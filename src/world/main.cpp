@@ -178,8 +178,14 @@ int main() {
 			screenMouseY * cameraScale.y + cameraOffset.y
 		);
 
+		Vector2 oldCameraOffset = cameraOffset;
 		cameraOffset.x += previousWorldMouse.x - worldMouse.x;
 		cameraOffset.y += previousWorldMouse.y - worldMouse.y;
+
+		if (std::isnan(cameraOffset.x) || std::isnan(cameraOffset.y)) {
+			cameraOffset.x = oldCameraOffset.x;
+			cameraOffset.y = oldCameraOffset.y;
+		}
 
 		//// Panning
 		if (mouse->Middle()) {
@@ -539,6 +545,11 @@ int main() {
 							std::cout << "\t\t" << connectionId << ": " << enterance << " - " << (hoveringRoom->ConnectionUsed(connectionId) ? "Used" : "Not Used") << std::endl;
 							connectionId++;
 						}
+					} else {
+						std::cout << "Debug:" << std::endl;
+						std::cout << "\tCam Scale: " << cameraScale.x << std::endl;
+						std::cout << "\tCam Position X: " << cameraOffset.x << std::endl;
+						std::cout << "\tCam Position Y: " << cameraOffset.y << std::endl;
 					}
 				}
 			}

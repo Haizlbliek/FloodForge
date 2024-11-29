@@ -774,7 +774,7 @@ class MenuItems {
 
 					std::cout << "Opening world " << worldAcronym << std::endl;
 
-					std::filesystem::path mapFilePath = exportDirectory / ("map_" + worldAcronym + ".txt");
+					std::filesystem::path mapFilePath = findFileCaseInsensitive(exportDirectory.string(), "map_" + worldAcronym + ".txt");
 
 					std::string propertiesFilePath = findFileCaseInsensitive(exportDirectory.string(), "properties.txt");
 
