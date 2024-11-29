@@ -38,6 +38,10 @@ Requirements:
 
 `./build/World.sh`
 
+## Custom Themes
+To create a custom theme, you need to modify the file `assets/theme.txt`.
+FloodForge will only load `theme.txt`, so if you need a backup, feel free to duplicate it.
+
 ## License
 FloodForge is licensed under the [GPL-3.0 License](LICENSE).  
 Please refer to the `LICENSE` file for full details.  
