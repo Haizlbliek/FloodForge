@@ -1,5 +1,5 @@
-#ifndef ACRONYM_WINDOW_HPP
-#define ACRONYM_WINDOW_HPP
+#ifndef SUBREGION_NEW_POPUP_HPP
+#define SUBREGION_NEW_POPUP_HPP
 
 #include "../gl.h"
 
@@ -14,9 +14,9 @@
 #include "Room.hpp"
 #include "Popups.hpp"
 
-class AcronymWindow : public Popup {
+class SubregionNewPopup : public Popup {
 	public:
-		AcronymWindow(Window *window) : Popup(window) {
+		SubregionNewPopup(Window *window, Room *room) : Popup(window), room(room) {
 			window->addKeyCallback(this, keyCallback);
 
 			bounds = Rect(-0.25, -0.08, 0.25, 0.25);
@@ -29,7 +29,7 @@ class AcronymWindow : public Popup {
 
 			setThemeColour(THEME_TEXT_COLOUR);
 			glLineWidth(1);
-			Fonts::rainworld->writeCentred("Enter Region Acronym:", 0.0, 0.18, 0.035, CENTRE_X);
+			Fonts::rainworld->writeCentred("Enter Subregion Name:", 0.0, 0.18, 0.035, CENTRE_X);
 
 			if (text.length() < 2) {
 				glColor3f(1.0, 0.0, 0.0);
@@ -77,13 +77,13 @@ class AcronymWindow : public Popup {
 			}
 
 			if (text.length() > 2) {
-				bounds.Y0(-0.25);
-				glColor3f(1.0, 1.0, 0.0);
-				Fonts::rainworld->writeCentred("WARNING:", 0.0, -0.055, 0.035, CENTRE_X);
-				Fonts::rainworld->writeCentred("Regions acronyms longer", 0.0, -0.09, 0.03, CENTRE_X);
-				Fonts::rainworld->writeCentred("than 2 characters behave", 0.0, -0.125, 0.03, CENTRE_X);
-				Fonts::rainworld->writeCentred("weirdly, to fix this", 0.0, -0.16, 0.03, CENTRE_X);
-				Fonts::rainworld->writeCentred("install REGION TITLE FIX", 0.0, -0.195, 0.03, CENTRE_X);
+				// bounds.Y0(-0.25);
+				// glColor3f(1.0, 1.0, 0.0);
+				// Fonts::rainworld->writeCentred("WARNING:", 0.0, -0.055, 0.035, CENTRE_X);
+				// Fonts::rainworld->writeCentred("Regions acronyms longer", 0.0, -0.09, 0.03, CENTRE_X);
+				// Fonts::rainworld->writeCentred("than 2 characters behave", 0.0, -0.125, 0.03, CENTRE_X);
+				// Fonts::rainworld->writeCentred("weirdly, to fix this", 0.0, -0.16, 0.03, CENTRE_X);
+				// Fonts::rainworld->writeCentred("install REGION TITLE FIX", 0.0, -0.195, 0.03, CENTRE_X);
 			} else {
 				bounds.Y0(-0.08);
 			}
@@ -104,72 +104,39 @@ class AcronymWindow : public Popup {
 		}
 
 		static char parseCharacter(char character, bool shiftPressed) {
-			if (!shiftPressed) return character;
+			if (!shiftPressed) return std::tolower(character);
 
-			if (std::islower(character)) {
-				return std::toupper(character);
-			}
-
-			switch (character) {
-				case '1': return '!';
-				case '2': return '@';
-				case '3': return '#';
-				case '4': return '$';
-				case '5': return '%';
-				case '6': return '^';
-				case '7': return '&';
-				case '8': return '*';
-				case '9': return '(';
-				case '0': return ')';
-				case '`': return '~';
-				case '-': return '_';
-				case '=': return '+';
-				case '[': return '{';
-				case ']': return '}';
-				case ';': return ':';
-				case '\'': return '"';
-				case '\\': return '|';
-				case ',': return '<';
-				case '.': return '>';
-				case '/': return '?';
-			}
-
-			return character;
+			return std::toupper(character);
 		}
 
 		static void keyCallback(void *object, int action, int key) {
-			AcronymWindow *acronymWindow = static_cast<AcronymWindow*>(object);
+			SubregionNewPopup *popup = static_cast<SubregionNewPopup*>(object);
 
 			if (action == GLFW_PRESS) {
-				if (key == GLFW_KEY_V && (acronymWindow->window->keyPressed(GLFW_KEY_LEFT_CONTROL) || acronymWindow->window->keyPressed(GLFW_KEY_RIGHT_CONTROL))) {
-					std::string clipboardText = toUpper(acronymWindow->window->getClipboard());
+				if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
+					char character = parseCharacter(key, popup->window->keyPressed(GLFW_KEY_LEFT_SHIFT) || popup->window->keyPressed(GLFW_KEY_RIGHT_SHIFT));
 
-					for (char character : clipboardText) {
-						if (character == '/') continue;
-						if (character == '\\') continue;
-
-						acronymWindow->text += character;
-					}
-					return;
+					popup->text += character;
 				}
 
-				if (key >= 33 && key <= 126) {
-					char character = parseCharacter(key, acronymWindow->window->keyPressed(GLFW_KEY_LEFT_SHIFT) || acronymWindow->window->keyPressed(GLFW_KEY_RIGHT_SHIFT));
-
-					if (character == '/') return;
-					if (character == '\\') return;
-
-					acronymWindow->text += character;
-				}
+                if (key == GLFW_KEY_SPACE) {
+                    if (!popup->text.empty())
+                        popup->text += " ";
+                }
 
 				if (key == GLFW_KEY_BACKSPACE) {
-					if (!acronymWindow->text.empty()) acronymWindow->text.pop_back();
+					if (!popup->text.empty()) popup->text.pop_back();
 				}
 			}
 		}
+        
+		bool canStack(std::string popupName) { return false; }
+		std::string PopupName() { return "SubregionNewPopup"; }
 
 	private:
 		std::string text;
+
+		Room *room;
 };
 
 #endif

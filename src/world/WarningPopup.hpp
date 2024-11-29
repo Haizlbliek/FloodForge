@@ -44,6 +44,7 @@ class WarningPopup : public Popup {
 				lineId++;
 			}
 		}
+		std::string PopupName() { return "WarningPopup"; }
 
 	private:
 		std::vector<std::string> warning;

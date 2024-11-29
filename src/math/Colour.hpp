@@ -1,6 +1,8 @@
 #ifndef COLOUR_HPP
 #define COLOUR_HPP
 
+#include "MathUtils.hpp"
+
 #define Color Colour
 
 class Colour {
@@ -10,6 +12,13 @@ class Colour {
 		   g(0.0),
 		   b(0.0),
 		   a(1.0) {
+		}
+
+		Colour(float v)
+		: r(v),
+		  g(v),
+		  b(v),
+		  a(1.0) {
 		}
 
 		Colour(float r, float g, float b)
@@ -30,6 +39,24 @@ class Colour {
 			g = colour.g;
 			b = colour.b;
 			a = colour.a;
+		}
+
+		// Colour mix(Colour other, double amount) {
+		// 	return Colour(
+		// 		MathUtils::lerp(r, other.r, amount),
+		// 		MathUtils::lerp(g, other.g, amount),
+		// 		MathUtils::lerp(b, other.b, amount),
+		// 		MathUtils::lerp(a, other.a, amount)
+		// 	);
+		// }
+
+		Colour mix(Colour other, double amount) {
+			return Colour(
+				MathUtils::lerp(r, r * other.r, amount),
+				MathUtils::lerp(g, g * other.g, amount),
+				MathUtils::lerp(b, b * other.b, amount),
+				MathUtils::lerp(a, a * other.a, amount)
+			);
 		}
 
 		float R() const { return r; }

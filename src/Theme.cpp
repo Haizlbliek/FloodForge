@@ -2,7 +2,14 @@
 
 #include "gl.h"
 
-Theme themeA {
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+#include "Constants.hpp"
+#include "Utils.hpp"
+
+Theme themeBasic {
 	Colour(0.3,  0.3,  0.3),  // Background
 	Colour(0.0,  0.0,  0.0),  // Header
 	Colour(0.75, 0.75, 0.75), // Border
@@ -15,20 +22,66 @@ Theme themeA {
 	Colour(0.5,  0.5,  0.5)   // Text Disabled
 };
 
-Theme themeB {
-	Colour(0.96, 0.79, 0.62),  // Background
-	Colour(0.54, 0.28, 0.21),  // Header
-	Colour(0.75, 0.44, 0.29),  // Border
-	Colour(1.00, 0.64, 0.08),  // Border Highlight
-	Colour(0.36, 0.17, 0.16),  // Popup Background
-	Colour(0.54, 0.28, 0.21),  // Popup Header
-	Colour(0.36, 0.17, 0.15),  // Button
-	Colour(0.36, 0.17, 0.15),  // Button Disabled
-	Colour(0.75, 0.44, 0.29),  // Text
-	Colour(0.22, 0.12, 0.13)   // Text Disabled
-};
+Theme *currentTheme = &themeBasic;
 
-Theme *currentTheme = &themeA;
+Colour parseHexColor(const std::string &hex) {
+	if (hex.size() != 7 || hex[0] != '#') {
+		throw std::invalid_argument("Invalid hex color format. Expected format: #RRGGBB");
+	}
+
+	int red, green, blue;
+	std::stringstream ss;
+	ss << std::hex;
+
+	ss.str(hex.substr(1, 2));
+	ss.clear();
+	ss >> red;
+
+	ss.str(hex.substr(3, 2));
+	ss.clear();
+	ss >> green;
+
+	ss.str(hex.substr(5, 2));
+	ss.clear();
+	ss >> blue;
+
+	return Colour(red / 255.0, green / 255.0, blue / 255.0);
+}
+
+void loadTheme() {
+	std::string themePath = BASE_PATH + "assets/theme.txt";
+
+	std::cout << themePath << std::endl;
+
+	if (!std::filesystem::exists(themePath)) return;
+
+	if (currentTheme != &themeBasic) delete currentTheme;
+
+	currentTheme = new Theme(themeBasic);
+
+	std::fstream themeFile(themePath);
+
+	std::string line;
+	while (std::getline(themeFile, line)) {
+		if (line.empty()) continue;
+
+		std::string colourString = line.substr(line.find_last_of(" ") + 1);
+		Colour colour = parseHexColor(colourString);
+
+		if (startsWith(line, "Background:")) currentTheme->background = colour;
+		if (startsWith(line, "Header:")) currentTheme->header = colour;
+		if (startsWith(line, "Border:")) currentTheme->border = colour;
+		if (startsWith(line, "BorderHighlight:")) currentTheme->borderHighlight = colour;
+		if (startsWith(line, "Popup:")) currentTheme->popup = colour;
+		if (startsWith(line, "PopupHeader:")) currentTheme->popupHeader = colour;
+		if (startsWith(line, "Button:")) currentTheme->button = colour;
+		if (startsWith(line, "ButtonDisabled:")) currentTheme->buttonDisabled = colour;
+		if (startsWith(line, "Text:")) currentTheme->text = colour;
+		if (startsWith(line, "TextDisabled:")) currentTheme->textDisabled = colour;
+	}
+
+	themeFile.close();
+}
 
 void setThemeColour(unsigned int themeColour) {
 	Colour colour = Colour(0.0, 0.0, 0.0, 0.0);

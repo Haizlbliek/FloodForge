@@ -1,6 +1,6 @@
 # FloodForge
 
-FloodForge is a project that is meant to remake the current Rain World tools in C++.
+FloodForge is a C++ remake of a few Rain World modding tools.
 
 It aims for intuitive controls, clean ui, and as few dependencies as possible.
 
@@ -11,6 +11,7 @@ It aims for intuitive controls, clean ui, and as few dependencies as possible.
 |-------------------|-----------|---------------------------------------------------------------|
 | Delete            | `X`       | Removes hovered room or connection.                           |
 | Change Room Layer | `L`       | Switches between layers within the current room.              |
+| Change Subregion  | `S`       | Openes a popup for adding, removing, and changing subregions. |
 | Print Debug Info  | `D`       | Outputs debug information for the hovered room or connection. |
 | Cancel/Exit       | `ESC`     | Closes menus or cancels actions.                              |
 | Accept            | `ENTER`   | Confirms selections or actions.                               |

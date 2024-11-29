@@ -5,6 +5,8 @@
 
 extern bool debugRoomConnections;
 
+extern int roomColours;
+
 #include "Room.hpp"
 #include "Connection.hpp"
 #include "../font/Fonts.hpp"
@@ -12,5 +14,6 @@ extern bool debugRoomConnections;
 
 extern std::vector<Room*> rooms;
 extern std::vector<Connection*> connections;
+extern std::vector<std::string> subregions;
 
 #endif

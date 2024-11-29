@@ -24,4 +24,6 @@ void AcronymWindow::accept() {
 	connections.clear();
 	rooms.push_back(new OffscreenRoom("offscreenden" + toLower(text), "OffscreenDen" + text));
 	MenuItems::WorldAcronym(toLower(text));
+	MenuItems::extraProperties = "";
+	MenuItems::extraWorld = "";
 }

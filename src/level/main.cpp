@@ -501,12 +501,12 @@ int main() {
 		glDisable(GL_DEPTH_TEST);
 
 		glColor3f(0.0f, 0.0f, 0.0f);
-		fillrect(-1.0, -1.0, 1.0, 1.0);
+		fillRect(-1.0, -1.0, 1.0, 1.0);
 
 		glViewport(offsetX, offsetY, size, size);
 
 		glColor3f(0.3f, 0.3f, 0.3f);
-		fillrect(-1.0, -1.0, 1.0, 1.0);
+		fillRect(-1.0, -1.0, 1.0, 1.0);
 
 		applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale);
 
@@ -522,7 +522,7 @@ int main() {
 		drawTexturedGrid(project->GetLayer(1), tileSize, textureSolids, textureShortcuts, textureItems, getLayerTransparency(1));
 
 		glColor3f(0.75f, 0.75f, 0.75f);
-		strokerect(
+		strokeRect(
 			tileSize * 12.0f - 1.0f,
 			-(tileSize * 3.0f - 1.0f),
 			tileSize * (grid->Width() - 12.0f) - 1.0f,
@@ -544,7 +544,7 @@ int main() {
 				y1 = clamp(y1, 0, -1 + (signed int) grid->Height());
 
 
-		        strokerect(
+		        strokeRect(
 					x0 * tileSize - 1.0f,
 					-(y0 * tileSize - 1.0f),
 					(x1 + 1) * tileSize - 1.0f,
@@ -554,7 +554,7 @@ int main() {
 				std::vector<Vector2i> points = line(drawToolX0, drawToolY0, clampedTileX, clampedTileY);
 
 				for (Vector2i point : points) {
-			        strokerect(
+			        strokeRect(
 						point.x * tileSize - 1.0f,
 						-(point.y * tileSize - 1.0f),
 						(point.x + 1) * tileSize - 1.0f,
@@ -562,7 +562,7 @@ int main() {
 					);
 				}
 	        } else {
-		        strokerect(
+		        strokeRect(
 					tileX * tileSize - 1.0f,
 					-(tileY * tileSize - 1.0f),
 					(tileX + 1) * tileSize - 1.0f,
@@ -576,10 +576,10 @@ int main() {
 
         if (popupVisible && !disableCursor) {
 	        glColor3f(0.0f, 0.0f, 0.0f);
-	        fillrect(-0.25f + popupX, -0.25f + popupY, 0.25f + popupX, 0.25f + popupY);
+	        fillRect(-0.25f + popupX, -0.25f + popupY, 0.25f + popupX, 0.25f + popupY);
 
 	        glColor3f(1.0f, 1.0f, 1.0f);
-	        strokerect(-0.25f + popupX, -0.25f + popupY, 0.25f + popupX, 0.25f + popupY);
+	        strokeRect(-0.25f + popupX, -0.25f + popupY, 0.25f + popupX, 0.25f + popupY);
 
 	        // Draw tools
 	        for (int i = 0; i < 16; i++) {
@@ -592,7 +592,7 @@ int main() {
 	        glLineWidth(3);
 
 	        glColor3f(1.0f, 0.0f, 0.0f);
-	        strokerect(
+	        strokeRect(
 				-0.25f + popupX + (currentTool % 4) * 0.125f,
 				-0.25f + popupY + (3 - currentTool / 4) * 0.125f,
 				-0.125f + popupX + (currentTool % 4) * 0.125f,
@@ -607,7 +607,7 @@ int main() {
 	        popupSelectionY = clamp(popupSelectionY, 0, 3);
 	        newTool = popupSelectionX + (3 - popupSelectionY) * 4;
 	        glColor3f(0.0f, 1.0f, 0.0f);
-	        strokerect(-0.25f + popupX + popupSelectionX * 0.125f, -0.25f + popupY + popupSelectionY * 0.125f, -0.125f + popupX + popupSelectionX * 0.125f, -0.125f + popupY + popupSelectionY * 0.125f);
+	        strokeRect(-0.25f + popupX + popupSelectionX * 0.125f, -0.25f + popupY + popupSelectionY * 0.125f, -0.125f + popupX + popupSelectionX * 0.125f, -0.125f + popupY + popupSelectionY * 0.125f);
 
 	        glLineWidth(1);
 		}

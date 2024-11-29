@@ -8,3 +8,6 @@ double MenuItems::currentButtonX = -0.99;
 
 std::filesystem::path MenuItems::exportDirectory = "";
 std::string MenuItems::worldAcronym = "";
+
+std::string MenuItems::extraProperties = "";
+std::string MenuItems::extraWorld = "";

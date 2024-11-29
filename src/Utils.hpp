@@ -2,12 +2,14 @@
 
 #include <string>
 
+#include "math/Colour.hpp"
+
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-void fillrect(float x0, float y0, float x1, float y1);
+void fillRect(float x0, float y0, float x1, float y1);
 
-void strokerect(float x0, float y0, float x1, float y1);
+void strokeRect(float x0, float y0, float x1, float y1);
 
 void drawLine(float x0, float y0, float x1, float y1, double thickness);
 
@@ -31,6 +33,8 @@ std::string toLower(const std::string &str);
 
 std::string toUpper(const std::string &str);
 
+std::string findFileCaseInsensitive(const std::string &directory, const std::string &fileName);
+
 
 std::string OpenNewFileDialog(const std::string &types);
 
@@ -45,5 +49,13 @@ std::string OpenDirectoryDialog();
 std::string OpenDirectoryDialog(const std::string &title);
 
 bool verifyBox(std::string text);
+
+
+
+
+// GL functions
+void glColour(Colour colour);
+
+void glColor(Colour color);
 
 #endif

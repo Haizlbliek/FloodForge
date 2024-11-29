@@ -24,13 +24,13 @@ class Connection {
 			glEnable(GL_LINE_SMOOTH);
 			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-			if (distance(mousePosition) < 0.5) {
+			if (distance(mousePosition) < 1.0 / lineSize) {
 				glColor3f(0.0f, 1.0f, 1.0f);
-				drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 16.0);
+				drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 32.0 / lineSize);
 			}
 
 			glColor3f(1.0f, 1.0f, 0.0f);
-			drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 8.0);
+			drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 16.0 / lineSize);
 
 			glDisable(GL_LINE_SMOOTH);
 		}

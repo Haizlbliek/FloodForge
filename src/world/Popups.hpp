@@ -23,6 +23,9 @@ class Popup {
 		virtual void accept() { close(); }
 		virtual void reject() { close(); }
 
+		virtual bool canStack(std::string popupName) { return false; }
+		virtual std::string PopupName() { return "Popup"; }
+
 	protected:
 		Window *window;
 		Rect bounds;

@@ -23,6 +23,7 @@
 #include "Popups.hpp"
 #include "SplashArtPopup.hpp"
 #include "QuitConfirmationPopup.hpp"
+#include "SubregionPopup.hpp"
 
 #define TEXTURE_PATH (BASE_PATH + "assets/")
 
@@ -32,8 +33,11 @@
 
 std::vector<Room*> rooms;
 std::vector<Connection*> connections;
+std::vector<std::string> subregions;
 
 bool debugRoomConnections = false;
+
+int roomColours = 0;
 
 void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale, float left, float right, float bottom, float top, float nearVal, float farVal) {
 	left *= scale.x;
@@ -72,6 +76,8 @@ int transitionLayer(int layer) {
 }
 
 int main() {
+	loadTheme();
+	
 	Window *window = new Window(1024, 1024);
 	window->setIcon(TEXTURE_PATH + "MainIcon.png");
 	window->setTitle("FloodForge World Editor");
@@ -450,6 +456,24 @@ int main() {
 			previousKeys.erase(GLFW_KEY_X);
 		}
 
+		if (window->keyPressed(GLFW_KEY_S)) {
+			if (previousKeys.find(GLFW_KEY_S) == previousKeys.end()) {
+				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+					Room *room = *it;
+
+					if (room->inside(worldMouse)) {
+						addPopup(new SubregionPopup(window, room));
+
+						break;
+					}
+				}
+			}
+
+			previousKeys.insert(GLFW_KEY_S);
+		} else {
+			previousKeys.erase(GLFW_KEY_S);
+		}
+
 		if (window->keyPressed(GLFW_KEY_L)) {
 			if (previousKeys.find(GLFW_KEY_L) == previousKeys.end()) {
 				Room *hoveringRoom = nullptr;
@@ -533,13 +557,13 @@ int main() {
 		glDisable(GL_DEPTH_TEST);
 
 		glColor3f(0.0f, 0.0f, 0.0f);
-		fillrect(-1.0, -1.0, 1.0, 1.0);
+		fillRect(-1.0, -1.0, 1.0, 1.0);
 
 		glViewport(offsetX, offsetY, size, size);
 
 		setThemeColour(THEME_BACKGROUND_COLOUR);
 		// glColor3f(0.3f, 0.3f, 0.3f);
-		fillrect(-1.0, -1.0, 1.0, 1.0);
+		fillRect(-1.0, -1.0, 1.0, 1.0);
 
 		applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale);
 

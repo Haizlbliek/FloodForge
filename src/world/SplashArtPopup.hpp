@@ -27,7 +27,7 @@ class SplashArtPopup : public Popup {
 
 		void draw(double mouseX, double mouseY, bool mouseInside) {
 			glColor3f(0.0, 0.0, 0.0);
-			fillrect(-0.9, -0.45, 0.9, 0.45);
+			fillRect(-0.9, -0.45, 0.9, 0.45);
 
 			glBindTexture(GL_TEXTURE_2D, splashart->ID());
 
@@ -52,7 +52,7 @@ class SplashArtPopup : public Popup {
 			glColor3f(1.0f, 1.0f, 1.0f);
 			Fonts::rodondo->writeCentred("FloodForge", 0.0, 0.1, 0.2, CENTRE_XY);
 			Fonts::rainworld->writeCentred("World Editor", 0.0, -0.1, 0.1, CENTRE_XY);
-			Fonts::rainworld->write("v1.0", -0.88, 0.43, 0.04);
+			Fonts::rainworld->write("v1.1", -0.88, 0.43, 0.04);
 		}
 
 		void mouseClick(double mouseX, double mouseY) {

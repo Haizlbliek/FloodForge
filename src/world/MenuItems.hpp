@@ -68,13 +68,16 @@ class Button {
 
 			if (isHovered(mouse)) {
 				setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
-				strokerect(x - 0.005, y + 0.005, x + 0.005 + width, y - 0.005 - height);
+				strokeRect(x - 0.005, y + 0.005, x + 0.005 + width, y - 0.005 - height);
 			}
 		}
 
-		void setText(std::string text) {
+		void Text(std::string text) {
 			this->text = text;
+			width = font->getTextWidth(text, height);
 		}
+
+		std::string Text() { return text; }
 
 	private:
 		void press() {
@@ -121,60 +124,59 @@ class MenuItems {
 			std::string line;
 			while (std::getline(mapFile, line)) {
 				if (startsWith(line, "Connection: ")) {
-					line = line.substr(line.find(' ') + 1);
+					// line = line.substr(line.find(' ') + 1);
 
-					std::string roomAName = line.substr(0, line.find(','));
-					line = line.substr(line.find(',') + 1);
-					std::string roomBName = line.substr(0, line.find(','));
-					line = line.substr(line.find(',') + 1);
+					// std::string roomAName = line.substr(0, line.find(','));
+					// line = line.substr(line.find(',') + 1);
+					// std::string roomBName = line.substr(0, line.find(','));
+					// line = line.substr(line.find(',') + 1);
 
-					int connectionAX = std::stoi(line.substr(0, line.find(',')));
-					line = line.substr(line.find(',') + 1);
-					int connectionAY = std::stoi(line.substr(0, line.find(',')));
-					line = line.substr(line.find(',') + 1);
-					int connectionBX = std::stoi(line.substr(0, line.find(',')));
-					line = line.substr(line.find(',') + 1);
-					int connectionBY = std::stoi(line.substr(0, line.find(',')));
-					line = line.substr(line.find(',') + 1);
+					// int connectionAX = std::stoi(line.substr(0, line.find(',')));
+					// line = line.substr(line.find(',') + 1);
+					// int connectionAY = std::stoi(line.substr(0, line.find(',')));
+					// line = line.substr(line.find(',') + 1);
+					// int connectionBX = std::stoi(line.substr(0, line.find(',')));
+					// line = line.substr(line.find(',') + 1);
+					// int connectionBY = std::stoi(line.substr(0, line.find(',')));
+					// line = line.substr(line.find(',') + 1);
 
-					Room *roomA = nullptr;
-					Room *roomB = nullptr;
+					// Room *roomA = nullptr;
+					// Room *roomB = nullptr;
 
-					for (Room *room : rooms) {
-						if (room->RoomName() == roomAName) {
-							roomA = room;
-						}
-						if (room->RoomName() == roomBName) {
-							roomB = room;
-						}
-					}
+					// for (Room *room : rooms) {
+					// 	if (room->RoomName() == roomAName) {
+					// 		roomA = room;
+					// 	}
+					// 	if (room->RoomName() == roomBName) {
+					// 		roomB = room;
+					// 	}
+					// }
 
-					if (roomA == nullptr || roomB == nullptr) continue;
+					// if (roomA == nullptr || roomB == nullptr) continue;
 
-					connectionAY = roomA->Height() - connectionAY - 1;
-					connectionBY = roomB->Height() - connectionBY - 1;
+					// connectionAY = roomA->Height() - connectionAY - 1;
+					// connectionBY = roomB->Height() - connectionBY - 1;
 
-					int connectionA = roomA->getShortcutConnection(Vector2i(connectionAX, connectionAY));
-					int connectionB = roomB->getShortcutConnection(Vector2i(connectionBX, connectionBY));
+					// int connectionA = roomA->getShortcutConnection(Vector2i(connectionAX, connectionAY));
+					// int connectionB = roomB->getShortcutConnection(Vector2i(connectionBX, connectionBY));
 
-					if (connectionA == -1 || connectionB == -1) {
-						std::cout << "Failed to load connection from " << roomAName << " to " << roomBName << std::endl;
-						std::cout << "\t" << connectionAX << ", " << connectionAY << " - " << connectionA << std::endl;
-						std::cout << "\t" << connectionBX << ", " << connectionBY << " - " << connectionB << std::endl;
-						continue;
-					}
+					// if (connectionA == -1 || connectionB == -1) {
+					// 	std::cout << "Failed to load connection from " << roomAName << " to " << roomBName << std::endl;
+					// 	std::cout << "\t" << connectionAX << ", " << connectionAY << " - " << connectionA << std::endl;
+					// 	std::cout << "\t" << connectionBX << ", " << connectionBY << " - " << connectionB << std::endl;
+					// 	continue;
+					// }
 
-					roomA->connect(roomB, connectionA);
-					roomB->connect(roomA, connectionB);
+					// roomA->connect(roomB, connectionA);
+					// roomB->connect(roomA, connectionB);
 
-					Connection *connection = new Connection(roomA, connectionA, roomB, connectionB);
-					connections.push_back(connection);
+					// Connection *connection = new Connection(roomA, connectionA, roomB, connectionB);
+					// connections.push_back(connection);
 				} else {
-					std::string roomName = line.substr(0, line.find(':'));
-					std::transform(roomName.begin(), roomName.end(), roomName.begin(), ::tolower);
+					std::string roomName = toLower(line.substr(0, line.find(':')));
 
 					std::string roomPath = directory.string();
-					replaceLastInstance(roomPath, worldAcronym, worldAcronym + "-rooms");
+					replaceLastInstance(roomPath, toLower(worldAcronym), toLower(worldAcronym) + "-rooms");
 					roomPath = (std::filesystem::path(roomPath) / roomName).string();
 
 					if (startsWith(roomName, "gate")) {
@@ -212,50 +214,29 @@ class MenuItems {
 					std::getline(data, temp, '<');
 					std::getline(data, temp, '>'); // Layer
 					int layer = std::stoi(temp);
+					
+					std::getline(data, temp, '<');
+					std::getline(data, temp, '>'); // Subregion
+					std::string subregion = temp;
 
 					position->x = x - room->Width() * 0.5;
 					position->y = y + room->Height() * 0.5;
 					room->Layer(layer);
+
+					if (subregion.empty()) {
+						room->Subregion(-1);
+					} else {
+						auto it = std::find(subregions.begin(), subregions.end(), subregion);
+						if (it == subregions.end()) {
+							subregions.push_back(subregion);
+							it = std::find(subregions.begin(), subregions.end(), subregion);
+						}
+
+						room->Subregion(std::distance(subregions.begin(), it));
+					}
 				}
 			}
 			mapFile.close();
-		}
-
-		static void parseMapTags(std::filesystem::path worldFilePath, std::filesystem::path directory) {
-			std::fstream worldFile(worldFilePath);
-
-			bool inRooms = false;
-			std::string line;
-			while (std::getline(worldFile, line)) {
-				if (line == "ROOMS") {
-					inRooms = true;
-					continue;
-				}
-				if (line == "END ROOMS") {
-					break;
-				}
-				if (!inRooms) continue;
-				if (line == "") continue;
-
-				std::tuple<std::string, std::vector<std::string>, std::string> parts = parseRoomString(line);
-				std::string roomName = toLower(std::get<0>(parts));
-
-				Room *room = nullptr;
-				for (Room *otherRoom : rooms) {
-					if (toLower(otherRoom->RoomName()) == roomName) {
-						room = otherRoom;
-						break;
-					}
-				}
-
-				if (room == nullptr) {
-					std::cout << "Can't load world data for " << roomName << std::endl;
-					continue;
-				}
-
-				room->Tag(std::get<2>(parts));
-			}
-			worldFile.close();
 		}
 
 		static std::vector<std::string> split(const std::string &text, char delimiter) {
@@ -298,6 +279,7 @@ class MenuItems {
 			std::vector<Quadruple<Room*, int, std::string, int>> connectionsToAdd;
 
 			bool inRooms = false;
+			bool outOfRooms = false;
 			std::string line;
 			while (std::getline(worldFile, line)) {
 				if (line == "ROOMS") {
@@ -305,22 +287,39 @@ class MenuItems {
 					continue;
 				}
 				if (line == "END ROOMS") {
-					break;
+					outOfRooms = true;
+					continue;
 				}
-				if (inRooms) {
-					std::tuple<std::string, std::vector<std::string>, std::string> parts = parseRoomString(line);
-					std::string roomName = toLower(std::get<0>(parts));
 
-					std::string roomPath = directory.string();
-					replaceLastInstance(roomPath, worldAcronym, worldAcronym + "-rooms");
-					roomPath = (std::filesystem::path(roomPath) / roomName).string();
+				if (outOfRooms) {
+					extraWorld += line + "\n";
+					continue;
+				}
 
-					if (startsWith(roomName, "gate")) {
-						replaceLastInstance(roomPath, worldAcronym + "-rooms", "gates");
+				if (line == "") continue;
+				if (!inRooms) continue;
+
+				std::tuple<std::string, std::vector<std::string>, std::string> parts = parseRoomString(line);
+
+				std::string roomName = toLower(std::get<0>(parts));
+
+				std::string roomPath = directory.string();
+				replaceLastInstance(roomPath, worldAcronym, worldAcronym + "-rooms");
+				roomPath = (std::filesystem::path(roomPath) / roomName).string();
+
+				if (startsWith(roomName, "gate")) {
+					replaceLastInstance(roomPath, worldAcronym + "-rooms", "gates");
+				}
+
+				Room *room = nullptr;
+				for (Room *otherRoom : rooms) {
+					if (toLower(otherRoom->RoomName()) == roomName) {
+						room = otherRoom;
+						break;
 					}
+				}
 
-					Room *room;
-
+				if (room == nullptr) {
 					if (startsWith(roomName, "offscreenden")) {
 						room = new OffscreenRoom(roomName, roomName);
 					} else {
@@ -328,40 +327,40 @@ class MenuItems {
 					}
 
 					rooms.push_back(room);
+				}
 
-					int connectionId = 0;
-					for (std::string connection : std::get<1>(parts)) {
-						connection = toLower(connection);
-						if (connection == "disconnected") {
-							connectionId++;
-							continue;
-						}
-
-						bool alreadyExists = false;
-						for (Quadruple<Room*, int, std::string, int> &connectionData : connectionsToAdd) {
-							if (toLower(connectionData.first->RoomName()) == connection && connectionData.third == toLower(roomName)) {
-								connectionData.fourth = connectionId;
-								alreadyExists = true;
-								break;
-							}
-						}
-						if (alreadyExists) {
-							connectionId++;
-							continue;
-						}
-
-						connectionsToAdd.push_back(Quadruple<Room*, int, std::string, int> {
-							room,
-							connectionId,
-							connection,
-							-1
-						});
-
+				int connectionId = 0;
+				for (std::string connection : std::get<1>(parts)) {
+					connection = toLower(connection);
+					if (connection == "disconnected") {
 						connectionId++;
+						continue;
 					}
 
-					room->Tag(std::get<2>(parts));
+					bool alreadyExists = false;
+					for (Quadruple<Room*, int, std::string, int> &connectionData : connectionsToAdd) {
+						if (toLower(connectionData.first->RoomName()) == connection && connectionData.third == toLower(roomName)) {
+							connectionData.fourth = connectionId;
+							alreadyExists = true;
+							break;
+						}
+					}
+					if (alreadyExists) {
+						connectionId++;
+						continue;
+					}
+
+					connectionsToAdd.push_back(Quadruple<Room*, int, std::string, int> {
+						room,
+						connectionId,
+						connection,
+						-1
+					});
+
+					connectionId++;
 				}
+
+				room->Tag(std::get<2>(parts));
 			}
 			worldFile.close();
 
@@ -389,12 +388,31 @@ class MenuItems {
 				int connectionA = connectionData.second;
 				int connectionB = connectionData.fourth;
 
+				// std::cout << "Connecting " << roomA->RoomName() << " - " << connectionA << " to " << roomB->RoomName() << " - " << connectionB << std::endl;
+
 				roomA->connect(roomB, connectionA);
 				roomB->connect(roomA, connectionB);
 
 				Connection *connection = new Connection(roomA, connectionA, roomB, connectionB);
 				connections.push_back(connection);
 			}
+		}
+
+		static void parseProperties(std::string propertiesFilePath) {
+			std::fstream propertiesFile(propertiesFilePath);
+			
+			std::string line;
+			while (std::getline(propertiesFile, line)) {
+				if (startsWith(line, "Subregion: ")) {
+					std::string subregionName = line.substr(line.find(':') + 2);
+					std::cout << "Subregion: " << subregionName << std::endl;
+					subregions.push_back(subregionName);
+				} else {
+					extraProperties += line + "\n";
+				}
+			}
+
+			propertiesFile.close();
 		}
 
 		static void exportMapFile() {
@@ -414,6 +432,7 @@ class MenuItems {
 				file << position.x << "><" << position.y << "><"; // Canon Position
 				file << position.x << "><" << position.y << "><"; // Dev Position
 				file << room->Layer() << "><";
+				file << subregions[room->Subregion()];
 				file << "\n";
 			}
 
@@ -437,7 +456,7 @@ class MenuItems {
 				file << connectionB.x << "," << connectionB.y << ",";
 				file << connection->RoomA()->getShortcutDirection(connection->ConnectionA()) << ",";
 				file << connection->RoomB()->getShortcutDirection(connection->ConnectionB());
-				file << "                          \n";
+				file << "\n";
 			}
 
 			file.close();
@@ -454,11 +473,7 @@ class MenuItems {
 
 				file << toUpper(room->RoomName()) << " : ";
 
-				std::string connections[room->ConnectionCount()];
-
-				for (int i = 0; i < room->ConnectionCount(); i++) {
-					connections[i] = "DISCONNECTED";
-				}
+				std::vector<std::string> connections(room->ConnectionCount(), "DISCONNECTED");
 
 				for (std::pair<Room*, unsigned int> connection : room->RoomConnections()) {
 					connections[connection.second] = toUpper(connection.first->RoomName());
@@ -539,7 +554,6 @@ class MenuItems {
 				int x = std::floor(room->Position()->x - room->Width() * 0.0 - bounds.X0()) + padding;
 				int y = std::floor(-room->Position()->y - room->Height() * 0.0 - bounds.Y0()) + padding;
 				y += (2 - room->Layer()) * height / 3;
-				// std::cout << x << ", " << y << "\t\t" << (x + room->Width() - 1) << ", " << (y + room->Height() - 1) << std::endl;
 
 				for (int ox = 0; ox < room->Width(); ox++) {
 					for (int oy = 0; oy < room->Height(); oy++) {
@@ -577,6 +591,18 @@ class MenuItems {
 			} else {
 				std::cout << "Error saving image!" << std::endl;
 			}
+		}
+
+		static void exportPropertiesFile(std::filesystem::path outputPath) {
+			std::fstream propertiesFile(outputPath, std::ios::out | std::ios::trunc);
+			
+			propertiesFile << extraProperties;
+
+			for (std::string subregion : subregions) {
+				propertiesFile << "Subregion: " << subregion << "\n";
+			}
+
+			propertiesFile.close();
 		}
 
 /*
@@ -743,27 +769,36 @@ class MenuItems {
 					std::filesystem::path path = pathString;
 
 					exportDirectory = path.parent_path();
-					worldAcronym = path.filename().string();
+					worldAcronym = toLower(path.filename().string());
 					worldAcronym = worldAcronym.substr(worldAcronym.find_last_of('_') + 1, worldAcronym.find_last_of('.') - worldAcronym.find_last_of('_') - 1);
 
 					std::cout << "Opening world " << worldAcronym << std::endl;
 
 					std::filesystem::path mapFilePath = exportDirectory / ("map_" + worldAcronym + ".txt");
 
+					std::string propertiesFilePath = findFileCaseInsensitive(exportDirectory.string(), "properties.txt");
+
 					for (Room *room : rooms) delete room;
 					rooms.clear();
 					for (Connection *connection : connections) delete connection;
 					connections.clear();
+					subregions.clear();
+					extraProperties = "";
+					extraWorld = "";
+
+					if (std::filesystem::exists(propertiesFilePath)) {
+						std::cout << "Found properties file, loading subregions" << std::endl;
+
+						parseProperties(propertiesFilePath);
+					}
 
 					if (std::filesystem::exists(mapFilePath)) {
 						parseMap(mapFilePath, exportDirectory);
-						parseMapTags(path, exportDirectory);
 					} else {
 						std::cout << "Map file not found, loading world file" << std::endl;
-						parseWorld(path, exportDirectory);
 					}
 
-					// std::reverse(rooms.begin(), rooms.end());
+					parseWorld(path, exportDirectory);
 				}
 			);
 
@@ -787,6 +822,20 @@ class MenuItems {
 					exportImageFile(exportDirectory / ("map_" + worldAcronym + ".png"), exportDirectory / ("map_" + worldAcronym + "_2.png"));
 				}
 			);
+
+			addButton("No Colours",
+				[window](Button *button) {
+					::roomColours = (::roomColours + 1) % 3;
+
+					if (::roomColours == 0) {
+						button->Text("No Colours");
+					} else if (::roomColours == 1) {
+						button->Text("Layer Colours");
+					} else {
+						button->Text("Subregion Colours");
+					}
+				}
+			);
 		}
 
 		static void cleanup() {
@@ -799,7 +848,7 @@ class MenuItems {
 
 		static void draw(Mouse *mouse) {
 			setThemeColour(THEME_HEADER_COLOUR);
-			fillrect(-1.0f, 1.0f, 1.0f, 1.0f - 0.06f);
+			fillRect(-1.0f, 1.0f, 1.0f, 1.0f - 0.06f);
 			glLineWidth(1);
 
 			for (Button *button : buttons) {
@@ -811,6 +860,9 @@ class MenuItems {
 		static void WorldAcronym(std::string worldAcronym) {
 			MenuItems::worldAcronym = worldAcronym;
 		}
+		
+		static std::string extraProperties;
+		static std::string extraWorld;
 
 	private:
 		static std::vector<Button*> buttons;

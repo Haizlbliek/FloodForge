@@ -22,7 +22,7 @@
 
 #define CONNECTION_TYPE_NONE 0
 #define CONNECTION_TYPE_EXIT 1
-#define CONNECTION_TYPE_DEN 2
+#define CONNECTION_TYPE_DEN  2
 #define CONNECTION_TYPE_MOLE 3
 #define CONNECTION_TYPE_SCAV 4
 
@@ -30,7 +30,7 @@ class Room {
 	public:
 		Room(std::string path, std::string name) {
 			this->path = path;
-			this->roomName = name;
+			this->roomName = toLower(name);
 
 			position = new Vector2(
 				0.0f,
@@ -48,6 +48,7 @@ class Room {
 
 			layer = 0;
 			water = -1;
+			subregion = -1;
 
 			tag = "";
 
@@ -97,10 +98,33 @@ class Room {
 		virtual void draw(Vector2 mousePosition, double lineSize) {
 			if (!valid) return;
 
-			float transparency = 1.0f;
+			Colour tint = Colour(1.0, 1.0, 1.0);
+			double tintAmount = 0.5;
 
-			glColor4f(1.0f, 1.0f, 1.0f, transparency);
-			fillrect(position->x, position->y, position->x + width, position->y - height);
+			if (::roomColours == 1) {
+				if (layer == 0) tint = Colour(1.0, 0.0, 0.0);
+				if (layer == 1) tint = Colour(1.0, 1.0, 1.0);
+				if (layer == 2) tint = Colour(0.0, 1.0, 0.0);
+			}
+			
+			if (::roomColours == 2) {
+				if (subregion == -1) tint = Colour(1.0, 1.0, 1.0);
+				if (subregion ==  0) tint = Colour(1.0, 0.0, 0.0);
+				if (subregion ==  1) tint = Colour(0.0, 1.0, 0.0);
+				if (subregion ==  2) tint = Colour(0.0, 0.0, 1.0);
+				if (subregion ==  3) tint = Colour(1.0, 1.0, 0.0);
+				if (subregion ==  4) tint = Colour(0.0, 1.0, 1.0);
+				if (subregion ==  5) tint = Colour(1.0, 0.0, 1.0);
+				if (subregion ==  6) tint = Colour(1.0, 0.5, 0.0);
+				if (subregion ==  7) tint = Colour(1.0, 1.0, 0.5);
+				if (subregion ==  8) tint = Colour(0.5, 1.0, 0.0);
+				if (subregion ==  9) tint = Colour(1.0, 1.0, 0.5);
+				if (subregion == 10) tint = Colour(0.5, 0.0, 1.0);
+				if (subregion == 11) tint = Colour(1.0, 0.5, 1.0);
+			}
+
+			glColor(Colour(1.0, 1.0, 1.0).mix(tint, tintAmount));
+			fillRect(position->x, position->y, position->x + width, position->y - height);
 
 			glBegin(GL_QUADS);
 			for (int x = 0; x < width; x++) {
@@ -116,21 +140,21 @@ class Room {
 					float y2 = (y0 + y1) * 0.5;
 
 					if (tileType == 1) {
-						glColor4f(0.125f, 0.125f, 0.125f, transparency);
+						glColor(Colour(0.125, 0.125, 0.125).mix(tint, tintAmount));
 						glVertex2f(x0, y0);
 						glVertex2f(x1, y0);
 						glVertex2f(x1, y1);
 						glVertex2f(x0, y1);
 					}
 					if (tileType == 4) {
-						glColor4f(0.0f, 1.0f, 1.0f, transparency);
+						glColor(Colour(0.0, 1.0, 1.0).mix(tint, tintAmount));
 						glVertex2f(x0, y0);
 						glVertex2f(x1, y0);
 						glVertex2f(x1, y1);
 						glVertex2f(x0, y1);
 					}
 					if (tileType == 2) {
-						glColor4f(1.0f, 0.0f, 0.0f, transparency);
+						glColor(Colour(1.0, 0.0, 0.0).mix(tint, tintAmount));
 
 						int bits = 0;
 						bits += (getTile(x - 1, y) == 1) ? 1 : 0;
@@ -161,7 +185,7 @@ class Room {
 						}
 					}
 					if (tileType == 3) {
-						glColor4f(0.0f, 1.0f, 0.0f, transparency);
+						glColor(Colour(0.0, 1.0, 0.0).mix(tint, tintAmount));
 						glVertex2f(x0, y0);
 						glVertex2f(x1, y0);
 						glVertex2f(x1, (y0 + y1) * 0.5f);
@@ -169,7 +193,7 @@ class Room {
 					}
 
 					if (tileData & 1) { // 16 - Vertical Pole
-						glColor4f(0.0f, 0.0f, 1.0f, transparency);
+						glColor(Colour(0.0, 0.0, 1.0).mix(tint, tintAmount));
 						glVertex2f(x0 + 0.375, y0);
 						glVertex2f(x1 - 0.375, y0);
 						glVertex2f(x1 - 0.375, y1);
@@ -177,7 +201,7 @@ class Room {
 					}
 
 					if (tileData & 2) { // 32 - Horizontal Pole
-						glColor4f(0.0f, 0.0f, 1.0f, transparency);
+						glColor(Colour(0.0, 0.0, 1.0).mix(tint, tintAmount));
 						glVertex2f(x0, y0 - 0.375);
 						glVertex2f(x1, y0 - 0.375);
 						glVertex2f(x1, y1 + 0.375);
@@ -185,7 +209,7 @@ class Room {
 					}
 
 					if (tileData & 4) { // 64 - Room Exit
-						glColor4f(1.0f, 0.0f, 1.0f, transparency);
+						glColor(Colour(1.0, 0.0, 1.0).mix(tint, tintAmount));
 						glVertex2f(x0 + 0.25, y0 - 0.25);
 						glVertex2f(x1 - 0.25, y0 - 0.25);
 						glVertex2f(x1 - 0.25, y1 + 0.25);
@@ -193,13 +217,13 @@ class Room {
 					}
 
 					if (tileData & 8) { // 128 - Shortcut
-						glColor4f(0.0f, 0.0f, 0.0f, transparency);
+						glColor(Colour(0.125, 0.125, 0.125).mix(tint, tintAmount));
 						glVertex2f(x0 + 0.40625, y0 - 0.40625);
 						glVertex2f(x1 - 0.40625, y0 - 0.40625);
 						glVertex2f(x1 - 0.40625, y1 + 0.40625);
 						glVertex2f(x0 + 0.40625, y1 + 0.40625);
 
-						glColor4f(1.0f, 1.0f, 1.0f, transparency);
+						glColor(Colour(1.0, 1.0, 1.0).mix(tint, tintAmount));
 						glVertex2f(x0 + 0.4375, y0 - 0.4375);
 						glVertex2f(x1 - 0.4375, y0 - 0.4375);
 						glVertex2f(x1 - 0.4375, y1 + 0.4375);
@@ -217,26 +241,26 @@ class Room {
 						float x0 = position->x + x;
 						float y0 = position->y - y;
 
-						glColor4f(1.0f, 1.0f, 1.0f, transparency);
+						glColor(Colour(1.0, 1.0, 1.0).mix(tint, tintAmount));
 						Fonts::rainworld->writeCentred(std::to_string(getConnection(Vector2i(x, y))), x0 + 0.5, y0 - 0.5, 3.0, CENTER_XY);
 					}
 				}
 			}
 
 			if (water != -1) {
-				glColor4f(0.0f, 0.0f, 0.5f, transparency * 0.5f);
-				fillrect(position->x, position->y - (height - water), position->x + width, position->y - height);
+				glColor(Colour(0.0, 0.0, 0.5, 0.5).mix(tint, tintAmount));
+				fillRect(position->x, position->y - (height - std::min(water, height)), position->x + width, position->y - height);
 			}
 
 			if (inside(mousePosition)) {
-				glColor4f(0.00f, 0.75f, 0.00f, transparency);
+				glColor(Colour(0.00, 0.75, 0.00).mix(tint, tintAmount));
 			} else {
-				glColor4f(0.75f, 0.75f, 0.75f, transparency);
+				glColor(Colour(0.75, 0.75, 0.75).mix(tint, tintAmount));
 			}
-			strokerect(position->x, position->y, position->x + width, position->y - height);
+			strokeRect(position->x, position->y, position->x + width, position->y - height);
 
 #ifdef DEBUG_ROOMS
-			glColor4f(1.00f, 1.00f, 0.00f, transparency);
+			glColor(Colour(1.0, 1.0, 0.0).mix(tint, tintAmount));
 			strokerect(coord->x - 1, coord->y + 1, coord->x + 1, coord->y - 1);
 #endif
 		}
@@ -283,6 +307,7 @@ class Room {
 		}
 
 		const Vector2 getConnection(unsigned int connectionId) const {
+			if (connectionId >= connections.size()) return Vector2(0, 0);
 			Vector2i connection = connections[connectionId];
 			return Vector2(
 				position->x + connection.x + 0.5,
@@ -392,6 +417,9 @@ class Room {
 
 		void Tag(const std::string newTag) { tag = newTag; }
 		const std::string Tag() const { return tag; }
+
+		void Subregion(const int newSubregion) { subregion = newSubregion; }
+		const int Subregion() { return subregion; }
 
 	protected:
 		Room() {}
@@ -555,6 +583,7 @@ class Room {
 
 		int *geometry;
 		int layer;
+		int subregion;
 
 		std::string tag;
 

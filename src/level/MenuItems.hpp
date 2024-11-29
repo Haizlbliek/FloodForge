@@ -52,7 +52,7 @@ class Button {
 			font->write(text, x, y, height);
 
 			if (isHovered(mouse)) {
-				strokerect(x - 0.005, y + 0.005, x + 0.005 + width, y - 0.005 - height);
+				strokeRect(x - 0.005, y + 0.005, x + 0.005 + width, y - 0.005 - height);
 			}
 		}
 
@@ -169,7 +169,7 @@ class MenuItems {
 
 		static void draw(Mouse *mouse) {
 			glColor3f(0.0f, 0.0f, 0.0f);
-			fillrect(-1.0f, 1.0f, 1.0f, 1.0f - 0.06f);
+			fillRect(-1.0f, 1.0f, 1.0f, 1.0f - 0.06f);
 
 			for (Button *button : buttons) {
 				button->update(mouse);

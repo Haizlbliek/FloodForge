@@ -44,12 +44,12 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside) {
 		setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
 		// glColor3f(0.0, 1.0, 0.0);
 		glLineWidth(2);
-		strokerect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
+		strokeRect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
 	} else {
 		setThemeColour(THEME_BORDER_COLOUR);
 		// glColor3f(0.75, 0.75, 0.75);
 		glLineWidth(1);
-		strokerect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
+		strokeRect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
 	}
 
 	setThemeColour(THEME_TEXT_COLOUR);
@@ -98,7 +98,19 @@ void Popup::close() {
 std::vector<Popup*> popups;
 
 void addPopup(Popup *popup) {
-	popups.push_back(popup);
+	bool canStack = true;
+	for (Popup *otherPopup : popups) {
+		if (!otherPopup->canStack(popup->PopupName())) {
+			canStack = false;
+			break;
+		}
+	}
+	
+	if (canStack) {
+		popups.push_back(popup);
+	} else {
+		Popups::popupTrash.push_back(popup);
+	}
 }
 
 void removePopup(Popup *popup) {

@@ -23,6 +23,8 @@ class OffscreenRoom : public Room {
 			valid = false;
 			
 			layer = 0;
+			subregion = -1;
+			water = -1;
 
 			geometry = nullptr;
 			
@@ -34,7 +36,7 @@ class OffscreenRoom : public Room {
 
 		void draw(Vector2 mousePosition, double lineSize) override {
 			glColor3f(1.00f, 1.00f, 1.00f);
-			fillrect(position->x, position->y, position->x + width, position->y - height);
+			fillRect(position->x, position->y, position->x + width, position->y - height);
 
 			glColor3f(0.00f, 0.00f, 0.00f);
 			Fonts::rainworld->writeCentred(this->roomName, position->x + (width * 0.5), position->y - (height * 0.5), 5, CENTRE_XY);
@@ -44,7 +46,7 @@ class OffscreenRoom : public Room {
 			} else {
 				glColor3f(0.75f, 0.75f, 0.75f);
 			}
-			strokerect(position->x, position->y, position->x + width, position->y - height);
+			strokeRect(position->x, position->y, position->x + width, position->y - height);
 
 #ifdef DEBUG_ROOMS
 			glColor3f(1.00f, 1.00f, 0.00f);

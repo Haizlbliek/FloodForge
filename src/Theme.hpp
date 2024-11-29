@@ -31,8 +31,9 @@ struct Theme {
 	Colour textDisabled;
 };
 
-extern Theme themeA;
 extern Theme *currentTheme;
+
+void loadTheme();
 
 void setThemeColour(unsigned int colour);
 

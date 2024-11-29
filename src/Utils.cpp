@@ -8,11 +8,12 @@
 #include <cmath>
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
 
 #define M_PI   3.141592653589
 #define M_PI_2 1.570796326795
 
-void fillrect(float x0, float y0, float x1, float y1) {
+void fillRect(float x0, float y0, float x1, float y1) {
 	glBegin(GL_QUADS);
 	glVertex2f(x0, y0);
 	glVertex2f(x1, y0);
@@ -21,7 +22,7 @@ void fillrect(float x0, float y0, float x1, float y1) {
 	glEnd();
 }
 
-void strokerect(float x0, float y0, float x1, float y1) {
+void strokeRect(float x0, float y0, float x1, float y1) {
 	glBegin(GL_LINE_LOOP);
 	glVertex2f(x0, y0);
 	glVertex2f(x1, y0);
@@ -187,6 +188,18 @@ std::string toUpper(const std::string &str) {
 	return output;
 }
 
+std::string findFileCaseInsensitive(const std::string &directory, const std::string &fileName) {
+	for (const auto &entry : std::filesystem::directory_iterator(directory)) {
+		if (entry.is_regular_file()) {
+			const std::string entryFileName = entry.path().filename().string();
+			if (toLower(entryFileName) == toLower(fileName)) {
+				return entry.path().string();
+			}
+		}
+	}
+	return "";
+}
+
 
 
 
@@ -349,3 +362,15 @@ bool verifyBox(std::string text) {
 #error Will not work for your OS, sorry!
 
 #endif
+
+
+
+// Gl Functions
+
+void glColour(Colour colour) {
+	glColor4f(colour.R(), colour.G(), colour.B(), colour.A());
+}
+
+void glColor(Colour color) {
+	glColour(color);
+}
