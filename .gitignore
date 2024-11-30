@@ -7,6 +7,8 @@ FloodForge
 FloodForge.zip
 
 build/obj
+build/.buildmode
+build/.depend
 
 TODO.md
 
