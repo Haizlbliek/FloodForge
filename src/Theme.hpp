@@ -17,6 +17,7 @@
 
 #define THEME_TEXT_COLOUR 8
 #define THEME_TEXT_DISABLED_COLOUR 9
+#define THEME_TEXT_HIGHLIGHT_COLOUR 10
 
 struct Theme {
 	Colour background;
@@ -29,6 +30,7 @@ struct Theme {
 	Colour buttonDisabled;
 	Colour text;
 	Colour textDisabled;
+	Colour textHighlight;
 };
 
 extern Theme *currentTheme;

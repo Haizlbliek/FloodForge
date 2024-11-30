@@ -240,6 +240,24 @@ class Window {
 			);
 		}
 
+		void addScrollCallback(void *object, std::function<void(void*, double, double)> callback) {
+			scrollCallbacks.push_back(std::pair<void*, std::function<void(void*, double, double)>> { object, callback });
+		}
+
+		void removeScrollCallback(void *object, std::function<void(void*, double, double)> callback) {
+			auto pair = std::pair<void*, std::function<void(void*, double, double)>> { object, callback };
+	
+			scrollCallbacks.erase(
+				std::remove_if(
+					scrollCallbacks.begin(),
+					scrollCallbacks.end(),
+					[&pair](const std::pair<void*, std::function<void(void*, double, double)>>& p) {
+						return p.first == pair.first && p.second.target<void(void*, double, double)>() == pair.second.target<void(void*, double, double)>();
+					}
+				),
+				scrollCallbacks.end()
+			);
+		}
 
 		std::string getClipboard() {
 			const char* clipboardText = glfwGetClipboardString(glfwWindow);
@@ -279,6 +297,10 @@ class Window {
 
 			window->scrollXAccumulator += scrollX;
 			window->scrollYAccumulator += scrollY;
+
+			for (std::pair<void*, std::function<void(void*, double, double)>> callback : window->scrollCallbacks) {
+				callback.second(callback.first, scrollX, scrollY);
+			}
 		}
 
 		static void keyCallback(GLFWwindow *glfwWindow, int key, int scancode, int action, int mods) {
@@ -311,6 +333,7 @@ class Window {
 		GLFWcursor *cursorPointer;
 
 		std::vector<std::pair<void*, std::function<void(void*, int, int)>>> keyCallbacks;
+		std::vector<std::pair<void*, std::function<void(void*, double, double)>>> scrollCallbacks;
 };
 
 #endif

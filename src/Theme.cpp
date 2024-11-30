@@ -19,7 +19,8 @@ Theme themeBasic {
 	Colour(0.2,  0.2,  0.2),  // Button
 	Colour(0.2,  0.2,  0.2),  // Button Disabled
 	Colour(1.0,  1.0,  1.0),  // Text
-	Colour(0.5,  0.5,  0.5)   // Text Disabled
+	Colour(0.5,  0.5,  0.5),  // Text Disabled
+	Colour(0.0,  1.0,  1.0),  // Text Highlight
 };
 
 Theme *currentTheme = &themeBasic;
@@ -51,7 +52,7 @@ Colour parseHexColor(const std::string &hex) {
 void loadTheme() {
 	std::string themePath = BASE_PATH + "assets/theme.txt";
 
-	std::cout << themePath << std::endl;
+	// std::cout << themePath << std::endl;
 
 	if (!std::filesystem::exists(themePath)) return;
 
@@ -78,6 +79,7 @@ void loadTheme() {
 		if (startsWith(line, "ButtonDisabled:")) currentTheme->buttonDisabled = colour;
 		if (startsWith(line, "Text:")) currentTheme->text = colour;
 		if (startsWith(line, "TextDisabled:")) currentTheme->textDisabled = colour;
+		if (startsWith(line, "TextHighlight:")) currentTheme->textHighlight = colour;
 	}
 
 	themeFile.close();
@@ -116,6 +118,9 @@ void setThemeColour(unsigned int themeColour) {
 			break;
 		case THEME_TEXT_DISABLED_COLOUR:
 			colour = currentTheme->textDisabled;
+			break;
+		case THEME_TEXT_HIGHLIGHT_COLOUR:
+			colour = currentTheme->textHighlight;
 			break;
 	}
 

@@ -201,10 +201,28 @@ std::string findFileCaseInsensitive(const std::string &directory, const std::str
 	return "";
 }
 
+std::filesystem::path cleanPath(const std::filesystem::path &inputPath) {
+	// std::filesystem::path result;
+	// for (const auto &part : inputPath) {
+	// 	if (part == "..") {
+	// 		if (!result.empty() && result.filename() != "..") {
+	// 			result = result.parent_path();
+	// 		} else {
+	// 			result /= part;
+	// 		}
+	// 	} else if (part != ".") {
+	// 		result /= part;
+	// 	}
+	// }
+	// if (result.empty()) return ".";
+	
+	return std::filesystem::canonical(inputPath);
+}
 
 
 
 
+/*
 #ifdef _WIN32
 #include <windows.h>
 #include <commdlg.h>
@@ -292,7 +310,7 @@ bool verifyBox(std::string text) {
 #include <iostream>
 #include <string>
 
-std::string OpenNewFileDialog(const std::string& types) {
+std::string OpenNewFileDialog(const std::string &types) {
     GtkWidget *dialog;
     GtkFileFilter *filter;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
@@ -363,6 +381,7 @@ bool verifyBox(std::string text) {
 #error Will not work for your OS, sorry!
 
 #endif
+*/
 
 
 

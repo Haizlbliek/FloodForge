@@ -9,8 +9,10 @@
 #include <filesystem>
 #include <tuple>
 #include <iomanip>
+#include <regex>
 
 #include "../font/Fonts.hpp"
+#include "../math/Rect.hpp"
 #include "../math/Quadruple.hpp"
 
 #include "../Utils.hpp"
@@ -20,9 +22,6 @@
 #include "Globals.hpp"
 #include "Room.hpp"
 #include "OffscreenRoom.hpp"
-#include "Popups.hpp"
-#include "AcronymWindow.hpp"
-#include "WarningPopup.hpp"
 
 //#define VISIBLE_OUTPUT_PADDING
 
@@ -420,6 +419,7 @@ class MenuItems {
 
 			if (!file.is_open()) { std::cout << "Error opening map_" << worldAcronym << ".txt\n"; return; }
 
+			std::cout << "Exporting rooms" << std::endl;
 			for (Room *room : rooms) {
 				Vector2 *roomPosition = room->Position();
 				Vector2 position = Vector2(
@@ -432,10 +432,11 @@ class MenuItems {
 				file << position.x << "><" << position.y << "><"; // Canon Position
 				file << position.x << "><" << position.y << "><"; // Dev Position
 				file << room->Layer() << "><";
-				file << subregions[room->Subregion()];
+				if (room->Subregion() > -1) file << subregions[room->Subregion()];
 				file << "\n";
 			}
 
+			std::cout << "Exporting connections" << std::endl;
 			for (Connection *connection : connections) {
 				Vector2i connectionA = connection->RoomA()->getShortcutConnection(connection->ConnectionA());
 				Vector2i connectionB = connection->RoomB()->getShortcutConnection(connection->ConnectionB());
@@ -729,114 +730,7 @@ class MenuItems {
 		}
 */
 
-		static void init(Window *window) {
-			MenuItems::window = window;
-			worldAcronym = "";
-
-			addButton("New",
-				[window](Button *button) {
-					addPopup(new AcronymWindow(window));
-				}
-			);
-
-			addButton("Add Room",
-				[window](Button *button) {
-					if (worldAcronym == "") {
-						addPopup(new WarningPopup(window, "You must create or import a region\nbefore adding rooms."));
-						return;
-					}
-
-					std::string pathString = OpenFileDialog("RW Room File (XX_ROOM.txt)\0*.txt\0");
-
-					if (pathString == "") return;
-
-					std::filesystem::path path = pathString;
-
-					std::string roomName = path.filename().string();
-					roomName = roomName.substr(0, roomName.find_last_of('.'));
-
-					Room *room = new Room(path.string().substr(0, path.string().find_last_of('.')), roomName);
-					rooms.push_back(room);
-				}
-			);
-
-			addButton("Import",
-				[window](Button *button) {
-					std::string pathString = OpenFileDialog("RW World File (world_xx.txt)\0*.txt\0");
-
-					if (pathString == "") return;
-
-					std::filesystem::path path = pathString;
-
-					exportDirectory = path.parent_path();
-					worldAcronym = toLower(path.filename().string());
-					worldAcronym = worldAcronym.substr(worldAcronym.find_last_of('_') + 1, worldAcronym.find_last_of('.') - worldAcronym.find_last_of('_') - 1);
-
-					std::cout << "Opening world " << worldAcronym << std::endl;
-
-					std::filesystem::path mapFilePath = findFileCaseInsensitive(exportDirectory.string(), "map_" + worldAcronym + ".txt");
-
-					std::string propertiesFilePath = findFileCaseInsensitive(exportDirectory.string(), "properties.txt");
-
-					for (Room *room : rooms) delete room;
-					rooms.clear();
-					for (Connection *connection : connections) delete connection;
-					connections.clear();
-					subregions.clear();
-					extraProperties = "";
-					extraWorld = "";
-
-					if (std::filesystem::exists(propertiesFilePath)) {
-						std::cout << "Found properties file, loading subregions" << std::endl;
-
-						parseProperties(propertiesFilePath);
-					}
-
-					if (std::filesystem::exists(mapFilePath)) {
-						parseMap(mapFilePath, exportDirectory);
-					} else {
-						std::cout << "Map file not found, loading world file" << std::endl;
-					}
-
-					parseWorld(path, exportDirectory);
-				}
-			);
-
-			addButton("Export",
-				[window](Button *button) {
-					if (exportDirectory.string().length() == 0) {
-						if (worldAcronym == "") {
-							addPopup(new WarningPopup(window, "You must create or import a region\nbefore exporting."));
-							return;
-						}
-
-						std::filesystem::path fileDirectory = OpenNewFileDialog("RW World File (world_xx.txt)\0*.txt");
-
-						if (fileDirectory.empty()) return;
-
-						exportDirectory = fileDirectory.parent_path();
-					}
-
-					exportMapFile();
-					exportWorldFile();
-					exportImageFile(exportDirectory / ("map_" + worldAcronym + ".png"), exportDirectory / ("map_" + worldAcronym + "_2.png"));
-				}
-			);
-
-			addButton("No Colours",
-				[window](Button *button) {
-					::roomColours = (::roomColours + 1) % 3;
-
-					if (::roomColours == 0) {
-						button->Text("No Colours");
-					} else if (::roomColours == 1) {
-						button->Text("Layer Colours");
-					} else {
-						button->Text("Subregion Colours");
-					}
-				}
-			);
-		}
+		static void init(Window *window);
 
 		static void cleanup() {
 			for (Button *button : buttons) {
@@ -860,6 +754,8 @@ class MenuItems {
 		static void WorldAcronym(std::string worldAcronym) {
 			MenuItems::worldAcronym = worldAcronym;
 		}
+
+		static std::filesystem::path ExportDirectory() { return exportDirectory; }
 		
 		static std::string extraProperties;
 		static std::string extraWorld;

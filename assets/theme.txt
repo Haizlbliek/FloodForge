@@ -8,3 +8,4 @@ Button: #333333
 ButtonDisabled: #333333
 Text: #ffffff
 TextDisabled: #7f7f7f
+TextHighlight: #00ffff

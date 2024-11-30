@@ -6,6 +6,7 @@
 
 #include "Popups.hpp"
 #include "Room.hpp"
+#include "WarningPopup.hpp"
 #include "SubregionNewPopup.hpp"
 
 class SubregionPopup : public Popup {

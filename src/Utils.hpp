@@ -1,6 +1,7 @@
 #include <GLFW/glfw3.h>
 
 #include <string>
+#include <filesystem>
 
 #include "math/Colour.hpp"
 
@@ -35,7 +36,8 @@ std::string toUpper(const std::string &str);
 
 std::string findFileCaseInsensitive(const std::string &directory, const std::string &fileName);
 
-
+std::filesystem::path cleanPath(const std::filesystem::path &inputPath);
+/*
 std::string OpenNewFileDialog(const std::string &types);
 
 std::string OpenNewFileDialog();
@@ -49,7 +51,7 @@ std::string OpenDirectoryDialog();
 std::string OpenDirectoryDialog(const std::string &title);
 
 bool verifyBox(std::string text);
-
+*/
 
 
 
