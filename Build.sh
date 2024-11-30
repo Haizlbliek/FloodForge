@@ -18,6 +18,8 @@ do
             ;;
         --fresh) fresh=1 # clean obj directories before building
             ;;
+        --no-run) norun=1
+            ;;
         world) app=world
             ;;
         level) app=level
@@ -55,7 +57,9 @@ else
 fi
 
 if [ $? -eq 0 ]; then
-    build/FloodForge
+    if [[ $buildmode != "release" && $norun != 1 ]]; then
+        build/FloodForge
+    fi
 else
     echo "Compilation failed."
 fi

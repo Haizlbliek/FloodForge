@@ -6,13 +6,13 @@
 CXX ?= c++
 
 # list of all cpp source files
-SOURCES=$(wildcard src/*.cpp) $(APP_SOURCES) $(wildcard src/font/*.cpp) $(wildcard src/math/*.cpp)
+SOURCES=src/glad.c $(wildcard src/*.cpp) $(APP_SOURCES) $(wildcard src/font/*.cpp) $(wildcard src/math/*.cpp)
 CPPFLAGS += --std=c++17
 INCLUDES = -I"include/"
 
 # debug/release mode
 ifeq ($(buildmode),debug)
-  CPPFLAGS += -g
+  CPPFLAGS += -g -Og
 else ifeq ($(buildmode),release)
   CPPFLAGS += -O2
   ifeq ($(OS),Windows_NT)
@@ -34,15 +34,21 @@ INCLUDES += $(foreach pkg,$(REQPKGS),$(shell pkg-config --cflags $(pkg)))
 LIBS += $(foreach pkg,$(REQPKGS),$(shell pkg-config --libs $(pkg)))
 
 # collect list of all .o files associated with source .cpp files
-OBJS = $(addprefix build/obj/, $(shell realpath --relative-to src $(SOURCES:%.cpp=%.o)))
+OBJS = $(addprefix build/obj/, $(shell realpath --relative-to src $(patsubst %.c,%.o,$(SOURCES:%.cpp=%.o))))
 
 # link all .o files to build FloodForge executable
 build/FloodForge: pkgcheck $(OBJS)
 	@echo [LNK] $@
-	@$(CXX) -o $@ $(CPPFLAGS) $(OBJS) $(LIBS)
+	@$(CXX) -o $@ $(CPPFLAGS) build/resource.o $(OBJS) $(LIBS)
 
 # instruct make on how build an .o file from a .cpp file
 build/obj/%.o: src/%.cpp
+	@mkdir -p $(dir $@)
+	@echo [CXX] $<
+	@$(CXX) -c $(CPPFLAGS) $(INCLUDES) $< -o $@
+
+# instruct make on how build an .o file from a .c file
+build/obj/%.o: src/%.c
 	@mkdir -p $(dir $@)
 	@echo [CXX] $<
 	@$(CXX) -c $(CPPFLAGS) $(INCLUDES) $< -o $@
