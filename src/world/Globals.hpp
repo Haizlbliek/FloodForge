@@ -1,5 +1,7 @@
 #include <filesystem>
 
+#include "../math/Vector.hpp"
+
 #ifndef GLOBALS_HPP
 #define GLOBALS_HPP
 
@@ -15,5 +17,8 @@ extern int roomColours;
 extern std::vector<Room*> rooms;
 extern std::vector<Connection*> connections;
 extern std::vector<std::string> subregions;
+
+extern Vector2 cameraOffset;
+extern Vector2 cameraScale;
 
 #endif

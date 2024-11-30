@@ -36,6 +36,9 @@ std::vector<Room*> rooms;
 std::vector<Connection*> connections;
 std::vector<std::string> subregions;
 
+Vector2 cameraOffset = Vector2(0.0f, 0.0f);
+Vector2 cameraScale = Vector2(32.0f, 32.0f);
+
 bool debugRoomConnections = false;
 
 int roomColours = 0;
@@ -99,8 +102,6 @@ int main() {
 
 	std::set<int> previousKeys;
 
-	Vector2 cameraOffset = Vector2(0.0f, 0.0f);
-	Vector2 cameraScale = Vector2(32.0f, 32.0f);
 	bool cameraPanning = false;
 	bool cameraPanningBlocked = false;
 	Vector2 cameraPanStartMouse = Vector2(0.0f, 0.0f);
