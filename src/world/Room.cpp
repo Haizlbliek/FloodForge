@@ -27,16 +27,7 @@ void Room::draw(Vector2 mousePosition, double lineSize) {
         if (subregion == 11) tint = Colour(1.0, 0.5, 1.0);
     }
     
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(float) * 2));
-    glEnableVertexAttribArray(1);
-
-
+    glBindVertexArray(vao);
     glUseProgram(Shaders::roomShader);
 
     GLuint projLoc = glGetUniformLocation(Shaders::roomShader, "projection");
@@ -46,15 +37,11 @@ void Room::draw(Vector2 mousePosition, double lineSize) {
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position->x, position->y).m);
 
     glColor(Colour(1.0).mix(tint, 0.5));
-    glTranslatef(position->x, position->y, 0.0f);
 
     glDrawArrays(GL_QUADS, 0, vertices.size());
-    glUseProgram(0);
 
-    glTranslatef(-position->x, -position->y, 0.0f);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    glUseProgram(0);
 
     if (water != -1) {
         glColor(Colour(0.0, 0.0, 0.5, 0.5));

@@ -585,9 +585,12 @@ class Room {
 		void generateVBO() {
 			glGenBuffers(1, &vbo);
 			glGenVertexArrays(1, &vao);
-			fillRect(position->x, position->y, position->x + width, position->y - height);
 
-			glBegin(GL_QUADS);
+			vertices.push_back({ (float) position->x,         (float) position->y,          1.0, 1.0, 1.0 });
+			vertices.push_back({ (float) position->x + width, (float) position->y,          1.0, 1.0, 1.0 });
+			vertices.push_back({ (float) position->x + width, (float) position->y - height, 1.0, 1.0, 1.0 });
+			vertices.push_back({ (float) position->x,         (float) position->y - height, 1.0, 1.0, 1.0 });
+
 			for (int x = 0; x < width; x++) {
 				for (int y = 0; y < height; y++) {
 					int tileType = getTile(x, y) % 16;
@@ -682,21 +685,18 @@ class Room {
 					}
 				}
 			}
-			glEnd();
 
-			// if (debugRoomConnections) {
-			// 	for (int x = 0; x < width; x++) {
-			// 		for (int y = 0; y < height; y++) {
-			// 			if (!((getTile(x, y) / 16) & 4)) continue;
+			glBindVertexArray(vao);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
-			// 			float x0 = position->x + x;
-			// 			float y0 = position->y - y;
+			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+			glEnableVertexAttribArray(0);
 
-			// 			glColor(Colour(1.0, 1.0, 1.0).mix(tint, tintAmount));
-			// 			Fonts::rainworld->writeCentred(std::to_string(getConnection(Vector2i(x, y))), x0 + 0.5, y0 - 0.5, 3.0, CENTER_XY);
-			// 		}
-			// 	}
-			// }
+			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(float) * 2));
+			glEnableVertexAttribArray(1);
+
+			glBindVertexArray(0);
 		}
 
 		std::vector<Vertex> vertices;

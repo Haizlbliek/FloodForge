@@ -18,10 +18,11 @@ Matrix4 ortho(float left, float right, float bottom, float top, float near, floa
 }
 
 Matrix4 projectionMatrix(Vector2 position, Vector2 scale) {
-    float left = -1.0 + position.x;
-    float right = 1.0 + position.x;
-    float bottom = -1.0 + position.y;
-    float top = 1.0 + position.y;
+    float left = -scale.x + position.x;
+    float right = scale.x + position.x;
+    float bottom = -scale.y + position.y;
+    float top = scale.y + position.y;
+    
     return ortho(left, right, bottom, top, 0.0, 1000.0);
 }
 
