@@ -23,11 +23,11 @@ Requirements:
 
 #### One time build
 If you want to have a permanent executable that you can run whenever, use this option.
-`build\Build.bat`
+`./Build.bat`
 
 #### Building for debugging
 Use this if you are editing the code and need to quickly test
-`build\Build.bat --debug`
+`./Build.bat --debug`
 
 ### Shell script
 The build.sh script also works under Msys2.
@@ -50,13 +50,13 @@ Requirements:
 - Make
 
 ```bash
-build/build.sh
+./Build.sh
 
 # build in debug mode
-build/build.sh --debug
+./Build.sh --debug
 
 # build in release mode
-build/build.sh --release
+./Build.sh --release
 ```
 
 ## Custom Themes
