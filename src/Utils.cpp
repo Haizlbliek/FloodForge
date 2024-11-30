@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <cstring>
 
 #define M_PI   3.141592653589
 #define M_PI_2 1.570796326795
@@ -291,7 +292,7 @@ bool verifyBox(std::string text) {
 #include <iostream>
 #include <string>
 
-std::string OpenNewFileDialog(std::string types) {
+std::string OpenNewFileDialog(const std::string& types) {
     GtkWidget *dialog;
     GtkFileFilter *filter;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
@@ -325,7 +326,7 @@ std::string OpenNewFileDialog() {
     return OpenNewFileDialog("*.level");
 }
 
-std::string OpenFileDialog(std::string types) {
+std::string OpenFileDialog(const std::string& types) {
     return OpenNewFileDialog(types);
 }
 

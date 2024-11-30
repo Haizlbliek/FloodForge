@@ -34,9 +34,14 @@ Use this if you are editing the code and need to quickly test
 > Linux builds are untested, they may not work.
 
 Requirements:
-- [GTK](https://www.gtk.org)
+- [GTK3](https://www.gtk.org)
+- GLFW3
+- pkg-config
+- Make
 
-`./build/World.sh`
+```bash
+build/World.sh
+```
 
 ## Custom Themes
 To create a custom theme, you need to modify the file `assets/theme.txt`.
