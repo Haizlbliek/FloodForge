@@ -36,24 +36,6 @@ std::string toUpper(const std::string &str);
 
 std::string findFileCaseInsensitive(const std::string &directory, const std::string &fileName);
 
-std::filesystem::path cleanPath(const std::filesystem::path &inputPath);
-/*
-std::string OpenNewFileDialog(const std::string &types);
-
-std::string OpenNewFileDialog();
-
-std::string OpenFileDialog(const std::string &types);
-
-std::string OpenFileDialog();
-
-std::string OpenDirectoryDialog();
-
-std::string OpenDirectoryDialog(const std::string &title);
-
-bool verifyBox(std::string text);
-*/
-
-
 
 // GL functions
 void glColour(Colour colour);

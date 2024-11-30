@@ -217,7 +217,7 @@ class FilesystemPopup : public Popup {
 
             if (mode == 0) {
                 if (Rect(bounds.X0() + 0.02, bounds.Y1() - 0.12, bounds.X0() + 0.07, bounds.Y1() - 0.07).inside(mouseX, mouseY)) {
-                    currentDirectory = cleanPath(currentDirectory / "..");
+                    currentDirectory = std::filesystem::canonical(currentDirectory / "..");
                     scroll = 0.0;
                     refresh();
                 }
@@ -235,7 +235,7 @@ class FilesystemPopup : public Popup {
                     int id = (-mouseY + 0.35 - scroll) / 0.06;
                     
                     if (id < directories.size()) {
-                        currentDirectory = cleanPath(currentDirectory / directories[id].filename());
+                        currentDirectory = std::filesystem::canonical(currentDirectory / directories[id].filename());
                         scroll = 0.0;
                         refresh();
                     } else {
@@ -353,7 +353,7 @@ class FilesystemPopup : public Popup {
                 return;
             }
 
-            currentDirectory = cleanPath(BASE_PATH);
+            currentDirectory = std::filesystem::canonical(BASE_PATH);
         }
 
         void refresh() {

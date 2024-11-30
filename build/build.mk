@@ -25,7 +25,7 @@ ifeq ($(OS),Windows_NT)
   LIBS += lib/GLFW/libglfw3.a -lgdi32 -lopengl32 -luser32 -lcomdlg32 -lole32
 else
   # items to plug into pkg-config to find libs and includes
-  REQPKGS += glfw3 gtk+-3.0
+  REQPKGS += glfw3
   LIBS += -lGL
 endif
 
