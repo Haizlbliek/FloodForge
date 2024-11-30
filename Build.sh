@@ -2,6 +2,7 @@
 
 # read arguments
 app=world
+makeargs=
 while test $# -gt 0
 do
     case "$1" in
@@ -23,9 +24,7 @@ do
             ;;
         clean) app=clean
             ;;
-        --*) echo "bad option $1"
-            ;;
-        *) echo "argument $1"
+        *) makeargs="$makeargs $1"
             ;;
     esac
     shift
@@ -48,9 +47,9 @@ if [[ "$fresh" == 1 || ! -f build/.buildmode || "$app/$buildmode" != "$(cat buil
 fi
 
 if [[ "$app" == "world" ]]; then
-    make -f build/world.mk
+    make -f build/world.mk $makeargs
 elif [[ "$app" == "level" ]]; then
-    make -f build/level.mk
+    make -f build/level.mk $makeargs
 else
     exit 1
 fi
