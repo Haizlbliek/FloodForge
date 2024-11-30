@@ -32,11 +32,11 @@ void Room::draw(Vector2 mousePosition, double lineSize) {
 
     GLuint projLoc = glGetUniformLocation(Shaders::roomShader, "projection");
     GLuint modelLoc = glGetUniformLocation(Shaders::roomShader, "model");
+    GLuint tintLoc = glGetUniformLocation(Shaders::roomShader, "tintColour");
 
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(cameraOffset, cameraScale).m);
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position->x, position->y).m);
-
-    glColor(Colour(1.0).mix(tint, 0.5));
+    glUniform4f(tintLoc, tint.R(), tint.G(), tint.B(), tint.A());
 
     glDrawArrays(GL_QUADS, 0, vertices.size());
 
