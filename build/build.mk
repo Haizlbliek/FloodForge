@@ -2,9 +2,6 @@
 # consider using an actual build system
 # meson or cmake
 # batch files/shell scripts and makefiles are difficult to use and to make platform/compiler-agnostic.
-#
-# TODO: couldn't figure out how to use static glfw from the libs folder. (usually, i just include glfw source as a submodule)
-#		so right now, it just uses glfw from the package manager on Linux.
 
 CXX ?= c++
 
@@ -27,8 +24,9 @@ endif
 ifeq ($(OS),Windows_NT)
   LIBS += lib/GLFW/libglfw3.a -lgdi32 -lopengl32 -luser32 -lcomdlg32 -lole32
 else
-# items to plug into pkg-config to find libs and includes
+  # items to plug into pkg-config to find libs and includes
   REQPKGS += glfw3 gtk+-3.0
+  LIBS += -lGL
 endif
 
 # find libs and includes from REQPKGS list. works if empty.
