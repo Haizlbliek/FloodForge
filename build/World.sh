@@ -1,12 +1,8 @@
 #!/bin/bash
-
-clear
-
-g++ src/*.cpp src/world/*.cpp src/font/*.cpp --std=c++17 -I"include/" -L"lib/GLFW/" -o FloodForge -lglfw3 -lgdi32 -lopengl32 -luser32 -lcomdlg32
+make -f build/world.mk
 
 if [ $? -eq 0 ]; then
-    clear
-    ./FloodForge
+    build/FloodForge
 else
     echo "Compilation failed."
 fi

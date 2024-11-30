@@ -6,6 +6,8 @@ FloodForge.exe
 FloodForge
 FloodForge.zip
 
+build/obj
+
 TODO.md
 
 .vscode/
