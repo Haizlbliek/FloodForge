@@ -1,7 +1,7 @@
 #ifndef RENDER_HPP
 #define RENDER_HPP
 
-#include <GLFW/glfw3.h>
+#include "gl.h"
 
 #include "Project.hpp"
 #include "../Grid.hpp"

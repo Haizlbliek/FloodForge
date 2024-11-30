@@ -1,4 +1,4 @@
-#include <GLFW/glfw3.h>
+#include "gl.h"
 
 #include <string>
 #include <filesystem>
@@ -41,5 +41,8 @@ std::string findFileCaseInsensitive(const std::string &directory, const std::str
 void glColour(Colour colour);
 
 void glColor(Colour color);
+
+
+GLuint loadShaders(const char* vertexPath, const char* fragmentPath);
 
 #endif

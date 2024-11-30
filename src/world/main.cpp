@@ -15,6 +15,7 @@
 #include "../font/Fonts.hpp"
 #include "../Theme.hpp"
 
+#include "Shaders.hpp"
 #include "Globals.hpp"
 #include "Room.hpp"
 #include "OffscreenRoom.hpp"
@@ -82,9 +83,15 @@ int main() {
 	window->setIcon(TEXTURE_PATH + "MainIcon.png");
 	window->setTitle("FloodForge World Editor");
 
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		std::cerr << "Failed to initialize GLAD!" << std::endl;
+		return -1;
+	}
+
 	Fonts::init();
 	MenuItems::init(window);
 	Popups::init();
+	Shaders::init();
 
 	addPopup(new SplashArtPopup(window));
 
@@ -651,6 +658,7 @@ int main() {
 
 	Fonts::cleanup();
 	MenuItems::cleanup();
+	Shaders::cleanup();
 
 	return 0;
 }

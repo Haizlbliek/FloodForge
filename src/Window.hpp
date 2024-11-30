@@ -1,4 +1,4 @@
-#include <GLFW/glfw3.h>
+#include "gl.h"
 #include "stb_image.h"
 
 #include <string>

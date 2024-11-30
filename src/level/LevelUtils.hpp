@@ -1,7 +1,7 @@
 #ifndef LEVEL_UTILS_HPP
 #define LEVEL_UTILS_HPP
 
-#include <GLFW/glfw3.h>
+#include "gl.h"
 
 #include "../Grid.hpp"
 

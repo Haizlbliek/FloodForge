@@ -11,8 +11,10 @@
 #include "../Texture.hpp"
 #include "../Grid.hpp"
 #include "../math/Vector.hpp"
+#include "../math/Matrix4.hpp"
 #include "../font/Fonts.hpp"
 
+#include "Shaders.hpp"
 #include "Globals.hpp"
 
 //#define DEBUG_ROOMS
@@ -25,6 +27,11 @@
 #define CONNECTION_TYPE_DEN  2
 #define CONNECTION_TYPE_MOLE 3
 #define CONNECTION_TYPE_SCAV 4
+
+struct Vertex {
+    float x, y;
+    float r, g, b, a;
+};
 
 class Room {
 	public:
@@ -53,6 +60,7 @@ class Room {
 			tag = "";
 
 			loadGeometry();
+			generateVBO();
 		}
 
 		virtual ~Room() {
@@ -95,6 +103,73 @@ class Room {
 			return geometry[x * height + y];
 		}
 
+		virtual void draw(Vector2 mousePosition, double lineSize) {
+			if (!valid) return;
+			
+			Colour tint = Colour(1.0, 1.0, 1.0);
+
+			if (::roomColours == 1) {
+				if (layer == 0) tint = Colour(1.0, 0.0, 0.0);
+				if (layer == 1) tint = Colour(1.0, 1.0, 1.0);
+				if (layer == 2) tint = Colour(0.0, 1.0, 0.0);
+			}
+			
+			if (::roomColours == 2) {
+				if (subregion == -1) tint = Colour(1.0, 1.0, 1.0);
+				if (subregion ==  0) tint = Colour(1.0, 0.0, 0.0);
+				if (subregion ==  1) tint = Colour(0.0, 1.0, 0.0);
+				if (subregion ==  2) tint = Colour(0.0, 0.0, 1.0);
+				if (subregion ==  3) tint = Colour(1.0, 1.0, 0.0);
+				if (subregion ==  4) tint = Colour(0.0, 1.0, 1.0);
+				if (subregion ==  5) tint = Colour(1.0, 0.0, 1.0);
+				if (subregion ==  6) tint = Colour(1.0, 0.5, 0.0);
+				if (subregion ==  7) tint = Colour(1.0, 1.0, 0.5);
+				if (subregion ==  8) tint = Colour(0.5, 1.0, 0.0);
+				if (subregion ==  9) tint = Colour(1.0, 1.0, 0.5);
+				if (subregion == 10) tint = Colour(0.5, 0.0, 1.0);
+				if (subregion == 11) tint = Colour(1.0, 0.5, 1.0);
+			}
+			
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+
+			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+			glEnableVertexAttribArray(0);
+
+			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(float) * 2));
+			glEnableVertexAttribArray(1);
+
+			GLuint projLoc = glGetUniformLocation(Shaders::roomShader, "projection");
+			GLuint modelLoc = glGetUniformLocation(Shaders::roomShader, "model");
+
+			glUniformMatrix4fv(projLoc, 1, GL_FALSE, ortho(-1.0, 1.0, -1.0, 1.0, 0.000, 1000.0).m);
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position->x, position->y).m);
+
+			glColor(Colour(1.0).mix(tint, 0.5));
+			glTranslatef(position->x, position->y, 0.0f);
+
+    		glUseProgram(Shaders::roomShader);
+			glDrawArrays(GL_QUADS, 0, vertices.size());
+    		glUseProgram(0);
+
+			glTranslatef(-position->x, -position->y, 0.0f);
+			
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glBindVertexArray(0);
+
+			if (water != -1) {
+				glColor(Colour(0.0, 0.0, 0.5, 0.5));
+				fillRect(position->x, position->y - (height - std::min(water, height)), position->x + width, position->y - height);
+			}
+
+			if (inside(mousePosition)) {
+				glColor(Colour(0.00, 0.75, 0.00));
+			} else {
+				glColor(Colour(0.75, 0.75, 0.75));
+			}
+			strokeRect(position->x, position->y, position->x + width, position->y - height);
+		}
+/*
 		virtual void draw(Vector2 mousePosition, double lineSize) {
 			if (!valid) return;
 
@@ -264,7 +339,7 @@ class Room {
 			strokerect(coord->x - 1, coord->y + 1, coord->x + 1, coord->y - 1);
 #endif
 		}
-
+*/
 		void Position(Vector2 newPosition) {
 			position->x = newPosition.x;
 			position->y = newPosition.y;
@@ -571,6 +646,127 @@ class Room {
 			valid = true;
 			ensureConnections();
 		}
+
+		void generateVBO() {
+			glGenBuffers(1, &vbo);
+			glGenVertexArrays(1, &vao);
+			fillRect(position->x, position->y, position->x + width, position->y - height);
+
+			glBegin(GL_QUADS);
+			for (int x = 0; x < width; x++) {
+				for (int y = 0; y < height; y++) {
+					int tileType = getTile(x, y) % 16;
+					int tileData = getTile(x, y) / 16;
+
+					float x0 = position->x + x;
+					float y0 = position->y - y;
+					float x1 = position->x + x + 1;
+					float y1 = position->y - y - 1;
+					float x2 = (x0 + x1) * 0.5;
+					float y2 = (y0 + y1) * 0.5;
+
+					if (tileType == 1) {
+						vertices.push_back({ x0, y0, 0.125, 0.125, 0.125 });
+						vertices.push_back({ x1, y0, 0.125, 0.125, 0.125 });
+						vertices.push_back({ x1, y1, 0.125, 0.125, 0.125 });
+						vertices.push_back({ x0, y1, 0.125, 0.125, 0.125 });
+					}
+					if (tileType == 4) {
+						vertices.push_back({ x0, y0, 0.0, 1.0, 1.0 });
+						vertices.push_back({ x1, y0, 0.0, 1.0, 1.0 });
+						vertices.push_back({ x1, y1, 0.0, 1.0, 1.0 });
+						vertices.push_back({ x0, y1, 0.0, 1.0, 1.0 });
+					}
+					if (tileType == 2) {
+						int bits = 0;
+						bits += (getTile(x - 1, y) == 1) ? 1 : 0;
+						bits += (getTile(x + 1, y) == 1) ? 2 : 0;
+						bits += (getTile(x, y - 1) == 1) ? 4 : 0;
+						bits += (getTile(x, y + 1) == 1) ? 8 : 0;
+
+						if (bits == 1 + 4) {
+							vertices.push_back({ x0, y0, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x1, y0, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x0, y1, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x0, y0, 1.0, 0.0, 0.0 });
+						} else if (bits == 1 + 8) {
+							vertices.push_back({ x0, y1, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x1, y1, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x0, y0, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x0, y1, 1.0, 0.0, 0.0 });
+						} else if (bits == 2 + 4) {
+							vertices.push_back({ x1, y0, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x0, y0, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x1, y1, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x1, y0, 1.0, 0.0, 0.0 });
+						} else if (bits == 2 + 8) {
+							vertices.push_back({ x1, y1, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x0, y1, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x1, y0, 1.0, 0.0, 0.0 });
+							vertices.push_back({ x1, y1, 1.0, 0.0, 0.0 });
+						}
+					}
+					if (tileType == 3) {
+						vertices.push_back({ x0, y0, 0.0, 1.0, 0.0 });
+						vertices.push_back({ x1, y0, 0.0, 1.0, 0.0 });
+						vertices.push_back({ x1, (y0 + y1) * 0.5f, 0.0, 1.0, 0.0 });
+						vertices.push_back({ x0, (y0 + y1) * 0.5f, 0.0, 1.0, 0.0 });
+					}
+
+					if (tileData & 1) { // 16 - Vertical Pole
+						vertices.push_back({ x0 + 0.375f, y0, 0.0, 0.0, 1.0 });
+						vertices.push_back({ x1 - 0.375f, y0, 0.0, 0.0, 1.0 });
+						vertices.push_back({ x1 - 0.375f, y1, 0.0, 0.0, 1.0 });
+						vertices.push_back({ x0 + 0.375f, y1, 0.0, 0.0, 1.0 });
+					}
+
+					if (tileData & 2) { // 32 - Horizontal Pole
+						vertices.push_back({ x0, y0 - 0.375f, 0.0, 0.0, 1.0 });
+						vertices.push_back({ x1, y0 - 0.375f, 0.0, 0.0, 1.0 });
+						vertices.push_back({ x1, y1 + 0.375f, 0.0, 0.0, 1.0 });
+						vertices.push_back({ x0, y1 + 0.375f, 0.0, 0.0, 1.0 });
+					}
+
+					if (tileData & 4) { // 64 - Room Exit
+						vertices.push_back({ x0 + 0.25f, y0 - 0.25f, 1.0, 0.0, 1.0 });
+						vertices.push_back({ x1 - 0.25f, y0 - 0.25f, 1.0, 0.0, 1.0 });
+						vertices.push_back({ x1 - 0.25f, y1 + 0.25f, 1.0, 0.0, 1.0 });
+						vertices.push_back({ x0 + 0.25f, y1 + 0.25f, 1.0, 0.0, 1.0 });
+					}
+
+					if (tileData & 8) { // 128 - Shortcut
+						vertices.push_back({ x0 + 0.40625f, y0 - 0.40625f, 0.125, 0.125, 0.125 });
+						vertices.push_back({ x1 - 0.40625f, y0 - 0.40625f, 0.125, 0.125, 0.125 });
+						vertices.push_back({ x1 - 0.40625f, y1 + 0.40625f, 0.125, 0.125, 0.125 });
+						vertices.push_back({ x0 + 0.40625f, y1 + 0.40625f, 0.125, 0.125, 0.125 });
+
+						vertices.push_back({ x0 + 0.4375f, y0 - 0.4375f, 1.0, 1.0, 1.0 });
+						vertices.push_back({ x1 - 0.4375f, y0 - 0.4375f, 1.0, 1.0, 1.0 });
+						vertices.push_back({ x1 - 0.4375f, y1 + 0.4375f, 1.0, 1.0, 1.0 });
+						vertices.push_back({ x0 + 0.4375f, y1 + 0.4375f, 1.0, 1.0, 1.0 });
+					}
+				}
+			}
+			glEnd();
+
+			// if (debugRoomConnections) {
+			// 	for (int x = 0; x < width; x++) {
+			// 		for (int y = 0; y < height; y++) {
+			// 			if (!((getTile(x, y) / 16) & 4)) continue;
+
+			// 			float x0 = position->x + x;
+			// 			float y0 = position->y - y;
+
+			// 			glColor(Colour(1.0, 1.0, 1.0).mix(tint, tintAmount));
+			// 			Fonts::rainworld->writeCentred(std::to_string(getConnection(Vector2i(x, y))), x0 + 0.5, y0 - 0.5, 3.0, CENTER_XY);
+			// 		}
+			// 	}
+			// }
+		}
+
+		std::vector<Vertex> vertices;
+		GLuint vbo;
+		GLuint vao;
 
 		std::string path;
 		std::string roomName;

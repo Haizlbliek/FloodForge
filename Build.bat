@@ -28,7 +28,7 @@ for %%a in (%*) do (
 )
 
 :: Compile Command
-set "compile_cmd=g++ build/resource.o src/*.cpp !src_dir! src/font/*.cpp src/math/*.cpp --std=c++17 -I"include/" -L"lib/GLFW/" -o FloodForge.exe -lglfw3 -lgdi32 -lopengl32 -luser32 -lcomdlg32 -lole32"
+set "compile_cmd=g++ build/resource.o src/glad.c src/*.cpp !src_dir! src/font/*.cpp src/math/*.cpp --std=c++17 -I"include/" -L"lib/GLFW/" -o FloodForge.exe -lglfw3 -lgdi32 -lopengl32 -luser32 -lcomdlg32 -lole32"
 
 if "%debug_mode%"=="false" (
     set "compile_cmd=!compile_cmd! -mwindows"

@@ -44,7 +44,6 @@ Then refer to the Linux build instructions.
 > Linux builds are untested, they may not work.
 
 Requirements:
-- [GTK3](https://www.gtk.org)
 - GLFW3
 - pkg-config
 - Make
