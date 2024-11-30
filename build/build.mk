@@ -39,7 +39,7 @@ OBJS = $(addprefix build/obj/, $(shell realpath --relative-to src $(SOURCES:%.cp
 # link all .o files to build FloodForge executable
 build/FloodForge: pkgcheck $(OBJS)
 	@echo [LNK] $@
-	@$(CXX) -o $@ $(OBJS) $(LIBS)
+	@$(CXX) -o $@ $(CPPFLAGS) $(OBJS) $(LIBS)
 
 # instruct make on how build an .o file from a .cpp file
 build/obj/%.o: src/%.cpp
@@ -51,7 +51,7 @@ build/obj/%.o: src/%.cpp
 # uses the c++ preprocessor to determine header dependencies
 build/.depend: $(SOURCES)
 	@echo [INF] Updating header dependency graph...
-	@$(CXX) -MM $^ > $@ && \
+	@$(CXX) -MM $^ $(CPPFLAGS) $(INCLUDES) > $@ && \
 	sed -Ei 's#^(.*\.o: *)src/(.*/)?(.*\.cpp)#build/obj/\2\1src/\2\3#' $@
 
 # check if any required packages are missing. if so, stop compilation.
