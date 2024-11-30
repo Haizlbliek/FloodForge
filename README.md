@@ -23,11 +23,21 @@ Requirements:
 
 #### One time build
 If you want to have a permanent executable that you can run whenever, use this option.
-`build\Build.bat`
+`./Build.bat`
 
 #### Building for debugging
 Use this if you are editing the code and need to quickly test
-`build\Build.bat --debug`
+`./Build.bat --debug`
+
+### Shell script
+The build.sh script also works under Msys2.
+
+First, install Make:
+```bash
+pacman -S make
+```
+
+Then refer to the Linux build instructions.
 
 ### Linux
 > [!WARNING]  
@@ -40,7 +50,13 @@ Requirements:
 - Make
 
 ```bash
-build/World.sh
+./Build.sh
+
+# build in debug mode
+./Build.sh --debug
+
+# build in release mode
+./Build.sh --release
 ```
 
 ## Custom Themes
