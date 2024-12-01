@@ -1,12 +1,15 @@
-#include "draw.hpp"
+#include "Draw.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <stack>
+#include <string>
+#include <iostream>
 #include <cmath>
 #include <glad/glad.h>
 
 #define MAX_VERTICES 1024
 #define MAX_INDICES 1024
+#define MATRIX_COUNT 2
 
 struct VertexData {
     float x, y, z, u, v, r, g, b, a;
@@ -34,9 +37,7 @@ const char *SHADER_FRAG_SRC = "#version 330 core\n"
 "fragColor = texture(uTexture, texCoord) * color;\n"
 "}\n";
 
-struct {
-    int viewX, viewY, viewW, viewH;
-    
+struct {    
     VertexData batchVertices[MAX_VERTICES];
     uint32_t batchIndices[MAX_INDICES];
 
@@ -57,9 +58,11 @@ struct {
     Draw::PrimitiveType curPrim;
     GLuint curGlPrim;
 
-    std::stack<Draw::Matrix4f> matStack;
-    Draw::Matrix4f mvp;
-    Draw::Matrix4f viewMatrix;
+    struct {
+        std::stack<Draw::Matrix4f> stack;
+        Draw::Matrix4f cur;
+    } mats[MATRIX_COUNT];
+    int matIdx;
 
     float u, v, r, g, b, a;
 
@@ -67,12 +70,15 @@ struct {
     size_t idx;
 } static drawState;
 
+bool Draw::flushOnEnd = true;
+
 void Draw::init() {
     drawState.vertexCount = 0;
     drawState.indexCount = 0;
     drawState.currentIndex = 0;
 
     glGenVertexArrays(1, &drawState.vertexArray);
+    glBindVertexArray(drawState.vertexArray);
     glGenBuffers(1, &drawState.vtxBuffer);
     glGenBuffers(1, &drawState.idxBuffer);
 
@@ -80,7 +86,7 @@ void Draw::init() {
     glBufferData(GL_ARRAY_BUFFER, MAX_VERTICES * sizeof(VertexData), nullptr, GL_STREAM_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawState.idxBuffer);
-    glBufferData(GL_ARRAY_BUFFER, MAX_INDICES * sizeof(uint32_t), nullptr, GL_STREAM_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAX_INDICES * sizeof(uint32_t), nullptr, GL_STREAM_DRAW);
 
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, false, sizeof(VertexData), 0);
@@ -93,6 +99,8 @@ void Draw::init() {
     // color attribute
     glVertexAttribPointer(2, 4, GL_FLOAT, false, sizeof(VertexData), (void*)(5 * sizeof(float)));
     glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
 
     GLint status, strlen;
     std::string log;
@@ -160,6 +168,12 @@ void Draw::init() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whitePixel);
 
     drawState.activeTexture = drawState.placeholderTexture;
+
+    for (int i = 0; i < MATRIX_COUNT; i++) {
+        drawState.mats[i].cur = Draw::Matrix4f::identity();
+    }
+
+    drawState.matIdx = PROJECTION;
 }
 
 void Draw::cleanup() {
@@ -191,7 +205,7 @@ void Draw::flush() {
 
     // update shader and bind texture
     glUseProgram(drawState.gpuProgram);
-    glUniformMatrix4fv(drawState.mvpUniform, 1, GL_FALSE, (drawState.viewMatrix * drawState.mvp).m);
+    glUniformMatrix4fv(drawState.mvpUniform, 1, GL_FALSE, Matrix4f::identity().m);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, drawState.activeTexture);
@@ -202,18 +216,6 @@ void Draw::flush() {
     drawState.vertexCount = 0;
     drawState.indexCount = 0;
     drawState.currentIndex = 0;
-}
-
-void Draw::viewport(int x, int y, int w, int h) {
-    drawState.viewX = x;
-    drawState.viewY = y;
-    drawState.viewW = w;
-    drawState.viewH = h;
-
-    drawState.viewMatrix =
-        Matrix4f::translation(x, y, 0.0f) *
-        Matrix4f::scaling(w / 2.0f, h / 2.0f, 1.0f) *
-        Matrix4f::translation(1.0f, 1.0f, 0.0f);
 }
 
 void Draw::useTexture(GLuint textureId) {
@@ -241,7 +243,7 @@ static void beginDraw(size_t requiredCapacity, size_t numIndices, GLuint newDraw
 }
 
 static void pushVertex(VertexData vtxData) {
-    const Matrix4 &mat = drawState.mvp;
+    const Draw::Matrix4f &mat = drawState.mats[0].cur * drawState.mats[1].cur;
 
     float x = vtxData.x;
     float y = vtxData.y;
@@ -294,14 +296,14 @@ void Draw::vertex(const Vec2f &pos) {
     curVert.a = drawState.a;
 
     switch (drawState.curPrim) {
-        case DRAW_POINTS:
+        case POINTS:
             beginDraw(1, 1, GL_POINTS);
             pushVertex(drawState.verts[0]);
             drawState.idx = 0;
             break;
         
-        case DRAW_LINES:
-        if (++drawState.idx >= 2) {
+        case LINES:
+        if (drawState.idx >= 2) {
             beginDraw(2, 2, GL_LINES);
 
             pushVertex(drawState.verts[0]);
@@ -313,22 +315,22 @@ void Draw::vertex(const Vec2f &pos) {
             break;
         }
 
-        case DRAW_LINE_STRIP:
+        case LINE_STRIP:
             beginDraw(1, 1, GL_LINE_STRIP);
             pushVertex(drawState.verts[0]);
             pushIndex(drawState.currentIndex++);
             drawState.idx = 0;
             break;
 
-        case DRAW_LINE_LOOP:
+        case LINE_LOOP:
             beginDraw(1, 1, GL_LINE_LOOP);
             pushVertex(drawState.verts[0]);
             pushIndex(drawState.currentIndex++);
             drawState.idx = 0;
             break;
         
-        case DRAW_TRIANGLES:
-        if (++drawState.idx >= 3) {
+        case TRIANGLES:
+        if (drawState.idx >= 3) {
             beginDraw(3, 3, GL_TRIANGLES);
 
             pushVertex(drawState.verts[0]);
@@ -343,22 +345,22 @@ void Draw::vertex(const Vec2f &pos) {
             break;
         }
 
-        case DRAW_TRIANGLE_STRIP:
+        case TRIANGLE_STRIP:
             beginDraw(1, 1, GL_TRIANGLE_STRIP);
             pushVertex(drawState.verts[0]);
             pushIndex(drawState.currentIndex++);
             drawState.idx = 0;
             break;
         
-        case DRAW_TRIANGLE_FAN:
+        case TRIANGLE_FAN:
             beginDraw(1, 1, GL_TRIANGLE_FAN);
             pushVertex(drawState.verts[0]);
             pushIndex(drawState.currentIndex++);
             drawState.idx = 0;
             break;
         
-        case DRAW_QUADS:
-        if (++drawState.idx >= 4) {
+        case QUADS:
+        if (drawState.idx >= 4) {
             beginDraw(4, 6, GL_TRIANGLES);
 
             pushVertex(drawState.verts[0]);
@@ -382,7 +384,7 @@ void Draw::vertex(const Vec2f &pos) {
 }
 
 void Draw::end() {
-    Draw::flush();
+    if (Draw::flushOnEnd) Draw::flush();
 }
 
 ///////////////////////
@@ -459,33 +461,57 @@ Draw::Matrix4f Draw::Matrix4f::translation(float x, float y, float z) {
     mat.v(0, 3) = x;
     mat.v(1, 3) = y;
     mat.v(2, 3) = z;
+
+    return mat;
+}
+
+void Draw::matrixMode(Draw::MatrixMode mode) {
+    drawState.matIdx = mode;
 }
 
 void Draw::loadIdentity() {
-    drawState.mvp = Draw::Matrix4f::identity();
+    drawState.mats[drawState.matIdx].cur = Draw::Matrix4f::identity();
 }
 
 void Draw::loadMatrix(const Matrix4f &mat) {
-    drawState.mvp = mat;
+    drawState.mats[drawState.matIdx].cur = mat;
 }
 
 void Draw::popMatrix() {
-    drawState.mvp = drawState.matStack.top();
-    drawState.matStack.pop();
+    drawState.mats[drawState.matIdx].cur = drawState.mats[drawState.matIdx].stack.top();
+    drawState.mats[drawState.matIdx].stack.pop();
 }
 
 void Draw::pushMatrix() {
-    drawState.matStack.push(drawState.mvp);
+    drawState.mats[drawState.matIdx].stack.push(drawState.mats[drawState.matIdx].cur);
 }
 
 void Draw::rotate(float angle) {
-    drawState.mvp = Draw::Matrix4f::rotationZ(angle) * drawState.mvp;
+    Draw::Matrix4f &m = drawState.mats[drawState.matIdx].cur;
+    m = Draw::Matrix4f::rotationZ(angle) * m;
 }
 
 void Draw::translate(const Vec2f &vec) {
-    drawState.mvp = Draw::Matrix4f::translation(vec.x, vec.y, 0.0f) * drawState.mvp;
+    Draw::Matrix4f &m = drawState.mats[drawState.matIdx].cur;
+    m = Draw::Matrix4f::translation(vec.x, vec.y, 0.0f) * m;
 }
 
 void Draw::scale(const Vec2f &vec) {
-    drawState.mvp = Draw::Matrix4f::scaling(vec.x, vec.y, 1.0f) * drawState.mvp;
+    Draw::Matrix4f &m = drawState.mats[drawState.matIdx].cur;
+    m = Draw::Matrix4f::scaling(vec.x, vec.y, 1.0f) * m;
+}
+
+void Draw::ortho(float left, float right, float bottom, float top, float near, float far) {
+    Draw::Matrix4f mat;
+    mat.v(0, 0) = 2.0f / (right - left);
+    mat.v(1, 1) = 2.0f / (top - bottom);
+    mat.v(2, 2) = -2.0f / (far - near);
+    mat.v(3, 3) = 1.0f;
+
+    mat.v(0, 3) = -(right + left) / (right - left);
+    mat.v(1, 3) = -(top + bottom) / (top - bottom);
+    mat.v(2, 3) = -(far + near) / (far - near);
+
+    Draw::Matrix4f &m = drawState.mats[drawState.matIdx].cur;
+    m = mat * m;
 }
