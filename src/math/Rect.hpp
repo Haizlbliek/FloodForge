@@ -34,6 +34,15 @@ class Rect {
 			return x >= x0 && y >= y0 && x <= x1 && y <= y1;
 		}
 
+		Rect &offset(Vector2 offset) {
+			x0 += offset.x;
+			x1 += offset.x;
+			y0 += offset.y;
+			y1 += offset.y;
+			
+			return *this;
+		}
+
 		static Rect fromSize(double x, double y, double width, double height) {
 			return Rect(x, y, x + width, y + height);
 		}

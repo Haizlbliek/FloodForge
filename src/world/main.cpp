@@ -108,6 +108,7 @@ int main() {
 	Vector2 cameraPanStart = Vector2(0.0f, 0.0f);
 
 	Room *holdingRoom = nullptr;
+	Popup *holdingPopup = nullptr;
 	Vector2 holdingStart = Vector2(0.0f, 0.0f);
 
 
@@ -138,12 +139,16 @@ int main() {
 
 		Mouse *mouse = window->GetMouse();
 		
-		double globalMouseX = (mouse->X() - offsetX) / size * 1024;
-		double globalMouseY = (mouse->Y() - offsetY) / size * 1024;
-		double screenMouseX = (globalMouseX / 1024.0) *  2.0 - 1.0;
-		double screenMouseY = (globalMouseY / 1024.0) * -2.0 + 1.0;
+		Vector2 globalMouse(
+			(mouse->X() - offsetX) / size * 1024,
+			(mouse->Y() - offsetY) / size * 1024
+		);
+		Vector2 screenMouse(
+			(globalMouse.x / 1024.0) *  2.0 - 1.0,
+			(globalMouse.y / 1024.0) * -2.0 + 1.0
+		);
 
-		Mouse customMouse = Mouse(window->getGLFWWindow(), globalMouseX, globalMouseY);
+		Mouse customMouse = Mouse(window->getGLFWWindow(), globalMouse.x, globalMouse.y);
 
 
 		// Update
@@ -152,7 +157,7 @@ int main() {
 		for (Popup *popup : popups) {
 			Rect bounds = popup->Bounds();
 
-			if (bounds.inside(Vector2(screenMouseX, screenMouseY))) {
+			if (bounds.inside(Vector2(screenMouse.x, screenMouse.y))) {
 				isHoveringPopup = true;
 				break;
 			}
@@ -167,23 +172,23 @@ int main() {
 		if (scrollY < -10.0) scrollY = -10.0;
 		double zoom = std::pow(1.25, scrollY);
 
-		double previousScreenMouseX = (globalMouseX / 1024.0) *  2.0 - 1.0;
-		double previousScreenMouseY = (globalMouseY / 1024.0) * -2.0 + 1.0;
+		// double previousScreenMouseX = ;
+		// double previousScreenMouseY = ;
 
 		Vector2 previousWorldMouse = Vector2(
-			previousScreenMouseX * cameraScale.x + cameraOffset.x,
-			previousScreenMouseY * cameraScale.y + cameraOffset.y
+			((globalMouse.x / 1024.0) *  2.0 - 1.0) * cameraScale.x + cameraOffset.x,
+			((globalMouse.y / 1024.0) * -2.0 + 1.0) * cameraScale.y + cameraOffset.y
 		);
 
 		cameraScale.x *= zoom;
 		cameraScale.y *= zoom;
 
-		double globalMouseX2 = (mouse->X() - offsetX) / size * 1024;
-		double globalMouseY2 = (mouse->Y() - offsetY) / size * 1024;
+		// double globalMouseX2 = (mouse->X() - offsetX) / size * 1024;
+		// double globalMouseY2 = (mouse->Y() - offsetY) / size * 1024;
 
 		Vector2 worldMouse = Vector2(
-			screenMouseX * cameraScale.x + cameraOffset.x,
-			screenMouseY * cameraScale.y + cameraOffset.y
+			screenMouse.x * cameraScale.x + cameraOffset.x,
+			screenMouse.y * cameraScale.y + cameraOffset.y
 		);
 
 		Vector2 oldCameraOffset = cameraOffset;
@@ -203,15 +208,15 @@ int main() {
 				if (!cameraPanningBlocked) {
 					cameraPanStart.x = cameraOffset.x;
 					cameraPanStart.y = cameraOffset.y;
-					cameraPanStartMouse.x = globalMouseX;
-					cameraPanStartMouse.y = globalMouseY;
+					cameraPanStartMouse.x = globalMouse.x;
+					cameraPanStartMouse.y = globalMouse.y;
 					cameraPanning = true;
 				}
 			}
 
 			if (cameraPanning && !cameraPanningBlocked) {
-				cameraOffset.x = cameraPanStart.x + cameraScale.x * (cameraPanStartMouse.x - globalMouseX) / 512.0;
-				cameraOffset.y = cameraPanStart.y + cameraScale.y * (cameraPanStartMouse.y - globalMouseY) / -512.0;
+				cameraOffset.x = cameraPanStart.x + cameraScale.x * (cameraPanStartMouse.x - globalMouse.x) / 512.0;
+				cameraOffset.y = cameraPanStart.y + cameraScale.y * (cameraPanStartMouse.y - globalMouse.y) / -512.0;
 			}
 		} else {
 			cameraPanning = false;
@@ -382,9 +387,14 @@ int main() {
 				for (Popup *popup : popups) {
 					Rect bounds = popup->Bounds();
 
-					if (bounds.inside(Vector2(screenMouseX, screenMouseY))) {
-						popup->mouseClick(screenMouseX, screenMouseY);
+					if (bounds.inside(screenMouse)) {
+						popup->mouseClick(screenMouse.x, screenMouse.y);
+						if (popup->drag(screenMouse.x, screenMouse.y)) {
+							holdingPopup = popup;
+							holdingStart = screenMouse;
+						}
 						blockLeftMouse = true;
+						break;
 					}
 				}
 
@@ -406,12 +416,18 @@ int main() {
 					holdingRoom->Position()->add(worldMouse - holdingStart);
 					holdingStart = worldMouse;
 				}
+
+				if (holdingPopup != nullptr) {
+					holdingPopup->offset(screenMouse - holdingStart);
+					holdingStart = screenMouse;
+				}
 			}
 
 			leftMouseDown = true;
 		} else {
 			leftMouseDown = false;
 			holdingRoom = nullptr;
+			holdingPopup = nullptr;
 		}
 
 		if (window->keyPressed(GLFW_KEY_X)) {
@@ -637,9 +653,9 @@ int main() {
 
 		for (Popup *popup : popups) {
 			Rect bounds = popup->Bounds();
-			bool mouseInside = bounds.inside(Vector2(screenMouseX, screenMouseY));
+			bool mouseInside = bounds.inside(screenMouse);
 
-			popup->draw(screenMouseX, screenMouseY, mouseInside);
+			popup->draw(screenMouse.x, screenMouse.y, mouseInside);
 		}
 
 		window->render();

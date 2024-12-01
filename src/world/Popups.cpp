@@ -95,6 +95,18 @@ void Popup::close() {
 	removePopup(this);
 }
 
+bool Popup::drag(double mouseX, double mouseY) {
+	if (mouseX >= bounds.X1() - 0.05 && mouseY >= bounds.Y1() - 0.05)
+		return false;
+
+	return (mouseY >= bounds.Y1() - 0.05);
+}
+
+void Popup::offset(Vector2 offset) {
+	bounds.offset(offset);
+}
+
+
 std::vector<Popup*> popups;
 
 void addPopup(Popup *popup) {

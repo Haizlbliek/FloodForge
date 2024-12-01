@@ -7,6 +7,7 @@
 #include "../Window.hpp"
 #include "../Utils.hpp"
 #include "../math/Rect.hpp"
+#include "../math/Vector.hpp"
 
 class Popup {
 	public:
@@ -25,6 +26,10 @@ class Popup {
 
 		virtual bool canStack(std::string popupName) { return false; }
 		virtual std::string PopupName() { return "Popup"; }
+
+		virtual bool drag(double mouseX, double mouseY);
+
+		void offset(Vector2 offset);
 
 	protected:
 		Window *window;

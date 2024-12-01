@@ -40,9 +40,9 @@ class SplashArtPopup : public Popup {
 			glColor3f(0.75, 0.75, 0.75);
 
 			glTexCoord2f(0.0f, 1.0f); glVertex2f(-0.89, -0.44);
-			glTexCoord2f(1.0f, 1.0f); glVertex2f(0.89, -0.44);
-			glTexCoord2f(1.0f, 0.0f); glVertex2f(0.89, 0.44);
-			glTexCoord2f(0.0f, 0.0f); glVertex2f(-0.89, 0.44);
+			glTexCoord2f(1.0f, 1.0f); glVertex2f( 0.89, -0.44);
+			glTexCoord2f(1.0f, 0.0f); glVertex2f( 0.89,  0.44);
+			glTexCoord2f(0.0f, 0.0f); glVertex2f(-0.89,  0.44);
 
 			glEnd();
 

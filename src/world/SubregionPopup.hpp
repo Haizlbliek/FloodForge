@@ -18,9 +18,14 @@ class SubregionPopup : public Popup {
 
 		void draw(double mouseX, double mouseY, bool mouseInside) {
             Popup::draw(mouseX, mouseY, mouseInside);
-			// setThemeColour(THEME_TEXT_COLOUR);
-            // Fonts::rainworld->write("Subregion", -0.494, 0.494, 0.04);
-            
+
+			mouseX -= bounds.X0() + 0.5;
+			mouseY -= bounds.Y0() + 0.5;
+
+			glPushMatrix();
+
+			glTranslated(bounds.X0() + 0.5, bounds.Y0() + 0.5, 0.0);
+
             if (room != nullptr) {
 			    setThemeColour(THEME_TEXT_COLOUR);
 			    Fonts::rainworld->writeCentred(room->RoomName(), 0.0, 0.4, 0.04, CENTRE_XY);
@@ -40,10 +45,15 @@ class SubregionPopup : public Popup {
                 // int button = getButtonIndex(mouseX, mouseY);
                 drawSubregionButton(-2, "+ new subregion +", y, mouseX, mouseY);
             }
+
+            glPopMatrix();
         }
 
         void mouseClick(double mouseX, double mouseY) {
             Popup::mouseClick(mouseX, mouseY);
+
+			mouseX -= bounds.X0() + 0.5;
+			mouseY -= bounds.Y0() + 0.5;
 
             int button = getButtonIndex(mouseX, mouseY);
 

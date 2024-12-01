@@ -31,6 +31,7 @@ class FilesystemPopup : public Popup {
             called = false;
             forceRegex = true;
             mode = 0;
+            scroll = 0;
 
             openType = TYPE_FILE;
 
@@ -45,6 +46,7 @@ class FilesystemPopup : public Popup {
             called = false;
             forceRegex = true;
             mode = 0;
+            scroll = 0;
             
             openType = type;
 
@@ -128,12 +130,14 @@ class FilesystemPopup : public Popup {
             setThemeColour(THEME_TEXT_COLOUR);
             Fonts::rainworld->write(croppedPath, bounds.X0() + 0.19, bounds.Y1() - 0.07, 0.04);
 
-            double y = 0.35 - scroll;
-            
+            double offsetY = (bounds.Y1() + bounds.Y0()) * 0.5;
+            double y = 0.35 - scroll + offsetY;
+            bool hasExtras = false;
+
             // New Directory
             if (mode == 1) {
-                if (y > -0.35) {
-                    if (y > 0.375) {
+                if (y > -0.35 + offsetY) {
+                    if (y > 0.375 + offsetY) {
                         y -= 0.06;
                     } else {
                         setThemeColour(THEME_TEXT_DISABLED_COLOUR);
@@ -157,51 +161,48 @@ class FilesystemPopup : public Popup {
             }
 
             // Directories
-            if (y > -0.30) {
-                for (std::filesystem::path path : directories) {
-                    if (y > 0.375) {
-                        y -= 0.06;
-                        continue;
-                    }
-
-                    if (mouseX >= -0.4 && mouseX <= 0.4 && mouseY <= y && mouseY >= y - 0.06)
-                        setThemeColour(THEME_TEXT_HIGHLIGHT_COLOUR);
-                    else
-                        setThemeColour(THEME_TEXT_COLOUR);
-
-                    Fonts::rainworld->write(path.filename().string() + "/", bounds.X0() + 0.1, y, 0.04);
-                    setThemeColour(THEME_TEXT_DISABLED_COLOUR);
-                    drawIcon(5, y);
+            for (std::filesystem::path path : directories) {
+                if (y <= -0.30 + offsetY) { hasExtras = true; break; }
+                if (y > 0.375 + offsetY) {
                     y -= 0.06;
-                    if (y <= -0.30) break;
+                    continue;
                 }
+
+                if (mouseX >= bounds.X0() + 0.1 && mouseX <= bounds.X1() - 0.1 && mouseY <= y && mouseY >= y - 0.06)
+                    setThemeColour(THEME_TEXT_HIGHLIGHT_COLOUR);
+                else
+                    setThemeColour(THEME_TEXT_COLOUR);
+
+                Fonts::rainworld->write(path.filename().string() + "/", bounds.X0() + 0.1, y, 0.04);
+                setThemeColour(THEME_TEXT_DISABLED_COLOUR);
+                drawIcon(5, y);
+                y -= 0.06;
             }
 
             // Files
-            if (y > -0.30) {
-                for (std::filesystem::path path : files) {
-                    if (y > 0.375) {
-                        y -= 0.06;
-                        continue;
-                    }
+            for (std::filesystem::path path : files) {
+                if (y <= -0.30 + offsetY) { hasExtras = true; break; }
 
-                    if (mouseX >= -0.4 && mouseX <= 0.4 && mouseY <= y && mouseY >= y - 0.06)
-                        setThemeColour(THEME_TEXT_HIGHLIGHT_COLOUR);
-                    else
-                        setThemeColour(THEME_TEXT_COLOUR);
-
-                    Fonts::rainworld->write(path.filename().string(), bounds.X0() + 0.1, y, 0.04);
-                    setThemeColour(THEME_TEXT_DISABLED_COLOUR);
-                    drawIcon(4, y);
+                if (y > 0.375 + offsetY) {
                     y -= 0.06;
-                    if (y <= -0.30) break;
+                    continue;
                 }
+
+                if (mouseX >= bounds.X0() + 0.1 && mouseX <= bounds.X1() - 0.1 && mouseY <= y && mouseY >= y - 0.06)
+                    setThemeColour(THEME_TEXT_HIGHLIGHT_COLOUR);
+                else
+                    setThemeColour(THEME_TEXT_COLOUR);
+
+                Fonts::rainworld->write(path.filename().string(), bounds.X0() + 0.1, y, 0.04);
+                setThemeColour(THEME_TEXT_DISABLED_COLOUR);
+                drawIcon(4, y);
+                y -= 0.06;
             }
             
             // ...
-            if (y <= -0.30) {
+            if (hasExtras) {
                 setThemeColour(THEME_TEXT_DISABLED_COLOUR);
-                Fonts::rainworld->write("...", -0.4, y, 0.04);
+                Fonts::rainworld->write("...", bounds.X0() + 0.1, y, 0.04);
             }
 		}
 
@@ -220,10 +221,13 @@ class FilesystemPopup : public Popup {
                     currentDirectory = std::filesystem::canonical(currentDirectory / "..");
                     scroll = 0.0;
                     refresh();
+                    clampScroll();
                 }
 
-                if (Rect(bounds.X0() + 0.09, bounds.Y1() - 0.12, bounds.X0() + 0.14, bounds.Y1() - 0.07).inside(mouseX, mouseY))
+                if (Rect(bounds.X0() + 0.09, bounds.Y1() - 0.12, bounds.X0() + 0.14, bounds.Y1() - 0.07).inside(mouseX, mouseY)) {
                     refresh();
+                    clampScroll();
+                }
 
                 if (Rect(bounds.X1() - 0.09, bounds.Y1() - 0.12, bounds.X1() - 0.04, bounds.Y1() - 0.07).inside(mouseX, mouseY)) {
                     mode = 1;
@@ -231,8 +235,8 @@ class FilesystemPopup : public Popup {
                     newDirectory = "";
                 }
                 
-                if (mouseX >= -0.4 && mouseX <= 0.4 && mouseY >= -0.30 && mouseY <= 0.35) {
-                    int id = (-mouseY + 0.35 - scroll) / 0.06;
+                if (mouseX >= bounds.X0() + 0.1 && mouseX <= bounds.X1() - 0.1 && mouseY >= bounds.Y0() + 0.2 && mouseY <= bounds.Y1() - 0.15) {
+                    int id = (-mouseY + (bounds.Y1() - 0.15) - scroll) / 0.06;
                     
                     if (id < directories.size()) {
                         currentDirectory = std::filesystem::canonical(currentDirectory / directories[id].filename());
@@ -245,7 +249,6 @@ class FilesystemPopup : public Popup {
                             called = true;
                             callback(files[id].string());
                             close();
-                            // std::cout << files[id] << std::endl;
                         }
                     }
                 }
@@ -254,6 +257,7 @@ class FilesystemPopup : public Popup {
                     if (Rect(bounds.X0() + 0.02, bounds.Y0() + 0.09, bounds.X0() + 0.07, bounds.Y0() + 0.04).inside(mouseX, mouseY)) {
                         forceRegex = !forceRegex;
                         refresh();
+                        clampScroll();
                     }
                 } else if (openType == TYPE_FOLDER) {
                     if (Rect(bounds.X1() - 0.17, bounds.Y0() + 0.09, bounds.X1() - 0.05, bounds.Y0() + 0.04).inside(mouseX, mouseY)) {

@@ -2,7 +2,7 @@
 
 #include "Popups.hpp"
 #include "FilesystemPopup.hpp"
-#include "AcronymWindow.hpp"
+#include "AcronymPopup.hpp"
 #include "WarningPopup.hpp"
 
 std::vector<Button*> MenuItems::buttons;
@@ -23,7 +23,7 @@ void MenuItems::init(Window *window) {
 
     addButton("New",
         [window](Button *button) {
-            addPopup(new AcronymWindow(window));
+            addPopup(new AcronymPopup(window));
         }
     );
 

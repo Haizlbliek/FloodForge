@@ -27,6 +27,13 @@ class SubregionNewPopup : public Popup {
 		void draw(double mouseX, double mouseY, bool mouseInside) {
 			Popup::draw(mouseX, mouseY, mouseInside);
 
+			mouseX -= bounds.X0() + 0.25;
+			mouseY -= bounds.Y0() + 0.08;
+
+			glPushMatrix();
+
+			glTranslated(bounds.X0() + 0.25, bounds.Y0() + 0.08, 0.0);
+
 			setThemeColour(THEME_TEXT_COLOUR);
 			glLineWidth(1);
 			Fonts::rainworld->writeCentred("Enter Subregion Name:", 0.0, 0.18, 0.035, CENTRE_X);
@@ -87,6 +94,8 @@ class SubregionNewPopup : public Popup {
 			} else {
 				bounds.Y0(-0.08);
 			}
+
+			glPopMatrix();
 		}
 
 		void mouseClick(double mouseX, double mouseY);
