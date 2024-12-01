@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include "../Window.hpp"
+#include "../Draw.hpp"
 
 #include "Popups.hpp"
 
@@ -26,30 +27,28 @@ class SplashArtPopup : public Popup {
 		}
 
 		void draw(double mouseX, double mouseY, bool mouseInside) {
-			glColor3f(0.0, 0.0, 0.0);
+			Draw::color(0.0, 0.0, 0.0);
 			fillRect(-0.9, -0.45, 0.9, 0.45);
 
-			glBindTexture(GL_TEXTURE_2D, splashart->ID());
-
-			glEnable(GL_TEXTURE_2D);
+			Draw::useTexture(splashart->ID());
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-			glBegin(GL_QUADS);
+			Draw::begin(Draw::QUADS);
 
-			glColor3f(0.75, 0.75, 0.75);
+			Draw::color(0.75, 0.75, 0.75);
 
-			glTexCoord2f(0.0f, 1.0f); glVertex2f(-0.89, -0.44);
-			glTexCoord2f(1.0f, 1.0f); glVertex2f( 0.89, -0.44);
-			glTexCoord2f(1.0f, 0.0f); glVertex2f( 0.89,  0.44);
-			glTexCoord2f(0.0f, 0.0f); glVertex2f(-0.89,  0.44);
+			Draw::texCoord(0.0f, 1.0f); Draw::vertex(-0.89, -0.44);
+			Draw::texCoord(1.0f, 1.0f); Draw::vertex(0.89, -0.44);
+			Draw::texCoord(1.0f, 0.0f); Draw::vertex(0.89, 0.44);
+			Draw::texCoord(0.0f, 0.0f); Draw::vertex(-0.89, 0.44);
 
-			glEnd();
+			Draw::end();
 
-			glDisable(GL_TEXTURE_2D);
+			Draw::useTexture(0);
 			glDisable(GL_BLEND);
 
-			glColor3f(1.0f, 1.0f, 1.0f);
+			Draw::color(1.0f, 1.0f, 1.0f);
 			Fonts::rodondo->writeCentred("FloodForge", 0.0, 0.1, 0.2, CENTRE_XY);
 			Fonts::rainworld->writeCentred("World Editor", 0.0, -0.1, 0.1, CENTRE_XY);
 			Fonts::rainworld->write("v1.1", -0.88, 0.43, 0.04);

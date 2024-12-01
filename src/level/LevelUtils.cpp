@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include "Constants.hpp"
+#include "../Draw.hpp"
 
 
 bool isShortcutAir(unsigned int tile) {
@@ -68,10 +69,10 @@ void drawTextureQuad(uint8_t tile, float x, float y, float width, float height, 
 	float uWidth = 1.0 / ((float) tilesWidth);
 	float vHeight = 1.0 / ((float) tilesHeight);
 
-	glTexCoord2f(u,          v);           glVertex2f(x,         y);
-	glTexCoord2f(u + uWidth, v);           glVertex2f(x + width, y);
-	glTexCoord2f(u + uWidth, v + vHeight); glVertex2f(x + width, y + height);
-	glTexCoord2f(u,          v + vHeight); glVertex2f(x,         y + height);
+	Draw::texCoord(u,          v);           Draw::vertex(x,         y);
+	Draw::texCoord(u + uWidth, v);           Draw::vertex(x + width, y);
+	Draw::texCoord(u + uWidth, v + vHeight); Draw::vertex(x + width, y + height);
+	Draw::texCoord(u,          v + vHeight); Draw::vertex(x,         y + height);
 }
 
 void drawTextureQuad(uint8_t tile, float x, float y, float width, float height) {
@@ -102,17 +103,17 @@ bool isValid(Grid *grid, uint8_t data, int x, int y) {
 
 void colourValid(Grid *grid, uint8_t data, int x, int y, float transparency) {
 	if (isValid(grid, data, x, y)) {
-		glColor4f(1.0f, 1.0f, 1.0f, transparency);
+		Draw::color(1.0f, 1.0f, 1.0f, transparency);
 	} else {
-		glColor4f(1.0f, 0.0f, 0.0f, transparency);
+		Draw::color(1.0f, 0.0f, 0.0f, transparency);
 	}
 }
 
 void colourValidBlack(Grid *grid, uint8_t data, int x, int y, float transparency) {
 	if (isValid(grid, data, x, y)) {
-		glColor4f(0.0f, 0.0f, 0.0f, transparency);
+		Draw::color(0.0f, 0.0f, 0.0f, transparency);
 	} else {
-		glColor4f(1.0f, 0.0f, 0.0f, transparency);
+		Draw::color(1.0f, 0.0f, 0.0f, transparency);
 	}
 }
 
@@ -121,15 +122,13 @@ void drawTexturedGrid(Grid *grid, float scale, GLuint solids, GLuint shortcuts, 
 }
 
 void drawTexturedGrid(Grid *grid, float scale, GLuint solids, GLuint shortcuts, GLuint items, float transparency) {
-	glBindTexture(GL_TEXTURE_2D, solids);
-
-	glEnable(GL_TEXTURE_2D);
+	Draw::useTexture(solids);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glBegin(GL_QUADS);
+	Draw::begin(Draw::QUADS);
 
-	glColor4f(0.0, 0.0, 0.0, transparency);
+	Draw::color(0.0, 0.0, 0.0, transparency);
 
 	for (float x = 0; x < grid->Width(); x++) {
 		for (float y = 0; y < grid->Height(); y++) {
@@ -152,10 +151,10 @@ void drawTexturedGrid(Grid *grid, float scale, GLuint solids, GLuint shortcuts, 
 		}
 	}
 
-	glEnd();
+	Draw::end();
 
-	glBindTexture(GL_TEXTURE_2D, items);
-	glBegin(GL_QUADS);
+	Draw::useTexture(items);
+	Draw::begin(Draw::QUADS);
 
 	for (int x = 0; x < grid->Width(); x++) {
 		for (int y = 0; y < grid->Height(); y++) {
@@ -197,18 +196,18 @@ void drawTexturedGrid(Grid *grid, float scale, GLuint solids, GLuint shortcuts, 
 		}
 	}
 
-	glEnd();
+	Draw::end();
 
-	// glColor4f(1.0f, 1.0f, 1.0f, transparency);
-	glBindTexture(GL_TEXTURE_2D, shortcuts);
-	glBegin(GL_QUADS);
+	// Draw::color(1.0f, 1.0f, 1.0f, transparency);
+	Draw::useTexture(shortcuts);
+	Draw::begin(Draw::QUADS);
 
 	for (float x = 0; x < grid->Width(); x++) {
 		for (float y = 0; y < grid->Height(); y++) {
 			if (grid->inBoundary(x, y)) {
-				glColor4f(1.0f, 1.0f, 1.0f, transparency);
+				Draw::color(1.0f, 1.0f, 1.0f, transparency);
 			} else {
-				glColor4f(1.0f, 0.0f, 0.0f, transparency);
+				Draw::color(1.0f, 0.0f, 0.0f, transparency);
 			}
 
 			if (grid->hasData(x, y, DATA_ROOM_EXIT)) {
@@ -229,23 +228,22 @@ void drawTexturedGrid(Grid *grid, float scale, GLuint solids, GLuint shortcuts, 
 		}
 	}
 
-	glEnd();
+	Draw::end();
 
 	// Disable texture mapping after drawing
-	glDisable(GL_TEXTURE_2D);
+	Draw::useTexture(0);
 	glDisable(GL_BLEND);
 }
 
 // TODO: Update
 void drawTexturedGrid(Grid *grid, double scaleX, double scaleY, GLuint solids, GLuint shortcuts, int startX, int startY, int endX, int endY) {
-	glBindTexture(GL_TEXTURE_2D, solids);
+	Draw::useTexture(solids);
 
 	// Enable 2D texture
-	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glBegin(GL_QUADS);
+	Draw::begin(Draw::QUADS);
 
 	for (float x = startX; x <= endX; x++) {
 		for (float y = startY; y <= endY; y++) {
@@ -262,9 +260,9 @@ void drawTexturedGrid(Grid *grid, double scaleX, double scaleY, GLuint solids, G
 		}
 	}
 
-	glEnd();
+	Draw::end();
 
 	// Disable texture mapping after drawing
-	glDisable(GL_TEXTURE_2D);
+	Draw::useTexture(0);
 	glDisable(GL_BLEND);
 }

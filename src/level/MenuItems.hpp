@@ -51,7 +51,7 @@ class Button {
 		}
 
 		void draw(Mouse *mouse) {
-			glColor3f(1.0f, 1.0f, 1.0f);
+			Draw::color(1.0f, 1.0f, 1.0f);
 			font->write(text, x, y, height);
 
 			if (isHovered(mouse)) {
@@ -184,7 +184,7 @@ class MenuItems {
 		}
 
 		static void draw(Mouse *mouse) {
-			glColor3f(0.0f, 0.0f, 0.0f);
+			Draw::color(0.0f, 0.0f, 0.0f);
 			fillRect(-1.0f, 1.0f, 1.0f, 1.0f - 0.06f);
 
 			for (Button *button : buttons) {
@@ -192,7 +192,7 @@ class MenuItems {
 				button->draw(mouse);
 			}
 
-			// glColor3f(1.0f, 1.0f, 1.0f);
+			// Draw::color(1.0f, 1.0f, 1.0f);
 			// fontRainworld->write("File", -0.99f, 0.99f, 0.04f);
 			// fontRainworld->write("Edit", -0.84f, 0.99f, 0.04f);
 

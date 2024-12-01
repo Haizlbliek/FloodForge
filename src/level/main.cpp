@@ -24,6 +24,7 @@
 #include "History.hpp"
 #include "MenuItems.hpp"
 #include "Tools.hpp"
+#include "../Draw.hpp"
 
 #warning The FloodForge Level Editor is very WIP. Take caution.
 
@@ -40,45 +41,44 @@ void error_callback(int error, const char* description) {
 }
 
 void drawGrid(float spacing, unsigned int width, unsigned int height) {
-	glBegin(GL_LINES);
+	Draw::begin(Draw::LINES);
 	for (int x = 0; x <= width; x++) {
-		glVertex2f(x * spacing - 1.0f, 1.0f);
-		glVertex2f(x * spacing - 1.0f, -(height * spacing - 1.0f));
+		Draw::vertex(x * spacing - 1.0f, 1.0f);
+		Draw::vertex(x * spacing - 1.0f, -(height * spacing - 1.0f));
 	}
 
 	for (int y = 0; y <= height; y++) {
-		glVertex2f(-1.0f, -(y * spacing - 1.0f));
-		glVertex2f(width * spacing - 1.0f, -(y * spacing - 1.0f));
+		Draw::vertex(-1.0f, -(y * spacing - 1.0f));
+		Draw::vertex(width * spacing - 1.0f, -(y * spacing - 1.0f));
 	}
-	glEnd();
+	Draw::end();
 }
 
 void drawSprite(GLuint texture, float x, float y, float width, float height) {
-    glBindTexture(GL_TEXTURE_2D, texture);
+	Draw::useTexture(texture);
 
-    glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glBegin(GL_QUADS);
+	Draw::begin(Draw::QUADS);
     
-    glColor3f(1.0f, 1.0f, 1.0f);
+    Draw::color(1.0f, 1.0f, 1.0f);
 
-	glTexCoord2f(0.0f, 1.0f);
-	glVertex2f(x,         y);
+	Draw::texCoord(0.0f, 1.0f);
+	Draw::vertex(x,         y);
 
-	glTexCoord2f(1.0f, 1.0f);
-	glVertex2f(x + width, y);
+	Draw::texCoord(1.0f, 1.0f);
+	Draw::vertex(x + width, y);
 
-	glTexCoord2f(1.0f, 0.0f);
-	glVertex2f(x + width, y + height);
+	Draw::texCoord(1.0f, 0.0f);
+	Draw::vertex(x + width, y + height);
 
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex2f(x,         y + height);
+	Draw::texCoord(0.0f, 0.0f);
+	Draw::vertex(x,         y + height);
 
-	glEnd();
+	Draw::end();
 
-    glDisable(GL_TEXTURE_2D);
+	Draw::useTexture(0);
     glDisable(GL_BLEND);
 }
 
@@ -88,27 +88,25 @@ void drawSprite(GLuint texture, float x, float y, float width, float height, uns
 	float uvWidth = 1.0 / textureSubWidth;
 	float uvHeight = 1.0 / textureSubHeight;
 
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glEnable(GL_TEXTURE_2D);
+	Draw::useTexture(texture);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glBegin(GL_QUADS);
+	Draw::begin(Draw::QUADS);
     
-    glColor3f(1.0f, 1.0f, 1.0f);
+    Draw::color(1.0f, 1.0f, 1.0f);
 
-	glTexCoord2f(uvX,           uvY);            glVertex2f(x,         y);
+	Draw::texCoord(uvX,           uvY);            Draw::vertex(x,         y);
 
-	glTexCoord2f(uvX + uvWidth, uvY);            glVertex2f(x + width, y);
+	Draw::texCoord(uvX + uvWidth, uvY);            Draw::vertex(x + width, y);
 
-	glTexCoord2f(uvX + uvWidth, uvY + uvHeight); glVertex2f(x + width, y + height);
+	Draw::texCoord(uvX + uvWidth, uvY + uvHeight); Draw::vertex(x + width, y + height);
 
-	glTexCoord2f(uvX,           uvY + uvHeight); glVertex2f(x,         y + height);
+	Draw::texCoord(uvX,           uvY + uvHeight); Draw::vertex(x,         y + height);
 
-	glEnd();
+	Draw::end();
 
-    glDisable(GL_TEXTURE_2D);
+	Draw::useTexture(0);
     glDisable(GL_BLEND);
 }
 
@@ -138,12 +136,12 @@ void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale,
     };
 
     // Apply the orthographic projection
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(left, right, bottom, top, nearVal, farVal);
+    Draw::matrixMode(Draw::PROJECTION);
+    Draw::loadIdentity();
+    Draw::ortho(left, right, bottom, top, nearVal, farVal);
 
     // Apply rotation matrix
-    glMultMatrixf(rotationMatrix);
+	Draw::multMatrix(Draw::Matrix4f(rotationMatrix));
 
     // Apply frustum based on modified projection
     // glFrustum(left, right, bottom, top, nearVal, farVal);
@@ -223,6 +221,7 @@ int main() {
 	
 	Fonts::init();
 	Popups::init();
+	Draw::init();
 
     GLuint textureSolids = loadTexture(TEXTURE_PATH + "solids.png");
     GLuint textureShortcuts = loadTexture(TEXTURE_PATH + "shortcuts.png");
@@ -566,19 +565,19 @@ int main() {
 		window->clear();
 		glDisable(GL_DEPTH_TEST);
 
-		glColor3f(0.0f, 0.0f, 0.0f);
+		Draw::color(0.0f, 0.0f, 0.0f);
 		fillRect(-1.0, -1.0, 1.0, 1.0);
 
 		glViewport(offsetX, offsetY, size, size);
 
-		glColor3f(0.3f, 0.3f, 0.3f);
+		Draw::color(0.3f, 0.3f, 0.3f);
 		fillRect(-1.0, -1.0, 1.0, 1.0);
 
 		applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale);
 
 		float tileSize = 0.125f;
 
-		glColor3f(0.5f, 0.5f, 0.5f);
+		Draw::color(0.5f, 0.5f, 0.5f);
 		drawGrid(tileSize, grid->Width(), grid->Height());
 
 		glEnable(GL_BLEND);
@@ -587,7 +586,7 @@ int main() {
 		drawTexturedGrid(project->GetLayer(2), tileSize, textureSolids, textureShortcuts, textureItems, getLayerTransparency(2));
 		drawTexturedGrid(project->GetLayer(1), tileSize, textureSolids, textureShortcuts, textureItems, getLayerTransparency(1));
 
-		glColor3f(0.75f, 0.75f, 0.75f);
+		Draw::color(0.75f, 0.75f, 0.75f);
 		strokeRect(
 			tileSize * 12.0f - 1.0f,
 			-(tileSize * 3.0f - 1.0f),
@@ -596,7 +595,7 @@ int main() {
 		);
 
         if (!popupVisible && !disableCursor) { // Selection
-	        glColor3f(0.0f, 1.0f, 0.0f);
+	        Draw::color(0.0f, 1.0f, 0.0f);
 
 	        if (wasDrawing && toolMode == 1) {
 	        	int x0 = min(tileX, drawToolX0);
@@ -641,10 +640,10 @@ int main() {
 		applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, Vector2(1.0f, 1.0f));
 
         if (popupVisible && !disableCursor) {
-	        glColor3f(0.0f, 0.0f, 0.0f);
+	        Draw::color(0.0f, 0.0f, 0.0f);
 	        fillRect(-0.25f + popupX, -0.25f + popupY, 0.25f + popupX, 0.25f + popupY);
 
-	        glColor3f(1.0f, 1.0f, 1.0f);
+	        Draw::color(1.0f, 1.0f, 1.0f);
 	        strokeRect(-0.25f + popupX, -0.25f + popupY, 0.25f + popupX, 0.25f + popupY);
 
 	        // Draw tools
@@ -657,7 +656,7 @@ int main() {
 	        // Draw selection
 	        glLineWidth(3);
 
-	        glColor3f(1.0f, 0.0f, 0.0f);
+	        Draw::color(1.0f, 0.0f, 0.0f);
 	        strokeRect(
 				-0.25f + popupX + (currentTool % 4) * 0.125f,
 				-0.25f + popupY + (3 - currentTool / 4) * 0.125f,
@@ -672,7 +671,7 @@ int main() {
 	        popupSelectionX = clamp(popupSelectionX, 0, 3);
 	        popupSelectionY = clamp(popupSelectionY, 0, 3);
 	        newTool = popupSelectionX + (3 - popupSelectionY) * 4;
-	        glColor3f(0.0f, 1.0f, 0.0f);
+	        Draw::color(0.0f, 1.0f, 0.0f);
 	        strokeRect(-0.25f + popupX + popupSelectionX * 0.125f, -0.25f + popupY + popupSelectionY * 0.125f, -0.125f + popupX + popupSelectionX * 0.125f, -0.125f + popupY + popupSelectionY * 0.125f);
 
 	        glLineWidth(1);
@@ -691,10 +690,10 @@ int main() {
 
 		// glLineStipple(1, 0xF000);
 		// glEnable(GL_LINE_STIPPLE);
-		// glBegin(GL_LINES);
+		// Draw::begin(Draw::LINES);
 		// glVertex3f(-.5,.5,-.5);
 		// glVertex3f(.5,.5,-.5);
-		// glEnd();
+		// Draw::end();
 
 		// glPopAttrib();
 
@@ -711,6 +710,7 @@ int main() {
 	delete window;
 
 	Fonts::cleanup();
+	Draw::cleanup();
 
 	glfwTerminate();
 

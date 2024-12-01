@@ -24,7 +24,7 @@ class Render {
 
 			GLuint solids = loadTexture(TEXTURE_PATH + "renderSolids.png");
 			GLuint shortcuts = loadTexture(TEXTURE_PATH + "shortcuts.png");
-			glColor3f(0.4745f, 0.0f, 0.0f);
+			Draw::color(0.4745f, 0.0f, 0.0f);
         	drawTexturedGrid(
 				grid,
 				2.0 / (double) width,

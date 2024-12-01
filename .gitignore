@@ -13,3 +13,4 @@ build/.depend
 TODO.md
 
 .vscode/
+/.clangd

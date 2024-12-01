@@ -12,9 +12,9 @@ void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside) {
 	Fonts::rainworld->writeCentred("Enter Region Acronym:", centreX, bounds.Y1() - 0.07, 0.035, CENTRE_X);
 
 	if (text.length() < 2) {
-		glColor3f(1.0, 0.0, 0.0);
+		Draw::color(1.0, 0.0, 0.0);
 	} else if (text.length() > 2) {
-		glColor3f(1.0, 1.0, 0.0);
+		Draw::color(1.0, 1.0, 0.0);
 	} else {
 		setThemeColour(THEME_TEXT_COLOUR);
 	}
@@ -56,14 +56,14 @@ void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside) {
 
 	if (text.length() > 2) {
 		bounds.Y0(bounds.Y1() - 0.5);
-		glColor3f(1.0, 1.0, 0.0);
-		glTranslatef(0.0, bounds.Y1() - 0.25, 0.0);
+		Draw::color(1.0, 1.0, 0.0);
+		Draw::translate(0.0, bounds.Y1() - 0.25);
 		Fonts::rainworld->writeCentred("WARNING:", centreX, -0.055, 0.035, CENTRE_X);
 		Fonts::rainworld->writeCentred("Region acronyms longer", centreX, -0.09, 0.03, CENTRE_X);
 		Fonts::rainworld->writeCentred("than 2 characters behave", centreX, -0.125, 0.03, CENTRE_X);
 		Fonts::rainworld->writeCentred("weirdly, to fix this", centreX, -0.16, 0.03, CENTRE_X);
 		Fonts::rainworld->writeCentred("install REGION TITLE FIX", centreX, -0.195, 0.03, CENTRE_X);
-		glTranslatef(0.0, -(bounds.Y1() - 0.25), 0.0);
+		Draw::translate(0.0, -(bounds.Y1() - 0.25));
 	} else {
 		bounds.Y0(bounds.Y1() - 0.33);
 	}

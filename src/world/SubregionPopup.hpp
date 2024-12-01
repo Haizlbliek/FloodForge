@@ -23,9 +23,9 @@ class SubregionPopup : public Popup {
 			mouseX -= bounds.X0() + 0.5;
 			mouseY -= bounds.Y0() + 0.5;
 
-			glPushMatrix();
+			Draw::pushMatrix();
 
-			glTranslated(bounds.X0() + 0.5, bounds.Y0() + 0.5, 0.0);
+			Draw::translate(bounds.X0() + 0.5, bounds.Y0() + 0.5);
 
             if (room != nullptr) {
 			    setThemeColour(THEME_TEXT_COLOUR);
@@ -47,7 +47,7 @@ class SubregionPopup : public Popup {
                 drawSubregionButton(-2, "+ new subregion +", y, mouseX, mouseY);
             }
 
-            glPopMatrix();
+            Draw::popMatrix();
         }
 
         void mouseClick(double mouseX, double mouseY) {

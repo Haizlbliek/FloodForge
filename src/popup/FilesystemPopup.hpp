@@ -382,22 +382,21 @@ class FilesystemPopup : public Popup {
         }
 
         void drawIcon(int type, double x, double y) {
-            glBindTexture(GL_TEXTURE_2D, Popups::textureUI);
-            glEnable(GL_TEXTURE_2D);
+            Draw::useTexture(Popups::textureUI);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glBegin(GL_QUADS);
+            Draw::begin(Draw::QUADS);
 
             float offsetUVx = (type % 4) * 0.25f;
             float offsetUVy = (type / 4) * 0.25f;
 
-            glTexCoord2f(0.00f + offsetUVx, 0.00f + offsetUVy); glVertex2f(x + 0.00, y);
-            glTexCoord2f(0.25f + offsetUVx, 0.00f + offsetUVy); glVertex2f(x + 0.05, y);
-            glTexCoord2f(0.25f + offsetUVx, 0.25f + offsetUVy); glVertex2f(x + 0.05, y - 0.05);
-            glTexCoord2f(0.00f + offsetUVx, 0.25f + offsetUVy); glVertex2f(x + 0.00, y - 0.05);
+            Draw::texCoord(0.00f + offsetUVx, 0.00f + offsetUVy); Draw::vertex(x + 0.00, y);
+            Draw::texCoord(0.25f + offsetUVx, 0.00f + offsetUVy); Draw::vertex(x + 0.05, y);
+            Draw::texCoord(0.25f + offsetUVx, 0.25f + offsetUVy); Draw::vertex(x + 0.05, y - 0.05);
+            Draw::texCoord(0.00f + offsetUVx, 0.25f + offsetUVy); Draw::vertex(x + 0.00, y - 0.05);
 
-            glEnd();
-            glDisable(GL_TEXTURE_2D);
+            Draw::end();
+            Draw::useTexture(0);
             glDisable(GL_BLEND);
         }
 

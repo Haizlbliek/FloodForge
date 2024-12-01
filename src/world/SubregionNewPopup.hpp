@@ -31,18 +31,18 @@ class SubregionNewPopup : public Popup {
 			mouseX -= bounds.X0() + 0.25;
 			mouseY -= bounds.Y0() + 0.08;
 
-			glPushMatrix();
+			Draw::pushMatrix();
 
-			glTranslated(bounds.X0() + 0.25, bounds.Y0() + 0.08, 0.0);
+			Draw::translate(bounds.X0() + 0.25, bounds.Y0() + 0.08);
 
 			setThemeColour(THEME_TEXT_COLOUR);
 			glLineWidth(1);
 			Fonts::rainworld->writeCentred("Enter Subregion Name:", 0.0, 0.18, 0.035, CENTRE_X);
 
 			if (text.length() < 2) {
-				glColor3f(1.0, 0.0, 0.0);
+				Draw::color(1.0, 0.0, 0.0);
 			} else if (text.length() > 2) {
-				glColor3f(1.0, 1.0, 0.0);
+				Draw::color(1.0, 1.0, 0.0);
 			} else {
 				setThemeColour(THEME_TEXT_COLOUR);
 			}
@@ -86,7 +86,7 @@ class SubregionNewPopup : public Popup {
 
 			if (text.length() > 2) {
 				// bounds.Y0(-0.25);
-				// glColor3f(1.0, 1.0, 0.0);
+				// Draw::color(1.0, 1.0, 0.0);
 				// Fonts::rainworld->writeCentred("WARNING:", 0.0, -0.055, 0.035, CENTRE_X);
 				// Fonts::rainworld->writeCentred("Regions acronyms longer", 0.0, -0.09, 0.03, CENTRE_X);
 				// Fonts::rainworld->writeCentred("than 2 characters behave", 0.0, -0.125, 0.03, CENTRE_X);
@@ -96,7 +96,7 @@ class SubregionNewPopup : public Popup {
 				bounds.Y0(-0.08);
 			}
 
-			glPopMatrix();
+			Draw::popMatrix();
 		}
 
 		void mouseClick(double mouseX, double mouseY);

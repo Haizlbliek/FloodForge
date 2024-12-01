@@ -21,9 +21,9 @@ class QuitConfirmationPopup : public Popup {
 			mouseX -= bounds.X0() + 0.25;
 			mouseY -= bounds.Y0() + 0.15;
 
-			glPushMatrix();
+			Draw::pushMatrix();
 
-			glTranslated(bounds.X0() + 0.25, bounds.Y0() + 0.15, 0.0);
+			Draw::translate(bounds.X0() + 0.25, bounds.Y0() + 0.15);
 
 			setThemeColour(THEME_TEXT_COLOUR);
 			Fonts::rainworld->writeCentred("Exit FloodForge?", 0.0, 0.04, 0.04, CENTRE_XY);
@@ -52,7 +52,7 @@ class QuitConfirmationPopup : public Popup {
 				strokeRect(0.05, -0.09, 0.2, -0.03);
 			}
 			
-			glPopMatrix();
+			Draw::popMatrix();
 		}
 
 		void accept() {
