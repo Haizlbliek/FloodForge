@@ -73,8 +73,9 @@ class Window {
 			if (!glfwInit()) exit(EXIT_FAILURE);
 
 			// glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-		    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-		    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+		    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 		    glfwWindow = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 			if (!glfwWindow) {
