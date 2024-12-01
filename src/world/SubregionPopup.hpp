@@ -4,9 +4,10 @@
 #include "../Window.hpp"
 #include "../Utils.hpp"
 
-#include "Popups.hpp"
+#include "../popup/Popups.hpp"
+#include "../popup/WarningPopup.hpp"
+
 #include "Room.hpp"
-#include "WarningPopup.hpp"
 #include "SubregionNewPopup.hpp"
 
 class SubregionPopup : public Popup {

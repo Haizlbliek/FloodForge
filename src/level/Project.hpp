@@ -12,6 +12,7 @@
 #include "Constants.hpp"
 #include "../Utils.hpp"
 #include "../Grid.hpp"
+#include "../Window.hpp"
 
 class Project {
 	public:
@@ -63,6 +64,9 @@ class Project {
 			layer2->resize(width, height);
 			layer3->resize(width, height);
 		}
+
+		void WindowC(Window *newWindow) { window = newWindow; }
+		const Window *WindowC() { return window; }
 
 	private:
 		void renderCollision() {
@@ -154,6 +158,8 @@ class Project {
 		Grid *layer3;
 
 		std::string filePath;
+
+		Window *window;
 };
 
 #endif

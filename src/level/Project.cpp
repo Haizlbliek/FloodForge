@@ -5,26 +5,43 @@
 #include <set>
 #include <vector>
 
+#include "../popup/Popups.hpp"
+#include "../popup/FilesystemPopup.hpp"
+
 #include "Constants.hpp"
 #include "Render.hpp"
 
 void Project::save() {
-	while (filePath == "") {
-		filePath = OpenNewFileDialog();
+	// while (filePath == "") {
+	// 	filePath = OpenNewFileDialog();
 
-		if (!endsWith(filePath, ".level")) {
-			filePath = "";
+	// 	if (!endsWith(filePath, ".level")) {
+	// 		filePath = "";
 
-			int result = verifyBox("The file must end in .level.\nTry again?");
+	// 		int result = verifyBox("The file must end in .level.\nTry again?");
 
-			if (!result) return;
+	// 		if (!result) return;
 
-			continue;
-		}
+	// 		continue;
+	// 	}
 
-		name = (std::filesystem::path(filePath)).stem().string();
+	// 	name = (std::filesystem::path(filePath)).stem().string();
 
-		break;
+	// 	break;
+	// }
+
+	std::cout << filePath << std::endl;
+	if (filePath.empty()) {
+		addPopup(new FilesystemPopup(window, std::regex(R"([^.]+\.level)"),
+			[this](std::string newFilePath) {
+				if (newFilePath == "") return;
+
+				filePath = newFilePath;
+				save();
+			}
+		));
+		
+		return;
 	}
 
 
@@ -196,6 +213,9 @@ std::string parseDrizzleData(Grid *layer, unsigned int x, unsigned int y) {
 }
 
 void Project::exportDrizzle() {
+	if (!std::filesystem::exists(OUTPUT_PATH) || !std::filesystem::is_directory(OUTPUT_PATH)) {
+		std::filesystem::create_directory(OUTPUT_PATH);
+	}
 	std::ofstream file;
 	file.open(OUTPUT_PATH + name + ".txt");
 

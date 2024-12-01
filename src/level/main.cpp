@@ -15,6 +15,9 @@
 #include "../font/Font.hpp"
 #include "../font/Fonts.hpp"
 
+#include "../popup/Popups.hpp"
+#include "../popup/QuitConfirmationPopup.hpp"
+
 #include "Constants.hpp"
 #include "../Window.hpp"
 #include "../Grid.hpp"
@@ -150,15 +153,15 @@ void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale)
 	applyFrustumToOrthographic(position, rotation, scale, -1.0f, 1.0f, -1.0f, 1.0f, 0.000f, 100.0f);
 }
 
-void windowCloseCallback(GLFWwindow *window) {
-	if (!History::unsavedChanges) return;
+// void windowCloseCallback(GLFWwindow *window) {
+// 	if (!History::unsavedChanges) return;
 
-	int result = verifyBox("You have unsaved changes.\nAre you sure you want to quit?");
+// 	int result = verifyBox("You have unsaved changes.\nAre you sure you want to quit?");
 
-	if (!result) {
-		glfwSetWindowShouldClose(window, false);
-	}
-}
+// 	if (!result) {
+// 		glfwSetWindowShouldClose(window, false);
+// 	}
+// }
 
 float getLayerTransparency(unsigned int layer) {
 	if (currentLayer == layer) return 1.0f;
@@ -209,7 +212,17 @@ int main() {
 	window->setIcon(TEXTURE_PATH + "MainIcon.png");
 	window->setTitle("FloodForge Level Editor - " + project->Name());
 	window->setBackgroundColour(0.3f, 0.3f, 0.3f);
-	glfwSetWindowCloseCallback(window->getGLFWWindow(), windowCloseCallback);
+	
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		std::cerr << "Failed to initialize GLAD!" << std::endl;
+		return -1;
+	}
+
+	project->WindowC(window);
+	// glfwSetWindowCloseCallback(window->getGLFWWindow(), windowCloseCallback);
+	
+	Fonts::init();
+	Popups::init();
 
     GLuint textureSolids = loadTexture(TEXTURE_PATH + "solids.png");
     GLuint textureShortcuts = loadTexture(TEXTURE_PATH + "shortcuts.png");
@@ -240,9 +253,10 @@ int main() {
 	bool wasSaving = false;
 	bool wasFullscreen = false;
 
-	History::unsavedChanges = false;
+	std::set<int> previousKeys;
+	bool leftMouseDown = false;
 
-	Fonts::init();
+	History::unsavedChanges = false;
 
 	MenuItems::init(window);
 
@@ -283,6 +297,10 @@ int main() {
 		double globalMouseX = (mouse->X() - offsetX) / size * 1024;
 		double globalMouseY = (mouse->Y() - offsetY) / size * 1024;
 
+		double screenMouseX = (globalMouseX / 1024.0) *  2.0 - 1.0;
+		double screenMouseY = (globalMouseY / 1024.0) * -2.0 + 1.0;
+
+
 		Mouse *customMouse = new Mouse(window->getGLFWWindow(), globalMouseX, globalMouseY);
 
 		double mouseX = globalMouseX;
@@ -300,6 +318,59 @@ int main() {
 		unsigned int clampedTileY = clamp(tileY, 0, -1 + (signed int) grid->Height());
 
 		bool disableCursor = globalMouseY < window->Height() * 0.03;
+
+		Popup *hoveringPopup = nullptr;
+		for (Popup *popup : popups) {
+			Rect bounds = popup->Bounds();
+
+			if (bounds.inside(Vector2(screenMouseX, screenMouseY))) {
+				hoveringPopup = popup;
+				break;
+			}
+		}
+
+		if (window->keyPressed(GLFW_KEY_ESCAPE)) {
+			if (previousKeys.find(GLFW_KEY_ESCAPE) == previousKeys.end()) {
+				if (popups.size() > 0)
+					popups[0]->reject();
+				else
+					addPopup(new QuitConfirmationPopup(window));
+			}
+
+			previousKeys.insert(GLFW_KEY_ESCAPE);
+		} else {
+			previousKeys.erase(GLFW_KEY_ESCAPE);
+		}
+
+		if (window->keyPressed(GLFW_KEY_ENTER)) {
+			if (previousKeys.find(GLFW_KEY_ENTER) == previousKeys.end()) {
+				if (popups.size() > 0)
+					popups[0]->accept();
+			}
+
+			previousKeys.insert(GLFW_KEY_ENTER);
+		} else {
+			previousKeys.erase(GLFW_KEY_ENTER);
+		}
+
+		if (hoveringPopup != nullptr) {
+			if (mouse->Left()) {
+				if (!leftMouseDown) {
+					hoveringPopup->mouseClick(screenMouseX, screenMouseY);
+				}
+
+				leftMouseDown = true;
+			} else {
+				leftMouseDown = false;
+			}
+		} else {
+			if (!mouse->Left()) leftMouseDown = false;
+		}
+
+		if (leftMouseDown || hoveringPopup != nullptr) {
+			disableCursor = true;
+			double __ = window->getMouseScrollY();
+		}
 
 		if (!disableCursor) {
 			if (popupVisible) {
@@ -340,8 +411,8 @@ int main() {
 
 				double globalMouseX2 = (mouse->X() - offsetX) / size * 1024;
 				double globalMouseY2 = (mouse->Y() - offsetY) / size * 1024;
-				double screenMouseX = (globalMouseX / 1024.0) *  2.0 - 1.0;
-				double screenMouseY = (globalMouseY / 1024.0) * -2.0 + 1.0;
+				// double screenMouseX = (globalMouseX / 1024.0) *  2.0 - 1.0;
+				// double screenMouseY = (globalMouseY / 1024.0) * -2.0 + 1.0;
 
 				Vector2 worldMouse = Vector2(
 					screenMouseX * cameraScale.x + cameraOffset.x,
@@ -488,11 +559,6 @@ int main() {
 			wasFullscreen = false;
 		}
 
-		if (window->keyPressed(GLFW_KEY_Q) || window->keyPressed(GLFW_KEY_ESCAPE)) {
-			window->close();
-			windowCloseCallback(window->getGLFWWindow());
-		}
-
 		// Draw
 
 		glViewport(0, 0, width, height);
@@ -613,6 +679,13 @@ int main() {
 		}
 
 		MenuItems::draw(customMouse);
+		
+		for (Popup *popup : popups) {
+			Rect bounds = popup->Bounds();
+			bool mouseInside = bounds.inside(screenMouseX, screenMouseY);
+
+			popup->draw(screenMouseX, screenMouseY, mouseInside);
+		}
 
 		// glPushAttrib(GL_ENABLE_BIT); 
 
@@ -628,6 +701,8 @@ int main() {
 		window->render();
 
 		delete customMouse;
+		
+		Popups::cleanup();
 	}
 
 	MenuItems::terminate();

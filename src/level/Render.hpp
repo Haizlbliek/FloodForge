@@ -1,7 +1,7 @@
 #ifndef RENDER_HPP
 #define RENDER_HPP
 
-#include "gl.h"
+#include "../gl.h"
 
 #include "Project.hpp"
 #include "../Grid.hpp"

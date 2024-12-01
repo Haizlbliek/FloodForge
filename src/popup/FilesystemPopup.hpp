@@ -13,7 +13,7 @@
 #include "../Theme.hpp"
 #include "../font/Fonts.hpp"
 
-#include "MenuItems.hpp"
+// #include "MenuItems.hpp"
 #include "Popups.hpp"
 
 #define TYPE_FILE 0
@@ -341,10 +341,11 @@ class FilesystemPopup : public Popup {
         std::string newDirectory;
 
         void setDirectory() {
-            if (!MenuItems::ExportDirectory().empty()) {
-                currentDirectory = MenuItems::ExportDirectory();
-                return;
-            }
+            // TODO: Make this work
+            // if (!MenuItems::ExportDirectory().empty()) {
+            //     currentDirectory = MenuItems::ExportDirectory();
+            //     return;
+            // }
 
             if (std::filesystem::exists("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Rain World\\RainWorld_Data\\StreamingAssets")) {
                 currentDirectory = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Rain World\\RainWorld_Data\\StreamingAssets";

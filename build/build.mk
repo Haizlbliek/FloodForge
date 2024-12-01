@@ -6,7 +6,7 @@
 CXX ?= c++
 
 # list of all cpp source files
-SOURCES=src/glad.c $(wildcard src/*.cpp) $(APP_SOURCES) $(wildcard src/font/*.cpp) $(wildcard src/math/*.cpp)
+SOURCES=src/glad.c $(wildcard src/*.cpp) $(APP_SOURCES) $(wildcard src/font/*.cpp) $(wildcard src/math/*.cpp) $(wildcard src/popup/*.cpp)
 CPPFLAGS += --std=c++17
 INCLUDES = -I"include/"
 

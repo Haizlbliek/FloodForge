@@ -15,16 +15,17 @@
 #include "../font/Fonts.hpp"
 #include "../Theme.hpp"
 
+#include "../popup/Popups.hpp"
+#include "../popup/SplashArtPopup.hpp"
+#include "../popup/QuitConfirmationPopup.hpp"
+#include "SubregionPopup.hpp"
+
 #include "Shaders.hpp"
 #include "Globals.hpp"
 #include "Room.hpp"
 #include "OffscreenRoom.hpp"
 #include "Connection.hpp"
 #include "MenuItems.hpp"
-#include "Popups.hpp"
-#include "SplashArtPopup.hpp"
-#include "QuitConfirmationPopup.hpp"
-#include "SubregionPopup.hpp"
 
 #define TEXTURE_PATH (BASE_PATH + "assets/")
 

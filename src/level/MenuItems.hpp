@@ -11,6 +11,9 @@
 #include "../Window.hpp"
 #include "Main.hpp"
 
+#include "../popup/Popups.hpp"
+#include "../popup/FilesystemPopup.hpp"
+
 class Button {
 	public:
 		Button(std::string text, double x, double y, double width, double height, Font *font)
@@ -88,11 +91,11 @@ class MenuItems {
 			buttons.push_back(
 				(new Button("New", -0.99, 0.99, 0.1, 0.04, Fonts::rainworld))->OnPress(
 				[](Button *button) {
-					if (History::unsavedChanges) {
-						bool result = verifyBox("You have unsaved changes.\nAre you sure you want to create a new project?");
+					// if (History::unsavedChanges) {
+					// 	bool result = verifyBox("You have unsaved changes.\nAre you sure you want to create a new project?");
 
-						if (!result) return;
-					}
+					// 	if (!result) return;
+					// }
 
 					delete project;
 
@@ -101,30 +104,43 @@ class MenuItems {
 			));
 			buttons.push_back(
 				(new Button("Open", -0.84, 0.99, 0.12, 0.04, Fonts::rainworld))->OnPress(
-				[](Button *button) {
-					if (History::unsavedChanges) {
-						bool result = verifyBox("You have unsaved changes.\nAre you sure you want to load project?");
+				[window](Button *button) {
+					// if (History::unsavedChanges) {
+					// 	bool result = verifyBox("You have unsaved changes.\nAre you sure you want to load project?");
 						
-						if (!result) return;
-					}
+					// 	if (!result) return;
+					// }
+					
+					addPopup(new FilesystemPopup(window, std::regex(R"([^.]+\.level)"),
+						[](std::string path) {
+							if (path == "") return;
 
-					std::string path = OpenFileDialog();
+							std::cout << "Opening " << path << std::endl;
 
-					if (path == "") return;
+							delete project;
+							project = Project::loadFromPath(path);
 
-					std::cout << "Opening " << path << std::endl;
+							History::unsavedChanges = false;
+						}
+					));
 
-					delete project;
-					project = Project::loadFromPath(path);
+					// std::string path = OpenFileDialog();
 
-					History::unsavedChanges = false;
+					// if (path == "") return;
+
+					// std::cout << "Opening " << path << std::endl;
+
+					// delete project;
+					// project = Project::loadFromPath(path);
+
+					// History::unsavedChanges = false;
 				}
 			));
 			buttons.push_back(
 				(new Button("Export", -0.67, 0.99, 0.15, 0.04, Fonts::rainworld))->OnPress(
 				[](Button *button) {
 					if (!project->validPath()) project->save();
-					if (project->validPath()) project->exportDrizzle();
+					else if (project->validPath()) project->exportDrizzle();
 				}
 			));
 			buttons.push_back(

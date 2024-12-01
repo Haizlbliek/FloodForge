@@ -12,7 +12,7 @@
 
 #include "Globals.hpp"
 #include "Room.hpp"
-#include "Popups.hpp"
+#include "../popup/Popups.hpp"
 
 class AcronymPopup : public Popup {
 	public:

@@ -1,9 +1,9 @@
 #include "MenuItems.hpp"
 
-#include "Popups.hpp"
-#include "FilesystemPopup.hpp"
+#include "../popup/Popups.hpp"
+#include "../popup/FilesystemPopup.hpp"
+#include "../popup/WarningPopup.hpp"
 #include "AcronymPopup.hpp"
-#include "WarningPopup.hpp"
 
 std::vector<Button*> MenuItems::buttons;
 

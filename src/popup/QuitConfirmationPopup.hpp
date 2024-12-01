@@ -4,6 +4,7 @@
 #include "../gl.h"
 
 #include "../Window.hpp"
+#include "../Theme.hpp"
 
 #include "Popups.hpp"
 

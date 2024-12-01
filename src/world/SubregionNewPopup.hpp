@@ -10,9 +10,10 @@
 #include "../Window.hpp"
 #include "../Theme.hpp"
 
+#include "../popup/Popups.hpp"
+
 #include "Globals.hpp"
 #include "Room.hpp"
-#include "Popups.hpp"
 
 class SubregionNewPopup : public Popup {
 	public:
