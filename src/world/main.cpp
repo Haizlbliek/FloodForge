@@ -14,6 +14,7 @@
 #include "../math/Rect.hpp"
 #include "../font/Fonts.hpp"
 #include "../Theme.hpp"
+#include "../Draw.hpp"
 
 #include "Shaders.hpp"
 #include "Globals.hpp"
@@ -64,11 +65,11 @@ void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale,
 		0,       0,      0, 1
 	};
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(left, right, bottom, top, nearVal, farVal);
+	Draw::matrixMode(Draw::PROJECTION);
+	Draw::loadIdentity();
+	Draw::ortho(left, right, bottom, top, nearVal, farVal);
 
-	glMultMatrixf(rotationMatrix);
+	Draw::multMatrix(Draw::Matrix4f(rotationMatrix));
 }
 
 void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale) {
@@ -95,6 +96,7 @@ int main() {
 	MenuItems::init(window);
 	Popups::init();
 	Shaders::init();
+	Draw::init();
 
 	addPopup(new SplashArtPopup(window));
 
@@ -575,13 +577,13 @@ int main() {
 		window->clear();
 		glDisable(GL_DEPTH_TEST);
 
-		glColor3f(0.0f, 0.0f, 0.0f);
+		Draw::color(0.0f, 0.0f, 0.0f);
 		fillRect(-1.0, -1.0, 1.0, 1.0);
 
 		glViewport(offsetX, offsetY, size, size);
 
 		setThemeColour(THEME_BACKGROUND_COLOUR);
-		// glColor3f(0.3f, 0.3f, 0.3f);
+		// Draw::color(0.3f, 0.3f, 0.3f);
 		fillRect(-1.0, -1.0, 1.0, 1.0);
 
 		applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale);
@@ -616,12 +618,12 @@ int main() {
 			if (currentConnection->RoomB() != nullptr && currentConnection->RoomB()->ConnectionUsed(currentConnection->ConnectionB())) valid = false;
 
 			if (valid) {
-				glColor3f(1.0f, 1.0f, 0.0f);
+				Draw::color(1.0f, 1.0f, 0.0f);
 			} else {
-				glColor3f(1.0f, 0.0f, 0.0f);
+				Draw::color(1.0f, 0.0f, 0.0f);
 			}
 
-			glColor3f(1.0f, 1.0f, 0.0f);
+			Draw::color(1.0f, 1.0f, 0.0f);
 			drawLine(connectionStart->x, connectionStart->y, connectionEnd->x, connectionEnd->y, 8.0);
 		}
 
@@ -629,7 +631,7 @@ int main() {
 		applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, Vector2(1.0f, 1.0f));
 
 		if (connectionError != "") {
-			glColor3f(1.0, 0.0, 0.0);
+			Draw::color(1.0, 0.0, 0.0);
 			Fonts::rainworld->write(connectionError, mouse->X() / 512.0f - 1.0f, -mouse->Y() / 512.0f + 1.0f, 0.05);
 		}
 
@@ -660,6 +662,7 @@ int main() {
 	Fonts::cleanup();
 	MenuItems::cleanup();
 	Shaders::cleanup();
+	Draw::cleanup();
 
 	return 0;
 }

@@ -12,6 +12,7 @@
 #define FONT_PATH (BASE_PATH + "assets/fonts/")
 
 #include "../Utils.hpp"
+#include "../Draw.hpp"
 
 // American English
 #define CENTER_X  1
@@ -47,15 +48,14 @@ class Font {
 		}
 
 		void write(std::string text, float startX, float startY, float fontSize) {
-			glBindTexture(GL_TEXTURE_2D, texture);
+			Draw::useTexture(texture);
 
 			bool reenableBlend = glIsEnabled(GL_BLEND);
 
-			glEnable(GL_TEXTURE_2D);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-			glBegin(GL_QUADS);
+			Draw::begin(Draw::QUADS);
 
 			double scale = (1.0 / base) * fontSize;
 
@@ -86,17 +86,17 @@ class Font {
 				u1 = u0 + fontCharacter->width / (double) textureWidth;
 				v1 = v0 + fontCharacter->height / (double) textureHeight;
 
-				glTexCoord2f(u0, v0); glVertex2f(x,         y);
-				glTexCoord2f(u1, v0); glVertex2f(x + width, y);
-				glTexCoord2f(u1, v1); glVertex2f(x + width, y - height);
-				glTexCoord2f(u0, v1); glVertex2f(x,         y - height);
+				Draw::texCoord(u0, v0); Draw::vertex(x, y);
+				Draw::texCoord(u1, v0); Draw::vertex(x + width, y);
+				Draw::texCoord(u1, v1); Draw::vertex(x + width, y - height);
+				Draw::texCoord(u0, v1); Draw::vertex(x, y - height);
 
 				currentX += fontCharacter->xAdvance * scale;
 			}
 
-			glEnd();
+			Draw::end();
 
-			glDisable(GL_TEXTURE_2D);
+			Draw::useTexture(0);
 			if (!reenableBlend) glDisable(GL_BLEND);
 		}
 

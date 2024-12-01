@@ -1,4 +1,5 @@
 #include "Utils.hpp"
+#include "Draw.hpp"
 
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -16,21 +17,21 @@
 #define M_PI_2 1.570796326795
 
 void fillRect(float x0, float y0, float x1, float y1) {
-	glBegin(GL_QUADS);
-	glVertex2f(x0, y0);
-	glVertex2f(x1, y0);
-	glVertex2f(x1, y1);
-	glVertex2f(x0, y1);
-	glEnd();
+	Draw::begin(Draw::QUADS);
+	Draw::vertex(x0, y0);
+	Draw::vertex(x1, y0);
+	Draw::vertex(x1, y1);
+	Draw::vertex(x0, y1);
+	Draw::end();
 }
 
 void strokeRect(float x0, float y0, float x1, float y1) {
-	glBegin(GL_LINE_LOOP);
-	glVertex2f(x0, y0);
-	glVertex2f(x1, y0);
-	glVertex2f(x1, y1);
-	glVertex2f(x0, y1);
-	glEnd();
+	Draw::begin(Draw::LINE_LOOP);
+	Draw::vertex(x0, y0);
+	Draw::vertex(x1, y0);
+	Draw::vertex(x1, y1);
+	Draw::vertex(x0, y1);
+	Draw::end();
 }
 
 void drawLine(float x0, float y0, float x1, float y1, double thickness) {
@@ -52,25 +53,25 @@ void drawLine(float x0, float y0, float x1, float y1, double thickness) {
 	float c1x = x1 + cos(angle) * thickness;
 	float c1y = y1 + sin(angle) * thickness;
 
-	glBegin(GL_TRIANGLES);
+	Draw::begin(Draw::TRIANGLES);
 
-	glVertex2f(a0x, a0y);
-	glVertex2f(a1x, a1y);
-	glVertex2f(b0x, b0y);
+	Draw::vertex(a0x, a0y);
+	Draw::vertex(a1x, a1y);
+	Draw::vertex(b0x, b0y);
 
-	glVertex2f(a1x, a1y);
-	glVertex2f(b1x, b1y);
-	glVertex2f(b0x, b0y);
+	Draw::vertex(a1x, a1y);
+	Draw::vertex(b1x, b1y);
+	Draw::vertex(b0x, b0y);
 
-	glVertex2f(a0x, a0y);
-	glVertex2f(b0x, b0y);
-	glVertex2f(c0x, c0y);
+	Draw::vertex(a0x, a0y);
+	Draw::vertex(b0x, b0y);
+	Draw::vertex(c0x, c0y);
 
-	glVertex2f(a1x, a1y);
-	glVertex2f(b1x, b1y);
-	glVertex2f(c1x, c1y);
+	Draw::vertex(a1x, a1y);
+	Draw::vertex(b1x, b1y);
+	Draw::vertex(c1x, c1y);
 
-	glEnd();
+	Draw::end();
 }
 
 GLuint loadTexture(std::string filepath) {
@@ -205,7 +206,7 @@ std::string findFileCaseInsensitive(const std::string &directory, const std::str
 // Gl Functions
 
 void glColour(Colour colour) {
-	glColor4f(colour.R(), colour.G(), colour.B(), colour.A());
+	Draw::color(colour.R(), colour.G(), colour.B(), colour.A());
 }
 
 void glColor(Colour color) {

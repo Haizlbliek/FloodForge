@@ -8,6 +8,7 @@
 
 #include "Constants.hpp"
 #include "Utils.hpp"
+#include "Draw.hpp"
 
 Theme themeBasic {
 	Colour(0.3,  0.3,  0.3),  // Background
@@ -126,7 +127,7 @@ void setThemeColour(unsigned int themeColour) {
 
 	if (colour.A() == 0.0) return;
 
-	glColor3f(colour.R(), colour.G(), colour.B());
+	Draw::color(colour.R(), colour.G(), colour.B());
 }
 
 void setThemeColor(unsigned int color) {

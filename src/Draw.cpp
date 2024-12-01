@@ -477,6 +477,10 @@ void Draw::loadMatrix(const Matrix4f &mat) {
     drawState.mats[drawState.matIdx].cur = mat;
 }
 
+void Draw::multMatrix(const Matrix4f &mat) {
+    drawState.mats[drawState.matIdx].cur = mat * drawState.mats[drawState.matIdx].cur;
+}
+
 void Draw::popMatrix() {
     drawState.mats[drawState.matIdx].cur = drawState.mats[drawState.matIdx].stack.top();
     drawState.mats[drawState.matIdx].stack.pop();

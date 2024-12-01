@@ -136,7 +136,7 @@ class Room {
 			glColor(Colour(1.0, 1.0, 1.0).mix(tint, tintAmount));
 			fillRect(position->x, position->y, position->x + width, position->y - height);
 
-			glBegin(GL_QUADS);
+			Draw::begin(Draw::QUADS);
 			for (int x = 0; x < width; x++) {
 				for (int y = 0; y < height; y++) {
 					int tileType = getTile(x, y) % 16;
@@ -151,17 +151,17 @@ class Room {
 
 					if (tileType == 1) {
 						glColor(Colour(0.125, 0.125, 0.125).mix(tint, tintAmount));
-						glVertex2f(x0, y0);
-						glVertex2f(x1, y0);
-						glVertex2f(x1, y1);
-						glVertex2f(x0, y1);
+						Draw::vertex(x0, y0);
+						Draw::vertex(x1, y0);
+						Draw::vertex(x1, y1);
+						Draw::vertex(x0, y1);
 					}
 					if (tileType == 4) {
 						glColor(Colour(0.0, 1.0, 1.0).mix(tint, tintAmount));
-						glVertex2f(x0, y0);
-						glVertex2f(x1, y0);
-						glVertex2f(x1, y1);
-						glVertex2f(x0, y1);
+						Draw::vertex(x0, y0);
+						Draw::vertex(x1, y0);
+						Draw::vertex(x1, y1);
+						Draw::vertex(x0, y1);
 					}
 					if (tileType == 2) {
 						glColor(Colour(1.0, 0.0, 0.0).mix(tint, tintAmount));
@@ -173,75 +173,75 @@ class Room {
 						bits += (getTile(x, y + 1) == 1) ? 8 : 0;
 
 						if (bits == 1 + 4) {
-							glVertex2f(x0, y0);
-							glVertex2f(x1, y0);
-							glVertex2f(x0, y1);
-							glVertex2f(x0, y0);
+							Draw::vertex(x0, y0);
+							Draw::vertex(x1, y0);
+							Draw::vertex(x0, y1);
+							Draw::vertex(x0, y0);
 						} else if (bits == 1 + 8) {
-							glVertex2f(x0, y1);
-							glVertex2f(x1, y1);
-							glVertex2f(x0, y0);
-							glVertex2f(x0, y1);
+							Draw::vertex(x0, y1);
+							Draw::vertex(x1, y1);
+							Draw::vertex(x0, y0);
+							Draw::vertex(x0, y1);
 						} else if (bits == 2 + 4) {
-							glVertex2f(x1, y0);
-							glVertex2f(x0, y0);
-							glVertex2f(x1, y1);
-							glVertex2f(x1, y0);
+							Draw::vertex(x1, y0);
+							Draw::vertex(x0, y0);
+							Draw::vertex(x1, y1);
+							Draw::vertex(x1, y0);
 						} else if (bits == 2 + 8) {
-							glVertex2f(x1, y1);
-							glVertex2f(x0, y1);
-							glVertex2f(x1, y0);
-							glVertex2f(x1, y1);
+							Draw::vertex(x1, y1);
+							Draw::vertex(x0, y1);
+							Draw::vertex(x1, y0);
+							Draw::vertex(x1, y1);
 						}
 					}
 					if (tileType == 3) {
 						glColor(Colour(0.0, 1.0, 0.0).mix(tint, tintAmount));
-						glVertex2f(x0, y0);
-						glVertex2f(x1, y0);
-						glVertex2f(x1, (y0 + y1) * 0.5f);
-						glVertex2f(x0, (y0 + y1) * 0.5f);
+						Draw::vertex(x0, y0);
+						Draw::vertex(x1, y0);
+						Draw::vertex(x1, (y0 + y1) * 0.5f);
+						Draw::vertex(x0, (y0 + y1) * 0.5f);
 					}
 
 					if (tileData & 1) { // 16 - Vertical Pole
 						glColor(Colour(0.0, 0.0, 1.0).mix(tint, tintAmount));
-						glVertex2f(x0 + 0.375, y0);
-						glVertex2f(x1 - 0.375, y0);
-						glVertex2f(x1 - 0.375, y1);
-						glVertex2f(x0 + 0.375, y1);
+						Draw::vertex(x0 + 0.375, y0);
+						Draw::vertex(x1 - 0.375, y0);
+						Draw::vertex(x1 - 0.375, y1);
+						Draw::vertex(x0 + 0.375, y1);
 					}
 
 					if (tileData & 2) { // 32 - Horizontal Pole
 						glColor(Colour(0.0, 0.0, 1.0).mix(tint, tintAmount));
-						glVertex2f(x0, y0 - 0.375);
-						glVertex2f(x1, y0 - 0.375);
-						glVertex2f(x1, y1 + 0.375);
-						glVertex2f(x0, y1 + 0.375);
+						Draw::vertex(x0, y0 - 0.375);
+						Draw::vertex(x1, y0 - 0.375);
+						Draw::vertex(x1, y1 + 0.375);
+						Draw::vertex(x0, y1 + 0.375);
 					}
 
 					if (tileData & 4) { // 64 - Room Exit
 						glColor(Colour(1.0, 0.0, 1.0).mix(tint, tintAmount));
-						glVertex2f(x0 + 0.25, y0 - 0.25);
-						glVertex2f(x1 - 0.25, y0 - 0.25);
-						glVertex2f(x1 - 0.25, y1 + 0.25);
-						glVertex2f(x0 + 0.25, y1 + 0.25);
+						Draw::vertex(x0 + 0.25, y0 - 0.25);
+						Draw::vertex(x1 - 0.25, y0 - 0.25);
+						Draw::vertex(x1 - 0.25, y1 + 0.25);
+						Draw::vertex(x0 + 0.25, y1 + 0.25);
 					}
 
 					if (tileData & 8) { // 128 - Shortcut
 						glColor(Colour(0.125, 0.125, 0.125).mix(tint, tintAmount));
-						glVertex2f(x0 + 0.40625, y0 - 0.40625);
-						glVertex2f(x1 - 0.40625, y0 - 0.40625);
-						glVertex2f(x1 - 0.40625, y1 + 0.40625);
-						glVertex2f(x0 + 0.40625, y1 + 0.40625);
+						Draw::vertex(x0 + 0.40625, y0 - 0.40625);
+						Draw::vertex(x1 - 0.40625, y0 - 0.40625);
+						Draw::vertex(x1 - 0.40625, y1 + 0.40625);
+						Draw::vertex(x0 + 0.40625, y1 + 0.40625);
 
 						glColor(Colour(1.0, 1.0, 1.0).mix(tint, tintAmount));
-						glVertex2f(x0 + 0.4375, y0 - 0.4375);
-						glVertex2f(x1 - 0.4375, y0 - 0.4375);
-						glVertex2f(x1 - 0.4375, y1 + 0.4375);
-						glVertex2f(x0 + 0.4375, y1 + 0.4375);
+						Draw::vertex(x0 + 0.4375, y0 - 0.4375);
+						Draw::vertex(x1 - 0.4375, y0 - 0.4375);
+						Draw::vertex(x1 - 0.4375, y1 + 0.4375);
+						Draw::vertex(x0 + 0.4375, y1 + 0.4375);
 					}
 				}
 			}
-			glEnd();
+			Draw::end();
 
 			if (debugRoomConnections) {
 				for (int x = 0; x < width; x++) {

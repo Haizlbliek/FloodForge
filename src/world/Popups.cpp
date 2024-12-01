@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "../Theme.hpp"
+#include "../Draw.hpp"
 
 GLuint Popups::textureUI = 0;
 std::vector<Popup*> Popups::popupTrash;
@@ -22,50 +23,49 @@ Popup::Popup(Window *window) : bounds(Rect(-0.5, -0.5, 0.5, 0.5)) {
 }
 
 void Popup::draw(double mouseX, double mouseY, bool mouseInside) {
-	glBegin(GL_QUADS);
+	Draw::begin(Draw::QUADS);
 
 	setThemeColour(THEME_POPUP_COLOUR);
-	// glColor3f(0.0, 0.0, 0.0);
-	glVertex2f(bounds.X0(), bounds.Y0());
-	glVertex2f(bounds.X0(), bounds.Y1());
-	glVertex2f(bounds.X1(), bounds.Y1());
-	glVertex2f(bounds.X1(), bounds.Y0());
+	// Draw::color(0.0, 0.0, 0.0);
+	Draw::vertex(bounds.X0(), bounds.Y0());
+	Draw::vertex(bounds.X0(), bounds.Y1());
+	Draw::vertex(bounds.X1(), bounds.Y1());
+	Draw::vertex(bounds.X1(), bounds.Y0());
 
 	setThemeColour(THEME_POPUP_HEADER_COLOUR);
-	// glColor3f(0.2, 0.2, 0.2);
-	glVertex2f(bounds.X0(),  bounds.Y1() - 0.00);
-	glVertex2f(bounds.X0(),  bounds.Y1() - 0.05);
-	glVertex2f(bounds.X1(),  bounds.Y1() - 0.05);
-	glVertex2f(bounds.X1(),  bounds.Y1() - 0.00);
+	// Draw::color(0.2, 0.2, 0.2);
+	Draw::vertex(bounds.X0(),  bounds.Y1() - 0.00);
+	Draw::vertex(bounds.X0(),  bounds.Y1() - 0.05);
+	Draw::vertex(bounds.X1(),  bounds.Y1() - 0.05);
+	Draw::vertex(bounds.X1(),  bounds.Y1() - 0.00);
 
-	glEnd();
+	Draw::end();
 
 	if (mouseInside) {
 		setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
-		// glColor3f(0.0, 1.0, 0.0);
+		// Draw::color(0.0, 1.0, 0.0);
 		glLineWidth(2);
 		strokeRect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
 	} else {
 		setThemeColour(THEME_BORDER_COLOUR);
-		// glColor3f(0.75, 0.75, 0.75);
+		// Draw::color(0.75, 0.75, 0.75);
 		glLineWidth(1);
 		strokeRect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
 	}
 
 	setThemeColour(THEME_TEXT_COLOUR);
-	glBindTexture(GL_TEXTURE_2D, Popups::textureUI);
-	glEnable(GL_TEXTURE_2D);
+	Draw::useTexture(Popups::textureUI);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glBegin(GL_QUADS);
+	Draw::begin(Draw::QUADS);
 
-	glTexCoord2f(0.00f, 0.00f); glVertex2f(bounds.X1() - 0.05, bounds.Y1() - 0.00);
-	glTexCoord2f(0.25f, 0.00f); glVertex2f(bounds.X1() - 0.00, bounds.Y1() - 0.00);
-	glTexCoord2f(0.25f, 0.25f); glVertex2f(bounds.X1() - 0.00, bounds.Y1() - 0.05);
-	glTexCoord2f(0.00f, 0.25f); glVertex2f(bounds.X1() - 0.05, bounds.Y1() - 0.05);
+	Draw::texCoord(0.00f, 0.00f); Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.00);
+	Draw::texCoord(0.25f, 0.00f); Draw::vertex(bounds.X1() - 0.00, bounds.Y1() - 0.00);
+	Draw::texCoord(0.25f, 0.25f); Draw::vertex(bounds.X1() - 0.00, bounds.Y1() - 0.05);
+	Draw::texCoord(0.00f, 0.25f); Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.05);
 
-	glEnd();
-	glDisable(GL_TEXTURE_2D);
+	Draw::end();
+	Draw::useTexture(0);
 	glDisable(GL_BLEND);
 
 	if (mouseInside && mouseX >= bounds.X1() - 0.05 && mouseY >= bounds.Y1() - 0.05) {
@@ -75,14 +75,14 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside) {
 	}
 
 	glLineWidth(1);
-	glBegin(GL_LINE_LOOP);
+	Draw::begin(Draw::LINE_LOOP);
 
-	glVertex2f(bounds.X1() - 0.05, bounds.Y1() - 0.00);
-	glVertex2f(bounds.X1() - 0.00, bounds.Y1() - 0.00);
-	glVertex2f(bounds.X1() - 0.00, bounds.Y1() - 0.05);
-	glVertex2f(bounds.X1() - 0.05, bounds.Y1() - 0.05);
+	Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.00);
+	Draw::vertex(bounds.X1() - 0.00, bounds.Y1() - 0.00);
+	Draw::vertex(bounds.X1() - 0.00, bounds.Y1() - 0.05);
+	Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.05);
 
-	glEnd();
+	Draw::end();
 }
 
 void Popup::mouseClick(double mouseX, double mouseY) {

@@ -1,3 +1,4 @@
+#pragma once
 #include "math/Matrix4.hpp"
 #include "math/Colour.hpp"
 #include <glad/glad.h>
@@ -63,6 +64,10 @@ namespace Draw {
             memcpy(m, mat.m, sizeof(float) * 16);
         }
 
+        Matrix4f(const float *values) noexcept {
+            memcpy(m, values, sizeof(m));
+        }
+
         operator Matrix4() const {
             Matrix4 mat;
             memcpy(mat.m, m, sizeof(m));
@@ -125,6 +130,7 @@ namespace Draw {
     void matrixMode(Draw::MatrixMode mode);
     void loadIdentity();
     void loadMatrix(const Matrix4f &mat);
+    void multMatrix(const Matrix4f &mat);
     void popMatrix();
     void pushMatrix();
     void ortho(float left, float right, float bottom, float top, float near, float far);
