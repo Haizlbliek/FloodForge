@@ -43,6 +43,7 @@ void Room::draw(Vector2 mousePosition, double lineSize) {
     glBindVertexArray(0);
     glUseProgram(0);
 
+    Draw::flushOnEnd = false;
     if (water != -1) {
         glColor(Colour(0.0, 0.0, 0.5, 0.5));
         fillRect(position->x, position->y - (height - std::min(water, height)), position->x + width, position->y - height);
@@ -54,4 +55,5 @@ void Room::draw(Vector2 mousePosition, double lineSize) {
         glColor(Colour(0.75, 0.75, 0.75));
     }
     strokeRect(position->x, position->y, position->x + width, position->y - height);
+    Draw::flushOnEnd = true;
 }

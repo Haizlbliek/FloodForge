@@ -11,8 +11,8 @@ namespace Draw {
         LINE_STRIP,
         LINE_LOOP,
         TRIANGLES,
-        TRIANGLE_STRIP,
-        TRIANGLE_FAN,
+        //TRIANGLE_STRIP,
+        //TRIANGLE_FAN,
         QUADS,
     };
 
@@ -156,6 +156,8 @@ namespace Draw {
     /**
      * If set to true, flush() will automatically called on every subsequent call to end(). This may have a performance penalty.
      * This is set to true by default.
+     *
+     * You may temporarily set this to false for blocks of draw commands without any raw OpenGL calls in-between.
      */
     extern bool flushOnEnd;
 }
