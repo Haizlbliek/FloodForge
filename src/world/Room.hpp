@@ -582,125 +582,14 @@ class Room {
 			ensureConnections();
 		}
 
-		void generateVBO() {
-			glGenBuffers(1, &vbo);
-			glGenVertexArrays(1, &vao);
-
-			vertices.push_back({ (float) position->x,         (float) position->y,          1.0, 1.0, 1.0 });
-			vertices.push_back({ (float) position->x + width, (float) position->y,          1.0, 1.0, 1.0 });
-			vertices.push_back({ (float) position->x + width, (float) position->y - height, 1.0, 1.0, 1.0 });
-			vertices.push_back({ (float) position->x,         (float) position->y - height, 1.0, 1.0, 1.0 });
-
-			for (int x = 0; x < width; x++) {
-				for (int y = 0; y < height; y++) {
-					int tileType = getTile(x, y) % 16;
-					int tileData = getTile(x, y) / 16;
-
-					float x0 = position->x + x;
-					float y0 = position->y - y;
-					float x1 = position->x + x + 1;
-					float y1 = position->y - y - 1;
-					float x2 = (x0 + x1) * 0.5;
-					float y2 = (y0 + y1) * 0.5;
-
-					if (tileType == 1) {
-						vertices.push_back({ x0, y0, 0.125, 0.125, 0.125 });
-						vertices.push_back({ x1, y0, 0.125, 0.125, 0.125 });
-						vertices.push_back({ x1, y1, 0.125, 0.125, 0.125 });
-						vertices.push_back({ x0, y1, 0.125, 0.125, 0.125 });
-					}
-					if (tileType == 4) {
-						vertices.push_back({ x0, y0, 0.0, 1.0, 1.0 });
-						vertices.push_back({ x1, y0, 0.0, 1.0, 1.0 });
-						vertices.push_back({ x1, y1, 0.0, 1.0, 1.0 });
-						vertices.push_back({ x0, y1, 0.0, 1.0, 1.0 });
-					}
-					if (tileType == 2) {
-						int bits = 0;
-						bits += (getTile(x - 1, y) == 1) ? 1 : 0;
-						bits += (getTile(x + 1, y) == 1) ? 2 : 0;
-						bits += (getTile(x, y - 1) == 1) ? 4 : 0;
-						bits += (getTile(x, y + 1) == 1) ? 8 : 0;
-
-						if (bits == 1 + 4) {
-							vertices.push_back({ x0, y0, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x1, y0, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x0, y1, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x0, y0, 1.0, 0.0, 0.0 });
-						} else if (bits == 1 + 8) {
-							vertices.push_back({ x0, y1, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x1, y1, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x0, y0, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x0, y1, 1.0, 0.0, 0.0 });
-						} else if (bits == 2 + 4) {
-							vertices.push_back({ x1, y0, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x0, y0, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x1, y1, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x1, y0, 1.0, 0.0, 0.0 });
-						} else if (bits == 2 + 8) {
-							vertices.push_back({ x1, y1, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x0, y1, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x1, y0, 1.0, 0.0, 0.0 });
-							vertices.push_back({ x1, y1, 1.0, 0.0, 0.0 });
-						}
-					}
-					if (tileType == 3) {
-						vertices.push_back({ x0, y0, 0.0, 1.0, 0.0 });
-						vertices.push_back({ x1, y0, 0.0, 1.0, 0.0 });
-						vertices.push_back({ x1, (y0 + y1) * 0.5f, 0.0, 1.0, 0.0 });
-						vertices.push_back({ x0, (y0 + y1) * 0.5f, 0.0, 1.0, 0.0 });
-					}
-
-					if (tileData & 1) { // 16 - Vertical Pole
-						vertices.push_back({ x0 + 0.375f, y0, 0.0, 0.0, 1.0 });
-						vertices.push_back({ x1 - 0.375f, y0, 0.0, 0.0, 1.0 });
-						vertices.push_back({ x1 - 0.375f, y1, 0.0, 0.0, 1.0 });
-						vertices.push_back({ x0 + 0.375f, y1, 0.0, 0.0, 1.0 });
-					}
-
-					if (tileData & 2) { // 32 - Horizontal Pole
-						vertices.push_back({ x0, y0 - 0.375f, 0.0, 0.0, 1.0 });
-						vertices.push_back({ x1, y0 - 0.375f, 0.0, 0.0, 1.0 });
-						vertices.push_back({ x1, y1 + 0.375f, 0.0, 0.0, 1.0 });
-						vertices.push_back({ x0, y1 + 0.375f, 0.0, 0.0, 1.0 });
-					}
-
-					if (tileData & 4) { // 64 - Room Exit
-						vertices.push_back({ x0 + 0.25f, y0 - 0.25f, 1.0, 0.0, 1.0 });
-						vertices.push_back({ x1 - 0.25f, y0 - 0.25f, 1.0, 0.0, 1.0 });
-						vertices.push_back({ x1 - 0.25f, y1 + 0.25f, 1.0, 0.0, 1.0 });
-						vertices.push_back({ x0 + 0.25f, y1 + 0.25f, 1.0, 0.0, 1.0 });
-					}
-
-					if (tileData & 8) { // 128 - Shortcut
-						vertices.push_back({ x0 + 0.40625f, y0 - 0.40625f, 0.125, 0.125, 0.125 });
-						vertices.push_back({ x1 - 0.40625f, y0 - 0.40625f, 0.125, 0.125, 0.125 });
-						vertices.push_back({ x1 - 0.40625f, y1 + 0.40625f, 0.125, 0.125, 0.125 });
-						vertices.push_back({ x0 + 0.40625f, y1 + 0.40625f, 0.125, 0.125, 0.125 });
-
-						vertices.push_back({ x0 + 0.4375f, y0 - 0.4375f, 1.0, 1.0, 1.0 });
-						vertices.push_back({ x1 - 0.4375f, y0 - 0.4375f, 1.0, 1.0, 1.0 });
-						vertices.push_back({ x1 - 0.4375f, y1 + 0.4375f, 1.0, 1.0, 1.0 });
-						vertices.push_back({ x0 + 0.4375f, y1 + 0.4375f, 1.0, 1.0, 1.0 });
-					}
-				}
-			}
-
-			glBindVertexArray(vao);
-			glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
-
-			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-			glEnableVertexAttribArray(0);
-
-			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(float) * 2));
-			glEnableVertexAttribArray(1);
-
-			glBindVertexArray(0);
-		}
+		void generateVBO();
+		void addQuad(const Vertex &a, const Vertex &b, const Vertex &c, const Vertex &d);
+		void addTri(const Vertex &a, const Vertex &b, const Vertex &c);
 
 		std::vector<Vertex> vertices;
-		GLuint vbo;
+		std::vector<uint32_t> indices;
+		size_t cur_index;
+		GLuint vbo[2]; // first: vertices, second: indices
 		GLuint vao;
 
 		std::string path;
