@@ -523,7 +523,7 @@ class Room {
 
 			std::string tempLine;
 
-			std::getline(geometryFile, roomName);
+			std::getline(geometryFile, tempLine);
 			std::getline(geometryFile, tempLine, '*');
 			width = std::stoi(tempLine);
 			std::getline(geometryFile, tempLine, '|');
