@@ -503,8 +503,8 @@ class Room {
 
 			for (size_t i = 0; i < connections.size(); ++i) {
 				for (size_t j = 0; j < connections.size() - i - 1; ++j) {
-					const Vector2i& a = connections[j];
-					const Vector2i& b = connections[j + 1];
+					const Vector2i &a = connections[j];
+					const Vector2i &b = connections[j + 1];
 
 					if (a.y > b.y || (a.y == b.y && a.x > b.x)) {
 						std::swap(connections[j], connections[j + 1]);
@@ -528,10 +528,15 @@ class Room {
 			width = std::stoi(tempLine);
 			std::getline(geometryFile, tempLine, '|');
 			height = std::stoi(tempLine);
-			std::getline(geometryFile, tempLine, '|');
-			water = std::stoi(tempLine);
-			if (water == 0) water = -1;
-			std::getline(geometryFile, tempLine); // Junk
+			if (tempLine.find('\n') != std::string::npos) {
+				water = -1;
+				std::cout << "Yep, vater" << std::endl;
+			} else {
+				std::getline(geometryFile, tempLine, '|');
+				water = std::stoi(tempLine);
+				if (water == 0) water = -1;
+				std::getline(geometryFile, tempLine); // Junk
+			}
 
 			std::getline(geometryFile, tempLine); // Junk
 			std::getline(geometryFile, tempLine); // Junk
@@ -542,6 +547,10 @@ class Room {
 			std::getline(geometryFile, tempLine); // Junk
 			std::getline(geometryFile, tempLine); // Junk
 			std::getline(geometryFile, tempLine); // Junk
+
+			std::cout << "Data for " << roomName << "\n"
+			<< "Width: " << width << "\n"
+			<< "Height: " << height << "\n";
 
 			// Collision Data
 			geometry = new int[width * height];
