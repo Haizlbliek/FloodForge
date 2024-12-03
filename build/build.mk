@@ -39,7 +39,7 @@ OBJS = $(addprefix build/obj/, $(shell realpath --relative-to src $(patsubst %.c
 # link all .o files to build FloodForge executable
 build/FloodForge: pkgcheck $(OBJS)
 	@echo [LNK] $@
-	@$(CXX) -o $@ $(CPPFLAGS) build/resource.o $(OBJS) $(LIBS)
+	@$(CXX) -o $@ $(CPPFLAGS) $(OBJS) $(LIBS)
 
 # instruct make on how build an .o file from a .cpp file
 build/obj/%.o: src/%.cpp
