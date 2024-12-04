@@ -68,7 +68,7 @@ class SubregionPopup : public Popup {
                         room->Subregion(button - 1);
                         close();
                     } else if (button == subregions.size() + 1) {
-                        addPopup(new SubregionNewPopup(window, room));
+                        Popups::addPopup(new SubregionNewPopup(window, room));
                         close();
                     }
                 } else if (mouseX >= 0.35) {
@@ -85,7 +85,7 @@ class SubregionPopup : public Popup {
                         if (canRemove) {
                             subregions.erase(subregions.begin() + (button - 1));
                         } else {
-                            addPopup(new WarningPopup(window, "Can't remove subregion\nRooms still use it"));
+                            Popups::addPopup(new WarningPopup(window, "Can't remove subregion\nRooms still use it"));
                         }
                     } else if (button == subregions.size() + 1) {
                     }

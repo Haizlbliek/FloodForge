@@ -99,7 +99,7 @@ int main() {
 	Shaders::init();
 	Draw::init();
 
-	addPopup(new SplashArtPopup(window));
+	Popups::addPopup(new SplashArtPopup(window));
 
 	bool leftMouseDown;
 
@@ -157,7 +157,7 @@ int main() {
 		// Update
 
 		bool isHoveringPopup = false;
-		for (Popup *popup : popups) {
+		for (Popup *popup : Popups::popups) {
 			Rect bounds = popup->Bounds();
 
 			if (bounds.inside(Vector2(screenMouse.x, screenMouse.y))) {
@@ -241,10 +241,10 @@ int main() {
 
 		if (window->keyPressed(GLFW_KEY_ESCAPE)) {
 			if (previousKeys.find(GLFW_KEY_ESCAPE) == previousKeys.end()) {
-				if (popups.size() > 0)
-					popups[0]->reject();
+				if (Popups::popups.size() > 0)
+					Popups::popups[0]->reject();
 				else
-					addPopup(new QuitConfirmationPopup(window));
+					Popups::addPopup(new QuitConfirmationPopup(window));
 			}
 
 			previousKeys.insert(GLFW_KEY_ESCAPE);
@@ -254,8 +254,8 @@ int main() {
 
 		if (window->keyPressed(GLFW_KEY_ENTER)) {
 			if (previousKeys.find(GLFW_KEY_ENTER) == previousKeys.end()) {
-				if (popups.size() > 0)
-					popups[0]->accept();
+				if (Popups::popups.size() > 0)
+					Popups::popups[0]->accept();
 			}
 
 			previousKeys.insert(GLFW_KEY_ENTER);
@@ -387,7 +387,7 @@ int main() {
 			if (!leftMouseDown) {
 				bool blockLeftMouse = false;
 
-				for (Popup *popup : popups) {
+				for (Popup *popup : Popups::popups) {
 					Rect bounds = popup->Bounds();
 
 					if (bounds.inside(screenMouse)) {
@@ -495,7 +495,7 @@ int main() {
 					Room *room = *it;
 
 					if (room->inside(worldMouse)) {
-						addPopup(new SubregionPopup(window, room));
+						Popups::addPopup(new SubregionPopup(window, room));
 
 						break;
 					}
@@ -654,12 +654,7 @@ int main() {
 
 		MenuItems::draw(&customMouse);
 
-		for (Popup *popup : popups) {
-			Rect bounds = popup->Bounds();
-			bool mouseInside = bounds.inside(screenMouse);
-
-			popup->draw(screenMouse.x, screenMouse.y, mouseInside);
-		}
+		Popups::draw(screenMouse);
 
 		window->render();
 

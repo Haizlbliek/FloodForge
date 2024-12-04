@@ -35,7 +35,7 @@ class AcronymPopup : public Popup {
 		}
 
 		void close() {
-			removePopup(this);
+			Popups::removePopup(this);
 
 			window->removeKeyCallback(this, keyCallback);
 		}

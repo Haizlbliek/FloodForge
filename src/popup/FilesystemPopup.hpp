@@ -88,7 +88,7 @@ class FilesystemPopup : public Popup {
         }
 
 		void close() {
-			removePopup(this);
+			Popups::removePopup(this);
 
 			window->removeKeyCallback(this, keyCallback);
 			window->removeScrollCallback(this, scrollCallback);

@@ -66,11 +66,14 @@ class Room {
 		virtual ~Room() {
 			delete position;
 			delete coord;
-			delete geometry;
+			delete[] geometry;
 
 			position = nullptr;
 			coord = nullptr;
 			geometry = nullptr;
+
+			glDeleteBuffers(2, vbo);
+			glDeleteVertexArrays(1, &vao);
 		}
 
 		bool inside(Vector2 otherPosition) {
@@ -548,9 +551,9 @@ class Room {
 			std::getline(geometryFile, tempLine); // Junk
 			std::getline(geometryFile, tempLine); // Junk
 
-			std::cout << "Data for " << roomName << "\n"
-			<< "Width: " << width << "\n"
-			<< "Height: " << height << "\n";
+			// std::cout << "Data for " << roomName << "\n"
+			// << "Width: " << width << "\n"
+			// << "Height: " << height << "\n";
 
 			// Collision Data
 			geometry = new int[width * height];

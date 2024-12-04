@@ -12,6 +12,7 @@
 class Popup {
 	public:
 		Popup(Window *window);
+		virtual ~Popup() {}
 
 		virtual void draw(double mouseX, double mouseY, bool mouseInside);
 
@@ -44,14 +45,15 @@ class Popups {
 
 		static GLuint textureUI;
 		static std::vector<Popup*> popupTrash;
+		static std::vector<Popup*> popups;
 
 		static void cleanup();
+
+		static void draw(Vector2 mouse);
+		
+		static void addPopup(Popup *popup);
+
+		static void removePopup(Popup *popup);
 };
-
-extern std::vector<Popup*> popups;
-
-void addPopup(Popup *popup);
-
-void removePopup(Popup *popup);
 
 #endif
