@@ -19,8 +19,7 @@ void Popups::cleanup() {
 	Popups::popupTrash.clear();
 }
 
-Popup::Popup(Window *window) : bounds(Rect(-0.5, -0.5, 0.5, 0.5)) {
-	this->window = window;
+Popup::Popup(Window *window) : bounds(Rect(-0.5, -0.5, 0.5, 0.5)), window(window) {
 }
 
 void Popup::draw(double mouseX, double mouseY, bool mouseInside) {
@@ -119,7 +118,7 @@ void Popups::addPopup(Popup *popup) {
 	if (canStack) {
 		Popups::popups.push_back(popup);
 	} else {
-		Popups::popupTrash.push_back(popup);
+		popup->close();
 	}
 }
 

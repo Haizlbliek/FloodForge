@@ -93,6 +93,8 @@ class FilesystemPopup : public Popup {
 			window->removeKeyCallback(this, keyCallback);
 			window->removeScrollCallback(this, scrollCallback);
             
+            window = nullptr;
+            
             if (!called) callback("");
 		}
 
@@ -285,6 +287,16 @@ class FilesystemPopup : public Popup {
 
 		static void keyCallback(void *object, int action, int key) {
 			FilesystemPopup *popup = static_cast<FilesystemPopup*>(object);
+
+            if (!popup) {
+                std::cerr << "Error: popup is nullptr." << std::endl;
+                return;
+            }
+
+            if (!popup->window) {
+                std::cerr << "Error: popup->window is nullptr." << std::endl;
+                return;
+            }
 
             if (popup->mode == 0) return;
 

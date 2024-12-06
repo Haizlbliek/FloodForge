@@ -260,6 +260,30 @@ class Window {
 			);
 		}
 
+		void clearCallbacks(void *object) {
+			keyCallbacks.erase(
+				std::remove_if(
+					keyCallbacks.begin(),
+					keyCallbacks.end(),
+					[&object](const std::pair<void*, std::function<void(void*, int, int)>>& p) {
+						return p.first == object;
+					}
+				),
+				keyCallbacks.end()
+			);
+			
+			scrollCallbacks.erase(
+				std::remove_if(
+					scrollCallbacks.begin(),
+					scrollCallbacks.end(),
+					[&object](const std::pair<void*, std::function<void(void*, double, double)>>& p) {
+						return p.first == object;
+					}
+				),
+				scrollCallbacks.end()
+			);
+		}
+
 		std::string getClipboard() {
 			const char* clipboardText = glfwGetClipboardString(glfwWindow);
 
@@ -310,6 +334,11 @@ class Window {
 			if (!window) return;
 
 			for (std::pair<void*, std::function<void(void*, int, int)>> callback : window->keyCallbacks) {
+				if (!callback.second) {
+					std::cout << "INVALID CALLBACK" << std::endl;
+					continue;
+				}
+
 				callback.second(callback.first, action, key);
 			}
 		}
