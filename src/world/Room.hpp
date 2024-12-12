@@ -148,9 +148,18 @@ class Room {
 			return -1;
 		}
 
-		const Vector2 getConnection(unsigned int connectionId) const {
+		const Vector2 getConnectionPosition(unsigned int connectionId) const {
 			if (connectionId >= connections.size()) return Vector2(0, 0);
 			Vector2i connection = connections[connectionId];
+			return Vector2(
+				position->x + connection.x + 0.5,
+				position->y - connection.y - 0.5
+			);
+		}
+
+		const Vector2 getShortcutConnectionPosition(unsigned int connectionId) const {
+			if (connectionId >= connections.size()) return Vector2(0, 0);
+			Vector2i connection = getShortcutConnection(connectionId);
 			return Vector2(
 				position->x + connection.x + 0.5,
 				position->y - connection.y - 0.5

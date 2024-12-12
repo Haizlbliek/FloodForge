@@ -41,6 +41,7 @@ namespace DebugData {
         if (hoveringRoom != nullptr) {
             debugText.push_back("    Room:");
             debugText.push_back("Name: " + hoveringRoom->RoomName());
+            debugText.push_back("Tag: " + hoveringRoom->Tag());
             debugText.push_back("Width: " + std::to_string(hoveringRoom->Width()));
             debugText.push_back("Height: " + std::to_string(hoveringRoom->Height()));
             if (hoveringRoom->Hidden()) {

@@ -293,21 +293,21 @@ int main() {
 				if (connectionEnd   != nullptr) { delete connectionEnd;   connectionEnd   = nullptr; }
 
 				if (hoveringRoom != nullptr) {
-					bool valid = false;
-					int connectionId = 0;
+					// bool valid = false;
+					int connectionId = hoveringRoom->getShortcutConnection(tilePosition);
 
-					for (Vector2i connectionPosition : hoveringRoom->TileConnections()) {
-						if (hoveringRoom->ConnectionUsed(connectionId)) { connectionId++; continue; }
+					// for (Vector2i connectionPosition : hoveringRoom->TileConnections()) {
+					// 	if (hoveringRoom->ConnectionUsed(connectionId)) { connectionId++; continue; }
 
-						if (connectionPosition == tilePosition) {
-							valid = true;
-							break;
-						}
+					// 	if (connectionPosition == tilePosition) {
+					// 		valid = true;
+					// 		break;
+					// 	}
 
-						connectionId++;
-					}
+					// 	connectionId++;
+					// }
 
-					if (valid) {
+					if (connectionId != -1) {
 						connectionStart = new Vector2(floor(worldMouse.x - hoveringRoom->Position()->x) + 0.5 + hoveringRoom->Position()->x, floor(worldMouse.y - hoveringRoom->Position()->y) + 0.5 + hoveringRoom->Position()->y);
 						connectionEnd   = new Vector2(connectionStart);
 						currentConnection = new Connection(hoveringRoom, connectionId, nullptr, 0);
@@ -316,21 +316,22 @@ int main() {
 
 				connectionState = (connectionStart == nullptr) ? 2 : 1;
 			} else if (connectionState == 1) {
-				bool snap = false;
-				int connectionId = 0;
+				// bool snap = false;
+				int connectionId = -1;
 
 				if (hoveringRoom != nullptr) {
-					for (Vector2i connectionPosition : hoveringRoom->TileConnections()) {
-						if (connectionPosition == tilePosition) {
-							snap = true;
-							break;
-						}
+					connectionId = hoveringRoom->getShortcutConnection(tilePosition);
+					// for (Vector2i connectionPosition : hoveringRoom->TileConnections()) {
+					// 	if (connectionPosition == tilePosition) {
+					// 		snap = true;
+					// 		break;
+					// 	}
 
-						connectionId++;
-					}
+					// 	connectionId++;
+					// }
 				}
 
-				if (snap) {
+				if (connectionId != -1) {
 					connectionEnd->x = floor(worldMouse.x - hoveringRoom->Position()->x) + 0.5 + hoveringRoom->Position()->x;
 					connectionEnd->y = floor(worldMouse.y - hoveringRoom->Position()->y) + 0.5 + hoveringRoom->Position()->y;
 					currentConnection->RoomB(hoveringRoom);
@@ -515,8 +516,8 @@ int main() {
 			previousKeys.erase(GLFW_KEY_S);
 		}
 
-		if (window->keyPressed(GLFW_KEY_F)) {
-			if (previousKeys.find(GLFW_KEY_F) == previousKeys.end()) {
+		if (window->keyPressed(GLFW_KEY_T)) {
+			if (previousKeys.find(GLFW_KEY_T) == previousKeys.end()) {
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 					Room *room = *it;
 
@@ -528,9 +529,9 @@ int main() {
 				}
 			}
 
-			previousKeys.insert(GLFW_KEY_F);
+			previousKeys.insert(GLFW_KEY_T);
 		} else {
-			previousKeys.erase(GLFW_KEY_F);
+			previousKeys.erase(GLFW_KEY_T);
 		}
 
 		if (window->keyPressed(GLFW_KEY_L)) {

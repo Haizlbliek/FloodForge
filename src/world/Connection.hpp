@@ -18,8 +18,8 @@ class Connection {
 		}
 
 		void draw(Vector2 mousePosition, double lineSize) {
-			Vector2 pointA = roomA->getConnection(connectionA);
-			Vector2 pointB = roomB->getConnection(connectionB);
+			Vector2 pointA = roomA->getShortcutConnectionPosition(connectionA);
+			Vector2 pointB = roomB->getShortcutConnectionPosition(connectionB);
 
 			glEnable(GL_LINE_SMOOTH);
 			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
@@ -36,8 +36,8 @@ class Connection {
 		}
 
 		bool collides(Vector2 vector) {
-			Vector2 pointA = roomA->getConnection(connectionA);
-			Vector2 pointB = roomB->getConnection(connectionB);
+			Vector2 pointA = roomA->getShortcutConnectionPosition(connectionA);
+			Vector2 pointB = roomB->getShortcutConnectionPosition(connectionB);
 
 			double length = pointA.distanceTo(pointB);
 			double d1 = pointA.distanceTo(vector);
@@ -53,8 +53,8 @@ class Connection {
 		}
 
 		double distance(Vector2 vector) {
-			Vector2 pointA = roomA->getConnection(connectionA);
-			Vector2 pointB = roomB->getConnection(connectionB);
+			Vector2 pointA = roomA->getShortcutConnectionPosition(connectionA);
+			Vector2 pointB = roomB->getShortcutConnectionPosition(connectionB);
 
 			Vector2 AB = pointB - pointA;
 			Vector2 AP = vector - pointA;
