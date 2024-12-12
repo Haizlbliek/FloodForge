@@ -71,12 +71,20 @@ class Button {
 			}
 		}
 
-		void Text(std::string text) {
+		void Text(const std::string text) {
 			this->text = text;
 			width = font->getTextWidth(text, height);
 		}
 
-		std::string Text() { return text; }
+		std::string Text() const { return text; }
+
+		void X(const double x) {
+			this->x = x;
+		}
+
+		const double Width() const {
+			return width;
+		}
 
 	private:
 		void press() {
@@ -774,6 +782,16 @@ class MenuItems {
 		static std::string extraWorld;
 
 	private:
+		static void repositionButtons() {
+			currentButtonX = -0.99;
+
+			for (Button *button : buttons) {
+				button->X(currentButtonX);
+
+				currentButtonX += button->Width() + 0.04;
+			}
+		}
+	
 		static std::vector<Button*> buttons;
 
 		static Window *window;

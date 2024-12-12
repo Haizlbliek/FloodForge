@@ -136,6 +136,8 @@ void MenuItems::init(Window *window) {
             } else {
                 button->Text("Subregion Colours");
             }
+
+            repositionButtons();
         }
     );
 
@@ -148,6 +150,8 @@ void MenuItems::init(Window *window) {
                 ::roomSnap = ROOM_SNAP_NONE;
                 button->Text("No Snap");
             }
+            
+            repositionButtons();
         }
     );
 }
