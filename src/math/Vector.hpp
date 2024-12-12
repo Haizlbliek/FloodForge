@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <string>
 
 #ifndef VECTOR_HPP
 #define VECTOR_HPP
@@ -74,11 +75,15 @@ Vector2 operator*(const Vector2 &lhs, const double &rhs);
 
 Vector2 operator*(const double &lhs, const Vector2 &rhs);
 
+std::string to_string(const Vector2 &vector);
+
 // Vector2i
 std::ostream &operator<<(std::ostream &stream, Vector2i &obj);
 
 bool operator==(const Vector2i &lhs, const Vector2i &rhs);
 
 void operator+=(Vector2i &lhs, const Vector2i &rhs);
+
+std::string to_string(const Vector2i &vector);
 
 #endif

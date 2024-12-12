@@ -7,9 +7,9 @@
 #include <vector>
 #include <iostream>
 #include <stack>
+#include <set>
 
 #include "../Texture.hpp"
-#include "../Grid.hpp"
 #include "../math/Vector.hpp"
 #include "../math/Matrix4.hpp"
 #include "../font/Fonts.hpp"

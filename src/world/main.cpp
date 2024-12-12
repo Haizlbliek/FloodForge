@@ -27,6 +27,7 @@
 #include "OffscreenRoom.hpp"
 #include "Connection.hpp"
 #include "MenuItems.hpp"
+#include "DebugData.hpp"
 
 #define TEXTURE_PATH (BASE_PATH + "assets/")
 
@@ -655,6 +656,8 @@ int main() {
 		MenuItems::draw(&customMouse);
 
 		Popups::draw(screenMouse);
+
+		DebugData::draw(window, worldMouse);
 
 		window->render();
 
