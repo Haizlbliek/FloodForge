@@ -21,7 +21,7 @@
 
 class FilesystemPopup : public Popup {
 	public:
-		FilesystemPopup(Window *window, std::regex regex, std::function<void(std::string)> callback)
+		FilesystemPopup(Window *window, std::regex regex, std::function<void(std::set<std::string>)> callback)
 		: Popup(window),
           regex(regex),
           callback(callback) {
@@ -38,7 +38,7 @@ class FilesystemPopup : public Popup {
             refresh();
 		}
 
-		FilesystemPopup(Window *window, int type, std::function<void(std::string)> callback)
+		FilesystemPopup(Window *window, int type, std::function<void(std::set<std::string>)> callback)
 		: Popup(window),
           callback(callback) {
 			window->addKeyCallback(this, keyCallback);
@@ -54,11 +54,22 @@ class FilesystemPopup : public Popup {
             refresh();
 		}
 
+        FilesystemPopup *AllowMultiple() {
+            allowMultiple = true;
+            return this;
+        }
+
         void accept() {
             if (mode == 0) {
                 if (openType == TYPE_FOLDER) {
                     called = true;
-                    callback(currentDirectory.string());
+                    std::set<std::string> output { currentDirectory.string() };
+                    callback(output);
+                }
+                
+                if (openType == TYPE_FILE) {
+                    called = true;
+                    callback(selected);
                 }
 
                 close();
@@ -95,7 +106,7 @@ class FilesystemPopup : public Popup {
             
             window = nullptr;
             
-            if (!called) callback("");
+            if (!called) callback(std::set<std::string>());
 		}
 
 		void draw(double mouseX, double mouseY, bool mouseInside) {
@@ -116,12 +127,18 @@ class FilesystemPopup : public Popup {
                 }
 
                 Fonts::rainworld->write("Show all", bounds.X0() + 0.09, bounds.Y0() + 0.09, 0.04);
-            } else if (openType == TYPE_FOLDER) {
-                Fonts::rainworld->write("Open", bounds.X1() - 0.17, bounds.Y0() + 0.09, 0.04);
-
-                drawBounds(Rect(bounds.X1() - 0.17, bounds.Y0() + 0.09, bounds.X1() - 0.05, bounds.Y0() + 0.04), mouseX, mouseY);
             }
 
+            if (selected.empty() && openType == TYPE_FILE) {
+                setThemeColour(THEME_TEXT_DISABLED_COLOUR);
+            } else {
+                setThemeColour(THEME_TEXT_COLOUR);
+            }
+            Fonts::rainworld->write("Open", bounds.X1() - 0.17, bounds.Y0() + 0.09, 0.04);
+            drawBounds(Rect(bounds.X1() - 0.17, bounds.Y0() + 0.09, bounds.X1() - 0.05, bounds.Y0() + 0.04), mouseX, mouseY);
+
+
+            setThemeColour(THEME_TEXT_COLOUR);
             drawBounds(Rect(bounds.X0() + 0.02, bounds.Y1() - 0.12, bounds.X0() + 0.07, bounds.Y1() - 0.07), mouseX, mouseY);
             drawBounds(Rect(bounds.X0() + 0.09, bounds.Y1() - 0.12, bounds.X0() + 0.14, bounds.Y1() - 0.07), mouseX, mouseY);
             drawBounds(Rect(bounds.X1() - 0.09, bounds.Y1() - 0.12, bounds.X1() - 0.04, bounds.Y1() - 0.07), mouseX, mouseY);
@@ -195,6 +212,10 @@ class FilesystemPopup : public Popup {
                 else
                     setThemeColour(THEME_TEXT_COLOUR);
 
+                if (selected.find(path.string()) != selected.end()) {
+                    strokeRect(bounds.X0() + 0.09, y + 0.01, bounds.X1() - 0.09, y - 0.05);
+                }
+
                 Fonts::rainworld->write(path.filename().string(), bounds.X0() + 0.1, y, 0.04);
                 setThemeColour(THEME_TEXT_DISABLED_COLOUR);
                 drawIcon(4, y);
@@ -248,9 +269,18 @@ class FilesystemPopup : public Popup {
                         id -= directories.size();
 
                         if (id < files.size()) {
-                            called = true;
-                            callback(files[id].string());
-                            close();
+                            // called = true;
+                            if (allowMultiple && (window->keyPressed(GLFW_KEY_LEFT_SHIFT) || window->keyPressed(GLFW_KEY_RIGHT_SHIFT))) {
+                                if (selected.find(files[id].string()) == selected.end()) {
+                                    selected.insert(files[id].string());
+                                } else {
+                                    selected.erase(files[id].string());
+                                }
+                            } else {
+                                selected.clear();
+                                selected.insert(files[id].string());
+                            }
+                            // close();
                         }
                     }
                 }
@@ -261,10 +291,10 @@ class FilesystemPopup : public Popup {
                         refresh();
                         clampScroll();
                     }
-                } else if (openType == TYPE_FOLDER) {
-                    if (Rect(bounds.X1() - 0.17, bounds.Y0() + 0.09, bounds.X1() - 0.05, bounds.Y0() + 0.04).inside(mouseX, mouseY)) {
-                        accept();
-                    }
+                }
+                
+                if (Rect(bounds.X1() - 0.17, bounds.Y0() + 0.09, bounds.X1() - 0.05, bounds.Y0() + 0.04).inside(mouseX, mouseY)) {
+                    accept();
                 }
             } else if (mode == 1) {
                 accept();
@@ -338,7 +368,11 @@ class FilesystemPopup : public Popup {
         std::vector<std::filesystem::path> files;
 
         std::regex regex;
-        std::function<void(std::string)> callback;
+        bool allowMultiple;
+
+        std::function<void(std::set<std::string>)> callback;
+
+        std::set<std::string> selected;
 
         double scroll;
 
@@ -371,11 +405,13 @@ class FilesystemPopup : public Popup {
             }
 
             currentDirectory = std::filesystem::canonical(BASE_PATH);
+            selected.clear();
         }
 
         void refresh() {
             directories.clear();
             files.clear();
+            selected.clear();
 
             try {
                 for (const auto &entry : std::filesystem::directory_iterator(currentDirectory)) {

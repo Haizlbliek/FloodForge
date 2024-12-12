@@ -47,11 +47,6 @@ class OffscreenRoom : public Room {
 				Draw::color(0.75f, 0.75f, 0.75f);
 			}
 			strokeRect(position->x, position->y, position->x + width, position->y - height);
-
-#ifdef DEBUG_ROOMS
-			Draw::color(1.00f, 1.00f, 0.00f);
-			strokerect(coord->x - 1, coord->y + 1, coord->x + 1, coord->y - 1);
-#endif
 		}
 };
 

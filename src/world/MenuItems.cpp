@@ -34,29 +34,31 @@ void MenuItems::init(Window *window) {
                 return;
             }
 
-            Popups::addPopup(new FilesystemPopup(window, std::regex("([^.]+)_[a-zA-Z0-9]+\\.txt"),
-                [](std::string pathString) {
-                    if (pathString == "") return;
+            Popups::addPopup((new FilesystemPopup(window, std::regex("([^.]+)_[a-zA-Z0-9]+\\.txt"),
+                [](std::set<std::string> pathStrings) {
+                    if (pathStrings.empty()) return;
 
-                    std::filesystem::path path = pathString;
+                    for (std::string pathString : pathStrings) {
+                        std::filesystem::path path = pathString;
 
-                    std::string roomName = path.filename().string();
-                    roomName = roomName.substr(0, roomName.find_last_of('.'));
+                        std::string roomName = path.filename().string();
+                        roomName = roomName.substr(0, roomName.find_last_of('.'));
 
-                    Room *room = new Room(path.string().substr(0, path.string().find_last_of('.')), roomName);
-                    rooms.push_back(room);
+                        Room *room = new Room(path.string().substr(0, path.string().find_last_of('.')), roomName);
+                        rooms.push_back(room);
+                    }
                 }
-            ));
+            ))->AllowMultiple());
         }
     );
 
     addButton("Import",
         [window](Button *button) {
             Popups::addPopup(new FilesystemPopup(window, std::regex("world_([^.]+)\\.txt"),
-                [](std::string pathString) {
-                    if (pathString == "") return;
+                [](std::set<std::string> pathStrings) {
+                    if (pathStrings.empty()) return;
 
-                    std::filesystem::path path = pathString;
+                    std::filesystem::path path = *pathStrings.begin();
 
                     exportDirectory = path.parent_path();
                     worldAcronym = toLower(path.filename().string());
@@ -108,10 +110,10 @@ void MenuItems::init(Window *window) {
                 }
 
                 Popups::addPopup(new FilesystemPopup(window, TYPE_FOLDER,
-                    [window](std::string pathString) {
-                        if (pathString.empty()) return;
+                    [window](std::set<std::string> pathStrings) {
+                        if (pathStrings.empty()) return;
 
-                        exportDirectory = pathString;
+                        exportDirectory = *pathStrings.begin();
 
                         exportMapFile();
                         exportWorldFile();

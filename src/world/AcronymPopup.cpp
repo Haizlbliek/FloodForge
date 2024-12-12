@@ -91,6 +91,7 @@ void AcronymPopup::accept() {
 	rooms.clear();
 	for (Connection *connection : connections) delete connection;
 	connections.clear();
+    subregions.clear();
 	rooms.push_back(new OffscreenRoom("offscreenden" + toLower(text), "OffscreenDen" + text));
 	MenuItems::WorldAcronym(toLower(text));
 	MenuItems::extraProperties = "";
