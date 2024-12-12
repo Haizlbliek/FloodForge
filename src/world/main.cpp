@@ -120,8 +120,6 @@ int main() {
 
 	std::string line;
 
-	bool shownLayers[3] = { true, true, true };
-
 	// rooms.push_back(new OffscreenRoom("exampleroom", "Example Room"));
 
 	Vector2 *connectionStart = nullptr;
@@ -662,12 +660,8 @@ int main() {
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		for (int layerId = 2; layerId >= 0; layerId--) {
-			if (!shownLayers[layerId]) continue;
-
-			for (Room *room : rooms) {
-				if (room->Layer() == layerId) room->draw(worldMouse, lineSize);
-			}
+		for (Room *room : rooms) {
+			room->draw(worldMouse, lineSize);
 		}
 		glDisable(GL_BLEND);
 
