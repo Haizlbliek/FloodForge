@@ -530,6 +530,28 @@ int main() {
 			previousKeys.erase(GLFW_KEY_L);
 		}
 
+		if (window->keyPressed(GLFW_KEY_H)) {
+			if (previousKeys.find(GLFW_KEY_H) == previousKeys.end()) {
+				Room *hoveringRoom = nullptr;
+				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+					Room *room = (*it);
+
+					if (room->inside(worldMouse)) {
+						hoveringRoom = room;
+						break;
+					}
+				}
+
+				if (hoveringRoom != nullptr) {
+					hoveringRoom->Hidden(!hoveringRoom->Hidden());
+				}
+			}
+
+			previousKeys.insert(GLFW_KEY_H);
+		} else {
+			previousKeys.erase(GLFW_KEY_H);
+		}
+
 
 		if (window->keyPressed(GLFW_KEY_D)) {
 			if (previousKeys.find(GLFW_KEY_D) == previousKeys.end()) {

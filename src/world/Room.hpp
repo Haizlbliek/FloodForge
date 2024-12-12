@@ -56,6 +56,7 @@ class Room {
 			subregion = -1;
 
 			tag = "";
+			hidden = false;
 
 			loadGeometry();
 			generateVBO();
@@ -262,6 +263,9 @@ class Room {
 		void Subregion(const int newSubregion) { subregion = newSubregion; }
 		const int Subregion() { return subregion; }
 
+		void Hidden(const bool newHidden) { hidden = newHidden; }
+		const bool Hidden() const { return hidden; }
+
 	protected:
 		Room() {}
 		
@@ -446,6 +450,7 @@ class Room {
 		int subregion;
 
 		std::string tag;
+		bool hidden;
 
 		bool valid;
 

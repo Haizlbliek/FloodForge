@@ -36,7 +36,11 @@ void Room::draw(Vector2 mousePosition, double lineSize) {
 
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(cameraOffset, cameraScale).m);
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position->x, position->y).m);
-    glUniform4f(tintLoc, tint.R(), tint.G(), tint.B(), tint.A());
+    if (hidden) {
+        glUniform4f(tintLoc, tint.R(), tint.G(), tint.B(), 0.5f);
+    } else {
+        glUniform4f(tintLoc, tint.R(), tint.G(), tint.B(), tint.A());
+    }
 
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
 

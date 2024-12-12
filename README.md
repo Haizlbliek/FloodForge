@@ -10,8 +10,9 @@ It aims for intuitive controls, clean ui, and as few dependencies as possible.
 | Action            | Key       | Description                                                   |
 |-------------------|-----------|---------------------------------------------------------------|
 | Delete            | `X`       | Removes hovered room or connection.                           |
-| Change Room Layer | `L`       | Switches between layers within the current room.              |
+| Change Room Layer | `L`       | Switches between layers within the hovered room.              |
 | Change Subregion  | `S`       | Openes a popup for adding, removing, and changing subregions. |
+| Hide / Show       | `H`       | Toggle visibility of hovered room.                            |
 | Print Debug Info  | `D`       | Outputs debug information for the hovered room or connection. |
 | Cancel/Exit       | `ESC`     | Closes menus or cancels actions.                              |
 | Accept            | `ENTER`   | Confirms selections or actions.                               |

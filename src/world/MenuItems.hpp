@@ -221,6 +221,10 @@ class MenuItems {
 					position->x = x - room->Width() * 0.5;
 					position->y = y + room->Height() * 0.5;
 					room->Layer(layer);
+					if (layer >= LAYER_HIDDEN && layer <= LAYER_HIDDEN + 2) {
+						room->Hidden(true);
+						room->Layer(layer - LAYER_HIDDEN);
+					}
 
 					if (subregion.empty()) {
 						room->Subregion(-1);
@@ -431,13 +435,19 @@ class MenuItems {
 				file << toUpper(room->RoomName()) << ": ";
 				file << position.x << "><" << position.y << "><"; // Canon Position
 				file << position.x << "><" << position.y << "><"; // Dev Position
-				file << room->Layer() << "><";
+				if (room->Hidden()) {
+					file << (LAYER_HIDDEN + room->Layer()) << "><";
+				} else {
+					file << room->Layer() << "><";
+				}
 				if (room->Subregion() > -1) file << subregions[room->Subregion()];
 				file << "\n";
 			}
 
 			std::cout << "Exporting connections" << std::endl;
 			for (Connection *connection : connections) {
+				if (connection->RoomA()->Hidden() || connection->RoomB()->Hidden()) continue;
+
 				Vector2i connectionA = connection->RoomA()->getShortcutConnection(connection->ConnectionA());
 				Vector2i connectionB = connection->RoomB()->getShortcutConnection(connection->ConnectionB());
 
@@ -499,6 +509,8 @@ class MenuItems {
 			Rect bounds;
 
 			for (Room *room : rooms) {
+				if (room->Hidden()) continue;
+
 				double left   = room->Position()->x;
 				double right  = room->Position()->x + room->Width();
 				double top    = -room->Position()->y + room->Height();
@@ -550,6 +562,7 @@ class MenuItems {
 
 			for (Room *room : rooms) {
 				if (room->Tag() == "OffscreenRoom") continue;
+				if (room->Hidden()) continue;
 
 				// Top left corner
 				int x = std::floor(room->Position()->x - room->Width() * 0.0 - bounds.X0()) + padding;

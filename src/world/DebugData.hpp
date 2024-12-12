@@ -43,7 +43,11 @@ namespace DebugData {
             debugText.push_back("Name: " + hoveringRoom->RoomName());
             debugText.push_back("Width: " + std::to_string(hoveringRoom->Width()));
             debugText.push_back("Height: " + std::to_string(hoveringRoom->Height()));
-            debugText.push_back("Layer: " + std::to_string(hoveringRoom->Layer()));
+            if (hoveringRoom->Hidden()) {
+                debugText.push_back("Layer: Hidden - " + std::to_string(hoveringRoom->Layer()));
+            } else {
+                debugText.push_back("Layer: " + std::to_string(hoveringRoom->Layer()));
+            }
             if (hoveringRoom->Subregion() == -1) {
                 debugText.push_back("Subregion: ");
             } else {

@@ -5,6 +5,8 @@
 #ifndef GLOBALS_HPP
 #define GLOBALS_HPP
 
+#define LAYER_HIDDEN 5
+
 extern bool debugRoomConnections;
 
 extern int roomColours;
