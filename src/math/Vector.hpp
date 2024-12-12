@@ -25,6 +25,12 @@ class Vector2 {
 			this->y += other.y;
 		}
 
+		Vector2 &round() {
+			x = ::round(x);
+			y = ::round(y);
+			return *this;
+		}
+
 		double distanceTo(const Vector2 &other) {
 			return std::sqrt(pow(x - other.x, 2) + pow(y - other.y, 2));
 		}

@@ -42,9 +42,8 @@ std::vector<std::string> subregions;
 Vector2 cameraOffset = Vector2(0.0f, 0.0f);
 Vector2 cameraScale = Vector2(32.0f, 32.0f);
 
-bool debugRoomConnections = false;
-
 int roomColours = 0;
+int roomSnap = ROOM_SNAP_TILE;
 
 void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale, float left, float right, float bottom, float top, float nearVal, float farVal) {
 	left *= scale.x;
@@ -383,7 +382,7 @@ int main() {
 			connectionState = 0;
 		}
 
-		//// Popups
+		//// Holding
 		if (mouse->Left()) {
 			if (!leftMouseDown) {
 				bool blockLeftMouse = false;
@@ -411,14 +410,21 @@ int main() {
 							rooms.push_back(room);
 							holdingRoom = room;
 							holdingStart = worldMouse;
+							if (roomSnap == ROOM_SNAP_TILE) {
+								holdingRoom->Position()->x = round(holdingRoom->Position()->x);
+								holdingRoom->Position()->y = round(holdingRoom->Position()->y);
+							}
 							break;
 						}
 					}
 				}
 			} else {
 				if (holdingRoom != nullptr) {
-					holdingRoom->Position()->add(worldMouse - holdingStart);
-					holdingStart = worldMouse;
+					Vector2 offset = (worldMouse - holdingStart);
+					if (roomSnap == ROOM_SNAP_TILE) offset.round();
+
+					holdingRoom->Position()->add(offset);
+					holdingStart = holdingStart + offset;
 				}
 
 				if (holdingPopup != nullptr) {

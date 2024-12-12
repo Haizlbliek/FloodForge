@@ -7,9 +7,11 @@
 
 #define LAYER_HIDDEN 5
 
-extern bool debugRoomConnections;
+#define ROOM_SNAP_NONE 0
+#define ROOM_SNAP_TILE 1
 
 extern int roomColours;
+extern int roomSnap;
 
 #include "Room.hpp"
 #include "Connection.hpp"

@@ -138,4 +138,16 @@ void MenuItems::init(Window *window) {
             }
         }
     );
+
+    addButton("Tile Snap",
+        [window](Button *button) {
+            if (::roomSnap == ROOM_SNAP_NONE) {
+                ::roomSnap = ROOM_SNAP_TILE;
+                button->Text("Tile Snap");
+            } else {
+                ::roomSnap = ROOM_SNAP_NONE;
+                button->Text("No Snap");
+            }
+        }
+    );
 }
