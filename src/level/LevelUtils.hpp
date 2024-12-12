@@ -3,7 +3,7 @@
 
 #include "../gl.h"
 
-#include "../Grid.hpp"
+#include "Grid.hpp"
 
 int getShortcutTile(Grid *grid, unsigned int x, unsigned int y);
 

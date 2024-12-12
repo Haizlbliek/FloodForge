@@ -3,7 +3,7 @@
 
 #include <functional>
 
-#include "../Grid.hpp"
+#include "Grid.hpp"
 
 using ToolAction = std::function<void(Grid*, unsigned int, unsigned int)>;
 

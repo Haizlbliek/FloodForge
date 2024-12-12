@@ -11,7 +11,7 @@
 #include "LevelUtils.hpp"
 #include "Constants.hpp"
 #include "../Utils.hpp"
-#include "../Grid.hpp"
+#include "Grid.hpp"
 #include "../Window.hpp"
 
 class Project {

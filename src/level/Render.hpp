@@ -4,7 +4,7 @@
 #include "../gl.h"
 
 #include "Project.hpp"
-#include "../Grid.hpp"
+#include "Grid.hpp"
 #include "../Window.hpp"
 #include "../Utils.hpp"
 

@@ -7,7 +7,7 @@
 #include <iostream>
 #include <cstdint>
 
-#include "level/History.hpp"
+#include "History.hpp"
 
 struct Tile {
 	uint8_t tile;

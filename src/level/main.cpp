@@ -20,7 +20,7 @@
 
 #include "Constants.hpp"
 #include "../Window.hpp"
-#include "../Grid.hpp"
+#include "Grid.hpp"
 #include "History.hpp"
 #include "MenuItems.hpp"
 #include "Tools.hpp"
@@ -319,7 +319,7 @@ int main() {
 		bool disableCursor = globalMouseY < window->Height() * 0.03;
 
 		Popup *hoveringPopup = nullptr;
-		for (Popup *popup : popups) {
+		for (Popup *popup : Popups::popups) {
 			Rect bounds = popup->Bounds();
 
 			if (bounds.inside(Vector2(screenMouseX, screenMouseY))) {
@@ -330,8 +330,8 @@ int main() {
 
 		if (window->keyPressed(GLFW_KEY_ESCAPE)) {
 			if (previousKeys.find(GLFW_KEY_ESCAPE) == previousKeys.end()) {
-				if (popups.size() > 0)
-					popups[0]->reject();
+				if (Popups::popups.size() > 0)
+					Popups::popups[0]->reject();
 				else
 					Popups::addPopup(new QuitConfirmationPopup(window));
 			}
@@ -343,8 +343,8 @@ int main() {
 
 		if (window->keyPressed(GLFW_KEY_ENTER)) {
 			if (previousKeys.find(GLFW_KEY_ENTER) == previousKeys.end()) {
-				if (popups.size() > 0)
-					popups[0]->accept();
+				if (Popups::popups.size() > 0)
+					Popups::popups[0]->accept();
 			}
 
 			previousKeys.insert(GLFW_KEY_ENTER);
@@ -679,7 +679,7 @@ int main() {
 
 		MenuItems::draw(customMouse);
 		
-		for (Popup *popup : popups) {
+		for (Popup *popup : Popups::popups) {
 			Rect bounds = popup->Bounds();
 			bool mouseInside = bounds.inside(screenMouseX, screenMouseY);
 
