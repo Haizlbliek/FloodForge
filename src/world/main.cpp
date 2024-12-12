@@ -20,6 +20,7 @@
 #include "../popup/SplashArtPopup.hpp"
 #include "../popup/QuitConfirmationPopup.hpp"
 #include "SubregionPopup.hpp"
+#include "RoomTagPopup.hpp"
 
 #include "Shaders.hpp"
 #include "Globals.hpp"
@@ -41,6 +42,8 @@ std::vector<std::string> subregions;
 
 Vector2 cameraOffset = Vector2(0.0f, 0.0f);
 Vector2 cameraScale = Vector2(32.0f, 32.0f);
+
+std::string ROOM_TAGS[9] = { "SHELTER", "ANCIENTSHELTER", "GATE", "SWARMROOM", "PERF_HEAVY", "SAVOUTPOST", "SCAVTRADER", "NOTRACKERS", "ARENA" };
 
 int roomColours = 0;
 int roomSnap = ROOM_SNAP_TILE;
@@ -512,6 +515,24 @@ int main() {
 			previousKeys.insert(GLFW_KEY_S);
 		} else {
 			previousKeys.erase(GLFW_KEY_S);
+		}
+
+		if (window->keyPressed(GLFW_KEY_F)) {
+			if (previousKeys.find(GLFW_KEY_F) == previousKeys.end()) {
+				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+					Room *room = *it;
+
+					if (room->inside(worldMouse)) {
+						Popups::addPopup(new RoomTagPopup(window, room));
+
+						break;
+					}
+				}
+			}
+
+			previousKeys.insert(GLFW_KEY_F);
+		} else {
+			previousKeys.erase(GLFW_KEY_F);
 		}
 
 		if (window->keyPressed(GLFW_KEY_L)) {
