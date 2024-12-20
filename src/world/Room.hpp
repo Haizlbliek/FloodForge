@@ -89,10 +89,10 @@ class Room {
 			Vector2 cornerMax = Vector2::max(corner0, corner1);
 
 			return (
-				cornerMin.x >= position->x &&
-				cornerMin.y >= position->y - height &&
-				cornerMax.x <= position->x + width &&
-				cornerMax.y <= position->y
+				cornerMin.x <= position->x + width &&
+				cornerMin.y <= position->y &&
+				cornerMax.x >= position->x &&
+				cornerMax.y >= position->y - height
 			);
 		}
 

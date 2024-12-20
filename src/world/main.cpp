@@ -116,6 +116,12 @@ int main() {
 	Room *holdingRoom = nullptr;
 	Popup *holdingPopup = nullptr;
 	Vector2 holdingStart = Vector2(0.0f, 0.0f);
+	int holdingType = 0;
+
+	int selectingState = 0;
+	Vector2 selectionStart;
+	Vector2 selectionEnd;
+	std::set<Room*> selectedRooms;
 
 
 	std::string line;
@@ -412,26 +418,58 @@ int main() {
 							rooms.push_back(room);
 							holdingRoom = room;
 							holdingStart = worldMouse;
-							if (roomSnap == ROOM_SNAP_TILE) {
-								holdingRoom->Position()->x = round(holdingRoom->Position()->x);
-								holdingRoom->Position()->y = round(holdingRoom->Position()->y);
+							if (selectedRooms.find(room) != selectedRooms.end()) {
+								holdingType = 1;
+								if (roomSnap == ROOM_SNAP_TILE) {
+									for (Room *room2 : selectedRooms) {
+										room2->Position()->x = round(room2->Position()->x);
+										room2->Position()->y = round(room2->Position()->y);
+									}
+								}
+							} else {
+								holdingType = 0;
+								if (roomSnap == ROOM_SNAP_TILE) {
+									holdingRoom->Position()->x = round(holdingRoom->Position()->x);
+									holdingRoom->Position()->y = round(holdingRoom->Position()->y);
+								}
 							}
 							break;
 						}
 					}
+				}
+
+				if (holdingPopup == nullptr && holdingRoom == nullptr) {
+					selectingState = 1;
+					selectionStart = worldMouse;
+					selectionEnd = worldMouse;
+					selectedRooms.clear();
 				}
 			} else {
 				if (holdingRoom != nullptr) {
 					Vector2 offset = (worldMouse - holdingStart);
 					if (roomSnap == ROOM_SNAP_TILE) offset.round();
 
-					holdingRoom->Position()->add(offset);
+					if (holdingType == 0) {
+						holdingRoom->Position()->add(offset);
+					} else {
+						for (Room *room2 : selectedRooms) {
+							room2->Position()->add(offset);
+						}
+					}
 					holdingStart = holdingStart + offset;
 				}
 
 				if (holdingPopup != nullptr) {
 					holdingPopup->offset(screenMouse - holdingStart);
 					holdingStart = screenMouse;
+				}
+
+				if (selectingState == 1) {
+					selectionEnd = worldMouse;
+					selectedRooms.clear();
+					for (Room *room : rooms) {
+						if (room->intersects(selectionStart, selectionEnd)) selectedRooms.insert(room);
+					}
 				}
 			}
 
@@ -440,6 +478,7 @@ int main() {
 			leftMouseDown = false;
 			holdingRoom = nullptr;
 			holdingPopup = nullptr;
+			selectingState = 0;
 		}
 
 		if (window->keyPressed(GLFW_KEY_X)) {
@@ -578,7 +617,6 @@ int main() {
 			previousKeys.erase(GLFW_KEY_H);
 		}
 
-
 		if (window->keyPressed(GLFW_KEY_D)) {
 			if (previousKeys.find(GLFW_KEY_D) == previousKeys.end()) {
 				Connection *hoveringConnection = nullptr;
@@ -663,6 +701,10 @@ int main() {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		for (Room *room : rooms) {
 			room->draw(worldMouse, lineSize);
+			if (selectedRooms.find(room) != selectedRooms.end()) {
+				setThemeColour(THEME_SELECTION_BORDER_COLOUR);
+				strokeRect(room->Position()->x, room->Position()->y, room->Position()->x + room->Width(), room->Position()->y - room->Height(), 16.0f / lineSize);
+			}
 		}
 		glDisable(GL_BLEND);
 
@@ -687,6 +729,15 @@ int main() {
 
 			Draw::color(1.0f, 1.0f, 0.0f);
 			drawLine(connectionStart->x, connectionStart->y, connectionEnd->x, connectionEnd->y, 8.0);
+		}
+
+		if (selectingState == 1) {
+			glEnable(GL_BLEND);
+			Draw::color(0.1f, 0.1f, 0.1f, 0.125f);
+			fillRect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y);
+			glDisable(GL_BLEND);
+			setThemeColour(THEME_SELECTION_BORDER_COLOUR);
+			strokeRect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y, 16.0f / lineSize);
 		}
 
 		/// Draw UI

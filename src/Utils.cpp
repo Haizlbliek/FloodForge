@@ -38,6 +38,13 @@ void strokeRect(float x0, float y0, float x1, float y1) {
 	Draw::end();
 }
 
+void strokeRect(float x0, float y0, float x1, float y1, double thickness) {
+	drawLine(x0, y0, x1, y0, thickness);
+	drawLine(x1, y0, x1, y1, thickness);
+	drawLine(x1, y1, x0, y1, thickness);
+	drawLine(x0, y1, x0, y0, thickness);
+}
+
 void drawLine(float x0, float y0, float x1, float y1, double thickness) {
 	thickness /= 64.0;
 

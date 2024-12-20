@@ -19,6 +19,8 @@
 #define THEME_TEXT_DISABLED_COLOUR 9
 #define THEME_TEXT_HIGHLIGHT_COLOUR 10
 
+#define THEME_SELECTION_BORDER_COLOUR 11
+
 struct Theme {
 	Colour background;
 	Colour header;
@@ -31,6 +33,7 @@ struct Theme {
 	Colour text;
 	Colour textDisabled;
 	Colour textHighlight;
+	Colour selectionBorder;
 };
 
 extern Theme *currentTheme;

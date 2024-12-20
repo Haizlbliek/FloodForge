@@ -12,6 +12,8 @@ void fillRect(float x0, float y0, float x1, float y1);
 
 void strokeRect(float x0, float y0, float x1, float y1);
 
+void strokeRect(float x0, float y0, float x1, float y1, double thickness);
+
 void drawLine(float x0, float y0, float x1, float y1, double thickness);
 
 GLuint loadTexture(std::string filepath);

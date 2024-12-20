@@ -81,6 +81,7 @@ void loadTheme() {
 		if (startsWith(line, "Text:")) currentTheme->text = colour;
 		if (startsWith(line, "TextDisabled:")) currentTheme->textDisabled = colour;
 		if (startsWith(line, "TextHighlight:")) currentTheme->textHighlight = colour;
+		if (startsWith(line, "SelectionBorder:")) currentTheme->selectionBorder = colour;
 	}
 
 	themeFile.close();
@@ -123,6 +124,8 @@ void setThemeColour(unsigned int themeColour) {
 		case THEME_TEXT_HIGHLIGHT_COLOUR:
 			colour = currentTheme->textHighlight;
 			break;
+		case THEME_SELECTION_BORDER_COLOUR:
+			colour = currentTheme->selectionBorder;
 	}
 
 	if (colour.A() == 0.0) return;
