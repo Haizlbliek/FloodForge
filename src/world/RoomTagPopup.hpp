@@ -10,7 +10,8 @@
 
 class RoomTagPopup : public Popup {
     public:
-        RoomTagPopup(Window *window, Room *room) : Popup(window), room(room) {
+        RoomTagPopup(Window *window, std::set<Room*> newRooms) : Popup(window) {
+            for (Room *room : newRooms) rooms.insert(room);
         }
 
         void draw(double mouseX, double mouseY, bool mouseInside) {
@@ -23,9 +24,13 @@ class RoomTagPopup : public Popup {
 
 			Draw::translate(bounds.X0() + 0.5, bounds.Y0() + 0.5);
 
-            if (room != nullptr) {
+            if (rooms.size() > 0) {
 			    setThemeColour(THEME_TEXT_COLOUR);
-			    Fonts::rainworld->writeCentred(room->RoomName(), 0.0, 0.4, 0.04, CENTRE_XY);
+                if (rooms.size() == 1) {
+			        Fonts::rainworld->writeCentred((*rooms.begin())->RoomName(), 0.0, 0.4, 0.04, CENTRE_XY);
+                } else {
+                    Fonts::rainworld->writeCentred("Selected Rooms", 0.0, 0.4, 0.04, CENTRE_XY);
+                }
 
                 double y = bounds.Y1() - 0.15;
                 drawTagButton("None", "", y, mouseX, mouseY);
@@ -41,6 +46,10 @@ class RoomTagPopup : public Popup {
             Draw::popMatrix();
         }
 
+        void setTag(std::string tag) {
+            for (Room *room : rooms) room->Tag(tag);
+        }
+
         void mouseClick(double mouseX, double mouseY) {
             Popup::mouseClick(mouseX, mouseY);
 
@@ -52,10 +61,10 @@ class RoomTagPopup : public Popup {
             if (button == -1) return;
 
             if (button == 0) {
-                room->Tag("");
+                setTag("");
                 close();
             } else {
-                room->Tag(ROOM_TAGS[button - 1]);
+                setTag(ROOM_TAGS[button - 1]);
                 close();
             }
         }
@@ -63,7 +72,7 @@ class RoomTagPopup : public Popup {
 		std::string PopupName() { return "RoomTagPopup"; }
 
     private:
-        Room *room;
+        std::set<Room*> rooms;
 
         int getButtonIndex(double mouseX, double mouseY) {
             if (mouseX < -0.4 || mouseX > 0.4) return -1;
@@ -77,8 +86,12 @@ class RoomTagPopup : public Popup {
             setThemeColour(THEME_BUTTON_COLOUR);
             fillRect(-0.4, y, 0.4, y - 0.05);
 
-            if (room->Tag() == tagId) {
-                setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+            if (rooms.size() == 1) {
+                if ((*rooms.begin())->Tag() == tagId) {
+                    setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+                } else {
+                    setThemeColour(THEME_TEXT_COLOUR);
+                }
             } else {
                 setThemeColour(THEME_TEXT_COLOUR);
             }

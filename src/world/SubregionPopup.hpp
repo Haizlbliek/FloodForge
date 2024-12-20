@@ -12,7 +12,8 @@
 
 class SubregionPopup : public Popup {
     public:
-        SubregionPopup(Window *window, Room *room) : Popup(window), room(room) {
+        SubregionPopup(Window *window, std::set<Room*> newRooms) : Popup(window) {
+            for (Room *room : newRooms) rooms.insert(room);
         }
 
 		~SubregionPopup() {}
@@ -27,9 +28,13 @@ class SubregionPopup : public Popup {
 
 			Draw::translate(bounds.X0() + 0.5, bounds.Y0() + 0.5);
 
-            if (room != nullptr) {
+            if (rooms.size() > 0) {
 			    setThemeColour(THEME_TEXT_COLOUR);
-			    Fonts::rainworld->writeCentred(room->RoomName(), 0.0, 0.4, 0.04, CENTRE_XY);
+                if (rooms.size() == 1) {
+			        Fonts::rainworld->writeCentred((*rooms.begin())->RoomName(), 0.0, 0.4, 0.04, CENTRE_XY);
+                } else {
+                    Fonts::rainworld->writeCentred("Selected Rooms", 0.0, 0.4, 0.04, CENTRE_XY);
+                }
 
                 double y = 0.35;
                 drawSubregionButton(-1, "None", y, mouseX, mouseY);
@@ -50,6 +55,10 @@ class SubregionPopup : public Popup {
             Draw::popMatrix();
         }
 
+        void setSubregion(int subregion) {
+            for (Room *room : rooms) room->Subregion(subregion);
+        }
+
         void mouseClick(double mouseX, double mouseY) {
             Popup::mouseClick(mouseX, mouseY);
 
@@ -62,13 +71,13 @@ class SubregionPopup : public Popup {
             } else {
                 if (mouseX <= 0.325) {
                     if (button == 0) {
-                        room->Subregion(-1);
+                        setSubregion(-1);
                         close();
                     } else if (button <= subregions.size()) {
-                        room->Subregion(button - 1);
+                        setSubregion(button - 1);
                         close();
                     } else if (button == subregions.size() + 1) {
-                        Popups::addPopup(new SubregionNewPopup(window, room));
+                        Popups::addPopup(new SubregionNewPopup(window, rooms));
                         close();
                     }
                 } else if (mouseX >= 0.35) {
@@ -97,7 +106,7 @@ class SubregionPopup : public Popup {
 		std::string PopupName() { return "SubregionPopup"; }
 
     private:
-        Room *room;
+        std::set<Room*> rooms;
 
         int getButtonIndex(double mouseX, double mouseY) {
             if (mouseX < -0.4 || mouseX > 0.4) return -1;
@@ -112,8 +121,12 @@ class SubregionPopup : public Popup {
             fillRect(-0.4, y, 0.325, y - 0.05);
             fillRect(0.35, y, 0.4, y - 0.05);
 
-            if (room->Subregion() == subregionId) {
-                setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+            if (rooms.size() == 1) {
+                if ((*rooms.begin())->Subregion() == subregionId) {
+                    setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+                } else {
+                    setThemeColour(THEME_TEXT_COLOUR);
+                }
             } else {
                 setThemeColour(THEME_TEXT_COLOUR);
             }

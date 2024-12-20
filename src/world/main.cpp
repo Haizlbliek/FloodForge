@@ -438,7 +438,7 @@ int main() {
 					}
 				}
 
-				if (holdingPopup == nullptr && holdingRoom == nullptr) {
+				if (!blockLeftMouse && holdingRoom == nullptr) {
 					selectingState = 1;
 					selectionStart = worldMouse;
 					selectionEnd = worldMouse;
@@ -484,20 +484,49 @@ int main() {
 		if (window->keyPressed(GLFW_KEY_X)) {
 			if (previousKeys.find(GLFW_KEY_X) == previousKeys.end()) {
 				bool deleted = false;
-				for (auto it = connections.rbegin(); it != connections.rend(); it++) {
-					Connection *connection = *it;
 
-					if (connection->distance(worldMouse) < 0.5) {
-						connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
+				if (selectedRooms.size() > 0) {
+					for (Room *room : selectedRooms) {
+						rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
 
-						connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
-						connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
+						connections.erase(std::remove_if(connections.begin(), connections.end(),
+							[room](Connection *connection) {
+								if (connection->RoomA() == room || connection->RoomB() == room) {
+									connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
+									connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
 
-						delete connection;
+									delete connection;
+									return true;
+								}
 
-						deleted = true;
+								return false;
+							}
+						), connections.end());
 
-						break;
+						delete room;
+					}
+
+					selectedRooms.clear();
+
+					deleted = true;
+				}
+
+				if (!deleted) {
+					for (auto it = connections.rbegin(); it != connections.rend(); it++) {
+						Connection *connection = *it;
+
+						if (connection->distance(worldMouse) < 0.5) {
+							connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
+
+							connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
+							connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
+
+							delete connection;
+
+							deleted = true;
+
+							break;
+						}
 					}
 				}
 
@@ -539,13 +568,19 @@ int main() {
 
 		if (window->keyPressed(GLFW_KEY_S)) {
 			if (previousKeys.find(GLFW_KEY_S) == previousKeys.end()) {
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = *it;
+				if (selectedRooms.size() >= 1) {
+					Popups::addPopup(new SubregionPopup(window, selectedRooms));
+				} else {
+					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+						Room *room = *it;
 
-					if (room->inside(worldMouse)) {
-						Popups::addPopup(new SubregionPopup(window, room));
+						if (room->inside(worldMouse)) {
+							std::set<Room*> roomGroup;
+							roomGroup.insert(room);
+							Popups::addPopup(new SubregionPopup(window, roomGroup));
 
-						break;
+							break;
+						}
 					}
 				}
 			}
@@ -557,13 +592,19 @@ int main() {
 
 		if (window->keyPressed(GLFW_KEY_T)) {
 			if (previousKeys.find(GLFW_KEY_T) == previousKeys.end()) {
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = *it;
+				if (selectedRooms.size() >= 1) {
+					Popups::addPopup(new RoomTagPopup(window, selectedRooms));
+				} else {
+					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+						Room *room = *it;
 
-					if (room->inside(worldMouse)) {
-						Popups::addPopup(new RoomTagPopup(window, room));
+						if (room->inside(worldMouse)) {
+							std::set<Room*> roomGroup;
+							roomGroup.insert(room);
+							Popups::addPopup(new RoomTagPopup(window, roomGroup));
 
-						break;
+							break;
+						}
 					}
 				}
 			}
@@ -575,18 +616,31 @@ int main() {
 
 		if (window->keyPressed(GLFW_KEY_L)) {
 			if (previousKeys.find(GLFW_KEY_L) == previousKeys.end()) {
-				Room *hoveringRoom = nullptr;
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = (*it);
+				if (selectedRooms.size() > 0) {
+					int minimumLayer = 3;
 
-					if (room->inside(worldMouse)) {
-						hoveringRoom = room;
-						break;
+					for (Room *room : selectedRooms)
+						minimumLayer = min(minimumLayer, room->Layer());
+
+					minimumLayer = transitionLayer(minimumLayer);
+
+					for (Room *room : selectedRooms)
+						room->Layer(minimumLayer);
+
+				} else {
+					Room *hoveringRoom = nullptr;
+					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+						Room *room = (*it);
+
+						if (room->inside(worldMouse)) {
+							hoveringRoom = room;
+							break;
+						}
 					}
-				}
 
-				if (hoveringRoom != nullptr) {
-					hoveringRoom->Layer(transitionLayer(hoveringRoom->Layer()));
+					if (hoveringRoom != nullptr) {
+						hoveringRoom->Layer(transitionLayer(hoveringRoom->Layer()));
+					}
 				}
 			}
 
@@ -597,18 +651,29 @@ int main() {
 
 		if (window->keyPressed(GLFW_KEY_H)) {
 			if (previousKeys.find(GLFW_KEY_H) == previousKeys.end()) {
-				Room *hoveringRoom = nullptr;
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = (*it);
+				if (selectedRooms.size() > 0) {
+					bool setHidden = true;
 
-					if (room->inside(worldMouse)) {
-						hoveringRoom = room;
-						break;
+					for (Room *room : selectedRooms)
+						if (room->Hidden()) { setHidden = false; break; }
+
+					for (Room *room : selectedRooms)
+						room->Hidden(setHidden);
+
+				} else {
+					Room *hoveringRoom = nullptr;
+					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+						Room *room = (*it);
+
+						if (room->inside(worldMouse)) {
+							hoveringRoom = room;
+							break;
+						}
 					}
-				}
 
-				if (hoveringRoom != nullptr) {
-					hoveringRoom->Hidden(!hoveringRoom->Hidden());
+					if (hoveringRoom != nullptr) {
+						hoveringRoom->Hidden(!hoveringRoom->Hidden());
+					}
 				}
 			}
 
