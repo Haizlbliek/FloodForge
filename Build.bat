@@ -15,7 +15,7 @@ cls
 set "src_dir=src/world/*.cpp"
 set "debug_mode=false"
 set "release_mode=false"
-set "run=false"
+set "run=true"
 
 :: Parse arguments
 for %%a in (%*) do (
