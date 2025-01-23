@@ -1,6 +1,6 @@
 #include "Room.hpp"
 
-void Room::draw(Vector2 mousePosition, double lineSize) {
+void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
     if (!valid) return;
     
     Colour tint = Colour(1.0, 1.0, 1.0);
@@ -34,7 +34,7 @@ void Room::draw(Vector2 mousePosition, double lineSize) {
     GLuint modelLoc = glGetUniformLocation(Shaders::roomShader, "model");
     GLuint tintLoc = glGetUniformLocation(Shaders::roomShader, "tintColour");
 
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(cameraOffset, cameraScale).m);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(cameraOffset, cameraScale * screenBounds).m);
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position.x, position.y).m);
     if (hidden) {
         glUniform4f(tintLoc, tint.R(), tint.G(), tint.B(), 0.5f);

@@ -17,6 +17,14 @@ Vector2 operator*(const double &lhs, const Vector2 &rhs) {
 	return Vector2(lhs * rhs.x, lhs * rhs.y);
 }
 
+Vector2 operator*(const Vector2 &lhs, const Vector2 &rhs) {
+	return Vector2(lhs.x * rhs.x, lhs.y * rhs.y);
+}
+
+Vector2 operator/(const Vector2 &lhs, const double &rhs) {
+	return Vector2(lhs.x / rhs, lhs.y / rhs);
+}
+
 std::string to_string(const Vector2 &vector) {
 	return "(" + std::to_string(vector.x) + ", " + std::to_string(vector.y) + ")";
 }

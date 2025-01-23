@@ -34,7 +34,7 @@ class OffscreenRoom : public Room {
 		~OffscreenRoom() {
 		}
 
-		void draw(Vector2 mousePosition, double lineSize) override {
+		void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) override {
 			Draw::color(1.00f, 1.00f, 1.00f);
 			fillRect(position.x, position.y, position.x + width, position.y - height);
 

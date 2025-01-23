@@ -180,6 +180,9 @@ class Window {
 
 				case GLFW_MOD_SHIFT:
 					return keyPressed(GLFW_KEY_LEFT_SHIFT) || keyPressed(GLFW_KEY_RIGHT_SHIFT);
+
+				case GLFW_MOD_ALT:
+					return keyPressed(GLFW_KEY_LEFT_ALT) || keyPressed(GLFW_KEY_RIGHT_ALT);
 			}
 
 			return false;

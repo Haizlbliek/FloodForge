@@ -9,7 +9,7 @@ std::vector<Button*> MenuItems::buttons;
 
 Window *MenuItems::window = nullptr;
 
-double MenuItems::currentButtonX = -0.99;
+double MenuItems::currentButtonX = 0.01;
 
 std::filesystem::path MenuItems::exportDirectory = "";
 std::string MenuItems::worldAcronym = "";
@@ -142,17 +142,17 @@ void MenuItems::init(Window *window) {
         }
     );
 
-    addButton("Tile Snap",
-        [window](Button *button) {
-            if (::roomSnap == ROOM_SNAP_NONE) {
-                ::roomSnap = ROOM_SNAP_TILE;
-                button->Text("Tile Snap");
-            } else {
-                ::roomSnap = ROOM_SNAP_NONE;
-                button->Text("No Snap");
-            }
+    // addButton("Tile Snap",
+    //     [window](Button *button) {
+    //         if (::roomSnap == ROOM_SNAP_NONE) {
+    //             ::roomSnap = ROOM_SNAP_TILE;
+    //             button->Text("Tile Snap");
+    //         } else {
+    //             ::roomSnap = ROOM_SNAP_NONE;
+    //             button->Text("No Snap");
+    //         }
             
-            repositionButtons();
-        }
-    );
+    //         repositionButtons();
+    //     }
+    // );
 }

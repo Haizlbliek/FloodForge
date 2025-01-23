@@ -5,7 +5,7 @@
 #include "Globals.hpp"
 
 namespace DebugData {
-    void draw(Window *window, Vector2 mouse, double lineSize) {
+    void draw(Window *window, Vector2 mouse, double lineSize, Vector2 screenBounds) {
         Connection *hoveringConnection = nullptr;
         Room *hoveringRoom = nullptr;
 
@@ -34,8 +34,8 @@ namespace DebugData {
             debugText.push_back("    Connection:");
             debugText.push_back("Room A: " + hoveringConnection->RoomA()->RoomName());
             debugText.push_back("Room B: " + hoveringConnection->RoomB()->RoomName());
-            debugText.push_back("Connection A: " + hoveringConnection->ConnectionA());
-            debugText.push_back("Connection B: " + hoveringConnection->ConnectionB());
+            debugText.push_back("Connection A: " + std::to_string(hoveringConnection->ConnectionA()));
+            debugText.push_back("Connection B: " + std::to_string(hoveringConnection->ConnectionB()));
         }
 
         if (hoveringRoom != nullptr) {
@@ -62,10 +62,10 @@ namespace DebugData {
         for (auto it = debugText.rbegin(); it != debugText.rend(); it++) {
             std::string line = *it;
 
-            Fonts::rainworld->write(line, -1.0, -1.0 + i*0.04 - 0.003, 0.03);
-            Fonts::rainworld->write(line, -1.0, -1.0 + i*0.04 + 0.003, 0.03);
-            Fonts::rainworld->write(line, -1.0 - 0.003, -1.0 + i*0.04, 0.03);
-            Fonts::rainworld->write(line, -1.0 + 0.003, -1.0 + i*0.04, 0.03);
+            Fonts::rainworld->write(line, -screenBounds.x, -screenBounds.y + i*0.04 - 0.003, 0.03);
+            Fonts::rainworld->write(line, -screenBounds.x, -screenBounds.y + i*0.04 + 0.003, 0.03);
+            Fonts::rainworld->write(line, -screenBounds.x - 0.003, -screenBounds.y + i*0.04, 0.03);
+            Fonts::rainworld->write(line, -screenBounds.x + 0.003, -screenBounds.y + i*0.04, 0.03);
             i++;
         }
         
@@ -75,7 +75,7 @@ namespace DebugData {
         for (auto it = debugText.rbegin(); it != debugText.rend(); it++) {
             std::string line = *it;
 
-            Fonts::rainworld->write(line, -1.0, -1.0 + i*0.04, 0.03);
+            Fonts::rainworld->write(line, -screenBounds.x, -screenBounds.y + i*0.04, 0.03);
             i++;
         }
     }

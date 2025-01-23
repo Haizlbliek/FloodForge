@@ -34,7 +34,7 @@ if "%debug_mode%"=="false" (
     set "compile_cmd=!compile_cmd! -mwindows"
 )
 if "%release_mode%"=="true" (
-    set "compile_cmd=!compile_cmd! -static"
+    set "compile_cmd=!compile_cmd! -static -O2"
 )
 
 
@@ -54,7 +54,7 @@ if "%release_mode%"=="false" (
 
 :: Zip
 if "%release_mode%"=="true" (
-	"C:\Program Files\7-Zip\7z.exe" a "FloodForge.zip" "FloodForge.exe" "assets\*" "README.md" "LICENSE" -r
+	"C:\Program Files\7-Zip\7z.exe" a "FloodForge-Windows.zip" "FloodForge.exe" "assets\*" "README.md" "LICENSE" -r
 )
 
 :: Return

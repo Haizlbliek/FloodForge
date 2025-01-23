@@ -99,7 +99,7 @@ class Room {
 			return geometry[x * height + y];
 		}
 
-		virtual void draw(Vector2 mousePosition, double lineSize);
+		virtual void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds);
 		
 		void Position(Vector2 position) {
 			this->position.x = position.x;

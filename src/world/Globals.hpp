@@ -13,7 +13,6 @@
 extern std::string ROOM_TAGS[9];
 
 extern int roomColours;
-extern int roomSnap;
 
 #include "Room.hpp"
 #include "Connection.hpp"

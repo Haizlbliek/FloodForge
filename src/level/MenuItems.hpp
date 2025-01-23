@@ -112,8 +112,10 @@ class MenuItems {
 					// }
 					
 					Popups::addPopup(new FilesystemPopup(window, std::regex(R"([^.]+\.level)"),
-						[](std::string path) {
-							if (path == "") return;
+						[](std::set<std::string> paths) {
+							if (paths.empty()) return;
+
+							std::string path = *paths.begin();
 
 							std::cout << "Opening " << path << std::endl;
 

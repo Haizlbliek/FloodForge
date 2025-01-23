@@ -89,6 +89,10 @@ Vector2 operator*(const Vector2 &lhs, const double &rhs);
 
 Vector2 operator*(const double &lhs, const Vector2 &rhs);
 
+Vector2 operator*(const Vector2 &lhs, const Vector2 &rhs);
+
+Vector2 operator/(const Vector2 &lhs, const double &rhs);
+
 std::string to_string(const Vector2 &vector);
 
 // Vector2i

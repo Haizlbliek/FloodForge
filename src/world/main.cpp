@@ -46,7 +46,6 @@ Vector2 cameraScale = Vector2(32.0f, 32.0f);
 std::string ROOM_TAGS[9] = { "SHELTER", "ANCIENTSHELTER", "GATE", "SWARMROOM", "PERF_HEAVY", "SAVOUTPOST", "SCAVTRADER", "NOTRACKERS", "ARENA" };
 
 int roomColours = 0;
-int roomSnap = ROOM_SNAP_TILE;
 
 void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale, float left, float right, float bottom, float top, float nearVal, float farVal) {
 	left *= scale.x;
@@ -124,6 +123,7 @@ int main() {
 	Vector2 selectionStart;
 	Vector2 selectionEnd;
 	std::set<Room*> selectedRooms;
+	int roomSnap = ROOM_SNAP_TILE;
 
 	std::string line;
 
@@ -239,6 +239,12 @@ int main() {
 
 
 		/// Update Inputs
+
+		if (window->modifierPressed(GLFW_MOD_ALT)) {
+			roomSnap = ROOM_SNAP_NONE;
+		} else {
+			roomSnap = ROOM_SNAP_TILE;
+		}
 
 		if (window->keyPressed(GLFW_KEY_F11)) {
 			if (previousKeys.find(GLFW_KEY_F11) == previousKeys.end()) {
@@ -501,6 +507,24 @@ int main() {
 				}
 			}
 			selectingState = 0;
+		}
+
+		if (window->keyPressed(GLFW_KEY_I)) {
+			if (previousKeys.find(GLFW_KEY_I) == previousKeys.end()) {
+				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+					Room *room = *it;
+
+					if (room->inside(worldMouse)) {
+						rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
+						rooms.insert(rooms.begin(), room);
+						break;
+					}
+				}
+			}
+
+			previousKeys.insert(GLFW_KEY_I);
+		} else {
+			previousKeys.erase(GLFW_KEY_I);
 		}
 
 		if (window->keyPressed(GLFW_KEY_X)) {
@@ -774,16 +798,16 @@ int main() {
 		window->clear();
 		glDisable(GL_DEPTH_TEST);
 
-		Draw::color(0.0f, 0.0f, 0.0f);
-		fillRect(-1.0, -1.0, 1.0, 1.0);
+		// Draw::color(0.0f, 0.0f, 0.0f);
+		// fillRect(-1.0, -1.0, 1.0, 1.0);
 
-		glViewport(offsetX, offsetY, size, size);
+		// glViewport(offsetX, offsetY, size, size);
 
 		setThemeColour(THEME_BACKGROUND_COLOUR);
-		// Draw::color(0.3f, 0.3f, 0.3f);
-		fillRect(-1.0, -1.0, 1.0, 1.0);
+		Vector2 screenBounds = Vector2(width, height) / size;
+		fillRect(-screenBounds.x, -screenBounds.y, screenBounds.x, screenBounds.y);
 
-		applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale);
+		applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale * screenBounds);
 
 		glLineWidth(lineSize);
 
@@ -792,7 +816,7 @@ int main() {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		for (Room *room : rooms) {
-			room->draw(worldMouse, lineSize);
+			room->draw(worldMouse, lineSize, screenBounds);
 			if (selectedRooms.find(room) != selectedRooms.end()) {
 				setThemeColour(THEME_SELECTION_BORDER_COLOUR);
 				strokeRect(room->Position().x, room->Position().y, room->Position().x + room->Width(), room->Position().y - room->Height(), 16.0f / lineSize);
@@ -833,18 +857,18 @@ int main() {
 		}
 
 		/// Draw UI
-		applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, Vector2(1.0f, 1.0f));
+		applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, screenBounds);
 
 		if (connectionError != "") {
 			Draw::color(1.0, 0.0, 0.0);
 			Fonts::rainworld->write(connectionError, mouse->X() / 512.0f - 1.0f, -mouse->Y() / 512.0f + 1.0f, 0.05);
 		}
 
-		MenuItems::draw(&customMouse);
+		MenuItems::draw(&customMouse, screenBounds);
 
 		Popups::draw(screenMouse);
 
-		DebugData::draw(window, worldMouse, lineSize);
+		DebugData::draw(window, worldMouse, lineSize, screenBounds);
 
 		window->render();
 

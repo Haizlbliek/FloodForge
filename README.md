@@ -10,6 +10,7 @@ It aims for intuitive controls, clean ui, and as few dependencies as possible.
 | Action            | Key       | Description                                                   |
 |-------------------|-----------|---------------------------------------------------------------|
 | Delete            | `X`       | Removes hovered room or connection.                           |
+| Show other rooms  | `I`       | Places hovered room behind all other rooms.                   |
 | Change Room Layer | `L`       | Switches between layers within the hovered room.              |
 | Change Flag       | `F`       | Change room flags (shelter, karma gate, savvy outpost, etc.). |
 | Change Subregion  | `S`       | Openes a popup for adding, removing, and changing subregions. |

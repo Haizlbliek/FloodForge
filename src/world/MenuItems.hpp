@@ -43,15 +43,15 @@ class Button {
 			return this;
 		}
 
-		bool isHovered(Mouse *mouse) {
-			double mouseX = mouse->X() / 512.0 - 1.0;
-			double mouseY = -(mouse->Y() / 512.0 - 1.0);
+		bool isHovered(Mouse *mouse, Vector2 screenBounds) {
+			double mouseX = mouse->X() / 512.0 + screenBounds.x - 1.0;
+			double mouseY = -(mouse->Y() / 512.0 + screenBounds.y - 1.0);
 
-			return mouseX >= x && mouseX <= x + width && mouseY <= y && mouseY >= y - height;
+			return mouseX >= (x - 0.005) && mouseX <= (x + 0.005) + width && mouseY <= (y + 0.005) && mouseY >= (y - 0.005) - height;
 		}
 
-		void update(Mouse *mouse) {
-			if (isHovered(mouse) && mouse->Left()) {
+		void update(Mouse *mouse, Vector2 screenBounds) {
+			if (isHovered(mouse, screenBounds) && mouse->Left()) {
 				if (!lastPressed) {
 					lastPressed = true;
 					press();
@@ -61,13 +61,13 @@ class Button {
 			}
 		}
 
-		void draw(Mouse *mouse) {
+		void draw(Mouse *mouse, Vector2 screenBounds) {
 			setThemeColour(THEME_TEXT_COLOUR);
-			font->write(text, x, y, height);
+			font->write(text, x - screenBounds.x, y + screenBounds.y, height);
 
-			if (isHovered(mouse)) {
+			if (isHovered(mouse, screenBounds)) {
 				setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
-				strokeRect(x - 0.005, y + 0.005, x + 0.005 + width, y - 0.005 - height);
+				strokeRect(x - 0.005 - screenBounds.x, y + 0.005 + screenBounds.y, x + 0.005 + width - screenBounds.x, y - 0.005 - height + screenBounds.y);
 			}
 		}
 
@@ -114,7 +114,7 @@ class MenuItems {
 			double width = Fonts::rainworld->getTextWidth(text, 0.04);
 
 			currentButtonX += width + 0.04;
-			buttons.push_back((new Button(text, x, 0.99, width, 0.04, Fonts::rainworld))->OnPress(listener));
+			buttons.push_back((new Button(text, x, -0.01, width, 0.04, Fonts::rainworld))->OnPress(listener));
 		}
 
 		static void replaceLastInstance(std::string& str, const std::string& old_sub, const std::string& new_sub) {
@@ -510,6 +510,8 @@ class MenuItems {
 			}
 			file << "END ROOMS\n";
 
+			file << extraWorld;
+
 			file.close();
 		}
 
@@ -761,14 +763,14 @@ class MenuItems {
 			buttons.clear();
 		}
 
-		static void draw(Mouse *mouse) {
+		static void draw(Mouse *mouse, Vector2 screenBounds) {
 			setThemeColour(THEME_HEADER_COLOUR);
-			fillRect(-1.0f, 1.0f, 1.0f, 1.0f - 0.06f);
+			fillRect(-screenBounds.x, screenBounds.y, screenBounds.x, screenBounds.y - 0.06f);
 			glLineWidth(1);
 
 			for (Button *button : buttons) {
-				button->update(mouse);
-				button->draw(mouse);
+				button->update(mouse, screenBounds);
+				button->draw(mouse, screenBounds);
 			}
 		}
 
@@ -783,7 +785,7 @@ class MenuItems {
 
 	private:
 		static void repositionButtons() {
-			currentButtonX = -0.99;
+			currentButtonX = 0.01;
 
 			for (Button *button : buttons) {
 				button->X(currentButtonX);
