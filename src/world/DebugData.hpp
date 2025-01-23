@@ -5,14 +5,14 @@
 #include "Globals.hpp"
 
 namespace DebugData {
-    void draw(Window *window, Vector2 mouse) {
+    void draw(Window *window, Vector2 mouse, double lineSize) {
         Connection *hoveringConnection = nullptr;
         Room *hoveringRoom = nullptr;
 
         for (auto it = connections.rbegin(); it != connections.rend(); it++) {
             Connection *connection = *it;
 
-            if (connection->collides(mouse)) {
+            if (connection->distance(mouse) < 1.0 / lineSize) {
                 hoveringConnection = connection;
 
                 break;

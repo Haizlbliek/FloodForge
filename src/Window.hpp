@@ -172,6 +172,18 @@ class Window {
 		bool keyPressed(uint16_t key) {
 			return GLFW_PRESS == glfwGetKey(glfwWindow, key);
 		}
+		
+		bool modifierPressed(uint16_t modifier) {
+			switch (modifier) {
+				case GLFW_MOD_CONTROL:
+					return keyPressed(GLFW_KEY_LEFT_CONTROL) || keyPressed(GLFW_KEY_RIGHT_CONTROL) || keyPressed(GLFW_KEY_LEFT_SUPER) || keyPressed(GLFW_KEY_RIGHT_SUPER);
+
+				case GLFW_MOD_SHIFT:
+					return keyPressed(GLFW_KEY_LEFT_SHIFT) || keyPressed(GLFW_KEY_RIGHT_SHIFT);
+			}
+
+			return false;
+		}
 
 		double getMouseScrollX() {
 			double scrollX = scrollXAccumulator;

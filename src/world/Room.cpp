@@ -35,7 +35,7 @@ void Room::draw(Vector2 mousePosition, double lineSize) {
     GLuint tintLoc = glGetUniformLocation(Shaders::roomShader, "tintColour");
 
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(cameraOffset, cameraScale).m);
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position->x, position->y).m);
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position.x, position.y).m);
     if (hidden) {
         glUniform4f(tintLoc, tint.R(), tint.G(), tint.B(), 0.5f);
     } else {
@@ -50,7 +50,7 @@ void Room::draw(Vector2 mousePosition, double lineSize) {
     Draw::flushOnEnd = false;
     if (water != -1) {
         Draw::color(Colour(0.0, 0.0, 0.5, 0.5));
-        fillRect(position->x, position->y - (height - std::min(water, height)), position->x + width, position->y - height);
+        fillRect(position.x, position.y - (height - std::min(water, height)), position.x + width, position.y - height);
     }
 
     if (inside(mousePosition)) {
@@ -58,8 +58,8 @@ void Room::draw(Vector2 mousePosition, double lineSize) {
     } else {
         Draw::color(Colour(0.75, 0.75, 0.75));
     }
-    strokeRect(position->x, position->y, position->x + width, position->y - height);
     Draw::flushOnEnd = true;
+    strokeRect(position.x, position.y, position.x + width, position.y - height);
 }
 
 void Room::addQuad(const Vertex &a, const Vertex &b, const Vertex &c, const Vertex &d) {
@@ -96,10 +96,10 @@ void Room::generateVBO() {
     glGenVertexArrays(2, &vao);
 
     addQuad(
-        { (float) position->x,         (float) position->y,          1.0, 1.0, 1.0 },
-        { (float) position->x + width, (float) position->y,          1.0, 1.0, 1.0 },
-        { (float) position->x + width, (float) position->y - height, 1.0, 1.0, 1.0 },
-        { (float) position->x,         (float) position->y - height, 1.0, 1.0, 1.0 }
+        { (float) position.x,         (float) position.y,          1.0, 1.0, 1.0 },
+        { (float) position.x + width, (float) position.y,          1.0, 1.0, 1.0 },
+        { (float) position.x + width, (float) position.y - height, 1.0, 1.0, 1.0 },
+        { (float) position.x,         (float) position.y - height, 1.0, 1.0, 1.0 }
     );
 
     for (int x = 0; x < width; x++) {
@@ -107,10 +107,10 @@ void Room::generateVBO() {
             int tileType = getTile(x, y) % 16;
             int tileData = getTile(x, y) / 16;
 
-            float x0 = position->x + x;
-            float y0 = position->y - y;
-            float x1 = position->x + x + 1;
-            float y1 = position->y - y - 1;
+            float x0 = position.x + x;
+            float y0 = position.y - y;
+            float x1 = position.x + x + 1;
+            float y1 = position.y - y - 1;
             float x2 = (x0 + x1) * 0.5;
             float y2 = (y0 + y1) * 0.5;
 
@@ -222,10 +222,10 @@ void Room::generateVBO() {
     }
 
     for (Vector2i &shortcutEntrance : shortcutEntrances) {
-        float x0 = position->x + shortcutEntrance.x;
-        float y0 = position->y - shortcutEntrance.y;
-        float x1 = position->x + shortcutEntrance.x + 1;
-        float y1 = position->y - shortcutEntrance.y - 1;
+        float x0 = position.x + shortcutEntrance.x;
+        float y0 = position.y - shortcutEntrance.y;
+        float x1 = position.x + shortcutEntrance.x + 1;
+        float y1 = position.y - shortcutEntrance.y - 1;
         
         addQuad(
             { x0 + 0.25f, y0 - 0.25f, 1.0, 0.0, 1.0 },

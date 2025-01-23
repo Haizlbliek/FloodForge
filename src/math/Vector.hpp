@@ -43,6 +43,14 @@ class Vector2 {
 			return Vector2(this->x - other.x, this->y - other.y);
 		}
 
+		void X(const double x) {
+			this->x = x;
+		}
+
+		void Y(const double y) {
+			this->y = y;
+		}
+
 		static Vector2 min(const Vector2 &a, const Vector2 &b) {
 			return Vector2(
 				(a.x < b.x) ? a.x : b.x,

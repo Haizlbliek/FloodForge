@@ -42,8 +42,6 @@ class Room {
 				0.0f
 			);
 
-			coord = new Vector2();
-
 			width = 1;
 			height = 1;
 
@@ -63,12 +61,8 @@ class Room {
 		}
 
 		virtual ~Room() {
-			delete position;
-			delete coord;
 			delete[] geometry;
 
-			position = nullptr;
-			coord = nullptr;
 			geometry = nullptr;
 
 			glDeleteBuffers(2, vbo);
@@ -77,10 +71,10 @@ class Room {
 
 		bool inside(Vector2 otherPosition) {
 			return (
-				otherPosition.x >= position->x &&
-				otherPosition.y >= position->y - height &&
-				otherPosition.x <= position->x + width &&
-				otherPosition.y <= position->y
+				otherPosition.x >= position.x &&
+				otherPosition.y >= position.y - height &&
+				otherPosition.x <= position.x + width &&
+				otherPosition.y <= position.y
 			);
 		}
 
@@ -89,10 +83,10 @@ class Room {
 			Vector2 cornerMax = Vector2::max(corner0, corner1);
 
 			return (
-				cornerMin.x <= position->x + width &&
-				cornerMin.y <= position->y &&
-				cornerMax.x >= position->x &&
-				cornerMax.y >= position->y - height
+				cornerMin.x <= position.x + width &&
+				cornerMin.y <= position.y &&
+				cornerMax.x >= position.x &&
+				cornerMax.y >= position.y - height
 			);
 		}
 
@@ -107,27 +101,27 @@ class Room {
 
 		virtual void draw(Vector2 mousePosition, double lineSize);
 		
-		void Position(Vector2 newPosition) {
-			position->x = newPosition.x;
-			position->y = newPosition.y;
+		void Position(Vector2 position) {
+			this->position.x = position.x;
+			this->position.y = position.y;
 		}
 
-		Vector2 *Position() const {
+		Vector2 &Position() {
 			return position;
 		}
 
-		void Coord(const Vector2 &coord) {
-			this->coord->x = coord.x;
-			this->coord->y = coord.y;
-		}
+		// void Coord(const Vector2 &coord) {
+		// 	this->coord.x = coord.x;
+		// 	this->coord.y = coord.y;
+		// }
 
 		const std::vector<Vector2> Connections() const {
 			std::vector<Vector2> transformedConnections;
 
 			for (Vector2i connection : connections) {
 				transformedConnections.push_back(Vector2(
-					position->x + connection.x + 0.5,
-					position->y - connection.y - 0.5
+					position.x + connection.x + 0.5,
+					position.y - connection.y - 0.5
 				));
 			}
 
@@ -152,8 +146,8 @@ class Room {
 			if (connectionId >= connections.size()) return Vector2(0, 0);
 			Vector2i connection = connections[connectionId];
 			return Vector2(
-				position->x + connection.x + 0.5,
-				position->y - connection.y - 0.5
+				position.x + connection.x + 0.5,
+				position.y - connection.y - 0.5
 			);
 		}
 
@@ -161,8 +155,8 @@ class Room {
 			if (connectionId >= connections.size()) return Vector2(0, 0);
 			Vector2i connection = getShortcutConnection(connectionId);
 			return Vector2(
-				position->x + connection.x + 0.5,
-				position->y - connection.y - 0.5
+				position.x + connection.x + 0.5,
+				position.y - connection.y - 0.5
 			);
 		}
 
@@ -448,8 +442,8 @@ class Room {
 		std::string path;
 		std::string roomName;
 
-		Vector2 *position;
-		Vector2 *coord;
+		Vector2 position;
+		// Vector2 coord;
 
 		int width;
 		int height;

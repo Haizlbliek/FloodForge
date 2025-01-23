@@ -57,9 +57,25 @@ else
 fi
 
 if [ $? -eq 0 ]; then
+    # create distribution zip if on release mode
+    if [[ $buildmode == "release" ]]; then
+        # windows: 7zip
+        if [[ -f "/c/Program Files/7-Zip/7z.exe" ]]; then
+            echo \[INF\] Using 7-Zip to create distribution...
+            "/c/Program Files/7-Zip/7z.exe" a FloodForge.zip FloodForge.exe README.md LICENSE assets/* -r
+        
+        # linux: zip command
+        elif command -v zip 2>&1 >/dev/null; then
+            echo \[INF\] Using zip to create distribution...
+            zip -r FloodForge.zip FloodForge README.md LICENSE assets/*
+        fi
+    fi
+
+    # auto-run executable if not in release mode and --no-run flag was not specified
     if [[ $buildmode != "release" && $norun != 1 ]]; then
-        build/FloodForge
+        ./FloodForge
     fi
 else
     echo "Compilation failed."
+    exit 1
 fi

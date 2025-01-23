@@ -107,6 +107,7 @@ int main() {
 	bool leftMouseDown;
 
 	std::set<int> previousKeys;
+	Vector2 lastMousePosition;
 
 	bool cameraPanning = false;
 	bool cameraPanningBlocked = false;
@@ -119,10 +120,10 @@ int main() {
 	int holdingType = 0;
 
 	int selectingState = 0;
+	Room *roomPossibleSelect = nullptr;
 	Vector2 selectionStart;
 	Vector2 selectionEnd;
 	std::set<Room*> selectedRooms;
-
 
 	std::string line;
 
@@ -148,6 +149,7 @@ int main() {
 		float offsetY = (height * 0.5) - size * 0.5;
 
 		Mouse *mouse = window->GetMouse();
+		bool mouseMoved = (mouse->X() != lastMousePosition.x || mouse->Y() != lastMousePosition.y);
 		
 		Vector2 globalMouse(
 			(mouse->X() - offsetX) / size * 1024,
@@ -232,6 +234,8 @@ int main() {
 			cameraPanning = false;
 			cameraPanningBlocked = false;
 		}
+		
+		double lineSize = 64.0 / cameraScale.x;
 
 
 		/// Update Inputs
@@ -287,8 +291,8 @@ int main() {
 
 			if (hoveringRoom != nullptr) {
 				tilePosition = Vector2i(
-					floor(worldMouse.x - hoveringRoom->Position()->x),
-					-1 - floor(worldMouse.y - hoveringRoom->Position()->y)
+					floor(worldMouse.x - hoveringRoom->Position().x),
+					-1 - floor(worldMouse.y - hoveringRoom->Position().y)
 				);
 			} else {
 				tilePosition = Vector2i(-1, -1);
@@ -314,7 +318,7 @@ int main() {
 					// }
 
 					if (connectionId != -1) {
-						connectionStart = new Vector2(floor(worldMouse.x - hoveringRoom->Position()->x) + 0.5 + hoveringRoom->Position()->x, floor(worldMouse.y - hoveringRoom->Position()->y) + 0.5 + hoveringRoom->Position()->y);
+						connectionStart = new Vector2(floor(worldMouse.x - hoveringRoom->Position().x) + 0.5 + hoveringRoom->Position().x, floor(worldMouse.y - hoveringRoom->Position().y) + 0.5 + hoveringRoom->Position().y);
 						connectionEnd   = new Vector2(connectionStart);
 						currentConnection = new Connection(hoveringRoom, connectionId, nullptr, 0);
 					}
@@ -338,8 +342,8 @@ int main() {
 				}
 
 				if (connectionId != -1) {
-					connectionEnd->x = floor(worldMouse.x - hoveringRoom->Position()->x) + 0.5 + hoveringRoom->Position()->x;
-					connectionEnd->y = floor(worldMouse.y - hoveringRoom->Position()->y) + 0.5 + hoveringRoom->Position()->y;
+					connectionEnd->x = floor(worldMouse.x - hoveringRoom->Position().x) + 0.5 + hoveringRoom->Position().x;
+					connectionEnd->y = floor(worldMouse.y - hoveringRoom->Position().y) + 0.5 + hoveringRoom->Position().y;
 					currentConnection->RoomB(hoveringRoom);
 					currentConnection->ConnectionB(connectionId);
 
@@ -393,8 +397,6 @@ int main() {
 		//// Holding
 		if (mouse->Left()) {
 			if (!leftMouseDown) {
-				bool blockLeftMouse = false;
-
 				for (Popup *popup : Popups::popups) {
 					Rect bounds = popup->Bounds();
 
@@ -404,57 +406,52 @@ int main() {
 							holdingPopup = popup;
 							holdingStart = screenMouse;
 						}
-						blockLeftMouse = true;
+						selectingState = 2;
 						break;
 					}
 				}
 
-				if (!blockLeftMouse) {
+				if (selectingState == 0) {
 					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 						Room *room = *it;
 
 						if (room->inside(worldMouse)) {
-							rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
-							rooms.push_back(room);
 							holdingRoom = room;
 							holdingStart = worldMouse;
-							if (selectedRooms.find(room) != selectedRooms.end()) {
-								holdingType = 1;
-								if (roomSnap == ROOM_SNAP_TILE) {
-									for (Room *room2 : selectedRooms) {
-										room2->Position()->x = round(room2->Position()->x);
-										room2->Position()->y = round(room2->Position()->y);
-									}
-								}
-							} else {
-								holdingType = 0;
-								if (roomSnap == ROOM_SNAP_TILE) {
-									holdingRoom->Position()->x = round(holdingRoom->Position()->x);
-									holdingRoom->Position()->y = round(holdingRoom->Position()->y);
-								}
-							}
+							roomPossibleSelect = room;
+							selectingState = 3;
 							break;
 						}
 					}
 				}
 
-				if (!blockLeftMouse && holdingRoom == nullptr) {
+				if (selectingState == 0) {
 					selectingState = 1;
 					selectionStart = worldMouse;
 					selectionEnd = worldMouse;
-					selectedRooms.clear();
+					if (!window->modifierPressed(GLFW_MOD_SHIFT) && !window->modifierPressed(GLFW_MOD_CONTROL)) selectedRooms.clear();
 				}
 			} else {
-				if (holdingRoom != nullptr) {
+				if (selectingState == 3 && mouseMoved || selectingState == 4) {
+					if (selectingState == 3) {
+						if (window->modifierPressed(GLFW_MOD_SHIFT) || window->modifierPressed(GLFW_MOD_CONTROL)) {
+							selectedRooms.insert(roomPossibleSelect);
+						} else {
+							if (selectedRooms.find(holdingRoom) == selectedRooms.end()) {
+								selectedRooms.clear();
+								selectedRooms.insert(roomPossibleSelect);
+							}
+						}
+						rooms.erase(std::remove(rooms.begin(), rooms.end(), roomPossibleSelect), rooms.end());
+						rooms.push_back(roomPossibleSelect);
+						selectingState = 4;
+					}
+
 					Vector2 offset = (worldMouse - holdingStart);
 					if (roomSnap == ROOM_SNAP_TILE) offset.round();
 
-					if (holdingType == 0) {
-						holdingRoom->Position()->add(offset);
-					} else {
-						for (Room *room2 : selectedRooms) {
-							room2->Position()->add(offset);
-						}
+					for (Room *room2 : selectedRooms) {
+						room2->Position().add(offset);
 					}
 					holdingStart = holdingStart + offset;
 				}
@@ -466,96 +463,127 @@ int main() {
 
 				if (selectingState == 1) {
 					selectionEnd = worldMouse;
-					selectedRooms.clear();
-					for (Room *room : rooms) {
-						if (room->intersects(selectionStart, selectionEnd)) selectedRooms.insert(room);
-					}
+					// selectedRooms.clear();
 				}
 			}
 
 			leftMouseDown = true;
 		} else {
+			if (selectingState == 3) {
+				rooms.erase(std::remove(rooms.begin(), rooms.end(), roomPossibleSelect), rooms.end());
+				rooms.push_back(roomPossibleSelect);
+				if (window->modifierPressed(GLFW_MOD_SHIFT) || window->modifierPressed(GLFW_MOD_CONTROL)) {
+					if (selectedRooms.find(roomPossibleSelect) != selectedRooms.end()) {
+						selectedRooms.erase(roomPossibleSelect);
+					} else {
+						selectedRooms.insert(roomPossibleSelect);
+					}
+				} else {
+					selectedRooms.clear();
+					selectedRooms.insert(roomPossibleSelect);
+				}
+				holdingType = 1;
+				if (roomSnap == ROOM_SNAP_TILE) {
+					for (Room *room2 : selectedRooms) {
+						room2->Position().X(round(room2->Position().x));
+						room2->Position().Y(round(room2->Position().y));
+					}
+				}
+			}
+
 			leftMouseDown = false;
 			holdingRoom = nullptr;
 			holdingPopup = nullptr;
+
+			if (selectingState == 1) {
+				for (Room *room : rooms) {
+					if (room->intersects(selectionStart, selectionEnd)) selectedRooms.insert(room);
+				}
+			}
 			selectingState = 0;
 		}
 
 		if (window->keyPressed(GLFW_KEY_X)) {
 			if (previousKeys.find(GLFW_KEY_X) == previousKeys.end()) {
 				bool deleted = false;
+				
+				for (auto it = connections.rbegin(); it != connections.rend(); it++) {
+					Connection *connection = *it;
 
-				if (selectedRooms.size() > 0) {
-					for (Room *room : selectedRooms) {
-						rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
+					if (connection->distance(worldMouse) < 1.0 / lineSize) {
+						connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
 
-						connections.erase(std::remove_if(connections.begin(), connections.end(),
-							[room](Connection *connection) {
-								if (connection->RoomA() == room || connection->RoomB() == room) {
-									connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
-									connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
+						connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
+						connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
 
-									delete connection;
-									return true;
-								}
+						delete connection;
 
-								return false;
-							}
-						), connections.end());
+						deleted = true;
 
-						delete room;
-					}
-
-					selectedRooms.clear();
-
-					deleted = true;
-				}
-
-				if (!deleted) {
-					for (auto it = connections.rbegin(); it != connections.rend(); it++) {
-						Connection *connection = *it;
-
-						if (connection->distance(worldMouse) < 0.5) {
-							connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
-
-							connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
-							connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
-
-							delete connection;
-
-							deleted = true;
-
-							break;
-						}
+						break;
 					}
 				}
 
 				if (!deleted) {
+					Room *hoveredRoom = nullptr;
 					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 						Room *room = *it;
 
 						if (room->inside(worldMouse)) {
-							rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
-
-							connections.erase(std::remove_if(connections.begin(), connections.end(),
-								[room](Connection *connection) {
-									if (connection->RoomA() == room || connection->RoomB() == room) {
-										connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
-										connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
-
-										delete connection;
-										return true;
-									}
-
-									return false;
-								}
-							), connections.end());
-
-							delete room;
-
-							deleted = true;
-
+							hoveredRoom = room;
 							break;
+						}
+					}
+
+					if (hoveredRoom != nullptr) {
+						if (selectedRooms.find(hoveredRoom) != selectedRooms.end()) {
+							for (Room *room : selectedRooms) {
+								rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
+
+								connections.erase(std::remove_if(connections.begin(), connections.end(),
+									[room](Connection *connection) {
+										if (connection->RoomA() == room || connection->RoomB() == room) {
+											connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
+											connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
+
+											delete connection;
+											return true;
+										}
+
+										return false;
+									}
+								), connections.end());
+
+								delete room;
+							}
+
+							selectedRooms.clear();
+						} else {
+							for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+								Room *room = *it;
+
+								if (room->inside(worldMouse)) {
+									rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
+
+									connections.erase(std::remove_if(connections.begin(), connections.end(),
+										[room](Connection *connection) {
+											if (connection->RoomA() == room || connection->RoomB() == room) {
+												connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
+												connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
+
+												delete connection;
+												return true;
+											}
+
+											return false;
+										}
+									), connections.end());
+
+									delete room;
+
+									break;
+								}
+							}
 						}
 					}
 				}
@@ -688,7 +716,7 @@ int main() {
 				for (auto it = connections.rbegin(); it != connections.rend(); it++) {
 					Connection *connection = *it;
 
-					if (connection->distance(worldMouse) < 0.5) {
+					if (connection->distance(worldMouse) < 1.0 / lineSize) {
 						hoveringConnection = connection;
 
 						break;
@@ -757,7 +785,6 @@ int main() {
 
 		applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale);
 
-		double lineSize = 64.0 / cameraScale.x;
 		glLineWidth(lineSize);
 
 		/// Draw Rooms
@@ -768,7 +795,7 @@ int main() {
 			room->draw(worldMouse, lineSize);
 			if (selectedRooms.find(room) != selectedRooms.end()) {
 				setThemeColour(THEME_SELECTION_BORDER_COLOUR);
-				strokeRect(room->Position()->x, room->Position()->y, room->Position()->x + room->Width(), room->Position()->y - room->Height(), 16.0f / lineSize);
+				strokeRect(room->Position().x, room->Position().y, room->Position().x + room->Width(), room->Position().y - room->Height(), 16.0f / lineSize);
 			}
 		}
 		glDisable(GL_BLEND);
@@ -817,11 +844,14 @@ int main() {
 
 		Popups::draw(screenMouse);
 
-		DebugData::draw(window, worldMouse);
+		DebugData::draw(window, worldMouse, lineSize);
 
 		window->render();
 
 		Popups::cleanup();
+		
+		lastMousePosition.x = mouse->X();
+		lastMousePosition.y = mouse->Y();
 	}
 
 	for (Room *room : rooms)
