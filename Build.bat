@@ -15,6 +15,7 @@ cls
 set "src_dir=src/world/*.cpp"
 set "debug_mode=false"
 set "release_mode=false"
+set "run=false"
 
 :: Parse arguments
 for %%a in (%*) do (
@@ -23,6 +24,7 @@ for %%a in (%*) do (
     if /i "%%a"=="--dev" set "debug_mode=true"
     if /i "%%a"=="-r" set "release_mode=true"
     if /i "%%a"=="--release" set "release_mode=true"
+    if /i "%%a"=="--no-run" set "run=false"
     if /i "%%a"=="world" set "src_dir=src/world/*.cpp"
     if /i "%%a"=="level" set "src_dir=src/level/*.cpp"
 )
@@ -44,11 +46,13 @@ if "%release_mode%"=="true" (
 
 :: Execute
 if "%release_mode%"=="false" (
-	if %errorlevel%==0 (
-	    FloodForge.exe
-	) else (
-	    echo Compilation failed.
-	)
+    if "%run%"=="true" (
+        if %errorlevel%==0 (
+            FloodForge.exe
+        ) else (
+            echo Compilation failed.
+        )
+    )
 )
 
 
