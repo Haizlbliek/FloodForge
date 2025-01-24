@@ -254,11 +254,13 @@ class MenuItems {
 			std::vector<std::string> tokens;
 			std::string token;
 			std::istringstream tokenStream(text);
+
 			while (std::getline(tokenStream, token, delimiter)) {
 				token.erase(0, token.find_first_not_of(" \t\n"));
 				token.erase(token.find_last_not_of(" \t\n") + 1);
 				tokens.push_back(token);
 			}
+
 			return tokens;
 		}
 
@@ -284,94 +286,126 @@ class MenuItems {
 			};
 		}
 
+		static void parseWorldRoom(std::string line, std::filesystem::path directory, std::vector<Quadruple<Room*, int, std::string, int>> &connectionsToAdd) {
+			std::tuple<std::string, std::vector<std::string>, std::string> parts = parseRoomString(line);
+
+			std::string roomName = toLower(std::get<0>(parts));
+
+			std::string roomPath = directory.string();
+			replaceLastInstance(roomPath, worldAcronym, worldAcronym + "-rooms");
+			roomPath = (std::filesystem::path(roomPath) / roomName).string();
+
+			if (startsWith(roomName, "gate")) {
+				replaceLastInstance(roomPath, worldAcronym + "-rooms", "gates");
+			}
+
+			Room *room = nullptr;
+			for (Room *otherRoom : rooms) {
+				if (toLower(otherRoom->RoomName()) == roomName) {
+					room = otherRoom;
+					break;
+				}
+			}
+
+			if (room == nullptr) {
+				if (startsWith(roomName, "offscreenden")) {
+					room = new OffscreenRoom(roomName, roomName);
+				} else {
+					room = new Room(roomPath, roomName);
+				}
+
+				rooms.push_back(room);
+			}
+
+			int connectionId = 0;
+			for (std::string connection : std::get<1>(parts)) {
+				connection = toLower(connection);
+				if (connection == "disconnected") {
+					connectionId++;
+					continue;
+				}
+
+				bool alreadyExists = false;
+				for (Quadruple<Room*, int, std::string, int> &connectionData : connectionsToAdd) {
+					if (toLower(connectionData.first->RoomName()) == connection && connectionData.third == toLower(roomName)) {
+						connectionData.fourth = connectionId;
+						alreadyExists = true;
+						break;
+					}
+				}
+				if (alreadyExists) {
+					connectionId++;
+					continue;
+				}
+
+				connectionsToAdd.push_back(Quadruple<Room*, int, std::string, int> {
+					room,
+					connectionId,
+					connection,
+					-1
+				});
+
+				connectionId++;
+			}
+
+			room->Tag(std::get<2>(parts));
+		}
+
+		static void parseWorldCreature(std::string line) {
+			std::vector<std::string> splits = split(line, ':');
+
+			if (splits[0] == "LINEAGE" || splits[0][0] == '(') {
+				// std::cout << "Skipping parsing '" << line << "'\n";
+				return;
+			}
+
+			for (std::string den : split(splits[1], ',')) {
+				std::cout << den << std::endl;
+			}
+		}
+
 		static void parseWorld(std::filesystem::path worldFilePath, std::filesystem::path directory) {
 			std::fstream worldFile(worldFilePath);
 
 			std::vector<Quadruple<Room*, int, std::string, int>> connectionsToAdd;
 
-			bool inRooms = false;
-			bool outOfRooms = false;
+			int parseState = 0;
+			// bool inRooms = false;
+			// bool outOfRooms = false;
 			std::string line;
 			while (std::getline(worldFile, line)) {
 				if (line == "ROOMS") {
-					inRooms = true;
-					continue;
-				}
-				if (line == "END ROOMS") {
-					outOfRooms = true;
+					parseState = 1;
 					continue;
 				}
 
-				if (outOfRooms) {
+				if (line == "END ROOMS") {
+					parseState = 2;
+					continue;
+				}
+
+				if (line == "CREATURES") {
+					parseState = 3;
+					continue;
+				}
+
+				if (line == "END CREATURES") {
+					parseState = 4;
+					continue;
+				}
+
+				if (parseState == 4) {
 					extraWorld += line + "\n";
 					continue;
 				}
 
 				if (line == "") continue;
-				if (!inRooms) continue;
 
-				std::tuple<std::string, std::vector<std::string>, std::string> parts = parseRoomString(line);
-
-				std::string roomName = toLower(std::get<0>(parts));
-
-				std::string roomPath = directory.string();
-				replaceLastInstance(roomPath, worldAcronym, worldAcronym + "-rooms");
-				roomPath = (std::filesystem::path(roomPath) / roomName).string();
-
-				if (startsWith(roomName, "gate")) {
-					replaceLastInstance(roomPath, worldAcronym + "-rooms", "gates");
-				}
-
-				Room *room = nullptr;
-				for (Room *otherRoom : rooms) {
-					if (toLower(otherRoom->RoomName()) == roomName) {
-						room = otherRoom;
-						break;
-					}
-				}
-
-				if (room == nullptr) {
-					if (startsWith(roomName, "offscreenden")) {
-						room = new OffscreenRoom(roomName, roomName);
-					} else {
-						room = new Room(roomPath, roomName);
-					}
-
-					rooms.push_back(room);
-				}
-
-				int connectionId = 0;
-				for (std::string connection : std::get<1>(parts)) {
-					connection = toLower(connection);
-					if (connection == "disconnected") {
-						connectionId++;
-						continue;
-					}
-
-					bool alreadyExists = false;
-					for (Quadruple<Room*, int, std::string, int> &connectionData : connectionsToAdd) {
-						if (toLower(connectionData.first->RoomName()) == connection && connectionData.third == toLower(roomName)) {
-							connectionData.fourth = connectionId;
-							alreadyExists = true;
-							break;
-						}
-					}
-					if (alreadyExists) {
-						connectionId++;
-						continue;
-					}
-
-					connectionsToAdd.push_back(Quadruple<Room*, int, std::string, int> {
-						room,
-						connectionId,
-						connection,
-						-1
-					});
-
-					connectionId++;
-				}
-
-				room->Tag(std::get<2>(parts));
+				if (parseState == 1)
+					parseWorldRoom(line, directory, connectionsToAdd);
+				
+				if (parseState == 3)
+					parseWorldCreature(line);
 			}
 			worldFile.close();
 
@@ -398,8 +432,6 @@ class MenuItems {
 
 				int connectionA = connectionData.second;
 				int connectionB = connectionData.fourth;
-
-				// std::cout << "Connecting " << roomA->RoomName() << " - " << connectionA << " to " << roomB->RoomName() << " - " << connectionB << std::endl;
 
 				roomA->connect(roomB, connectionA);
 				roomB->connect(roomA, connectionB);

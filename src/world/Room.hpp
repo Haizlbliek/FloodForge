@@ -8,6 +8,7 @@
 #include <iostream>
 #include <stack>
 #include <set>
+#include <algorithm>
 
 #include "../Texture.hpp"
 #include "../math/Vector.hpp"
@@ -99,6 +100,12 @@ class Room {
 			return geometry[x * height + y];
 		}
 
+		bool tileIsShortcut(int x, int y) const {
+			int tile = getTile(x, y);
+			
+			return (tile & (256 | 128 | 64)) > 0;
+		}
+
 		virtual void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds);
 		
 		void Position(Vector2 position) {
@@ -110,18 +117,13 @@ class Room {
 			return position;
 		}
 
-		// void Coord(const Vector2 &coord) {
-		// 	this->coord.x = coord.x;
-		// 	this->coord.y = coord.y;
-		// }
-
 		const std::vector<Vector2> Connections() const {
 			std::vector<Vector2> transformedConnections;
 
-			for (Vector2i connection : connections) {
+			for (const std::pair<Vector2i, int> &connection : connections) {
 				transformedConnections.push_back(Vector2(
-					position.x + connection.x + 0.5,
-					position.y - connection.y - 0.5
+					position.x + connection.first.x + 0.5,
+					position.y - connection.first.y - 0.5
 				));
 			}
 
@@ -131,8 +133,8 @@ class Room {
 		int getConnection(const Vector2i &searchPosition) const {
 			unsigned int connectionId = 0;
 
-			for (Vector2i connectionPosition : connections) {
-				if (connectionPosition == searchPosition) {
+			for (const std::pair<Vector2i, int> &connection : connections) {
+				if (connection.first == searchPosition) {
 					return connectionId;
 				}
 
@@ -144,7 +146,7 @@ class Room {
 
 		const Vector2 getConnectionPosition(unsigned int connectionId) const {
 			if (connectionId >= connections.size()) return Vector2(0, 0);
-			Vector2i connection = connections[connectionId];
+			const Vector2i &connection = connections[connectionId].first;
 			return Vector2(
 				position.x + connection.x + 0.5,
 				position.y - connection.y - 0.5
@@ -183,13 +185,13 @@ class Room {
 
 			int forwardDirection = -1;
 
-			if (getTile(connection.x - 1, connection.y) & 128)
+			if (tileIsShortcut(connection.x - 1, connection.y))
 				forwardDirection = 2;
-			else if (getTile(connection.x, connection.y + 1) & 128)
+			else if (tileIsShortcut(connection.x, connection.y + 1))
 				forwardDirection = 3;
-			else if (getTile(connection.x + 1, connection.y) & 128)
+			else if (tileIsShortcut(connection.x + 1, connection.y))
 				forwardDirection = 0;
-			else if (getTile(connection.x, connection.y - 1) & 128)
+			else if (tileIsShortcut(connection.x, connection.y - 1))
 				forwardDirection = 1;
 
 			return forwardDirection;
@@ -241,7 +243,7 @@ class Room {
 			return connections.size();
 		}
 
-		const std::vector<Vector2i> TileConnections() const {
+		const std::vector<std::pair<Vector2i, int>> TileConnections() const {
 			return connections;
 		}
 
@@ -278,7 +280,6 @@ class Room {
 			std::string token;
 
 			while (std::getline(ss, token, ',')) {
-				// Convert token to uint8_t and add to the vector
 				result.push_back(static_cast<uint8_t>(std::stoi(token)));
 			}
 
@@ -286,20 +287,20 @@ class Room {
 		}
 
 		void ensureConnections() {
-			std::stack<Vector2i> verifiedConnections;
+			std::vector<std::pair<Vector2i, int>> verifiedConnections;
 
 			for (int i = connections.size() - 1; i >= 0; i--) {
-				Vector2i connection = Vector2i(connections[i]);
+				Vector2i connection = connections[i].first;
 
 				Vector2i forwardDirection = Vector2i(0, 0);
 
-				if (getTile(connection.x - 1, connection.y) & 128)
+				if (tileIsShortcut(connection.x - 1, connection.y))
 					forwardDirection.x = -1;
-				else if (getTile(connection.x, connection.y + 1) & 128)
+				else if (tileIsShortcut(connection.x, connection.y + 1))
 					forwardDirection.y = 1;
-				else if (getTile(connection.x + 1, connection.y) & 128)
+				else if (tileIsShortcut(connection.x + 1, connection.y))
 					forwardDirection.x = 1;
-				else if (getTile(connection.x, connection.y - 1) & 128)
+				else if (tileIsShortcut(connection.x, connection.y - 1))
 					forwardDirection.y = -1;
 
 				if (forwardDirection.x == 0 && forwardDirection.y == 0) continue;
@@ -308,18 +309,18 @@ class Room {
 				while (runs++ < 10000) {
 					connection += forwardDirection;
 
-					if ((getTile(connection.x + forwardDirection.x, connection.y + forwardDirection.y) & 128) == 0) {
+					if (!tileIsShortcut(connection.x + forwardDirection.x, connection.y + forwardDirection.y)) {
 						Vector2i lastDirection = Vector2i(forwardDirection);
 
 						forwardDirection.x = 0;
 						forwardDirection.y = 0;
-						if (lastDirection.x !=  1 && getTile(connection.x - 1, connection.y) & 128)
+						if (lastDirection.x !=  1 && tileIsShortcut(connection.x - 1, connection.y))
 							forwardDirection.x = -1;
-						else if (lastDirection.y != -1 && getTile(connection.x, connection.y + 1) & 128)
+						else if (lastDirection.y != -1 && tileIsShortcut(connection.x, connection.y + 1))
 							forwardDirection.y = 1;
-						else if (lastDirection.x != -1 && getTile(connection.x + 1, connection.y) & 128)
+						else if (lastDirection.x != -1 && tileIsShortcut(connection.x + 1, connection.y))
 							forwardDirection.x = 1;
-						else if (lastDirection.y !=  1 && getTile(connection.x, connection.y - 1) & 128)
+						else if (lastDirection.y !=  1 && tileIsShortcut(connection.x, connection.y - 1))
 							forwardDirection.y = -1;
 					}
 
@@ -328,26 +329,28 @@ class Room {
 					}
 				}
 
-				verifiedConnections.push(connection);
+				verifiedConnections.push_back(std::pair<Vector2i, int>{connection, connections[i].second});
 			}
 
-			int i = 0;
-			while (verifiedConnections.size() > 0) {
-				shortcutEntrances.push_back(verifiedConnections.top());
-				verifiedConnections.pop();
-				i++;
-			}
-
+			std::reverse(verifiedConnections.begin(), verifiedConnections.end());
 
 			for (size_t i = 0; i < connections.size(); ++i) {
 				for (size_t j = 0; j < connections.size() - i - 1; ++j) {
-					const Vector2i &a = connections[j];
-					const Vector2i &b = connections[j + 1];
+					const Vector2i &a = connections[j].first;
+					const Vector2i &b = connections[j + 1].first;
 
 					if (a.y > b.y || (a.y == b.y && a.x > b.x)) {
 						std::swap(connections[j], connections[j + 1]);
-						std::swap(shortcutEntrances[j], shortcutEntrances[j + 1]);
+						std::swap(verifiedConnections[j], verifiedConnections[j + 1]);
 					}
+				}
+			}
+			
+			for (std::pair<Vector2i, int> verifiedConnection : verifiedConnections) {
+				if (verifiedConnection.second == 0) {
+					shortcutEntrances.push_back(verifiedConnection.first);
+				} else {
+					denEntrances.push_back(verifiedConnection.first);
 				}
 			}
 		}
@@ -368,7 +371,6 @@ class Room {
 			height = std::stoi(tempLine);
 			if (tempLine.find('\n') != std::string::npos) {
 				water = -1;
-				std::cout << "Yep, vater" << std::endl;
 			} else {
 				std::getline(geometryFile, tempLine, '|');
 				water = std::stoi(tempLine);
@@ -385,10 +387,6 @@ class Room {
 			std::getline(geometryFile, tempLine); // Junk
 			std::getline(geometryFile, tempLine); // Junk
 			std::getline(geometryFile, tempLine); // Junk
-
-			// std::cout << "Data for " << roomName << "\n"
-			// << "Width: " << width << "\n"
-			// << "Height: " << height << "\n";
 
 			// Collision Data
 			geometry = new int[width * height];
@@ -414,7 +412,11 @@ class Room {
 							break;
 						case 4: // Exit
 							geometry[tileId] += 64;
-							connections.push_back(Vector2i(tileId / height, tileId % height));
+							connections.push_back(std::pair<Vector2i, int>{ Vector2i(tileId / height, tileId % height), 0 });
+							break;
+						case 5: // Den
+							geometry[tileId] += 256;
+							connections.push_back(std::pair<Vector2i, int>{ Vector2i(tileId / height, tileId % height), 1 });
 							break;
 					}
 				}
@@ -443,7 +445,6 @@ class Room {
 		std::string roomName;
 
 		Vector2 position;
-		// Vector2 coord;
 
 		int width;
 		int height;
@@ -459,7 +460,8 @@ class Room {
 
 		std::set<std::pair<Room*, unsigned int>> roomConnections;
 		std::vector<Vector2i> shortcutEntrances;
-		std::vector<Vector2i> connections;
+		std::vector<Vector2i> denEntrances;
+		std::vector<std::pair<Vector2i, int>> connections;
 
 		int water;
 };

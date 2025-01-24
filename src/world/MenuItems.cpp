@@ -103,6 +103,7 @@ void MenuItems::init(Window *window) {
                 exportMapFile();
                 exportWorldFile();
                 exportImageFile(exportDirectory / ("map_" + worldAcronym + ".png"), exportDirectory / ("map_" + worldAcronym + "_2.png"));
+                exportPropertiesFile(exportDirectory / "properties.txt");
                 Popups::addPopup(new WarningPopup(window, "Exported successfully!"));
             } else {
                 if (worldAcronym == "") {
@@ -119,6 +120,7 @@ void MenuItems::init(Window *window) {
                         exportMapFile();
                         exportWorldFile();
                         exportImageFile(exportDirectory / ("map_" + worldAcronym + ".png"), exportDirectory / ("map_" + worldAcronym + "_2.png"));
+                        exportPropertiesFile(exportDirectory / "properties.txt");
                         Popups::addPopup(new WarningPopup(window, "Exported successfully!"));
                     }
                 ));

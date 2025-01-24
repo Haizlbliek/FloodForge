@@ -235,6 +235,20 @@ void Room::generateVBO() {
         );
     }
 
+    for (Vector2i &shortcutEntrance : denEntrances) {
+        float x0 = position.x + shortcutEntrance.x;
+        float y0 = position.y - shortcutEntrance.y;
+        float x1 = position.x + shortcutEntrance.x + 1;
+        float y1 = position.y - shortcutEntrance.y - 1;
+        
+        addQuad(
+            { x0 + 0.25f, y0 - 0.25f, 1.0, 1.0, 0.0 },
+            { x1 - 0.25f, y0 - 0.25f, 1.0, 1.0, 0.0 },
+            { x1 - 0.25f, y1 + 0.25f, 1.0, 1.0, 0.0 },
+            { x0 + 0.25f, y1 + 0.25f, 1.0, 1.0, 0.0 }
+        );
+    }
+
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
