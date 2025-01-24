@@ -24,6 +24,8 @@ enum class ThemeColour {
 
 extern std::unordered_map<ThemeColour, Colour> currentTheme;
 
+extern std::string currentThemeName;
+
 void loadTheme(std::string theme);
 
 void setThemeColour(ThemeColour colour);

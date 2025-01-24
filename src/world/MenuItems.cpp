@@ -17,8 +17,29 @@ std::string MenuItems::worldAcronym = "";
 std::string MenuItems::extraProperties = "";
 std::string MenuItems::extraWorld = "";
 
+GLuint MenuItems::textureButtonNormal = 0;
+GLuint MenuItems::textureButtonNormalHover = 0;
+GLuint MenuItems::textureButtonPress = 0;
+GLuint MenuItems::textureButtonPressHover = 0;
+
+void Button::draw(Mouse *mouse, Vector2 screenBounds) {
+    Draw::color(1.0, 1.0, 1.0);
+    
+    Draw::useTexture(isHovered(mouse, screenBounds) ? (pressed ? MenuItems::textureButtonPressHover : MenuItems::textureButtonNormalHover) : (pressed ? MenuItems::textureButtonNormalHover : MenuItems::textureButtonNormal));
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    nineSlice(x - 0.005 - screenBounds.x, y + 0.005 + screenBounds.y, x + 0.005 + width - screenBounds.x, y - 0.005 - height + screenBounds.y, 0.02);
+    glDisable(GL_BLEND);
+    Draw::useTexture(0);
+
+    setThemeColour(ThemeColour::Text);
+    font->writeCentred(text, x - screenBounds.x + (width * 0.5), y + height * -0.5 + screenBounds.y + 0.003, height - 0.01, CENTRE_XY);
+}
+
 void MenuItems::init(Window *window) {
     MenuItems::window = window;
+    MenuItems::loadTextures();
     worldAcronym = "";
 
     addButton("New",

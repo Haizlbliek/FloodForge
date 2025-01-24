@@ -45,6 +45,68 @@ void strokeRect(float x0, float y0, float x1, float y1, double thickness) {
 	drawLine(x0, y1, x0, y0, thickness);
 }
 
+
+void nineSlice(double x0, double y0, double x1, double y1, double thickness) {
+	double t = 1.0 / 3.0;
+	double f = 2.0 / 3.0;
+
+	double xm0 = x0 + thickness;
+	double xm1 = x1 - thickness;
+	double ym0 = y0 - thickness;
+	double ym1 = y1 + thickness;
+
+	Draw::begin(Draw::QUADS);
+
+	Draw::texCoord(0, 0); Draw::vertex(x0, y0);
+	Draw::texCoord(t, 0); Draw::vertex(xm0, y0);
+	Draw::texCoord(t, t); Draw::vertex(xm0, ym0);
+	Draw::texCoord(0, t); Draw::vertex(x0, ym0);
+
+	Draw::texCoord(1, 0); Draw::vertex(x1, y0);
+	Draw::texCoord(f, 0); Draw::vertex(xm1, y0);
+	Draw::texCoord(f, t); Draw::vertex(xm1, ym0);
+	Draw::texCoord(1, t); Draw::vertex(x1, ym0);
+
+	Draw::texCoord(0, 1); Draw::vertex(x0, y1);
+	Draw::texCoord(t, 1); Draw::vertex(xm0, y1);
+	Draw::texCoord(t, f); Draw::vertex(xm0, ym1);
+	Draw::texCoord(0, f); Draw::vertex(x0, ym1);
+
+	Draw::texCoord(1, 1); Draw::vertex(x1, y1);
+	Draw::texCoord(f, 1); Draw::vertex(xm1, y1);
+	Draw::texCoord(f, f); Draw::vertex(xm1, ym1);
+	Draw::texCoord(1, f); Draw::vertex(x1, ym1);
+
+	
+	Draw::texCoord(t, 0); Draw::vertex(xm0, y0);
+	Draw::texCoord(f, 0); Draw::vertex(xm1, y0);
+	Draw::texCoord(f, t); Draw::vertex(xm1, ym0);
+	Draw::texCoord(t, t); Draw::vertex(xm0, ym0);
+
+	Draw::texCoord(t, 1); Draw::vertex(xm0, y1);
+	Draw::texCoord(f, 1); Draw::vertex(xm1, y1);
+	Draw::texCoord(f, f); Draw::vertex(xm1, ym1);
+	Draw::texCoord(t, f); Draw::vertex(xm0, ym1);
+
+	Draw::texCoord(0, t); Draw::vertex(x0, ym0);
+	Draw::texCoord(t, t); Draw::vertex(xm0, ym0);
+	Draw::texCoord(t, f); Draw::vertex(xm0, ym1);
+	Draw::texCoord(0, f); Draw::vertex(x0, ym1);
+
+	Draw::texCoord(f, t); Draw::vertex(xm1, ym0);
+	Draw::texCoord(1, t); Draw::vertex(x1, ym0);
+	Draw::texCoord(1, f); Draw::vertex(x1, ym1);
+	Draw::texCoord(f, f); Draw::vertex(xm1, ym1);
+
+
+	Draw::texCoord(t, t); Draw::vertex(xm0, ym0);
+	Draw::texCoord(f, t); Draw::vertex(xm1, ym0);
+	Draw::texCoord(f, f); Draw::vertex(xm1, ym1);
+	Draw::texCoord(t, f); Draw::vertex(xm0, ym1);
+
+	Draw::end();
+}
+
 void drawLine(float x0, float y0, float x1, float y1, double thickness) {
 	thickness /= 64.0;
 

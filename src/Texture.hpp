@@ -1,6 +1,9 @@
 #ifndef TEXTURE_HPP
 #define TEXTURE_HPP
 
+#include <iostream>
+#include <string>
+
 #include "gl.h"
 #include "stb_image.h"
 #include "stb_image_write.h"

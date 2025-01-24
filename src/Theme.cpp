@@ -28,6 +28,8 @@ std::unordered_map<ThemeColour, Colour> themeBasic {
 
 std::unordered_map<ThemeColour, Colour> currentTheme;
 
+std::string currentThemeName = "";
+
 Colour parseHexColor(const std::string &hex) {
 	if (hex.size() != 7 || hex[0] != '#') {
 		throw std::invalid_argument("Invalid hex color format. Expected format: #RRGGBB");
@@ -58,8 +60,7 @@ void loadTheme(std::string theme) {
 	std::string themePath = BASE_PATH + "assets/themes/" + theme + "/theme.txt";
 	if (!std::filesystem::exists(themePath)) return;
 
-	// if (currentTheme != &themeBasic) delete currentTheme;
-
+	currentThemeName = theme;
 	currentTheme = {};
 
 	std::fstream themeFile(themePath);

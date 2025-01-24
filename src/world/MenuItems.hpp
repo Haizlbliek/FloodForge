@@ -51,24 +51,18 @@ class Button {
 		}
 
 		void update(Mouse *mouse, Vector2 screenBounds) {
+			pressed = isHovered(mouse, screenBounds) && mouse->Left();
+
 			if (isHovered(mouse, screenBounds) && mouse->JustLeft()) {
 				press();
 			}
 		}
 
-		void draw(Mouse *mouse, Vector2 screenBounds) {
-			setThemeColour(ThemeColour::Text);
-			font->write(text, x - screenBounds.x, y + screenBounds.y, height);
-
-			if (isHovered(mouse, screenBounds)) {
-				setThemeColour(ThemeColour::BorderHighlight);
-				strokeRect(x - 0.005 - screenBounds.x, y + 0.005 + screenBounds.y, x + 0.005 + width - screenBounds.x, y - 0.005 - height + screenBounds.y);
-			}
-		}
+		void draw(Mouse *mouse, Vector2 screenBounds);
 
 		void Text(const std::string text) {
 			this->text = text;
-			width = font->getTextWidth(text, height);
+			width = font->getTextWidth(text, height - 0.01) + 0.02;
 		}
 
 		std::string Text() const { return text; }
@@ -90,6 +84,8 @@ class Button {
 
 		std::vector<std::function<void(Button*)>> listeners;
 
+		bool pressed = false;
+
 		double x;
 		double y;
 		double width;
@@ -101,9 +97,18 @@ class Button {
 
 class MenuItems {
 	public:
+		static void loadTextures() {
+			std::string texturePath = BASE_PATH + "assets/themes/" + currentThemeName + "/";
+
+			textureButtonNormal = loadTexture(texturePath + "ButtonNormal.png");
+			textureButtonNormalHover = loadTexture(texturePath + "ButtonNormalHover.png");
+			textureButtonPress = loadTexture(texturePath + "ButtonPress.png");
+			textureButtonPressHover = loadTexture(texturePath + "ButtonPressHover.png");
+		}
+
 		static void addButton(std::string text, std::function<void(Button*)> listener) {
 			double x = currentButtonX;
-			double width = Fonts::rainworld->getTextWidth(text, 0.04);
+			double width = Fonts::rainworld->getTextWidth(text, 0.03) + 0.02;
 
 			currentButtonX += width + 0.04;
 			buttons.push_back((new Button(text, x, -0.01, width, 0.04, Fonts::rainworld))->OnPress(listener));
@@ -653,130 +658,6 @@ class MenuItems {
 			propertiesFile.close();
 		}
 
-/*
-		static void compareImages(std::filesystem::path imageA, std::filesystem::path imageB, std::filesystem::path outputPath) {
-			std::cout << "Image A Path: " << imageA << std::endl;
-			std::cout << "Image B Path: " << imageB << std::endl;
-			std::cout << "Output Path: " << outputPath << std::endl;
-
-		    // Load the first image (Image A)
-		    int widthA, heightA, channelsA;
-		    unsigned char* imgA = stbi_load(imageA.string().c_str(), &widthA, &heightA, &channelsA, 0); // Let stb choose the number of channels
-		    if (!imgA) {
-		        std::cerr << "Failed to load image: " << imageA << std::endl;
-		        return;
-		    }
-
-		    // Load the second image (Image B)
-		    int widthB, heightB, channelsB;
-		    unsigned char* imgB = stbi_load(imageB.string().c_str(), &widthB, &heightB, &channelsB, 0); // Let stb choose the number of channels
-		    if (!imgB) {
-		        std::cerr << "Failed to load image: " << imageB << std::endl;
-		        stbi_image_free(imgA);
-		        return;
-		    }
-
-		    // Ensure the images have the same dimensions
-		    if (widthA != widthB || heightA != heightB) {
-		        std::cerr << "Images have different sizes!" << std::endl;
-		        stbi_image_free(imgA);
-		        stbi_image_free(imgB);
-		        return;
-		    }
-
-
-
-		    // Adjust the channel count if necessary
-		    // if (channelsA == 4 && channelsB == 3) {
-		    // 	std::cout << "Adjusting 1" << std::endl;
-		    //     // Image A has 4 channels (RGBA), Image B has 3 channels (RGB)
-		    //     // Convert Image A (RGBA) to RGB by discarding the alpha channel
-		    //     std::vector<unsigned char> imgA_RGB(widthA * heightA * 3);
-		    //     for (int i = 0; i < widthA * heightA; ++i) {
-		    //         imgA_RGB[i * 3 + 0] = imgA[i * 4 + 0];  // Red
-		    //         imgA_RGB[i * 3 + 1] = imgA[i * 4 + 1];  // Green
-		    //         imgA_RGB[i * 3 + 2] = imgA[i * 4 + 2];  // Blue
-		    //     }
-		    //     imgA = imgA_RGB.data();  // Use the converted data
-		    //     channelsA = 3;  // Update the channel count to 3 (RGB)
-		    // } else if (channelsA == 3 && channelsB == 4) {
-		    // 	std::cout << "Adjusting 2" << std::endl;
-		    //     // Image A has 3 channels (RGB), Image B has 4 channels (RGBA)
-		    //     // Convert Image A (RGB) to RGBA by adding an alpha channel (255)
-		    //     std::vector<unsigned char> imgA_RGBA(widthA * heightA * 4);
-		    //     for (int i = 0; i < widthA * heightA; ++i) {
-		    //         imgA_RGBA[i * 4 + 0] = imgA[i * 3 + 0];  // Red
-		    //         imgA_RGBA[i * 4 + 1] = imgA[i * 3 + 1];  // Green
-		    //         imgA_RGBA[i * 4 + 2] = imgA[i * 3 + 2];  // Blue
-		    //         imgA_RGBA[i * 4 + 3] = 255;               // Alpha (fully opaque)
-		    //     }
-		    //     imgA = imgA_RGBA.data();  // Use the converted data
-		    //     channelsA = 4;  // Update the channel count to 4 (RGBA)
-		    // }
-
-		    // if (channelsA != channelsB) {
-		    //     std::cerr << "Images have incompatible channel counts!" << std::endl;
-		    //     stbi_image_free(imgA);
-		    //     stbi_image_free(imgB);
-		    //     return;
-		    // }
-
-		    std::cout << "Creating diff file" << std::endl;
-
-		    // Create a new image for the difference (black-and-white)
-		    std::vector<unsigned char> outputImage(widthA * heightA * 3, 0);  // B/W, so we have R=G=B for each pixel
-
-		    bool same = true;
-		    for (int y = 0; y < heightA; ++y) {
-		        for (int x = 0; x < widthA; ++x) {
-		            int idx = (y * widthA + x) * 3;
-		            bool isDifferent = false;
-
-		            // Compare the pixels (ignore alpha channel for comparison)
-		            for (int c = 0; c < 3; ++c) {
-		            	// std::cout << "Calculating Value A\n";
-		            	int valueA = imgA[(y * widthA + x) * channelsA + c];
-		            	// std::cout << "Calculating Value B\n";
-		            	int valueB = imgB[(y * widthB + x) * channelsB + c];
-		            	// std::cout << "Calculated\n";
-		                if (valueB != valueB) {
-		                    isDifferent = true;
-		                    break;
-		                }
-		            }
-
-		            // Set the corresponding output pixel to white (255) if different, black (0) otherwise
-		            if (isDifferent) {
-		            	same = false;
-		                outputImage[idx] = 255;   // Red channel (white)
-		                outputImage[idx + 1] = 255; // Green channel (white)
-		                outputImage[idx + 2] = 255; // Blue channel (white)
-		            }
-		            else {
-		                outputImage[idx] = 0;   // Red channel (black)
-		                outputImage[idx + 1] = 0; // Green channel (black)
-		                outputImage[idx + 2] = 0; // Blue channel (black)
-		            }
-		        }
-		    }
-
-		    std::cout << "Writing diff file" << std::endl;
-
-		    // Save the output image
-		    if (stbi_write_png(outputPath.string().c_str(), widthA, heightA, 3, outputImage.data(), widthA * 3)) {
-		        std::cout << "Comparison image saved to " << outputPath << std::endl;
-		    } else {
-		        std::cerr << "Failed to save the output image." << std::endl;
-		    }
-
-		    std::cout << (same ? "Accurate" : "Not Accurate") << std::endl;
-
-		    // Free memory
-		    stbi_image_free(imgA);
-		    stbi_image_free(imgB);
-		}
-*/
-
 		static void init(Window *window);
 
 		static void cleanup() {
@@ -806,6 +687,11 @@ class MenuItems {
 		
 		static std::string extraProperties;
 		static std::string extraWorld;
+
+		static GLuint textureButtonNormal;
+		static GLuint textureButtonNormalHover;
+		static GLuint textureButtonPress;
+		static GLuint textureButtonPressHover;
 
 	private:
 		static void repositionButtons() {
