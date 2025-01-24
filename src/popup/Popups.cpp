@@ -25,14 +25,14 @@ Popup::Popup(Window *window) : bounds(Rect(-0.5, -0.5, 0.5, 0.5)), window(window
 void Popup::draw(double mouseX, double mouseY, bool mouseInside) {
 	Draw::begin(Draw::QUADS);
 
-	setThemeColour(THEME_POPUP_COLOUR);
+	setThemeColour(ThemeColour::Popup);
 	// Draw::color(0.0, 0.0, 0.0);
 	Draw::vertex(bounds.X0(), bounds.Y0());
 	Draw::vertex(bounds.X0(), bounds.Y1());
 	Draw::vertex(bounds.X1(), bounds.Y1());
 	Draw::vertex(bounds.X1(), bounds.Y0());
 
-	setThemeColour(THEME_POPUP_HEADER_COLOUR);
+	setThemeColour(ThemeColour::PopupHeader);
 	// Draw::color(0.2, 0.2, 0.2);
 	Draw::vertex(bounds.X0(),  bounds.Y1() - 0.00);
 	Draw::vertex(bounds.X0(),  bounds.Y1() - 0.05);
@@ -42,18 +42,18 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside) {
 	Draw::end();
 
 	if (mouseInside) {
-		setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+		setThemeColour(ThemeColour::BorderHighlight);
 		// Draw::color(0.0, 1.0, 0.0);
 		glLineWidth(2);
 		strokeRect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
 	} else {
-		setThemeColour(THEME_BORDER_COLOUR);
+		setThemeColour(ThemeColour::Border);
 		// Draw::color(0.75, 0.75, 0.75);
 		glLineWidth(1);
 		strokeRect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
 	}
 
-	setThemeColour(THEME_TEXT_COLOUR);
+	setThemeColour(ThemeColour::Text);
 	Draw::useTexture(Popups::textureUI);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -69,9 +69,9 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside) {
 	glDisable(GL_BLEND);
 
 	if (mouseInside && mouseX >= bounds.X1() - 0.05 && mouseY >= bounds.Y1() - 0.05) {
-		setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+		setThemeColour(ThemeColour::BorderHighlight);
 	} else {
-		setThemeColour(THEME_BORDER_COLOUR);
+		setThemeColour(ThemeColour::Border);
 	}
 
 	glLineWidth(1);

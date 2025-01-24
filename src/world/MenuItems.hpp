@@ -57,11 +57,11 @@ class Button {
 		}
 
 		void draw(Mouse *mouse, Vector2 screenBounds) {
-			setThemeColour(THEME_TEXT_COLOUR);
+			setThemeColour(ThemeColour::Text);
 			font->write(text, x - screenBounds.x, y + screenBounds.y, height);
 
 			if (isHovered(mouse, screenBounds)) {
-				setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+				setThemeColour(ThemeColour::BorderHighlight);
 				strokeRect(x - 0.005 - screenBounds.x, y + 0.005 + screenBounds.y, x + 0.005 + width - screenBounds.x, y - 0.005 - height + screenBounds.y);
 			}
 		}
@@ -788,7 +788,7 @@ class MenuItems {
 		}
 
 		static void draw(Mouse *mouse, Vector2 screenBounds) {
-			setThemeColour(THEME_HEADER_COLOUR);
+			setThemeColour(ThemeColour::Header);
 			fillRect(-screenBounds.x, screenBounds.y, screenBounds.x, screenBounds.y - 0.06f);
 			glLineWidth(1);
 

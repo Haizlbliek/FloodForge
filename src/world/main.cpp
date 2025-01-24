@@ -15,6 +15,7 @@
 #include "../font/Fonts.hpp"
 #include "../Theme.hpp"
 #include "../Draw.hpp"
+#include "../Settings.hpp"
 
 #include "../popup/Popups.hpp"
 #include "../popup/SplashArtPopup.hpp"
@@ -84,8 +85,6 @@ int transitionLayer(int layer) {
 }
 
 int main() {
-	loadTheme();
-	
 	Window *window = new Window(1024, 1024);
 	window->setIcon(TEXTURE_PATH + "MainIcon.png");
 	window->setTitle("FloodForge World Editor");
@@ -95,6 +94,7 @@ int main() {
 		return -1;
 	}
 
+	Settings::init();
 	Fonts::init();
 	MenuItems::init(window);
 	Popups::init();
@@ -805,7 +805,7 @@ int main() {
 
 		// glViewport(offsetX, offsetY, size, size);
 
-		setThemeColour(THEME_BACKGROUND_COLOUR);
+		setThemeColour(ThemeColour::Background);
 		Vector2 screenBounds = Vector2(width, height) / size;
 		fillRect(-screenBounds.x, -screenBounds.y, screenBounds.x, screenBounds.y);
 
@@ -814,13 +814,12 @@ int main() {
 		glLineWidth(lineSize);
 
 		/// Draw Rooms
-
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		for (Room *room : rooms) {
 			room->draw(worldMouse, lineSize, screenBounds);
 			if (selectedRooms.find(room) != selectedRooms.end()) {
-				setThemeColour(THEME_SELECTION_BORDER_COLOUR);
+				setThemeColour(ThemeColour::SelectionBorder);
 				strokeRect(room->Position().x, room->Position().y, room->Position().x + room->Width(), room->Position().y - room->Height(), 16.0f / lineSize);
 			}
 		}
@@ -854,7 +853,7 @@ int main() {
 			Draw::color(0.1f, 0.1f, 0.1f, 0.125f);
 			fillRect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y);
 			glDisable(GL_BLEND);
-			setThemeColour(THEME_SELECTION_BORDER_COLOUR);
+			setThemeColour(ThemeColour::SelectionBorder);
 			strokeRect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y, 16.0f / lineSize);
 		}
 
@@ -894,6 +893,7 @@ int main() {
 	MenuItems::cleanup();
 	Shaders::cleanup();
 	Draw::cleanup();
+	Settings::cleanup();
 
 	return 0;
 }

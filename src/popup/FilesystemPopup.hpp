@@ -114,7 +114,7 @@ class FilesystemPopup : public Popup {
 
             frame++;
 
-            setThemeColour(THEME_TEXT_COLOUR);
+            setThemeColour(ThemeColour::Text);
             drawIcon(1, bounds.X0() + 0.02, bounds.Y1() - 0.07);
             drawIcon(2, bounds.X0() + 0.09, bounds.Y1() - 0.07);
             drawIcon(5, bounds.X1() - 0.09, bounds.Y1() - 0.07);
@@ -130,15 +130,15 @@ class FilesystemPopup : public Popup {
             }
 
             if (selected.empty() && openType == TYPE_FILE) {
-                setThemeColour(THEME_TEXT_DISABLED_COLOUR);
+                setThemeColour(ThemeColour::TextDisabled);
             } else {
-                setThemeColour(THEME_TEXT_COLOUR);
+                setThemeColour(ThemeColour::Text);
             }
             Fonts::rainworld->write("Open", bounds.X1() - 0.17, bounds.Y0() + 0.09, 0.04);
             drawBounds(Rect(bounds.X1() - 0.17, bounds.Y0() + 0.09, bounds.X1() - 0.05, bounds.Y0() + 0.04), mouseX, mouseY);
 
 
-            setThemeColour(THEME_TEXT_COLOUR);
+            setThemeColour(ThemeColour::Text);
             drawBounds(Rect(bounds.X0() + 0.02, bounds.Y1() - 0.12, bounds.X0() + 0.07, bounds.Y1() - 0.07), mouseX, mouseY);
             drawBounds(Rect(bounds.X0() + 0.09, bounds.Y1() - 0.12, bounds.X0() + 0.14, bounds.Y1() - 0.07), mouseX, mouseY);
             drawBounds(Rect(bounds.X1() - 0.09, bounds.Y1() - 0.12, bounds.X1() - 0.04, bounds.Y1() - 0.07), mouseX, mouseY);
@@ -146,7 +146,7 @@ class FilesystemPopup : public Popup {
             std::string croppedPath = currentDirectory.string();
             if (croppedPath.size() > 25) croppedPath = croppedPath.substr(croppedPath.size() - 25);
 
-            setThemeColour(THEME_TEXT_COLOUR);
+            setThemeColour(ThemeColour::Text);
             Fonts::rainworld->write(croppedPath, bounds.X0() + 0.19, bounds.Y1() - 0.07, 0.04);
 
             double offsetY = (bounds.Y1() + bounds.Y0()) * 0.5;
@@ -159,20 +159,20 @@ class FilesystemPopup : public Popup {
                     if (y > 0.375 + offsetY) {
                         y -= 0.06;
                     } else {
-                        setThemeColour(THEME_TEXT_DISABLED_COLOUR);
+                        setThemeColour(ThemeColour::TextDisabled);
                         fillRect(bounds.X0() + 0.1, y, bounds.X1() - 0.1, y - 0.05);
-                        setThemeColour(THEME_TEXT_HIGHLIGHT_COLOUR);
+                        setThemeColour(ThemeColour::TextHighlight);
 
                         Fonts::rainworld->write(newDirectory, bounds.X0() + 0.1, y, 0.04);
 
                         // Cursor
                         if (frame % 60 < 30) {
-                            setThemeColour(THEME_TEXT_COLOUR);
+                            setThemeColour(ThemeColour::Text);
                             double cursorX = bounds.X0() + 0.1 + Fonts::rainworld->getTextWidth(newDirectory, 0.04);
                             fillRect(cursorX, y + 0.01, cursorX + 0.005, y - 0.06);
                         }
 
-                        setThemeColour(THEME_TEXT_DISABLED_COLOUR);
+                        setThemeColour(ThemeColour::TextDisabled);
                         drawIcon(5, y);
                         y -= 0.06;
                     }
@@ -188,12 +188,12 @@ class FilesystemPopup : public Popup {
                 }
 
                 if (mouseX >= bounds.X0() + 0.1 && mouseX <= bounds.X1() - 0.1 && mouseY <= y && mouseY >= y - 0.06)
-                    setThemeColour(THEME_TEXT_HIGHLIGHT_COLOUR);
+                    setThemeColour(ThemeColour::TextHighlight);
                 else
-                    setThemeColour(THEME_TEXT_COLOUR);
+                    setThemeColour(ThemeColour::Text);
 
                 Fonts::rainworld->write(path.filename().string() + "/", bounds.X0() + 0.1, y, 0.04);
-                setThemeColour(THEME_TEXT_DISABLED_COLOUR);
+                setThemeColour(ThemeColour::TextDisabled);
                 drawIcon(5, y);
                 y -= 0.06;
             }
@@ -208,23 +208,23 @@ class FilesystemPopup : public Popup {
                 }
 
                 if (mouseX >= bounds.X0() + 0.1 && mouseX <= bounds.X1() - 0.1 && mouseY <= y && mouseY >= y - 0.06)
-                    setThemeColour(THEME_TEXT_HIGHLIGHT_COLOUR);
+                    setThemeColour(ThemeColour::TextHighlight);
                 else
-                    setThemeColour(THEME_TEXT_COLOUR);
+                    setThemeColour(ThemeColour::Text);
 
                 if (selected.find(path.string()) != selected.end()) {
                     strokeRect(bounds.X0() + 0.09, y + 0.01, bounds.X1() - 0.09, y - 0.05);
                 }
 
                 Fonts::rainworld->write(path.filename().string(), bounds.X0() + 0.1, y, 0.04);
-                setThemeColour(THEME_TEXT_DISABLED_COLOUR);
+                setThemeColour(ThemeColour::TextDisabled);
                 drawIcon(4, y);
                 y -= 0.06;
             }
             
             // ...
             if (hasExtras) {
-                setThemeColour(THEME_TEXT_DISABLED_COLOUR);
+                setThemeColour(ThemeColour::TextDisabled);
                 Fonts::rainworld->write("...", bounds.X0() + 0.1, y, 0.04);
             }
 		}
@@ -232,7 +232,7 @@ class FilesystemPopup : public Popup {
         void drawBounds(Rect rect, double mouseX, double mouseY) {
             if (!rect.inside(mouseX, mouseY)) return;
 
-            setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+            setThemeColour(ThemeColour::BorderHighlight);
             strokeRect(rect.X0(), rect.Y0(), rect.X1(), rect.Y1());
         }
 

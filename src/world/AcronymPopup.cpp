@@ -7,7 +7,7 @@ void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside) {
 
 	double centreX = (bounds.X0() + bounds.X1()) * 0.5;
 
-	setThemeColour(THEME_TEXT_COLOUR);
+	setThemeColour(ThemeColour::Text);
 	glLineWidth(1);
 	Fonts::rainworld->writeCentred("Enter Region Acronym:", centreX, bounds.Y1() - 0.07, 0.035, CENTRE_X);
 
@@ -16,41 +16,41 @@ void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside) {
 	} else if (text.length() > 2) {
 		Draw::color(1.0, 1.0, 0.0);
 	} else {
-		setThemeColour(THEME_TEXT_COLOUR);
+		setThemeColour(ThemeColour::Text);
 	}
 	Fonts::rainworld->writeCentred(text, centreX, bounds.Y1() - 0.13, 0.055, CENTRE_X);
 
-	setThemeColour(THEME_BUTTON_COLOUR);
+	setThemeColour(ThemeColour::Button);
 	fillRect(centreX - 0.2, bounds.Y1() - 0.28, centreX - 0.05, bounds.Y1() - 0.22);
 
 	if (text.length() < 2) {
-		setThemeColour(THEME_BUTTON_DISABLED_COLOUR);
+		setThemeColour(ThemeColour::ButtonDisabled);
 	} else {
-		setThemeColour(THEME_BUTTON_COLOUR);
+		setThemeColour(ThemeColour::Button);
 	}
 	fillRect(centreX + 0.05, bounds.Y1() - 0.28, centreX + 0.2, bounds.Y1() - 0.22);
 
-	setThemeColour(THEME_TEXT_COLOUR);
+	setThemeColour(ThemeColour::Text);
 	Fonts::rainworld->writeCentred("Cancel", centreX - 0.125, bounds.Y1() - 0.25, 0.03, CENTRE_XY);
 
 	if (text.length() < 2) {
-		setThemeColour(THEME_TEXT_DISABLED_COLOUR);
+		setThemeColour(ThemeColour::TextDisabled);
 	} else {
-		setThemeColour(THEME_TEXT_COLOUR);
+		setThemeColour(ThemeColour::Text);
 	}
 	Fonts::rainworld->writeCentred("Confirm", centreX + 0.125, bounds.Y1() - 0.25, 0.03, CENTRE_XY);
 
 	if (Rect(centreX - 0.2, bounds.Y1() - 0.28, centreX - 0.05, bounds.Y1() - 0.22).inside(mouseX, mouseY)) {
-		setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+		setThemeColour(ThemeColour::BorderHighlight);
 	} else {
-		setThemeColour(THEME_BORDER_COLOUR);
+		setThemeColour(ThemeColour::Border);
 	}
 	strokeRect(centreX - 0.2, bounds.Y1() - 0.28, centreX - 0.05, bounds.Y1() - 0.22);
 
 	if (Rect(centreX + 0.05, bounds.Y1() - 0.28, centreX + 0.2, bounds.Y1() - 0.22).inside(mouseX, mouseY)) {
-		setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+		setThemeColour(ThemeColour::BorderHighlight);
 	} else {
-		setThemeColour(THEME_BORDER_COLOUR);
+		setThemeColour(ThemeColour::Border);
 	}
 	strokeRect(centreX + 0.05, bounds.Y1() - 0.28, centreX + 0.2, bounds.Y1() - 0.22);
 

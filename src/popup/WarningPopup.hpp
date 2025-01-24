@@ -34,7 +34,7 @@ class WarningPopup : public Popup {
 		void draw(double mouseX, double mouseY, bool mouseInside) {
 			Popup::draw(mouseX, mouseY, mouseInside);
 
-			setThemeColour(THEME_TEXT_COLOUR);
+			setThemeColour(ThemeColour::Text);
 
 			int lineId = 0;
 			for (std::string line : warning) {

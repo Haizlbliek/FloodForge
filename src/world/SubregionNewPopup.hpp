@@ -35,7 +35,7 @@ class SubregionNewPopup : public Popup {
 
 			Draw::translate(bounds.X0() + 0.25, bounds.Y0() + 0.08);
 
-			setThemeColour(THEME_TEXT_COLOUR);
+			setThemeColour(ThemeColour::Text);
 			glLineWidth(1);
 			Fonts::rainworld->writeCentred("Enter Subregion Name:", 0.0, 0.18, 0.035, CENTRE_X);
 
@@ -44,43 +44,43 @@ class SubregionNewPopup : public Popup {
 			} else if (text.length() > 2) {
 				Draw::color(1.0, 1.0, 0.0);
 			} else {
-				setThemeColour(THEME_TEXT_COLOUR);
+				setThemeColour(ThemeColour::Text);
 			}
 			Fonts::rainworld->writeCentred(text, 0.0, 0.12, 0.055, CENTRE_X);
 
-			setThemeColour(THEME_BUTTON_COLOUR);
+			setThemeColour(ThemeColour::Button);
 			fillRect(-0.2,  -0.03, -0.05, 0.03);
 
 			if (text.length() < 2) {
-				setThemeColour(THEME_BUTTON_DISABLED_COLOUR);
+				setThemeColour(ThemeColour::ButtonDisabled);
 			} else {
-				setThemeColour(THEME_BUTTON_COLOUR);
+				setThemeColour(ThemeColour::Button);
 			}
 			fillRect( 0.05, -0.03,  0.2,  0.03);
 
-			setThemeColour(THEME_TEXT_COLOUR);
+			setThemeColour(ThemeColour::Text);
 			Fonts::rainworld->writeCentred("Cancel", -0.125, 0.0, 0.03, CENTRE_XY);
 
 			if (text.length() < 2) {
-				setThemeColour(THEME_TEXT_DISABLED_COLOUR);
+				setThemeColour(ThemeColour::TextDisabled);
 			} else {
-				setThemeColour(THEME_TEXT_COLOUR);
+				setThemeColour(ThemeColour::Text);
 			}
 			Fonts::rainworld->writeCentred("Confirm", 0.125, 0.0, 0.03, CENTRE_XY);
 
 			if (Rect(-0.2, -0.03, -0.05, 0.03).inside(mouseX, mouseY)) {
-				setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+				setThemeColour(ThemeColour::BorderHighlight);
 				strokeRect(-0.2, -0.03, -0.05, 0.03);
 			} else {
-				setThemeColour(THEME_BORDER_COLOUR);
+				setThemeColour(ThemeColour::Border);
 				strokeRect(-0.2, -0.03, -0.05, 0.03);
 			}
 
 			if (Rect(0.05, -0.03, 0.2, 0.03).inside(mouseX, mouseY)) {
-				setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+				setThemeColour(ThemeColour::BorderHighlight);
 				strokeRect(0.05, -0.03, 0.2, 0.03);
 			} else {
-				setThemeColour(THEME_BORDER_COLOUR);
+				setThemeColour(ThemeColour::Border);
 				strokeRect(0.05, -0.03, 0.2, 0.03);
 			}
 

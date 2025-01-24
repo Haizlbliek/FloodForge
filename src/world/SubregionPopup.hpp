@@ -29,7 +29,7 @@ class SubregionPopup : public Popup {
 			Draw::translate(bounds.X0() + 0.5, bounds.Y0() + 0.5);
 
             if (rooms.size() > 0) {
-			    setThemeColour(THEME_TEXT_COLOUR);
+			    setThemeColour(ThemeColour::Text);
                 if (rooms.size() == 1) {
 			        Fonts::rainworld->writeCentred((*rooms.begin())->RoomName(), 0.0, 0.4, 0.04, CENTRE_XY);
                 } else {
@@ -117,35 +117,35 @@ class SubregionPopup : public Popup {
         }
 
         void drawSubregionButton(int subregionId, std::string subregion, double y, double mouseX, double mouseY) {
-            setThemeColour(THEME_BUTTON_COLOUR);
+            setThemeColour(ThemeColour::Button);
             fillRect(-0.4, y, 0.325, y - 0.05);
             fillRect(0.35, y, 0.4, y - 0.05);
 
             if (rooms.size() == 1) {
                 if ((*rooms.begin())->Subregion() == subregionId) {
-                    setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+                    setThemeColour(ThemeColour::BorderHighlight);
                 } else {
-                    setThemeColour(THEME_TEXT_COLOUR);
+                    setThemeColour(ThemeColour::Text);
                 }
             } else {
-                setThemeColour(THEME_TEXT_COLOUR);
+                setThemeColour(ThemeColour::Text);
             }
             Fonts::rainworld->writeCentred(subregion, -0.025, y - 0.02, 0.04, CENTRE_XY);            
             Fonts::rainworld->writeCentred("-", 0.37, y, 0.04, CENTRE_X);
 
             if (Rect(-0.4, y, 0.325, y - 0.05).inside(mouseX, mouseY)) {
-                setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+                setThemeColour(ThemeColour::BorderHighlight);
                 strokeRect(-0.4, y, 0.325, y - 0.05);
             } else {
-                setThemeColour(THEME_BORDER_COLOUR);
+                setThemeColour(ThemeColour::Border);
                 strokeRect(-0.4, y, 0.325, y - 0.05);
             }
             
             if (Rect(0.35, y, 0.4, y - 0.05).inside(mouseX, mouseY)) {
-                setThemeColour(THEME_BORDER_HIGHLIGHT_COLOUR);
+                setThemeColour(ThemeColour::BorderHighlight);
                 strokeRect(0.35, y, 0.4, y - 0.05);
             } else {
-                setThemeColour(THEME_BORDER_COLOUR);
+                setThemeColour(ThemeColour::Border);
                 strokeRect(0.35, y, 0.4, y - 0.05);
             }
         }
