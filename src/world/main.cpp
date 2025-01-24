@@ -137,6 +137,7 @@ int main() {
 	int connectionState = 0;
 
 	while (window->isOpen()) {
+		window->GetMouse()->updateLastPressed();
 		glfwPollEvents();
 
 		window->ensureFullscreen();
@@ -161,6 +162,7 @@ int main() {
 		);
 
 		Mouse customMouse = Mouse(window->getGLFWWindow(), globalMouse.x, globalMouse.y);
+		customMouse.copyPressed(*mouse);
 
 
 		// Update

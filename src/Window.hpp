@@ -41,16 +41,40 @@ class Mouse {
 			this->y = y;
 		}
 
-		bool Left() {
+		void updateLastPressed() {
+			lastFrameLeft = Left();
+			lastFrameMiddle = Middle();
+			lastFrameRight = Right();
+		}
+
+		bool Left() const {
 			return GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_LEFT);
 		}
 
-		bool Right() {
+		bool Middle() const {
+			return GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE);
+		}
+
+		bool Right() const {
 			return GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_RIGHT);
 		}
 
-		bool Middle() {
-			return GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE);
+		bool JustLeft() const {
+			return (!lastFrameLeft) && (GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_LEFT));
+		}
+
+		bool JustMiddle() const {
+			return (!lastFrameMiddle) && (GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE));
+		}
+
+		bool JustRight() const {
+			return (!lastFrameRight) && (GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_RIGHT));
+		}
+
+		void copyPressed(Mouse &otherMouse) {
+			this->lastFrameLeft = otherMouse.lastFrameLeft;
+			this->lastFrameMiddle = otherMouse.lastFrameMiddle;
+			this->lastFrameRight = otherMouse.lastFrameRight;
 		}
 
 		void setCursor(unsigned int cursorMode);
@@ -58,6 +82,10 @@ class Mouse {
 	private:
 		double x;
 		double y;
+
+		bool lastFrameLeft;
+		bool lastFrameMiddle;
+		bool lastFrameRight;
 
 		GLFWwindow *glfwWindow;
 };

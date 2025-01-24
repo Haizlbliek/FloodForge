@@ -51,13 +51,8 @@ class Button {
 		}
 
 		void update(Mouse *mouse, Vector2 screenBounds) {
-			if (isHovered(mouse, screenBounds) && mouse->Left()) {
-				if (!lastPressed) {
-					lastPressed = true;
-					press();
-				}
-			} else {
-				lastPressed = false;
+			if (isHovered(mouse, screenBounds) && mouse->JustLeft()) {
+				press();
 			}
 		}
 
@@ -102,9 +97,6 @@ class Button {
 
 		std::string text;
 		Font *font;
-
-
-		bool lastPressed = false;
 };
 
 class MenuItems {
