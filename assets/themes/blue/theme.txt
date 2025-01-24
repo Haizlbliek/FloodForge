@@ -1,5 +1,5 @@
 Background: #0d1125
-Grid: #10142a
+Grid: #1a1d31
 Header: #000000
 Border: #bfbfbf
 BorderHighlight: #00ffff

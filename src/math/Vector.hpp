@@ -31,6 +31,13 @@ class Vector2 {
 			return *this;
 		}
 
+		Vector2 rounded() const {
+			return Vector2(
+				::round(x),
+				::round(y)
+			);
+		}
+
 		double distanceTo(const Vector2 &other) {
 			return std::sqrt(pow(x - other.x, 2) + pow(y - other.y, 2));
 		}
@@ -92,6 +99,8 @@ Vector2 operator*(const double &lhs, const Vector2 &rhs);
 Vector2 operator*(const Vector2 &lhs, const Vector2 &rhs);
 
 Vector2 operator/(const Vector2 &lhs, const double &rhs);
+
+Vector2 operator/(const Vector2 &lhs, const Vector2 &rhs);
 
 std::string to_string(const Vector2 &vector);
 

@@ -811,6 +811,25 @@ int main() {
 
 		applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale * screenBounds);
 
+		/// Draw Grid
+		glLineWidth(1);
+		setThemeColor(ThemeColour::Grid);
+		double gridStep = max(cameraScale.x / 16.0, 1.0);
+		gridStep = std::pow(2, std::ceil(std::log2(gridStep - 0.01)));
+		Draw::begin(Draw::LINES);
+		Vector2 offset = (cameraOffset / gridStep).rounded() * gridStep;
+		Vector2 extraOffset = Vector2(fmod((screenBounds.x - 1.0) * gridStep * 16.0, gridStep), 0);
+		Vector2 gridScale = gridStep * 16.0 * screenBounds;
+		for (float x = -gridScale.x + offset.x; x < gridScale.x + offset.x; x += gridStep) {
+			Draw::vertex(x + extraOffset.x, -cameraScale.y * screenBounds.y + offset.y + extraOffset.y - gridStep);
+			Draw::vertex(x + extraOffset.x,  cameraScale.y * screenBounds.y + offset.y + extraOffset.y + gridStep);
+		}
+		for (float y = -gridScale.y + offset.y; y < gridScale.y + offset.y; y += gridStep) {
+			Draw::vertex(-cameraScale.x * screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
+			Draw::vertex( cameraScale.x * screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
+		}
+		Draw::end();
+		
 		glLineWidth(lineSize);
 
 		/// Draw Rooms
