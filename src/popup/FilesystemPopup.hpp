@@ -12,6 +12,7 @@
 #include "../Window.hpp"
 #include "../Theme.hpp"
 #include "../font/Fonts.hpp"
+#include "../Settings.hpp"
 
 // #include "MenuItems.hpp"
 #include "Popups.hpp"
@@ -111,6 +112,8 @@ class FilesystemPopup : public Popup {
 
 		void draw(double mouseX, double mouseY, bool mouseInside) {
 			Popup::draw(mouseX, mouseY, mouseInside);
+
+            scroll += (scrollTo - scroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 
             frame++;
 
@@ -225,7 +228,7 @@ class FilesystemPopup : public Popup {
             // ...
             if (hasExtras) {
                 setThemeColour(ThemeColour::TextDisabled);
-                Fonts::rainworld->write("...", bounds.X0() + 0.1, y, 0.04);
+                Fonts::rainworld->write("...", bounds.X0() + 0.1, ceil(y / 0.06) * 0.06, 0.04);
             }
 		}
 
@@ -243,6 +246,7 @@ class FilesystemPopup : public Popup {
                 if (Rect(bounds.X0() + 0.02, bounds.Y1() - 0.12, bounds.X0() + 0.07, bounds.Y1() - 0.07).inside(mouseX, mouseY)) {
                     currentDirectory = std::filesystem::canonical(currentDirectory / "..");
                     scroll = 0.0;
+                    scrollTo = 0.0;
                     refresh();
                     clampScroll();
                 }
@@ -255,6 +259,7 @@ class FilesystemPopup : public Popup {
                 if (Rect(bounds.X1() - 0.09, bounds.Y1() - 0.12, bounds.X1() - 0.04, bounds.Y1() - 0.07).inside(mouseX, mouseY)) {
                     mode = 1;
                     scroll = 0.0;
+                    scrollTo = 0.0;
                     newDirectory = "";
                 }
                 
@@ -264,6 +269,7 @@ class FilesystemPopup : public Popup {
                     if (id < directories.size()) {
                         currentDirectory = std::filesystem::canonical(currentDirectory / directories[id].filename());
                         scroll = 0.0;
+                        scrollTo = 0.0;
                         refresh();
                     } else {
                         id -= directories.size();
@@ -304,7 +310,7 @@ class FilesystemPopup : public Popup {
 		static void scrollCallback(void *object, double deltaX, double deltaY) {
             FilesystemPopup *popup = static_cast<FilesystemPopup*>(object);
 
-            popup->scroll += deltaY * 0.06;
+            popup->scrollTo += deltaY * 0.06;
             
             popup->clampScroll();
         }
@@ -375,6 +381,7 @@ class FilesystemPopup : public Popup {
         std::set<std::string> selected;
 
         double scroll;
+        double scrollTo;
 
         bool called;
         bool forceRegex;
@@ -451,8 +458,18 @@ class FilesystemPopup : public Popup {
         void clampScroll() {
             int size = directories.size() + files.size();
 
-            if (scroll < -size * 0.06 + 0.06) scroll = -size * 0.06 + 0.06;
-            if (scroll > 0) scroll = 0;
+            if (scrollTo < -size * 0.06 + 0.06) {
+                scrollTo = -size * 0.06 + 0.06;
+                if (scroll <= -size * 0.06 + 0.12) {
+                    scroll = -size * 0.06 + 0.03;
+                }
+            }
+            if (scrollTo > 0) {
+                scrollTo = 0;
+                if (scroll >= -0.06) {
+                    scroll = 0.03;
+                }
+            }
         }
 };
 

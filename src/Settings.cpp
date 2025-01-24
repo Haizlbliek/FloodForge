@@ -5,6 +5,7 @@ std::unordered_map<Settings::Setting, std::variant<double, int, Colour, std::str
 void Settings::loadDefaults() {
     settings[Setting::CameraPanSpeed] = 0.4;
     settings[Setting::CameraZoomSpeed] = 0.4;
+    settings[Setting::PopupScrollSpeed] = 0.4;
 }
 
 void Settings::init() {

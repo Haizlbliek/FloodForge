@@ -14,7 +14,8 @@
 namespace Settings {
     enum class Setting {
         CameraPanSpeed,
-        CameraZoomSpeed
+        CameraZoomSpeed,
+        PopupScrollSpeed
     };
 
     extern std::unordered_map<Setting, std::variant<double, int, Colour, std::string>> settings;
