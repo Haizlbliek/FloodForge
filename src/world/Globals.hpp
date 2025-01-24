@@ -24,6 +24,6 @@ extern std::vector<Connection*> connections;
 extern std::vector<std::string> subregions;
 
 extern Vector2 cameraOffset;
-extern Vector2 cameraScale;
+extern double cameraScale;
 
 #endif

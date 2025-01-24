@@ -68,7 +68,7 @@ void loadTheme(std::string theme) {
 	while (std::getline(themeFile, line)) {
 		if (line.empty()) continue;
 
-		std::string colourString = line.substr(line.find_last_of(" ") + 1);
+		std::string colourString = line.substr(line.find_first_of(':') + 2);
 		Colour colour = parseHexColor(colourString);
 
 		if (startsWith(line, "Background:")) currentTheme[ThemeColour::Background] = colour;

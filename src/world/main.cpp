@@ -41,8 +41,8 @@ std::vector<Room*> rooms;
 std::vector<Connection*> connections;
 std::vector<std::string> subregions;
 
-Vector2 cameraOffset = Vector2(0.0f, 0.0f);
-Vector2 cameraScale = Vector2(32.0f, 32.0f);
+Vector2 cameraOffset = Vector2(0.0, 0.0);
+double cameraScale = 32.0;
 
 std::string ROOM_TAGS[9] = { "SHELTER", "ANCIENTSHELTER", "GATE", "SWARMROOM", "PERF_HEAVY", "SAVOUTPOST", "SCAVTRADER", "NOTRACKERS", "ARENA" };
 
@@ -112,6 +112,8 @@ int main() {
 	bool cameraPanningBlocked = false;
 	Vector2 cameraPanStartMouse = Vector2(0.0f, 0.0f);
 	Vector2 cameraPanStart = Vector2(0.0f, 0.0f);
+	Vector2 cameraPanTo = Vector2(0.0f, 0.0f);
+	double cameraScaleTo = cameraScale;
 
 	Room *holdingRoom = nullptr;
 	Popup *holdingPopup = nullptr;
@@ -190,29 +192,31 @@ int main() {
 		// double previousScreenMouseY = ;
 
 		Vector2 previousWorldMouse = Vector2(
-			((globalMouse.x / 1024.0) *  2.0 - 1.0) * cameraScale.x + cameraOffset.x,
-			((globalMouse.y / 1024.0) * -2.0 + 1.0) * cameraScale.y + cameraOffset.y
+			((globalMouse.x / 1024.0) *  2.0 - 1.0) * cameraScale + cameraOffset.x,
+			((globalMouse.y / 1024.0) * -2.0 + 1.0) * cameraScale + cameraOffset.y
 		);
 
-		cameraScale.x *= zoom;
-		cameraScale.y *= zoom;
+		cameraScaleTo *= zoom;
+		cameraScale += (cameraScaleTo - cameraScale) * Settings::getSetting<double>(Settings::Setting::CameraZoomSpeed);
 
 		// double globalMouseX2 = (mouse->X() - offsetX) / size * 1024;
 		// double globalMouseY2 = (mouse->Y() - offsetY) / size * 1024;
 
 		Vector2 worldMouse = Vector2(
-			screenMouse.x * cameraScale.x + cameraOffset.x,
-			screenMouse.y * cameraScale.y + cameraOffset.y
+			screenMouse.x * cameraScale + cameraOffset.x,
+			screenMouse.y * cameraScale + cameraOffset.y
 		);
 
-		Vector2 oldCameraOffset = cameraOffset;
+		// Vector2 oldCameraOffset = cameraOffset;
 		cameraOffset.x += previousWorldMouse.x - worldMouse.x;
 		cameraOffset.y += previousWorldMouse.y - worldMouse.y;
+		cameraPanTo.x += previousWorldMouse.x - worldMouse.x;
+		cameraPanTo.y += previousWorldMouse.y - worldMouse.y;
 
-		if (std::isnan(cameraOffset.x) || std::isnan(cameraOffset.y)) {
-			cameraOffset.x = oldCameraOffset.x;
-			cameraOffset.y = oldCameraOffset.y;
-		}
+		// if (std::isnan(cameraOffset.x) || std::isnan(cameraOffset.y)) {
+		// 	cameraOffset.x = oldCameraOffset.x;
+		// 	cameraOffset.y = oldCameraOffset.y;
+		// }
 
 		//// Panning
 		if (mouse->Middle()) {
@@ -229,15 +233,19 @@ int main() {
 			}
 
 			if (cameraPanning && !cameraPanningBlocked) {
-				cameraOffset.x = cameraPanStart.x + cameraScale.x * (cameraPanStartMouse.x - globalMouse.x) / 512.0;
-				cameraOffset.y = cameraPanStart.y + cameraScale.y * (cameraPanStartMouse.y - globalMouse.y) / -512.0;
+				cameraPanTo.x = cameraPanStart.x + cameraScale * (cameraPanStartMouse.x - globalMouse.x) / 512.0;
+				cameraPanTo.y = cameraPanStart.y + cameraScale * (cameraPanStartMouse.y - globalMouse.y) / -512.0;
 			}
 		} else {
 			cameraPanning = false;
 			cameraPanningBlocked = false;
 		}
+
+		cameraOffset.x += (cameraPanTo.x - cameraOffset.x) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
+		cameraOffset.y += (cameraPanTo.y - cameraOffset.y) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
+
 		
-		double lineSize = 64.0 / cameraScale.x;
+		double lineSize = 64.0 / cameraScale;
 
 
 		/// Update Inputs
@@ -780,7 +788,7 @@ int main() {
 						}
 					} else {
 						std::cout << "Debug:" << std::endl;
-						std::cout << "\tCam Scale: " << cameraScale.x << std::endl;
+						std::cout << "\tCam Scale: " << cameraScale << std::endl;
 						std::cout << "\tCam Position X: " << cameraOffset.x << std::endl;
 						std::cout << "\tCam Position Y: " << cameraOffset.y << std::endl;
 					}
@@ -814,19 +822,19 @@ int main() {
 		/// Draw Grid
 		glLineWidth(1);
 		setThemeColor(ThemeColour::Grid);
-		double gridStep = max(cameraScale.x / 16.0, 1.0);
+		double gridStep = max(cameraScale / 16.0, 1.0);
 		gridStep = std::pow(2, std::ceil(std::log2(gridStep - 0.01)));
 		Draw::begin(Draw::LINES);
 		Vector2 offset = (cameraOffset / gridStep).rounded() * gridStep;
 		Vector2 extraOffset = Vector2(fmod((screenBounds.x - 1.0) * gridStep * 16.0, gridStep), 0);
 		Vector2 gridScale = gridStep * 16.0 * screenBounds;
 		for (float x = -gridScale.x + offset.x; x < gridScale.x + offset.x; x += gridStep) {
-			Draw::vertex(x + extraOffset.x, -cameraScale.y * screenBounds.y + offset.y + extraOffset.y - gridStep);
-			Draw::vertex(x + extraOffset.x,  cameraScale.y * screenBounds.y + offset.y + extraOffset.y + gridStep);
+			Draw::vertex(x + extraOffset.x, -cameraScale * screenBounds.y + offset.y + extraOffset.y - gridStep);
+			Draw::vertex(x + extraOffset.x,  cameraScale * screenBounds.y + offset.y + extraOffset.y + gridStep);
 		}
 		for (float y = -gridScale.y + offset.y; y < gridScale.y + offset.y; y += gridStep) {
-			Draw::vertex(-cameraScale.x * screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
-			Draw::vertex( cameraScale.x * screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
+			Draw::vertex(-cameraScale * screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
+			Draw::vertex( cameraScale * screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
 		}
 		Draw::end();
 		

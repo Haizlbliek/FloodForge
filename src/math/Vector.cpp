@@ -9,6 +9,13 @@ bool operator==(const Vector2 &lhs, const Vector2 &rhs) {
 	return (lhs.x == rhs.x) && (lhs.y == rhs.y);
 }
 
+Vector2 &operator*=(Vector2 &lhs, const double &rhs) {
+	lhs.x *= rhs;
+	lhs.y *= rhs;
+
+	return lhs;
+}
+
 Vector2 operator*(const Vector2 &lhs, const double &rhs) {
 	return Vector2(lhs.x * rhs, lhs.y * rhs);
 }

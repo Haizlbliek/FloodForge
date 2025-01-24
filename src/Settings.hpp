@@ -4,33 +4,31 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
+#include <variant>
 
 #include "Constants.hpp"
 #include "Utils.hpp"
 #include "Theme.hpp"
 
 namespace Settings {
-    void init() {
-	    std::string settingsPath = BASE_PATH + "assets/settings.txt";
-	    if (!std::filesystem::exists(settingsPath)) return;
+    enum class Setting {
+        CameraPanSpeed,
+        CameraZoomSpeed
+    };
 
-        std::fstream settingsFile(settingsPath);
+    extern std::unordered_map<Setting, std::variant<double, int, Colour, std::string>> settings;
 
-        std::string line;
-        while (std::getline(settingsFile, line)) {
-            if (line.empty()) continue;
+    void loadDefaults();
 
-            if (startsWith(line, "Theme:")) {
-                loadTheme(line.substr(line.find_first_of(":") + 1));
-            }
-        }
-
-        settingsFile.close();
+    template<typename T>
+    T getSetting(Setting setting) {
+        return std::get<T>(settings.at(setting));
     }
 
-    void cleanup() {
+    void init();
 
-    }
+    void cleanup();
 }
 
 #endif
