@@ -42,10 +42,10 @@ namespace Draw {
         Color4f() : r(0.0f), g(0.0), b(0.0), a(0.0) {}
         Color4f(float r, float g, float b, float a) noexcept : r(r), g(g), b(b), a(a) {}
         Color4f(const Colour &col) noexcept {
-            r = col.R();
-            g = col.G();
-            b = col.B();
-            a = col.A();
+            r = col.r;
+            g = col.g;
+            b = col.b;
+            a = col.a;
         }
 
         operator Colour() const {

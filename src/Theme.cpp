@@ -98,7 +98,7 @@ void setThemeColour(ThemeColour colour) {
 	if (currentTheme.find(colour) == currentTheme.end()) return;
 
 	const Colour& col = currentTheme[colour];
-	Draw::color(col.R(), col.G(), col.B());
+	Draw::color(col.r, col.g, col.b);
 }
 
 void setThemeColor(ThemeColour colour) {

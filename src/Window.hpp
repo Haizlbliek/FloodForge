@@ -160,11 +160,11 @@ class Window {
 
 		void clear() const {
 		    glClearColor(
-		                 backgroundColour.R(),
-		                 backgroundColour.G(),
-		                 backgroundColour.B(),
-		                 1.0
-		                );
+				backgroundColour.r,
+				backgroundColour.g,
+				backgroundColour.b,
+		        1.0
+		    );
 
 	        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
@@ -192,9 +192,9 @@ class Window {
 		}
 
 		void setBackgroundColour(const float r, const float g, const float b) {
-			backgroundColour.R(r);
-			backgroundColour.G(g);
-			backgroundColour.B(b);
+			backgroundColour.r = r;
+			backgroundColour.g = g;
+			backgroundColour.b = b;
 		}
 
 		bool keyPressed(uint16_t key) {

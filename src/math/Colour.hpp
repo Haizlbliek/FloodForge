@@ -58,18 +58,7 @@ class Colour {
 				MathUtils::lerp(a, a * other.a, amount)
 			);
 		}
-
-		float R() const { return r; }
-		float G() const { return g; }
-		float B() const { return b; }
-		float A() const { return a; }
-
-		void R(const float r) { this->r = r; }
-		void G(const float g) { this->g = g; }
-		void B(const float b) { this->b = b; }
-		void A(const float a) { this->a = a; }
-
-	private:
+		
 		float r;
 		float g;
 		float b;

@@ -278,16 +278,6 @@ std::string findFileCaseInsensitive(const std::string &directory, const std::str
 	return "";
 }
 
-// Gl Functions
-
-void glColour(Colour colour) {
-	Draw::color(colour.R(), colour.G(), colour.B(), colour.A());
-}
-
-void glColor(Colour color) {
-	glColour(color);
-}
-
 
 std::string loadShaderSource(const char* filePath) {
     std::ifstream shaderFile(filePath);
