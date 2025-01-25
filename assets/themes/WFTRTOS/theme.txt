@@ -1,0 +1,13 @@
+Background: #ffffff
+Grid: #be7dff
+Header: #000000
+Border: #bfbfbf
+BorderHighlight: #8502fe
+Popup: #000000
+PopupHeader: #333333
+Button: #333333
+ButtonDisabled: #333333
+Text: #ffffff
+TextDisabled: #9e0000
+TextHighlight: #8502fe
+SelectionBorder: #9e0000
