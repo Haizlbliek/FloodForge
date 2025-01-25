@@ -104,6 +104,7 @@ class MenuItems {
 			textureButtonNormalHover = loadTexture(texturePath + "ButtonNormalHover.png");
 			textureButtonPress = loadTexture(texturePath + "ButtonPress.png");
 			textureButtonPressHover = loadTexture(texturePath + "ButtonPressHover.png");
+			textureBar = loadTexture(texturePath + "Bar.png");
 		}
 
 		static void addButton(std::string text, std::function<void(Button*)> listener) {
@@ -669,8 +670,21 @@ class MenuItems {
 		}
 
 		static void draw(Mouse *mouse, Vector2 screenBounds) {
-			setThemeColour(ThemeColour::Header);
-			fillRect(-screenBounds.x, screenBounds.y, screenBounds.x, screenBounds.y - 0.06f);
+			Draw::color(1.0, 1.0, 1.0);
+			
+			Draw::useTexture(MenuItems::textureBar);
+
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			Draw::begin(Draw::QUADS);
+			Draw::texCoord(-screenBounds.x, 0.0f); Draw::vertex(-screenBounds.x, screenBounds.y);
+			Draw::texCoord( screenBounds.x, 0.0f); Draw::vertex( screenBounds.x, screenBounds.y);
+			Draw::texCoord( screenBounds.x, 1.0f); Draw::vertex( screenBounds.x, screenBounds.y - 0.09f);
+			Draw::texCoord(-screenBounds.x, 1.0f); Draw::vertex(-screenBounds.x, screenBounds.y - 0.09f);
+			Draw::end();
+			glDisable(GL_BLEND);
+    		Draw::useTexture(0);
+
 			glLineWidth(1);
 
 			for (Button *button : buttons) {
@@ -692,6 +706,7 @@ class MenuItems {
 		static GLuint textureButtonNormalHover;
 		static GLuint textureButtonPress;
 		static GLuint textureButtonPressHover;
+		static GLuint textureBar;
 
 	private:
 		static void repositionButtons() {

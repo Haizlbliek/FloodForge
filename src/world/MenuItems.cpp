@@ -21,6 +21,7 @@ GLuint MenuItems::textureButtonNormal = 0;
 GLuint MenuItems::textureButtonNormalHover = 0;
 GLuint MenuItems::textureButtonPress = 0;
 GLuint MenuItems::textureButtonPressHover = 0;
+GLuint MenuItems::textureBar = 0;
 
 void Button::draw(Mouse *mouse, Vector2 screenBounds) {
     Draw::color(1.0, 1.0, 1.0);
