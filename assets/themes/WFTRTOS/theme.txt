@@ -11,3 +11,4 @@ Text: #ffffff
 TextDisabled: #9e0000
 TextHighlight: #8502fe
 SelectionBorder: #9e0000
+RoomBorderHighlight: #8502fe

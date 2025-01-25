@@ -14,6 +14,7 @@
 #include "../math/Vector.hpp"
 #include "../math/Matrix4.hpp"
 #include "../font/Fonts.hpp"
+#include "../Theme.hpp"
 
 #include "Shaders.hpp"
 #include "Globals.hpp"

@@ -2,12 +2,13 @@ Background: #7a7a89
 Grid: #838692
 Header: #000000
 Border: #bfbfbf
-BorderHighlight: #00ffff
+BorderHighlight: #00ff00
 Popup: #000000
 PopupHeader: #333333
 Button: #333333
 ButtonDisabled: #333333
 Text: #ffffff
 TextDisabled: #7f7f7f
-TextHighlight: #00ffff
+TextHighlight: #00ff00
 SelectionBorder: #00ff00
+RoomBorderHighlight: #00ff00

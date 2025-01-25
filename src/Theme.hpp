@@ -8,6 +8,7 @@
 
 enum class ThemeColour {
 	Background,
+	Grid,
 	Header,
 	Border,
 	BorderHighlight,
@@ -19,7 +20,8 @@ enum class ThemeColour {
 	TextDisabled,
 	TextHighlight,
 	SelectionBorder,
-	Grid
+	RoomBorder,
+	RoomBorderHighlight,
 };
 
 extern std::unordered_map<ThemeColour, Colour> currentTheme;

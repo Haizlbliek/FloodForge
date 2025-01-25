@@ -11,19 +11,21 @@
 #include "Draw.hpp"
 
 std::unordered_map<ThemeColour, Colour> themeBasic {
-	{ThemeColour::Background, Colour(0.3,  0.3,  0.3)},
-	{ThemeColour::Header, Colour(0.0,  0.0,  0.0)},
-	{ThemeColour::Border, Colour(0.75, 0.75, 0.75)},
-	{ThemeColour::BorderHighlight, Colour(0.0,  1.0,  1.0)},
-	{ThemeColour::Popup, Colour(0.0,  0.0,  0.0)},
-	{ThemeColour::PopupHeader, Colour(0.2,  0.2,  0.2)},
-	{ThemeColour::Button, Colour(0.2,  0.2,  0.2)},
-	{ThemeColour::ButtonDisabled, Colour(0.2,  0.2,  0.2)},
-	{ThemeColour::Text, Colour(1.0,  1.0,  1.0)},
-	{ThemeColour::TextDisabled, Colour(0.5,  0.5,  0.5)},
-	{ThemeColour::TextHighlight, Colour(0.0,  1.0,  1.0)},
-	{ThemeColour::SelectionBorder, Colour(0.3,  0.3,  0.3)},
-	{ThemeColour::Grid, Colour(0.3,  0.3,  0.3)}
+	{ ThemeColour::Background, Colour(0.3,  0.3,  0.3) },
+	{ ThemeColour::Header, Colour(0.0,  0.0,  0.0) },
+	{ ThemeColour::Border, Colour(0.75, 0.75, 0.75) },
+	{ ThemeColour::BorderHighlight, Colour(0.0,  1.0,  1.0) },
+	{ ThemeColour::Popup, Colour(0.0,  0.0,  0.0) },
+	{ ThemeColour::PopupHeader, Colour(0.2,  0.2,  0.2)},
+	{ ThemeColour::Button, Colour(0.2,  0.2,  0.2) },
+	{ ThemeColour::ButtonDisabled, Colour(0.2,  0.2,  0.2) },
+	{ ThemeColour::Text, Colour(1.0,  1.0,  1.0) },
+	{ ThemeColour::TextDisabled, Colour(0.5,  0.5,  0.5) },
+	{ ThemeColour::TextHighlight, Colour(0.0,  1.0,  1.0) },
+	{ ThemeColour::SelectionBorder, Colour(0.3,  0.3,  0.3) },
+	{ ThemeColour::Grid, Colour(0.3,  0.3,  0.3) },
+    { ThemeColour::RoomBorder, Colour(0.6, 0.6, 0.6) },
+    { ThemeColour::RoomBorderHighlight, Colour(0.00, 0.75, 0.00) }
 };
 
 std::unordered_map<ThemeColour, Colour> currentTheme;
@@ -61,7 +63,7 @@ void loadTheme(std::string theme) {
 	if (!std::filesystem::exists(themePath)) return;
 
 	currentThemeName = theme;
-	currentTheme = {};
+	currentTheme = { themeBasic };
 
 	std::fstream themeFile(themePath);
 
@@ -85,6 +87,8 @@ void loadTheme(std::string theme) {
 		else if (startsWith(line, "TextDisabled:")) currentTheme[ThemeColour::TextDisabled] = colour;
 		else if (startsWith(line, "TextHighlight:")) currentTheme[ThemeColour::TextHighlight] = colour;
 		else if (startsWith(line, "SelectionBorder:")) currentTheme[ThemeColour::SelectionBorder] = colour;
+		else if (startsWith(line, "RoomBorder:")) currentTheme[ThemeColour::RoomBorder] = colour;
+		else if (startsWith(line, "RoomBorderHighlight:")) currentTheme[ThemeColour::RoomBorderHighlight] = colour;
 	}
 
 	themeFile.close();

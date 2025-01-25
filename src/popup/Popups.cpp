@@ -26,14 +26,12 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside) {
 	Draw::begin(Draw::QUADS);
 
 	setThemeColour(ThemeColour::Popup);
-	// Draw::color(0.0, 0.0, 0.0);
 	Draw::vertex(bounds.X0(), bounds.Y0());
 	Draw::vertex(bounds.X0(), bounds.Y1());
 	Draw::vertex(bounds.X1(), bounds.Y1());
 	Draw::vertex(bounds.X1(), bounds.Y0());
 
 	setThemeColour(ThemeColour::PopupHeader);
-	// Draw::color(0.2, 0.2, 0.2);
 	Draw::vertex(bounds.X0(),  bounds.Y1() - 0.00);
 	Draw::vertex(bounds.X0(),  bounds.Y1() - 0.05);
 	Draw::vertex(bounds.X1(),  bounds.Y1() - 0.05);
@@ -43,15 +41,12 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside) {
 
 	if (mouseInside) {
 		setThemeColour(ThemeColour::BorderHighlight);
-		// Draw::color(0.0, 1.0, 0.0);
 		glLineWidth(2);
-		strokeRect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
 	} else {
 		setThemeColour(ThemeColour::Border);
-		// Draw::color(0.75, 0.75, 0.75);
 		glLineWidth(1);
-		strokeRect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
 	}
+	strokeRect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
 
 	setThemeColour(ThemeColour::Text);
 	Draw::useTexture(Popups::textureUI);

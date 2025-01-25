@@ -54,9 +54,9 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
     }
 
     if (inside(mousePosition)) {
-        Draw::color(Colour(0.00, 0.75, 0.00));
+        setThemeColour(ThemeColour::RoomBorderHighlight);
     } else {
-        Draw::color(Colour(0.75, 0.75, 0.75));
+        setThemeColour(ThemeColour::RoomBorder);
     }
     Draw::flushOnEnd = true;
     strokeRect(position.x, position.y, position.x + width, position.y - height);
