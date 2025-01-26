@@ -35,6 +35,9 @@ set "compile_cmd=g++ build/resource.o src/glad.c src/*.cpp !src_dir! src/font/*.
 if "%debug_mode%"=="false" (
     set "compile_cmd=!compile_cmd! -mwindows"
 )
+if "%debug_mode%"=="true" (
+    set "compile_cmd=!compile_cmd! -g"
+)
 if "%release_mode%"=="true" (
     set "compile_cmd=!compile_cmd! -static -O2"
 )

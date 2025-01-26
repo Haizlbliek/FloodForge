@@ -22,6 +22,7 @@
 #include "Globals.hpp"
 #include "Room.hpp"
 #include "OffscreenRoom.hpp"
+#include "DenPopup.hpp"
 
 //#define VISIBLE_OUTPUT_PADDING
 
@@ -357,8 +358,73 @@ class MenuItems {
 				return;
 			}
 
-			for (std::string den : split(splits[1], ',')) {
-				std::cout << den << std::endl;
+			std::string roomName = toLower(splits[0]);
+			Room *room = nullptr;
+
+			for (Room *otherRoom : rooms) {
+				if (toLower(otherRoom->RoomName()) == roomName) {
+					room = otherRoom;
+					break;
+				}
+			}
+
+			if (roomName == "OFFSCREEN") {
+				room = offscreenDen;
+			}
+
+			if (room == nullptr) return;
+
+			for (std::string creatureInDen : split(splits[1], ',')) {
+				std::vector<std::string> sections = split(creatureInDen, '-');
+				int denId = std::stoi(sections[0]);
+				std::string creature = sections[1];
+
+				if (room == offscreenDen) {
+					while (denId >= room->DenCount()) {
+						offscreenDen->AddDen();
+					}
+				}
+
+				Den &den = room->CreatureDen(denId);
+				den.type = CreatureTextures::parse(creature);
+
+				if (sections.size() == 3) {
+					if (sections[2][0] == '{') {
+						std::string tag = sections[2].substr(1, sections[2].size() - 2);
+						if (startsWith(tag, "Mean")) {
+							den.tag = "MEAN";
+							den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+						} else if (startsWith(tag, "Seed")) {
+							den.tag = "SEED";
+							den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+						} else if (tag.find(':') != -1) {
+							den.tag = "LENGTH";
+							den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+						} else {
+							den.tag = tag;
+						}
+						den.count = 1;
+					} else {
+						den.count = std::stoi(sections[2]);
+					}
+				} else if (sections.size() == 4) {
+					std::string tag = sections[2].substr(1, sections[2].size() - 2);
+					if (startsWith(tag, "Mean")) {
+						den.tag = "MEAN";
+						den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					} else if (startsWith(tag, "Seed")) {
+						den.tag = "SEED";
+						den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					} else if (tag.find(':') != -1) {
+						den.tag = "LENGTH";
+						den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					} else {
+						den.tag = tag;
+					}
+					den.count = std::stoi(sections[3]);
+				} else {
+					den.count = 1;
+				}
 			}
 		}
 
@@ -538,7 +604,50 @@ class MenuItems {
 
 				file << "\n";
 			}
-			file << "END ROOMS\n";
+			file << "END ROOMS\n\n";
+
+			file << "CREATURES\n";
+
+			for (Room *room : rooms) {
+				std::stringstream line;
+				bool add = false;
+				
+				if (room == offscreenDen) {
+					line << "OFFSCREEN : ";
+				} else {
+					line << toUpper(room->RoomName()) << " : ";
+				}
+
+				for (int i = 0; i < room->DenCount(); i++) {
+					const Den &den = room->CreatureDen01(i);
+					if (den.type.empty() || den.count == 0)
+						continue;
+
+					if (i > 0) line << ", ";
+					line << (i + room->ConnectionCount()) << "-" << den.type;
+					if (!den.tag.empty()) {
+						if (den.tag == "MEAN") {
+							line << "-{Mean:" << den.data << "}";
+						} else if (den.tag == "LENGTH") {
+							if (den.type == "PoleMimic") {
+								line << "-{" << int(den.data) << "}";
+							} else {
+								line << "-{" << den.data << "}";
+							}
+						} else if (den.tag == "SEED") {
+							line << "-{Seed:" << int(den.data) << "}";
+						} else {
+							line << "-{" << den.tag << "}";
+						}
+					}
+					if (den.count > 1) line << "-" << den.count;
+					add = true;
+				}
+
+				if (add) file << line.str() << "\n";
+			}
+
+			file << "END CREATURES\n";
 
 			file << extraWorld;
 

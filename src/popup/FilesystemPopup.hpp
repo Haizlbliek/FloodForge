@@ -33,6 +33,7 @@ class FilesystemPopup : public Popup {
             forceRegex = true;
             mode = 0;
             scroll = 0;
+            scrollTo = 0;
 
             openType = TYPE_FILE;
 
@@ -110,8 +111,8 @@ class FilesystemPopup : public Popup {
             if (!called) callback(std::set<std::string>());
 		}
 
-		void draw(double mouseX, double mouseY, bool mouseInside) {
-			Popup::draw(mouseX, mouseY, mouseInside);
+		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
+			Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
 
             scroll += (scrollTo - scroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 

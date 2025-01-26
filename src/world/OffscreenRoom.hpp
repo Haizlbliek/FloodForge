@@ -1,8 +1,8 @@
-#include "Room.hpp"
-#include "../font/Fonts.hpp"
-
 #ifndef OFFSCREEN_ROOM_HPP
 #define OFFSCREEN_ROOM_HPP
+
+#include "Room.hpp"
+#include "../font/Fonts.hpp"
 
 class OffscreenRoom : public Room {
 	public:
@@ -29,6 +29,13 @@ class OffscreenRoom : public Room {
 			geometry = nullptr;
 			
 			tag = "OffscreenRoom";
+
+			AddDen();
+		}
+
+		void AddDen() {
+			dens.push_back(Den("", 0, "", 0.0));
+			denEntrances.push_back(Vector2i(0, 0));
 		}
 
 		~OffscreenRoom() {

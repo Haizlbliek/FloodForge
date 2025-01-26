@@ -44,6 +44,7 @@ namespace DebugData {
             debugText.push_back("Tag: " + hoveringRoom->Tag());
             debugText.push_back("Width: " + std::to_string(hoveringRoom->Width()));
             debugText.push_back("Height: " + std::to_string(hoveringRoom->Height()));
+            debugText.push_back("Dens: " + std::to_string(hoveringRoom->DenCount()));
             if (hoveringRoom->Hidden()) {
                 debugText.push_back("Layer: Hidden - " + std::to_string(hoveringRoom->Layer()));
             } else {

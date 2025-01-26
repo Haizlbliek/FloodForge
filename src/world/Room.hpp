@@ -18,6 +18,7 @@
 
 #include "Shaders.hpp"
 #include "Globals.hpp"
+#include "Den.hpp"
 
 #ifndef ROOM_HPP
 #define ROOM_HPP
@@ -241,7 +242,7 @@ class Room {
 		}
 
 		int ConnectionCount() const {
-			return connections.size();
+			return shortcutEntrances.size();
 		}
 
 		const std::vector<std::pair<Vector2i, int>> TileConnections() const {
@@ -250,6 +251,39 @@ class Room {
 
 		const std::vector<Vector2i> ShortcutEntrances() const {
 			return shortcutEntrances;
+		}
+
+		const int DenId(Vector2i coord) const {
+			auto it = find(denEntrances.begin(), denEntrances.end(), coord);
+
+			if (it == denEntrances.end()) return -1;
+
+			return (it - denEntrances.begin()) + shortcutEntrances.size();
+		}
+
+		Den &CreatureDen(int id) {
+			return CreatureDen01(id - shortcutEntrances.size());
+		}
+
+		Den &CreatureDen01(int id) {
+			if (id < 0 || id >= dens.size()) {
+				std::cout << "INVALID DEN " << id << std::endl;
+				throw "INVALID DEN";
+			}
+
+			return dens[id];
+		}
+
+		const int DenCount() const {
+			return denEntrances.size();
+		}
+
+		const std::vector<Vector2i> DenEntrances() const {
+			return denEntrances;
+		}
+
+		const std::vector<Den> Dens() const {
+			return dens;
 		}
 
 		const int Width() const { return width; }
@@ -430,6 +464,10 @@ class Room {
 
 			valid = true;
 			ensureConnections();
+
+			for (Vector2i denLocation : denEntrances) {
+				dens.push_back(Den("", 0, "", 0.0));
+			}
 		}
 
 		void generateVBO();
@@ -453,6 +491,7 @@ class Room {
 		int *geometry;
 		int layer;
 		int subregion;
+		std::vector<Den> dens;
 
 		std::string tag;
 		bool hidden;

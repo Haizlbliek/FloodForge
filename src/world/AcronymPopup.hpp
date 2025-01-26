@@ -24,7 +24,7 @@ class AcronymPopup : public Popup {
 			text = "";
 		}
 
-		void draw(double mouseX, double mouseY, bool mouseInside);
+		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
 
 		void mouseClick(double mouseX, double mouseY);
 

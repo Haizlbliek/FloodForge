@@ -26,7 +26,7 @@ class SplashArtPopup : public Popup {
 			delete splashart;
 		}
 
-		void draw(double mouseX, double mouseY, bool mouseInside) {
+		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 			Draw::color(0.0, 0.0, 0.0);
 			fillRect(-0.9, -0.45, 0.9, 0.45);
 

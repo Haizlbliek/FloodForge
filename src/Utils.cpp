@@ -29,6 +29,15 @@ void fillRect(float x0, float y0, float x1, float y1) {
 	Draw::end();
 }
 
+void textureRect(float x0, float y0, float x1, float y1) {
+	Draw::begin(Draw::QUADS);
+	Draw::texCoord(0, 0); Draw::vertex(x0, y0);
+	Draw::texCoord(1, 0); Draw::vertex(x1, y0);
+	Draw::texCoord(1, 1); Draw::vertex(x1, y1);
+	Draw::texCoord(0, 1); Draw::vertex(x0, y1);
+	Draw::end();
+}
+
 void strokeRect(float x0, float y0, float x1, float y1) {
 	Draw::begin(Draw::LINE_LOOP);
 	Draw::vertex(x0, y0);

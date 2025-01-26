@@ -2,8 +2,8 @@
 
 #include "MenuItems.hpp"
 
-void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside) {
-	Popup::draw(mouseX, mouseY, mouseInside);
+void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
+	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
 
 	double centreX = (bounds.X0() + bounds.X1()) * 0.5;
 
@@ -92,7 +92,8 @@ void AcronymPopup::accept() {
 	for (Connection *connection : connections) delete connection;
 	connections.clear();
     subregions.clear();
-	rooms.push_back(new OffscreenRoom("offscreenden" + toLower(text), "OffscreenDen" + text));
+	offscreenDen = new OffscreenRoom("offscreenden" + toLower(text), "OffscreenDen" + text);
+	rooms.push_back(offscreenDen);
 	MenuItems::WorldAcronym(toLower(text));
 	MenuItems::extraProperties = "";
 	MenuItems::extraWorld = "";

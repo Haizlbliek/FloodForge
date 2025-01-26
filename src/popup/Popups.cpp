@@ -22,7 +22,9 @@ void Popups::cleanup() {
 Popup::Popup(Window *window) : bounds(Rect(-0.5, -0.5, 0.5, 0.5)), window(window) {
 }
 
-void Popup::draw(double mouseX, double mouseY, bool mouseInside) {
+void Popup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
+	hovered = mouseInside;
+	
 	Draw::begin(Draw::QUADS);
 
 	setThemeColour(ThemeColour::Popup);
@@ -121,10 +123,10 @@ void Popups::removePopup(Popup *popup) {
 	Popups::popupTrash.push_back(popup);
 }
 
-void Popups::draw(Vector2 mouse) {
+void Popups::draw(Vector2 mouse, Vector2 screenBounds) {
 	for (Popup *popup : Popups::popups) {
 		Rect bounds = popup->Bounds();
 
-		popup->draw(mouse.x, mouse.y, bounds.inside(mouse));
+		popup->draw(mouse.x, mouse.y, bounds.inside(mouse), screenBounds);
 	}
 }

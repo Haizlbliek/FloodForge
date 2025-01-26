@@ -1,10 +1,15 @@
 #pragma once
+#include <glad/glad.h>
 #include "math/Matrix4.hpp"
 #include "math/Colour.hpp"
-#include <glad/glad.h>
-#include <cstring>
+#include "math/Vector.hpp"
 
 namespace Draw {
+    using vec2 = Vector2f;
+    using vec3 = Vector3f;
+    using mat4 = Matrix4;
+    using col4 = Colour;
+
     enum PrimitiveType {
         POINTS,
         LINES,
@@ -19,73 +24,6 @@ namespace Draw {
     enum MatrixMode {
         PROJECTION = 0,
         MODELVIEW = 1,
-    };
-
-    struct Vec2f {
-        float x; float y;
-
-        Vec2f() : x(0.0f), y(0.0f) {}
-        Vec2f(float x, float y) noexcept : x(x), y(y) {}
-        Vec2f(const Vector2 &vec) noexcept {
-            x = vec.x;
-            y = vec.y;
-        }
-
-        operator Vector2() const {
-            return { x, y };
-        }
-    };
-
-    struct Color4f {
-        float r, g, b, a;
-
-        Color4f() : r(0.0f), g(0.0), b(0.0), a(0.0) {}
-        Color4f(float r, float g, float b, float a) noexcept : r(r), g(g), b(b), a(a) {}
-        Color4f(const Colour &col) noexcept {
-            r = col.r;
-            g = col.g;
-            b = col.b;
-            a = col.a;
-        }
-
-        operator Colour() const {
-            return { r, g, b, a };
-        }
-    };
-
-    struct Matrix4f {
-        float m[16];
-
-        Matrix4f() noexcept {
-            memset(m, 0, sizeof(m));
-        }
-        
-        Matrix4f(const Matrix4 &mat) noexcept {
-            memcpy(m, mat.m, sizeof(float) * 16);
-        }
-
-        Matrix4f(const float *values) noexcept {
-            memcpy(m, values, sizeof(m));
-        }
-
-        operator Matrix4() const {
-            Matrix4 mat;
-            memcpy(mat.m, m, sizeof(m));
-            return mat;
-        }
-
-        inline float& v(size_t x, size_t y) {
-            return m[y * 4 + x];
-        }
-
-        inline const float& v(size_t x, size_t y) const {
-            return m[y * 4 + x];
-        }
-
-        static Matrix4f identity();
-        static Matrix4f rotationZ(float angle);
-        static Matrix4f translation(float x, float y, float z);
-        static Matrix4f scaling(float x, float y, float z);
     };
 
     /**
@@ -118,48 +56,66 @@ namespace Draw {
      */
     void useTexture(GLuint textureId);
 
-    void vertex(const Vec2f &pt);
-    void texCoord(const Vec2f &texCoord);
-    void color(const Color4f &color);
+    void vertex(const Vector3f &pt);
+    void vertex(const vec3 &pt);
+    void texCoord(const vec2 &texCoord);
+    void color(const col4 &color);
 
-    inline void vertex(float x, float y) { vertex({ x, y }); };
+    inline void vertex(float x, float y, float z) { vertex({ x, y, z }); };
+    inline void vertex(float x, float y) { vertex({ x, y, 0.0f }); };
     inline void texCoord(float u, float v) { texCoord({ u, v }); };
     inline void color(float r, float g, float b, float a) { color({ r, g, b, a }); };
     inline void color(float r, float g, float b) { color(r, g, b, 1.0f); };
 
+    mat4 getMatrix(Draw::MatrixMode mode);
     void matrixMode(Draw::MatrixMode mode);
     void loadIdentity();
-    void loadMatrix(const Matrix4f &mat);
-    void multMatrix(const Matrix4f &mat);
+    void loadMatrix(const mat4 &mat);
+    void multMatrix(const mat4 &mat);
     void popMatrix();
     void pushMatrix();
     void ortho(float left, float right, float bottom, float top, float near, float far);
-    void rotate(float angle);
-    void scale(const Vec2f &factor);
-    void translate(const Vec2f &delta);
-    inline void scale(float x, float y) { scale({x, y}); };
+    void perspective(float fov, float aspect, float near, float far);
+
+    void translate(const vec3 &delta);
+    void scale(const vec3 &factor);
+    void rotate(float angle, const vec3 &axis);
+
+    inline void translate(const vec2 &delta) { translate({ delta.x, delta.y, 0.0f }); };
+    inline void scale(const vec2 &factor) { scale({ factor.x, factor.y, 1.0f }); };
     inline void translate(float x, float y) { translate({x, y}); };
+    inline void scale(float x, float y) { scale({x, y}); };
+
+    inline void translate(float x, float y, float z) { translate({x, y, z}); };
+    inline void scale(float x, float y, float z) { scale({x, y, z}); };
+    inline void rotate(float angle, float x, float y, float z) { rotate(angle, {x, y, z}); }
 
     /**
      * @brief Flush batched geometry to the GPU.
      * Draw commands geometry into a buffer stored in RAM. This command
      * sends the data to the GPU, draws it, and clears the buffer.
      *
-     * This function should be called before calling any OpenGL draw commands or issuing any state changes
+     * This function should be called before calling any OpenGL Draw commands or issuing any state changes
      * outside of this library.
      *
      * Alternatively, you may set flushOnEnd to true (which is the default value), eliminating the need to call flush(), although this will increase the number
-     * of draw calls sent to the GPU and thus may incur a performance penalty.
+     * of Draw calls sent to the GPU and thus may incur a performance penalty.
      */
     void flush();
 
     /**
-     * If set to true, flush() will automatically called on every subsequent call to end(). This may have a performance penalty.
-     * This is set to true by default.
+     * If set to true, flush() will automatically called on every subsequent call to end().
+     * This is set to true by default. This can also be dynamically changed in-between begin/end calls.
      *
-     * You may temporarily set this to false for blocks of draw commands without any raw OpenGL calls in-between.
+     * False:
+     *   - Decreased Draw call count
+     *   - Model-view transformation is done on the CPU.
+     *   - No modifying OpenGL state externally while it is false.
+     *
+     * True:
+     *   - Draw call for each begin/end,
+     *   - Matrix transformation done on the GPU.
+     *   - Can modify OpenGL state freely outside of begin/end calls.
      */
     extern bool flushOnEnd;
 }
-
-Draw::Matrix4f operator*(const Draw::Matrix4f &a, const Draw::Matrix4f &b);

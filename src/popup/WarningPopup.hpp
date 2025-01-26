@@ -31,8 +31,8 @@ class WarningPopup : public Popup {
 			bounds = Rect(-0.42, -0.1, 0.42, 0.1);
 		}
 
-		void draw(double mouseX, double mouseY, bool mouseInside) {
-			Popup::draw(mouseX, mouseY, mouseInside);
+		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
+			Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
 
 			setThemeColour(ThemeColour::Text);
 

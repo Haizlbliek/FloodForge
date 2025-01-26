@@ -57,3 +57,8 @@ void operator+=(Vector2i &lhs, const Vector2i &rhs) {
 std::string to_string(const Vector2i &vector) {
 	return "(" + std::to_string(vector.x) + ", " + std::to_string(vector.y) + ")";
 }
+
+// Vector3
+std::ostream &operator<<(std::ostream &stream, Vector3f &vec) {
+	return stream << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+}

@@ -14,7 +14,7 @@ class Popup {
 		Popup(Window *window);
 		virtual ~Popup() {}
 
-		virtual void draw(double mouseX, double mouseY, bool mouseInside);
+		virtual void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
 
 		virtual void mouseClick(double mouseX, double mouseY);
 
@@ -33,6 +33,8 @@ class Popup {
 		void offset(Vector2 offset);
 
 	protected:
+		bool hovered;
+		
 		Window *window;
 		Rect bounds;
 };
@@ -49,7 +51,7 @@ class Popups {
 
 		static void cleanup();
 
-		static void draw(Vector2 mouse);
+		static void draw(Vector2 mouse, Vector2 screenBounds);
 		
 		static void addPopup(Popup *popup);
 

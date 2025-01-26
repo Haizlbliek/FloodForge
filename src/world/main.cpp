@@ -22,6 +22,7 @@
 #include "../popup/QuitConfirmationPopup.hpp"
 #include "SubregionPopup.hpp"
 #include "RoomTagPopup.hpp"
+#include "DenPopup.hpp"
 
 #include "Shaders.hpp"
 #include "Globals.hpp"
@@ -37,6 +38,7 @@
 #define min(a, b) (a < b) ? a : b
 #define max(a, b) (a > b) ? a : b
 
+OffscreenRoom* offscreenDen;
 std::vector<Room*> rooms;
 std::vector<Connection*> connections;
 std::vector<std::string> subregions;
@@ -73,7 +75,7 @@ void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale,
 	Draw::loadIdentity();
 	Draw::ortho(left, right, bottom, top, nearVal, farVal);
 
-	Draw::multMatrix(Draw::Matrix4f(rotationMatrix));
+	Draw::multMatrix(Matrix4(rotationMatrix));
 }
 
 void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale) {
@@ -100,6 +102,7 @@ int main() {
 	Popups::init();
 	Shaders::init();
 	Draw::init();
+	CreatureTextures::init();
 
 	Popups::addPopup(new SplashArtPopup(window));
 
@@ -128,8 +131,6 @@ int main() {
 	int roomSnap = ROOM_SNAP_TILE;
 
 	std::string line;
-
-	// rooms.push_back(new OffscreenRoom("exampleroom", "Example Room"));
 
 	Vector2 *connectionStart = nullptr;
 	Vector2 *connectionEnd = nullptr;
@@ -319,21 +320,9 @@ int main() {
 				if (connectionEnd   != nullptr) { delete connectionEnd;   connectionEnd   = nullptr; }
 
 				if (hoveringRoom != nullptr) {
-					// bool valid = false;
 					int connectionId = hoveringRoom->getShortcutConnection(tilePosition);
 
-					// for (Vector2i connectionPosition : hoveringRoom->TileConnections()) {
-					// 	if (hoveringRoom->ConnectionUsed(connectionId)) { connectionId++; continue; }
-
-					// 	if (connectionPosition == tilePosition) {
-					// 		valid = true;
-					// 		break;
-					// 	}
-
-					// 	connectionId++;
-					// }
-
-					if (connectionId != -1) {
+					if (connectionId != -1 && !hoveringRoom->ConnectionUsed(connectionId)) {
 						connectionStart = new Vector2(floor(worldMouse.x - hoveringRoom->Position().x) + 0.5 + hoveringRoom->Position().x, floor(worldMouse.y - hoveringRoom->Position().y) + 0.5 + hoveringRoom->Position().y);
 						connectionEnd   = new Vector2(connectionStart);
 						currentConnection = new Connection(hoveringRoom, connectionId, nullptr, 0);
@@ -342,19 +331,10 @@ int main() {
 
 				connectionState = (connectionStart == nullptr) ? 2 : 1;
 			} else if (connectionState == 1) {
-				// bool snap = false;
 				int connectionId = -1;
 
 				if (hoveringRoom != nullptr) {
 					connectionId = hoveringRoom->getShortcutConnection(tilePosition);
-					// for (Vector2i connectionPosition : hoveringRoom->TileConnections()) {
-					// 	if (connectionPosition == tilePosition) {
-					// 		snap = true;
-					// 		break;
-					// 	}
-
-					// 	connectionId++;
-					// }
 				}
 
 				if (connectionId != -1) {
@@ -501,8 +481,8 @@ int main() {
 				holdingType = 1;
 				if (roomSnap == ROOM_SNAP_TILE) {
 					for (Room *room2 : selectedRooms) {
-						room2->Position().X(round(room2->Position().x));
-						room2->Position().Y(round(room2->Position().y));
+						room2->Position().x = round(room2->Position().x);
+						room2->Position().y = round(room2->Position().y);
 					}
 				}
 			}
@@ -744,6 +724,41 @@ int main() {
 			previousKeys.erase(GLFW_KEY_H);
 		}
 
+		if (window->keyPressed(GLFW_KEY_C)) {
+			if (previousKeys.find(GLFW_KEY_C) == previousKeys.end()) {
+				Room *hoveringRoom = nullptr;
+				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+					Room *room = (*it);
+
+					if (room->inside(worldMouse)) {
+						hoveringRoom = room;
+						break;
+					}
+				}
+
+				if (hoveringRoom != nullptr) {
+					if (hoveringRoom == offscreenDen) {
+						Popups::addPopup(new DenPopup(window, hoveringRoom, 0));
+					} else {
+						Vector2i tilePosition = Vector2i(
+							floor(worldMouse.x - hoveringRoom->Position().x),
+							-1 - floor(worldMouse.y - hoveringRoom->Position().y)
+						);
+
+						int den = hoveringRoom->DenId(tilePosition);
+
+						if (den != -1) {
+							Popups::addPopup(new DenPopup(window, hoveringRoom, den));
+						}
+					}
+				}
+			}
+
+			previousKeys.insert(GLFW_KEY_C);
+		} else {
+			previousKeys.erase(GLFW_KEY_C);
+		}
+
 		if (window->keyPressed(GLFW_KEY_D)) {
 			if (previousKeys.find(GLFW_KEY_D) == previousKeys.end()) {
 				Connection *hoveringConnection = nullptr;
@@ -872,7 +887,7 @@ int main() {
 			}
 
 			Draw::color(1.0f, 1.0f, 0.0f);
-			drawLine(connectionStart->x, connectionStart->y, connectionEnd->x, connectionEnd->y, 8.0);
+			drawLine(connectionStart->x, connectionStart->y, connectionEnd->x, connectionEnd->y, 16.0 / lineSize);
 		}
 
 		if (selectingState == 1) {
@@ -881,7 +896,7 @@ int main() {
 			fillRect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y);
 			glDisable(GL_BLEND);
 			setThemeColour(ThemeColour::SelectionBorder);
-			strokeRect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y, 16.0f / lineSize);
+			strokeRect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y, 16.0 / lineSize);
 		}
 
 		/// Draw UI
@@ -889,12 +904,12 @@ int main() {
 
 		if (connectionError != "") {
 			Draw::color(1.0, 0.0, 0.0);
-			Fonts::rainworld->write(connectionError, mouse->X() / 512.0f - 1.0f, -mouse->Y() / 512.0f + 1.0f, 0.05);
+			Fonts::rainworld->write(connectionError, mouse->X() / 512.0f - screenBounds.x, -mouse->Y() / 512.0f + screenBounds.y, 0.05);
 		}
 
 		MenuItems::draw(&customMouse, screenBounds);
 
-		Popups::draw(screenMouse);
+		Popups::draw(screenMouse, screenBounds);
 
 		DebugData::draw(window, worldMouse, lineSize, screenBounds);
 

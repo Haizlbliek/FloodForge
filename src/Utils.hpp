@@ -10,6 +10,8 @@
 
 void fillRect(float x0, float y0, float x1, float y1);
 
+void textureRect(float x0, float y0, float x1, float y1);
+
 void strokeRect(float x0, float y0, float x1, float y1);
 
 void strokeRect(float x0, float y0, float x1, float y1, double thickness);
