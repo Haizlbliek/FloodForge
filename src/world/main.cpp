@@ -544,7 +544,7 @@ int main() {
 						Room *room = *it;
 
 						if (room->inside(worldMouse)) {
-							hoveredRoom = room;
+							if (room != offscreenDen) hoveredRoom = room;
 							break;
 						}
 					}
@@ -738,7 +738,13 @@ int main() {
 
 				if (hoveringRoom != nullptr) {
 					if (hoveringRoom == offscreenDen) {
-						Popups::addPopup(new DenPopup(window, hoveringRoom, 0));
+						int denId = offscreenDen->denAt(worldMouse.x, worldMouse.y);
+						if (denId == -1) {
+							denId = offscreenDen->AddDen();
+							Popups::addPopup(new DenPopup(window, hoveringRoom, denId));
+						} else {
+							Popups::addPopup(new DenPopup(window, hoveringRoom, denId));
+						}
 					} else {
 						Vector2i tilePosition = Vector2i(
 							floor(worldMouse.x - hoveringRoom->Position().x),
@@ -813,6 +819,11 @@ int main() {
 			previousKeys.insert(GLFW_KEY_D);
 		} else {
 			previousKeys.erase(GLFW_KEY_D);
+		}
+
+		
+		if (!Popups::hasPopup("DenPopup") && offscreenDen != nullptr) {
+			offscreenDen->cleanup();
 		}
 
 

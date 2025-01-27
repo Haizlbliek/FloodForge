@@ -6,8 +6,7 @@
 #include <vector>
 #include <iostream>
 
-#include "../popup/Popups.hpp"
-#include "Room.hpp"
+#include "../gl.h"
 
 namespace CreatureTextures {
 	extern std::unordered_map<std::string, GLuint> creatureTextures;
@@ -24,6 +23,10 @@ namespace CreatureTextures {
 
 	bool known(std::string type);
 };
+
+#include "../popup/Popups.hpp"
+#include "Room.hpp"
+#include "Globals.hpp"
 
 class DenPopup : public Popup {
 	public:
@@ -52,11 +55,7 @@ class DenPopup : public Popup {
 			close();
 		}
 
-		void close() {
-			Popups::removePopup(this);
-			
-			window->removeScrollCallback(this, scrollCallback);
-		}
+		void close();
         
 		static void scrollCallback(void *object, double deltaX, double deltaY) {
             DenPopup *popup = static_cast<DenPopup*>(object);
@@ -71,6 +70,8 @@ class DenPopup : public Popup {
             
             popup->clampScroll();
         }
+
+		std::string PopupName() { return "DenPopup"; }
 	
 	private:
         double scrollA;

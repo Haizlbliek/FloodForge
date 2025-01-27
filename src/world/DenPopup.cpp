@@ -81,6 +81,12 @@ bool CreatureTextures::known(std::string type) {
 	return creatureTextures.find(parse(type)) != creatureTextures.end();
 }
 
+void DenPopup::close() {
+	Popups::removePopup(this);
+	
+	window->removeScrollCallback(this, scrollCallback);
+}
+
 void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 	mouseOnRight = mouseX > (bounds.X1() - 0.2);
 	
@@ -226,7 +232,9 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 		}
 	}
 	
-	Fonts::rainworld->writeCentred(std::to_string(den.count), countX, countY, 0.04, CENTRE_XY);
+	if (den.type != "") {
+		Fonts::rainworld->writeCentred(std::to_string(den.count), countX, countY, 0.04, CENTRE_XY);
+	}
 
 
 	double tagCentreX = bounds.X0() + 0.5;

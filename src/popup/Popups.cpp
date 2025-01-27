@@ -11,6 +11,7 @@ std::vector<Popup*> Popups::popups;
 
 void Popups::cleanup() {
 	for (Popup *popup : Popups::popupTrash) {
+		popup->finalCleanup();
 		Popups::popups.erase(std::remove(Popups::popups.begin(), Popups::popups.end(), popup), Popups::popups.end());
 		
 		delete popup;
@@ -129,4 +130,12 @@ void Popups::draw(Vector2 mouse, Vector2 screenBounds) {
 
 		popup->draw(mouse.x, mouse.y, bounds.inside(mouse), screenBounds);
 	}
+}
+
+bool Popups::hasPopup(std::string popupName) {
+	for (Popup *popup : Popups::popups) {
+		if (popup->PopupName() == popupName) return true;
+	}
+
+	return false;
 }

@@ -22,6 +22,8 @@ class Popup {
 
 		virtual void close();
 
+		virtual void finalCleanup() {};
+
 		virtual void accept() { close(); }
 		virtual void reject() { close(); }
 
@@ -56,6 +58,8 @@ class Popups {
 		static void addPopup(Popup *popup);
 
 		static void removePopup(Popup *popup);
+
+		static bool hasPopup(std::string popupName);
 };
 
 #endif

@@ -98,6 +98,8 @@ void MenuItems::init(Window *window) {
                     for (Connection *connection : connections) delete connection;
                     connections.clear();
                     subregions.clear();
+                    if (offscreenDen != nullptr) delete offscreenDen;
+                    offscreenDen = nullptr;
                     extraProperties = "";
                     extraWorld = "";
 

@@ -368,8 +368,9 @@ class MenuItems {
 				}
 			}
 
-			if (roomName == "OFFSCREEN") {
+			if (roomName == "offscreen") {
 				room = offscreenDen;
+				// std::cout << offscreenDen << std::endl;
 			}
 
 			if (room == nullptr) return;
@@ -380,9 +381,8 @@ class MenuItems {
 				std::string creature = sections[1];
 
 				if (room == offscreenDen) {
-					while (denId >= room->DenCount()) {
-						offscreenDen->AddDen();
-					}
+					denId = offscreenDen->DenCount();
+					offscreenDen->AddDen();
 				}
 
 				Den &den = room->CreatureDen(denId);
@@ -445,6 +445,12 @@ class MenuItems {
 
 				if (line == "END ROOMS") {
 					parseState = 2;
+			
+					if (offscreenDen == nullptr) {
+						offscreenDen = new OffscreenRoom("offscreenden" + worldAcronym, "OffscreenDen" + toUpper(worldAcronym));
+						rooms.push_back(offscreenDen);
+					}
+
 					continue;
 				}
 
@@ -624,7 +630,11 @@ class MenuItems {
 						continue;
 
 					if (i > 0) line << ", ";
-					line << (i + room->ConnectionCount()) << "-" << den.type;
+					if (room == offscreenDen) {
+						line << "0-" << den.type;
+					} else {
+						line << (i + room->ConnectionCount()) << "-" << den.type;
+					}
 					if (!den.tag.empty()) {
 						if (den.tag == "MEAN") {
 							line << "-{Mean:" << den.data << "}";
