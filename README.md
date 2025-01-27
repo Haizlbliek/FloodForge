@@ -10,6 +10,7 @@ It aims for intuitive controls, clean ui, and as few dependencies as possible.
 | Action            | Key       | Description                                                   |
 |-------------------|-----------|---------------------------------------------------------------|
 | Delete            | `X`       | Removes hovered room or connection.                           |
+| Creature Den      | `C`       | Opens the hovered den.                                        |
 | Show other rooms  | `I`       | Places hovered room behind all other rooms.                   |
 | Change Room Layer | `L`       | Switches between layers within the hovered room.              |
 | Change Flag       | `F`       | Change room flags (shelter, karma gate, savvy outpost, etc.). |
