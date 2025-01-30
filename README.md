@@ -7,18 +7,21 @@ It aims for intuitive controls, clean ui, and as few dependencies as possible.
 
 ## Controls
 
-| Action            | Key       | Description                                                   |
-|-------------------|-----------|---------------------------------------------------------------|
-| Delete            | `X`       | Removes hovered room or connection.                           |
-| Creature Den      | `C`       | Opens the hovered den.                                        |
-| Show other rooms  | `I`       | Places hovered room behind all other rooms.                   |
-| Change Room Layer | `L`       | Switches between layers within the hovered room.              |
-| Change Flag       | `F`       | Change room flags (shelter, karma gate, savvy outpost, etc.). |
-| Change Subregion  | `S`       | Openes a popup for adding, removing, and changing subregions. |
-| Hide / Show       | `H`       | Toggle visibility of hovered room.                            |
-| Print Debug Info  | `D`       | Outputs debug information for the hovered room or connection. |
-| Cancel/Exit       | `ESC`     | Closes menus or cancels actions.                              |
-| Accept            | `ENTER`   | Confirms selections or actions.                               |
+| Action            | Key       | Description                                                       |
+|-------------------|-----------|-------------------------------------------------------------------|
+| Move Room / Popup | `LMB`     | Move rooms around, hold ALT to move without snapping.             |
+| Move Camera       | `MMB`     | Pan camera.                                                       |
+| Connect Rooms     | `RMB`     | Add connections between room exits.                               |
+| Delete            | `X`       | Removes hovered room or connection.                               |
+| Creature Den      | `C`       | Opens the hovered den.                                            |
+| Change Room Layer | `L`       | Switches between layers within the hovered room.                  |
+| Change Flag       | `F`       | Change room flags (shelter, karma gate, scavenger outpost, etc.). |
+| Change Subregion  | `S`       | Openes a popup for adding, removing, and changing subregions.     |
+| Hide / Show       | `H`       | Toggle visibility of hovered room.                                |
+| Print Debug Info  | `D`       | Outputs debug information for the hovered room or connection.     |
+| Show other rooms  | `I`       | Places hovered room behind all other rooms.                       |
+| Cancel/Exit       | `ESC`     | Closes menus or cancels actions.                                  |
+| Accept            | `ENTER`   | Confirms selections or actions.                                   |
 
 ## Building
 ### Windows
