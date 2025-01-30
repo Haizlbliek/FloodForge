@@ -11,6 +11,7 @@
 #define ROOM_SNAP_TILE 1
 
 extern std::string ROOM_TAGS[9];
+extern std::string ROOM_TAG_NAMES[9];
 
 extern int roomColours;
 

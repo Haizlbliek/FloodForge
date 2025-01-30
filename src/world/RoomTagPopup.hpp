@@ -36,8 +36,8 @@ class RoomTagPopup : public Popup {
                 drawTagButton("None", "", y, mouseX, mouseY);
                 y -= 0.075;
 
-                for (std::string tag : ROOM_TAGS) {
-                    drawTagButton(tag, tag, y, mouseX, mouseY);
+                for (int i = 0; i < 9; i++) {
+                    drawTagButton(ROOM_TAG_NAMES[i], ROOM_TAGS[i], y, mouseX, mouseY);
 
                     y -= 0.075;
                 }
