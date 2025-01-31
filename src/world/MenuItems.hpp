@@ -23,6 +23,7 @@
 #include "Room.hpp"
 #include "OffscreenRoom.hpp"
 #include "DenPopup.hpp"
+#include "FailureController.hpp"
 
 //#define VISIBLE_OUTPUT_PADDING
 
@@ -190,15 +191,20 @@ class MenuItems {
 						// std::cout << "Found gate " << roomName << std::endl;
 					}
 
-					Room *room;
+					Room *room = nullptr;
 
 					if (startsWith(roomName, "offscreenden")) {
-						room = new OffscreenRoom(roomName, roomName);
+						if (offscreenDen == nullptr) {
+							offscreenDen = new OffscreenRoom(roomName, roomName);
+							rooms.push_back(offscreenDen);
+							room = offscreenDen;
+						} else {
+							room = offscreenDen;
+						}
 					} else {
 						room = new Room(roomPath, roomName);
+						rooms.push_back(room);
 					}
-
-					rooms.push_back(room);
 
 					Vector2 &position = room->Position();
 
@@ -383,6 +389,12 @@ class MenuItems {
 				if (room == offscreenDen) {
 					denId = offscreenDen->DenCount();
 					offscreenDen->AddDen();
+				}
+
+				if (!room->CreatureDenExists(denId)) {
+					std::cout << (roomName + " failed den " + std::to_string(denId)) << std::endl;
+					FailureController::fails.push_back(roomName + " failed den " + std::to_string(denId));
+					continue;
 				}
 
 				Den &den = room->CreatureDen(denId);

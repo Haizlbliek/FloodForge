@@ -28,7 +28,8 @@ class WarningPopup : public Popup {
 				warning.push_back(line);
 			}
 
-			bounds = Rect(-0.42, -0.1, 0.42, 0.1);
+			double height = std::max(0.2, warning.size() * 0.05 + 0.07);
+			bounds = Rect(-0.42, -height * 0.5, 0.42, height * 0.5);
 		}
 
 		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {

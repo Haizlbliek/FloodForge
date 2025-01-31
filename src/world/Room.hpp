@@ -15,6 +15,7 @@
 #include "../math/Matrix4.hpp"
 #include "../font/Fonts.hpp"
 #include "../Theme.hpp"
+#include "../popup/WarningPopup.hpp"
 
 #include "Shaders.hpp"
 #include "Globals.hpp"
@@ -64,7 +65,7 @@ class Room {
 		}
 
 		virtual ~Room() {
-			delete[] geometry;
+			if (geometry != nullptr) delete[] geometry;
 
 			geometry = nullptr;
 
@@ -259,6 +260,14 @@ class Room {
 			if (it == denEntrances.end()) return -1;
 
 			return (it - denEntrances.begin()) + shortcutEntrances.size();
+		}
+
+		bool CreatureDenExists(int id) {
+			return CreatureDen01Exists(id - shortcutEntrances.size());
+		}
+
+		bool CreatureDen01Exists(int id) {
+			return (id >= 0 && id < dens.size());
 		}
 
 		Den &CreatureDen(int id) {

@@ -78,7 +78,7 @@ void MenuItems::init(Window *window) {
     addButton("Import",
         [window](Button *button) {
             Popups::addPopup(new FilesystemPopup(window, std::regex("world_([^.]+)\\.txt"),
-                [](std::set<std::string> pathStrings) {
+                [window](std::set<std::string> pathStrings) {
                     if (pathStrings.empty()) return;
 
                     std::filesystem::path path = *pathStrings.begin();
@@ -93,7 +93,13 @@ void MenuItems::init(Window *window) {
 
                     std::string propertiesFilePath = findFileCaseInsensitive(exportDirectory.string(), "properties.txt");
 
-                    for (Room *room : rooms) delete room;
+                    if (std::find(rooms.begin(), rooms.end(), offscreenDen) != rooms.end()) {
+                        offscreenDen = nullptr;
+                    }
+
+                    for (Room *room : rooms) {
+                        delete room;
+                    }
                     rooms.clear();
                     for (Connection *connection : connections) delete connection;
                     connections.clear();
@@ -116,6 +122,15 @@ void MenuItems::init(Window *window) {
                     }
 
                     parseWorld(path, exportDirectory);
+
+                    if (FailureController::fails.size() > 0) {
+                        std::string fails = "";
+                        for (std::string fail : FailureController::fails) {
+                            fails += fail + "\n";
+                        }
+                        Popups::addPopup(new WarningPopup(window, fails));
+                        FailureController::fails.clear();
+                    }
                 }
             ));
         }

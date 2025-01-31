@@ -24,13 +24,14 @@ class OffscreenRoom : public Room {
 
 			valid = false;
 			
-			layer = 0;
-			subregion = -1;
-			water = -1;
-
 			geometry = nullptr;
+
+			layer = 0;
+			water = -1;
+			subregion = -1;
 			
 			tag = "OffscreenRoom";
+			hidden = false;
 		}
 
 		int AddDen() {

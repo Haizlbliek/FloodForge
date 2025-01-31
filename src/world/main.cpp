@@ -38,7 +38,7 @@
 #define min(a, b) (a < b) ? a : b
 #define max(a, b) (a > b) ? a : b
 
-OffscreenRoom* offscreenDen;
+OffscreenRoom* offscreenDen = nullptr;
 std::vector<Room*> rooms;
 std::vector<Connection*> connections;
 std::vector<std::string> subregions;
