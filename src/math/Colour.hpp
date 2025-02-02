@@ -1,5 +1,4 @@
-#ifndef COLOUR_HPP
-#define COLOUR_HPP
+#pragma once
 
 #include "MathUtils.hpp"
 
@@ -64,5 +63,3 @@ class Colour {
 		float b;
 		float a;
 };
-
-#endif

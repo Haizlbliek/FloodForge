@@ -1,5 +1,4 @@
-#ifndef DEN_HPP
-#define DEN_HPP
+#pragma once
 
 #include <string>
 
@@ -17,5 +16,3 @@ class Den {
         std::string tag;
         double data;
 };
-
-#endif

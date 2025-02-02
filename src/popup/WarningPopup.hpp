@@ -1,5 +1,4 @@
-#ifndef WARNING_POPUP_HPP
-#define WARNING_POPUP_HPP
+#pragma once
 
 #include "../gl.h"
 
@@ -9,6 +8,8 @@
 #include <sstream>
 
 #include "../Window.hpp"
+#include "../font/Fonts.hpp"
+#include "../Theme.hpp"
 
 #include "Popups.hpp"
 
@@ -50,5 +51,3 @@ class WarningPopup : public Popup {
 	private:
 		std::vector<std::string> warning;
 };
-
-#endif

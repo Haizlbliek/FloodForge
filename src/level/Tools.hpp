@@ -1,5 +1,4 @@
-#ifndef TOOLS_HPP
-#define TOOLS_HPP
+#pragma once
 
 #include <functional>
 
@@ -37,5 +36,3 @@ extern Tool toolRoomExit;
 extern Tool toolWackAMole;
 extern Tool toolLizardDen;
 extern Tool toolScavengerDen;
-
-#endif

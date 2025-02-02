@@ -1,5 +1,4 @@
-#ifndef PROJECT_HPP
-#define PROJECT_HPP
+#pragma once
 
 #include "../stb_image.h"
 #include "../stb_image_write.h"
@@ -161,5 +160,3 @@ class Project {
 
 		Window *window;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef SPLASH_ART_POPUP_HPP
-#define SPLASH_ART_POPUP_HPP
+#pragma once
 
 #include "../gl.h"
 
@@ -10,6 +9,7 @@
 
 #include "../Window.hpp"
 #include "../Draw.hpp"
+#include "../font/Fonts.hpp"
 
 #include "Popups.hpp"
 
@@ -61,5 +61,3 @@ class SplashArtPopup : public Popup {
 	private:
 		Texture *splashart;
 };
-
-#endif

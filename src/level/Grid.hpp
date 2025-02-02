@@ -1,5 +1,4 @@
-#ifndef GRID_HPP
-#define GRID_HPP
+#pragma once
 
 #include <vector>
 #include <set>
@@ -156,5 +155,3 @@ class Grid {
 		unsigned int height;
 		std::vector< Tile* > tiles;
 };
-
-#endif

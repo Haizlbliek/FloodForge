@@ -1,5 +1,4 @@
-#ifndef OFFSCREEN_ROOM_HPP
-#define OFFSCREEN_ROOM_HPP
+#pragma once
 
 #include <algorithm>
 
@@ -143,5 +142,3 @@ class OffscreenRoom : public Room {
 			strokeRect(position.x, position.y, position.x + width, position.y - height);
 		}
 };
-
-#endif

@@ -1,10 +1,7 @@
-#ifndef MAIN_HPP
-#define MAIN_HPP
+#pragma once
 
 #include "Project.hpp"
 
 extern Project *project;
 
 extern unsigned int currentLayer;
-
-#endif

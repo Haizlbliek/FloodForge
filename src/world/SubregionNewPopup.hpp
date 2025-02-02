@@ -1,5 +1,4 @@
-#ifndef SUBREGION_NEW_POPUP_HPP
-#define SUBREGION_NEW_POPUP_HPP
+#pragma once
 
 #include "../gl.h"
 
@@ -148,5 +147,3 @@ class SubregionNewPopup : public Popup {
 
 		std::set<Room*> rooms;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef GL_INCLUDED
-#define GL_INCLUDED
+#pragma once
 
 #include <glad/glad.h>
 
@@ -15,5 +14,3 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-#endif // GL_INCLUDED

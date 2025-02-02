@@ -1,4 +1,5 @@
 #pragma once
+
 #include <glad/glad.h>
 #include "math/Matrix4.hpp"
 #include "math/Colour.hpp"

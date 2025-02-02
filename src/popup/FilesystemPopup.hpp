@@ -1,5 +1,4 @@
-#ifndef FILESYSTEM_POPUP_HPP
-#define FILESYSTEM_POPUP_HPP
+#pragma once
 
 #include "../gl.h"
 
@@ -473,5 +472,3 @@ class FilesystemPopup : public Popup {
             }
         }
 };
-
-#endif

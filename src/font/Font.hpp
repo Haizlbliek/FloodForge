@@ -1,5 +1,4 @@
-#ifndef FONT_HPP
-#define FONT_HPP
+#pragma once
 
 #include "../gl.h"
 
@@ -276,5 +275,3 @@ class Font {
 
 		bool hasInvalidCharacter;
 };
-
-#endif

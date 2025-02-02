@@ -1,5 +1,4 @@
-#ifndef QUADRUPLE_HPP
-#define QUADRUPLE_HPP
+#pragma once
 
 template <typename T1, typename T2, typename T3, typename T4>
 class Quadruple {
@@ -16,5 +15,3 @@ class Quadruple {
 		  fourth(fourthVal) {
 		}
 };
-
-#endif

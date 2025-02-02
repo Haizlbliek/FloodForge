@@ -1,12 +1,11 @@
+#pragma once
+
 #include "gl.h"
 
 #include <string>
 #include <filesystem>
 
 #include "math/Colour.hpp"
-
-#ifndef UTILS_HPP
-#define UTILS_HPP
 
 void fillRect(float x0, float y0, float x1, float y1);
 
@@ -50,5 +49,3 @@ void glColor(Colour color);
 
 
 GLuint loadShaders(const char* vertexPath, const char* fragmentPath);
-
-#endif

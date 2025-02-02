@@ -1,5 +1,4 @@
-#ifndef MATH_UTILS_HPP
-#define MATH_UTILS_HPP
+#pragma once
 
 class MathUtils {
 	public:
@@ -7,5 +6,3 @@ class MathUtils {
 			return (b - a) * t + a;
 		}
 };
-
-#endif

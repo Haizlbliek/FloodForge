@@ -1,5 +1,4 @@
-#ifndef DEN_POPUP_HPP
-#define DEN_POPUP_HPP
+#pragma once
 
 #include <unordered_map>
 #include <filesystem>
@@ -178,5 +177,3 @@ class DenPopup : public Popup {
 			}
 		}
 };
-
-#endif

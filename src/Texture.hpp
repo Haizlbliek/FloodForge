@@ -1,5 +1,4 @@
-#ifndef TEXTURE_HPP
-#define TEXTURE_HPP
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -55,5 +54,3 @@ class Texture {
 		int width;
 		int height;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef QUIT_CONFIRMATION_POPUP
-#define QUIT_CONFIRMATION_POPUP
+#pragma once
 
 #include "../gl.h"
 
@@ -78,5 +77,3 @@ class QuitConfirmationPopup : public Popup {
 			}
 		}
 };
-
-#endif

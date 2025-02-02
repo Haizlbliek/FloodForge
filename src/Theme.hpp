@@ -1,5 +1,4 @@
-#ifndef THEME_HPP
-#define THEME_HPP
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -33,5 +32,3 @@ void loadTheme(std::string theme);
 void setThemeColour(ThemeColour colour);
 
 void setThemeColor(ThemeColour color);
-
-#endif

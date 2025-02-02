@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../gl.h"
 
 #include <random>
@@ -18,11 +20,7 @@
 #include "../popup/WarningPopup.hpp"
 
 #include "Shaders.hpp"
-#include "Globals.hpp"
 #include "Den.hpp"
-
-#ifndef ROOM_HPP
-#define ROOM_HPP
 
 #define CONNECTION_TYPE_NONE 0
 #define CONNECTION_TYPE_EXIT 1
@@ -514,5 +512,3 @@ class Room {
 
 		int water;
 };
-
-#endif

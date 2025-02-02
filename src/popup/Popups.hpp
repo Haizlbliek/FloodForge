@@ -1,5 +1,4 @@
-#ifndef POPUPS_HPP
-#define POPUPS_HPP
+#pragma once
 
 #include <vector>
 
@@ -61,5 +60,3 @@ class Popups {
 
 		static bool hasPopup(std::string popupName);
 };
-
-#endif

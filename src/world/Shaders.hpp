@@ -1,5 +1,4 @@
-#ifndef SHADERS_HPP
-#define SHADERS_HPP
+#pragma once
 
 #include "../gl.h"
 
@@ -9,5 +8,3 @@ namespace Shaders {
     void init();
     void cleanup();
 }
-
-#endif

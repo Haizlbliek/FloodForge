@@ -1,5 +1,4 @@
-#ifndef GLOBALS_HPP
-#define GLOBALS_HPP
+#pragma once
 
 #include <filesystem>
 
@@ -28,6 +27,3 @@ extern std::vector<std::string> subregions;
 
 extern Vector2 cameraOffset;
 extern double cameraScale;
-
-
-#endif

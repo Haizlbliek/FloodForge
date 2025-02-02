@@ -1,3 +1,5 @@
+#pragma once
+
 #include "gl.h"
 #include "stb_image.h"
 
@@ -10,9 +12,6 @@
 
 #include "math/Colour.hpp"
 // #include "Utils.hpp"
-
-#ifndef WINDOW_HPP
-#define WINDOW_HPP
 
 #define CURSOR_DEFAULT 0
 #define CURSOR_POINTER 1
@@ -408,5 +407,3 @@ class Window {
 		std::vector<std::pair<void*, std::function<void(void*, int, int)>>> keyCallbacks;
 		std::vector<std::pair<void*, std::function<void(void*, double, double)>>> scrollCallbacks;
 };
-
-#endif

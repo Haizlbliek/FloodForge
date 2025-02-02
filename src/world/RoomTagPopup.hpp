@@ -1,5 +1,4 @@
-#ifndef ROOM_TAG_POPUP_HPP
-#define ROOM_TAG_POPUP_HPP
+#pragma once
 
 #include "../Window.hpp"
 #include "../Utils.hpp"
@@ -106,5 +105,3 @@ class RoomTagPopup : public Popup {
             }
         }
 };
-
-#endif

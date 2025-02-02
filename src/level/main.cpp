@@ -11,6 +11,7 @@
 
 #include "../math/Colour.hpp"
 #include "../math/Vector.hpp"
+#include "../math/Matrix4.hpp"
 
 #include "../font/Font.hpp"
 #include "../font/Fonts.hpp"
@@ -141,7 +142,7 @@ void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale,
     Draw::ortho(left, right, bottom, top, nearVal, farVal);
 
     // Apply rotation matrix
-	Draw::multMatrix(Draw::Matrix4f(rotationMatrix));
+	Draw::multMatrix(Matrix4(rotationMatrix));
 
     // Apply frustum based on modified projection
     // glFrustum(left, right, bottom, top, nearVal, farVal);
@@ -683,7 +684,7 @@ int main() {
 			Rect bounds = popup->Bounds();
 			bool mouseInside = bounds.inside(screenMouseX, screenMouseY);
 
-			popup->draw(screenMouseX, screenMouseY, mouseInside);
+			popup->draw(screenMouseX, screenMouseY, mouseInside, Vector2(1, 1));
 		}
 
 		// glPushAttrib(GL_ENABLE_BIT); 

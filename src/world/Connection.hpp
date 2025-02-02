@@ -1,5 +1,4 @@
-#ifndef CONNECTION_HPP
-#define CONNECTION_HPP
+#pragma once
 
 #include "../gl.h"
 
@@ -92,5 +91,3 @@ class Connection {
 		unsigned int connectionA;
 		unsigned int connectionB;
 };
-
-#endif

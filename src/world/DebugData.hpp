@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../Window.hpp"
 #include "../font/Fonts.hpp"
 #include "../Theme.hpp"

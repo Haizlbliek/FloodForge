@@ -1,5 +1,4 @@
-#ifndef MENU_ITEMS_HPP
-#define MENU_ITEMS_HPP
+#pragma once
 
 #include <vector>
 #include <functional>
@@ -210,5 +209,3 @@ class MenuItems {
 
 		static Window *window;
 };
-
-#endif

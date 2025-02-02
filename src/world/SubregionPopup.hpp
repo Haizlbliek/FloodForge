@@ -1,5 +1,4 @@
-#ifndef SUBREGION_POPUP_HPP
-#define SUBREGION_POPUP_HPP
+#pragma once
 
 #include "../Window.hpp"
 #include "../Utils.hpp"
@@ -150,5 +149,3 @@ class SubregionPopup : public Popup {
             }
         }
 };
-
-#endif

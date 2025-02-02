@@ -1,5 +1,4 @@
-#ifndef MATRIX4_HPP
-#define MATRIX4_HPP
+#pragma once
 
 #include "Vector.hpp"
 #include <cstring>
@@ -53,5 +52,3 @@ Matrix4 ortho(float left, float right, float bottom, float top, float near, floa
 Matrix4 projectionMatrix(Vector2 position, Vector2 scale);
 
 Matrix4 modelMatrix(float x, float y);
-
-#endif

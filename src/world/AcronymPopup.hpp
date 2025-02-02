@@ -1,5 +1,4 @@
-#ifndef ACRONYM_WINDOW_HPP
-#define ACRONYM_WINDOW_HPP
+#pragma once
 
 #include "../gl.h"
 
@@ -47,5 +46,3 @@ class AcronymPopup : public Popup {
 	private:
 		std::string text;
 };
-
-#endif

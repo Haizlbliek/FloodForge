@@ -1,9 +1,8 @@
+#pragma once
+
 #include <iostream>
 #include <cmath>
 #include <string>
-
-#ifndef VECTOR_HPP
-#define VECTOR_HPP
 
 template <typename T>
 struct BasicVector2 {
@@ -230,5 +229,3 @@ template <typename T>
 inline constexpr Vector3f operator/(const T s, const Vector3f &v) {
     return Vector3f(v.x / s, v.y / s, v.z / s);
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef RECT_HPP
-#define RECT_HPP
+#pragma once
 
 #include "Vector.hpp"
 
@@ -63,5 +62,3 @@ class Rect {
 		double x1;
 		double y1;
 };
-
-#endif

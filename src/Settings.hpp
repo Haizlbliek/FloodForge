@@ -1,5 +1,4 @@
-#ifndef SETTINGS_HPP
-#define SETTINGS_HPP
+#pragma once
 
 #include <string>
 #include <fstream>
@@ -31,5 +30,3 @@ namespace Settings {
 
     void cleanup();
 }
-
-#endif

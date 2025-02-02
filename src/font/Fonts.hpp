@@ -1,5 +1,4 @@
-#ifndef FONTS_HPP
-#define FONTS_HPP
+#pragma once
 
 #include "Font.hpp"
 
@@ -11,5 +10,3 @@ namespace Fonts {
 	void init();
 	void cleanup();
 }
-
-#endif
