@@ -7,6 +7,9 @@
 #include <vector>
 #include <sstream>
 #include <regex>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "../Window.hpp"
 #include "../Theme.hpp"
@@ -399,20 +402,38 @@ class FilesystemPopup : public Popup {
             //     currentDirectory = MenuItems::ExportDirectory();
             //     return;
             // }
+            selected.clear();
 
-            if (std::filesystem::exists("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Rain World\\RainWorld_Data\\StreamingAssets")) {
-                currentDirectory = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Rain World\\RainWorld_Data\\StreamingAssets";
+#ifdef _WIN32
+            std::vector<char> drives(256);
+            DWORD size = GetLogicalDriveStringsA(drives.size(), drives.data());
+
+            if (size == 0) {
+                std::cerr << "Failed to get drives." << std::endl;
                 return;
             }
 
-            std::filesystem::path dir = std::filesystem::path(std::getenv("HOME")) / ".steam/steam/steamapps/common/Rain World/RainWorld_Data/StreamingAssets";
-            if (std::filesystem::exists(dir)) {
-                currentDirectory = dir;
-                return;
+            std::string targetPath = "Program Files (x86)\\Steam\\steamapps\\common\\Rain World\\RainWorld_Data\\StreamingAssets";
+
+            for (char* drive = drives.data(); *drive; drive += std::strlen(drive) + 1) {
+                std::filesystem::path potentialPath = std::filesystem::path(drive) / targetPath;
+
+                if (std::filesystem::exists(potentialPath)) {
+                    currentDirectory = potentialPath.string();
+                    return;
+                }
+            }
+#endif
+
+            if (std::getenv("HOME") != nullptr) {
+                std::filesystem::path dir = std::filesystem::path(std::getenv("HOME")) / ".steam/steam/steamapps/common/Rain World/RainWorld_Data/StreamingAssets";
+                if (std::filesystem::exists(dir)) {
+                    currentDirectory = dir;
+                    return;
+                }
             }
 
             currentDirectory = std::filesystem::canonical(BASE_PATH);
-            selected.clear();
         }
 
         void refresh() {
