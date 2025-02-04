@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "math/Colour.hpp"
+#include "math/Vector.hpp"
 
 void fillRect(float x0, float y0, float x1, float y1);
 
@@ -40,6 +41,10 @@ std::string toLower(const std::string &str);
 std::string toUpper(const std::string &str);
 
 std::string findFileCaseInsensitive(const std::string &directory, const std::string &fileName);
+
+void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale, float left, float right, float bottom, float top, float nearVal, float farVal);
+
+void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale);
 
 
 // GL functions

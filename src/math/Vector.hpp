@@ -172,6 +172,10 @@ std::ostream &operator<<(std::ostream &stream, Vector2 &obj);
 
 bool operator==(const Vector2 &lhs, const Vector2 &rhs);
 
+Vector2 &operator+=(Vector2 &lhs, const Vector2 &rhs);
+
+Vector2 &operator-=(Vector2 &lhs, const Vector2 &rhs);
+
 Vector2 &operator*=(Vector2 &lhs, const double &rhs);
 
 Vector2 operator*(const Vector2 &lhs, const double &rhs);

@@ -51,38 +51,6 @@ std::string ROOM_TAG_NAMES[9] = { "Shelter", "Ancient Shelter", "Gate", "Swarm R
 
 int roomColours = 0;
 
-void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale, float left, float right, float bottom, float top, float nearVal, float farVal) {
-	left *= scale.x;
-	right *= scale.x;
-	bottom *= scale.y;
-	top *= scale.y;
-
-	left += position.x;
-	right += position.x;
-	bottom += position.y;
-	top += position.y;
-
-	float cosRot = std::cos(rotation);
-	float sinRot = std::sin(rotation);
-
-	GLfloat rotationMatrix[16] = {
-		cosRot,  sinRot, 0, 0,
-		-sinRot, cosRot, 0, 0,
-		0,       0,      1, 0,
-		0,       0,      0, 1
-	};
-
-	Draw::matrixMode(Draw::PROJECTION);
-	Draw::loadIdentity();
-	Draw::ortho(left, right, bottom, top, nearVal, farVal);
-
-	Draw::multMatrix(Matrix4(rotationMatrix));
-}
-
-void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale) {
-	applyFrustumToOrthographic(position, rotation, scale, -1.0f, 1.0f, -1.0f, 1.0f, 0.000f, 100.0f);
-}
-
 int transitionLayer(int layer) {
 	return (layer + 1) % 3;
 }

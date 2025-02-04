@@ -27,6 +27,7 @@ for %%a in (%*) do (
     if /i "%%a"=="--no-run" set "run=false"
     if /i "%%a"=="world" set "src_dir=src/world/*.cpp"
     if /i "%%a"=="level" set "src_dir=src/level/*.cpp"
+    if /i "%%a"=="leviathan" set "src_dir=src/leviathan/*.cpp"
 )
 
 :: Compile Command

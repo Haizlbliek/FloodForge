@@ -4,6 +4,7 @@
 
 #include "../Window.hpp"
 #include "../Theme.hpp"
+#include "../font/Fonts.hpp"
 
 #include "Popups.hpp"
 

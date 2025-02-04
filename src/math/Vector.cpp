@@ -9,6 +9,20 @@ bool operator==(const Vector2 &lhs, const Vector2 &rhs) {
 	return (lhs.x == rhs.x) && (lhs.y == rhs.y);
 }
 
+Vector2 &operator+=(Vector2 &lhs, const Vector2 &rhs) {
+	lhs.x += rhs.x;
+	lhs.y += rhs.y;
+
+	return lhs;
+}
+
+Vector2 &operator-=(Vector2 &lhs, const Vector2 &rhs) {
+	lhs.x -= rhs.x;
+	lhs.y -= rhs.y;
+
+	return lhs;
+}
+
 Vector2 &operator*=(Vector2 &lhs, const double &rhs) {
 	lhs.x *= rhs;
 	lhs.y *= rhs;
