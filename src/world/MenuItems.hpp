@@ -601,7 +601,7 @@ class MenuItems {
 
 			file << "ROOMS\n";
 			for (Room *room : rooms) {
-				if (room->Tag() == "OffscreenRoom") continue;
+				if (room->isOffscreen) continue;
 
 				file << toUpper(room->RoomName()) << " : ";
 
@@ -617,7 +617,10 @@ class MenuItems {
 					file << connections[i];
 				}
 
-				if (room->Tag() != "") file << " : " << room->Tag();
+				for (std::string tag : room->Tags()) {
+					file << " : " << tag;
+				}
+				// if (room->Tag() != "") file << " : " << room->Tag();
 
 				file << "\n";
 			}
@@ -731,7 +734,7 @@ class MenuItems {
 #endif
 
 			for (Room *room : rooms) {
-				if (room->Tag() == "OffscreenRoom") continue;
+				if (room->isOffscreen) continue;
 				if (room->Hidden()) continue;
 
 				// Top left corner

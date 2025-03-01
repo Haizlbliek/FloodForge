@@ -35,6 +35,8 @@ struct Vertex {
 
 class Room {
 	public:
+		const bool isOffscreen = false;
+
 		Room(std::string path, std::string name) {
 			this->path = path;
 			this->roomName = toLower(name);
@@ -55,7 +57,6 @@ class Room {
 			water = -1;
 			subregion = -1;
 
-			tag = "";
 			hidden = false;
 
 			loadGeometry();
@@ -304,8 +305,15 @@ class Room {
 		void Water(const int newWater) { water = newWater; }
 		const int Water() const { return water; }
 
-		void Tag(const std::string newTag) { tag = newTag; }
-		const std::string Tag() const { return tag; }
+		void Tag(const std::string newTag) { tags.clear(); tags.push_back(newTag); }
+		void ToggleTag(const std::string newTag) {
+			if (std::find(tags.begin(), tags.end(), newTag) != tags.end()) {
+				std::remove(tags.begin(), tags.end(), newTag);
+			} else {
+				tags.push_back(newTag);
+			}
+		}
+		const std::vector<std::string> Tags() const { return tags; }
 
 		void Subregion(const int newSubregion) { subregion = newSubregion; }
 		const int Subregion() { return subregion; }
@@ -500,7 +508,7 @@ class Room {
 		int subregion;
 		std::vector<Den> dens;
 
-		std::string tag;
+		std::vector<std::string> tags;
 		bool hidden;
 
 		bool valid;

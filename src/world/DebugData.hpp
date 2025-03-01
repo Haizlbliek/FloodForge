@@ -41,9 +41,11 @@ namespace DebugData {
         }
 
         if (hoveringRoom != nullptr) {
+            std::string tags = "";
+            for (std::string tag : hoveringRoom->Tags()) tags += " " + tag;
             debugText.push_back("    Room:");
             debugText.push_back("Name: " + hoveringRoom->RoomName());
-            debugText.push_back("Tag: " + hoveringRoom->Tag());
+            debugText.push_back("Tags:" + tags);
             debugText.push_back("Width: " + std::to_string(hoveringRoom->Width()));
             debugText.push_back("Height: " + std::to_string(hoveringRoom->Height()));
             debugText.push_back("Dens: " + std::to_string(hoveringRoom->DenCount()));

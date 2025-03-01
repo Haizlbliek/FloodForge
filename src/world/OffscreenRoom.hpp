@@ -9,6 +9,8 @@
 
 class OffscreenRoom : public Room {
 	public:
+		const bool isOffscreen = false;
+
 		OffscreenRoom(std::string path, std::string name) {
 			this->path = path;
 			this->roomName = name;
@@ -29,7 +31,7 @@ class OffscreenRoom : public Room {
 			water = -1;
 			subregion = -1;
 			
-			tag = "OffscreenRoom";
+			tags.push_back("OffscreenRoom");
 			hidden = false;
 		}
 
