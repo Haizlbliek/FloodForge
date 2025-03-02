@@ -38,9 +38,13 @@ class Button {
 			// Temp
 		}
 
-		Button *OnPress(std::function<void(Button*)> listener) {
-			listeners.push_back(listener);
+		Button *OnLeftPress(std::function<void(Button*)> listener) {
+			listenersLeft.push_back(listener);
+			return this;
+		}
 
+		Button *OnRightPress(std::function<void(Button*)> listener) {
+			listenersRight.push_back(listener);
 			return this;
 		}
 
@@ -52,10 +56,14 @@ class Button {
 		}
 
 		void update(Mouse *mouse, Vector2 screenBounds) {
-			pressed = isHovered(mouse, screenBounds) && mouse->Left();
+			pressed = isHovered(mouse, screenBounds) && (mouse->Left() || mouse->Right());
 
 			if (isHovered(mouse, screenBounds) && mouse->JustLeft()) {
 				press();
+			}
+
+			if (isHovered(mouse, screenBounds) && mouse->JustRight()) {
+				pressRight();
 			}
 		}
 
@@ -72,18 +80,31 @@ class Button {
 			this->x = x;
 		}
 
+		Button &Darken(bool newDarken) {
+			darken = newDarken;
+
+			return *this;
+		}
+
 		const double Width() const {
 			return width;
 		}
 
 	private:
 		void press() {
-			for (const auto &listener : listeners) {
+			for (const auto &listener : listenersLeft) {
 				listener(this);
 			}
 		}
 
-		std::vector<std::function<void(Button*)>> listeners;
+		void pressRight() {
+			for (const auto &listener : listenersRight) {
+				listener(this);
+			}
+		}
+
+		std::vector<std::function<void(Button*)>> listenersLeft;
+		std::vector<std::function<void(Button*)>> listenersRight;
 
 		bool pressed = false;
 
@@ -94,6 +115,8 @@ class Button {
 
 		std::string text;
 		Font *font;
+
+		bool darken = false;
 };
 
 class MenuItems {
@@ -108,12 +131,15 @@ class MenuItems {
 			textureBar = loadTexture(texturePath + "Bar.png");
 		}
 
-		static void addButton(std::string text, std::function<void(Button*)> listener) {
+		static Button &addButton(std::string text) {
 			double x = currentButtonX;
 			double width = Fonts::rainworld->getTextWidth(text, 0.03) + 0.02;
 
 			currentButtonX += width + 0.04;
-			buttons.push_back((new Button(text, x, -0.01, width, 0.04, Fonts::rainworld))->OnPress(listener));
+			Button *button = new Button(text, x, -0.01, width, 0.04, Fonts::rainworld);
+			buttons.push_back(button);
+
+			return *button;
 		}
 
 		static void replaceLastInstance(std::string& str, const std::string& old_sub, const std::string& new_sub) {

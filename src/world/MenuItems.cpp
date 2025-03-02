@@ -26,7 +26,15 @@ GLuint MenuItems::textureBar = 0;
 void Button::draw(Mouse *mouse, Vector2 screenBounds) {
     Draw::color(1.0, 1.0, 1.0);
     
-    Draw::useTexture(isHovered(mouse, screenBounds) ? (pressed ? MenuItems::textureButtonPressHover : MenuItems::textureButtonNormalHover) : (pressed ? MenuItems::textureButtonNormalHover : MenuItems::textureButtonNormal));
+    GLuint texture = 0;
+    bool dark = darken || pressed;
+    if (isHovered(mouse, screenBounds)) {
+        texture = dark ? MenuItems::textureButtonPressHover : MenuItems::textureButtonNormalHover;
+    } else {
+        texture = dark ? MenuItems::textureButtonPress : MenuItems::textureButtonNormal;
+    }
+
+    Draw::useTexture(texture);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -43,13 +51,13 @@ void MenuItems::init(Window *window) {
     MenuItems::loadTextures();
     worldAcronym = "";
 
-    addButton("New",
+    addButton("New").OnLeftPress(
         [window](Button *button) {
             Popups::addPopup(new AcronymPopup(window));
         }
     );
 
-    addButton("Add Room",
+    addButton("Add Room").OnLeftPress(
         [window](Button *button) {
             if (worldAcronym == "") {
                 Popups::addPopup(new WarningPopup(window, "You must create or import a region\nbefore adding rooms."));
@@ -75,7 +83,7 @@ void MenuItems::init(Window *window) {
         }
     );
 
-    addButton("Import",
+    addButton("Import").OnLeftPress(
         [window](Button *button) {
             Popups::addPopup(new FilesystemPopup(window, std::regex("world_([^.]+)\\.txt"),
                 [window](std::set<std::string> pathStrings) {
@@ -136,7 +144,7 @@ void MenuItems::init(Window *window) {
         }
     );
 
-    addButton("Export",
+    addButton("Export").OnLeftPress(
         [window](Button *button) {
             if (exportDirectory.string().length() > 0) {
                 exportMapFile();
@@ -167,7 +175,7 @@ void MenuItems::init(Window *window) {
         }
     );
 
-    addButton("No Colours",
+    addButton("No Colours").OnLeftPress(
         [window](Button *button) {
             ::roomColours = (::roomColours + 1) % 3;
 
@@ -180,6 +188,48 @@ void MenuItems::init(Window *window) {
             }
 
             repositionButtons();
+        }
+    );
+
+    addButton("1")
+    .OnLeftPress(
+        [window](Button *button) {
+            visibleLayers[LAYER_1] = !visibleLayers[LAYER_1];
+            button->Darken(!visibleLayers[LAYER_1]);
+        }
+    )
+    ->OnRightPress(
+        [window](Button *button) {
+            // TODO LATER
+            // visibleLayers[0] = true; visibleLayers[1] = true; visibleLayers[2] = true;
+        }
+    );
+
+    addButton("2")
+    .OnLeftPress(
+        [window](Button *button) {
+            visibleLayers[LAYER_2] = !visibleLayers[LAYER_2];
+            button->Darken(!visibleLayers[LAYER_2]);
+        }
+    )
+    ->OnRightPress(
+        [window](Button *button) {
+            // TODO LATER
+            // visibleLayers[0] = true; visibleLayers[1] = true; visibleLayers[2] = true;
+        }
+    );
+
+    addButton("3")
+    .OnLeftPress(
+        [window](Button *button) {
+            visibleLayers[LAYER_3] = !visibleLayers[LAYER_3];
+            button->Darken(!visibleLayers[LAYER_3]);
+        }
+    )
+    ->OnRightPress(
+        [window](Button *button) {
+            // TODO LATER
+            // visibleLayers[0] = true; visibleLayers[1] = true; visibleLayers[2] = true;
         }
     );
 

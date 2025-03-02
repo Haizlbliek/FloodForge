@@ -13,6 +13,8 @@ namespace DebugData {
 
         for (auto it = connections.rbegin(); it != connections.rend(); it++) {
             Connection *connection = *it;
+			if (!visibleLayers[connection->RoomA()->Layer()]) continue;
+			if (!visibleLayers[connection->RoomB()->Layer()]) continue;
 
             if (connection->hovered(mouse, lineSize)) {
                 hoveringConnection = connection;
@@ -23,6 +25,7 @@ namespace DebugData {
 
         for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
             Room *room = *it;
+            if (!visibleLayers[room->Layer()]) continue;
 
             if (room->inside(mouse)) {
                 hoveringRoom = room;

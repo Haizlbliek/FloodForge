@@ -50,6 +50,7 @@ std::string ROOM_TAGS[9] = { "SHELTER", "ANCIENTSHELTER", "GATE", "SWARMROOM", "
 std::string ROOM_TAG_NAMES[9] = { "Shelter", "Ancient Shelter", "Gate", "Swarm Room", "Performance Heavy", "Scavenger Outpost", "Scavenger Trader", "No Trackers", "Arena (MSC)" };
 
 int roomColours = 0;
+bool visibleLayers[] = { true, true, true };
 
 int transitionLayer(int layer) {
 	return (layer + 1) % 3;
@@ -266,6 +267,7 @@ int main() {
 			Room *hoveringRoom = nullptr;
 			for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 				Room *room = (*it);
+				if (!visibleLayers[room->Layer()]) continue;
 
 				if (room->inside(worldMouse)) {
 					hoveringRoom = room;
@@ -379,6 +381,7 @@ int main() {
 				if (selectingState == 0) {
 					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 						Room *room = *it;
+						if (!visibleLayers[room->Layer()]) continue;
 
 						if (room->inside(worldMouse)) {
 							holdingRoom = room;
@@ -472,6 +475,7 @@ int main() {
 			if (previousKeys.find(GLFW_KEY_I) == previousKeys.end()) {
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 					Room *room = *it;
+					if (!visibleLayers[room->Layer()]) continue;
 
 					if (room->inside(worldMouse)) {
 						rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
@@ -492,6 +496,8 @@ int main() {
 				
 				for (auto it = connections.rbegin(); it != connections.rend(); it++) {
 					Connection *connection = *it;
+					if (!visibleLayers[connection->RoomA()->Layer()]) continue;
+					if (!visibleLayers[connection->RoomB()->Layer()]) continue;
 
 					if (connection->hovered(worldMouse, lineSize)) {
 						connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
@@ -511,6 +517,7 @@ int main() {
 					Room *hoveredRoom = nullptr;
 					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 						Room *room = *it;
+						if (!visibleLayers[room->Layer()]) continue;
 
 						if (room->inside(worldMouse)) {
 							if (room != offscreenDen) hoveredRoom = room;
@@ -544,6 +551,7 @@ int main() {
 						} else {
 							for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 								Room *room = *it;
+								if (!visibleLayers[room->Layer()]) continue;
 
 								if (room->inside(worldMouse)) {
 									rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
@@ -584,6 +592,7 @@ int main() {
 				} else {
 					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 						Room *room = *it;
+						if (!visibleLayers[room->Layer()]) continue;
 
 						if (room->inside(worldMouse)) {
 							std::set<Room*> roomGroup;
@@ -608,6 +617,7 @@ int main() {
 				} else {
 					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 						Room *room = *it;
+						if (!visibleLayers[room->Layer()]) continue;
 
 						if (room->inside(worldMouse)) {
 							if (room->isOffscreen) break;
@@ -644,6 +654,7 @@ int main() {
 					Room *hoveringRoom = nullptr;
 					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 						Room *room = (*it);
+						if (!visibleLayers[room->Layer()]) continue;
 
 						if (room->inside(worldMouse)) {
 							hoveringRoom = room;
@@ -677,6 +688,8 @@ int main() {
 					Room *hoveringRoom = nullptr;
 					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 						Room *room = (*it);
+
+						if (!visibleLayers[room->Layer()]) continue;
 
 						if (room->inside(worldMouse)) {
 							hoveringRoom = room;
@@ -736,61 +749,61 @@ int main() {
 			previousKeys.erase(GLFW_KEY_C);
 		}
 
-		if (window->keyPressed(GLFW_KEY_D)) {
-			if (previousKeys.find(GLFW_KEY_D) == previousKeys.end()) {
-				Connection *hoveringConnection = nullptr;
-				for (auto it = connections.rbegin(); it != connections.rend(); it++) {
-					Connection *connection = *it;
+		// if (window->keyPressed(GLFW_KEY_D)) {
+		// 	if (previousKeys.find(GLFW_KEY_D) == previousKeys.end()) {
+		// 		Connection *hoveringConnection = nullptr;
+		// 		for (auto it = connections.rbegin(); it != connections.rend(); it++) {
+		// 			Connection *connection = *it;
 
-					if (connection->hovered(worldMouse, lineSize)) {
-						hoveringConnection = connection;
+		// 			if (connection->hovered(worldMouse, lineSize)) {
+		// 				hoveringConnection = connection;
 
-						break;
-					}
-				}
+		// 				break;
+		// 			}
+		// 		}
 
-				if (hoveringConnection != nullptr) {
-					std::cout << "Debugging connection:" << std::endl;
-					std::cout << "\tRoom A: " << hoveringConnection->RoomA()->RoomName() << std::endl;
-					std::cout << "\tRoom B: " << hoveringConnection->RoomB()->RoomName() << std::endl;
-					std::cout << "\tConnection A: " << hoveringConnection->ConnectionA() << std::endl;
-					std::cout << "\tConnection B: " << hoveringConnection->ConnectionB() << std::endl;
-				} else {
-					Room *hoveringRoom = nullptr;
-					for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-						Room *room = (*it);
+		// 		if (hoveringConnection != nullptr) {
+		// 			std::cout << "Debugging connection:" << std::endl;
+		// 			std::cout << "\tRoom A: " << hoveringConnection->RoomA()->RoomName() << std::endl;
+		// 			std::cout << "\tRoom B: " << hoveringConnection->RoomB()->RoomName() << std::endl;
+		// 			std::cout << "\tConnection A: " << hoveringConnection->ConnectionA() << std::endl;
+		// 			std::cout << "\tConnection B: " << hoveringConnection->ConnectionB() << std::endl;
+		// 		} else {
+		// 			Room *hoveringRoom = nullptr;
+		// 			for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+		// 				Room *room = (*it);
 
-						if (room->inside(worldMouse)) {
-							hoveringRoom = room;
-							break;
-						}
-					}
+		// 				if (room->inside(worldMouse)) {
+		// 					hoveringRoom = room;
+		// 					break;
+		// 				}
+		// 			}
 
-					if (hoveringRoom != nullptr) {
-						std::cout << "Debugging room:" << std::endl;
-						std::cout << "\tName: " << hoveringRoom->RoomName() << std::endl;
-						std::cout << "\tWidth: " << hoveringRoom->Width() << std::endl;
-						std::cout << "\tHeight: " << hoveringRoom->Height() << std::endl;
-						std::cout << "\tLayer: " << hoveringRoom->Layer() << std::endl;
-						std::cout << "\tConnections: " << std::endl;
-						int connectionId = 0;
-						for (Vector2i enterance : hoveringRoom->ShortcutEntrances()) {
-							std::cout << "\t\t" << connectionId << ": " << enterance << " - " << (hoveringRoom->ConnectionUsed(connectionId) ? "Used" : "Not Used") << std::endl;
-							connectionId++;
-						}
-					} else {
-						std::cout << "Debug:" << std::endl;
-						std::cout << "\tCam Scale: " << cameraScale << std::endl;
-						std::cout << "\tCam Position X: " << cameraOffset.x << std::endl;
-						std::cout << "\tCam Position Y: " << cameraOffset.y << std::endl;
-					}
-				}
-			}
+		// 			if (hoveringRoom != nullptr) {
+		// 				std::cout << "Debugging room:" << std::endl;
+		// 				std::cout << "\tName: " << hoveringRoom->RoomName() << std::endl;
+		// 				std::cout << "\tWidth: " << hoveringRoom->Width() << std::endl;
+		// 				std::cout << "\tHeight: " << hoveringRoom->Height() << std::endl;
+		// 				std::cout << "\tLayer: " << hoveringRoom->Layer() << std::endl;
+		// 				std::cout << "\tConnections: " << std::endl;
+		// 				int connectionId = 0;
+		// 				for (Vector2i enterance : hoveringRoom->ShortcutEntrances()) {
+		// 					std::cout << "\t\t" << connectionId << ": " << enterance << " - " << (hoveringRoom->ConnectionUsed(connectionId) ? "Used" : "Not Used") << std::endl;
+		// 					connectionId++;
+		// 				}
+		// 			} else {
+		// 				std::cout << "Debug:" << std::endl;
+		// 				std::cout << "\tCam Scale: " << cameraScale << std::endl;
+		// 				std::cout << "\tCam Position X: " << cameraOffset.x << std::endl;
+		// 				std::cout << "\tCam Position Y: " << cameraOffset.y << std::endl;
+		// 			}
+		// 		}
+		// 	}
 
-			previousKeys.insert(GLFW_KEY_D);
-		} else {
-			previousKeys.erase(GLFW_KEY_D);
-		}
+		// 	previousKeys.insert(GLFW_KEY_D);
+		// } else {
+		// 	previousKeys.erase(GLFW_KEY_D);
+		// }
 
 		
 		if (!Popups::hasPopup("DenPopup") && offscreenDen != nullptr) {
@@ -841,6 +854,8 @@ int main() {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		for (Room *room : rooms) {
+			if (!visibleLayers[room->Layer()]) continue;
+
 			room->draw(worldMouse, lineSize, screenBounds);
 			if (selectedRooms.find(room) != selectedRooms.end()) {
 				setThemeColour(ThemeColour::SelectionBorder);
@@ -850,8 +865,12 @@ int main() {
 		glDisable(GL_BLEND);
 
 		/// Draw Connections
-		for (Connection *connection : connections)
+		for (Connection *connection : connections) {
+			if (!visibleLayers[connection->RoomA()->Layer()]) continue;
+			if (!visibleLayers[connection->RoomB()->Layer()]) continue;
+
 			connection->draw(worldMouse, lineSize);
+		}
 
 		if (connectionStart != nullptr && connectionEnd != nullptr) {
 			bool valid = true;
