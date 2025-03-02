@@ -995,7 +995,7 @@ int main() {
 				directionB *= directionStrength;
 
 				Vector2 lastPoint = bezierCubic(0.0, pointA, pointA + directionA, pointB + directionB, pointB);
-				for (double t = 1.0 / segments; t <= 1.0; t += 1.0 / segments) {
+				for (double t = 1.0 / segments; t <= 1.01; t += 1.0 / segments) {
 					Vector2 point = bezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
 
 					drawLine(lastPoint.x, lastPoint.y, point.x, point.y, 16.0 / lineSize);
