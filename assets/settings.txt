@@ -2,3 +2,4 @@ Theme: blue
 CameraPanSpeed: 0.4
 CameraZoomSpeed: 0.4
 PopupScrollSpeed: 0.4
+ConnectionType: bezier

@@ -14,7 +14,7 @@ namespace DebugData {
         for (auto it = connections.rbegin(); it != connections.rend(); it++) {
             Connection *connection = *it;
 
-            if (connection->distance(mouse) < 1.0 / lineSize) {
+            if (connection->hovered(mouse, lineSize)) {
                 hoveringConnection = connection;
 
                 break;

@@ -268,9 +268,9 @@ class MenuItems {
 			return tokens;
 		}
 
-		static std::tuple<std::string, std::vector<std::string>, std::string> parseRoomString(const std::string &input) {
+		static std::tuple<std::string, std::vector<std::string>, std::vector<std::string>> parseRoomString(const std::string &input) {
 			std::vector<std::string> connections;
-			std::string flag = "";
+			std::vector<std::string> flags;
 			std::string roomName = "";
 
 			auto colonSplit = split(input, ':');
@@ -281,17 +281,19 @@ class MenuItems {
 				connections.push_back(item);
 			}
 
-			if (colonSplit.size() > 2) flag = colonSplit[2];
+			for (int i = 2; i < colonSplit.size(); i++) {
+				flags.push_back(colonSplit[i]);
+			}
 
-			return std::tuple<std::string, std::vector<std::string>, std::string> {
+			return {
 				roomName,
 				connections,
-				flag
+				flags
 			};
 		}
 
 		static void parseWorldRoom(std::string line, std::filesystem::path directory, std::vector<Quadruple<Room*, int, std::string, int>> &connectionsToAdd) {
-			std::tuple<std::string, std::vector<std::string>, std::string> parts = parseRoomString(line);
+			std::tuple<std::string, std::vector<std::string>, std::vector<std::string>> parts = parseRoomString(line);
 
 			std::string roomName = toLower(std::get<0>(parts));
 
@@ -352,7 +354,10 @@ class MenuItems {
 				connectionId++;
 			}
 
-			room->Tag(std::get<2>(parts));
+			room->Tag("");
+			for (std::string tag : std::get<2>(parts)) {
+				room->ToggleTag(tag);
+			}
 		}
 
 		static void parseWorldCreature(std::string line) {

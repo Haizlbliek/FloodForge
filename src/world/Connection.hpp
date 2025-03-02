@@ -4,6 +4,7 @@
 
 #include "../Utils.hpp"
 #include "../math/Vector.hpp"
+#include "../Settings.hpp"
 
 #include "Room.hpp"
 
@@ -14,24 +15,71 @@ class Connection {
 		  roomB(roomB),
 		  connectionA(connectionA),
 		  connectionB(connectionB) {
+			segments = 10;
+			directionStrength = 10.0;
 		}
 
 		void draw(Vector2 mousePosition, double lineSize) {
+			if (hovered(mousePosition, lineSize)) {
+				Draw::color(0.0f, 1.0f, 1.0f);
+			} else {
+				Draw::color(1.0f, 1.0f, 0.0f);
+			}
+
 			Vector2 pointA = roomA->getShortcutConnectionPosition(connectionA);
 			Vector2 pointB = roomB->getShortcutConnectionPosition(connectionB);
 
-			glEnable(GL_LINE_SMOOTH);
-			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+			segments = std::clamp((int) (pointA.distanceTo(pointB) / 2.0), 4, 100);
+			directionStrength = pointA.distanceTo(pointB);
+			if (directionStrength > 300.0) directionStrength = (directionStrength - 300.0) * 0.5 + 300.0;
 
-			if (distance(mousePosition) < 1.0 / lineSize) {
-				Draw::color(0.0f, 1.0f, 1.0f);
-				drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 32.0 / lineSize);
+			if (Settings::getSetting<int>(Settings::Setting::ConnectionType) == 0) {
+				drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 16.0 / lineSize);
+			} else {
+				Vector2 directionA = roomA->getShortcutDirectionVector(connectionA);
+				Vector2 directionB = roomB->getShortcutDirectionVector(connectionB);
+
+				if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
+					directionStrength *= 0.3333;
+				} else {
+					directionStrength *= 0.6666;
+				}
+
+				directionA *= directionStrength;
+				directionB *= directionStrength;
+
+				Vector2 lastPoint = bezierCubic(0.0, pointA, pointA + directionA, pointB + directionB, pointB);
+				for (double t = 0.1; t <= 1.0; t += 1.0 / segments) {
+					Vector2 point = bezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
+
+					drawLine(lastPoint.x, lastPoint.y, point.x, point.y, 16.0 / lineSize);
+	
+					lastPoint = point;
+				}
 			}
+		}
 
-			Draw::color(1.0f, 1.0f, 0.0f);
-			drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 16.0 / lineSize);
+		bool hovered(Vector2 mouse, double lineSize) {
+			Vector2 pointA = roomA->getShortcutConnectionPosition(connectionA);
+			Vector2 pointB = roomB->getShortcutConnectionPosition(connectionB);
 
-			glDisable(GL_LINE_SMOOTH);
+			if (Settings::getSetting<int>(Settings::Setting::ConnectionType) == 0) {
+				return lineDistance(mouse, pointA, pointB) < 1.0 / lineSize;
+			} else {
+				Vector2 directionA = roomA->getShortcutDirectionVector(connectionA) * directionStrength;
+				Vector2 directionB = roomB->getShortcutDirectionVector(connectionB) * directionStrength;
+
+				Vector2 lastPoint = bezierCubic(0.0, pointA, pointA + directionA, pointB + directionB, pointB);
+				for (double t = 0.1; t <= 1.0; t += 1.0 / segments) {
+					Vector2 point = bezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
+
+					if (lineDistance(mouse, lastPoint, point) < 1.0 / lineSize) return true;
+
+					lastPoint = point;
+				}
+
+				return false;
+			}
 		}
 
 		bool collides(Vector2 vector) {
@@ -49,23 +97,6 @@ class Connection {
 			}
 
 			return false;
-		}
-
-		double distance(Vector2 vector) {
-			Vector2 pointA = roomA->getShortcutConnectionPosition(connectionA);
-			Vector2 pointB = roomB->getShortcutConnectionPosition(connectionB);
-
-			Vector2 AB = pointB - pointA;
-			Vector2 AP = vector - pointA;
-			double lengthSqrAB = AB.x * AB.x + AB.y * AB.y;
-			double t = (AP.x * AB.x + AP.y * AB.y) / lengthSqrAB;
-
-			if (t < 0.0) t = 0.0;
-			if (t > 1.0) t = 1.0;
-
-			Vector2 closestPoint = pointA + t * AB;
-
-			return closestPoint.distanceTo(vector);
 		}
 
 		void RoomA(Room *roomA) { this->roomA = roomA; }
@@ -90,4 +121,7 @@ class Connection {
 
 		unsigned int connectionA;
 		unsigned int connectionB;
+
+		int segments;
+		double directionStrength;
 };

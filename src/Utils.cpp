@@ -319,6 +319,47 @@ void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale)
 	applyFrustumToOrthographic(position, rotation, scale, -1.0f, 1.0f, -1.0f, 1.0f, 0.000f, 100.0f);
 }
 
+Vector2 bezierCubic(float t, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3) {
+	float u = 1 - t;
+	float tt = t * t;
+	float uu = u * u;
+	float uuu = uu * u;
+	float ttt = tt * t;
+
+	Vector2 p;
+	p = uuu * p0;         // (1 - t)^3 * P0
+	p += 3 * uu * t * p1; // 3(1 - t)^2 * t * P1
+	p += 3 * u * tt * p2; // 3(1 - t) * t^2 * P2
+	p += ttt * p3;        // t^3 * P3
+
+	return p;
+}
+
+void drawBezier(Vector2 p0, Vector2 d0, Vector2 p3, Vector2 d3, int resolution) {
+	Vector2 p1 = p0 + d0;
+	Vector2 p2 = p3 + d3;
+
+	Draw::begin(Draw::LINE_STRIP);
+	for (double t = 0; t <= 1; t += 1.0 / (double) resolution) {
+		Vector2 point = bezierCubic(t, p0, p1, p2, p3);
+		Draw::vertex(point.x, point.y);
+	}
+	Draw::end();
+}
+
+double lineDistance(Vector2 vector, Vector2 pointA, Vector2 pointB) {
+	Vector2 AB = pointB - pointA;
+	Vector2 AP = vector - pointA;
+	double lengthSqrAB = AB.x * AB.x + AB.y * AB.y;
+	double t = (AP.x * AB.x + AP.y * AB.y) / lengthSqrAB;
+
+	if (t < 0.0) t = 0.0;
+	if (t > 1.0) t = 1.0;
+
+	Vector2 closestPoint = pointA + t * AB;
+
+	return closestPoint.distanceTo(vector);
+}
 
 
 

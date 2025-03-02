@@ -46,6 +46,10 @@ void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale,
 
 void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale);
 
+Vector2 bezierCubic(float t, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3);
+void drawBezier(Vector2 p0, Vector2 d0, Vector2 p3, Vector2 d3, int resolution = 10);
+
+double lineDistance(Vector2 vector, Vector2 pointA, Vector2 pointB);
 
 // GL functions
 void glColour(Colour colour);

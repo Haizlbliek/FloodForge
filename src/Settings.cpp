@@ -6,6 +6,7 @@ void Settings::loadDefaults() {
     settings[Setting::CameraPanSpeed] = 0.4;
     settings[Setting::CameraZoomSpeed] = 0.4;
     settings[Setting::PopupScrollSpeed] = 0.4;
+    settings[Setting::ConnectionType] = 0;
 }
 
 void Settings::init() {
@@ -25,6 +26,7 @@ void Settings::init() {
         if (key == "Theme") loadTheme(value);
         else if (key == "CameraPanSpeed") settings[Setting::CameraPanSpeed] = std::stod(value);
         else if (key == "CameraZoomSpeed") settings[Setting::CameraZoomSpeed] = std::stod(value);
+        else if (key == "ConnectionType") settings[Setting::ConnectionType] = (toLower(value) == "bezier");
     }
 
     settingsFile.close();

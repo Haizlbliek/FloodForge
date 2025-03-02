@@ -182,6 +182,21 @@ class Room {
 			return connection;
 		}
 
+		Vector2 getShortcutDirectionVector(unsigned int connectionId) const {
+			Vector2i connection = shortcutEntrances[connectionId];
+
+			if (tileIsShortcut(connection.x - 1, connection.y))
+				return Vector2(-1.0, 0.0);
+			else if (tileIsShortcut(connection.x, connection.y + 1))
+				return Vector2(0.0, -1.0);
+			else if (tileIsShortcut(connection.x + 1, connection.y))
+				return Vector2(1.0, 0.0);
+			else if (tileIsShortcut(connection.x, connection.y - 1))
+				return Vector2(0.0, 1.0);
+
+			return Vector2(0, 0);
+		}
+
 		int getShortcutDirection(unsigned int connectionId) const {
 			Vector2i connection = shortcutEntrances[connectionId];
 
@@ -305,7 +320,7 @@ class Room {
 		void Water(const int newWater) { water = newWater; }
 		const int Water() const { return water; }
 
-		void Tag(const std::string newTag) { tags.clear(); tags.push_back(newTag); }
+		void Tag(const std::string newTag) { tags.clear(); if (newTag != "") tags.push_back(newTag); }
 		void ToggleTag(const std::string newTag) {
 			if (std::find(tags.begin(), tags.end(), newTag) != tags.end()) {
 				std::remove(tags.begin(), tags.end(), newTag);

@@ -493,7 +493,7 @@ int main() {
 				for (auto it = connections.rbegin(); it != connections.rend(); it++) {
 					Connection *connection = *it;
 
-					if (connection->distance(worldMouse) < 1.0 / lineSize) {
+					if (connection->hovered(worldMouse, lineSize)) {
 						connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
 
 						connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
@@ -610,6 +610,8 @@ int main() {
 						Room *room = *it;
 
 						if (room->inside(worldMouse)) {
+							if (room->isOffscreen) break;
+
 							std::set<Room*> roomGroup;
 							roomGroup.insert(room);
 							Popups::addPopup(new RoomTagPopup(window, roomGroup));
@@ -740,7 +742,7 @@ int main() {
 				for (auto it = connections.rbegin(); it != connections.rend(); it++) {
 					Connection *connection = *it;
 
-					if (connection->distance(worldMouse) < 1.0 / lineSize) {
+					if (connection->hovered(worldMouse, lineSize)) {
 						hoveringConnection = connection;
 
 						break;

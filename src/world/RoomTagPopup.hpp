@@ -46,11 +46,19 @@ class RoomTagPopup : public Popup {
         }
 
         void setTag(std::string tag) {
-            for (Room *room : rooms) room->Tag(tag);
+            for (Room *room : rooms) {
+                if (room->isOffscreen) continue;
+
+                room->Tag(tag);
+            }
         }
 
         void toggleTag(std::string tag) {
-            for (Room *room : rooms) room->ToggleTag(tag);
+            for (Room *room : rooms) {
+                if (room->isOffscreen) continue;
+
+                room->ToggleTag(tag);
+            }
         }
 
         void mouseClick(double mouseX, double mouseY) {
@@ -93,7 +101,8 @@ class RoomTagPopup : public Popup {
 
             if (rooms.size() == 1) {
                 const std::vector<std::string> tags = (*rooms.begin())->Tags();
-                if (std::find(tags.begin(), tags.end(), tagId) != tags.end()) {
+
+                if ((tagId == "" && tags.size() == 0) || std::find(tags.begin(), tags.end(), tagId) != tags.end()) {
                     setThemeColour(ThemeColour::BorderHighlight);
                 } else {
                     setThemeColour(ThemeColour::Text);
