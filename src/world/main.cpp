@@ -868,8 +868,41 @@ int main() {
 				Draw::color(1.0f, 0.0f, 0.0f);
 			}
 
-			Draw::color(1.0f, 1.0f, 0.0f);
-			drawLine(connectionStart->x, connectionStart->y, connectionEnd->x, connectionEnd->y, 16.0 / lineSize);
+			Vector2 pointA = connectionStart;
+			Vector2 pointB = connectionEnd;
+
+			int segments = int(pointA.distanceTo(pointB) / 2.0);
+			segments = clamp(segments, 4, 100);
+			double directionStrength = pointA.distanceTo(pointB);
+			if (directionStrength > 300.0) directionStrength = (directionStrength - 300.0) * 0.5 + 300.0;
+
+			if (Settings::getSetting<int>(Settings::Setting::ConnectionType) == 0) {
+				drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 16.0 / lineSize);
+			} else {
+				Vector2 directionA = currentConnection->RoomA()->getShortcutDirectionVector(currentConnection->ConnectionA());
+				Vector2 directionB = Vector2(0, 0);
+
+				if (currentConnection->RoomB() != nullptr) directionB = currentConnection->RoomB()->getShortcutDirectionVector(currentConnection->ConnectionB());
+
+				if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
+					directionStrength *= 0.3333;
+				} else {
+					directionStrength *= 0.6666;
+				}
+
+				directionA *= directionStrength;
+				directionB *= directionStrength;
+
+				Vector2 lastPoint = bezierCubic(0.0, pointA, pointA + directionA, pointB + directionB, pointB);
+				for (double t = 0.1; t <= 1.0; t += 1.0 / segments) {
+					Vector2 point = bezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
+
+					drawLine(lastPoint.x, lastPoint.y, point.x, point.y, 16.0 / lineSize);
+	
+					lastPoint = point;
+				}
+			}
+			// drawLine(connectionStart->x, connectionStart->y, connectionEnd->x, connectionEnd->y, 16.0 / lineSize);
 		}
 
 		if (selectingState == 1) {
