@@ -67,3 +67,28 @@ MotherLongLegs>TerrorLongLegs
 Mother Long Legs>TerrorLongLegs
 Hunter>HunterDaddy
 Hunter Daddy>HunterDaddy
+Blizzard>BlizzardLizard
+Blizard>BlizzardLizard
+Blizzard Lizard>BlizzardLizard
+Basilisk>BasiliskLizard
+Basilisk Lizard>BasiliskLizard
+Indigo>IndigoLizard
+Indigo Lizard>IndigoLizard
+Skink>IndigoLizard
+Big Moth>BigMoth
+Small Moth>SmallMoth
+Seapig>Tardigrade
+Sky Whale>SkyWhale
+Templar>ScavengerTemplar
+Scavenger Templar>ScavengerTemplar
+TemplarScavenger>ScavengerTemplar
+Templar Scavenger>ScavengerTemplar
+Disciple>ScavengerDisciple
+Scavenger Disciple>ScavengerDisciple
+DiscipleScavenger>ScavengerDisciple
+Disciple Scavenger>ScavengerDisciple
+RotBehemoth>RotLoach
+Rot Behemoth>RotLoach
+RBehemoth>RotLoach
+RoBehemoth>RotLoach
+BigRot>RotLoach
