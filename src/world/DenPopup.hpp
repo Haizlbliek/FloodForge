@@ -7,12 +7,16 @@
 
 #include "../gl.h"
 
+#define CREATURE_ROWS 6
+
 namespace CreatureTextures {
 	extern std::unordered_map<std::string, GLuint> creatureTextures;
 	extern std::unordered_map<std::string, GLuint> creatureTagTextures;
 	extern std::vector<std::string> creatures;
 	extern std::vector<std::string> creatureTags;
 	extern std::unordered_map<std::string, std::string> parseMap;
+
+	void loadCreaturesFromFolder(std::string path);
 
 	GLuint getTexture(std::string type);
 
@@ -30,7 +34,7 @@ namespace CreatureTextures {
 class DenPopup : public Popup {
 	public:
 		DenPopup(Window *window, Room *room, int den) : Popup(window) {
-			bounds = Rect(-0.25, -0.25, 0.375, 0.25);
+			bounds = Rect(-0.35, -0.35, 0.375 + 0.1, 0.35);
 			scrollA = 0.0;
 			scrollATo = 0.0;
 			scrollB = 0.0;
@@ -88,13 +92,13 @@ class DenPopup : public Popup {
 		
 
         void clampScroll() {
-			double width = std::abs(bounds.X1() - bounds.X0());
-			double height = std::abs(bounds.Y1() - bounds.Y0());
+			double width = 0.5;
+			double height = 0.5;
 
 			double buttonSize = std::min(width / 7.0, height / 7.0);
 			double buttonPadding = 0.02;
 
-            int itemsA = CreatureTextures::creatures.size() / 4 - 1;
+            int itemsA = CreatureTextures::creatures.size() / CREATURE_ROWS - 1;
 			double sizeA = itemsA * (buttonSize + buttonPadding);
 
             if (scrollATo < -sizeA) {
