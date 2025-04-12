@@ -312,6 +312,7 @@ class Room {
 		const int Width() const { return width; }
 		const int Height() const { return height; }
 
+		void RoomName(const std::string newName) { roomName = newName; }
 		const std::string RoomName() const { return roomName; }
 
 		void Layer(const int newLayer) { layer = newLayer; }

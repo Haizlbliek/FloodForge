@@ -13,8 +13,6 @@ void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 
 
 	if (text.length() < 2) {
 		Draw::color(1.0, 0.0, 0.0);
-	} else if (text.length() > 2) {
-		Draw::color(1.0, 1.0, 0.0);
 	} else {
 		setThemeColour(ThemeColour::Text);
 	}
@@ -53,20 +51,6 @@ void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 
 		setThemeColour(ThemeColour::Border);
 	}
 	strokeRect(centreX + 0.05, bounds.Y1() - 0.28, centreX + 0.2, bounds.Y1() - 0.22);
-
-	if (text.length() > 2) {
-		bounds.Y0(bounds.Y1() - 0.5);
-		Draw::color(1.0, 1.0, 0.0);
-		Draw::translate(0.0, bounds.Y1() - 0.25);
-		Fonts::rainworld->writeCentred("WARNING:", centreX, -0.055, 0.035, CENTRE_X);
-		Fonts::rainworld->writeCentred("Region acronyms with 2+", centreX, -0.09, 0.03, CENTRE_X);
-		Fonts::rainworld->writeCentred("characters can behave", centreX, -0.125, 0.03, CENTRE_X);
-		Fonts::rainworld->writeCentred("weirdly, to fix this install", centreX, -0.16, 0.03, CENTRE_X);
-		Fonts::rainworld->writeCentred("REGION ARCONYM FIX", centreX, -0.195, 0.03, CENTRE_X);
-		Draw::translate(0.0, -(bounds.Y1() - 0.25));
-	} else {
-		bounds.Y0(bounds.Y1() - 0.33);
-	}
 }
 
 void AcronymPopup::mouseClick(double mouseX, double mouseY) {
@@ -143,6 +127,7 @@ void AcronymPopup::keyCallback(void *object, int action, int key) {
 			for (char character : clipboardText) {
 				if (character == '/') continue;
 				if (character == '\\') continue;
+				if (character == '_') continue;
 
 				acronymWindow->text += character;
 			}
@@ -154,6 +139,7 @@ void AcronymPopup::keyCallback(void *object, int action, int key) {
 
 			if (character == '/') return;
 			if (character == '\\') return;
+			if (character == '_') return;
 
 			acronymWindow->text += character;
 		}

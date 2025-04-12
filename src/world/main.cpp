@@ -807,12 +807,10 @@ void updateMain() {
 			if (hoveringRoom != nullptr) {
 				if (hoveringRoom == offscreenDen) {
 					int denId = offscreenDen->denAt(worldMouse.x, worldMouse.y);
-					if (denId == -1) {
-						denId = offscreenDen->AddDen();
-						Popups::addPopup(new DenPopup(window, hoveringRoom, denId));
-					} else {
-						Popups::addPopup(new DenPopup(window, hoveringRoom, denId));
-					}
+
+					if (denId == -1) denId = offscreenDen->AddDen();
+
+					Popups::addPopup(new DenPopup(window, hoveringRoom, denId));
 				} else {
 					Vector2i tilePosition = Vector2i(
 						floor(worldMouse.x - hoveringRoom->Position().x),

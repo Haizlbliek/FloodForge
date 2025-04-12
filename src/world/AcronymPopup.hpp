@@ -43,6 +43,6 @@ class AcronymPopup : public Popup {
 
 		static void keyCallback(void *object, int action, int key);
 
-	private:
+	protected:
 		std::string text;
 };
