@@ -231,6 +231,10 @@ void updateOriginalControls() {
 				if (roomSnap == ROOM_SNAP_TILE) offset.round();
 
 				for (Room *room2 : selectedRooms) {
+					if (roomSnap == ROOM_SNAP_TILE) {
+						room2->Position().round();
+					}
+
 					room2->Position().add(offset);
 				}
 				holdingStart = holdingStart + offset;
@@ -350,6 +354,10 @@ void updateFloodForgeControls() {
 				if (roomSnap == ROOM_SNAP_TILE) offset.round();
 
 				for (Room *room2 : selectedRooms) {
+					if (roomSnap == ROOM_SNAP_TILE) {
+						room2->Position().round();
+					}
+
 					room2->Position().add(offset);
 				}
 				holdingStart = holdingStart + offset;
