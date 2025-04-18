@@ -123,8 +123,8 @@ void updateCamera() {
 	double zoom = std::pow(1.25, scrollY);
 
 	Vector2 previousWorldMouse = Vector2(
-		((globalMouse.x / 1024.0) *  2.0 - 1.0) * cameraScale + cameraOffset.x,
-		((globalMouse.y / 1024.0) * -2.0 + 1.0) * cameraScale + cameraOffset.y
+		screenMouse.x * cameraScale + cameraOffset.x,
+		screenMouse.y * cameraScale + cameraOffset.y
 	);
 
 	cameraScaleTo *= zoom;
@@ -908,6 +908,7 @@ int main() {
 		int width;
 		int height;
 		glfwGetWindowSize(window->getGLFWWindow(), &width, &height);
+		if (width == 0 || height == 0) continue;
 		float size = min(width, height);
 		float offsetX = (width * 0.5) - size * 0.5;
 		float offsetY = (height * 0.5) - size * 0.5;
