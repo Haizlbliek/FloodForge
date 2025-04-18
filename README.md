@@ -13,6 +13,7 @@ It aims for intuitive controls, clean ui, and as few dependencies as possible.
 | Connect Rooms     | `RMB`     | Add connections between room exits.                               |
 | Delete            | `X`       | Removes hovered room or connection.                               |
 | Creature Den      | `C`       | Opens the hovered den.                                            |
+| Room Merge        | `G`       | Toggle room visual merging.                                       |
 | Change Room Layer | `L`       | Switches between layers within the hovered room.                  |
 | Change Flag       | `F`       | Change room flags (shelter, karma gate, scavenger outpost, etc.). |
 | Change Subregion  | `S`       | Openes a popup for adding, removing, and changing subregions.     |

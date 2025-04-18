@@ -2,6 +2,18 @@
 
 #include "DenPopup.hpp"
 
+void Room::drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
+    if (!valid) return;
+    
+    if (hidden) {
+        Draw::color(0.0, 0.0, 0.0, 0.5);
+    } else {
+        Draw::color(0.0, 0.0, 0.0, 1.0);
+    }
+    
+    fillRect(position.x, position.y - height, position.x + width, position.y);
+}
+
 void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
     if (!valid) return;
     
@@ -144,12 +156,12 @@ void Room::generateVBO() {
     glGenBuffers(2, vbo);
     glGenVertexArrays(2, &vao);
 
-    addQuad(
-        { (float) position.x,         (float) position.y,          1.0, 1.0, 1.0 },
-        { (float) position.x + width, (float) position.y,          1.0, 1.0, 1.0 },
-        { (float) position.x + width, (float) position.y - height, 1.0, 1.0, 1.0 },
-        { (float) position.x,         (float) position.y - height, 1.0, 1.0, 1.0 }
-    );
+    // addQuad(
+    //     { (float) position.x,         (float) position.y,          1.0, 1.0, 1.0 },
+    //     { (float) position.x + width, (float) position.y,          1.0, 1.0, 1.0 },
+    //     { (float) position.x + width, (float) position.y - height, 1.0, 1.0, 1.0 },
+    //     { (float) position.x,         (float) position.y - height, 1.0, 1.0, 1.0 }
+    // );
 
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
@@ -163,14 +175,17 @@ void Room::generateVBO() {
             float x2 = (x0 + x1) * 0.5;
             float y2 = (y0 + y1) * 0.5;
 
-            if (tileType == 1) {
+            // Background air
+            if (tileType != 1 && tileType != 4) {
                 addQuad(
-                    { x0, y0, 0.125, 0.125, 0.125 },
-                    { x1, y0, 0.125, 0.125, 0.125 },
-                    { x1, y1, 0.125, 0.125, 0.125 },
-                    { x0, y1, 0.125, 0.125, 0.125 }
+                    { x0, y0, 1.0, 1.0, 1.0 },
+                    { x1, y0, 1.0, 1.0, 1.0 },
+                    { x1, y1, 1.0, 1.0, 1.0 },
+                    { x0, y1, 1.0, 1.0, 1.0 }
                 );
             }
+
+            // Shortcut Entrance
             if (tileType == 4) {
                 addQuad(
                     { x0, y0, 0.0, 1.0, 1.0 },
@@ -179,6 +194,8 @@ void Room::generateVBO() {
                     { x0, y1, 0.0, 1.0, 1.0 }
                 );
             }
+            
+            // Slope
             if (tileType == 2) {
                 int bits = 0;
                 bits += (getTile(x - 1, y) == 1) ? 1 : 0;
@@ -216,6 +233,8 @@ void Room::generateVBO() {
                     );
                 }
             }
+            
+            // One-way
             if (tileType == 3) {
                 addQuad(
                     { x0, y0, 0.0, 1.0, 0.0 },
@@ -225,7 +244,8 @@ void Room::generateVBO() {
                 );
             }
 
-            if (tileData & 1) { // 16 - Vertical Pole
+            // 16 - Vertical Pole
+            if (tileData & 1) {
                 addQuad(
                     { x0 + 0.375f, y0, 0.0, 0.0, 1.0 },
                     { x1 - 0.375f, y0, 0.0, 0.0, 1.0 },
@@ -234,7 +254,8 @@ void Room::generateVBO() {
                 );
             }
 
-            if (tileData & 2) { // 32 - Horizontal Pole
+            // 32 - Horizontal Pole
+            if (tileData & 2) {
                 addQuad(
                     { x0, y0 - 0.375f, 0.0, 0.0, 1.0 },
                     { x1, y0 - 0.375f, 0.0, 0.0, 1.0 },
@@ -243,16 +264,18 @@ void Room::generateVBO() {
                 );
             }
 
-            if (tileData & 4) { // 64 - Room Exit
+            // 64 - Room Exit
+            // if (tileData & 4) {
                 // addQuad(
                 //     { x0 + 0.25f, y0 - 0.25f, 1.0, 0.0, 1.0 },
                 //     { x1 - 0.25f, y0 - 0.25f, 1.0, 0.0, 1.0 },
                 //     { x1 - 0.25f, y1 + 0.25f, 1.0, 0.0, 1.0 },
                 //     { x0 + 0.25f, y1 + 0.25f, 1.0, 0.0, 1.0 }
                 // );
-            }
+            // }
 
-            if (tileData & 8) { // 128 - Shortcut
+            // 128 - Shortcut
+            if (tileData & 8) {
                 addQuad(
                     { x0 + 0.40625f, y0 - 0.40625f, 0.125, 0.125, 0.125 },
                     { x1 - 0.40625f, y0 - 0.40625f, 0.125, 0.125, 0.125 },

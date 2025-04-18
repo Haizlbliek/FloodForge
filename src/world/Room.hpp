@@ -71,6 +71,11 @@ class Room {
 			glDeleteBuffers(2, vbo);
 			glDeleteVertexArrays(1, &vao);
 		}
+		
+
+		virtual void drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds);
+		virtual void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds);
+		
 
 		bool inside(Vector2 otherPosition) {
 			return (
@@ -107,8 +112,6 @@ class Room {
 			
 			return (tile & (256 | 128 | 64)) > 0;
 		}
-
-		virtual void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds);
 		
 		void Position(Vector2 position) {
 			this->position.x = position.x;

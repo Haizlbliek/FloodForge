@@ -24,6 +24,8 @@
 #include "DenPopup.hpp"
 #include "FailureController.hpp"
 
+#include "ExtraRoomData.hpp"
+
 //#define VISIBLE_OUTPUT_PADDING
 
 class Button {
@@ -152,10 +154,29 @@ class MenuItems {
 
 		static void parseMap(std::filesystem::path mapFilePath, std::filesystem::path directory) {
 			std::fstream mapFile(mapFilePath);
+			
+			std::map<std::string, ExtraRoomData> extraRoomData;
 
 			std::string line;
 			while (std::getline(mapFile, line)) {
-				if (startsWith(line, "Connection: ")) {
+				if (startsWith(line, "//FloodForge;")) {
+					line = line.substr(line.find(';') + 1);
+					std::vector<std::string> data = split(line, '|');
+					
+					if (data[0] == "ROOM") {
+						extraRoomData[data[1]] = ExtraRoomData();
+						
+						for (int i = 2; i < data.size(); i++) {
+							std::string key = data[i];
+							
+							if (key == "hidden") {
+								extraRoomData[data[1]].hidden = true;
+							} else if (key == "merge") {
+								extraRoomData[data[1]].merge = true;
+							}
+						}
+					}
+				} else if (startsWith(line, "Connection: ")) {
 					// line = line.substr(line.find(' ') + 1);
 
 					// std::string roomAName = line.substr(0, line.find(','));
@@ -259,6 +280,8 @@ class MenuItems {
 					position.x = x - room->Width() * 0.5;
 					position.y = y + room->Height() * 0.5;
 					room->layer = layer;
+					
+					// Backwards-Compatibility
 					if (layer >= LAYER_HIDDEN && layer <= LAYER_HIDDEN + 2) {
 						room->hidden = true;
 						room->layer = layer - LAYER_HIDDEN;
@@ -278,6 +301,18 @@ class MenuItems {
 				}
 			}
 			mapFile.close();
+			
+			for (const auto &[oRoomName, extraRoomData] : extraRoomData) {
+				std::string roomName = toLower(oRoomName);
+
+				for (Room *room : rooms) {
+					if (room->roomName == roomName) {
+						room->hidden = extraRoomData.hidden;
+						room->merge = extraRoomData.merge;
+						break;
+					}
+				}
+			}
 		}
 
 		static std::vector<std::string> split(const std::string &text, char delimiter) {
@@ -593,6 +628,14 @@ class MenuItems {
 					file << room->layer << "><";
 				}
 				if (room->subregion > -1) file << subregions[room->subregion];
+				file << "\n";
+			}
+			
+			std::cout << "Exporting extra data" << std::endl;
+			for (Room *room : rooms) {
+				file << "//FloodForge;ROOM|" << room->roomName;
+				if (room->hidden) file << "|hidden";
+				if (room->merge) file << "|merge";
 				file << "\n";
 			}
 

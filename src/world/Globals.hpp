@@ -4,6 +4,7 @@
 
 #include "../math/Vector.hpp"
 
+// For backwards-compatibility
 #define LAYER_HIDDEN 5
 
 #define ROOM_SNAP_NONE 0

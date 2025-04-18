@@ -13,8 +13,8 @@ namespace DebugData {
 
         for (auto it = connections.rbegin(); it != connections.rend(); it++) {
             Connection *connection = *it;
-			if (!visibleLayers[connection->RoomA()->Layer()]) continue;
-			if (!visibleLayers[connection->RoomB()->Layer()]) continue;
+			if (!visibleLayers[connection->RoomA()->layer]) continue;
+			if (!visibleLayers[connection->RoomB()->layer]) continue;
 
             if (connection->hovered(mouse, lineSize)) {
                 hoveringConnection = connection;
@@ -52,6 +52,7 @@ namespace DebugData {
             debugText.push_back("Width: " + std::to_string(hoveringRoom->Width()));
             debugText.push_back("Height: " + std::to_string(hoveringRoom->Height()));
             debugText.push_back("Dens: " + std::to_string(hoveringRoom->DenCount()));
+            debugText.push_back(hoveringRoom->merge ? "Merge: true" : "Merge: false");
             if (hoveringRoom->hidden) {
                 debugText.push_back("Layer: Hidden - " + std::to_string(hoveringRoom->layer));
             } else {

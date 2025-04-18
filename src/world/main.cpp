@@ -764,6 +764,40 @@ void updateMain() {
 	} else {
 		previousKeys.erase(GLFW_KEY_L);
 	}
+	
+	if (window->keyPressed(GLFW_KEY_G)) {
+		if (previousKeys.find(GLFW_KEY_G) == previousKeys.end()) {
+			if (selectedRooms.size() > 0) {
+				bool setMerge = true;
+				
+				for (Room *room : selectedRooms)
+					if (room->merge) { setMerge = false; break; }
+				
+				for (Room *room : selectedRooms)
+					room->merge = setMerge;
+			} else {
+				Room *hoveringRoom = nullptr;
+				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+					Room *room = (*it);
+
+					if (!visibleLayers[room->layer]) continue;
+
+					if (room->inside(worldMouse)) {
+						hoveringRoom = room;
+						break;
+					}
+				}
+
+				if (hoveringRoom != nullptr) {
+					hoveringRoom->merge = !hoveringRoom->merge;
+				}
+			}
+		}
+		
+		previousKeys.insert(GLFW_KEY_G);
+	} else {
+		previousKeys.erase(GLFW_KEY_G);
+	}
 
 	if (window->keyPressed(GLFW_KEY_H)) {
 		if (previousKeys.find(GLFW_KEY_H) == previousKeys.end()) {
@@ -943,6 +977,16 @@ int main() {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		for (Room *room : rooms) {
 			if (!visibleLayers[room->layer]) continue;
+			if (!room->merge) continue;
+
+			room->drawBlack(worldMouse, lineSize, screenBounds);
+		}
+		for (Room *room : rooms) {
+			if (!visibleLayers[room->layer]) continue;
+			
+			if (!room->merge) {
+				room->drawBlack(worldMouse, lineSize, screenBounds);
+			}
 
 			room->draw(worldMouse, lineSize, screenBounds);
 			if (selectedRooms.find(room) != selectedRooms.end()) {
