@@ -187,7 +187,7 @@ void updateOriginalControls() {
 			if (selectingState == 0) {
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 					Room *room = *it;
-					if (!visibleLayers[room->Layer()]) continue;
+					if (!visibleLayers[room->layer]) continue;
 
 					if (room->inside(worldMouse)) {
 						holdingRoom = room;
@@ -312,7 +312,7 @@ void updateFloodForgeControls() {
 			if (selectingState == 0) {
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 					Room *room = *it;
-					if (!visibleLayers[room->Layer()]) continue;
+					if (!visibleLayers[room->layer]) continue;
 
 					if (room->inside(worldMouse)) {
 						holdingRoom = room;
@@ -454,7 +454,7 @@ void updateMain() {
 		Room *hoveringRoom = nullptr;
 		for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 			Room *room = (*it);
-			if (!visibleLayers[room->Layer()]) continue;
+			if (!visibleLayers[room->layer]) continue;
 
 			if (room->inside(worldMouse)) {
 				hoveringRoom = room;
@@ -559,7 +559,7 @@ void updateMain() {
 		if (previousKeys.find(GLFW_KEY_I) == previousKeys.end()) {
 			for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 				Room *room = *it;
-				if (!visibleLayers[room->Layer()]) continue;
+				if (!visibleLayers[room->layer]) continue;
 
 				if (room->inside(worldMouse)) {
 					rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
@@ -580,8 +580,8 @@ void updateMain() {
 			
 			for (auto it = connections.rbegin(); it != connections.rend(); it++) {
 				Connection *connection = *it;
-				if (!visibleLayers[connection->RoomA()->Layer()]) continue;
-				if (!visibleLayers[connection->RoomB()->Layer()]) continue;
+				if (!visibleLayers[connection->RoomA()->layer]) continue;
+				if (!visibleLayers[connection->RoomB()->layer]) continue;
 
 				if (connection->hovered(worldMouse, lineSize)) {
 					connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
@@ -601,7 +601,7 @@ void updateMain() {
 				Room *hoveredRoom = nullptr;
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 					Room *room = *it;
-					if (!visibleLayers[room->Layer()]) continue;
+					if (!visibleLayers[room->layer]) continue;
 
 					if (room->inside(worldMouse)) {
 						if (room != offscreenDen) hoveredRoom = room;
@@ -635,7 +635,7 @@ void updateMain() {
 					} else {
 						for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 							Room *room = *it;
-							if (!visibleLayers[room->Layer()]) continue;
+							if (!visibleLayers[room->layer]) continue;
 
 							if (room->inside(worldMouse)) {
 								rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
@@ -676,7 +676,7 @@ void updateMain() {
 			} else {
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 					Room *room = *it;
-					if (!visibleLayers[room->Layer()]) continue;
+					if (!visibleLayers[room->layer]) continue;
 
 					if (room->inside(worldMouse)) {
 						std::set<Room*> roomGroup;
@@ -701,7 +701,7 @@ void updateMain() {
 			} else {
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 					Room *room = *it;
-					if (!visibleLayers[room->Layer()]) continue;
+					if (!visibleLayers[room->layer]) continue;
 
 					if (room->inside(worldMouse)) {
 						if (room->isOffscreen) break;
@@ -727,18 +727,18 @@ void updateMain() {
 				int minimumLayer = 3;
 
 				for (Room *room : selectedRooms)
-					minimumLayer = min(minimumLayer, room->Layer());
+					minimumLayer = min(minimumLayer, room->layer);
 
 				minimumLayer = transitionLayer(minimumLayer);
 
 				for (Room *room : selectedRooms)
-					room->Layer(minimumLayer);
+					room->layer = minimumLayer;
 
 			} else {
 				Room *hoveringRoom = nullptr;
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 					Room *room = (*it);
-					if (!visibleLayers[room->Layer()]) continue;
+					if (!visibleLayers[room->layer]) continue;
 
 					if (room->inside(worldMouse)) {
 						hoveringRoom = room;
@@ -747,7 +747,7 @@ void updateMain() {
 				}
 
 				if (hoveringRoom != nullptr) {
-					hoveringRoom->Layer(transitionLayer(hoveringRoom->Layer()));
+					hoveringRoom->layer = (transitionLayer(hoveringRoom->layer));
 				}
 			}
 		}
@@ -763,17 +763,17 @@ void updateMain() {
 				bool setHidden = true;
 
 				for (Room *room : selectedRooms)
-					if (room->Hidden()) { setHidden = false; break; }
+					if (room->hidden) { setHidden = false; break; }
 
 				for (Room *room : selectedRooms)
-					room->Hidden(setHidden);
+					room->hidden = setHidden;
 
 			} else {
 				Room *hoveringRoom = nullptr;
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 					Room *room = (*it);
 
-					if (!visibleLayers[room->Layer()]) continue;
+					if (!visibleLayers[room->layer]) continue;
 
 					if (room->inside(worldMouse)) {
 						hoveringRoom = room;
@@ -782,7 +782,7 @@ void updateMain() {
 				}
 
 				if (hoveringRoom != nullptr) {
-					hoveringRoom->Hidden(!hoveringRoom->Hidden());
+					hoveringRoom->hidden = !hoveringRoom->hidden;
 				}
 			}
 		}
@@ -934,7 +934,7 @@ int main() {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		for (Room *room : rooms) {
-			if (!visibleLayers[room->Layer()]) continue;
+			if (!visibleLayers[room->layer]) continue;
 
 			room->draw(worldMouse, lineSize, screenBounds);
 			if (selectedRooms.find(room) != selectedRooms.end()) {
@@ -946,8 +946,8 @@ int main() {
 
 		/// Draw Connections
 		for (Connection *connection : connections) {
-			if (!visibleLayers[connection->RoomA()->Layer()]) continue;
-			if (!visibleLayers[connection->RoomB()->Layer()]) continue;
+			if (!visibleLayers[connection->RoomA()->layer]) continue;
+			if (!visibleLayers[connection->RoomB()->layer]) continue;
 
 			connection->draw(worldMouse, lineSize);
 		}

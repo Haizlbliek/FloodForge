@@ -143,11 +143,11 @@ class MenuItems {
 		}
 
 		static void replaceLastInstance(std::string& str, const std::string& old_sub, const std::string& new_sub) {
-		    size_t pos = str.rfind(old_sub);
-		    
-		    if (pos != std::string::npos) {
-		        str.replace(pos, old_sub.length(), new_sub);
-		    }
+			size_t pos = str.rfind(old_sub);
+			
+			if (pos != std::string::npos) {
+				str.replace(pos, old_sub.length(), new_sub);
+			}
 		}
 
 		static void parseMap(std::filesystem::path mapFilePath, std::filesystem::path directory) {
@@ -258,14 +258,14 @@ class MenuItems {
 
 					position.x = x - room->Width() * 0.5;
 					position.y = y + room->Height() * 0.5;
-					room->Layer(layer);
+					room->layer = layer;
 					if (layer >= LAYER_HIDDEN && layer <= LAYER_HIDDEN + 2) {
-						room->Hidden(true);
-						room->Layer(layer - LAYER_HIDDEN);
+						room->hidden = true;
+						room->layer = layer - LAYER_HIDDEN;
 					}
 
 					if (subregion.empty()) {
-						room->Subregion(-1);
+						room->subregion = -1;
 					} else {
 						auto it = std::find(subregions.begin(), subregions.end(), subregion);
 						if (it == subregions.end()) {
@@ -273,7 +273,7 @@ class MenuItems {
 							it = std::find(subregions.begin(), subregions.end(), subregion);
 						}
 
-						room->Subregion(std::distance(subregions.begin(), it));
+						room->subregion = std::distance(subregions.begin(), it);
 					}
 				}
 			}
@@ -333,7 +333,7 @@ class MenuItems {
 
 			Room *room = nullptr;
 			for (Room *otherRoom : rooms) {
-				if (toLower(otherRoom->RoomName()) == roomName) {
+				if (toLower(otherRoom->roomName) == roomName) {
 					room = otherRoom;
 					break;
 				}
@@ -359,7 +359,7 @@ class MenuItems {
 
 				bool alreadyExists = false;
 				for (Quadruple<Room*, int, std::string, int> &connectionData : connectionsToAdd) {
-					if (toLower(connectionData.first->RoomName()) == connection && connectionData.third == toLower(roomName)) {
+					if (toLower(connectionData.first->roomName) == connection && connectionData.third == toLower(roomName)) {
 						connectionData.fourth = connectionId;
 						alreadyExists = true;
 						break;
@@ -398,7 +398,7 @@ class MenuItems {
 			Room *room = nullptr;
 
 			for (Room *otherRoom : rooms) {
-				if (toLower(otherRoom->RoomName()) == roomName) {
+				if (toLower(otherRoom->roomName) == roomName) {
 					room = otherRoom;
 					break;
 				}
@@ -523,7 +523,7 @@ class MenuItems {
 
 			for (Quadruple<Room*, int, std::string, int> connectionData : connectionsToAdd) {
 				if (connectionData.second == -1 || connectionData.fourth == -1) {
-					std::cout << "Failed to load connection from " << connectionData.first->RoomName() << " to " << connectionData.third << std::endl;
+					std::cout << "Failed to load connection from " << connectionData.first->roomName << " to " << connectionData.third << std::endl;
 					continue;
 				}
 
@@ -531,14 +531,14 @@ class MenuItems {
 				Room *roomB = nullptr;
 
 				for (Room *room : rooms) {
-					if (toLower(room->RoomName()) == connectionData.third) {
+					if (toLower(room->roomName) == connectionData.third) {
 						roomB = room;
 						break;
 					}
 				}
 
 				if (roomB == nullptr) {
-					std::cout << "Failed to load connection from " << roomA->RoomName() << " to " << connectionData.third << std::endl;
+					std::cout << "Failed to load connection from " << roomA->roomName << " to " << connectionData.third << std::endl;
 					continue;
 				}
 
@@ -584,21 +584,21 @@ class MenuItems {
 				);
 
 				file << std::setprecision(12);
-				file << toUpper(room->RoomName()) << ": ";
+				file << toUpper(room->roomName) << ": ";
 				file << position.x << "><" << position.y << "><"; // Canon Position
 				file << position.x << "><" << position.y << "><"; // Dev Position
-				if (room->Hidden()) {
-					file << (LAYER_HIDDEN + room->Layer()) << "><";
+				if (room->hidden) {
+					file << (LAYER_HIDDEN + room->layer) << "><";
 				} else {
-					file << room->Layer() << "><";
+					file << room->layer << "><";
 				}
-				if (room->Subregion() > -1) file << subregions[room->Subregion()];
+				if (room->subregion > -1) file << subregions[room->subregion];
 				file << "\n";
 			}
 
 			std::cout << "Exporting connections" << std::endl;
 			for (Connection *connection : connections) {
-				if (connection->RoomA()->Hidden() || connection->RoomB()->Hidden()) continue;
+				if (connection->RoomA()->hidden || connection->RoomB()->hidden) continue;
 
 				Vector2i connectionA = connection->RoomA()->getShortcutConnection(connection->ConnectionA());
 				Vector2i connectionB = connection->RoomB()->getShortcutConnection(connection->ConnectionB());
@@ -613,8 +613,8 @@ class MenuItems {
 				);
 
 				file << "Connection: ";
-				file << toUpper(connection->RoomA()->RoomName()) << ",";
-				file << toUpper(connection->RoomB()->RoomName()) << ",";
+				file << toUpper(connection->RoomA()->roomName) << ",";
+				file << toUpper(connection->RoomB()->roomName) << ",";
 				file << connectionA.x << "," << connectionA.y << ",";
 				file << connectionB.x << "," << connectionB.y << ",";
 				file << connection->RoomA()->getShortcutDirection(connection->ConnectionA()) << ",";
@@ -634,12 +634,12 @@ class MenuItems {
 			for (Room *room : rooms) {
 				if (room->isOffscreen) continue;
 
-				file << toUpper(room->RoomName()) << " : ";
+				file << toUpper(room->roomName) << " : ";
 
 				std::vector<std::string> connections(room->ConnectionCount(), "DISCONNECTED");
 
 				for (std::pair<Room*, unsigned int> connection : room->RoomConnections()) {
-					connections[connection.second] = toUpper(connection.first->RoomName());
+					connections[connection.second] = toUpper(connection.first->roomName);
 				}
 
 				for (int i = 0; i < room->ConnectionCount(); i++) {
@@ -666,7 +666,7 @@ class MenuItems {
 				if (room == offscreenDen) {
 					line << "OFFSCREEN : ";
 				} else {
-					line << toUpper(room->RoomName()) << " : ";
+					line << toUpper(room->roomName) << " : ";
 				}
 
 				for (int i = 0; i < room->DenCount(); i++) {
@@ -713,7 +713,7 @@ class MenuItems {
 			Rect bounds;
 
 			for (Room *room : rooms) {
-				if (room->Hidden()) continue;
+				if (room->hidden) continue;
 
 				double left   = room->Position().x;
 				double right  = room->Position().x + room->Width();
@@ -766,12 +766,12 @@ class MenuItems {
 
 			for (Room *room : rooms) {
 				if (room->isOffscreen) continue;
-				if (room->Hidden()) continue;
+				if (room->hidden) continue;
 
 				// Top left corner
 				int x = std::floor(room->Position().x - room->Width() * 0.0 - bounds.X0()) + padding;
 				int y = std::floor(-room->Position().y - room->Height() * 0.0 - bounds.Y0()) + padding;
-				y += (2 - room->Layer()) * height / 3;
+				y += (2 - room->layer) * height / 3;
 
 				for (int ox = 0; ox < room->Width(); ox++) {
 					for (int oy = 0; oy < room->Height(); oy++) {
@@ -794,7 +794,7 @@ class MenuItems {
 
 						// Water
 						if (r > 0) {
-							if (oy >= room->Height() - room->Water()) b = 255; // #FF00FF or #9900FF
+							if (oy >= room->Height() - room->water) b = 255; // #FF00FF or #9900FF
 						}
 
 						image[((y + oy) * width + x + ox) * 3 + 0] = r;
@@ -847,7 +847,7 @@ class MenuItems {
 			Draw::texCoord(-screenBounds.x, 1.0f); Draw::vertex(-screenBounds.x, screenBounds.y - 0.09f);
 			Draw::end();
 			glDisable(GL_BLEND);
-    		Draw::useTexture(0);
+			Draw::useTexture(0);
 
 			glLineWidth(1);
 

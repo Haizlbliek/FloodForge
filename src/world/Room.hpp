@@ -312,15 +312,6 @@ class Room {
 		const int Width() const { return width; }
 		const int Height() const { return height; }
 
-		void RoomName(const std::string newName) { roomName = newName; }
-		const std::string RoomName() const { return roomName; }
-
-		void Layer(const int newLayer) { layer = newLayer; }
-		const int Layer() const { return layer; }
-
-		void Water(const int newWater) { water = newWater; }
-		const int Water() const { return water; }
-
 		void Tag(const std::string newTag) { tags.clear(); if (newTag != "") tags.push_back(newTag); }
 		void ToggleTag(const std::string newTag) {
 			if (std::find(tags.begin(), tags.end(), newTag) != tags.end()) {
@@ -331,11 +322,12 @@ class Room {
 		}
 		const std::vector<std::string> Tags() const { return tags; }
 
-		void Subregion(const int newSubregion) { subregion = newSubregion; }
-		const int Subregion() { return subregion; }
-
-		void Hidden(const bool newHidden) { hidden = newHidden; }
-		const bool Hidden() const { return hidden; }
+		std::string roomName = "";
+		int layer = 0;
+		int water = 0;
+		int subregion = 0;
+		bool hidden = false;
+		bool merge = false;
 
 	protected:
 		Room() {}
@@ -512,7 +504,6 @@ class Room {
 		GLuint vao;
 
 		std::string path;
-		std::string roomName;
 
 		Vector2 position;
 
@@ -520,12 +511,9 @@ class Room {
 		int height;
 
 		int *geometry;
-		int layer;
-		int subregion;
 		std::vector<Den> dens;
 
 		std::vector<std::string> tags;
-		bool hidden;
 
 		bool valid;
 
@@ -533,6 +521,4 @@ class Room {
 		std::vector<Vector2i> shortcutEntrances;
 		std::vector<Vector2i> denEntrances;
 		std::vector<std::pair<Vector2i, int>> connections;
-
-		int water;
 };

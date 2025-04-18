@@ -22,7 +22,9 @@ void SubregionNewPopup::accept() {
 		return;
 
 	subregions.push_back(text);
-	for (Room *room : rooms) room->Subregion(std::distance(subregions.begin(), std::find(subregions.begin(), subregions.end(), text)));
+	for (Room *room : rooms) {
+		room->subregion = std::distance(subregions.begin(), std::find(subregions.begin(), subregions.end(), text));
+	}
 
 	close();
 }
