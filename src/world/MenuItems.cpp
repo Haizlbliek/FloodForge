@@ -4,6 +4,7 @@
 #include "../popup/FilesystemPopup.hpp"
 #include "../popup/WarningPopup.hpp"
 #include "AcronymPopup.hpp"
+#include "ChangeAcronymPopup.hpp"
 
 std::vector<Button*> MenuItems::buttons;
 
@@ -232,6 +233,17 @@ void MenuItems::init(Window *window) {
             // visibleLayers[0] = true; visibleLayers[1] = true; visibleLayers[2] = true;
         }
     );
+
+    // addButton("Change Region Acronym").OnLeftPress(
+    //     [window](Button *button) {
+    //         if (worldAcronym == "") {
+    //             Popups::addPopup(new WarningPopup(window, "You must create or import a region\nbefore changing the acronym."));
+    //             return;
+    //         }
+
+    //         Popups::addPopup(new ChangeAcronymPopup(window));
+    //     }
+    // );
 
     // addButton("Tile Snap",
     //     [window](Button *button) {
