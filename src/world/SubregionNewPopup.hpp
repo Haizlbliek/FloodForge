@@ -114,6 +114,30 @@ class SubregionNewPopup : public Popup {
 
 		static char parseCharacter(char character, bool shiftPressed) {
 			if (!shiftPressed) return std::tolower(character);
+			
+			switch (character) {
+				case '1': return '!';
+				case '2': return '@';
+				case '3': return '#';
+				case '4': return '$';
+				case '5': return '%';
+				case '6': return '^';
+				case '7': return '&';
+				case '8': return '*';
+				case '9': return '(';
+				case '0': return ')';
+				case '`': return '~';
+				case '-': return '_';
+				case '=': return '+';
+				case '[': return '{';
+				case ']': return '}';
+				case ';': return ':';
+				case '\'': return '"';
+				case '\\': return '|';
+				case ',': return '<';
+				case '.': return '>';
+				case '/': return '?';
+			}
 
 			return std::toupper(character);
 		}
@@ -122,18 +146,18 @@ class SubregionNewPopup : public Popup {
 			SubregionNewPopup *popup = static_cast<SubregionNewPopup*>(object);
 
 			if (action == GLFW_PRESS) {
-				if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
-					char character = parseCharacter(key, popup->window->keyPressed(GLFW_KEY_LEFT_SHIFT) || popup->window->keyPressed(GLFW_KEY_RIGHT_SHIFT));
+				if (key >= 33 && key <= 126) {
+					char character = parseCharacter(key, popup->window->modifierPressed(GLFW_MOD_SHIFT));
+					
+					if (character == ':') return;
+					if (character == '<') return;
+					if (character == '>') return;
 
 					popup->text += character;
-				}
-
-                if (key == GLFW_KEY_SPACE) {
+				} else if (key == GLFW_KEY_SPACE) {
                     if (!popup->text.empty())
                         popup->text += " ";
-                }
-
-				if (key == GLFW_KEY_BACKSPACE) {
+                } else if (key == GLFW_KEY_BACKSPACE) {
 					if (!popup->text.empty()) popup->text.pop_back();
 				}
 			}

@@ -135,7 +135,7 @@ void AcronymPopup::keyCallback(void *object, int action, int key) {
 		}
 
 		if (key >= 33 && key <= 126) {
-			char character = parseCharacter(key, acronymWindow->window->keyPressed(GLFW_KEY_LEFT_SHIFT) || acronymWindow->window->keyPressed(GLFW_KEY_RIGHT_SHIFT));
+			char character = parseCharacter(key, acronymWindow->window->modifierPressed(GLFW_MOD_SHIFT));
 
 			if (character == '/') return;
 			if (character == '\\') return;
