@@ -622,11 +622,7 @@ class MenuItems {
 				file << toUpper(room->roomName) << ": ";
 				file << position.x << "><" << position.y << "><"; // Canon Position
 				file << position.x << "><" << position.y << "><"; // Dev Position
-				if (room->hidden) {
-					file << (LAYER_HIDDEN + room->layer) << "><";
-				} else {
-					file << room->layer << "><";
-				}
+				file << room->layer << "><";
 				if (room->subregion > -1) file << subregions[room->subregion];
 				file << "\n";
 			}
