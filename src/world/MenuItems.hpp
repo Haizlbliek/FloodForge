@@ -818,6 +818,8 @@ class MenuItems {
 
 				for (int ox = 0; ox < room->Width(); ox++) {
 					for (int oy = 0; oy < room->Height(); oy++) {
+						int i = ((y + oy) * width + x + ox) * 3;
+
 						unsigned int tileType = room->getTile(ox, oy) % 16;
 						unsigned int tileData = room->getTile(ox, oy) / 16;
 
@@ -840,9 +842,11 @@ class MenuItems {
 							if (oy >= room->Height() - room->water) b = 255; // #FF00FF or #9900FF
 						}
 
-						image[((y + oy) * width + x + ox) * 3 + 0] = r;
-						image[((y + oy) * width + x + ox) * 3 + 1] = g;
-						image[((y + oy) * width + x + ox) * 3 + 2] = b;
+						if (!room->merge || !(r == 0 && g == 0 && b == 0) || (image[i + 0] == 0 && image[i + 2] == 0)) {
+							image[i + 0] = r;
+							image[i + 1] = g;
+							image[i + 2] = b;
+						}
 					}
 				}
 			}
