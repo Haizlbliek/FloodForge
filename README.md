@@ -59,7 +59,7 @@ Then refer to the Linux build instructions.
 
 Requirements:
 
-- GLFW3
+- GLFW3 (`sudo apt install libglfw3-dev`)
 - pkg-config
 - Make
 
