@@ -94,17 +94,15 @@ class Window {
 		Window() : Window(1024, 1024) {
 		}
 
-		Window(int width, int height)
-		 : width(width),
-		   height(height) {
+		Window(int width, int height) : width(width), height(height) {
 			if (!glfwInit()) exit(EXIT_FAILURE);
 
 			// glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-		    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-		    glfwWindow = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
+			glfwWindow = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 			if (!glfwWindow) {
 				glfwTerminate();
 				exit(EXIT_FAILURE);
@@ -120,22 +118,22 @@ class Window {
 
 			glfwSetWindowUserPointer(glfwWindow, this);
 
-		    glfwSetKeyCallback(glfwWindow, Window::keyCallback);
-		    glfwSetCursorPosCallback(glfwWindow, Window::mouseCallback);
-
-		    // glClearColor(0.0, 0.0, 0.0, 1.0);
-	        // glViewport(0, 0, width, height);
-
-	        backgroundColour = Colour(0.0, 0.0, 0.0, 1.0);
-
+			glfwSetKeyCallback(glfwWindow, Window::keyCallback);
+			glfwSetCursorPosCallback(glfwWindow, Window::mouseCallback);
+			glfwSetInputMode(glfwWindow, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 			glfwSetScrollCallback(glfwWindow, Window::scrollCallback);
+
+			// glClearColor(0.0, 0.0, 0.0, 1.0);
+			// glViewport(0, 0, width, height);
+
+			backgroundColour = Colour(0.0, 0.0, 0.0, 1.0);
 
 			scrollXAccumulator = 0.0;
 			scrollYAccumulator = 0.0;
-		   	fullscreen = false;
+			fullscreen = false;
 
-		   	cursorDefault = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-		   	cursorPointer = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+			cursorDefault = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+			cursorPointer = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
 		}
 
 		~Window() {
@@ -150,7 +148,7 @@ class Window {
 
 		void terminate() const {
 			glfwDestroyWindow(glfwWindow);
-		    glfwTerminate();
+			glfwTerminate();
 		}
 
 		bool isOpen() const {
@@ -158,19 +156,19 @@ class Window {
 		}
 
 		void clear() const {
-		    glClearColor(
+			glClearColor(
 				backgroundColour.r,
 				backgroundColour.g,
 				backgroundColour.b,
-		        1.0
-		    );
+				1.0
+			);
 
-	        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
 
 		void render() const {
 			glfwMakeContextCurrent(glfwWindow);
-	        glfwSwapBuffers(glfwWindow);
+			glfwSwapBuffers(glfwWindow);
 		}
 
 		void setTitle(const std::string title) {
@@ -206,7 +204,7 @@ class Window {
 					return keyPressed(GLFW_KEY_LEFT_CONTROL) || keyPressed(GLFW_KEY_RIGHT_CONTROL) || keyPressed(GLFW_KEY_LEFT_SUPER) || keyPressed(GLFW_KEY_RIGHT_SUPER);
 
 				case GLFW_MOD_SHIFT:
-					return keyPressed(GLFW_KEY_LEFT_SHIFT) || keyPressed(GLFW_KEY_RIGHT_SHIFT);
+					return keyPressed(GLFW_KEY_LEFT_SHIFT) || keyPressed(GLFW_KEY_RIGHT_SHIFT) || capslock;
 
 				case GLFW_MOD_ALT:
 					return keyPressed(GLFW_KEY_LEFT_ALT) || keyPressed(GLFW_KEY_RIGHT_ALT);
@@ -374,6 +372,10 @@ class Window {
 			Window* window = static_cast<Window*>(glfwGetWindowUserPointer(glfwWindow));
 
 			if (!window) return;
+			
+			if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+				window->capslock = (mods & GLFW_MOD_CAPS_LOCK) > 0;
+			}
 
 			for (std::pair<void*, std::function<void(void*, int, int)>> callback : window->keyCallbacks) {
 				if (!callback.second) {
@@ -406,4 +408,6 @@ class Window {
 
 		std::vector<std::pair<void*, std::function<void(void*, int, int)>>> keyCallbacks;
 		std::vector<std::pair<void*, std::function<void(void*, double, double)>>> scrollCallbacks;
+		
+		bool capslock;
 };
