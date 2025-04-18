@@ -825,14 +825,14 @@ class MenuItems {
 						int g = 0;
 						int b = 0;
 
-						if (tileType == 0 || (tileType == 4 && room->getShortcutConnection(Vector2i(ox, oy)) != -1)) {
-							r = 255; g = 0; b = 0; // #FF0000
+						if (tileType == 0) {
+							r = 255; g = 0; // #FF0000
 						}
-						if (tileType == 1 || tileType == 2 || (tileType == 4 && r == 0)) {
-							r = 0; g = 0; b = 0; // #000000
+						if (tileType == 1 || tileType == 4) {
+							r = 0; g = 0; // #000000
 						}
-						if (tileType == 3 || tileData & 1 || tileData & 2) {
-							r = 153; g = 0; b = 0; // #990000
+						if (tileType == 2 || tileType == 3 || tileData & 1 || tileData & 2) {
+							r = 153; g = 0; // #990000
 						}
 
 						// Water
