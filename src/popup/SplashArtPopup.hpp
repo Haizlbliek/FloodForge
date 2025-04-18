@@ -25,6 +25,10 @@ class SplashArtPopup : public Popup {
 		~SplashArtPopup() {
 			delete splashart;
 		}
+		
+		const Rect Bounds() override {
+			return Rect(-100.0, -100.0, 100.0, 100.0);
+		}
 
 		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 			Draw::color(0.0, 0.0, 0.0);
