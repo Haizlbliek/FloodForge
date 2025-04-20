@@ -131,6 +131,12 @@ void MenuItems::init(Window *window) {
                     }
 
                     parseWorld(path, exportDirectory);
+                    
+                    for (Room *room : rooms) {
+                        if (room->isOffscreen()) continue;
+
+                        loadExtraRoomData(findFileCaseInsensitive((exportDirectory.parent_path() / (worldAcronym + "-rooms")).string(), room->roomName + "_settings.txt"), room->data);
+                    }
 
                     if (FailureController::fails.size() > 0) {
                         std::string fails = "";
@@ -231,6 +237,14 @@ void MenuItems::init(Window *window) {
         [window](Button *button) {
             // TODO LATER
             // visibleLayers[0] = true; visibleLayers[1] = true; visibleLayers[2] = true;
+        }
+    );
+
+    addButton("Dev Items: Hidden")
+    .OnLeftPress(
+        [window](Button *button) {
+            visibleDevItems = !visibleDevItems;
+            button->Text(visibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden");
         }
     );
 

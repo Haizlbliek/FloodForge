@@ -47,7 +47,7 @@ class RoomTagPopup : public Popup {
 
 		void setTag(std::string tag) {
 			for (Room *room : rooms) {
-				if (room->isOffscreen) continue;
+				if (room->isOffscreen()) continue;
 
 				room->Tag(tag);
 			}
@@ -55,7 +55,7 @@ class RoomTagPopup : public Popup {
 
 		void toggleTag(std::string tag) {
 			for (Room *room : rooms) {
-				if (room->isOffscreen) continue;
+				if (room->isOffscreen()) continue;
 
 				room->ToggleTag(tag);
 			}

@@ -19,6 +19,7 @@
 #include "../Theme.hpp"
 #include "../popup/WarningPopup.hpp"
 
+#include "ExtraRoomData.hpp"
 #include "Shaders.hpp"
 #include "Den.hpp"
 
@@ -35,7 +36,7 @@ struct Vertex {
 
 class Room {
 	public:
-		const bool isOffscreen = false;
+		virtual bool isOffscreen() { return false; }
 
 		Room(std::string path, std::string name) {
 			this->path = path;
@@ -57,7 +58,7 @@ class Room {
 			water = -1;
 			subregion = -1;
 
-			hidden = false;
+			data = ExtraRoomData();
 
 			loadGeometry();
 			generateVBO();
@@ -329,8 +330,8 @@ class Room {
 		int layer = 0;
 		int water = 0;
 		int subregion = 0;
-		bool hidden = false;
-		bool merge = false;
+		
+		ExtraRoomData data;
 
 	protected:
 		Room() {}

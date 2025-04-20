@@ -152,6 +152,20 @@ class MenuItems {
 			}
 		}
 
+		static std::vector<std::string> split(const std::string &text, char delimiter) {
+			std::vector<std::string> tokens;
+			std::string token;
+			std::istringstream tokenStream(text);
+
+			while (std::getline(tokenStream, token, delimiter)) {
+				token.erase(0, token.find_first_not_of(" \t\n"));
+				token.erase(token.find_last_not_of(" \t\n") + 1);
+				tokens.push_back(token);
+			}
+
+			return tokens;
+		}
+
 		static void parseMap(std::filesystem::path mapFilePath, std::filesystem::path directory) {
 			std::fstream mapFile(mapFilePath);
 			
@@ -283,7 +297,7 @@ class MenuItems {
 					
 					// Backwards-Compatibility
 					if (layer >= LAYER_HIDDEN && layer <= LAYER_HIDDEN + 2) {
-						room->hidden = true;
+						room->data.hidden = true;
 						room->layer = layer - LAYER_HIDDEN;
 					}
 
@@ -307,26 +321,11 @@ class MenuItems {
 
 				for (Room *room : rooms) {
 					if (room->roomName == roomName) {
-						room->hidden = extraRoomData.hidden;
-						room->merge = extraRoomData.merge;
+						room->data = extraRoomData;
 						break;
 					}
 				}
 			}
-		}
-
-		static std::vector<std::string> split(const std::string &text, char delimiter) {
-			std::vector<std::string> tokens;
-			std::string token;
-			std::istringstream tokenStream(text);
-
-			while (std::getline(tokenStream, token, delimiter)) {
-				token.erase(0, token.find_first_not_of(" \t\n"));
-				token.erase(token.find_last_not_of(" \t\n") + 1);
-				tokens.push_back(token);
-			}
-
-			return tokens;
 		}
 
 		static std::tuple<std::string, std::vector<std::string>, std::vector<std::string>> parseRoomString(const std::string &input) {
@@ -441,7 +440,6 @@ class MenuItems {
 
 			if (roomName == "offscreen") {
 				room = offscreenDen;
-				// std::cout << offscreenDen << std::endl;
 			}
 
 			if (room == nullptr) return;
@@ -511,8 +509,6 @@ class MenuItems {
 			std::vector<Quadruple<Room*, int, std::string, int>> connectionsToAdd;
 
 			int parseState = 0;
-			// bool inRooms = false;
-			// bool outOfRooms = false;
 			std::string line;
 			while (std::getline(worldFile, line)) {
 				if (line == "ROOMS") {
@@ -605,6 +601,38 @@ class MenuItems {
 			propertiesFile.close();
 		}
 
+		static void loadExtraRoomData(std::string roomPath, ExtraRoomData &data) {
+			std::fstream file(roomPath, std::ios::in | std::ios::binary);
+
+			if (!file.is_open()) return;
+
+			std::string line;
+			while (std::getline(file, line)) {
+				if (!startsWith(line, "PlacedObjects:")) continue;
+				
+				std::vector<std::string> splits = split(line.substr(line.find(':') + 1), ',');
+				
+				for (std::string item : splits) {
+					if (item[0] == ' ') item = item.substr(1); // Remove space
+					if (item.size() == 1) continue;
+					
+					std::vector<std::string> splits2 = split(item, '>');
+					std::string key = splits2[0];
+					
+					GLuint texture = CreatureTextures::getTexture("room-" + key);
+					if (texture == CreatureTextures::UNKNOWN) continue;
+
+					DevItem devItem = DevItem();
+					devItem.name = key;
+					devItem.position = Vector2(std::stod(splits2[1].substr(1)) / 20.0, std::stod(splits2[2].substr(1)) / 20.0);
+					devItem.texture = texture;
+					data.devItems.push_back(devItem);
+				}
+			}
+
+			file.close();
+		}
+
 		static void exportMapFile() {
 			std::fstream file(exportDirectory / ("map_" + worldAcronym + ".txt"), std::ios::out | std::ios::trunc);
 
@@ -630,14 +658,14 @@ class MenuItems {
 			std::cout << "Exporting extra data" << std::endl;
 			for (Room *room : rooms) {
 				file << "//FloodForge;ROOM|" << room->roomName;
-				if (room->hidden) file << "|hidden";
-				if (room->merge) file << "|merge";
+				if (room->data.hidden) file << "|hidden";
+				if (room->data.merge) file << "|merge";
 				file << "\n";
 			}
 
 			std::cout << "Exporting connections" << std::endl;
 			for (Connection *connection : connections) {
-				if (connection->RoomA()->hidden || connection->RoomB()->hidden) continue;
+				if (connection->RoomA()->data.hidden || connection->RoomB()->data.hidden) continue;
 
 				Vector2i connectionA = connection->RoomA()->getShortcutConnection(connection->ConnectionA());
 				Vector2i connectionB = connection->RoomB()->getShortcutConnection(connection->ConnectionB());
@@ -671,7 +699,7 @@ class MenuItems {
 
 			file << "ROOMS\n";
 			for (Room *room : rooms) {
-				if (room->isOffscreen) continue;
+				if (room->isOffscreen()) continue;
 
 				file << toUpper(room->roomName) << " : ";
 
@@ -752,7 +780,7 @@ class MenuItems {
 			Rect bounds;
 
 			for (Room *room : rooms) {
-				if (room->hidden) continue;
+				if (room->data.hidden) continue;
 
 				double left   = room->Position().x;
 				double right  = room->Position().x + room->Width();
@@ -764,18 +792,10 @@ class MenuItems {
 				bounds.Y1(std::max(bounds.Y1(), top));
 			}
 
-			// std::cout << bounds.X0() << std::endl;
-			// std::cout << bounds.X1() << std::endl;
-			// std::cout << bounds.Y0() << std::endl;
-			// std::cout << bounds.Y1() << std::endl;
-
 			const int padding = 10;
 
 			const int width = std::floor(bounds.X1() - bounds.X0() + padding * 2);
 			const int height = std::floor(bounds.Y1() - bounds.Y0() + padding * 2) * 3;
-
-			// std::cout << width << std::endl;
-			// std::cout << height << std::endl;
 
 			std::vector<unsigned char> image(width * height * 3);
 
@@ -804,8 +824,8 @@ class MenuItems {
 #endif
 
 			for (Room *room : rooms) {
-				if (room->isOffscreen) continue;
-				if (room->hidden) continue;
+				if (room->isOffscreen()) continue;
+				if (room->data.hidden) continue;
 
 				// Top left corner
 				int x = std::floor(room->Position().x - room->Width() * 0.0 - bounds.X0()) + padding;
@@ -838,7 +858,7 @@ class MenuItems {
 							if (oy >= room->Height() - room->water) b = 255; // #FF00FF or #9900FF
 						}
 
-						if (!room->merge || !(r == 0 && g == 0 && b == 0) || (image[i + 0] == 0 && image[i + 2] == 0)) {
+						if (!room->data.merge || !(r == 0 && g == 0 && b == 0) || (image[i + 0] == 0 && image[i + 2] == 0)) {
 							image[i + 0] = r;
 							image[i + 1] = g;
 							image[i + 2] = b;

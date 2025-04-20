@@ -51,6 +51,7 @@ std::string ROOM_TAG_NAMES[9] = { "Shelter", "Ancient Shelter", "Gate", "Swarm R
 
 int roomColours = 0;
 bool visibleLayers[] = { true, true, true };
+bool visibleDevItems = false;
 
 int transitionLayer(int layer) {
 	return (layer + 1) % 3;
@@ -712,7 +713,7 @@ void updateMain() {
 					if (!visibleLayers[room->layer]) continue;
 
 					if (room->inside(worldMouse)) {
-						if (room->isOffscreen) break;
+						if (room->isOffscreen()) break;
 
 						std::set<Room*> roomGroup;
 						roomGroup.insert(room);
@@ -771,10 +772,10 @@ void updateMain() {
 				bool setMerge = true;
 				
 				for (Room *room : selectedRooms)
-					if (room->merge) { setMerge = false; break; }
+					if (room->data.merge) { setMerge = false; break; }
 				
 				for (Room *room : selectedRooms)
-					room->merge = setMerge;
+					room->data.merge = setMerge;
 			} else {
 				Room *hoveringRoom = nullptr;
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
@@ -789,7 +790,7 @@ void updateMain() {
 				}
 
 				if (hoveringRoom != nullptr) {
-					hoveringRoom->merge = !hoveringRoom->merge;
+					hoveringRoom->data.merge = !hoveringRoom->data.merge;
 				}
 			}
 		}
@@ -805,10 +806,10 @@ void updateMain() {
 				bool setHidden = true;
 
 				for (Room *room : selectedRooms)
-					if (room->hidden) { setHidden = false; break; }
+					if (room->data.hidden) { setHidden = false; break; }
 
 				for (Room *room : selectedRooms)
-					room->hidden = setHidden;
+					room->data.hidden = setHidden;
 
 			} else {
 				Room *hoveringRoom = nullptr;
@@ -824,7 +825,7 @@ void updateMain() {
 				}
 
 				if (hoveringRoom != nullptr) {
-					hoveringRoom->hidden = !hoveringRoom->hidden;
+					hoveringRoom->data.hidden = !hoveringRoom->data.hidden;
 				}
 			}
 		}
@@ -978,14 +979,14 @@ int main() {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		for (Room *room : rooms) {
 			if (!visibleLayers[room->layer]) continue;
-			if (!room->merge) continue;
+			if (!room->data.merge) continue;
 
 			room->drawBlack(worldMouse, lineSize, screenBounds);
 		}
 		for (Room *room : rooms) {
 			if (!visibleLayers[room->layer]) continue;
 			
-			if (!room->merge) {
+			if (!room->data.merge) {
 				room->drawBlack(worldMouse, lineSize, screenBounds);
 			}
 

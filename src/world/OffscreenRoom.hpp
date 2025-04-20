@@ -9,7 +9,7 @@
 
 class OffscreenRoom : public Room {
 	public:
-		const bool isOffscreen = false;
+		bool isOffscreen() override { return true; }
 
 		OffscreenRoom(std::string path, std::string name) {
 			this->path = path;
@@ -32,7 +32,8 @@ class OffscreenRoom : public Room {
 			subregion = -1;
 			
 			tags.push_back("OffscreenRoom");
-			hidden = false;
+			
+			data = ExtraRoomData();
 		}
 
 		int AddDen() {

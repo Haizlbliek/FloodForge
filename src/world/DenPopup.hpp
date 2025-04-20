@@ -15,8 +15,11 @@ namespace CreatureTextures {
 	extern std::vector<std::string> creatures;
 	extern std::vector<std::string> creatureTags;
 	extern std::unordered_map<std::string, std::string> parseMap;
+	
+	extern GLuint UNKNOWN;
 
 	void loadCreaturesFromFolder(std::string path);
+	void loadCreaturesFromFolder(std::string path, std::string prefix);
 
 	GLuint getTexture(std::string type);
 

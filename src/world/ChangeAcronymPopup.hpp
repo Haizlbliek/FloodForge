@@ -17,7 +17,7 @@ class ChangeAcronymPopup : public AcronymPopup {
                 OffscreenRoom *newOffscreenDen = new OffscreenRoom("offscreenden" + toLower(text), "OffscreenDen" + text);
                 newOffscreenDen->Position(offscreenDen->Position());
                 newOffscreenDen->layer = offscreenDen->layer;
-                newOffscreenDen->hidden = offscreenDen->hidden;
+                newOffscreenDen->data.hidden = offscreenDen->data.hidden;
 
                 for (const Den &oldDen : offscreenDen->Dens()) {
                     Den &newDen = newOffscreenDen->CreatureDen01(newOffscreenDen->AddDen());

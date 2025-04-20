@@ -19,6 +19,7 @@ extern std::string ROOM_TAG_NAMES[9];
 
 extern int roomColours;
 extern bool visibleLayers[3];
+extern bool visibleDevItems;
 
 #include "Room.hpp"
 #include "OffscreenRoom.hpp"

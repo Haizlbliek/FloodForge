@@ -52,8 +52,9 @@ namespace DebugData {
             debugText.push_back("Width: " + std::to_string(hoveringRoom->Width()));
             debugText.push_back("Height: " + std::to_string(hoveringRoom->Height()));
             debugText.push_back("Dens: " + std::to_string(hoveringRoom->DenCount()));
-            debugText.push_back(hoveringRoom->merge ? "Merge: true" : "Merge: false");
-            if (hoveringRoom->hidden) {
+            debugText.push_back(hoveringRoom->data.merge ? "Merge: true" : "Merge: false");
+            debugText.push_back("Dev Items: " + std::to_string(hoveringRoom->data.devItems.size()));
+            if (hoveringRoom->data.hidden) {
                 debugText.push_back("Layer: Hidden - " + std::to_string(hoveringRoom->layer));
             } else {
                 debugText.push_back("Layer: " + std::to_string(hoveringRoom->layer));

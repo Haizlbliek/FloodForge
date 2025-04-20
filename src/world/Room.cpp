@@ -5,13 +5,50 @@
 void Room::drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
     if (!valid) return;
     
-    if (hidden) {
+    if (data.hidden) {
         Draw::color(0.0, 0.0, 0.0, 0.5);
     } else {
         Draw::color(0.0, 0.0, 0.0, 1.0);
     }
     
     fillRect(position.x, position.y - height, position.x + width, position.y);
+}
+
+void drawTexture(GLuint texture, double rectX, double rectY) {
+    Draw::color(1.0, 1.0, 1.0);
+    glEnable(GL_BLEND);
+    Draw::useTexture(texture);			
+    Draw::begin(Draw::QUADS);
+
+    int w, h;
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &w);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    float ratio = (float(w) / float(h) + 1.0) * 0.5;
+    float uvx = 1.0 / ratio;
+    float uvy = ratio;
+    if (uvx < 1.0) {
+        uvy /= uvx;
+        uvx = 1.0;
+    }
+    if (uvy < 1.0) {
+        uvx /= uvy;
+        uvy = 1.0;
+    }
+    uvx *= 0.5;
+    uvy *= 0.5;
+    
+    Draw::texCoord(0.5 - uvx, 0.5 + uvy); Draw::vertex(rectX, rectY - 1.0);
+    Draw::texCoord(0.5 + uvx, 0.5 + uvy); Draw::vertex(rectX + 1.0, rectY - 1.0);
+    Draw::texCoord(0.5 + uvx, 0.5 - uvy); Draw::vertex(rectX + 1.0, rectY);
+    Draw::texCoord(0.5 - uvx, 0.5 - uvy); Draw::vertex(rectX, rectY);
+    Draw::end();
+    Draw::useTexture(0);
+    glDisable(GL_BLEND);
 }
 
 void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
@@ -50,7 +87,7 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
 
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(cameraOffset, cameraScale * screenBounds).m);
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position.x, position.y).m);
-    if (hidden) {
+    if (data.hidden) {
         glUniform4f(tintLoc, tint.r, tint.g, tint.b, 0.5f);
     } else {
         glUniform4f(tintLoc, tint.r, tint.g, tint.b, tint.a);
@@ -66,8 +103,18 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
         Draw::color(0.0, 0.0, 0.5, 0.5);
         fillRect(position.x, position.y - (height - std::min(water, height)), position.x + width, position.y - height);
     }
-
     Draw::flushOnEnd = true;
+
+    if (visibleDevItems) {
+        for (DevItem item : data.devItems) {
+            if (item.texture == 0) continue;
+    
+            double rectX = position.x + item.position.x;
+            double rectY = position.y - height + item.position.y;
+            
+            drawTexture(item.texture, rectX, rectY);
+        }
+    }
 
     for (int i = 0; i < denEntrances.size(); i++) {
         if (dens[i].type == "" || dens[i].count == 0) continue;
@@ -75,44 +122,10 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
         double rectX = position.x + denEntrances[i].x;
         double rectY = position.y - denEntrances[i].y;
 
-        Draw::color(1.0, 1.0, 1.0);
-        GLuint texture = CreatureTextures::getTexture(dens[i].type);
-        glEnable(GL_BLEND);
-        Draw::useTexture(texture);			
-        Draw::begin(Draw::QUADS);
-
-        int w, h;
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &w);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-
-        float ratio = (float(w) / float(h) + 1.0) * 0.5;
-        float uvx = 1.0 / ratio;
-        float uvy = ratio;
-        if (uvx < 1.0) {
-            uvy /= uvx;
-            uvx = 1.0;
-        }
-        if (uvy < 1.0) {
-            uvx /= uvy;
-            uvy = 1.0;
-        }
-        uvx *= 0.5;
-        uvy *= 0.5;
-        Draw::texCoord(0.5 - uvx, 0.5 + uvy); Draw::vertex(rectX, rectY - 1.0);
-        Draw::texCoord(0.5 + uvx, 0.5 + uvy); Draw::vertex(rectX + 1.0, rectY - 1.0);
-        Draw::texCoord(0.5 + uvx, 0.5 - uvy); Draw::vertex(rectX + 1.0, rectY);
-        Draw::texCoord(0.5 - uvx, 0.5 - uvy); Draw::vertex(rectX, rectY);
-        Draw::end();
-        Draw::useTexture(0);
-        glDisable(GL_BLEND);
+        drawTexture(CreatureTextures::getTexture(dens[i].type), rectX, rectY);
 
         Draw::color(1.0, 0.0, 0.0);
-	    Fonts::rainworld->writeCentred(std::to_string(dens[i].count), rectX + 1.0, rectY - 1.0, 0.5, CENTRE_XY);
+        Fonts::rainworld->writeCentred(std::to_string(dens[i].count), rectX + 1.0, rectY - 1.0, 0.5, CENTRE_XY);
     }
 
     if (inside(mousePosition)) {
