@@ -4,3 +4,4 @@ CameraZoomSpeed: 0.4
 PopupScrollSpeed: 0.4
 ConnectionType: bezier
 OriginalControls: false
+SelectorScale: false

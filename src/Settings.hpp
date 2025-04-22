@@ -16,7 +16,8 @@ namespace Settings {
         CameraZoomSpeed,
         PopupScrollSpeed,
         ConnectionType,
-        OrignalControls
+        OrignalControls,
+        SelectorScale
     };
 
     extern std::unordered_map<Setting, std::variant<double, int, bool, Colour, std::string>> settings;

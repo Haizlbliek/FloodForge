@@ -17,25 +17,25 @@ bool validExtension(std::string extension) {
 	return extension == ".png";
 }
 
-void CreatureTextures::loadCreaturesFromFolder(std::string path) {
-	loadCreaturesFromFolder(path, "");
+void CreatureTextures::loadCreaturesFromFolder(std::string path, bool include) {
+	loadCreaturesFromFolder(path, "", include);
 }
 
-void CreatureTextures::loadCreaturesFromFolder(std::string path, std::string prefix) {
+void CreatureTextures::loadCreaturesFromFolder(std::string path, std::string prefix, bool include) {
 	for (const auto& entry : std::filesystem::directory_iterator(path)) {
 		if (std::filesystem::is_regular_file(entry.path()) && validExtension(entry.path().extension().string())) {
 			std::string creature = prefix + entry.path().stem().string();
-			creatures.push_back(creature);
+			if (include) creatures.push_back(creature);
 			creatureTextures[creature] = loadTexture(entry.path().string());
 		}
 	}
 }
 
 void CreatureTextures::init() {
-	loadCreaturesFromFolder("assets/creatures/");
-	loadCreaturesFromFolder("assets/creatures/downpour/");
-	loadCreaturesFromFolder("assets/creatures/watcher/");
-	loadCreaturesFromFolder("assets/creatures/room/", "room-");
+	loadCreaturesFromFolder("assets/creatures/", true);
+	loadCreaturesFromFolder("assets/creatures/downpour/", true);
+	loadCreaturesFromFolder("assets/creatures/watcher/", true);
+	loadCreaturesFromFolder("assets/creatures/room/", "room-", false);
 	
 	for (const auto& entry : std::filesystem::directory_iterator("assets/creatures/TAGS/")) {
 		if (std::filesystem::is_regular_file(entry.path()) && validExtension(entry.path().extension().string())) {

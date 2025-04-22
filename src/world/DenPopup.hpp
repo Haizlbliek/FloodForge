@@ -18,8 +18,8 @@ namespace CreatureTextures {
 	
 	extern GLuint UNKNOWN;
 
-	void loadCreaturesFromFolder(std::string path);
-	void loadCreaturesFromFolder(std::string path, std::string prefix);
+	void loadCreaturesFromFolder(std::string path, bool include);
+	void loadCreaturesFromFolder(std::string path, std::string prefix, bool include);
 
 	GLuint getTexture(std::string type);
 

@@ -14,7 +14,7 @@ void Room::drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBound
     fillRect(position.x, position.y - height, position.x + width, position.y);
 }
 
-void drawTexture(GLuint texture, double rectX, double rectY) {
+void RoomHelpers::drawTexture(GLuint texture, double rectX, double rectY, double scale) {
     Draw::color(1.0, 1.0, 1.0);
     glEnable(GL_BLEND);
     Draw::useTexture(texture);			
@@ -42,10 +42,12 @@ void drawTexture(GLuint texture, double rectX, double rectY) {
     uvx *= 0.5;
     uvy *= 0.5;
     
-    Draw::texCoord(0.5 - uvx, 0.5 + uvy); Draw::vertex(rectX, rectY - 1.0);
-    Draw::texCoord(0.5 + uvx, 0.5 + uvy); Draw::vertex(rectX + 1.0, rectY - 1.0);
-    Draw::texCoord(0.5 + uvx, 0.5 - uvy); Draw::vertex(rectX + 1.0, rectY);
-    Draw::texCoord(0.5 - uvx, 0.5 - uvy); Draw::vertex(rectX, rectY);
+    double centreX = rectX + 0.5;
+    double centreY = rectY - 0.5;
+    Draw::texCoord(0.5 - uvx, 0.5 + uvy); Draw::vertex(centreX - scale * 0.5, centreY - scale * 0.5);
+    Draw::texCoord(0.5 + uvx, 0.5 + uvy); Draw::vertex(centreX + scale * 0.5, centreY - scale * 0.5);
+    Draw::texCoord(0.5 + uvx, 0.5 - uvy); Draw::vertex(centreX + scale * 0.5, centreY + scale * 0.5);
+    Draw::texCoord(0.5 - uvx, 0.5 - uvy); Draw::vertex(centreX - scale * 0.5, centreY + scale * 0.5);
     Draw::end();
     Draw::useTexture(0);
     glDisable(GL_BLEND);
@@ -98,12 +100,10 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
     glBindVertexArray(0);
     glUseProgram(0);
 
-    Draw::flushOnEnd = false;
     if (water != -1) {
         Draw::color(0.0, 0.0, 0.5, 0.5);
         fillRect(position.x, position.y - (height - std::min(water, height)), position.x + width, position.y - height);
     }
-    Draw::flushOnEnd = true;
 
     if (visibleDevItems) {
         for (DevItem item : data.devItems) {
@@ -112,7 +112,7 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
             double rectX = position.x + item.position.x;
             double rectY = position.y - height + item.position.y;
             
-            drawTexture(item.texture, rectX, rectY);
+            RoomHelpers::drawTexture(item.texture, rectX, rectY, 0.5);
         }
     }
 
@@ -121,11 +121,14 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
 
         double rectX = position.x + denEntrances[i].x;
         double rectY = position.y - denEntrances[i].y;
+        double scale = selectorScale;
+        
+        if (i == hoveredDen) scale *= 1.5;
 
-        drawTexture(CreatureTextures::getTexture(dens[i].type), rectX, rectY);
+        RoomHelpers::drawTexture(CreatureTextures::getTexture(dens[i].type), rectX, rectY, scale);
 
         Draw::color(1.0, 0.0, 0.0);
-        Fonts::rainworld->writeCentred(std::to_string(dens[i].count), rectX + 1.0, rectY - 1.0, 0.5, CENTRE_XY);
+        Fonts::rainworld->writeCentred(std::to_string(dens[i].count), rectX + 0.5 + scale * 0.25, rectY - 0.5 - scale * 0.5, 0.5 * scale, CENTRE_XY);
     }
 
     if (inside(mousePosition)) {

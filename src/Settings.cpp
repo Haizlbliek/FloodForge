@@ -8,6 +8,7 @@ void Settings::loadDefaults() {
     settings[Setting::PopupScrollSpeed] = 0.4;
     settings[Setting::ConnectionType] = 0;
     settings[Setting::OrignalControls] = false;
+    settings[Setting::SelectorScale] = true;
 }
 
 void Settings::init() {
@@ -30,6 +31,7 @@ void Settings::init() {
         else if (key == "PopupScrollSpeed") settings[Setting::PopupScrollSpeed] = std::stod(value);
         else if (key == "ConnectionType") settings[Setting::ConnectionType] = int(toLower(value) == "bezier");
         else if (key == "OriginalControls") settings[Setting::OrignalControls] = (toLower(value) == "true" || toLower(value) == "yes" || toLower(value) == "1");
+        else if (key == "SelectorScale") settings[Setting::SelectorScale] = (toLower(value) == "true" || toLower(value) == "yes" || toLower(value) == "1");
     }
 
     settingsFile.close();

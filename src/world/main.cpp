@@ -45,6 +45,7 @@ std::vector<std::string> subregions;
 
 Vector2 cameraOffset = Vector2(0.0, 0.0);
 double cameraScale = 32.0;
+double selectorScale = 1.0;
 
 std::string ROOM_TAGS[9] = { "SHELTER", "ANCIENTSHELTER", "GATE", "SWARMROOM", "PERF_HEAVY", "SCAVOUTPOST", "SCAVTRADER", "NOTRACKERS", "ARENA" };
 std::string ROOM_TAG_NAMES[9] = { "Shelter", "Ancient Shelter", "Gate", "Swarm Room", "Performance Heavy", "Scavenger Outpost", "Scavenger Trader", "No Trackers", "Arena (MSC)" };
@@ -414,6 +415,8 @@ void updateFloodForgeControls() {
 
 void updateMain() {
 	updateCamera();
+	
+	selectorScale = Settings::getSetting<bool>(Settings::Setting::SelectorScale) ? cameraScale / 16.0 : 1.0;
 
 	/// Update Inputs
 
@@ -836,34 +839,50 @@ void updateMain() {
 	}
 
 	if (window->keyPressed(GLFW_KEY_C)) {
+		bool found = false;
+
 		if (previousKeys.find(GLFW_KEY_C) == previousKeys.end()) {
-			Room *hoveringRoom = nullptr;
 			for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-				Room *room = (*it);
-
-				if (room->inside(worldMouse)) {
-					hoveringRoom = room;
-					break;
-				}
-			}
-
-			if (hoveringRoom != nullptr) {
-				if (hoveringRoom == offscreenDen) {
-					int denId = offscreenDen->denAt(worldMouse.x, worldMouse.y);
-
-					if (denId == -1) denId = offscreenDen->AddDen();
-
-					Popups::addPopup(new DenPopup(window, hoveringRoom, denId));
+				Room *room = *it;
+				
+				Vector2 roomMouse = worldMouse - room->Position();
+				Vector2 shortcutPosition;
+				
+				if (room->isOffscreen()) {
+					for (int i = 0; i < room->DenCount(); i++) {
+						shortcutPosition = Vector2(room->Width() * 0.5 - room->DenCount() * 2.0 + i * 4.0 + 2.5, -room->Height() * 0.25 - 0.5);
+						
+						if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
+							Popups::addPopup(new DenPopup(window, room, i));
+			
+							found = true;
+							break;
+						}
+					}
 				} else {
-					Vector2i tilePosition = Vector2i(
-						floor(worldMouse.x - hoveringRoom->Position().x),
-						-1 - floor(worldMouse.y - hoveringRoom->Position().y)
-					);
-
-					int den = hoveringRoom->DenId(tilePosition);
-
-					if (den != -1) {
-						Popups::addPopup(new DenPopup(window, hoveringRoom, den));
+					for (Vector2i shortcut : room->DenEntrances()) {
+						shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
+						
+						if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
+							Popups::addPopup(new DenPopup(window, room, room->DenId(shortcut)));
+			
+							found = true;
+							break;
+						}
+					}
+				}
+				
+				if (found) break;
+			}
+			
+			if (!found) {
+				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+					Room *room = *it;
+					
+					if (room->inside(worldMouse)) {
+						if (!room->isOffscreen()) break;
+						
+						Popups::addPopup(new DenPopup(window, room, offscreenDen->AddDen()));
 					}
 				}
 			}
@@ -872,6 +891,41 @@ void updateMain() {
 		previousKeys.insert(GLFW_KEY_C);
 	} else {
 		previousKeys.erase(GLFW_KEY_C);
+	}
+
+	bool found = false;
+	for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+		Room *room = *it;
+		room->hoveredDen = -1;
+		
+		Vector2 roomMouse = worldMouse - room->Position();
+		Vector2 shortcutPosition;
+		
+		if (room->isOffscreen()) {
+			for (int i = 0; i < room->DenCount(); i++) {
+				shortcutPosition = Vector2(room->Width() * 0.5 - room->DenCount() * 2.0 + i * 4.0 + 2.5, -room->Height() * 0.25 - 0.5);
+				
+				if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
+					room->hoveredDen = i;
+	
+					found = true;
+					break;
+				}
+			}
+		} else {
+			for (Vector2i shortcut : room->DenEntrances()) {
+				shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
+				
+				if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
+					room->hoveredDen = room->DenId(shortcut) - room->ConnectionCount();
+	
+					found = true;
+					break;
+				}
+			}
+		}
+		
+		if (found) break;
 	}
 	
 	if (!Popups::hasPopup("DenPopup") && offscreenDen != nullptr) {

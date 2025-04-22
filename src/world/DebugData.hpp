@@ -65,6 +65,33 @@ namespace DebugData {
                 debugText.push_back("Subregion: " + subregions[hoveringRoom->subregion]);
             }
         }
+        
+        for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+            Room *room = *it;
+            
+            Vector2 roomMouse = mouse - room->Position();
+            Vector2 shortcutPosition;
+            
+            if (room->isOffscreen()) {
+                for (int i = 0; i < room->DenCount(); i++) {
+                    shortcutPosition = Vector2(room->Width() * 0.5 - room->DenCount() * 2.0 + i * 4.0 + 2.5, -room->Height() * 0.25 - 0.5);
+                    
+                    if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
+                        debugText.push_back("   Shortcut:");
+                        debugText.push_back("Den: Offscreen - " + std::to_string(i));
+                    }
+                }
+            } else {
+                for (Vector2i shortcut : room->DenEntrances()) {
+                    shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
+                    
+                    if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
+                        debugText.push_back("   Shortcut:");
+                        debugText.push_back("Den: " + std::to_string(shortcut.x) + ", " + std::to_string(shortcut.y));
+                    }
+                }
+            }
+        }
 
         int i = 1;
 

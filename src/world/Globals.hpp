@@ -21,6 +21,10 @@ extern int roomColours;
 extern bool visibleLayers[3];
 extern bool visibleDevItems;
 
+extern Vector2 cameraOffset;
+extern double cameraScale;
+extern double selectorScale;
+
 #include "Room.hpp"
 #include "OffscreenRoom.hpp"
 #include "Connection.hpp"
@@ -31,6 +35,3 @@ extern OffscreenRoom* offscreenDen;
 extern std::vector<Room*> rooms;
 extern std::vector<Connection*> connections;
 extern std::vector<std::string> subregions;
-
-extern Vector2 cameraOffset;
-extern double cameraScale;

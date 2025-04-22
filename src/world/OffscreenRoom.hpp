@@ -6,6 +6,7 @@
 
 #include "Room.hpp"
 #include "DenPopup.hpp"
+#include "Globals.hpp"
 
 class OffscreenRoom : public Room {
 	public:
@@ -90,50 +91,15 @@ class OffscreenRoom : public Room {
 
 				double rectX = position.x + width * 0.5 - denEntrances.size() * 2.0 + i * 4.0 + 2.0;
 				double rectY = position.y - height * 0.25;
-				
-				double size = 2.0;
-
-				if (Rect(rectX - size, rectY - size, rectX + size, rectY + size).inside(mousePosition.x, mousePosition.y)) {
-					Draw::color(1.0, 1.0, 1.0);
-				} else {
-					Draw::color(0.75, 0.75, 0.75);
-				}
-				GLuint texture = CreatureTextures::getTexture(dens[i].type);
-				glEnable(GL_BLEND);
-				Draw::useTexture(texture);			
-				Draw::begin(Draw::QUADS);
-
-				int w, h;
-				glBindTexture(GL_TEXTURE_2D, texture);
-				glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &w);
-				glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-				glBindTexture(GL_TEXTURE_2D, 0);
-
-				float ratio = (float(w) / float(h) + 1.0) * 0.5;
-				float uvx = 1.0 / ratio;
-				float uvy = ratio;
-				if (uvx < 1.0) {
-					uvy /= uvx;
-					uvx = 1.0;
-				}
-				if (uvy < 1.0) {
-					uvx /= uvy;
-					uvy = 1.0;
-				}
-				uvx *= 0.5;
-				uvy *= 0.5;
-				Draw::texCoord(0.5 - uvx, 0.5 + uvy); Draw::vertex(rectX - size, rectY - size);
-				Draw::texCoord(0.5 + uvx, 0.5 + uvy); Draw::vertex(rectX + size, rectY - size);
-				Draw::texCoord(0.5 + uvx, 0.5 - uvy); Draw::vertex(rectX + size, rectY + size);
-				Draw::texCoord(0.5 - uvx, 0.5 - uvy); Draw::vertex(rectX - size, rectY + size);
-				Draw::end();
-				Draw::useTexture(0);
-				glDisable(GL_BLEND);
-
+				double scale = selectorScale;
+        
+				if (i == hoveredDen) scale *= 1.5;
+		
+				RoomHelpers::drawTexture(CreatureTextures::getTexture(dens[i].type), rectX, rectY, scale);
+		
 				Draw::color(1.0, 0.0, 0.0);
-				Fonts::rainworld->writeCentred(std::to_string(dens[i].count), rectX + size, rectY - size, 1.0 * size, CENTRE_XY);
+				Fonts::rainworld->writeCentred(std::to_string(dens[i].count), rectX + 0.5 + scale * 0.25, rectY - 0.5 - scale * 0.5, 0.5 * scale, CENTRE_XY);
+		
 			}
 
 

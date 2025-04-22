@@ -34,6 +34,10 @@ struct Vertex {
     float r, g, b, a;
 };
 
+namespace RoomHelpers {
+	void drawTexture(GLuint texture, double rectX, double rectY, double scale);
+};
+
 class Room {
 	public:
 		virtual bool isOffscreen() { return false; }
@@ -332,6 +336,8 @@ class Room {
 		int subregion = 0;
 		
 		ExtraRoomData data;
+		
+		int hoveredDen = -1;
 
 	protected:
 		Room() {}
