@@ -47,22 +47,26 @@ namespace DebugData {
             std::string tags = "";
             for (std::string tag : hoveringRoom->Tags()) tags += " " + tag;
             debugText.push_back("    Room:");
-            debugText.push_back("Name: " + hoveringRoom->roomName);
-            debugText.push_back("Tags:" + tags);
-            debugText.push_back("Width: " + std::to_string(hoveringRoom->Width()));
-            debugText.push_back("Height: " + std::to_string(hoveringRoom->Height()));
-            debugText.push_back("Dens: " + std::to_string(hoveringRoom->DenCount()));
-            debugText.push_back(hoveringRoom->data.merge ? "Merge: true" : "Merge: false");
-            debugText.push_back("Dev Items: " + std::to_string(hoveringRoom->data.devItems.size()));
-            if (hoveringRoom->data.hidden) {
-                debugText.push_back("Layer: Hidden - " + std::to_string(hoveringRoom->layer));
+            if (!hoveringRoom->valid) {
+                debugText.push_back("INVALID - Check `xx-rooms` folder");
             } else {
-                debugText.push_back("Layer: " + std::to_string(hoveringRoom->layer));
-            }
-            if (hoveringRoom->subregion == -1) {
-                debugText.push_back("Subregion: <<NONE>>");
-            } else {
-                debugText.push_back("Subregion: " + subregions[hoveringRoom->subregion]);
+                debugText.push_back("Name: " + hoveringRoom->roomName);
+                debugText.push_back("Tags:" + tags);
+                debugText.push_back("Width: " + std::to_string(hoveringRoom->Width()));
+                debugText.push_back("Height: " + std::to_string(hoveringRoom->Height()));
+                debugText.push_back("Dens: " + std::to_string(hoveringRoom->DenCount()));
+                debugText.push_back(hoveringRoom->data.merge ? "Merge: true" : "Merge: false");
+                debugText.push_back("Dev Items: " + std::to_string(hoveringRoom->data.devItems.size()));
+                if (hoveringRoom->data.hidden) {
+                    debugText.push_back("Layer: Hidden - " + std::to_string(hoveringRoom->layer));
+                } else {
+                    debugText.push_back("Layer: " + std::to_string(hoveringRoom->layer));
+                }
+                if (hoveringRoom->subregion == -1) {
+                    debugText.push_back("Subregion: <<NONE>>");
+                } else {
+                    debugText.push_back("Subregion: " + subregions[hoveringRoom->subregion]);
+                }
             }
         }
         

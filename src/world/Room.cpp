@@ -3,8 +3,6 @@
 #include "DenPopup.hpp"
 
 void Room::drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
-    if (!valid) return;
-    
     if (data.hidden) {
         Draw::color(0.0, 0.0, 0.0, 0.5);
     } else {
@@ -54,7 +52,21 @@ void RoomHelpers::drawTexture(GLuint texture, double rectX, double rectY, double
 }
 
 void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
-    if (!valid) return;
+    if (!valid) {
+        Draw::color(1.0, 0.0, 0.0);
+        
+        Draw::begin(Draw::LINES);
+        Draw::vertex(position.x, position.y);
+        Draw::vertex(position.x + width, position.y - height);
+
+        Draw::vertex(position.x + width, position.y);
+        Draw::vertex(position.x, position.y - height);
+        Draw::end();
+        
+        strokeRect(position.x, position.y, position.x + width, position.y - height);
+
+        return;
+    }
     
     Colour tint = Colour(1.0, 1.0, 1.0);
 

@@ -24,7 +24,7 @@ class OffscreenRoom : public Room {
 			width = 72;
 			height = 43;
 
-			valid = false;
+			valid = true;
 			
 			geometry = nullptr;
 

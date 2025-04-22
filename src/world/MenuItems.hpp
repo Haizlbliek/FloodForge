@@ -551,6 +551,8 @@ class MenuItems {
 					parseWorldCreature(line);
 			}
 			worldFile.close();
+			
+			std::cout << "Loading connections" << std::endl;
 
 			for (Quadruple<Room*, int, std::string, int> connectionData : connectionsToAdd) {
 				if (connectionData.second == -1 || connectionData.fourth == -1) {
@@ -570,11 +572,18 @@ class MenuItems {
 
 				if (roomB == nullptr) {
 					std::cout << "Failed to load connection from " << roomA->roomName << " to " << connectionData.third << std::endl;
+					FailureController::fails.push_back("Failed to load connection from " + roomA->roomName + " to " + connectionData.third);
 					continue;
 				}
 
 				int connectionA = connectionData.second;
 				int connectionB = connectionData.fourth;
+				
+				if (!roomA->canConnect(connectionA) || !roomB->canConnect(connectionB)) {
+					std::cout << "Failed to load connection from " << roomA->roomName << " to " << connectionData.third << " - invalid room" << std::endl;
+					FailureController::fails.push_back("Failed to load connection from " + roomA->roomName + " to " + connectionData.third + " - invalid room");
+					continue;
+				}
 
 				roomA->connect(roomB, connectionA);
 				roomB->connect(roomA, connectionB);
@@ -582,6 +591,8 @@ class MenuItems {
 				Connection *connection = new Connection(roomA, connectionA, roomB, connectionB);
 				connections.push_back(connection);
 			}
+			
+			std::cout << "Connections loaded" << std::endl;
 		}
 
 		static void parseProperties(std::string propertiesFilePath) {

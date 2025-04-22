@@ -19,6 +19,7 @@
 #include "../Theme.hpp"
 #include "../popup/WarningPopup.hpp"
 
+#include "FailureController.hpp"
 #include "ExtraRoomData.hpp"
 #include "Shaders.hpp"
 #include "Den.hpp"
@@ -221,6 +222,12 @@ class Room {
 
 			return forwardDirection;
 		}
+		
+		bool canConnect(unsigned int connectionId) {
+			if (connections.size() <= connectionId) return false;
+			
+			return true;
+		}
 
 		void connect(Room *room, unsigned int connectionId) {
 			roomConnections.insert(std::pair<Room*, unsigned int> { room, connectionId });
@@ -338,6 +345,8 @@ class Room {
 		ExtraRoomData data;
 		
 		int hoveredDen = -1;
+		
+		bool valid;
 
 	protected:
 		Room() {}
@@ -426,7 +435,16 @@ class Room {
 		void loadGeometry() {
 			std::fstream geometryFile(path + ".txt");
 			if (!geometryFile.is_open()) {
+				FailureController::fails.push_back("Failed to load '" + path + "' - Doesn't exist");
 				std::cout << "Failed to load '" << path << "' - Doesn't exist." << std::endl;
+				width = 72;
+				height = 43;
+				water = -1;
+				geometry = new int[width * height];
+				for (int i = 0; i < width * height; i++) {
+					geometry[i] = 0;
+				}
+				valid = false;
 				return;
 			}
 
@@ -524,8 +542,6 @@ class Room {
 		std::vector<Den> dens;
 
 		std::vector<std::string> tags;
-
-		bool valid;
 
 		std::set<std::pair<Room*, unsigned int>> roomConnections;
 		std::vector<Vector2i> shortcutEntrances;

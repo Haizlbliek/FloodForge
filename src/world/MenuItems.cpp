@@ -132,11 +132,15 @@ void MenuItems::init(Window *window) {
 
                     parseWorld(path, exportDirectory);
                     
+                    std::cout << "Loading extra room data" << std::endl;
+                    
                     for (Room *room : rooms) {
                         if (room->isOffscreen()) continue;
 
                         loadExtraRoomData(findFileCaseInsensitive((exportDirectory.parent_path() / (worldAcronym + "-rooms")).string(), room->roomName + "_settings.txt"), room->data);
                     }
+                    
+                    std::cout << "Extra room data - loaded" << std::endl;
 
                     if (FailureController::fails.size() > 0) {
                         std::string fails = "";
