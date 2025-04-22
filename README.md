@@ -94,3 +94,7 @@ The license is at the top of both `.h` files (`include/GLFW/glfw3.h`, `include/G
 - Bitmap Fonts: Generated using [Snow Bamboo](https://snowb.org).  
 - Splash Screen Art: Rendered from Rain World's Shoreline map.  
 - All other artwork: Hand-created by the FloodForge team.
+
+## I found a bug!
+
+Report it on the new [FloodForge Discord server](https://discord.gg/RBq8PDbCmB)!
