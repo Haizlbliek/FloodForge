@@ -412,11 +412,18 @@ class FilesystemPopup : public Popup {
                 std::cerr << "Failed to get drives." << std::endl;
                 return;
             }
+            
+            std::filesystem::path potentialPath;
 
-            std::string targetPath = "Program Files (x86)\\Steam\\steamapps\\common\\Rain World\\RainWorld_Data\\StreamingAssets";
+            
+            potentialPath = Settings::getSetting<std::string>(Settings::Setting::DefaultFilePath);
+            if (std::filesystem::exists(potentialPath)) {
+                currentDirectory = potentialPath;
+                return;
+            }
 
             for (char* drive = drives.data(); *drive; drive += std::strlen(drive) + 1) {
-                std::filesystem::path potentialPath = std::filesystem::path(drive) / targetPath;
+                potentialPath = std::filesystem::path(drive) / "Program Files (x86)\\Steam\\steamapps\\common\\Rain World\\RainWorld_Data\\StreamingAssets";
 
                 if (std::filesystem::exists(potentialPath)) {
                     currentDirectory = potentialPath.string();
@@ -426,9 +433,9 @@ class FilesystemPopup : public Popup {
 #endif
 
             if (std::getenv("HOME") != nullptr) {
-                std::filesystem::path dir = std::filesystem::path(std::getenv("HOME")) / ".steam/steam/steamapps/common/Rain World/RainWorld_Data/StreamingAssets";
-                if (std::filesystem::exists(dir)) {
-                    currentDirectory = dir;
+                potentialPath = std::filesystem::path(std::getenv("HOME")) / ".steam/steam/steamapps/common/Rain World/RainWorld_Data/StreamingAssets";
+                if (std::filesystem::exists(potentialPath)) {
+                    currentDirectory = potentialPath;
                     return;
                 }
             }

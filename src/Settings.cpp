@@ -9,6 +9,7 @@ void Settings::loadDefaults() {
     settings[Setting::ConnectionType] = 0;
     settings[Setting::OrignalControls] = false;
     settings[Setting::SelectorScale] = true;
+    settings[Setting::DefaultFilePath] = "NON_EXISTANT_PATH_YOU_CAN'T_HAVE_THIS_PATH_PLSPLSPLS///";
 }
 
 void Settings::init() {
@@ -32,6 +33,7 @@ void Settings::init() {
         else if (key == "ConnectionType") settings[Setting::ConnectionType] = int(toLower(value) == "bezier");
         else if (key == "OriginalControls") settings[Setting::OrignalControls] = (toLower(value) == "true" || toLower(value) == "yes" || toLower(value) == "1");
         else if (key == "SelectorScale") settings[Setting::SelectorScale] = (toLower(value) == "true" || toLower(value) == "yes" || toLower(value) == "1");
+        else if (key == "DefaultFilePath") settings[Setting::DefaultFilePath] = value;
     }
 
     settingsFile.close();

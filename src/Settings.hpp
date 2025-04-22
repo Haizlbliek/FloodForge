@@ -17,7 +17,8 @@ namespace Settings {
         PopupScrollSpeed,
         ConnectionType,
         OrignalControls,
-        SelectorScale
+        SelectorScale,
+        DefaultFilePath
     };
 
     extern std::unordered_map<Setting, std::variant<double, int, bool, Colour, std::string>> settings;
