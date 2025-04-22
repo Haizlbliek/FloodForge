@@ -55,7 +55,7 @@ class SplashArtPopup : public Popup {
 			Draw::color(1.0f, 1.0f, 1.0f);
 			Fonts::rodondo->writeCentred("FloodForge", 0.0, 0.1, 0.2, CENTRE_XY);
 			Fonts::rainworld->writeCentred("World Editor", 0.0, -0.1, 0.1, CENTRE_XY);
-			Fonts::rainworld->write("v1.5.0", -0.88, 0.43, 0.04);
+			Fonts::rainworld->write("v1.5.1", -0.88, 0.43, 0.04);
 
 			strokeRect(-0.9, -0.45, 0.9, 0.45);
 		}
