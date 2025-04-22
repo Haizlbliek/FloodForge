@@ -613,6 +613,8 @@ class MenuItems {
 		}
 
 		static void loadExtraRoomData(std::string roomPath, ExtraRoomData &data) {
+			if (roomPath == "") return;
+		
 			std::fstream file(roomPath, std::ios::in | std::ios::binary);
 
 			if (!file.is_open()) return;
@@ -625,7 +627,7 @@ class MenuItems {
 				
 				for (std::string item : splits) {
 					if (item[0] == ' ') item = item.substr(1); // Remove space
-					if (item.size() == 1) continue;
+					if (item.size() <= 1) continue;
 					
 					std::vector<std::string> splits2 = split(item, '>');
 					std::string key = splits2[0];
