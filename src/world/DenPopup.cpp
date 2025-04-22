@@ -108,7 +108,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 	Den &den = room->CreatureDen(this->den);
 	bool unknown = !CreatureTextures::known(den.type);
 
-	bool hasSlider = den.tag == "MEAN" || den.tag == "SEED" || den.tag == "LENGTH";
+	bool hasSlider = den.tag == "MEAN" || den.tag == "SEED" || den.tag == "LENGTH" || den.tag == "RotType";
 	double sliderAt = den.data;
 
 	if (hasSlider) {
@@ -339,6 +339,9 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 				double P = (mouseY - bounds.Y0() - 0.075) / (bounds.Y1() - bounds.Y0() - 0.2);
 				P = std::clamp(P, 0.0, 1.0);
 				den.data = P * (sliderMax - sliderMin) + sliderMin;
+				if (sliderType == SliderType::SLIDER_INT) {
+					den.data = round(den.data);
+				}
 			}
 		}
 	}

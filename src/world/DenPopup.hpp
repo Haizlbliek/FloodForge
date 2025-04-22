@@ -30,6 +30,11 @@ namespace CreatureTextures {
 	bool known(std::string type);
 };
 
+enum SliderType {
+	SLIDER_INT,
+	SLIDER_FLOAT
+};
+
 #include "../popup/Popups.hpp"
 #include "Room.hpp"
 #include "Globals.hpp"
@@ -87,6 +92,7 @@ class DenPopup : public Popup {
 		
 		double sliderMin = 0.0;
 		double sliderMax = 1.0;
+		SliderType sliderType = SliderType::SLIDER_FLOAT;
 
 		Room *room;
 		int den;
@@ -139,7 +145,23 @@ class DenPopup : public Popup {
 		void ensureFlag() {
 			Den &den = room->CreatureDen(this->den);
 
-			bool isNotLizard = den.type != "BlackLizard" && den.type != "BlueLizard" && den.type != "CyanLizard" && den.type != "GreenLizard" && den.type != "PinkLizard" && den.type != "RedLizard" && den.type != "WhiteLizard" && den.type != "YellowLizard";
+			bool isNotLizard =
+				den.type != "BlackLizard" &&
+				den.type != "BlueLizard" &&
+				den.type != "CyanLizard" &&
+				den.type != "GreenLizard" &&
+				den.type != "PinkLizard" &&
+				den.type != "RedLizard" &&
+				den.type != "WhiteLizard" &&
+				den.type != "YellowLizard" &&
+				den.type != "Salamander" &&
+				den.type != "EelLizard" &&
+				den.type != "SpitLizard" &&
+				den.type != "TrainLizard" &&
+				den.type != "ZoopLizard" &&
+				den.type != "BasiliskLizard" &&
+				den.type != "BlizzardLizard" &&
+				den.type != "IndigoLizard";
 
 			if (den.tag == "MEAN") {
 				if (isNotLizard) {
@@ -167,6 +189,7 @@ class DenPopup : public Popup {
 
 			if (den.tag != "MEAN" && den.tag != "LENGTH" && den.tag != "SEED") den.data = 0.0;
 
+			sliderType = SliderType::SLIDER_FLOAT;
 			if (den.tag == "MEAN") {
 				sliderMin = -1.0;
 				sliderMax = 1.0;
@@ -181,6 +204,15 @@ class DenPopup : public Popup {
 			} else if (den.tag == "SEED") {
 				sliderMin = 0;
 				sliderMax = 65536;
+				sliderType = SliderType::SLIDER_INT;
+			} else if (den.tag == "RotType") {
+				if (isNotLizard) {
+					den.tag = "";
+				} else {
+					sliderMin = 0;
+					sliderMax = 3;
+				}
+				sliderType = SliderType::SLIDER_INT;
 			}
 		}
 };
