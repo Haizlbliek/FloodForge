@@ -77,7 +77,6 @@ Report it on the new [FloodForge Discord server](https://discord.gg/RBq8PDbCmB)!
 ## Settings
 
 Settings are stored in `assets/settings.txt`
-To switch to a different theme, change the `Theme:` value to the name of a directory in `assets/themes`
 
 | Setting          | Default Value | Allowed Values |
 |------------------|---------------|----------------|
