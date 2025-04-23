@@ -15,7 +15,7 @@ It aims for intuitive controls, clean ui, and as few dependencies as possible.
 | Creature Den      | `C`       | Opens the hovered den.                                            |
 | Room Merge        | `G`       | Toggle room visual merging.                                       |
 | Change Room Layer | `L`       | Switches between layers within the hovered room.                  |
-| Change Flag       | `F`       | Change room flags (shelter, karma gate, scavenger outpost, etc.). |
+| Change Room Tag   | `T`       | Change room tags (shelter, karma gate, scavenger outpost, etc.).  |
 | Change Subregion  | `S`       | Openes a popup for adding, removing, and changing subregions.     |
 | Hide / Show       | `H`       | Toggle visibility of hovered room.                                |
 | Show other rooms  | `I`       | Places hovered room behind all other rooms.                       |
