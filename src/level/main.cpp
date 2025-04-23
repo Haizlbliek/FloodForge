@@ -27,7 +27,7 @@
 #include "Tools.hpp"
 #include "../Draw.hpp"
 
-#warning The FloodForge Level Editor is very WIP. Take caution.
+#warning The FloodForge Level Editor is not complete. Take caution.
 
 Project *project = nullptr;
 unsigned int currentLayer = 1;
@@ -58,12 +58,12 @@ void drawGrid(float spacing, unsigned int width, unsigned int height) {
 void drawSprite(GLuint texture, float x, float y, float width, float height) {
 	Draw::useTexture(texture);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	Draw::begin(Draw::QUADS);
-    
-    Draw::color(1.0f, 1.0f, 1.0f);
+	
+	Draw::color(1.0f, 1.0f, 1.0f);
 
 	Draw::texCoord(0.0f, 1.0f);
 	Draw::vertex(x,         y);
@@ -80,7 +80,7 @@ void drawSprite(GLuint texture, float x, float y, float width, float height) {
 	Draw::end();
 
 	Draw::useTexture(0);
-    glDisable(GL_BLEND);
+	glDisable(GL_BLEND);
 }
 
 void drawSprite(GLuint texture, float x, float y, float width, float height, unsigned int textureSubWidth, unsigned int textureSubHeight, unsigned int subId) {
@@ -90,12 +90,12 @@ void drawSprite(GLuint texture, float x, float y, float width, float height, uns
 	float uvHeight = 1.0 / textureSubHeight;
 
 	Draw::useTexture(texture);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	Draw::begin(Draw::QUADS);
-    
-    Draw::color(1.0f, 1.0f, 1.0f);
+	
+	Draw::color(1.0f, 1.0f, 1.0f);
 
 	Draw::texCoord(uvX,           uvY);            Draw::vertex(x,         y);
 
@@ -108,59 +108,8 @@ void drawSprite(GLuint texture, float x, float y, float width, float height, uns
 	Draw::end();
 
 	Draw::useTexture(0);
-    glDisable(GL_BLEND);
+	glDisable(GL_BLEND);
 }
-
-void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale, float left, float right, float bottom, float top, float nearVal, float farVal) {
-    // Apply scaling
-    left *= scale.x;
-    right *= scale.x;
-    bottom *= scale.y;
-    top *= scale.y;
-
-    // Apply position translation
-    left += position.x;
-    right += position.x;
-    bottom += position.y;
-    top += position.y;
-
-    // Apply rotation
-    float cosRot = std::cos(rotation);
-    float sinRot = std::sin(rotation);
-
-    // Create rotation matrix
-    GLfloat rotationMatrix[16] = {
-        cosRot,  sinRot, 0, 0,
-        -sinRot, cosRot, 0, 0,
-        0,       0,      1, 0,
-        0,       0,      0, 1
-    };
-
-    // Apply the orthographic projection
-    Draw::matrixMode(Draw::PROJECTION);
-    Draw::loadIdentity();
-    Draw::ortho(left, right, bottom, top, nearVal, farVal);
-
-    // Apply rotation matrix
-	Draw::multMatrix(Matrix4(rotationMatrix));
-
-    // Apply frustum based on modified projection
-    // glFrustum(left, right, bottom, top, nearVal, farVal);
-}
-
-void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale) {
-	applyFrustumToOrthographic(position, rotation, scale, -1.0f, 1.0f, -1.0f, 1.0f, 0.000f, 100.0f);
-}
-
-// void windowCloseCallback(GLFWwindow *window) {
-// 	if (!History::unsavedChanges) return;
-
-// 	int result = verifyBox("You have unsaved changes.\nAre you sure you want to quit?");
-
-// 	if (!result) {
-// 		glfwSetWindowShouldClose(window, false);
-// 	}
-// }
 
 float getLayerTransparency(unsigned int layer) {
 	if (currentLayer == layer) return 1.0f;
@@ -172,31 +121,31 @@ float getLayerTransparency(unsigned int layer) {
 std::vector<Vector2i> line(int x0, int y0, int x1, int y1) {
 	std::vector<Vector2i> points;
 
-    int dx = abs(x1 - x0);
-    int dy = abs(y1 - y0);
-    int sx = (x0 < x1) ? 1 : -1;
-    int sy = (y0 < y1) ? 1 : -1;
-    int error = dx - dy;
+	int dx = abs(x1 - x0);
+	int dy = abs(y1 - y0);
+	int sx = (x0 < x1) ? 1 : -1;
+	int sy = (y0 < y1) ? 1 : -1;
+	int error = dx - dy;
 
-    while (true) {
-        points.push_back(Vector2i(x0, y0));
+	while (true) {
+		points.push_back(Vector2i(x0, y0));
 
-        if (x0 == x1 && y0 == y1) {
-            break;
-        }
+		if (x0 == x1 && y0 == y1) {
+			break;
+		}
 
-        int e2 = 2 * error;
-        if (e2 > -dy) {
-            error -= dy;
-            x0 += sx;
-        }
-        if (e2 < dx) {
-            error += dx;
-            y0 += sy;
-        }
-    }
+		int e2 = 2 * error;
+		if (e2 > -dy) {
+			error -= dy;
+			x0 += sx;
+		}
+		if (e2 < dx) {
+			error += dx;
+			y0 += sy;
+		}
+	}
 
-    return points;
+	return points;
 }
 
 int main() {
@@ -224,25 +173,25 @@ int main() {
 	Popups::init();
 	Draw::init();
 
-    GLuint textureSolids = loadTexture(TEXTURE_PATH + "solids.png");
-    GLuint textureShortcuts = loadTexture(TEXTURE_PATH + "shortcuts.png");
-    GLuint textureTools = loadTexture(TEXTURE_PATH + "tools.png");
-    GLuint textureItems = loadTexture(TEXTURE_PATH + "items.png");
+	GLuint textureSolids = loadTexture(TEXTURE_PATH + "solids.png");
+	GLuint textureShortcuts = loadTexture(TEXTURE_PATH + "shortcuts.png");
+	GLuint textureTools = loadTexture(TEXTURE_PATH + "tools.png");
+	GLuint textureItems = loadTexture(TEXTURE_PATH + "items.png");
 
 
-    bool popupVisible = false;
-    double popupX;
-    double popupY;
+	bool popupVisible = false;
+	double popupX;
+	double popupY;
 
-    unsigned int currentTool = 0;
-    unsigned int newTool = 0;
+	unsigned int currentTool = 0;
+	unsigned int newTool = 0;
 
-    bool wasDrawing = false;
-    unsigned int toolMode = 0;
-    bool drawErasing = false;
-    unsigned int drawToolX0 = 0;
-    unsigned int drawToolY0 = 0;
-    unsigned int rectToolMode = 0;
+	bool wasDrawing = false;
+	unsigned int toolMode = 0;
+	bool drawErasing = false;
+	unsigned int drawToolX0 = 0;
+	unsigned int drawToolY0 = 0;
+	unsigned int rectToolMode = 0;
 
 	Vector2 cameraOffset = Vector2(0.0f, 0.0f);
 	Vector2 cameraScale = Vector2(4.0f, 4.0f);
@@ -374,24 +323,24 @@ int main() {
 
 		if (!disableCursor) {
 			if (popupVisible) {
-		        if (!window->keyPressed(GLFW_KEY_SPACE)) {
-		        	popupVisible = false;
-		        	currentTool = newTool;
-		        }
-		    } else {
-		    	if (window->keyPressed(GLFW_KEY_SPACE)) {
-		    		// rectToolDrawing = false;
-		    		rectToolMode = 0;
+				if (!window->keyPressed(GLFW_KEY_SPACE)) {
+					popupVisible = false;
+					currentTool = newTool;
+				}
+			} else {
+				if (window->keyPressed(GLFW_KEY_SPACE)) {
+					// rectToolDrawing = false;
+					rectToolMode = 0;
 
-		    		popupVisible = true;
-		    		popupX = -1.0 + globalMouseX *  (1.0 / 512.0);
-		    		popupY =  1.0 + globalMouseY * -(1.0 / 512.0);
-		    		popupX += 0.25f - (currentTool % 4) * 0.125f;
-		    		popupY += 0.25f - (3 - (currentTool / 4)) * 0.125f;
-		    		popupX += -0.0625f;
-		    		popupY += -0.0625f;
-		    	}
-		    }
+					popupVisible = true;
+					popupX = -1.0 + globalMouseX *  (1.0 / 512.0);
+					popupY =  1.0 + globalMouseY * -(1.0 / 512.0);
+					popupX += 0.25f - (currentTool % 4) * 0.125f;
+					popupY += 0.25f - (3 - (currentTool / 4)) * 0.125f;
+					popupX += -0.0625f;
+					popupY += -0.0625f;
+				}
+			}
 
 			if (!popupVisible) {
 				double scrollY = -window->getMouseScrollY();
@@ -595,11 +544,11 @@ int main() {
 			-(tileSize * (grid->Height() - 5.0f) - 1.0f)
 		);
 
-        if (!popupVisible && !disableCursor) { // Selection
-	        Draw::color(0.0f, 1.0f, 0.0f);
+		if (!popupVisible && !disableCursor) { // Selection
+			Draw::color(0.0f, 1.0f, 0.0f);
 
-	        if (wasDrawing && toolMode == 1) {
-	        	int x0 = min(tileX, drawToolX0);
+			if (wasDrawing && toolMode == 1) {
+				int x0 = min(tileX, drawToolX0);
 				int y0 = min(tileY, drawToolY0);
 				int x1 = max(tileX, drawToolX0);
 				int y1 = max(tileY, drawToolY0);
@@ -610,72 +559,72 @@ int main() {
 				y1 = clamp(y1, 0, -1 + (signed int) grid->Height());
 
 
-		        strokeRect(
+				strokeRect(
 					x0 * tileSize - 1.0f,
 					-(y0 * tileSize - 1.0f),
 					(x1 + 1) * tileSize - 1.0f,
 					-((y1 + 1) * tileSize - 1.0f)
 				);
-		    } else if (wasDrawing && toolMode == 2) {
+			} else if (wasDrawing && toolMode == 2) {
 				std::vector<Vector2i> points = line(drawToolX0, drawToolY0, clampedTileX, clampedTileY);
 
 				for (Vector2i point : points) {
-			        strokeRect(
+					strokeRect(
 						point.x * tileSize - 1.0f,
 						-(point.y * tileSize - 1.0f),
 						(point.x + 1) * tileSize - 1.0f,
 						-((point.y + 1) * tileSize - 1.0f)
 					);
 				}
-	        } else {
-		        strokeRect(
+			} else {
+				strokeRect(
 					tileX * tileSize - 1.0f,
 					-(tileY * tileSize - 1.0f),
 					(tileX + 1) * tileSize - 1.0f,
 					-((tileY + 1) * tileSize - 1.0f)
 				);
-		    }
-	    }
+			}
+		}
 
-	    // UI
+		// UI
 		applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, Vector2(1.0f, 1.0f));
 
-        if (popupVisible && !disableCursor) {
-	        Draw::color(0.0f, 0.0f, 0.0f);
-	        fillRect(-0.25f + popupX, -0.25f + popupY, 0.25f + popupX, 0.25f + popupY);
+		if (popupVisible && !disableCursor) {
+			Draw::color(0.0f, 0.0f, 0.0f);
+			fillRect(-0.25f + popupX, -0.25f + popupY, 0.25f + popupX, 0.25f + popupY);
 
-	        Draw::color(1.0f, 1.0f, 1.0f);
-	        strokeRect(-0.25f + popupX, -0.25f + popupY, 0.25f + popupX, 0.25f + popupY);
+			Draw::color(1.0f, 1.0f, 1.0f);
+			strokeRect(-0.25f + popupX, -0.25f + popupY, 0.25f + popupX, 0.25f + popupY);
 
-	        // Draw tools
-	        for (int i = 0; i < 16; i++) {
-	        	double offsetX = (i % 4) * 0.125;
-	        	double offsetY = (i / 4) * 0.125;
-	        	drawSprite(textureTools, -0.25f + popupX + offsetX, 0.25f + popupY - offsetY, 0.125f, -0.125f, 4, 6, tools[i]->iconId);
-	        }
+			// Draw tools
+			for (int i = 0; i < 16; i++) {
+				double offsetX = (i % 4) * 0.125;
+				double offsetY = (i / 4) * 0.125;
+				drawSprite(textureTools, -0.25f + popupX + offsetX, 0.25f + popupY - offsetY, 0.125f, -0.125f, 4, 6, tools[i]->iconId);
+			}
 
-	        // Draw selection
-	        glLineWidth(3);
+			// Draw selection
+			glLineWidth(3);
 
-	        Draw::color(1.0f, 0.0f, 0.0f);
-	        strokeRect(
+			Draw::color(1.0f, 0.0f, 0.0f);
+			strokeRect(
 				-0.25f + popupX + (currentTool % 4) * 0.125f,
 				-0.25f + popupY + (3 - currentTool / 4) * 0.125f,
 				-0.125f + popupX + (currentTool % 4) * 0.125f,
 				-0.125f + popupY + (3 - currentTool / 4) * 0.125f
 			);
 
-	        float cx = -1.0 + globalMouseX *  (1.0 / 512.0);
-	        float cy =  1.0 + globalMouseY * -(1.0 / 512.0);
-	        int popupSelectionX = round((cx - popupX) * 8.0f + 1.5f);
-	        int popupSelectionY = round((cy - popupY) * 8.0f + 1.5f);
-	        popupSelectionX = clamp(popupSelectionX, 0, 3);
-	        popupSelectionY = clamp(popupSelectionY, 0, 3);
-	        newTool = popupSelectionX + (3 - popupSelectionY) * 4;
-	        Draw::color(0.0f, 1.0f, 0.0f);
-	        strokeRect(-0.25f + popupX + popupSelectionX * 0.125f, -0.25f + popupY + popupSelectionY * 0.125f, -0.125f + popupX + popupSelectionX * 0.125f, -0.125f + popupY + popupSelectionY * 0.125f);
+			float cx = -1.0 + globalMouseX *  (1.0 / 512.0);
+			float cy =  1.0 + globalMouseY * -(1.0 / 512.0);
+			int popupSelectionX = round((cx - popupX) * 8.0f + 1.5f);
+			int popupSelectionY = round((cy - popupY) * 8.0f + 1.5f);
+			popupSelectionX = clamp(popupSelectionX, 0, 3);
+			popupSelectionY = clamp(popupSelectionY, 0, 3);
+			newTool = popupSelectionX + (3 - popupSelectionY) * 4;
+			Draw::color(0.0f, 1.0f, 0.0f);
+			strokeRect(-0.25f + popupX + popupSelectionX * 0.125f, -0.25f + popupY + popupSelectionY * 0.125f, -0.125f + popupX + popupSelectionX * 0.125f, -0.125f + popupY + popupSelectionY * 0.125f);
 
-	        glLineWidth(1);
+			glLineWidth(1);
 		}
 
 		MenuItems::draw(customMouse);
