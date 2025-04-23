@@ -53,9 +53,6 @@ pacman -S make
 Then refer to the Linux build instructions.
 
 ### Linux
->
-> [!WARNING]  
-> Linux builds are untested, they may not work.
 
 Requirements:
 
@@ -73,10 +70,26 @@ Requirements:
 ./Build.sh --release
 ```
 
+## I found a bug!
+
+Report it on the new [FloodForge Discord server](https://discord.gg/RBq8PDbCmB)!
+
 ## Settings
 
 Settings are stored in `assets/settings.txt`
 To switch to a different theme, change the `Theme:` value to the name of a directory in `assets/themes`
+
+| Setting          | Default Value | Allowed Values |
+|------------------|---------------|----------------|
+| Theme            | N/A           | any folder in assets/themes/ |
+| CameraPanSpeed   | 0.4           | float          |
+| CameraZoomSpeed  | 0.4           | float          |
+| PopupScrollSpeed | 0.4           | float          |
+| OriginalControls | false         | true, false    |
+| ConnectionType   | bezier        | bezier, linear |
+| SelectorScale    | true          | true, false    |
+| SelectorScale    | true          | true, false    |
+| DefaultFilePath  |               | string         |
 
 ## License
 
@@ -94,7 +107,3 @@ The license is at the top of both `.h` files (`include/GLFW/glfw3.h`, `include/G
 - Bitmap Fonts: Generated using [Snow Bamboo](https://snowb.org).  
 - Splash Screen Art: Rendered from Rain World's Shoreline map.  
 - All other artwork: Hand-created by the FloodForge team.
-
-## I found a bug!
-
-Report it on the new [FloodForge Discord server](https://discord.gg/RBq8PDbCmB)!
