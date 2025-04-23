@@ -490,7 +490,7 @@ void updateMain() {
 			if (connectionEnd   != nullptr) { delete connectionEnd;   connectionEnd   = nullptr; }
 
 			if (hoveringRoom != nullptr) {
-				int connectionId = hoveringRoom->getShortcutConnection(tilePosition);
+				int connectionId = hoveringRoom->getRoomEntranceId(tilePosition);
 
 				if (connectionId != -1 && !hoveringRoom->ConnectionUsed(connectionId)) {
 					connectionStart = new Vector2(floor(worldMouse.x - hoveringRoom->Position().x) + 0.5 + hoveringRoom->Position().x, floor(worldMouse.y - hoveringRoom->Position().y) + 0.5 + hoveringRoom->Position().y);
@@ -504,7 +504,7 @@ void updateMain() {
 			int connectionId = -1;
 
 			if (hoveringRoom != nullptr) {
-				connectionId = hoveringRoom->getShortcutConnection(tilePosition);
+				connectionId = hoveringRoom->getRoomEntranceId(tilePosition);
 			}
 
 			if (connectionId != -1) {
@@ -917,7 +917,7 @@ void updateMain() {
 				shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
 				
 				if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
-					room->hoveredDen = room->DenId(shortcut) - room->ConnectionCount();
+					room->hoveredDen = room->DenId(shortcut) - room->RoomEntranceCount();
 	
 					found = true;
 					break;
@@ -1086,10 +1086,10 @@ int main() {
 			if (Settings::getSetting<int>(Settings::Setting::ConnectionType) == 0) {
 				drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 16.0 / lineSize);
 			} else {
-				Vector2 directionA = currentConnection->RoomA()->getShortcutDirectionVector(currentConnection->ConnectionA());
+				Vector2 directionA = currentConnection->RoomA()->getRoomEntranceDirectionVector(currentConnection->ConnectionA());
 				Vector2 directionB = Vector2(0, 0);
 
-				if (currentConnection->RoomB() != nullptr) directionB = currentConnection->RoomB()->getShortcutDirectionVector(currentConnection->ConnectionB());
+				if (currentConnection->RoomB() != nullptr) directionB = currentConnection->RoomB()->getRoomEntranceDirectionVector(currentConnection->ConnectionB());
 
 				if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
 					directionStrength *= 0.3333;

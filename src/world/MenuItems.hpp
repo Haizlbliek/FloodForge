@@ -224,8 +224,8 @@ class MenuItems {
 					// connectionAY = roomA->Height() - connectionAY - 1;
 					// connectionBY = roomB->Height() - connectionBY - 1;
 
-					// int connectionA = roomA->getShortcutConnection(Vector2i(connectionAX, connectionAY));
-					// int connectionB = roomB->getShortcutConnection(Vector2i(connectionBX, connectionBY));
+					// int connectionA = roomA->getRoomEntranceId(Vector2i(connectionAX, connectionAY));
+					// int connectionB = roomB->getRoomEntranceId(Vector2i(connectionBX, connectionBY));
 
 					// if (connectionA == -1 || connectionB == -1) {
 					// 	std::cout << "Failed to load connection from " << roomAName << " to " << roomBName << std::endl;
@@ -680,8 +680,8 @@ class MenuItems {
 			for (Connection *connection : connections) {
 				if (connection->RoomA()->data.hidden || connection->RoomB()->data.hidden) continue;
 
-				Vector2i connectionA = connection->RoomA()->getShortcutConnection(connection->ConnectionA());
-				Vector2i connectionB = connection->RoomB()->getShortcutConnection(connection->ConnectionB());
+				Vector2i connectionA = connection->RoomA()->getRoomEntrancePosition(connection->ConnectionA());
+				Vector2i connectionB = connection->RoomB()->getRoomEntrancePosition(connection->ConnectionB());
 
 				connectionA = Vector2i(
 					connectionA.x,
@@ -697,8 +697,8 @@ class MenuItems {
 				file << toUpper(connection->RoomB()->roomName) << ",";
 				file << connectionA.x << "," << connectionA.y << ",";
 				file << connectionB.x << "," << connectionB.y << ",";
-				file << connection->RoomA()->getShortcutDirection(connection->ConnectionA()) << ",";
-				file << connection->RoomB()->getShortcutDirection(connection->ConnectionB());
+				file << connection->RoomA()->getRoomEntranceDirection(connection->ConnectionA()) << ",";
+				file << connection->RoomB()->getRoomEntranceDirection(connection->ConnectionB());
 				file << "\n";
 			}
 
@@ -716,13 +716,13 @@ class MenuItems {
 
 				file << toUpper(room->roomName) << " : ";
 
-				std::vector<std::string> connections(room->ConnectionCount(), "DISCONNECTED");
+				std::vector<std::string> connections(room->RoomEntranceCount(), "DISCONNECTED");
 
 				for (std::pair<Room*, unsigned int> connection : room->RoomConnections()) {
 					connections[connection.second] = toUpper(connection.first->roomName);
 				}
 
-				for (int i = 0; i < room->ConnectionCount(); i++) {
+				for (int i = 0; i < room->RoomEntranceCount(); i++) {
 					if (i > 0) file << ", ";
 
 					file << connections[i];
@@ -758,7 +758,7 @@ class MenuItems {
 					if (room == offscreenDen) {
 						line << "0-" << den.type;
 					} else {
-						line << (i + room->ConnectionCount()) << "-" << den.type;
+						line << (i + room->RoomEntranceCount()) << "-" << den.type;
 					}
 					if (!den.tag.empty()) {
 						if (den.tag == "MEAN") {

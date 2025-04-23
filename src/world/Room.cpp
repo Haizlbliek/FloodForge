@@ -321,7 +321,7 @@ void Room::generateVBO() {
         }
     }
 
-    for (Vector2i &shortcutEntrance : shortcutEntrances) {
+    for (Vector2i &shortcutEntrance : roomEntrances) {
         float x0 = position.x + shortcutEntrance.x;
         float y0 = position.y - shortcutEntrance.y;
         float x1 = position.x + shortcutEntrance.x + 1;

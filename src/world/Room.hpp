@@ -30,6 +30,11 @@
 #define CONNECTION_TYPE_MOLE 3
 #define CONNECTION_TYPE_SCAV 4
 
+enum ShortcutType {
+	ROOM,
+	DEN
+};
+
 struct Vertex {
     float x, y;
     float r, g, b, a;
@@ -128,23 +133,23 @@ class Room {
 			return position;
 		}
 
-		const std::vector<Vector2> Connections() const {
-			std::vector<Vector2> transformedConnections;
+		const std::vector<Vector2> ShortcutEntranceOffsetPositions() const {
+			std::vector<Vector2> transformedEntrances;
 
-			for (const std::pair<Vector2i, int> &connection : connections) {
-				transformedConnections.push_back(Vector2(
+			for (const std::pair<Vector2i, int> &connection : shortcutEntrances) {
+				transformedEntrances.push_back(Vector2(
 					position.x + connection.first.x + 0.5,
 					position.y - connection.first.y - 0.5
 				));
 			}
 
-			return transformedConnections;
+			return transformedEntrances;
 		}
 
-		int getConnection(const Vector2i &searchPosition) const {
+		int getShortcutEntranceId(const Vector2i &searchPosition) const {
 			unsigned int connectionId = 0;
 
-			for (const std::pair<Vector2i, int> &connection : connections) {
+			for (const std::pair<Vector2i, int> &connection : shortcutEntrances) {
 				if (connection.first == searchPosition) {
 					return connectionId;
 				}
@@ -155,27 +160,18 @@ class Room {
 			return -1;
 		}
 
-		const Vector2 getConnectionPosition(unsigned int connectionId) const {
-			if (connectionId >= connections.size()) return Vector2(0, 0);
-			const Vector2i &connection = connections[connectionId].first;
+		const Vector2 getRoomEntranceOffsetPosition(unsigned int connectionId) const {
+			Vector2i connection = getRoomEntrancePosition(connectionId);
+
 			return Vector2(
 				position.x + connection.x + 0.5,
 				position.y - connection.y - 0.5
 			);
 		}
 
-		const Vector2 getShortcutConnectionPosition(unsigned int connectionId) const {
-			if (connectionId >= connections.size()) return Vector2(0, 0);
-			Vector2i connection = getShortcutConnection(connectionId);
-			return Vector2(
-				position.x + connection.x + 0.5,
-				position.y - connection.y - 0.5
-			);
-		}
-
-		int getShortcutConnection(const Vector2i &searchPosition) const {
+		int getRoomEntranceId(const Vector2i &searchPosition) const {
 			int index = 0;
-			for (const Vector2i enterance : shortcutEntrances) {
+			for (const Vector2i enterance : roomEntrances) {
 				if (enterance == searchPosition) {
 					return index;
 				}
@@ -186,45 +182,33 @@ class Room {
 			return -1;
 		}
 
-		const Vector2i getShortcutConnection(unsigned int connectionId) const {
-			Vector2i connection = shortcutEntrances[connectionId];
-			return connection;
+		const Vector2i getRoomEntrancePosition(unsigned int connectionId) const {
+			if (connectionId >= roomEntrances.size()) return Vector2i(-1, -1);
+
+			return roomEntrances[connectionId];
 		}
 
-		Vector2 getShortcutDirectionVector(unsigned int connectionId) const {
-			Vector2i connection = shortcutEntrances[connectionId];
-
-			if (tileIsShortcut(connection.x - 1, connection.y))
-				return Vector2(-1.0, 0.0);
-			else if (tileIsShortcut(connection.x, connection.y + 1))
-				return Vector2(0.0, -1.0);
-			else if (tileIsShortcut(connection.x + 1, connection.y))
-				return Vector2(1.0, 0.0);
-			else if (tileIsShortcut(connection.x, connection.y - 1))
-				return Vector2(0.0, 1.0);
-
-			return Vector2(0, 0);
+		Vector2 getRoomEntranceDirectionVector(unsigned int connectionId) const {
+			return MathUtils::directionToVector(getRoomEntranceDirection(connectionId));
 		}
 
-		int getShortcutDirection(unsigned int connectionId) const {
-			Vector2i connection = shortcutEntrances[connectionId];
-
-			int forwardDirection = -1;
+		Direction getRoomEntranceDirection(unsigned int connectionId) const {
+			Vector2i connection = roomEntrances[connectionId];
 
 			if (tileIsShortcut(connection.x - 1, connection.y))
-				forwardDirection = 2;
+				return Direction::LEFT;
 			else if (tileIsShortcut(connection.x, connection.y + 1))
-				forwardDirection = 3;
+				return Direction::DOWN;
 			else if (tileIsShortcut(connection.x + 1, connection.y))
-				forwardDirection = 0;
+				return Direction::RIGHT;
 			else if (tileIsShortcut(connection.x, connection.y - 1))
-				forwardDirection = 1;
+				return Direction::UP;
 
-			return forwardDirection;
+			return UNKNOWN;
 		}
 		
 		bool canConnect(unsigned int connectionId) {
-			if (connections.size() <= connectionId) return false;
+			if (shortcutEntrances.size() <= connectionId) return false;
 			
 			return true;
 		}
@@ -271,16 +255,16 @@ class Room {
 			return roomConnections;
 		}
 
-		int ConnectionCount() const {
-			return shortcutEntrances.size();
+		int RoomEntranceCount() const {
+			return roomEntrances.size();
 		}
 
-		const std::vector<std::pair<Vector2i, int>> TileConnections() const {
-			return connections;
-		}
-
-		const std::vector<Vector2i> ShortcutEntrances() const {
+		const std::vector<std::pair<Vector2i, ShortcutType>> ShortcutConnections() const {
 			return shortcutEntrances;
+		}
+
+		const std::vector<Vector2i> RoomEntrances() const {
+			return roomEntrances;
 		}
 
 		const int DenId(Vector2i coord) const {
@@ -288,11 +272,11 @@ class Room {
 
 			if (it == denEntrances.end()) return -1;
 
-			return (it - denEntrances.begin()) + shortcutEntrances.size();
+			return (it - denEntrances.begin()) + roomEntrances.size();
 		}
 
 		bool CreatureDenExists(int id) {
-			return CreatureDen01Exists(id - shortcutEntrances.size());
+			return CreatureDen01Exists(id - roomEntrances.size());
 		}
 
 		bool CreatureDen01Exists(int id) {
@@ -300,7 +284,7 @@ class Room {
 		}
 
 		Den &CreatureDen(int id) {
-			return CreatureDen01(id - shortcutEntrances.size());
+			return CreatureDen01(id - roomEntrances.size());
 		}
 
 		Den &CreatureDen01(int id) {
@@ -364,10 +348,10 @@ class Room {
 		}
 
 		void ensureConnections() {
-			std::vector<std::pair<Vector2i, int>> verifiedConnections;
+			std::vector<std::pair<Vector2i, ShortcutType>> verifiedConnections;
 
-			for (int i = connections.size() - 1; i >= 0; i--) {
-				Vector2i connection = connections[i].first;
+			for (int i = shortcutEntrances.size() - 1; i >= 0; i--) {
+				Vector2i connection = shortcutEntrances[i].first;
 
 				Vector2i forwardDirection = Vector2i(0, 0);
 
@@ -391,14 +375,10 @@ class Room {
 
 						forwardDirection.x = 0;
 						forwardDirection.y = 0;
-						if (lastDirection.x !=  1 && tileIsShortcut(connection.x - 1, connection.y))
-							forwardDirection.x = -1;
-						else if (lastDirection.y != -1 && tileIsShortcut(connection.x, connection.y + 1))
-							forwardDirection.y = 1;
-						else if (lastDirection.x != -1 && tileIsShortcut(connection.x + 1, connection.y))
-							forwardDirection.x = 1;
-						else if (lastDirection.y !=  1 && tileIsShortcut(connection.x, connection.y - 1))
-							forwardDirection.y = -1;
+						if (     lastDirection.x !=  1 && tileIsShortcut(connection.x - 1, connection.y    )) forwardDirection.x = -1;
+						else if (lastDirection.y != -1 && tileIsShortcut(connection.x,     connection.y + 1)) forwardDirection.y = 1;
+						else if (lastDirection.x != -1 && tileIsShortcut(connection.x + 1, connection.y    )) forwardDirection.x = 1;
+						else if (lastDirection.y !=  1 && tileIsShortcut(connection.x,     connection.y - 1)) forwardDirection.y = -1;
 					}
 
 					if (getTile(connection.x, connection.y) % 16 == 4) {
@@ -406,27 +386,29 @@ class Room {
 					}
 				}
 
-				verifiedConnections.push_back(std::pair<Vector2i, int>{connection, connections[i].second});
+				verifiedConnections.push_back(std::make_pair(connection, shortcutEntrances[i].second));
 			}
 
 			std::reverse(verifiedConnections.begin(), verifiedConnections.end());
 
-			for (size_t i = 0; i < connections.size(); ++i) {
-				for (size_t j = 0; j < connections.size() - i - 1; ++j) {
-					const Vector2i &a = connections[j].first;
-					const Vector2i &b = connections[j + 1].first;
+			for (size_t i = 0; i < shortcutEntrances.size(); ++i) {
+				for (size_t j = 0; j < shortcutEntrances.size() - i - 1; ++j) {
+					const Vector2i &a = shortcutEntrances[j].first;
+					const Vector2i &b = shortcutEntrances[j + 1].first;
 
 					if (a.y > b.y || (a.y == b.y && a.x > b.x)) {
-						std::swap(connections[j], connections[j + 1]);
+						std::swap(shortcutEntrances[j], shortcutEntrances[j + 1]);
 						std::swap(verifiedConnections[j], verifiedConnections[j + 1]);
 					}
 				}
 			}
 			
-			for (std::pair<Vector2i, int> verifiedConnection : verifiedConnections) {
-				if (verifiedConnection.second == 0) {
-					shortcutEntrances.push_back(verifiedConnection.first);
-				} else {
+			for (std::pair<Vector2i, ShortcutType> verifiedConnection : verifiedConnections) {
+				ShortcutType type = verifiedConnection.second;
+
+				if (type == ShortcutType::ROOM) {
+					roomEntrances.push_back(verifiedConnection.first);
+				} else if (type == ShortcutType::DEN) {
 					denEntrances.push_back(verifiedConnection.first);
 				}
 			}
@@ -498,11 +480,11 @@ class Room {
 							break;
 						case 4: // Exit
 							geometry[tileId] += 64;
-							connections.push_back(std::pair<Vector2i, int>{ Vector2i(tileId / height, tileId % height), 0 });
+							shortcutEntrances.push_back(std::make_pair( Vector2i(tileId / height, tileId % height), ShortcutType::ROOM ));
 							break;
 						case 5: // Den
 							geometry[tileId] += 256;
-							connections.push_back(std::pair<Vector2i, int>{ Vector2i(tileId / height, tileId % height), 1 });
+							shortcutEntrances.push_back(std::make_pair( Vector2i(tileId / height, tileId % height), ShortcutType::DEN ));
 							break;
 					}
 				}
@@ -544,7 +526,7 @@ class Room {
 		std::vector<std::string> tags;
 
 		std::set<std::pair<Room*, unsigned int>> roomConnections;
-		std::vector<Vector2i> shortcutEntrances;
+		std::vector<Vector2i> roomEntrances;
 		std::vector<Vector2i> denEntrances;
-		std::vector<std::pair<Vector2i, int>> connections;
+		std::vector<std::pair<Vector2i, ShortcutType>> shortcutEntrances;
 };

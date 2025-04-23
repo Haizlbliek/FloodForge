@@ -26,8 +26,8 @@ class Connection {
 				Draw::color(1.0f, 1.0f, 0.0f);
 			}
 
-			Vector2 pointA = roomA->getShortcutConnectionPosition(connectionA);
-			Vector2 pointB = roomB->getShortcutConnectionPosition(connectionB);
+			Vector2 pointA = roomA->getRoomEntranceOffsetPosition(connectionA);
+			Vector2 pointB = roomB->getRoomEntranceOffsetPosition(connectionB);
 
 			segments = std::clamp((int) (pointA.distanceTo(pointB) / 2.0), 4, 100);
 			directionStrength = pointA.distanceTo(pointB);
@@ -36,8 +36,8 @@ class Connection {
 			if (Settings::getSetting<int>(Settings::Setting::ConnectionType) == 0) {
 				drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 16.0 / lineSize);
 			} else {
-				Vector2 directionA = roomA->getShortcutDirectionVector(connectionA);
-				Vector2 directionB = roomB->getShortcutDirectionVector(connectionB);
+				Vector2 directionA = roomA->getRoomEntranceDirectionVector(connectionA);
+				Vector2 directionB = roomB->getRoomEntranceDirectionVector(connectionB);
 
 				if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
 					directionStrength *= 0.3333;
@@ -60,14 +60,14 @@ class Connection {
 		}
 
 		bool hovered(Vector2 mouse, double lineSize) {
-			Vector2 pointA = roomA->getShortcutConnectionPosition(connectionA);
-			Vector2 pointB = roomB->getShortcutConnectionPosition(connectionB);
+			Vector2 pointA = roomA->getRoomEntranceOffsetPosition(connectionA);
+			Vector2 pointB = roomB->getRoomEntranceOffsetPosition(connectionB);
 
 			if (Settings::getSetting<int>(Settings::Setting::ConnectionType) == 0) {
 				return lineDistance(mouse, pointA, pointB) < 1.0 / lineSize;
 			} else {
-				Vector2 directionA = roomA->getShortcutDirectionVector(connectionA) * directionStrength;
-				Vector2 directionB = roomB->getShortcutDirectionVector(connectionB) * directionStrength;
+				Vector2 directionA = roomA->getRoomEntranceDirectionVector(connectionA) * directionStrength;
+				Vector2 directionB = roomB->getRoomEntranceDirectionVector(connectionB) * directionStrength;
 
 				Vector2 lastPoint = bezierCubic(0.0, pointA, pointA + directionA, pointB + directionB, pointB);
 				for (double t = 1.0 / segments; t <= 1.01; t += 1.0 / segments) {
@@ -83,8 +83,8 @@ class Connection {
 		}
 
 		bool collides(Vector2 vector) {
-			Vector2 pointA = roomA->getShortcutConnectionPosition(connectionA);
-			Vector2 pointB = roomB->getShortcutConnectionPosition(connectionB);
+			Vector2 pointA = roomA->getRoomEntranceOffsetPosition(connectionA);
+			Vector2 pointB = roomB->getRoomEntranceOffsetPosition(connectionB);
 
 			double length = pointA.distanceTo(pointB);
 			double d1 = pointA.distanceTo(vector);
