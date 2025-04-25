@@ -54,11 +54,16 @@ Then refer to the Linux build instructions.
 
 ### Linux
 
-Requirements:
+Install:
 
-- GLFW3 (`sudo apt install libglfw3-dev`)
-- pkg-config
-- Make
+```bash
+sudo apt-get install make
+sudo apt-get install libglfw3-dev
+sudo apt-get install pkg-config
+sudo apt-get install g++
+```
+
+Build:
 
 ```bash
 ./Build.sh
