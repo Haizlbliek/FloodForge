@@ -142,9 +142,9 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 	}
 
 	
-    scrollA += (scrollATo - scrollA) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
-    scrollB += (scrollBTo - scrollB) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
-    
+	scrollA += (scrollATo - scrollA) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
+	scrollB += (scrollBTo - scrollB) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
+	
 	double centreX = bounds.X0() + 0.305;
 	double width = 0.5;
 	double height = 0.5;

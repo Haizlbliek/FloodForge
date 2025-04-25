@@ -59,7 +59,7 @@ class Font {
 			double scale = (1.0 / base) * fontSize;
 
 			double currentX = startX,
-			       currentY = startY;
+				   currentY = startY;
 
 			double x, y;
 			double width, height;

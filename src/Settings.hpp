@@ -11,26 +11,26 @@
 #include "Theme.hpp"
 
 namespace Settings {
-    enum class Setting {
-        CameraPanSpeed,
-        CameraZoomSpeed,
-        PopupScrollSpeed,
-        ConnectionType,
-        OrignalControls,
-        SelectorScale,
-        DefaultFilePath
-    };
+	enum class Setting {
+		CameraPanSpeed,
+		CameraZoomSpeed,
+		PopupScrollSpeed,
+		ConnectionType,
+		OrignalControls,
+		SelectorScale,
+		DefaultFilePath
+	};
 
-    extern std::unordered_map<Setting, std::variant<double, int, bool, Colour, std::string>> settings;
+	extern std::unordered_map<Setting, std::variant<double, int, bool, Colour, std::string>> settings;
 
-    void loadDefaults();
+	void loadDefaults();
 
-    template<typename T>
-    T getSetting(Setting setting) {
-        return std::get<T>(settings.at(setting));
-    }
+	template<typename T>
+	T getSetting(Setting setting) {
+		return std::get<T>(settings.at(setting));
+	}
 
-    void init();
+	void init();
 
-    void cleanup();
+	void cleanup();
 }

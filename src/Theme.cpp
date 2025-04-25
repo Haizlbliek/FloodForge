@@ -24,8 +24,8 @@ std::unordered_map<ThemeColour, Colour> themeBasic {
 	{ ThemeColour::TextHighlight, Colour(0.0,  1.0,  1.0) },
 	{ ThemeColour::SelectionBorder, Colour(0.3,  0.3,  0.3) },
 	{ ThemeColour::Grid, Colour(0.3,  0.3,  0.3) },
-    { ThemeColour::RoomBorder, Colour(0.6, 0.6, 0.6) },
-    { ThemeColour::RoomBorderHighlight, Colour(0.00, 0.75, 0.00) }
+	{ ThemeColour::RoomBorder, Colour(0.6, 0.6, 0.6) },
+	{ ThemeColour::RoomBorderHighlight, Colour(0.00, 0.75, 0.00) }
 };
 
 std::unordered_map<ThemeColour, Colour> currentTheme;

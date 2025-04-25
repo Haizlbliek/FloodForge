@@ -36,8 +36,8 @@ enum ShortcutType {
 };
 
 struct Vertex {
-    float x, y;
-    float r, g, b, a;
+	float x, y;
+	float r, g, b, a;
 };
 
 namespace RoomHelpers {

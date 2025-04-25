@@ -24,7 +24,7 @@ class Render {
 			GLuint solids = loadTexture(TEXTURE_PATH + "renderSolids.png");
 			GLuint shortcuts = loadTexture(TEXTURE_PATH + "shortcuts.png");
 			Draw::color(0.4745f, 0.0f, 0.0f);
-        	drawTexturedGrid(
+			drawTexturedGrid(
 				grid,
 				2.0 / (double) width,
 				2.0 / (double) height,
@@ -35,14 +35,14 @@ class Render {
 				70, 40
 			);
 
-        	window->render();
+			window->render();
 
 			while (window->isOpen()) {
 				glfwPollEvents();
 				// window->close();
 			}
 
-        	window->render();
+			window->render();
 
 			saveImage(window->getGLFWWindow(), path);
 

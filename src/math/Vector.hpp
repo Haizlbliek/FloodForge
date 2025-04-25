@@ -140,30 +140,30 @@ class Vector2 {
 
 
 struct Vector3f {
-    float x, y, z;
+	float x, y, z;
 
-    inline constexpr Vector3f() noexcept : x(0.0f), y(0.0f), z(0.0f) {}
-    inline constexpr Vector3f(float x, float y, float z) noexcept : x(x), y(y), z(z) {}
+	inline constexpr Vector3f() noexcept : x(0.0f), y(0.0f), z(0.0f) {}
+	inline constexpr Vector3f(float x, float y, float z) noexcept : x(x), y(y), z(z) {}
 
-    inline constexpr float lengthSq() const { return x * x + y * y + z * z; }
-    inline float length() const { return sqrtf(lengthSq()); }
+	inline constexpr float lengthSq() const { return x * x + y * y + z * z; }
+	inline float length() const { return sqrtf(lengthSq()); }
 
-    inline Vector3f normalized() const {
-        float len = length();
-        return Vector3f(x / len, y / len, z / len);
-    }
+	inline Vector3f normalized() const {
+		float len = length();
+		return Vector3f(x / len, y / len, z / len);
+	}
 
-    inline constexpr float dot(const Vector3f &other) const {
-        return x * other.x + y * other.y + z * other.z;
-    }
+	inline constexpr float dot(const Vector3f &other) const {
+		return x * other.x + y * other.y + z * other.z;
+	}
 
-    inline constexpr Vector3f cross(const Vector3f &other) const {
-        return Vector3f(
-            y * other.z - z * other.y,
-            z * other.x - x * other.z,
-            x * other.y - y * other.x
-        );
-    }
+	inline constexpr Vector3f cross(const Vector3f &other) const {
+		return Vector3f(
+			y * other.z - z * other.y,
+			z * other.x - x * other.z,
+			x * other.y - y * other.x
+		);
+	}
 };
 
 
@@ -203,33 +203,33 @@ std::string to_string(const Vector2i &vector);
 std::ostream &operator<<(std::ostream &stream, Vector3f &vec);
 
 inline constexpr bool operator==(const Vector3f &a, const Vector3f &b) {
-    return a.x == b.x && a.y == b.y && a.z == b.z;
+	return a.x == b.x && a.y == b.y && a.z == b.z;
 }
 
 inline constexpr Vector3f operator+(const Vector3f &a, const Vector3f &b) {
-    return Vector3f(a.x + b.x, a.y + b.y, a.z + b.z);
+	return Vector3f(a.x + b.x, a.y + b.y, a.z + b.z);
 }
 
 inline constexpr Vector3f operator-(const Vector3f &a, const Vector3f &b) {
-    return Vector3f(a.x - b.x, a.y - b.y, a.z - b.z);
+	return Vector3f(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
 template <typename T>
 inline constexpr Vector3f operator*(const Vector3f &v, const T s) {
-    return Vector3f(v.x * s, v.y * s, v.z * s);
+	return Vector3f(v.x * s, v.y * s, v.z * s);
 }
 
 template <typename T>
 inline constexpr Vector3f operator*(const T s, const Vector3f &v) {
-    return Vector3f(v.x * s, v.y * s, v.z * s);
+	return Vector3f(v.x * s, v.y * s, v.z * s);
 }
 
 template <typename T>
 inline constexpr Vector3f operator/(const Vector3f &v, const T s) {
-    return Vector3f(v.x / s, v.y / s, v.z / s);
+	return Vector3f(v.x / s, v.y / s, v.z / s);
 }
 
 template <typename T>
 inline constexpr Vector3f operator/(const T s, const Vector3f &v) {
-    return Vector3f(v.x / s, v.y / s, v.z / s);
+	return Vector3f(v.x / s, v.y / s, v.z / s);
 }

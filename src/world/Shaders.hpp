@@ -3,8 +3,8 @@
 #include "../gl.h"
 
 namespace Shaders {
-    extern GLuint roomShader;
+	extern GLuint roomShader;
 
-    void init();
-    void cleanup();
+	void init();
+	void cleanup();
 }

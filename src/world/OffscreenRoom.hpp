@@ -92,7 +92,7 @@ class OffscreenRoom : public Room {
 				double rectX = position.x + width * 0.5 - denEntrances.size() * 2.0 + i * 4.0 + 2.0;
 				double rectY = position.y - height * 0.25;
 				double scale = selectorScale;
-        
+		
 				if (i == hoveredDen) scale *= 1.5;
 		
 				RoomHelpers::drawTexture(CreatureTextures::getTexture(dens[i].type), rectX, rectY, scale);

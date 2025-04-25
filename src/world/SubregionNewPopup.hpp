@@ -155,14 +155,14 @@ class SubregionNewPopup : public Popup {
 
 					popup->text += character;
 				} else if (key == GLFW_KEY_SPACE) {
-                    if (!popup->text.empty())
-                        popup->text += " ";
-                } else if (key == GLFW_KEY_BACKSPACE) {
+					if (!popup->text.empty())
+						popup->text += " ";
+				} else if (key == GLFW_KEY_BACKSPACE) {
 					if (!popup->text.empty()) popup->text.pop_back();
 				}
 			}
 		}
-        
+		
 		bool canStack(std::string popupName) { return false; }
 		std::string PopupName() { return "SubregionNewPopup"; }
 

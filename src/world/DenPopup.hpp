@@ -67,28 +67,28 @@ class DenPopup : public Popup {
 		}
 
 		void close();
-        
+		
 		static void scrollCallback(void *object, double deltaX, double deltaY) {
-            DenPopup *popup = static_cast<DenPopup*>(object);
+			DenPopup *popup = static_cast<DenPopup*>(object);
 
 			if (!popup->hovered) return;
 
 			if (popup->mouseOnRight) {
 				popup->scrollBTo += deltaY * 0.06;
 			} else {
-            	popup->scrollATo += deltaY * 0.06;
+				popup->scrollATo += deltaY * 0.06;
 			}
-            
-            popup->clampScroll();
-        }
+			
+			popup->clampScroll();
+		}
 
 		std::string PopupName() { return "DenPopup"; }
 	
 	private:
-        double scrollA;
-        double scrollATo;
-        double scrollB;
-        double scrollBTo;
+		double scrollA;
+		double scrollATo;
+		double scrollB;
+		double scrollBTo;
 		
 		double sliderMin = 0.0;
 		double sliderMax = 1.0;
@@ -100,47 +100,47 @@ class DenPopup : public Popup {
 		bool mouseOnRight;
 		
 
-        void clampScroll() {
+		void clampScroll() {
 			double width = 0.5;
 			double height = 0.5;
 
 			double buttonSize = std::min(width / 7.0, height / 7.0);
 			double buttonPadding = 0.02;
 
-            int itemsA = CreatureTextures::creatures.size() / CREATURE_ROWS - 1;
+			int itemsA = CreatureTextures::creatures.size() / CREATURE_ROWS - 1;
 			double sizeA = itemsA * (buttonSize + buttonPadding);
 
-            if (scrollATo < -sizeA) {
-                scrollATo = -sizeA;
-                if (scrollA <= -sizeA + 0.06) {
-                    scrollA = -sizeA - 0.03;
-                }
-            }
+			if (scrollATo < -sizeA) {
+				scrollATo = -sizeA;
+				if (scrollA <= -sizeA + 0.06) {
+					scrollA = -sizeA - 0.03;
+				}
+			}
 
-            if (scrollATo > 0) {
-                scrollATo = 0;
-                if (scrollA >= -0.06) {
-                    scrollA = 0.03;
-                }
-            }
+			if (scrollATo > 0) {
+				scrollATo = 0;
+				if (scrollA >= -0.06) {
+					scrollA = 0.03;
+				}
+			}
 			
-            int itemsB = CreatureTextures::creatureTags.size() / 2;
+			int itemsB = CreatureTextures::creatureTags.size() / 2;
 			double sizeB = itemsB * (buttonSize + buttonPadding);
 
-            if (scrollBTo < -sizeB) {
-                scrollBTo = -sizeB;
-                if (scrollB <= -sizeB + 0.06) {
-                    scrollB = -sizeB - 0.03;
-                }
-            }
+			if (scrollBTo < -sizeB) {
+				scrollBTo = -sizeB;
+				if (scrollB <= -sizeB + 0.06) {
+					scrollB = -sizeB - 0.03;
+				}
+			}
 
-            if (scrollBTo > 0) {
-                scrollBTo = 0;
-                if (scrollB >= -0.06) {
-                    scrollB = 0.03;
-                }
-            }
-        }
+			if (scrollBTo > 0) {
+				scrollBTo = 0;
+				if (scrollB >= -0.06) {
+					scrollB = 0.03;
+				}
+			}
+		}
 
 		void ensureFlag() {
 			Den &den = room->CreatureDen(this->den);

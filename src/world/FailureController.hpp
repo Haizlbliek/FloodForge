@@ -4,6 +4,6 @@
 #include <string>
 
 class FailureController {
-    public:
-        static std::vector<std::string> fails;
+	public:
+		static std::vector<std::string> fails;
 };
