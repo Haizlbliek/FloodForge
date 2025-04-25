@@ -354,6 +354,7 @@ class Room {
 				Vector2i connection = shortcutEntrances[i].first;
 
 				Vector2i forwardDirection = Vector2i(0, 0);
+				bool hasDirection = true;
 
 				if (tileIsShortcut(connection.x - 1, connection.y))
 					forwardDirection.x = -1;
@@ -375,18 +376,22 @@ class Room {
 
 						forwardDirection.x = 0;
 						forwardDirection.y = 0;
-						if (     lastDirection.x !=  1 && tileIsShortcut(connection.x - 1, connection.y    )) forwardDirection.x = -1;
-						else if (lastDirection.y != -1 && tileIsShortcut(connection.x,     connection.y + 1)) forwardDirection.y = 1;
-						else if (lastDirection.x != -1 && tileIsShortcut(connection.x + 1, connection.y    )) forwardDirection.x = 1;
-						else if (lastDirection.y !=  1 && tileIsShortcut(connection.x,     connection.y - 1)) forwardDirection.y = -1;
+						hasDirection = false;
+						if (     lastDirection.x !=  1 && tileIsShortcut(connection.x - 1, connection.y    )) { forwardDirection.x = -1; hasDirection = true; }
+						else if (lastDirection.y != -1 && tileIsShortcut(connection.x,     connection.y + 1)) { forwardDirection.y =  1; hasDirection = true; }
+						else if (lastDirection.x != -1 && tileIsShortcut(connection.x + 1, connection.y    )) { forwardDirection.x =  1; hasDirection = true; }
+						else if (lastDirection.y !=  1 && tileIsShortcut(connection.x,     connection.y - 1)) { forwardDirection.y = -1; hasDirection = true; }
 					}
 
 					if (getTile(connection.x, connection.y) % 16 == 4) {
+						hasDirection = true;
 						break;
 					}
+					
+					if (!hasDirection) break;
 				}
 
-				verifiedConnections.push_back(std::make_pair(connection, shortcutEntrances[i].second));
+				if (hasDirection) verifiedConnections.push_back(std::make_pair(connection, shortcutEntrances[i].second));
 			}
 
 			std::reverse(verifiedConnections.begin(), verifiedConnections.end());
