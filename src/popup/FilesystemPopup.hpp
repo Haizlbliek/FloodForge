@@ -404,6 +404,8 @@ class FilesystemPopup : public Popup {
             // }
             selected.clear();
 
+            std::filesystem::path potentialPath;
+
 #ifdef _WIN32
             std::vector<char> drives(256);
             DWORD size = GetLogicalDriveStringsA(drives.size(), drives.data());
@@ -412,9 +414,6 @@ class FilesystemPopup : public Popup {
                 std::cerr << "Failed to get drives." << std::endl;
                 return;
             }
-            
-            std::filesystem::path potentialPath;
-
             
             potentialPath = Settings::getSetting<std::string>(Settings::Setting::DefaultFilePath);
             if (std::filesystem::exists(potentialPath)) {
