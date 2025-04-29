@@ -285,7 +285,7 @@ class MenuItems {
 
 					std::getline(data, temp, '<');
 					std::getline(data, temp, '>'); // Layer
-					int layer = std::stoi(temp);
+					int layer = temp.empty() ? 0 : std::stoi(temp);
 					
 					std::getline(data, temp, '<');
 					std::getline(data, temp, '>'); // Subregion
@@ -357,14 +357,6 @@ class MenuItems {
 
 			std::string roomName = toLower(std::get<0>(parts));
 
-			std::string roomPath = directory.string();
-			replaceLastInstance(roomPath, worldAcronym, worldAcronym + "-rooms");
-			roomPath = (std::filesystem::path(roomPath) / roomName).string();
-
-			if (startsWith(roomName, "gate")) {
-				replaceLastInstance(roomPath, worldAcronym + "-rooms", "gates");
-			}
-
 			Room *room = nullptr;
 			for (Room *otherRoom : rooms) {
 				if (toLower(otherRoom->roomName) == roomName) {
@@ -377,6 +369,15 @@ class MenuItems {
 				if (startsWith(roomName, "offscreenden")) {
 					room = new OffscreenRoom(roomName, roomName);
 				} else {
+					std::string roomPath = directory.string();
+					replaceLastInstance(roomPath, worldAcronym, worldAcronym + "-rooms");
+		
+					if (startsWith(roomName, "gate")) {
+						replaceLastInstance(roomPath, worldAcronym + "-rooms", "gates");
+					}
+
+					roomPath = findFileCaseInsensitive(roomPath, roomName + ".txt");
+
 					room = new Room(roomPath, roomName);
 				}
 
@@ -445,6 +446,7 @@ class MenuItems {
 			if (room == nullptr) return;
 
 			for (std::string creatureInDen : split(splits[1], ',')) {
+				std::cout << creatureInDen << std::endl;
 				std::vector<std::string> sections = split(creatureInDen, '-');
 				int denId = std::stoi(sections[0]);
 				std::string creature = sections[1];
@@ -483,7 +485,17 @@ class MenuItems {
 						den.count = std::stoi(sections[2]);
 					}
 				} else if (sections.size() == 4) {
-					std::string tag = sections[2].substr(1, sections[2].size() - 2);
+					std::string tagString = "";
+					std::string countString = "";
+					if (sections[2][0] == '{') {
+						tagString = sections[2];
+						countString = sections[3];
+					} else {
+						countString = sections[2];
+						tagString = sections[3];
+					}
+
+					std::string tag = tagString.substr(1, tagString.size() - 2);
 					if (startsWith(tag, "Mean")) {
 						den.tag = "MEAN";
 						den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
@@ -496,7 +508,7 @@ class MenuItems {
 					} else {
 						den.tag = tag;
 					}
-					den.count = std::stoi(sections[3]);
+					den.count = std::stoi(countString);
 				} else {
 					den.count = 1;
 				}

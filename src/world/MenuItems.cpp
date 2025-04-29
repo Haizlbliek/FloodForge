@@ -125,11 +125,14 @@ void MenuItems::init(Window *window) {
 					}
 
 					if (std::filesystem::exists(mapFilePath)) {
+						std::cout << "Loading map" << std::endl;
+
 						parseMap(mapFilePath, exportDirectory);
 					} else {
 						std::cout << "Map file not found, loading world file" << std::endl;
 					}
 
+					std::cout << "Loading world" << std::endl;
 					parseWorld(path, exportDirectory);
 					
 					std::cout << "Loading extra room data" << std::endl;
