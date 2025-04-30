@@ -446,7 +446,6 @@ class MenuItems {
 			if (room == nullptr) return;
 
 			for (std::string creatureInDen : split(splits[1], ',')) {
-				std::cout << creatureInDen << std::endl;
 				std::vector<std::string> sections = split(creatureInDen, '-');
 				int denId = std::stoi(sections[0]);
 				std::string creature = sections[1];

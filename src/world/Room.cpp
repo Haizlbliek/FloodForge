@@ -91,6 +91,8 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
 		if (subregion == 10) tint = Colour(0.5, 0.0, 1.0);
 		if (subregion == 11) tint = Colour(1.0, 0.5, 1.0);
 	}
+
+	glEnable(GL_BLEND);
 	
 	glBindVertexArray(vao);
 	glUseProgram(Shaders::roomShader);
@@ -116,6 +118,8 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
 		Draw::color(0.0, 0.0, 0.5, 0.5);
 		fillRect(position.x, position.y - (height - std::min(water, height)), position.x + width, position.y - height);
 	}
+
+	glDisable(GL_BLEND);
 
 	if (visibleDevItems) {
 		for (DevItem item : data.devItems) {
