@@ -422,7 +422,7 @@ class Room {
 		void loadGeometry() {
 			std::fstream geometryFile(path);
 			if (!geometryFile.is_open() || !std::filesystem::exists(path)) {
-				FailureController::fails.push_back("Failed to load '" + path + "' - Doesn't exist");
+				FailureController::fails.push_back("Failed to load '" + roomName + "' - Doesn't exist");
 				std::cout << "Failed to load '" << path << "' - Doesn't exist." << std::endl;
 				width = 72;
 				height = 43;
