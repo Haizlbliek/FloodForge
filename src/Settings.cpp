@@ -10,6 +10,7 @@ void Settings::loadDefaults() {
 	settings[Setting::OrignalControls] = false;
 	settings[Setting::SelectorScale] = true;
 	settings[Setting::DefaultFilePath] = "NON_EXISTANT_PATH_YOU_CAN'T_HAVE_THIS_PATH_PLSPLSPLS///";
+	settings[Setting::WarnMissingImages] = false;
 }
 
 void Settings::init() {
@@ -26,14 +27,17 @@ void Settings::init() {
 
 		std::string key = line.substr(0, line.find_first_of(':'));
 		std::string value = line.substr(line.find_first_of(':') + 2);
+		bool boolValue = (toLower(value) == "true" || toLower(value) == "yes" || toLower(value) == "1");
+		
 		if (key == "Theme") loadTheme(value);
 		else if (key == "CameraPanSpeed") settings[Setting::CameraPanSpeed] = std::stod(value);
 		else if (key == "CameraZoomSpeed") settings[Setting::CameraZoomSpeed] = std::stod(value);
 		else if (key == "PopupScrollSpeed") settings[Setting::PopupScrollSpeed] = std::stod(value);
 		else if (key == "ConnectionType") settings[Setting::ConnectionType] = int(toLower(value) == "bezier");
-		else if (key == "OriginalControls") settings[Setting::OrignalControls] = (toLower(value) == "true" || toLower(value) == "yes" || toLower(value) == "1");
-		else if (key == "SelectorScale") settings[Setting::SelectorScale] = (toLower(value) == "true" || toLower(value) == "yes" || toLower(value) == "1");
+		else if (key == "OriginalControls") settings[Setting::OrignalControls] = boolValue;
+		else if (key == "SelectorScale") settings[Setting::SelectorScale] = boolValue;
 		else if (key == "DefaultFilePath") settings[Setting::DefaultFilePath] = value;
+		else if (key == "WarnMissingImages") settings[Setting::WarnMissingImages] = boolValue;
 	}
 
 	settingsFile.close();

@@ -349,6 +349,20 @@ double lineDistance(Vector2 vector, Vector2 pointA, Vector2 pointB) {
 	return closestPoint.distanceTo(vector);
 }
 
+std::vector<std::string> split(const std::string &text, char delimiter) {
+	std::vector<std::string> tokens;
+	std::string token;
+	std::istringstream tokenStream(text);
+
+	while (std::getline(tokenStream, token, delimiter)) {
+		token.erase(0, token.find_first_not_of(" \t\n"));
+		token.erase(token.find_last_not_of(" \t\n") + 1);
+		tokens.push_back(token);
+	}
+
+	return tokens;
+}
+
 
 
 std::string loadShaderSource(const char* filePath) {

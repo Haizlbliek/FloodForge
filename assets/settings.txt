@@ -6,3 +6,4 @@ ConnectionType: bezier
 OriginalControls: false
 SelectorScale: false
 DefaultFilePath: 
+WarnMissingImages: false

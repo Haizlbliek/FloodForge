@@ -13,10 +13,11 @@
 #include <algorithm>
 
 #include "../Texture.hpp"
+#include "../Theme.hpp"
+#include "../Settings.hpp"
 #include "../math/Vector.hpp"
 #include "../math/Matrix4.hpp"
 #include "../font/Fonts.hpp"
-#include "../Theme.hpp"
 #include "../popup/WarningPopup.hpp"
 
 #include "FailureController.hpp"
@@ -68,10 +69,12 @@ class Room {
 			water = -1;
 			subregion = -1;
 
+			images = 0;
 			data = ExtraRoomData();
 
 			loadGeometry();
 			generateVBO();
+			checkImages();
 		}
 
 		virtual ~Room() {
@@ -452,7 +455,11 @@ class Room {
 			}
 
 			std::getline(geometryFile, tempLine); // Junk
-			std::getline(geometryFile, tempLine); // Junk
+			
+			std::getline(geometryFile, tempLine); // Cameras
+			std::vector<std::string> items = split(tempLine, '|');
+			images = items.size();
+			
 			std::getline(geometryFile, tempLine); // Junk
 			std::getline(geometryFile, tempLine); // Junk
 			std::getline(geometryFile, tempLine); // Junk
@@ -507,6 +514,21 @@ class Room {
 				dens.push_back(Den("", 0, "", 0.0));
 			}
 		}
+		
+		void checkImages() {
+			if (!Settings::getSetting<bool>(Settings::Setting::WarnMissingImages)) return;
+			
+			std::string imageDir = path.substr(0, path.find_last_of(std::filesystem::path::preferred_separator));
+			for (int i = 0; i < images; i++) {
+				std::string imagePath = roomName + "_" + std::to_string(i + 1) + ".png";
+				
+				std::string foundPath = findFileCaseInsensitive(imageDir, imagePath);
+				
+				if (foundPath.empty()) {
+					FailureController::fails.push_back("Can't find '" + imagePath + "'");
+				}
+			}
+		}
 
 		void generateVBO();
 		void addQuad(const Vertex &a, const Vertex &b, const Vertex &c, const Vertex &d);
@@ -527,6 +549,7 @@ class Room {
 
 		int *geometry;
 		std::vector<Den> dens;
+		int images;
 
 		std::vector<std::string> tags;
 

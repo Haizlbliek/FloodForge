@@ -4,6 +4,7 @@
 
 #include <string>
 #include <filesystem>
+#include <vector>
 
 #include "math/Colour.hpp"
 #include "math/Vector.hpp"
@@ -49,6 +50,8 @@ void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale)
 Vector2 bezierCubic(double t, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3);
 
 double lineDistance(Vector2 vector, Vector2 pointA, Vector2 pointB);
+
+std::vector<std::string> split(const std::string &text, char delimiter);
 
 // GL functions
 void glColour(Colour colour);

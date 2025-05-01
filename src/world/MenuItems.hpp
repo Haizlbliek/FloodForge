@@ -152,20 +152,6 @@ class MenuItems {
 			}
 		}
 
-		static std::vector<std::string> split(const std::string &text, char delimiter) {
-			std::vector<std::string> tokens;
-			std::string token;
-			std::istringstream tokenStream(text);
-
-			while (std::getline(tokenStream, token, delimiter)) {
-				token.erase(0, token.find_first_not_of(" \t\n"));
-				token.erase(token.find_last_not_of(" \t\n") + 1);
-				tokens.push_back(token);
-			}
-
-			return tokens;
-		}
-
 		static void parseMap(std::filesystem::path mapFilePath, std::filesystem::path directory) {
 			std::fstream mapFile(mapFilePath);
 			

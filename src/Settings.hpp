@@ -18,7 +18,8 @@ namespace Settings {
 		ConnectionType,
 		OrignalControls,
 		SelectorScale,
-		DefaultFilePath
+		DefaultFilePath,
+		WarnMissingImages
 	};
 
 	extern std::unordered_map<Setting, std::variant<double, int, bool, Colour, std::string>> settings;
