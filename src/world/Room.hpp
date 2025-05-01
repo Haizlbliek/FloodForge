@@ -420,7 +420,7 @@ class Room {
 		}
 
 		void loadGeometry() {
-			std::fstream geometryFile(path + ".txt");
+			std::fstream geometryFile(path);
 			if (!geometryFile.is_open()) {
 				FailureController::fails.push_back("Failed to load '" + path + "' - Doesn't exist");
 				std::cout << "Failed to load '" << path << "' - Doesn't exist." << std::endl;

@@ -262,7 +262,7 @@ class MenuItems {
 							room = offscreenDen;
 						}
 					} else {
-						room = new Room(roomPath, roomName);
+						room = new Room(roomPath + ".txt", roomName);
 						rooms.push_back(room);
 					}
 
@@ -524,6 +524,7 @@ class MenuItems {
 			while (std::getline(worldFile, line)) {
 				if (line == "ROOMS") {
 					parseState = 1;
+					std::cout << "World - Rooms" << std::endl;
 					continue;
 				}
 
@@ -540,6 +541,7 @@ class MenuItems {
 
 				if (line == "CREATURES") {
 					parseState = 3;
+					std::cout << "World - Creatures" << std::endl;
 					continue;
 				}
 
