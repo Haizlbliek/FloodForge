@@ -2,15 +2,17 @@
 
 #include <fstream>
 
+#include "../math/Quadruple.hpp"
 #include "Popups.hpp"
 #include "../font/Fonts.hpp"
 
-struct StyledText {
+struct MDStyledText {
 	std::string text;
 	bool italic = false;
 	bool bold = false;
 	bool underline = false;
 	bool strikethrough = false;
+	std::string url = "";
 };
 
 enum MDType {
@@ -36,6 +38,8 @@ class MarkdownPopup : public Popup {
 		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) override {
 			Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
 			
+			links.clear();
+			
 			int windowWidth;
 			int windowHeight;
 			glfwGetWindowSize(window->getGLFWWindow(), &windowWidth, &windowHeight);
@@ -54,7 +58,7 @@ class MarkdownPopup : public Popup {
 			double x = bounds.X0();
 			double y = 0.75 + bounds.Y0() + 0.8f + scroll;
 			
-			for (std::pair<MDType, std::vector<StyledText>> line : lines) {
+			for (std::pair<MDType, std::vector<MDStyledText>> line : lines) {
 				if (line.first == MDType::TEXT) {
 					Draw::color(1.0, 1.0, 1.0);
 					writeLine(line.second, x + 0.02, y, 0.03);
@@ -105,11 +109,24 @@ class MarkdownPopup : public Popup {
 			window->removeScrollCallback(this, scrollCallback);
 		}
 		
+		void mouseClick(double mouseX, double mouseY) override {
+			Popup::mouseClick(mouseX, mouseY);
+			
+			for (Quadruple<double, double, std::string, Vector2> link : links) {
+				if (
+					(mouseX >= link.first && mouseX <= link.first + link.fourth.x) &&
+					(mouseY >= link.second && mouseY <= link.second + link.fourth.y)
+				) {
+					openURL(link.third);
+				}
+			}
+		}
+		
 		std::string PopupName() { return "MarkdownPopup"; }
 	
 	private:
-		void writeLine(std::vector<StyledText> line, double x, double &y, double size) {
-			for (StyledText &seg : line) {
+		void writeLine(std::vector<MDStyledText> line, double x, double &y, double size) {
+			for (MDStyledText &seg : line) {
 				double width = Fonts::rainworld->getTextWidth(seg.text, size);
 
 				float matrix[16] = {
@@ -137,6 +154,10 @@ class MarkdownPopup : public Popup {
 
 				if (seg.underline) {
 					drawLine(x, 0.0, x + width, 0.0, 0.1);
+				}
+				
+				if (!seg.url.empty()) {
+					links.push_back(Quadruple<double, double, std::string, Vector2>( x, y - size, seg.url, Vector2(width, size) ));
 				}
 
 				Draw::popMatrix();
@@ -212,8 +233,8 @@ class MarkdownPopup : public Popup {
 			file.close();
 		}
 		
-		std::vector<StyledText> parseStyledText(const std::string &line) {
-			std::vector<StyledText> result;
+		std::vector<MDStyledText> parseStyledText(const std::string &line) {
+			std::vector<MDStyledText> result;
 			
 			bool bold = false, italic = false, underline = false, strikethrough = false;
 			std::string current = "";
@@ -243,6 +264,11 @@ class MarkdownPopup : public Popup {
 					result.push_back({ current, italic, bold, underline, strikethrough });
 					current = "";
 					italic = !italic;
+				} else if (line[i] == '[') {
+					
+				} else if (line[i] == ')') {
+					result.push_back({ "Test", italic, bold, true, strikethrough, "https://google.com" });
+					current = "";
 				} else {
 					current += line[i];
 				}
@@ -274,7 +300,9 @@ class MarkdownPopup : public Popup {
 	
 		std::ifstream file;
 
-		std::vector<std::pair<MDType, std::vector<StyledText>>> lines;
+		std::vector<std::pair<MDType, std::vector<MDStyledText>>> lines;
+		
+		std::vector<Quadruple<double, double, std::string, Vector2>> links;
 		
 		double scroll = 0.0;
 		double scrollTo = 0.0;

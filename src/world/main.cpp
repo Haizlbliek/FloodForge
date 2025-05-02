@@ -935,7 +935,6 @@ void updateMain() {
 }
 
 int main() {
-	openURL("https://google.com");
 	window = new Window(1024, 1024);
 	window->setIcon(TEXTURE_PATH + "MainIcon.png");
 	window->setTitle("FloodForge World Editor");
