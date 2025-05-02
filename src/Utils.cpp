@@ -373,8 +373,8 @@ void openURL(std::string url) {
 #ifdef __linux__
 #include <cstdlib>
 void openURL(std::string url) {
-	std::string command = "xdg-open " + url;
-	std::system(command.c_str());
+	std::string command = "xdg-open " + url + " &";
+	int __ = std::system(command.c_str());
 }
 #endif
 
