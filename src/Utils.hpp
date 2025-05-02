@@ -53,6 +53,8 @@ double lineDistance(Vector2 vector, Vector2 pointA, Vector2 pointB);
 
 std::vector<std::string> split(const std::string &text, char delimiter);
 
+void openURL(std::string url);
+
 // GL functions
 void glColour(Colour colour);
 

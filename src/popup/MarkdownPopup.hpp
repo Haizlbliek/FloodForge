@@ -1,0 +1,282 @@
+#pragma once
+
+#include <fstream>
+
+#include "Popups.hpp"
+#include "../font/Fonts.hpp"
+
+struct StyledText {
+	std::string text;
+	bool italic = false;
+	bool bold = false;
+	bool underline = false;
+	bool strikethrough = false;
+};
+
+enum MDType {
+	TEXT,
+	H1,
+	H2,
+	H3,
+	QUOTE,
+	HORIZONTAL_RULE
+};
+
+class MarkdownPopup : public Popup {
+	public:
+		MarkdownPopup(Window *window, std::string path)
+		: Popup(window) {
+			bounds = Rect(-0.8, -0.8, 0.8, 0.8);
+			
+			loadFile(path);
+			
+			window->addScrollCallback(this, scrollCallback);
+		}
+		
+		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) override {
+			Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+			
+			int windowWidth;
+			int windowHeight;
+			glfwGetWindowSize(window->getGLFWWindow(), &windowWidth, &windowHeight);
+			
+			double padding = 0.01;
+			glEnable(GL_SCISSOR_TEST);
+			glScissor(
+				((bounds.X0() + padding) / screenBounds.x + 1.0) * 0.5 * windowWidth,
+ 				((bounds.Y0() + padding) / screenBounds.y + 1.0) * 0.5 * windowHeight,
+				(((bounds.X1() - bounds.X0()) - padding * 2) / screenBounds.x) * 0.5 * windowWidth,
+				(((bounds.Y1() - bounds.Y0()) - padding * 2 - 0.05) / screenBounds.y) * 0.5 * windowHeight
+			);
+			
+			scroll += (scrollTo - scroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
+			
+			double x = bounds.X0();
+			double y = 0.75 + bounds.Y0() + 0.8f + scroll;
+			
+			for (std::pair<MDType, std::vector<StyledText>> line : lines) {
+				if (line.first == MDType::TEXT) {
+					Draw::color(1.0, 1.0, 1.0);
+					writeLine(line.second, x + 0.02, y, 0.03);
+					y -= 0.04;
+				} else if (line.first == MDType::QUOTE) {
+					Draw::color(0.7, 0.7, 0.7);
+					Draw::begin(Draw::LINES);
+					Draw::vertex(-0.77, y);
+					Draw::vertex(-0.77, y - 0.04);
+					Draw::end();
+					Draw::color(1.0, 1.0, 1.0);
+					writeLine(line.second, x + 0.05, y, 0.03);
+					y -= 0.04;
+				} else if (line.first == MDType::H1) {
+					Draw::color(1.0, 1.0, 1.0);
+					y -= 0.02;
+					writeLine(line.second, x + 0.03, y, 0.08);
+					y -= 0.11;
+				} else if (line.first == MDType::H2) {
+					Draw::color(1.0, 1.0, 1.0);
+					y -= 0.02;
+					writeLine(line.second, x + 0.02, y, 0.05);
+					y -= 0.08;
+				} else if (line.first == MDType::H3) {
+					Draw::color(0.8, 0.8, 0.8);
+					y -= 0.01;
+					writeLine(line.second, x + 0.02, y, 0.04);
+					y -= 0.06;
+				} else if (line.first == MDType::HORIZONTAL_RULE) {
+					y -= 0.03;
+					Draw::color(0.7, 0.7, 0.7);
+					Draw::begin(Draw::LINES);
+					Draw::vertex(bounds.X0() + 0.01, y);
+					Draw::vertex(bounds.X1() - 0.01, y);
+					Draw::end();
+					y -= 0.03;
+				}
+			}
+			
+			maxScroll = -(y - scroll);
+			
+			glDisable(GL_SCISSOR_TEST);
+		}
+		
+		void close() override {
+			Popup::close();
+			
+			window->removeScrollCallback(this, scrollCallback);
+		}
+		
+		std::string PopupName() { return "MarkdownPopup"; }
+	
+	private:
+		void writeLine(std::vector<StyledText> line, double x, double &y, double size) {
+			for (StyledText &seg : line) {
+				double width = Fonts::rainworld->getTextWidth(seg.text, size);
+
+				float matrix[16] = {
+					1, 0, 0, 0,
+					0, 1, 0, 0,
+					0, 0, 1, 0,
+					0, (float) (y - size), 0, 1
+				};
+				if (seg.italic) {
+					matrix[4] = 0.2f;
+				}
+				Draw::pushMatrix();
+				Draw::multMatrix(matrix);
+
+				if (seg.bold) {
+					Fonts::rainworld->write(seg.text, x + 0.003, size, size);
+					Fonts::rainworld->write(seg.text, x, size, size);
+				} else {
+					Fonts::rainworld->write(seg.text, x, size, size);
+				}
+				
+				if (seg.strikethrough) {
+					drawLine(x, size * 0.4, x + width, size * 0.4, 0.1);
+				}
+
+				if (seg.underline) {
+					drawLine(x, 0.0, x + width, 0.0, 0.1);
+				}
+
+				Draw::popMatrix();
+				
+				x += width;
+			}
+		}
+		
+		void loadFile(std::string filePath) {
+			file = std::ifstream(filePath);
+			if (!file.is_open() || !std::filesystem::exists(filePath)) {
+				std::cout << "No file found '" << filePath << "'" << std::endl;
+				close();
+				return;
+			}
+			
+			int addNewline = 0;
+			std::string line;
+			while (std::getline(file, line)) {
+				MDType type = MDType::TEXT;
+				if (line.empty()) {
+					if (addNewline == 1) {
+						addNewline = 2;
+					} else {
+						addNewline = 0;
+					}
+					
+					continue;
+				}
+
+				if (startsWith(line, "# ")) {
+					type = MDType::H1;
+					line = line.substr(2);
+					addNewline = 0;
+				} else if (startsWith(line, "## ")) {
+					type = MDType::H2;
+					line = line.substr(3);
+					addNewline = 0;
+				} else if (startsWith(line, "### ")) {
+					type = MDType::H3;
+					line = line.substr(4);
+					addNewline = 0;
+				} else if (startsWith(line, "> ")) {
+					if (addNewline == 2) {
+						lines.push_back({ MDType::TEXT, {} });
+					}
+					addNewline = 1;
+
+					type = MDType::QUOTE;
+					line = line.substr(2);
+				} else if (startsWith(line, "---") && (line.find_first_not_of('-') == std::string::npos)) {
+					lines.push_back({ MDType::HORIZONTAL_RULE, {} });
+					addNewline = 0;
+					continue;
+				} else if (startsWith(line, "***") && (line.find_first_not_of('*') == std::string::npos)) {
+					lines.push_back({ MDType::HORIZONTAL_RULE, {} });
+					addNewline = 0;
+					continue;
+				} else if (startsWith(line, "___") && (line.find_first_not_of('_') == std::string::npos)) {
+					lines.push_back({ MDType::HORIZONTAL_RULE, {} });
+					addNewline = 0;
+					continue;
+				} else {
+					if (addNewline == 2) {
+						lines.push_back({ MDType::TEXT, {} });
+					}
+					addNewline = 1;
+				}
+				
+				lines.push_back({ type, parseStyledText(line) });
+			}
+			
+			file.close();
+		}
+		
+		std::vector<StyledText> parseStyledText(const std::string &line) {
+			std::vector<StyledText> result;
+			
+			bool bold = false, italic = false, underline = false, strikethrough = false;
+			std::string current = "";
+
+			for (int i = 0; i < line.length(); i++) {
+				if (line[i] == '\\') {
+					if (i + 1 < line.length()) {
+						current += line[i + 1];
+						i++;
+					}
+				} else if (line[i] == '*' && i + 1 < line.length() && line[i + 1] == '*') {
+					result.push_back({ current, italic, bold, underline, strikethrough });
+					current = "";
+					bold = !bold;
+					i++;
+				} else if (line[i] == '~' && i + 1 < line.length() && line[i + 1] == '~') {
+					result.push_back({ current, italic, bold, underline, strikethrough });
+					current = "";
+					strikethrough = !strikethrough;
+					i++;
+				} else if (line[i] == '_' && i + 1 < line.length() && line[i + 1] == '_') {
+					result.push_back({ current, italic, bold, underline, strikethrough });
+					current = "";
+					underline = !underline;
+					i++;
+				} else if (line[i] == '*' || line[i] == '_') {
+					result.push_back({ current, italic, bold, underline, strikethrough });
+					current = "";
+					italic = !italic;
+				} else {
+					current += line[i];
+				}
+			}
+			
+			if (!current.empty()) result.push_back({ current, false, false, false, false });
+		
+			return result;
+		}
+		
+		void clampScroll() {
+			if (scrollTo < 0) {
+				scrollTo = 0;
+			}
+			if (scrollTo >= maxScroll) {
+				scrollTo = maxScroll;
+			}
+		}
+
+		static void scrollCallback(void *object, double deltaX, double deltaY) {
+			MarkdownPopup *popup = static_cast<MarkdownPopup*>(object);
+
+			if (!popup->hovered) return;
+			
+			popup->scrollTo -= deltaY * 0.1;
+			
+			popup->clampScroll();
+		}
+	
+		std::ifstream file;
+
+		std::vector<std::pair<MDType, std::vector<StyledText>>> lines;
+		
+		double scroll = 0.0;
+		double scrollTo = 0.0;
+		double maxScroll = 0.0;
+};

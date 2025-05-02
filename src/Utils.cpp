@@ -363,6 +363,20 @@ std::vector<std::string> split(const std::string &text, char delimiter) {
 	return tokens;
 }
 
+#ifdef _WIN32
+#include <windows.h>
+#include <shellapi.h>
+void openURL(std::string url) {
+	ShellExecuteA(NULL, NULL, url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+}
+#endif
+#ifdef __linux__
+#include <cstdlib>
+void openURL(std::string url) {
+	std::string command = "xdg-open " + url;
+	std::system(command.c_str());
+}
+#endif
 
 
 std::string loadShaderSource(const char* filePath) {

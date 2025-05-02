@@ -19,6 +19,7 @@
 
 #include "../popup/Popups.hpp"
 #include "../popup/SplashArtPopup.hpp"
+#include "../popup/MarkdownPopup.hpp"
 #include "../popup/QuitConfirmationPopup.hpp"
 #include "SubregionPopup.hpp"
 #include "RoomTagPopup.hpp"
@@ -934,6 +935,7 @@ void updateMain() {
 }
 
 int main() {
+	openURL("https://google.com");
 	window = new Window(1024, 1024);
 	window->setIcon(TEXTURE_PATH + "MainIcon.png");
 	window->setTitle("FloodForge World Editor");
@@ -952,6 +954,7 @@ int main() {
 	Draw::init();
 	CreatureTextures::init();
 
+	Popups::addPopup(new MarkdownPopup(window, BASE_PATH + "docs/controls.md"));
 	Popups::addPopup(new SplashArtPopup(window));
 
 	while (window->isOpen()) {
