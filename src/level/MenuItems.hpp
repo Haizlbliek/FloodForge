@@ -110,7 +110,7 @@ class MenuItems {
 					// 	if (!result) return;
 					// }
 					
-					Popups::addPopup(new FilesystemPopup(window, std::regex(R"([^.]+\.level)"),
+					Popups::addPopup(new FilesystemPopup(window, std::regex(R"([^.]+\.level)"), "xxxx.level",
 						[](std::set<std::string> paths) {
 							if (paths.empty()) return;
 

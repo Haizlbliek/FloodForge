@@ -953,7 +953,6 @@ int main() {
 	Draw::init();
 	CreatureTextures::init();
 
-	Popups::addPopup(new MarkdownPopup(window, BASE_PATH + "docs/controls.md"));
 	Popups::addPopup(new SplashArtPopup(window));
 
 	while (window->isOpen()) {

@@ -65,7 +65,7 @@ void MenuItems::init(Window *window) {
 				return;
 			}
 
-			Popups::addPopup((new FilesystemPopup(window, std::regex("([^.]+)_[a-zA-Z0-9]+\\.txt"),
+			Popups::addPopup((new FilesystemPopup(window, std::regex("([^.]+)_[a-zA-Z0-9]+\\.txt"), "xx_a01.txt",
 				[](std::set<std::string> pathStrings) {
 					if (pathStrings.empty()) return;
 
@@ -86,7 +86,7 @@ void MenuItems::init(Window *window) {
 
 	addButton("Import").OnLeftPress(
 		[window](Button *button) {
-			Popups::addPopup(new FilesystemPopup(window, std::regex("world_([^.]+)\\.txt"),
+			Popups::addPopup(new FilesystemPopup(window, std::regex("world_([^.]+)\\.txt"), "world_xx.txt",
 				[window](std::set<std::string> pathStrings) {
 					if (pathStrings.empty()) return;
 
@@ -172,7 +172,7 @@ void MenuItems::init(Window *window) {
 					return;
 				}
 
-				Popups::addPopup(new FilesystemPopup(window, TYPE_FOLDER,
+				Popups::addPopup(new FilesystemPopup(window, TYPE_FOLDER, "YOUR_MOD/world/xx/",
 					[window](std::set<std::string> pathStrings) {
 						if (pathStrings.empty()) return;
 

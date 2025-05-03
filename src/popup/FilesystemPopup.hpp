@@ -25,9 +25,10 @@
 
 class FilesystemPopup : public Popup {
 	public:
-		FilesystemPopup(Window *window, std::regex regex, std::function<void(std::set<std::string>)> callback)
+		FilesystemPopup(Window *window, std::regex regex, std::string hint, std::function<void(std::set<std::string>)> callback)
 		: Popup(window),
 		  regex(regex),
+		  hint(hint),
 		  callback(callback) {
 			window->addKeyCallback(this, keyCallback);
 			window->addScrollCallback(this, scrollCallback);
@@ -43,8 +44,9 @@ class FilesystemPopup : public Popup {
 			refresh();
 		}
 
-		FilesystemPopup(Window *window, int type, std::function<void(std::set<std::string>)> callback)
+		FilesystemPopup(Window *window, int type, std::string hint, std::function<void(std::set<std::string>)> callback)
 		: Popup(window),
+		  hint(hint),
 		  callback(callback) {
 			window->addKeyCallback(this, keyCallback);
 			window->addScrollCallback(this, scrollCallback);
@@ -136,6 +138,12 @@ class FilesystemPopup : public Popup {
 				}
 
 				Fonts::rainworld->write("Show all", bounds.X0() + 0.09, bounds.Y0() + 0.09, 0.04);
+				
+				setThemeColour(ThemeColour::TextDisabled);
+				Fonts::rainworld->write(hint, bounds.X0() + 0.35, bounds.Y0() + 0.09, 0.04);
+			} else {
+				setThemeColour(ThemeColour::TextDisabled);
+				Fonts::rainworld->write(hint, bounds.X0() + 0.02, bounds.Y0() + 0.09, 0.04);
 			}
 
 			if (selected.empty() && openType == TYPE_FILE) {
@@ -396,6 +404,7 @@ class FilesystemPopup : public Popup {
 		int frame = 0;
 
 		int openType;
+		std::string hint;
 
 		std::string newDirectory;
 

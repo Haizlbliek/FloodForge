@@ -7,6 +7,7 @@
 #include <vector>
 #include <sstream>
 
+#include "MarkdownPopup.hpp"
 #include "../Window.hpp"
 #include "../Draw.hpp"
 #include "../font/Fonts.hpp"
@@ -62,7 +63,11 @@ class SplashArtPopup : public Popup {
 
 		void mouseClick(double mouseX, double mouseY) {
 			close();
+			Popups::addPopup(new MarkdownPopup(window, BASE_PATH + "docs/controls.md"));
 		}
+		
+		bool canStack(std::string popupName) override { return popupName == "MarkdownPopup"; }
+		std::string PopupName() override { return "SplashArtPopup"; }
 
 	private:
 		Texture *splashart;
