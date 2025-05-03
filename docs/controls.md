@@ -12,12 +12,12 @@ This is a tool developed by [Haizlbliek](https://github.com/haizlbliek) to help 
 
 ### Importing a Region
 - `Import`
-- Navigate to your `world\_xx.txt` file (`mods/YOUR\_MOD/world/xx/world\_xx.txt`)
+- Navigate to your `world\_xx.txt` file (`mods/YOUR_MOD/world/xx/world_xx.txt`)
 - `Open`
 
 ### Adding Rooms to a Region
 - `Add Room`
-- Navigate to `mods/YOUR\_MOD/world/xx-rooms/XX\_A01.txt`
+- Navigate to `mods/YOUR_MOD/world/xx-rooms/XX_A01.txt`
 - `Open`
 
 ### Connecting Rooms
