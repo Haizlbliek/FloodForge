@@ -35,6 +35,8 @@ class WarningPopup : public Popup {
 
 		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 			Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+			
+			if (minimized) return;
 
 			setThemeColour(ThemeColour::Text);
 

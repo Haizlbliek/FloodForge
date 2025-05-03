@@ -17,7 +17,13 @@ class Popup {
 
 		virtual void mouseClick(double mouseX, double mouseY);
 
-		virtual const Rect Bounds() { return bounds; }
+		virtual const Rect Bounds() {
+			if (minimized) {
+				return Rect(bounds.X0(), bounds.Y1() - 0.05, bounds.X1(), bounds.Y1());
+			}
+
+			return bounds;
+		}
 
 		virtual void close();
 
@@ -35,6 +41,7 @@ class Popup {
 
 	protected:
 		bool hovered;
+		bool minimized = false;
 		
 		Window *window;
 		Rect bounds;

@@ -119,6 +119,8 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 
 	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
 	
+	if (minimized) return;
+	
 	if (hovered) {
 		setThemeColour(ThemeColour::BorderHighlight);
 	} else {

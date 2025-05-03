@@ -19,6 +19,8 @@ class SubregionPopup : public Popup {
 
 		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 			Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+			
+			if (minimized) return;
 
 			mouseX -= bounds.X0() + 0.5;
 			mouseY -= bounds.Y0() + 0.5;

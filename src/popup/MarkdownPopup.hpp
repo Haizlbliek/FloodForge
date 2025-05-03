@@ -38,6 +38,8 @@ class MarkdownPopup : public Popup {
 		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) override {
 			Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
 			
+			if (minimized) return;
+			
 			links.clear();
 			
 			int windowWidth;

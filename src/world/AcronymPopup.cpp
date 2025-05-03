@@ -4,6 +4,8 @@
 
 void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+	
+	if (minimized) return;
 
 	double centreX = (bounds.X0() + bounds.X1()) * 0.5;
 
@@ -119,6 +121,8 @@ char AcronymPopup::parseCharacter(char character, bool shiftPressed) {
 
 void AcronymPopup::keyCallback(void *object, int action, int key) {
 	AcronymPopup *acronymWindow = static_cast<AcronymPopup*>(object);
+	
+	if (acronymWindow->minimized) return;
 
 	if (action == GLFW_PRESS) {
 		if (key == GLFW_KEY_V && (acronymWindow->window->keyPressed(GLFW_KEY_LEFT_CONTROL) || acronymWindow->window->keyPressed(GLFW_KEY_RIGHT_CONTROL))) {

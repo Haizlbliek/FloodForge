@@ -18,6 +18,8 @@ void SubregionNewPopup::mouseClick(double mouseX, double mouseY) {
 }
 
 void SubregionNewPopup::accept() {
+	if (text.empty()) return;
+
 	if (std::find(subregions.begin(), subregions.end(), text) != subregions.end())
 		return;
 

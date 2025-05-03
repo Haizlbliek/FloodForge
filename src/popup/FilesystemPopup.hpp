@@ -7,6 +7,7 @@
 #include <vector>
 #include <sstream>
 #include <regex>
+#include <set>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -115,6 +116,8 @@ class FilesystemPopup : public Popup {
 
 		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 			Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+			
+			if (minimized) return;
 
 			scroll += (scrollTo - scroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 
