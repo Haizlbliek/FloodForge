@@ -63,6 +63,8 @@ class SplashArtPopup : public Popup {
 
 		void mouseClick(double mouseX, double mouseY) {
 			close();
+			if (Settings::getSetting<bool>(Settings::Setting::HideTutorial)) return;
+
 			Popups::addPopup(new MarkdownPopup(window, BASE_PATH + "docs/controls.md"));
 		}
 		

@@ -19,7 +19,8 @@ namespace Settings {
 		OrignalControls,
 		SelectorScale,
 		DefaultFilePath,
-		WarnMissingImages
+		WarnMissingImages,
+		HideTutorial
 	};
 
 	extern std::unordered_map<Setting, std::variant<double, int, bool, Colour, std::string>> settings;
