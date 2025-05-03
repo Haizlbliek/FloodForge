@@ -75,7 +75,7 @@ void MenuItems::init(Window *window) {
 						std::string roomName = path.filename().string();
 						roomName = roomName.substr(0, roomName.find_last_of('.'));
 
-						Room *room = new Room(path.string().substr(0, path.string().find_last_of('.')), roomName);
+						Room *room = new Room(path.string(), roomName);
 						room->Position(cameraOffset);
 						rooms.push_back(room);
 					}
