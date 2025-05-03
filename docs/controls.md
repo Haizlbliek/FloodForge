@@ -2,10 +2,6 @@
 
 Welcome to FloodForge!
 
-)
-
-Open [LINK](https://google.com)
-
 ## Controls
 
 X - Delete
