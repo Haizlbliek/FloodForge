@@ -238,6 +238,8 @@ class MarkdownPopup : public Popup {
 			
 			bool bold = false, italic = false, underline = false, strikethrough = false;
 			std::string current = "";
+			
+			bool inLink = false;
 
 			for (int i = 0; i < line.length(); i++) {
 				if (line[i] == '\\') {
@@ -265,10 +267,34 @@ class MarkdownPopup : public Popup {
 					current = "";
 					italic = !italic;
 				} else if (line[i] == '[') {
-					
-				} else if (line[i] == ')') {
-					result.push_back({ "Test", italic, bold, true, strikethrough, "https://google.com" });
+					result.push_back({ current + " ", italic, bold, underline, strikethrough });
 					current = "";
+					inLink = true;
+				} else if (line[i] == ']') {
+					if (!inLink) {
+						current += ']';
+						continue;
+					}
+
+					result.push_back({ current });
+				} else if (line[i] == '(') {
+					if (!inLink) {
+						current += '(';
+						continue;
+					}
+					
+					current = "";
+				} else if (line[i] == ')') {
+					if (!inLink) {
+						current += ')';
+						continue;
+					}
+					
+					MDStyledText last = result.back();
+					result.pop_back();
+					result.push_back({ (last.text), italic, bold, true, strikethrough, current });
+					current = "";
+					inLink = false;
 				} else {
 					current += line[i];
 				}
