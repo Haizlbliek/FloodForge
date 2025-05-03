@@ -62,7 +62,7 @@ if "%release_mode%"=="false" (
 
 :: Zip
 if "%release_mode%"=="true" (
-	"C:\Program Files\7-Zip\7z.exe" a "FloodForge-Windows.zip" "build\FloodForge.exe" "assets\*" "README.md" "LICENSE" -r
+	"C:\Program Files\7-Zip\7z.exe" a "FloodForge-Windows.zip" "build\FloodForge.exe" "assets\*" "README.md" "LICENSE" "docs\*" -r
 )
 
 :: Return
