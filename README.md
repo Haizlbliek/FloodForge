@@ -83,17 +83,19 @@ Report it on the new [FloodForge Discord server](https://discord.gg/RBq8PDbCmB)!
 
 Settings are stored in `assets/settings.txt`
 
-| Setting          | Default Value | Allowed Values |
-|------------------|---------------|----------------|
-| Theme            | N/A           | any folder in assets/themes/ |
-| CameraPanSpeed   | 0.4           | float          |
-| CameraZoomSpeed  | 0.4           | float          |
-| PopupScrollSpeed | 0.4           | float          |
-| OriginalControls | false         | true, false    |
-| ConnectionType   | bezier        | bezier, linear |
-| SelectorScale    | true          | true, false    |
-| SelectorScale    | true          | true, false    |
-| DefaultFilePath  |               | string         |
+| Setting           | Default Value | Allowed Values |
+|-------------------|---------------|----------------|
+| Theme             | N/A           | any folder in assets/themes/ |
+| CameraPanSpeed    | 0.4           | float          |
+| CameraZoomSpeed   | 0.4           | float          |
+| PopupScrollSpeed  | 0.4           | float          |
+| OriginalControls  | false         | true, false    |
+| ConnectionType    | bezier        | bezier, linear |
+| SelectorScale     | true          | true, false    |
+| SelectorScale     | true          | true, false    |
+| DefaultFilePath   |               | string         |
+| WarnMissingImages | false         | true, false    |
+| HideTutorial      | false         | true, false    |
 
 ## License
 

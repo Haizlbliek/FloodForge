@@ -7,3 +7,4 @@ OriginalControls: false
 SelectorScale: false
 DefaultFilePath: 
 WarnMissingImages: false
+HideTutorial: false
