@@ -12,6 +12,7 @@ struct MDStyledText {
 	bool bold = false;
 	bool underline = false;
 	bool strikethrough = false;
+	bool code = false;
 	std::string url = "";
 };
 
@@ -64,7 +65,7 @@ class MarkdownPopup : public Popup {
 				if (line.first == MDType::TEXT) {
 					Draw::color(1.0, 1.0, 1.0);
 					writeLine(line.second, x + 0.02, y, 0.03);
-					y -= 0.04;
+					y -= 0.05;
 				} else if (line.first == MDType::QUOTE) {
 					Draw::color(0.7, 0.7, 0.7);
 					Draw::begin(Draw::LINES);
@@ -142,6 +143,11 @@ class MarkdownPopup : public Popup {
 				}
 				Draw::pushMatrix();
 				Draw::multMatrix(matrix);
+				
+				if (seg.code) {
+					x += 0.02;
+					strokeRect(x - 0.01, -0.005, x + width + 0.01, size + 0.005);
+				}
 
 				if (seg.bold) {
 					Fonts::rainworld->write(seg.text, x + 0.003, size, size);
@@ -160,6 +166,10 @@ class MarkdownPopup : public Popup {
 				
 				if (!seg.url.empty()) {
 					links.push_back(Quadruple<double, double, std::string, Vector2>( x, y - size, seg.url, Vector2(width, size) ));
+				}
+				
+				if (seg.code) {
+					x += 0.02;
 				}
 
 				Draw::popMatrix();
@@ -238,7 +248,7 @@ class MarkdownPopup : public Popup {
 		std::vector<MDStyledText> parseStyledText(const std::string &line) {
 			std::vector<MDStyledText> result;
 			
-			bool bold = false, italic = false, underline = false, strikethrough = false;
+			bool bold = false, italic = false, underline = false, strikethrough = false, code = false;
 			std::string current = "";
 			
 			bool inLink = false;
@@ -249,56 +259,70 @@ class MarkdownPopup : public Popup {
 						current += line[i + 1];
 						i++;
 					}
-				} else if (line[i] == '*' && i + 1 < line.length() && line[i + 1] == '*') {
-					result.push_back({ current, italic, bold, underline, strikethrough });
-					current = "";
-					bold = !bold;
-					i++;
-				} else if (line[i] == '~' && i + 1 < line.length() && line[i + 1] == '~') {
-					result.push_back({ current, italic, bold, underline, strikethrough });
-					current = "";
-					strikethrough = !strikethrough;
-					i++;
-				} else if (line[i] == '_' && i + 1 < line.length() && line[i + 1] == '_') {
-					result.push_back({ current, italic, bold, underline, strikethrough });
-					current = "";
-					underline = !underline;
-					i++;
-				} else if (line[i] == '*' || line[i] == '_') {
-					result.push_back({ current, italic, bold, underline, strikethrough });
-					current = "";
-					italic = !italic;
-				} else if (line[i] == '[') {
-					result.push_back({ current + " ", italic, bold, underline, strikethrough });
-					current = "";
-					inLink = true;
-				} else if (line[i] == ']') {
-					if (!inLink) {
-						current += ']';
-						continue;
+				} else if (code) {
+					if (line[i] == '`') {
+						code = false;
+						result.push_back({ current, false, false, false, false, true });
+						current = "";
+					} else {
+						current += line[i];
 					}
-
-					result.push_back({ current });
-				} else if (line[i] == '(') {
-					if (!inLink) {
-						current += '(';
-						continue;
-					}
-					
-					current = "";
-				} else if (line[i] == ')') {
-					if (!inLink) {
-						current += ')';
-						continue;
-					}
-					
-					MDStyledText last = result.back();
-					result.pop_back();
-					result.push_back({ (last.text), italic, bold, true, strikethrough, current });
-					current = "";
-					inLink = false;
 				} else {
-					current += line[i];
+					if (line[i] == '`') {
+						result.push_back({ current, italic, bold, underline, strikethrough, false });
+						current = "";
+						code = true;
+					} else if (line[i] == '*' && i + 1 < line.length() && line[i + 1] == '*') {
+						result.push_back({ current, italic, bold, underline, strikethrough, false });
+						current = "";
+						bold = !bold;
+						i++;
+					} else if (line[i] == '~' && i + 1 < line.length() && line[i + 1] == '~') {
+						result.push_back({ current, italic, bold, underline, strikethrough, false });
+						current = "";
+						strikethrough = !strikethrough;
+						i++;
+					} else if (line[i] == '_' && i + 1 < line.length() && line[i + 1] == '_') {
+						result.push_back({ current, italic, bold, underline, strikethrough, false });
+						current = "";
+						underline = !underline;
+						i++;
+					} else if (line[i] == '*' || line[i] == '_') {
+						result.push_back({ current, italic, bold, underline, strikethrough, false });
+						current = "";
+						italic = !italic;
+					} else if (line[i] == '[') {
+						result.push_back({ current + " ", italic, bold, underline, strikethrough, false });
+						current = "";
+						inLink = true;
+					} else if (line[i] == ']') {
+						if (!inLink) {
+							current += ']';
+							continue;
+						}
+	
+						result.push_back({ current });
+					} else if (line[i] == '(') {
+						if (!inLink) {
+							current += '(';
+							continue;
+						}
+						
+						current = "";
+					} else if (line[i] == ')') {
+						if (!inLink) {
+							current += ')';
+							continue;
+						}
+						
+						MDStyledText last = result.back();
+						result.pop_back();
+						result.push_back({ (last.text), italic, bold, true, strikethrough, false, current });
+						current = "";
+						inLink = false;
+					} else {
+						current += line[i];
+					}
 				}
 			}
 			
