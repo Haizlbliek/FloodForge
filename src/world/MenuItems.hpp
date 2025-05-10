@@ -229,11 +229,11 @@ class MenuItems {
 					std::string roomName = toLower(line.substr(0, line.find(':')));
 
 					std::string roomPath = directory.string();
-					replaceLastInstance(roomPath, toLower(worldAcronym), toLower(worldAcronym) + "-rooms");
+					replaceLastInstance(roomPath, toLower(worldAcronym), roomsDirectory);
 					roomPath = (std::filesystem::path(roomPath) / roomName).string();
 
 					if (startsWith(roomName, "gate")) {
-						replaceLastInstance(roomPath, worldAcronym + "-rooms", "gates");
+						replaceLastInstance(roomPath, roomsDirectory, "gates");
 						// std::cout << "Found gate " << roomName << std::endl;
 					}
 
@@ -356,10 +356,10 @@ class MenuItems {
 					room = new OffscreenRoom(roomName, roomName);
 				} else {
 					std::string roomPath = directory.string();
-					replaceLastInstance(roomPath, worldAcronym, worldAcronym + "-rooms");
+					replaceLastInstance(roomPath, worldAcronym, roomsDirectory);
 		
 					if (startsWith(roomName, "gate")) {
-						replaceLastInstance(roomPath, worldAcronym + "-rooms", "gates");
+						replaceLastInstance(roomPath, roomsDirectory, "gates");
 					}
 
 					roomPath = findFileCaseInsensitive(roomPath, roomName + ".txt");
@@ -966,4 +966,5 @@ class MenuItems {
 
 		static std::filesystem::path exportDirectory;
 		static std::string worldAcronym;
+		static std::string roomsDirectory;
 };

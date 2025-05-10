@@ -41,6 +41,8 @@ std::string toLower(const std::string &str);
 
 std::string toUpper(const std::string &str);
 
+std::filesystem::path findDirectoryCaseInsensitive(const std::string &directory, const std::string &fileName);
+
 std::string findFileCaseInsensitive(const std::string &directory, const std::string &fileName);
 
 void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale, float left, float right, float bottom, float top, float nearVal, float farVal);

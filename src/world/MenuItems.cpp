@@ -14,6 +14,7 @@ double MenuItems::currentButtonX = 0.01;
 
 std::filesystem::path MenuItems::exportDirectory = "";
 std::string MenuItems::worldAcronym = "";
+std::string MenuItems::roomsDirectory = "";
 
 std::string MenuItems::extraProperties = "";
 std::string MenuItems::extraWorld = "";
@@ -86,7 +87,7 @@ void MenuItems::init(Window *window) {
 
 	addButton("Import").OnLeftPress(
 		[window](Button *button) {
-			Popups::addPopup(new FilesystemPopup(window, std::regex("world_([^.]+)\\.txt"), "world_xx.txt",
+			Popups::addPopup(new FilesystemPopup(window, std::regex("world_([^.]+)\\.txt", std::regex_constants::icase), "world_xx.txt",
 				[window](std::set<std::string> pathStrings) {
 					if (pathStrings.empty()) return;
 
@@ -97,6 +98,14 @@ void MenuItems::init(Window *window) {
 					worldAcronym = worldAcronym.substr(worldAcronym.find_last_of('_') + 1, worldAcronym.find_last_of('.') - worldAcronym.find_last_of('_') - 1);
 
 					std::cout << "Opening world " << worldAcronym << std::endl;
+
+					std::filesystem::path roomsPath = findDirectoryCaseInsensitive(exportDirectory.parent_path().string(), worldAcronym + "-rooms");
+					if (roomsPath.empty()) {
+						roomsDirectory = "";
+						FailureController::fails.push_back("Cannot find rooms directory!");
+					} else {
+						roomsDirectory = roomsPath.filename().string();
+					}
 
 					std::filesystem::path mapFilePath = findFileCaseInsensitive(exportDirectory.string(), "map_" + worldAcronym + ".txt");
 
@@ -140,7 +149,7 @@ void MenuItems::init(Window *window) {
 					for (Room *room : rooms) {
 						if (room->isOffscreen()) continue;
 
-						loadExtraRoomData(findFileCaseInsensitive((exportDirectory.parent_path() / (worldAcronym + "-rooms")).string(), room->roomName + "_settings.txt"), room->data);
+						loadExtraRoomData(findFileCaseInsensitive((exportDirectory.parent_path() / roomsDirectory).string(), room->roomName + "_settings.txt"), room->data);
 					}
 					
 					std::cout << "Extra room data - loaded" << std::endl;

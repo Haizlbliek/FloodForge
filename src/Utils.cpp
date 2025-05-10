@@ -275,6 +275,20 @@ std::string toUpper(const std::string &str) {
 	return output;
 }
 
+std::filesystem::path findDirectoryCaseInsensitive(const std::string &directory, const std::string &fileName) {
+	for (const auto &entry : std::filesystem::directory_iterator(directory)) {
+		if (entry.is_directory()) {
+			const std::string entryFileName = entry.path().filename().string();
+
+			if (toLower(entryFileName) == toLower(fileName)) {
+				return entry.path();
+			}
+		}
+	}
+
+	return "";
+}
+
 std::string findFileCaseInsensitive(const std::string &directory, const std::string &fileName) {
 	for (const auto &entry : std::filesystem::directory_iterator(directory)) {
 		if (entry.is_regular_file()) {
