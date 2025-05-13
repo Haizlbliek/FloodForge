@@ -20,7 +20,8 @@ namespace Settings {
 		SelectorScale,
 		DefaultFilePath,
 		WarnMissingImages,
-		HideTutorial
+		HideTutorial,
+		VisualMergeDefault
 	};
 
 	extern std::unordered_map<Setting, std::variant<double, int, bool, Colour, std::string>> settings;

@@ -12,6 +12,7 @@ void Settings::loadDefaults() {
 	settings[Setting::DefaultFilePath] = "NON_EXISTANT_PATH_YOU_CAN'T_HAVE_THIS_PATH_PLSPLSPLS///";
 	settings[Setting::WarnMissingImages] = false;
 	settings[Setting::HideTutorial] = false;
+	settings[Setting::VisualMergeDefault] = false;
 }
 
 void Settings::init() {
@@ -40,6 +41,7 @@ void Settings::init() {
 		else if (key == "DefaultFilePath") settings[Setting::DefaultFilePath] = value;
 		else if (key == "WarnMissingImages") settings[Setting::WarnMissingImages] = boolValue;
 		else if (key == "HideTutorial") settings[Setting::HideTutorial] = boolValue;
+		else if (key == "VisualMergeDefault") settings[Setting::VisualMergeDefault] = boolValue;
 	}
 
 	settingsFile.close();

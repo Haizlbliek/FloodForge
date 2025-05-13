@@ -82,6 +82,7 @@ void MenuItems::init(Window *window) {
 	
 							Room *room = new Room(roomFilePath.string(), roomName);
 							room->Position(cameraOffset);
+							room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
 							rooms.push_back(room);
 						} else {
 							Popups::addPopup((new ConfirmPopup(window, "Copy room to " + worldAcronym + "-rooms?"))
@@ -91,6 +92,7 @@ void MenuItems::init(Window *window) {
 		
 								Room *room = new Room(roomFilePath.string(), roomName);
 								room->Position(cameraOffset);
+								room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
 								rooms.push_back(room);
 							})
 							->OnOkay([roomFilePath, &window]() {
@@ -111,6 +113,7 @@ void MenuItems::init(Window *window) {
 									Settings::settings[Settings::Setting::WarnMissingImages] = false;
 									Room *room = new Room(roomFilePath.string(), newRoomName);
 									room->Position(cameraOffset);
+									room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
 									rooms.push_back(room);
 									Settings::settings[Settings::Setting::WarnMissingImages] = initial;
 									

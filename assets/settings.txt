@@ -8,3 +8,4 @@ SelectorScale: false
 DefaultFilePath: 
 WarnMissingImages: false
 HideTutorial: false
+VisualMergeDefault: true

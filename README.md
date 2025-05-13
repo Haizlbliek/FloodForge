@@ -92,10 +92,10 @@ Settings are stored in `assets/settings.txt`
 | OriginalControls  | false         | true, false    |
 | ConnectionType    | bezier        | bezier, linear |
 | SelectorScale     | true          | true, false    |
-| SelectorScale     | true          | true, false    |
 | DefaultFilePath   |               | string         |
 | WarnMissingImages | false         | true, false    |
 | HideTutorial      | false         | true, false    |
+| VisualMergeDefault| false         | true, false    |
 
 ## License
 
