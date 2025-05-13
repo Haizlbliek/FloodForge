@@ -3,6 +3,7 @@
 #include "../popup/Popups.hpp"
 #include "../popup/FilesystemPopup.hpp"
 #include "../popup/InfoPopup.hpp"
+#include "../popup/ConfirmPopup.hpp"
 #include "AcronymPopup.hpp"
 #include "ChangeAcronymPopup.hpp"
 
@@ -67,18 +68,74 @@ void MenuItems::init(Window *window) {
 			}
 
 			Popups::addPopup((new FilesystemPopup(window, std::regex("([^._-]+)_[a-zA-Z0-9]+\\.txt"), "xx_a01.txt",
-				[](std::set<std::string> pathStrings) {
+				[&](std::set<std::string> pathStrings) {
 					if (pathStrings.empty()) return;
 
 					for (std::string pathString : pathStrings) {
-						std::filesystem::path path = pathString;
+						std::filesystem::path roomFilePath = pathString;
+						std::string acronym = roomFilePath.parent_path().filename().string();
+						acronym = acronym.substr(0, acronym.find_last_of('-'));
 
-						std::string roomName = path.filename().string();
-						roomName = roomName.substr(0, roomName.find_last_of('.'));
+						if (acronym == worldAcronym || exportDirectory.empty()) {
+							std::string roomName = roomFilePath.filename().string();
+							roomName = roomName.substr(0, roomName.find_last_of('.'));
+	
+							Room *room = new Room(roomFilePath.string(), roomName);
+							room->Position(cameraOffset);
+							rooms.push_back(room);
+						} else {
+							Popups::addPopup((new ConfirmPopup(window, "Copy room to " + worldAcronym + "-rooms?"))
+							->OnCancel([roomFilePath]() {
+								std::string roomName = roomFilePath.filename().string();
+								roomName = roomName.substr(0, roomName.find_last_of('.'));
+		
+								Room *room = new Room(roomFilePath.string(), roomName);
+								room->Position(cameraOffset);
+								rooms.push_back(room);
+							})
+							->OnOkay([roomFilePath, &window]() {
+								std::filesystem::path fromDirectory = roomFilePath.parent_path();
+								std::filesystem::path output = ((std::filesystem::path) exportDirectory.string().substr(0, exportDirectory.string().find_last_of(std::filesystem::path::preferred_separator))) / roomsDirectory;
 
-						Room *room = new Room(path.string(), roomName);
-						room->Position(cameraOffset);
-						rooms.push_back(room);
+								std::string roomName = roomFilePath.filename().string();
+								roomName = roomName.substr(0, roomName.find_last_of('.'));
+								std::string newRoomName = worldAcronym + roomName.substr(roomName.find_first_of('_'));
+
+								std::filesystem::path newRoomPath = output / (newRoomName + ".txt");
+								if (std::filesystem::exists(newRoomPath)) {
+									Popups::addPopup(new InfoPopup(window, "Couldn't complete the copy!\nRoom already exists!"));
+								} else {
+									std::filesystem::copy_file(roomFilePath, newRoomPath);
+									
+									bool initial = Settings::getSetting<bool>(Settings::Setting::WarnMissingImages);
+									Settings::settings[Settings::Setting::WarnMissingImages] = false;
+									Room *room = new Room(roomFilePath.string(), newRoomName);
+									room->Position(cameraOffset);
+									rooms.push_back(room);
+									Settings::settings[Settings::Setting::WarnMissingImages] = initial;
+									
+									for (int i = 0; i < room->Images(); i++) {
+										std::string imagePath = roomName + "_" + std::to_string(i + 1) + ".png";
+										std::string image = findFileCaseInsensitive(fromDirectory.string(), imagePath);
+										
+										if (image.empty()) {
+											FailureController::fails.push_back("Can't find '" + imagePath + "'");
+										} else {
+											std::filesystem::copy_file(image, output / (newRoomName + "_" + std::to_string(i + 1) + ".png"));
+										}
+									}
+	
+									if (FailureController::fails.size() > 0) {
+										std::string fails = "";
+										for (std::string fail : FailureController::fails) {
+											fails += fail + "\n";
+										}
+										Popups::addPopup(new InfoPopup(window, fails));
+										FailureController::fails.clear();
+									}
+								}
+							}));
+						}
 					}
 				}
 			))->AllowMultiple());

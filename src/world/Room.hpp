@@ -323,6 +323,8 @@ class Room {
 		}
 		const std::vector<std::string> Tags() const { return tags; }
 
+		const int Images() const { return images; }
+
 		std::string roomName = "";
 		int layer = 0;
 		int water = 0;

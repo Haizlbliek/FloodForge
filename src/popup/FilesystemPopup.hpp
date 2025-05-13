@@ -378,7 +378,7 @@ class FilesystemPopup : public Popup {
 			}
 		}
 
-		bool canStack(std::string popupName) { return popupName == "InfoPopup"; }
+		bool canStack(std::string popupName) { return popupName == "InfoPopup" || popupName == "ConfirmPopup"; }
 		std::string PopupName() { return "FilesystemPopup"; }
 	
 	private:
