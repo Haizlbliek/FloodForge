@@ -855,10 +855,10 @@ class MenuItems {
 						int g = 0;
 						int b = 0;
 
-						if (tileType == 0) {
+						if (tileType == 0 || tileType == 4) {
 							r = 255; g = 0; // #FF0000
 						}
-						if (tileType == 1 || tileType == 4) {
+						if (tileType == 1) {
 							r = 0; g = 0; // #000000
 						}
 						if (tileType == 2 || tileType == 3 || tileData & 1 || tileData & 2) {
