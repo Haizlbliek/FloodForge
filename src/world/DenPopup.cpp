@@ -104,6 +104,9 @@ void DenPopup::close() {
 }
 
 void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
+	bool hasHover = false;
+	std::string hoverText = "";
+
 	mouseOnRight = mouseX > (bounds.X1() - 0.2);
 	
 	Den &den = room->CreatureDen(this->den);
@@ -237,6 +240,8 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 
 			if (rect.inside(mouseX, mouseY) || isSelected) {
 				setThemeColour(ThemeColour::BorderHighlight);
+				hasHover = true;
+				hoverText = "Creature - " + creatureType;
 			} else {
 				setThemeColour(ThemeColour::Border);
 			}
@@ -319,6 +324,8 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 
 			if (rect.inside(mouseX, mouseY) || isSelected) {
 				setThemeColour(ThemeColour::BorderHighlight);
+				hasHover = true;
+				hoverText = "Tag - " + creatureTag;
 			} else {
 				setThemeColour(ThemeColour::Border);
 			}
@@ -347,6 +354,18 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 				}
 			}
 		}
+	}
+	
+	// Hovers
+	
+	if (hasHover && mouseInside) {
+		double width = Fonts::rainworld->getTextWidth(hoverText, 0.04) + 0.02;
+		setThemeColour(ThemeColour::Popup);
+		fillRect(mouseX, mouseY, mouseX + width, mouseY + 0.06);
+		setThemeColour(ThemeColour::Border);
+		strokeRect(mouseX, mouseY, mouseX + width, mouseY + 0.06);
+		setThemeColour(ThemeColour::Text);
+		Fonts::rainworld->writeCentred(hoverText, mouseX + 0.01, mouseY + 0.03, 0.04, CENTRE_Y);
 	}
 }
 
