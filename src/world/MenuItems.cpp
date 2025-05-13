@@ -6,6 +6,7 @@
 #include "../popup/ConfirmPopup.hpp"
 #include "AcronymPopup.hpp"
 #include "ChangeAcronymPopup.hpp"
+#include "RecentFiles.hpp"
 
 std::vector<Button*> MenuItems::buttons;
 
@@ -47,6 +48,80 @@ void Button::draw(Mouse *mouse, Vector2 screenBounds) {
 
 	setThemeColour(ThemeColour::Text);
 	font->writeCentred(text, x - screenBounds.x + (width * 0.5), y + height * -0.5 + screenBounds.y + 0.003, height - 0.01, CENTRE_XY);
+}
+
+void MenuItems::importWorldFile(std::filesystem::path path) {
+	RecentFiles::addPath(path);
+
+	exportDirectory = path.parent_path();
+	worldAcronym = toLower(path.filename().string());
+	worldAcronym = worldAcronym.substr(worldAcronym.find_last_of('_') + 1, worldAcronym.find_last_of('.') - worldAcronym.find_last_of('_') - 1);
+	
+	std::cout << "Opening world " << worldAcronym << std::endl;
+	
+	std::filesystem::path roomsPath = findDirectoryCaseInsensitive(exportDirectory.parent_path().string(), worldAcronym + "-rooms");
+	if (roomsPath.empty()) {
+		roomsDirectory = "";
+		FailureController::fails.push_back("Cannot find rooms directory!");
+	} else {
+		roomsDirectory = roomsPath.filename().string();
+	}
+	
+	std::filesystem::path mapFilePath = findFileCaseInsensitive(exportDirectory.string(), "map_" + worldAcronym + ".txt");
+	
+	std::string propertiesFilePath = findFileCaseInsensitive(exportDirectory.string(), "properties.txt");
+	
+	if (std::find(rooms.begin(), rooms.end(), offscreenDen) != rooms.end()) {
+		offscreenDen = nullptr;
+	}
+	
+	for (Room *room : rooms) {
+		delete room;
+	}
+	rooms.clear();
+	for (Connection *connection : connections) delete connection;
+	connections.clear();
+	subregions.clear();
+	if (offscreenDen != nullptr) delete offscreenDen;
+	offscreenDen = nullptr;
+	extraProperties = "";
+	extraWorld = "";
+	
+	if (std::filesystem::exists(propertiesFilePath)) {
+		std::cout << "Found properties file, loading subregions" << std::endl;
+	
+		parseProperties(propertiesFilePath);
+	}
+	
+	if (std::filesystem::exists(mapFilePath)) {
+		std::cout << "Loading map" << std::endl;
+	
+		parseMap(mapFilePath, exportDirectory);
+	} else {
+		std::cout << "Map file not found, loading world file" << std::endl;
+	}
+	
+	std::cout << "Loading world" << std::endl;
+	parseWorld(path, exportDirectory);
+	
+	std::cout << "Loading extra room data" << std::endl;
+	
+	for (Room *room : rooms) {
+		if (room->isOffscreen()) continue;
+	
+		loadExtraRoomData(findFileCaseInsensitive((exportDirectory.parent_path() / roomsDirectory).string(), room->roomName + "_settings.txt"), room->data);
+	}
+	
+	std::cout << "Extra room data - loaded" << std::endl;
+	
+	if (FailureController::fails.size() > 0) {
+		std::string fails = "";
+		for (std::string fail : FailureController::fails) {
+			fails += fail + "\n";
+		}
+		Popups::addPopup(new InfoPopup(window, fails));
+		FailureController::fails.clear();
+	}
 }
 
 void MenuItems::init(Window *window) {
@@ -153,75 +228,7 @@ void MenuItems::init(Window *window) {
 
 					std::filesystem::path path = *pathStrings.begin();
 
-					exportDirectory = path.parent_path();
-					worldAcronym = toLower(path.filename().string());
-					worldAcronym = worldAcronym.substr(worldAcronym.find_last_of('_') + 1, worldAcronym.find_last_of('.') - worldAcronym.find_last_of('_') - 1);
-
-					std::cout << "Opening world " << worldAcronym << std::endl;
-
-					std::filesystem::path roomsPath = findDirectoryCaseInsensitive(exportDirectory.parent_path().string(), worldAcronym + "-rooms");
-					if (roomsPath.empty()) {
-						roomsDirectory = "";
-						FailureController::fails.push_back("Cannot find rooms directory!");
-					} else {
-						roomsDirectory = roomsPath.filename().string();
-					}
-
-					std::filesystem::path mapFilePath = findFileCaseInsensitive(exportDirectory.string(), "map_" + worldAcronym + ".txt");
-
-					std::string propertiesFilePath = findFileCaseInsensitive(exportDirectory.string(), "properties.txt");
-
-					if (std::find(rooms.begin(), rooms.end(), offscreenDen) != rooms.end()) {
-						offscreenDen = nullptr;
-					}
-
-					for (Room *room : rooms) {
-						delete room;
-					}
-					rooms.clear();
-					for (Connection *connection : connections) delete connection;
-					connections.clear();
-					subregions.clear();
-					if (offscreenDen != nullptr) delete offscreenDen;
-					offscreenDen = nullptr;
-					extraProperties = "";
-					extraWorld = "";
-
-					if (std::filesystem::exists(propertiesFilePath)) {
-						std::cout << "Found properties file, loading subregions" << std::endl;
-
-						parseProperties(propertiesFilePath);
-					}
-
-					if (std::filesystem::exists(mapFilePath)) {
-						std::cout << "Loading map" << std::endl;
-
-						parseMap(mapFilePath, exportDirectory);
-					} else {
-						std::cout << "Map file not found, loading world file" << std::endl;
-					}
-
-					std::cout << "Loading world" << std::endl;
-					parseWorld(path, exportDirectory);
-					
-					std::cout << "Loading extra room data" << std::endl;
-					
-					for (Room *room : rooms) {
-						if (room->isOffscreen()) continue;
-
-						loadExtraRoomData(findFileCaseInsensitive((exportDirectory.parent_path() / roomsDirectory).string(), room->roomName + "_settings.txt"), room->data);
-					}
-					
-					std::cout << "Extra room data - loaded" << std::endl;
-
-					if (FailureController::fails.size() > 0) {
-						std::string fails = "";
-						for (std::string fail : FailureController::fails) {
-							fails += fail + "\n";
-						}
-						Popups::addPopup(new InfoPopup(window, fails));
-						FailureController::fails.clear();
-					}
+					MenuItems::importWorldFile(path);
 				}
 			));
 		}

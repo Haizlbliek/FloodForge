@@ -18,9 +18,9 @@
 #include "../Settings.hpp"
 
 #include "../popup/Popups.hpp"
-#include "../popup/SplashArtPopup.hpp"
 #include "../popup/MarkdownPopup.hpp"
 #include "../popup/ConfirmPopup.hpp"
+#include "SplashArtPopup.hpp"
 #include "SubregionPopup.hpp"
 #include "RoomTagPopup.hpp"
 #include "DenPopup.hpp"
@@ -32,6 +32,7 @@
 #include "Connection.hpp"
 #include "MenuItems.hpp"
 #include "DebugData.hpp"
+#include "RecentFiles.hpp"
 
 #define TEXTURE_PATH (BASE_PATH + "assets/")
 
@@ -954,6 +955,7 @@ int main() {
 	Shaders::init();
 	Draw::init();
 	CreatureTextures::init();
+	RecentFiles::init();
 
 	Popups::addPopup(new SplashArtPopup(window));
 

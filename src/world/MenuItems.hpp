@@ -898,6 +898,8 @@ class MenuItems {
 			propertiesFile.close();
 		}
 
+		static void importWorldFile(std::filesystem::path path);
+
 		static void init(Window *window);
 
 		static void cleanup() {
