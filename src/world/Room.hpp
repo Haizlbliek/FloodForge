@@ -18,7 +18,6 @@
 #include "../math/Vector.hpp"
 #include "../math/Matrix4.hpp"
 #include "../font/Fonts.hpp"
-#include "../popup/WarningPopup.hpp"
 
 #include "FailureController.hpp"
 #include "ExtraRoomData.hpp"

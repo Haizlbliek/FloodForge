@@ -20,7 +20,7 @@
 #include "../popup/Popups.hpp"
 #include "../popup/SplashArtPopup.hpp"
 #include "../popup/MarkdownPopup.hpp"
-#include "../popup/QuitConfirmationPopup.hpp"
+#include "../popup/ConfirmPopup.hpp"
 #include "SubregionPopup.hpp"
 #include "RoomTagPopup.hpp"
 #include "DenPopup.hpp"
@@ -442,7 +442,9 @@ void updateMain() {
 			if (Popups::popups.size() > 0)
 				Popups::popups[0]->reject();
 			else
-				Popups::addPopup(new QuitConfirmationPopup(window));
+				Popups::addPopup((new ConfirmPopup(window, "Exit FloodForge?"))->OnOkay([&]() {
+					window->close();
+				}));
 		}
 
 		previousKeys.insert(GLFW_KEY_ESCAPE);

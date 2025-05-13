@@ -8,10 +8,11 @@
 
 #include "Popups.hpp"
 
-class QuitConfirmationPopup : public Popup {
+class ConfirmPopup : public Popup {
 	public:
-		QuitConfirmationPopup(Window *window)
+		ConfirmPopup(Window *window, std::string question)
 		: Popup(window) {
+			this->question = question;
 			bounds = Rect(-0.25, -0.15, 0.25, 0.15);
 		}
 		
@@ -28,7 +29,7 @@ class QuitConfirmationPopup : public Popup {
 			Draw::translate(bounds.X0() + 0.25, bounds.Y0() + 0.15);
 
 			setThemeColour(ThemeColour::Text);
-			Fonts::rainworld->writeCentred("Exit FloodForge?", 0.0, 0.04, 0.04, CENTRE_XY);
+			Fonts::rainworld->writeCentred(question, 0.0, 0.04, 0.04, CENTRE_XY);
 
 			setThemeColour(ThemeColour::Button);
 			fillRect(-0.2,  -0.09, -0.05, -0.03);
@@ -36,7 +37,7 @@ class QuitConfirmationPopup : public Popup {
 
 			setThemeColour(ThemeColour::Text);
 			Fonts::rainworld->writeCentred("Cancel", -0.125, -0.06, 0.03, CENTRE_XY);
-			Fonts::rainworld->writeCentred("Exit", 0.125, -0.06, 0.03, CENTRE_XY);
+			Fonts::rainworld->writeCentred("Okay", 0.125, -0.06, 0.03, CENTRE_XY);
 
 			if (Rect(-0.2, -0.09, -0.05, -0.03).inside(mouseX, mouseY)) {
 				setThemeColour(ThemeColour::BorderHighlight);
@@ -58,10 +59,16 @@ class QuitConfirmationPopup : public Popup {
 		}
 
 		void accept() {
-			window->close();
+			for (const auto &listener : listenersOkay) {
+				listener();
+			}
+			close();
 		}
 
 		void reject() {
+			for (const auto &listener : listenersCancel) {
+				listener();
+			}
 			close();
 		}
 
@@ -79,4 +86,20 @@ class QuitConfirmationPopup : public Popup {
 				accept();
 			}
 		}
+		
+		ConfirmPopup *OnOkay(std::function<void()> listener) {
+			listenersOkay.push_back(listener);
+			return this;
+		}
+
+		ConfirmPopup *OnCancel(std::function<void()> listener) {
+			listenersCancel.push_back(listener);
+			return this;
+		}
+	
+	private:
+		std::string question;
+		
+		std::vector<std::function<void()>> listenersOkay;
+		std::vector<std::function<void()>> listenersCancel;
 };

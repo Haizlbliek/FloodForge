@@ -4,7 +4,7 @@
 #include "../Utils.hpp"
 
 #include "../popup/Popups.hpp"
-#include "../popup/WarningPopup.hpp"
+#include "../popup/InfoPopup.hpp"
 
 #include "Room.hpp"
 #include "SubregionNewPopup.hpp"
@@ -95,7 +95,7 @@ class SubregionPopup : public Popup {
 						if (canRemove) {
 							subregions.erase(subregions.begin() + (button - 1));
 						} else {
-							Popups::addPopup(new WarningPopup(window, "Can't remove subregion\nRooms still use it"));
+							Popups::addPopup(new InfoPopup(window, "Can't remove subregion\nRooms still use it"));
 						}
 					} else if (button == subregions.size() + 1) {
 					}
@@ -103,7 +103,7 @@ class SubregionPopup : public Popup {
 			}
 		}
 		
-		bool canStack(std::string popupName) { return popupName == "SubregionNewPopup" || popupName == "WarningPopup"; }
+		bool canStack(std::string popupName) { return popupName == "SubregionNewPopup" || popupName == "InfoPopup"; }
 		std::string PopupName() { return "SubregionPopup"; }
 
 	private:

@@ -13,14 +13,14 @@
 
 #include "Popups.hpp"
 
-class WarningPopup : public Popup {
+class InfoPopup : public Popup {
 	public:
-		WarningPopup(Window *window)
+		InfoPopup(Window *window)
 		: Popup(window) {
 			bounds = Rect(-0.9, -0.1, 0.9, 0.1);
 		}
 
-		WarningPopup(Window *window, std::string warningText)
+		InfoPopup(Window *window, std::string warningText)
 		: Popup(window) {
 			std::istringstream stream(warningText);
 			std::string line;
@@ -48,7 +48,7 @@ class WarningPopup : public Popup {
 				lineId++;
 			}
 		}
-		std::string PopupName() { return "WarningPopup"; }
+		std::string PopupName() { return "InfoPopup"; }
 
 	private:
 		std::vector<std::string> warning;
