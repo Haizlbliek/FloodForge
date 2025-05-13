@@ -35,6 +35,7 @@ void CreatureTextures::init() {
 	loadCreaturesFromFolder("assets/creatures/", true);
 	loadCreaturesFromFolder("assets/creatures/downpour/", true);
 	loadCreaturesFromFolder("assets/creatures/watcher/", true);
+	loadCreaturesFromFolder("assets/creatures/floodwaters/", true);
 	loadCreaturesFromFolder("assets/creatures/room/", "room-", false);
 	
 	for (const auto& entry : std::filesystem::directory_iterator("assets/creatures/TAGS/")) {
