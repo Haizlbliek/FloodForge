@@ -92,5 +92,3 @@ Rot Behemoth>RotLoach
 RBehemoth>RotLoach
 RoBehemoth>RotLoach
 BigRot>RotLoach
-VoidPole>VoidPoleMimic
-VoidMimic>VoidPoleMimic
