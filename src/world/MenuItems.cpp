@@ -27,6 +27,8 @@ GLuint MenuItems::textureButtonPress = 0;
 GLuint MenuItems::textureButtonPressHover = 0;
 GLuint MenuItems::textureBar = 0;
 
+std::vector<std::pair<std::string, std::unordered_map<std::string, RoomAttractiveness>>> MenuItems::roomAttractiveness;
+
 void Button::draw(Mouse *mouse, Vector2 screenBounds) {
 	Draw::color(1.0, 1.0, 1.0);
 	
@@ -109,6 +111,12 @@ void MenuItems::importWorldFile(std::filesystem::path path) {
 	for (Room *room : rooms) {
 		if (room->isOffscreen()) continue;
 	
+		for (auto x : roomAttractiveness) {
+			if (x.first != room->roomName) continue;
+			
+			room->data.attractiveness = x.second;
+			break;
+		}
 		loadExtraRoomData(findFileCaseInsensitive((exportDirectory.parent_path() / roomsDirectory).string(), room->roomName + "_settings.txt"), room->data);
 	}
 	

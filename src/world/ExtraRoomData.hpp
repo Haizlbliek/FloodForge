@@ -2,9 +2,10 @@
 
 #include <vector>
 #include <string>
-#include "../math/Vector.hpp"
+#include <unordered_map>
 
-#include "../gl.h"
+#include "RoomAttractiveness.hpp"
+#include "../math/Vector.hpp"
 
 class DevItem {
 	public:
@@ -23,4 +24,6 @@ class ExtraRoomData {
 		bool merge = false;
 		
 		std::vector<DevItem> devItems;
+		
+		std::unordered_map<std::string, RoomAttractiveness> attractiveness;
 };

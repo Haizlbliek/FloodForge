@@ -32,6 +32,7 @@ G - Toggle Visual Merge
 L - Change Layer
 T - Change Tag
 S - Change Subregion
+A - Change Attractiveness
 H - Toggle Visibility
 I - Move to back
 

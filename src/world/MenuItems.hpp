@@ -594,6 +594,16 @@ class MenuItems {
 			std::cout << "Connections loaded" << std::endl;
 		}
 
+		static RoomAttractiveness parseRoomAttractiveness(std::string value) {
+			if (value == "neutral") return RoomAttractiveness::NEUTRAL;
+			if (value == "forbidden") return RoomAttractiveness::FORBIDDEN;
+			if (value == "avoid") return RoomAttractiveness::AVOID;
+			if (value == "like") return RoomAttractiveness::LIKE;
+			if (value == "stay") return RoomAttractiveness::STAY;
+			
+			return RoomAttractiveness::DEFAULT;
+		}
+
 		static void parseProperties(std::string propertiesFilePath) {
 			std::fstream propertiesFile(propertiesFilePath);
 			
@@ -603,6 +613,20 @@ class MenuItems {
 					std::string subregionName = line.substr(line.find(':') + 2);
 					std::cout << "Subregion: " << subregionName << std::endl;
 					subregions.push_back(subregionName);
+				} else if (startsWith(line, "Room_Attr: ")) {
+					std::string attractivenesses = line.substr(line.find(':') + 2);
+					std::string room = attractivenesses.substr(0, attractivenesses.find(':'));
+					std::vector<std::string> states = split(attractivenesses.substr(attractivenesses.find(':') + 2), ',');
+					
+					std::unordered_map<std::string, RoomAttractiveness> attractiveness;
+					for (std::string state : states) {
+						std::string creature = state.substr(0, state.find_first_of('-'));
+						std::string value = state.substr(state.find_first_of('-') + 1);
+						
+						creature = CreatureTextures::parse(creature);
+						attractiveness[creature] = parseRoomAttractiveness(toLower(value));
+					}
+					roomAttractiveness.push_back({ toLower(room), attractiveness });
 				} else {
 					extraProperties += line + "\n";
 				}
@@ -741,7 +765,7 @@ class MenuItems {
 			for (Room *room : rooms) {
 				std::stringstream line;
 				bool add = false;
-				
+
 				if (room == offscreenDen) {
 					line << "OFFSCREEN : ";
 				} else {
@@ -895,6 +919,25 @@ class MenuItems {
 				propertiesFile << "Subregion: " << subregion << "\n";
 			}
 
+			for (Room *room : rooms) {
+				if (room->isOffscreen()) continue;
+				
+				if (room->data.attractiveness.empty()) continue;
+				
+				
+				propertiesFile << "Room_Attr: " << room->roomName << ": ";
+				for (std::pair<std::string, RoomAttractiveness> attractivenss : room->data.attractiveness)  {
+					propertiesFile << attractivenss.first << "-";
+					if (attractivenss.second == RoomAttractiveness::NEUTRAL) propertiesFile << "Neutral";
+					if (attractivenss.second == RoomAttractiveness::FORBIDDEN) propertiesFile << "Forbidden";
+					if (attractivenss.second == RoomAttractiveness::AVOID) propertiesFile << "Avoid";
+					if (attractivenss.second == RoomAttractiveness::LIKE) propertiesFile << "Like";
+					if (attractivenss.second == RoomAttractiveness::STAY) propertiesFile << "Stay";
+					propertiesFile << ",";
+				}
+				propertiesFile << "\n";
+			}
+
 			propertiesFile.close();
 		}
 
@@ -912,7 +955,7 @@ class MenuItems {
 
 		static void draw(Mouse *mouse, Vector2 screenBounds) {
 			Draw::color(1.0, 1.0, 1.0);
-			
+
 			Draw::useTexture(MenuItems::textureBar);
 
 			glEnable(GL_BLEND);
@@ -969,4 +1012,6 @@ class MenuItems {
 		static std::filesystem::path exportDirectory;
 		static std::string worldAcronym;
 		static std::string roomsDirectory;
+		
+		static std::vector<std::pair<std::string, std::unordered_map<std::string, RoomAttractiveness>>> roomAttractiveness;
 };

@@ -1,3 +1,0 @@
-C:/Program Files (x86)/Steam/steamapps/common/Rain World/RainWorld_Data/StreamingAssets/mods/floodwaters/world/bq/world_bq.txt
-C:/Program Files (x86)/Steam/steamapps/common/Rain World/RainWorld_Data/StreamingAssets/mods/floodwaters/world/qr/world_qr.txt
-C:/Program Files (x86)/Steam/steamapps/common/Rain World/RainWorld_Data/StreamingAssets/mods/floodwaters/world/r2/world_r2.txt
