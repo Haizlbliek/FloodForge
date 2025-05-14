@@ -237,10 +237,13 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 			Draw::useTexture(0);
 			glDisable(GL_BLEND);
 
-			if (rect.inside(mouseX, mouseY) || isSelected) {
-				setThemeColour(ThemeColour::BorderHighlight);
+			if (rect.inside(mouseX, mouseY)) {
 				hasHover = true;
 				hoverText = "Creature - " + creatureType;
+			}
+
+			if (rect.inside(mouseX, mouseY) || isSelected) {
+				setThemeColour(ThemeColour::BorderHighlight);
 			} else {
 				setThemeColour(ThemeColour::Border);
 			}
