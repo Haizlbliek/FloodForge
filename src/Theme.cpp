@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 #include "Constants.hpp"
 #include "Utils.hpp"
@@ -34,7 +35,7 @@ std::string currentThemeName = "";
 
 Colour parseHexColor(const std::string &hex) {
 	if (hex.size() != 7 || hex[0] != '#') {
-		throw std::invalid_argument("Invalid hex color format. Expected format: #RRGGBB");
+		throw std::invalid_argument("Invalid hex color format. Expected format: #RRGGBB but got " + hex + " instead");
 	}
 
 	int red, green, blue;
@@ -72,6 +73,7 @@ void loadTheme(std::string theme) {
 		if (line.empty()) continue;
 
 		std::string colourString = line.substr(line.find_first_of(':') + 2);
+		colourString.erase(std::remove(colourString.begin(), colourString.end(), '\r'), colourString.end());
 		Colour colour = parseHexColor(colourString);
 
 		if (startsWith(line, "Background:")) currentTheme[ThemeColour::Background] = colour;
