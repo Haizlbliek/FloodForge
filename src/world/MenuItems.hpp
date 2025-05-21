@@ -772,12 +772,15 @@ class MenuItems {
 					line << toUpper(room->roomName) << " : ";
 				}
 
+				bool first = true;
 				for (int i = 0; i < room->DenCount(); i++) {
 					const Den &den = room->CreatureDen01(i);
 					if (den.type.empty() || den.count == 0)
 						continue;
 
-					if (i > 0) line << ", ";
+					if (!first) line << ", ";
+					first = false;
+
 					if (room == offscreenDen) {
 						line << "0-" << den.type;
 					} else {

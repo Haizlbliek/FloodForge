@@ -316,7 +316,7 @@ class Room {
 		void Tag(const std::string newTag) { tags.clear(); if (newTag != "") tags.push_back(newTag); }
 		void ToggleTag(const std::string newTag) {
 			if (std::find(tags.begin(), tags.end(), newTag) != tags.end()) {
-				std::remove(tags.begin(), tags.end(), newTag);
+				tags.erase(std::remove(tags.begin(), tags.end(), newTag), tags.end());
 			} else {
 				tags.push_back(newTag);
 			}
