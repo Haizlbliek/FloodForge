@@ -37,7 +37,7 @@ LIBS += $(foreach pkg,$(REQPKGS),$(shell pkg-config --libs $(pkg)))
 OBJS = $(addprefix build/obj/, $(shell realpath --relative-to src $(patsubst %.c,%.o,$(SOURCES:%.cpp=%.o))))
 
 # link all .o files to build FloodForge executable
-build/FloodForge: pkgcheck $(OBJS)
+FloodForge: pkgcheck $(OBJS)
 	@echo [LNK] $@
 	@$(CXX) -o $@ $(CPPFLAGS) $(OBJS) $(LIBS)
 

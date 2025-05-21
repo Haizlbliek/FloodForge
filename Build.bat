@@ -31,7 +31,7 @@ for %%a in (%*) do (
 )
 
 :: Compile Command
-set "compile_cmd=g++ build/resource.o src/glad.c src/*.cpp !src_dir! src/font/*.cpp src/math/*.cpp src/popup/*.cpp --std=c++17 -I"include/" -L"lib/GLFW/" -o build/FloodForge.exe -lglfw3 -lgdi32 -lopengl32 -luser32 -lcomdlg32 -lole32"
+set "compile_cmd=g++ build/resource.o src/glad.c src/*.cpp !src_dir! src/font/*.cpp src/math/*.cpp src/popup/*.cpp --std=c++17 -I"include/" -L"lib/GLFW/" -o FloodForge.exe -lglfw3 -lgdi32 -lopengl32 -luser32 -lcomdlg32 -lole32"
 
 if "%debug_mode%"=="false" (
     set "compile_cmd=!compile_cmd! -mwindows"
@@ -62,7 +62,7 @@ if "%release_mode%"=="false" (
 
 :: Zip
 if "%release_mode%"=="true" (
-	"C:\Program Files\7-Zip\7z.exe" a "FloodForge-Windows.zip" "build\FloodForge.exe" "assets\*" "README.md" "LICENSE" "docs\*" -r
+	"C:\Program Files\7-Zip\7z.exe" a "FloodForge-Windows.zip" "FloodForge.exe" "assets\*" "README.md" "LICENSE" "docs\*" -r
 )
 
 :: Return
