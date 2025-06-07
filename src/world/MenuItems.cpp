@@ -150,7 +150,7 @@ void MenuItems::init(Window *window) {
 				return;
 			}
 
-			Popups::addPopup((new FilesystemPopup(window, std::regex("([^._-]+)_[a-zA-Z0-9]+\\.txt"), "xx_a01.txt",
+			Popups::addPopup((new FilesystemPopup(window, std::regex("(([^._-]+)_[a-zA-Z0-9]+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"), "xx_a01.txt",
 				[&](std::set<std::string> pathStrings) {
 					if (pathStrings.empty()) return;
 
