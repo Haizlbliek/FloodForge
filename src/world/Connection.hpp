@@ -21,9 +21,9 @@ class Connection {
 
 		void draw(Vector2 mousePosition, double lineSize) {
 			if (hovered(mousePosition, lineSize)) {
-				Draw::color(0.0f, 1.0f, 1.0f);
+				Draw::color(RoomHelpers::RoomConnectionHover);
 			} else {
-				Draw::color(1.0f, 1.0f, 0.0f);
+				Draw::color(RoomHelpers::RoomConnection);
 			}
 
 			Vector2 pointA = roomA->getRoomEntranceOffsetPosition(connectionA);

@@ -37,11 +37,42 @@ enum ShortcutType {
 };
 
 struct Vertex {
+	Vertex(float x, float y, Colour col) {
+		this->x = x;
+		this->y = y;
+		this->r = col.r;
+		this->g = col.g;
+		this->b = col.b;
+		this->a = col.a;
+	}
+
+	Vertex(float x, float y, float r, float g, float b, float a = 1.0f) {
+		this->x = x;
+		this->y = y;
+		this->r = r;
+		this->g = g;
+		this->b = b;
+		this->a = a;
+	}
+
 	float x, y;
 	float r, g, b, a;
 };
 
 namespace RoomHelpers {
+	extern Colour RoomAir;
+	extern Colour RoomSolid;
+	extern Colour RoomPole;
+	extern Colour RoomPlatform;
+	extern Colour RoomShortcutEnterance;
+	extern Colour RoomShortcutDot;
+	extern Colour RoomShortcutRoom;
+	extern Colour RoomShortcutDen;
+	extern Colour RoomConnection;
+	extern Colour RoomConnectionHover;
+	
+	void loadColours();
+
 	void drawTexture(GLuint texture, double rectX, double rectY, double scale);
 };
 

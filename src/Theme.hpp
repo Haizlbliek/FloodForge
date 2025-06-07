@@ -21,6 +21,16 @@ enum class ThemeColour {
 	SelectionBorder,
 	RoomBorder,
 	RoomBorderHighlight,
+	RoomAir,
+	RoomSolid,
+	RoomPole,
+	RoomPlatform,
+	RoomShortcutEnterance,
+	RoomShortcutDot,
+	RoomShortcutRoom,
+	RoomShortcutDen,
+	RoomConnection,
+	RoomConnectionHover
 };
 
 extern std::unordered_map<ThemeColour, Colour> currentTheme;

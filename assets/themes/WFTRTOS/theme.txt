@@ -12,3 +12,13 @@ TextDisabled: #9e0000
 TextHighlight: #8502fe
 SelectionBorder: #9e0000
 RoomBorderHighlight: #8502fe
+RoomAir: #ffffff
+RoomSolid: #ff0000
+RoomPole: #9e0000
+RoomPlatform: #9e0000
+RoomShortcutEnterance: #ff5b38
+RoomShortcutDot: #9e0000
+RoomShortcutRoom: #ff0000
+RoomShortcutDen: #8502fe
+RoomConnection: #8502fe
+RoomConnectionHover: #9e0000

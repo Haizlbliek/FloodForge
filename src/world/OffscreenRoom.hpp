@@ -79,10 +79,10 @@ class OffscreenRoom : public Room {
 		}
 
 		void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) override {
-			Draw::color(1.00f, 1.00f, 1.00f);
+			Draw::color(RoomHelpers::RoomAir);
 			fillRect(position.x, position.y, position.x + width, position.y - height);
 
-			Draw::color(0.00f, 0.00f, 0.00f);
+			Draw::color(RoomHelpers::RoomSolid);
 			Fonts::rainworld->writeCentred(this->roomName, position.x + (width * 0.5), position.y - (height * 0.5), 5, CENTRE_XY);
 
 

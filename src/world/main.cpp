@@ -987,6 +987,7 @@ int main() {
 	Draw::init();
 	CreatureTextures::init();
 	RecentFiles::init();
+	RoomHelpers::loadColours();
 
 	Popups::addPopup(new SplashArtPopup(window));
 

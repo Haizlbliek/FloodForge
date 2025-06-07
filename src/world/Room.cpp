@@ -2,11 +2,35 @@
 
 #include "DenPopup.hpp"
 
+Colour RoomHelpers::RoomAir;
+Colour RoomHelpers::RoomSolid;
+Colour RoomHelpers::RoomPole;
+Colour RoomHelpers::RoomPlatform;
+Colour RoomHelpers::RoomShortcutEnterance;
+Colour RoomHelpers::RoomShortcutDot;
+Colour RoomHelpers::RoomShortcutRoom;
+Colour RoomHelpers::RoomShortcutDen;
+Colour RoomHelpers::RoomConnection;
+Colour RoomHelpers::RoomConnectionHover;
+
+void RoomHelpers::loadColours() {
+	RoomAir               = currentTheme[ThemeColour::RoomAir];
+	RoomSolid             = currentTheme[ThemeColour::RoomSolid];
+	RoomPole              = currentTheme[ThemeColour::RoomPole];
+	RoomPlatform          = currentTheme[ThemeColour::RoomPlatform];
+	RoomShortcutEnterance = currentTheme[ThemeColour::RoomShortcutEnterance];
+	RoomShortcutDot       = currentTheme[ThemeColour::RoomShortcutDot];
+	RoomShortcutRoom      = currentTheme[ThemeColour::RoomShortcutRoom];
+	RoomShortcutDen       = currentTheme[ThemeColour::RoomShortcutDen];
+	RoomConnection        = currentTheme[ThemeColour::RoomConnection];
+	RoomConnectionHover   = currentTheme[ThemeColour::RoomConnectionHover];
+}
+
 void Room::drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
 	if (data.hidden) {
-		Draw::color(0.0, 0.0, 0.0, 0.5);
+		Draw::color(RoomHelpers::RoomSolid.r, RoomHelpers::RoomSolid.g, RoomHelpers::RoomSolid.b, 0.5);
 	} else {
-		Draw::color(0.0, 0.0, 0.0, 1.0);
+		Draw::color(RoomHelpers::RoomSolid.r, RoomHelpers::RoomSolid.g, RoomHelpers::RoomSolid.b, 1.0);
 	}
 	
 	fillRect(position.x, position.y - height, position.x + width, position.y);
@@ -188,13 +212,6 @@ void Room::generateVBO() {
 	glGenBuffers(2, vbo);
 	glGenVertexArrays(2, &vao);
 
-	// addQuad(
-	//     { (float) position.x,         (float) position.y,          1.0, 1.0, 1.0 },
-	//     { (float) position.x + width, (float) position.y,          1.0, 1.0, 1.0 },
-	//     { (float) position.x + width, (float) position.y - height, 1.0, 1.0, 1.0 },
-	//     { (float) position.x,         (float) position.y - height, 1.0, 1.0, 1.0 }
-	// );
-
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
 			int tileType = getTile(x, y) % 16;
@@ -210,20 +227,20 @@ void Room::generateVBO() {
 			// Background air
 			if (tileType != 1 && tileType != 4) {
 				addQuad(
-					{ x0, y0, 1.0, 1.0, 1.0 },
-					{ x1, y0, 1.0, 1.0, 1.0 },
-					{ x1, y1, 1.0, 1.0, 1.0 },
-					{ x0, y1, 1.0, 1.0, 1.0 }
+					{ x0, y0, RoomHelpers::RoomAir },
+					{ x1, y0, RoomHelpers::RoomAir },
+					{ x1, y1, RoomHelpers::RoomAir },
+					{ x0, y1, RoomHelpers::RoomAir }
 				);
 			}
 
 			// Shortcut Entrance
 			if (tileType == 4) {
 				addQuad(
-					{ x0, y0, 0.0, 1.0, 1.0 },
-					{ x1, y0, 0.0, 1.0, 1.0 },
-					{ x1, y1, 0.0, 1.0, 1.0 },
-					{ x0, y1, 0.0, 1.0, 1.0 }
+					{ x0, y0, RoomHelpers::RoomShortcutEnterance },
+					{ x1, y0, RoomHelpers::RoomShortcutEnterance },
+					{ x1, y1, RoomHelpers::RoomShortcutEnterance },
+					{ x0, y1, RoomHelpers::RoomShortcutEnterance }
 				);
 			}
 			
@@ -237,31 +254,31 @@ void Room::generateVBO() {
 
 				if (bits == 1 + 4) {
 					addQuad(
-						{ x0, y0, 1.0, 0.0, 0.0 },
-						{ x1, y0, 1.0, 0.0, 0.0 },
-						{ x0, y1, 1.0, 0.0, 0.0 },
-						{ x0, y0, 1.0, 0.0, 0.0 }
+						{ x0, y0, RoomHelpers::RoomSolid },
+						{ x1, y0, RoomHelpers::RoomSolid },
+						{ x0, y1, RoomHelpers::RoomSolid },
+						{ x0, y0, RoomHelpers::RoomSolid }
 					);
 				} else if (bits == 1 + 8) {
 					addQuad(
-						{ x0, y1, 1.0, 0.0, 0.0 },
-						{ x1, y1, 1.0, 0.0, 0.0 },
-						{ x0, y0, 1.0, 0.0, 0.0 },
-						{ x0, y1, 1.0, 0.0, 0.0 }
+						{ x0, y1, RoomHelpers::RoomSolid },
+						{ x1, y1, RoomHelpers::RoomSolid },
+						{ x0, y0, RoomHelpers::RoomSolid },
+						{ x0, y1, RoomHelpers::RoomSolid }
 					);
 				} else if (bits == 2 + 4) {
 					addQuad(
-						{ x1, y0, 1.0, 0.0, 0.0 },
-						{ x0, y0, 1.0, 0.0, 0.0 },
-						{ x1, y1, 1.0, 0.0, 0.0 },
-						{ x1, y0, 1.0, 0.0, 0.0 }
+						{ x1, y0, RoomHelpers::RoomSolid },
+						{ x0, y0, RoomHelpers::RoomSolid },
+						{ x1, y1, RoomHelpers::RoomSolid },
+						{ x1, y0, RoomHelpers::RoomSolid }
 					);
 				} else if (bits == 2 + 8) {
 					addQuad(
-						{ x1, y1, 1.0, 0.0, 0.0 },
-						{ x0, y1, 1.0, 0.0, 0.0 },
-						{ x1, y0, 1.0, 0.0, 0.0 },
-						{ x1, y1, 1.0, 0.0, 0.0 }
+						{ x1, y1, RoomHelpers::RoomSolid },
+						{ x0, y1, RoomHelpers::RoomSolid },
+						{ x1, y0, RoomHelpers::RoomSolid },
+						{ x1, y1, RoomHelpers::RoomSolid }
 					);
 				}
 			}
@@ -269,30 +286,30 @@ void Room::generateVBO() {
 			// One-way
 			if (tileType == 3) {
 				addQuad(
-					{ x0, y0, 0.0, 1.0, 0.0 },
-					{ x1, y0, 0.0, 1.0, 0.0 },
-					{ x1, (y0 + y1) * 0.5f, 0.0, 1.0, 0.0 },
-					{ x0, (y0 + y1) * 0.5f, 0.0, 1.0, 0.0 }
+					{ x0, y0,               RoomHelpers::RoomPlatform },
+					{ x1, y0,               RoomHelpers::RoomPlatform },
+					{ x1, (y0 + y1) * 0.5f, RoomHelpers::RoomPlatform },
+					{ x0, (y0 + y1) * 0.5f, RoomHelpers::RoomPlatform }
 				);
 			}
 
 			// 16 - Vertical Pole
 			if (tileData & 1) {
 				addQuad(
-					{ x0 + 0.375f, y0, 0.0, 0.0, 1.0 },
-					{ x1 - 0.375f, y0, 0.0, 0.0, 1.0 },
-					{ x1 - 0.375f, y1, 0.0, 0.0, 1.0 },
-					{ x0 + 0.375f, y1, 0.0, 0.0, 1.0 }
+					{ x0 + 0.375f, y0, RoomHelpers::RoomPole },
+					{ x1 - 0.375f, y0, RoomHelpers::RoomPole },
+					{ x1 - 0.375f, y1, RoomHelpers::RoomPole },
+					{ x0 + 0.375f, y1, RoomHelpers::RoomPole }
 				);
 			}
 
 			// 32 - Horizontal Pole
 			if (tileData & 2) {
 				addQuad(
-					{ x0, y0 - 0.375f, 0.0, 0.0, 1.0 },
-					{ x1, y0 - 0.375f, 0.0, 0.0, 1.0 },
-					{ x1, y1 + 0.375f, 0.0, 0.0, 1.0 },
-					{ x0, y1 + 0.375f, 0.0, 0.0, 1.0 }
+					{ x0, y0 - 0.375f, RoomHelpers::RoomPole },
+					{ x1, y0 - 0.375f, RoomHelpers::RoomPole },
+					{ x1, y1 + 0.375f, RoomHelpers::RoomPole },
+					{ x0, y1 + 0.375f, RoomHelpers::RoomPole }
 				);
 			}
 
@@ -309,17 +326,17 @@ void Room::generateVBO() {
 			// 128 - Shortcut
 			if (tileData & 8) {
 				addQuad(
-					{ x0 + 0.40625f, y0 - 0.40625f, 0.125, 0.125, 0.125 },
-					{ x1 - 0.40625f, y0 - 0.40625f, 0.125, 0.125, 0.125 },
-					{ x1 - 0.40625f, y1 + 0.40625f, 0.125, 0.125, 0.125 },
-					{ x0 + 0.40625f, y1 + 0.40625f, 0.125, 0.125, 0.125 }
+					{ x0 + 0.40625f, y0 - 0.40625f, RoomHelpers::RoomSolid },
+					{ x1 - 0.40625f, y0 - 0.40625f, RoomHelpers::RoomSolid },
+					{ x1 - 0.40625f, y1 + 0.40625f, RoomHelpers::RoomSolid },
+					{ x0 + 0.40625f, y1 + 0.40625f, RoomHelpers::RoomSolid }
 				);
 
 				addQuad(
-					{ x0 + 0.4375f, y0 - 0.4375f, 1.0, 1.0, 1.0 },
-					{ x1 - 0.4375f, y0 - 0.4375f, 1.0, 1.0, 1.0 },
-					{ x1 - 0.4375f, y1 + 0.4375f, 1.0, 1.0, 1.0 },
-					{ x0 + 0.4375f, y1 + 0.4375f, 1.0, 1.0, 1.0 }
+					{ x0 + 0.4375f, y0 - 0.4375f, RoomHelpers::RoomShortcutDot },
+					{ x1 - 0.4375f, y0 - 0.4375f, RoomHelpers::RoomShortcutDot },
+					{ x1 - 0.4375f, y1 + 0.4375f, RoomHelpers::RoomShortcutDot },
+					{ x0 + 0.4375f, y1 + 0.4375f, RoomHelpers::RoomShortcutDot }
 				);
 			}
 		}
@@ -332,10 +349,10 @@ void Room::generateVBO() {
 		float y1 = position.y - shortcutEntrance.y - 1;
 		
 		addQuad(
-			{ x0 + 0.25f, y0 - 0.25f, 1.0, 0.0, 1.0 },
-			{ x1 - 0.25f, y0 - 0.25f, 1.0, 0.0, 1.0 },
-			{ x1 - 0.25f, y1 + 0.25f, 1.0, 0.0, 1.0 },
-			{ x0 + 0.25f, y1 + 0.25f, 1.0, 0.0, 1.0 }
+			{ x0 + 0.25f, y0 - 0.25f, RoomHelpers::RoomShortcutRoom },
+			{ x1 - 0.25f, y0 - 0.25f, RoomHelpers::RoomShortcutRoom },
+			{ x1 - 0.25f, y1 + 0.25f, RoomHelpers::RoomShortcutRoom },
+			{ x0 + 0.25f, y1 + 0.25f, RoomHelpers::RoomShortcutRoom }
 		);
 	}
 
@@ -346,10 +363,10 @@ void Room::generateVBO() {
 		float y1 = position.y - shortcutEntrance.y - 1;
 		
 		addQuad(
-			{ x0 + 0.25f, y0 - 0.25f, 1.0, 1.0, 0.0 },
-			{ x1 - 0.25f, y0 - 0.25f, 1.0, 1.0, 0.0 },
-			{ x1 - 0.25f, y1 + 0.25f, 1.0, 1.0, 0.0 },
-			{ x0 + 0.25f, y1 + 0.25f, 1.0, 1.0, 0.0 }
+			{ x0 + 0.25f, y0 - 0.25f, RoomHelpers::RoomShortcutDen },
+			{ x1 - 0.25f, y0 - 0.25f, RoomHelpers::RoomShortcutDen },
+			{ x1 - 0.25f, y1 + 0.25f, RoomHelpers::RoomShortcutDen },
+			{ x0 + 0.25f, y1 + 0.25f, RoomHelpers::RoomShortcutDen }
 		);
 	}
 

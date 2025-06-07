@@ -12,21 +12,31 @@
 #include "Draw.hpp"
 
 std::unordered_map<ThemeColour, Colour> themeBasic {
-	{ ThemeColour::Background, Colour(0.3,  0.3,  0.3) },
-	{ ThemeColour::Header, Colour(0.0,  0.0,  0.0) },
-	{ ThemeColour::Border, Colour(0.75, 0.75, 0.75) },
-	{ ThemeColour::BorderHighlight, Colour(0.0,  1.0,  1.0) },
-	{ ThemeColour::Popup, Colour(0.0,  0.0,  0.0) },
-	{ ThemeColour::PopupHeader, Colour(0.2,  0.2,  0.2)},
-	{ ThemeColour::Button, Colour(0.2,  0.2,  0.2) },
-	{ ThemeColour::ButtonDisabled, Colour(0.2,  0.2,  0.2) },
-	{ ThemeColour::Text, Colour(1.0,  1.0,  1.0) },
-	{ ThemeColour::TextDisabled, Colour(0.5,  0.5,  0.5) },
-	{ ThemeColour::TextHighlight, Colour(0.0,  1.0,  1.0) },
-	{ ThemeColour::SelectionBorder, Colour(0.3,  0.3,  0.3) },
-	{ ThemeColour::Grid, Colour(0.3,  0.3,  0.3) },
-	{ ThemeColour::RoomBorder, Colour(0.6, 0.6, 0.6) },
-	{ ThemeColour::RoomBorderHighlight, Colour(0.00, 0.75, 0.00) }
+	{ ThemeColour::Background,            Colour(0.3,  0.3,  0.3) },
+	{ ThemeColour::Header,                Colour(0.0,  0.0,  0.0) },
+	{ ThemeColour::Border,                Colour(0.75, 0.75, 0.75) },
+	{ ThemeColour::BorderHighlight,       Colour(0.0,  1.0,  1.0) },
+	{ ThemeColour::Popup,                 Colour(0.0,  0.0,  0.0) },
+	{ ThemeColour::PopupHeader,           Colour(0.2,  0.2,  0.2) },
+	{ ThemeColour::Button,                Colour(0.2,  0.2,  0.2) },
+	{ ThemeColour::ButtonDisabled,        Colour(0.2,  0.2,  0.2) },
+	{ ThemeColour::Text,                  Colour(1.0,  1.0,  1.0) },
+	{ ThemeColour::TextDisabled,          Colour(0.5,  0.5,  0.5) },
+	{ ThemeColour::TextHighlight,         Colour(0.0,  1.0,  1.0) },
+	{ ThemeColour::SelectionBorder,       Colour(0.3,  0.3,  0.3) },
+	{ ThemeColour::Grid,                  Colour(0.3,  0.3,  0.3) },
+	{ ThemeColour::RoomBorder,            Colour(0.6,  0.6,  0.6) },
+	{ ThemeColour::RoomBorderHighlight,   Colour(0.00, 0.75, 0.00) },
+	{ ThemeColour::RoomAir,               Colour(1.0,  1.0,  1.0) },
+	{ ThemeColour::RoomSolid,             Colour(0.0,  0.0,  0.0) },
+	{ ThemeColour::RoomPole,              Colour(0.0,  0.0,  0.0) },
+	{ ThemeColour::RoomPlatform,          Colour(0.0,  0.0,  0.0) },
+	{ ThemeColour::RoomShortcutEnterance, Colour(0.0,  1.0,  1.0) },
+	{ ThemeColour::RoomShortcutDot,       Colour(1.0,  1.0,  1.0) },
+	{ ThemeColour::RoomShortcutRoom,      Colour(1.0,  0.0,  1.0) },
+	{ ThemeColour::RoomShortcutDen,       Colour(0.0,  1.0,  0.0) },
+	{ ThemeColour::RoomConnection,        Colour(1.0,  1.0,  0.0) },
+	{ ThemeColour::RoomConnectionHover,   Colour(0.0,  1.0,  1.0) },
 };
 
 std::unordered_map<ThemeColour, Colour> currentTheme;
@@ -76,21 +86,31 @@ void loadTheme(std::string theme) {
 		colourString.erase(std::remove(colourString.begin(), colourString.end(), '\r'), colourString.end());
 		Colour colour = parseHexColor(colourString);
 
-		if (startsWith(line, "Background:")) currentTheme[ThemeColour::Background] = colour;
-		else if (startsWith(line, "Grid:")) currentTheme[ThemeColour::Grid] = colour;
-		else if (startsWith(line, "Header:")) currentTheme[ThemeColour::Header] = colour;
-		else if (startsWith(line, "Border:")) currentTheme[ThemeColour::Border] = colour;
-		else if (startsWith(line, "BorderHighlight:")) currentTheme[ThemeColour::BorderHighlight] = colour;
-		else if (startsWith(line, "Popup:")) currentTheme[ThemeColour::Popup] = colour;
-		else if (startsWith(line, "PopupHeader:")) currentTheme[ThemeColour::PopupHeader] = colour;
-		else if (startsWith(line, "Button:")) currentTheme[ThemeColour::Button] = colour;
-		else if (startsWith(line, "ButtonDisabled:")) currentTheme[ThemeColour::ButtonDisabled] = colour;
-		else if (startsWith(line, "Text:")) currentTheme[ThemeColour::Text] = colour;
-		else if (startsWith(line, "TextDisabled:")) currentTheme[ThemeColour::TextDisabled] = colour;
-		else if (startsWith(line, "TextHighlight:")) currentTheme[ThemeColour::TextHighlight] = colour;
-		else if (startsWith(line, "SelectionBorder:")) currentTheme[ThemeColour::SelectionBorder] = colour;
-		else if (startsWith(line, "RoomBorder:")) currentTheme[ThemeColour::RoomBorder] = colour;
-		else if (startsWith(line, "RoomBorderHighlight:")) currentTheme[ThemeColour::RoomBorderHighlight] = colour;
+		if      (startsWith(line, "Background:"           )) currentTheme[ThemeColour::Background           ] = colour;
+		else if (startsWith(line, "Grid:"                 )) currentTheme[ThemeColour::Grid                 ] = colour;
+		else if (startsWith(line, "Header:"               )) currentTheme[ThemeColour::Header               ] = colour;
+		else if (startsWith(line, "Border:"               )) currentTheme[ThemeColour::Border               ] = colour;
+		else if (startsWith(line, "BorderHighlight:"      )) currentTheme[ThemeColour::BorderHighlight      ] = colour;
+		else if (startsWith(line, "Popup:"                )) currentTheme[ThemeColour::Popup                ] = colour;
+		else if (startsWith(line, "PopupHeader:"          )) currentTheme[ThemeColour::PopupHeader          ] = colour;
+		else if (startsWith(line, "Button:"               )) currentTheme[ThemeColour::Button               ] = colour;
+		else if (startsWith(line, "ButtonDisabled:"       )) currentTheme[ThemeColour::ButtonDisabled       ] = colour;
+		else if (startsWith(line, "Text:"                 )) currentTheme[ThemeColour::Text                 ] = colour;
+		else if (startsWith(line, "TextDisabled:"         )) currentTheme[ThemeColour::TextDisabled         ] = colour;
+		else if (startsWith(line, "TextHighlight:"        )) currentTheme[ThemeColour::TextHighlight        ] = colour;
+		else if (startsWith(line, "SelectionBorder:"      )) currentTheme[ThemeColour::SelectionBorder      ] = colour;
+		else if (startsWith(line, "RoomBorder:"           )) currentTheme[ThemeColour::RoomBorder           ] = colour;
+		else if (startsWith(line, "RoomBorderHighlight:"  )) currentTheme[ThemeColour::RoomBorderHighlight  ] = colour;
+		else if (startsWith(line, "RoomAir:"              )) currentTheme[ThemeColour::RoomAir              ] = colour;
+		else if (startsWith(line, "RoomSolid:"            )) currentTheme[ThemeColour::RoomSolid            ] = colour;
+		else if (startsWith(line, "RoomPole:"             )) currentTheme[ThemeColour::RoomPole             ] = colour;
+		else if (startsWith(line, "RoomPlatform:"         )) currentTheme[ThemeColour::RoomPlatform         ] = colour;
+		else if (startsWith(line, "RoomShortcutEnterance:")) currentTheme[ThemeColour::RoomShortcutEnterance] = colour;
+		else if (startsWith(line, "RoomShortcutDot:"      )) currentTheme[ThemeColour::RoomShortcutDot      ] = colour;
+		else if (startsWith(line, "RoomShortcutRoom:"     )) currentTheme[ThemeColour::RoomShortcutRoom     ] = colour;
+		else if (startsWith(line, "RoomShortcutDen:"      )) currentTheme[ThemeColour::RoomShortcutDen      ] = colour;
+		else if (startsWith(line, "RoomConnection:"       )) currentTheme[ThemeColour::RoomConnection       ] = colour;
+		else if (startsWith(line, "RoomConnectionHover:"  )) currentTheme[ThemeColour::RoomConnectionHover  ] = colour;
 	}
 
 	themeFile.close();
