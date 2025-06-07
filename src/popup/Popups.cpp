@@ -5,6 +5,8 @@
 #include "../Theme.hpp"
 #include "../Draw.hpp"
 
+#include "FilesystemPopup.hpp"
+
 GLuint Popups::textureUI = 0;
 std::vector<Popup*> Popups::popupTrash;
 std::vector<Popup*> Popups::popups;
@@ -176,3 +178,6 @@ bool Popups::hasPopup(std::string popupName) {
 
 	return false;
 }
+
+
+std::filesystem::path FilesystemPopup::previousDirectory;

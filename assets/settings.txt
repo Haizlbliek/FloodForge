@@ -9,3 +9,4 @@ DefaultFilePath:
 WarnMissingImages: false
 VisualMergeDefault: true
 HideTutorial: false
+KeepFilesystemPath: true

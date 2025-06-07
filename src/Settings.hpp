@@ -21,7 +21,8 @@ namespace Settings {
 		DefaultFilePath,
 		WarnMissingImages,
 		HideTutorial,
-		VisualMergeDefault
+		VisualMergeDefault,
+		KeepFilesystemPath
 	};
 
 	extern std::unordered_map<Setting, std::variant<double, int, bool, Colour, std::string>> settings;

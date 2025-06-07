@@ -13,6 +13,7 @@ void Settings::loadDefaults() {
 	settings[Setting::WarnMissingImages] = false;
 	settings[Setting::HideTutorial] = false;
 	settings[Setting::VisualMergeDefault] = false;
+	settings[Setting::KeepFilesystemPath] = true;
 }
 
 void Settings::init() {
@@ -42,6 +43,7 @@ void Settings::init() {
 		else if (key == "WarnMissingImages") settings[Setting::WarnMissingImages] = boolValue;
 		else if (key == "HideTutorial") settings[Setting::HideTutorial] = boolValue;
 		else if (key == "VisualMergeDefault") settings[Setting::VisualMergeDefault] = boolValue;
+		else if (key == "KeepFilesystemPath") settings[Setting::KeepFilesystemPath] = boolValue;
 	}
 
 	settingsFile.close();

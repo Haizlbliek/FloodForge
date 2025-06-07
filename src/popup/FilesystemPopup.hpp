@@ -67,6 +67,8 @@ class FilesystemPopup : public Popup {
 		}
 
 		void accept() {
+			previousDirectory = currentDirectory;
+
 			if (mode == 0) {
 				if (openType == TYPE_FOLDER) {
 					called = true;
@@ -383,6 +385,7 @@ class FilesystemPopup : public Popup {
 	
 	private:
 		std::filesystem::path currentDirectory;
+		static std::filesystem::path previousDirectory;
 
 		std::vector<std::filesystem::path> directories;
 		std::vector<std::filesystem::path> files;
@@ -415,6 +418,11 @@ class FilesystemPopup : public Popup {
 			//     return;
 			// }
 			selected.clear();
+
+			if (!previousDirectory.empty() && std::filesystem::exists(previousDirectory)) {
+				currentDirectory = previousDirectory;
+				return;
+			}
 
 			std::filesystem::path potentialPath;
 			potentialPath = Settings::getSetting<std::string>(Settings::Setting::DefaultFilePath);
