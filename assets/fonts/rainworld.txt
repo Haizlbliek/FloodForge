@@ -1,7 +1,8 @@
 info face="rainworld" size=72 bold=0 italic=0 charset="" unicode=1 stretchH=100 smooth=1 aa=1 padding=1,1,1,1 spacing=0,0
 common lineHeight=72 base=60 scaleW=416 scaleH=416 pages=1 packed=0
 page id=0 file="rainworld.png"
-chars count=100
+chars count=101
+char id=21 x=0 y=380 width=32 height=32 xoffset=-1 yoffset=29 xadvance=36 page=0 chnl=15
 char id=32 x=0 y=0 width=0 height=0 xoffset=0 yoffset=0 xadvance=18 page=0 chnl=15
 char id=33 x=56 y=214 width=14 height=56 xoffset=-1 yoffset=5 xadvance=18 page=0 chnl=15
 char id=34 x=126 y=392 width=26 height=20 xoffset=-1 yoffset=5 xadvance=30 page=0 chnl=15

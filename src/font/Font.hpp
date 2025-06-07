@@ -68,7 +68,7 @@ class Font {
 
 			for (char character : text) {
 				if (characters.count(character) == 0) {
-					if (hasInvalidCharacter) character = char(33);
+					if (hasInvalidCharacter) character = char(21);
 					else continue;
 				}
 
@@ -134,7 +134,7 @@ class Font {
 			int characterIndex = 0;
 			for (char character : text) {
 				if (characters.count(character) == 0) {
-					if (hasInvalidCharacter) character = char(33);
+					if (hasInvalidCharacter) character = char(21);
 					else continue;
 				}
 
@@ -254,7 +254,7 @@ class Font {
 				progress++;
 			}
 
-			hasInvalidCharacter = (characters.count(145) > 0);
+			hasInvalidCharacter = (characters.count(21) > 0);
 
 			Logger::log(characters.size(), " characters loaded");
 		}
