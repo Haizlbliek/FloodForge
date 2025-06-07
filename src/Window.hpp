@@ -205,7 +205,7 @@ class Window {
 					return keyPressed(GLFW_KEY_LEFT_CONTROL) || keyPressed(GLFW_KEY_RIGHT_CONTROL) || keyPressed(GLFW_KEY_LEFT_SUPER) || keyPressed(GLFW_KEY_RIGHT_SUPER);
 
 				case GLFW_MOD_SHIFT:
-					return keyPressed(GLFW_KEY_LEFT_SHIFT) || keyPressed(GLFW_KEY_RIGHT_SHIFT) || capslock;
+					return (keyPressed(GLFW_KEY_LEFT_SHIFT) || keyPressed(GLFW_KEY_RIGHT_SHIFT)) ^ capslock;
 
 				case GLFW_MOD_ALT:
 					return keyPressed(GLFW_KEY_LEFT_ALT) || keyPressed(GLFW_KEY_RIGHT_ALT);
