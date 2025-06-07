@@ -16,6 +16,16 @@ class ConfirmPopup : public Popup {
 			bounds = Rect(-0.3, -0.15, 0.3, 0.15);
 		}
 		
+		ConfirmPopup *CancelText(std::string text) {
+			buttonCancel = text;
+			return this;
+		}
+		
+		ConfirmPopup *OkayText(std::string text) {
+			buttonOkay = text;
+			return this;
+		}
+		
 		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 			Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
 			
@@ -36,8 +46,8 @@ class ConfirmPopup : public Popup {
 			fillRect( 0.05, -0.09,  0.25,  -0.03);
 
 			setThemeColour(ThemeColour::Text);
-			Fonts::rainworld->writeCentred("Cancel", -0.15, -0.06, 0.03, CENTRE_XY);
-			Fonts::rainworld->writeCentred("Okay", 0.15, -0.06, 0.03, CENTRE_XY);
+			Fonts::rainworld->writeCentred(buttonCancel, -0.15, -0.06, 0.03, CENTRE_XY);
+			Fonts::rainworld->writeCentred(buttonOkay, 0.15, -0.06, 0.03, CENTRE_XY);
 
 			if (Rect(-0.2, -0.09, -0.05, -0.03).inside(mouseX, mouseY)) {
 				setThemeColour(ThemeColour::BorderHighlight);
@@ -102,6 +112,8 @@ class ConfirmPopup : public Popup {
 	
 	private:
 		std::string question;
+		std::string buttonOkay = "Okay";
+		std::string buttonCancel = "Cancel";
 		
 		std::vector<std::function<void()>> listenersOkay;
 		std::vector<std::function<void()>> listenersCancel;
