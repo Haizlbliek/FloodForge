@@ -822,6 +822,14 @@ class MenuItems {
 		}
 
 		static void exportImageFile(std::filesystem::path outputPath, std::filesystem::path otherPath) {
+			std::fstream mapFile(exportDirectory / ("map_image_" + worldAcronym + ".txt"), std::ios::out | std::ios::trunc);
+			bool hasMapFile = true;
+
+			if (!mapFile.is_open()) {
+				Logger::log("Error creating map_image_", worldAcronym, ".txt");
+				hasMapFile = false;
+			}
+
 			Rect bounds;
 
 			for (Room *room : rooms) {
@@ -876,6 +884,10 @@ class MenuItems {
 				int x = std::floor(room->Position().x - room->Width() * 0.0 - bounds.X0()) + padding;
 				int y = std::floor(-room->Position().y - room->Height() * 0.0 - bounds.Y0()) + padding;
 				y += (2 - room->layer) * height / 3;
+				
+				if (hasMapFile) {
+					mapFile << toUpper(room->roomName) << ": " << x << "," << (height - y - room->Height()) << "," << room->Width() << "," << room->Height() << "\n";
+				}
 
 				for (int ox = 0; ox < room->Width(); ox++) {
 					for (int oy = 0; oy < room->Height(); oy++) {
@@ -917,6 +929,8 @@ class MenuItems {
 			} else {
 				Logger::log("Error saving image!");
 			}
+			
+			if (hasMapFile) mapFile.close();
 		}
 
 		static void exportPropertiesFile(std::filesystem::path outputPath) {
