@@ -32,7 +32,7 @@ class SubregionPopup : public Popup {
 			if (rooms.size() > 0) {
 				setThemeColour(ThemeColour::Text);
 				if (rooms.size() == 1) {
-					Fonts::rainworld->writeCentred((*rooms.begin())->roomName, 0.0, 0.4, 0.04, CENTRE_XY);
+					Fonts::rainworld->writeCentred(toUpper((*rooms.begin())->roomName), 0.0, 0.4, 0.04, CENTRE_XY);
 				} else {
 					Fonts::rainworld->writeCentred("Selected Rooms", 0.0, 0.4, 0.04, CENTRE_XY);
 				}
@@ -70,7 +70,10 @@ class SubregionPopup : public Popup {
 
 			if (button == -1) {
 			} else {
-				if (mouseX <= 0.325) {
+				if (mouseX <= -0.35 && button >= 1 && button <= subregions.size()) {
+					Popups::addPopup(new SubregionNewPopup(window, rooms, button - 1));
+					close();
+				} else if (mouseX <= 0.325 && mouseX >= -0.325) {
 					if (button == 0) {
 						setSubregion(-1);
 						close();
@@ -82,8 +85,7 @@ class SubregionPopup : public Popup {
 						close();
 					}
 				} else if (mouseX >= 0.35) {
-					if (button == 0) {
-					} else if (button <= subregions.size()) {
+					if (button != 0 && button <= subregions.size()) {
 						bool canRemove = true;
 						for (Room *otherRoom : rooms) {
 							if (otherRoom->subregion == button - 1) {
@@ -97,7 +99,6 @@ class SubregionPopup : public Popup {
 						} else {
 							Popups::addPopup(new InfoPopup(window, "Can't remove subregion\nRooms still use it"));
 						}
-					} else if (button == subregions.size() + 1) {
 					}
 				}
 			}
@@ -119,8 +120,7 @@ class SubregionPopup : public Popup {
 
 		void drawSubregionButton(int subregionId, std::string subregion, double y, double mouseX, double mouseY) {
 			setThemeColour(ThemeColour::Button);
-			fillRect(-0.4, y, 0.325, y - 0.05);
-			fillRect(0.35, y, 0.4, y - 0.05);
+			fillRect(-0.325, y, 0.325, y - 0.05);
 
 			if (rooms.size() == 1) {
 				if ((*rooms.begin())->subregion == subregionId) {
@@ -131,22 +131,35 @@ class SubregionPopup : public Popup {
 			} else {
 				setThemeColour(ThemeColour::Text);
 			}
-			Fonts::rainworld->writeCentred(subregion, -0.025, y - 0.02, 0.04, CENTRE_XY);            
-			Fonts::rainworld->writeCentred("-", 0.37, y, 0.04, CENTRE_X);
+			Fonts::rainworld->writeCentred(subregion, -0.025, y - 0.02, 0.04, CENTRE_XY);
 
-			if (Rect(-0.4, y, 0.325, y - 0.05).inside(mouseX, mouseY)) {
+			if (Rect(-0.325, y, 0.325, y - 0.05).inside(mouseX, mouseY)) {
 				setThemeColour(ThemeColour::BorderHighlight);
-				strokeRect(-0.4, y, 0.325, y - 0.05);
 			} else {
 				setThemeColour(ThemeColour::Border);
-				strokeRect(-0.4, y, 0.325, y - 0.05);
 			}
-			
-			if (Rect(0.35, y, 0.4, y - 0.05).inside(mouseX, mouseY)) {
-				setThemeColour(ThemeColour::BorderHighlight);
-				strokeRect(0.35, y, 0.4, y - 0.05);
-			} else {
-				setThemeColour(ThemeColour::Border);
+			strokeRect(-0.325, y, 0.325, y - 0.05);
+
+			if (subregionId >= 0) {
+				setThemeColour(ThemeColour::Button);
+				fillRect(-0.4, y, -0.35, y - 0.05);
+				fillRect(0.35, y, 0.4, y - 0.05);
+
+				setThemeColour(ThemeColour::Text);
+				Fonts::rainworld->writeCentred("E", -0.37, y, 0.04, CENTRE_X);
+				Fonts::rainworld->writeCentred("-", 0.37, y, 0.04, CENTRE_X);
+
+				if (Rect(-0.4, y, -0.35, y - 0.05).inside(mouseX, mouseY)) {
+					setThemeColour(ThemeColour::BorderHighlight);
+				} else {
+					setThemeColour(ThemeColour::Border);
+				}
+				strokeRect(-0.4, y, -0.35, y - 0.05);
+				if (Rect(0.35, y, 0.4, y - 0.05).inside(mouseX, mouseY)) {
+					setThemeColour(ThemeColour::BorderHighlight);
+				} else {
+					setThemeColour(ThemeColour::Border);
+				}
 				strokeRect(0.35, y, 0.4, y - 0.05);
 			}
 		}
