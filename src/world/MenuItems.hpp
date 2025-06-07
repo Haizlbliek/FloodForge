@@ -1004,7 +1004,7 @@ class MenuItems {
 			MenuItems::worldAcronym = worldAcronym;
 		}
 
-		static std::filesystem::path ExportDirectory() { return exportDirectory; }
+		static std::filesystem::path exportDirectory;
 		
 		static std::string extraProperties;
 		static std::string extraWorld;
@@ -1032,7 +1032,6 @@ class MenuItems {
 
 		static double currentButtonX;
 
-		static std::filesystem::path exportDirectory;
 		static std::string worldAcronym;
 		static std::string roomsDirectory;
 		

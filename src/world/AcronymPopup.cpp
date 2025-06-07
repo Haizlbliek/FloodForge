@@ -83,6 +83,7 @@ void AcronymPopup::accept() {
 	MenuItems::WorldAcronym(toLower(text));
 	MenuItems::extraProperties = "";
 	MenuItems::extraWorld = "";
+	MenuItems::exportDirectory = "";
 }
 
 char AcronymPopup::parseCharacter(char character, bool shiftPressed) {
