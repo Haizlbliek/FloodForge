@@ -59,7 +59,7 @@ void MenuItems::importWorldFile(std::filesystem::path path) {
 	worldAcronym = toLower(path.filename().string());
 	worldAcronym = worldAcronym.substr(worldAcronym.find_last_of('_') + 1, worldAcronym.find_last_of('.') - worldAcronym.find_last_of('_') - 1);
 	
-	std::cout << "Opening world " << worldAcronym << std::endl;
+	Logger::log("Opening world ", worldAcronym);
 	
 	std::filesystem::path roomsPath = findDirectoryCaseInsensitive(exportDirectory.parent_path().string(), worldAcronym + "-rooms");
 	if (roomsPath.empty()) {
@@ -90,23 +90,23 @@ void MenuItems::importWorldFile(std::filesystem::path path) {
 	extraWorld = "";
 	
 	if (std::filesystem::exists(propertiesFilePath)) {
-		std::cout << "Found properties file, loading subregions" << std::endl;
+		Logger::log("Found properties file, loading subregions");
 	
 		parseProperties(propertiesFilePath);
 	}
 	
 	if (std::filesystem::exists(mapFilePath)) {
-		std::cout << "Loading map" << std::endl;
+		Logger::log("Loading map");
 	
 		parseMap(mapFilePath, exportDirectory);
 	} else {
-		std::cout << "Map file not found, loading world file" << std::endl;
+		Logger::log("Map file not found, loading world file");
 	}
 	
-	std::cout << "Loading world" << std::endl;
+	Logger::log("Loading world");
 	parseWorld(path, exportDirectory);
 	
-	std::cout << "Loading extra room data" << std::endl;
+	Logger::log("Loading extra room data");
 	
 	for (Room *room : rooms) {
 		if (room->isOffscreen()) continue;
@@ -120,7 +120,7 @@ void MenuItems::importWorldFile(std::filesystem::path path) {
 		loadExtraRoomData(findFileCaseInsensitive((exportDirectory.parent_path() / roomsDirectory).string(), room->roomName + "_settings.txt"), room->data);
 	}
 	
-	std::cout << "Extra room data - loaded" << std::endl;
+	Logger::log("Extra room data - loaded");
 	
 	if (FailureController::fails.size() > 0) {
 		std::string fails = "";

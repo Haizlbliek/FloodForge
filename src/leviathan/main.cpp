@@ -9,10 +9,8 @@
 #include "../Theme.hpp"
 #include "../Draw.hpp"
 #include "../Settings.hpp"
-
+#include "../font/Fonts.hpp"
 #include "../popup/Popups.hpp"
-#include "../popup/SplashArtPopup.hpp"
-#include "../popup/QuitConfirmationPopup.hpp"
 
 #include "BodyChunk.hpp"
 #include "Globals.hpp"
@@ -82,7 +80,7 @@ int main() {
 	window->setTitle("Leviathan");
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		std::cerr << "Failed to initialize GLAD!" << std::endl;
+		Logger::logError("Failed to initialize GLAD!");
 		return -1;
 	}
 

@@ -6,6 +6,7 @@
 #include "gl.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
+#include "Logger.hpp"
 
 class Texture {
 	public:
@@ -14,7 +15,7 @@ class Texture {
 
 			unsigned char* data = stbi_load(filepath, &width, &height, &nrChannels, 0);
 			if (!data) {
-				std::cerr << "Failed to load texture: " << filepath << std::endl;
+				Logger::logError("Failed to load texture: ", filepath);
 				return;
 			}
 

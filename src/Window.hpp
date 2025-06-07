@@ -10,6 +10,7 @@
 #include <functional>
 #include <algorithm>
 
+#include "Logger.hpp"
 #include "math/Colour.hpp"
 // #include "Utils.hpp"
 
@@ -379,7 +380,7 @@ class Window {
 
 			for (std::pair<void*, std::function<void(void*, int, int)>> callback : window->keyCallbacks) {
 				if (!callback.second) {
-					std::cout << "INVALID CALLBACK" << std::endl;
+					Logger::log("INVALID CALLBACK");
 					continue;
 				}
 

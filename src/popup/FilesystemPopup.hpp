@@ -339,12 +339,12 @@ class FilesystemPopup : public Popup {
 			FilesystemPopup *popup = static_cast<FilesystemPopup*>(object);
 
 			if (!popup) {
-				std::cerr << "Error: popup is nullptr." << std::endl;
+				Logger::logError("Error: popup is nullptr.");
 				return;
 			}
 
 			if (!popup->window) {
-				std::cerr << "Error: popup->window is nullptr." << std::endl;
+				Logger::logError("Error: popup->window is nullptr.");
 				return;
 			}
 
@@ -428,7 +428,7 @@ class FilesystemPopup : public Popup {
 			DWORD size = GetLogicalDriveStringsA(drives.size(), drives.data());
 
 			if (size == 0) {
-				std::cerr << "Failed to get drives." << std::endl;
+				Logger::logError("Failed to get drives");
 				return;
 			}
 

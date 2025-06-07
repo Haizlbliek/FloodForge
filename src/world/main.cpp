@@ -975,7 +975,7 @@ int main() {
 	mouse = window->GetMouse();
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		std::cerr << "Failed to initialize GLAD!" << std::endl;
+		Logger::logError("Failed to initialize GLAD!");
 		return -1;
 	}
 

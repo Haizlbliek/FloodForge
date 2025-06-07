@@ -18,6 +18,7 @@
 #include "../math/Vector.hpp"
 #include "../math/Matrix4.hpp"
 #include "../font/Fonts.hpp"
+#include "../Logger.hpp"
 
 #include "FailureController.hpp"
 #include "ExtraRoomData.hpp"
@@ -291,7 +292,7 @@ class Room {
 
 		Den &CreatureDen01(int id) {
 			if (id < 0 || id >= dens.size()) {
-				std::cout << "INVALID DEN " << id << std::endl;
+				Logger::log("INVALID DEN ", id);
 				throw "INVALID DEN";
 			}
 
@@ -427,7 +428,7 @@ class Room {
 			std::fstream geometryFile(path);
 			if (!geometryFile.is_open() || !std::filesystem::exists(path)) {
 				FailureController::fails.push_back("Failed to load '" + roomName + "' - Doesn't exist");
-				std::cout << "Failed to load '" << path << "' - Doesn't exist." << std::endl;
+				Logger::log("Failed to load '", path, "' - Doesn't exist.");
 				width = 72;
 				height = 43;
 				water = -1;

@@ -1,5 +1,6 @@
 #include "Utils.hpp"
 #include "Draw.hpp"
+#include "Logger.hpp"
 
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -173,7 +174,7 @@ GLuint loadTexture(const char *filepath, int filter) {
 
 	unsigned char* data = stbi_load(filepath, &width, &height, &nrChannels, 0);
 	if (!data) {
-		std::cerr << "Failed to load texture: " << filepath << std::endl;
+		Logger::logError("Failed to load texture: ", filepath);
 		return 0;
 	}
 
@@ -201,7 +202,7 @@ GLFWimage loadIcon(const char* filepath) {
 	int width, height, nrChannels;
 	unsigned char* data = stbi_load(filepath, &width, &height, &nrChannels, 0);
 	if (!data) {
-		std::cerr << "Failed to load texture: " << filepath << std::endl;
+		Logger::logError("Failed to load texture: ", filepath);
 		return GLFWimage();
 	}
 
@@ -396,7 +397,7 @@ void openURL(std::string url) {
 std::string loadShaderSource(const char* filePath) {
 	std::ifstream shaderFile(filePath);
 	if (!shaderFile.is_open()) {
-		std::cerr << "Failed to open shader file: " << filePath << std::endl;
+		Logger::logError("Failed to open shader file: ", filePath);
 		return "";
 	}
 
@@ -418,7 +419,7 @@ GLuint compileShader(const std::string& source, GLenum shaderType) {
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
 		char* log = new char[logLength];
 		glGetShaderInfoLog(shader, logLength, &logLength, log);
-		std::cerr << "Shader compilation failed: " << log << std::endl;
+		Logger::logError("Shader compilation failed: ", log);
 		delete[] log;
 	}
 
@@ -438,7 +439,7 @@ GLuint linkShaders(GLuint vertexShader, GLuint fragmentShader) {
 		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
 		char* log = new char[logLength];
 		glGetProgramInfoLog(program, logLength, &logLength, log);
-		std::cerr << "Program linking failed: " << log << std::endl;
+		Logger::logError("Program linking failed: ", log);
 		delete[] log;
 	}
 

@@ -17,7 +17,7 @@
 #include "../font/Fonts.hpp"
 
 #include "../popup/Popups.hpp"
-#include "../popup/QuitConfirmationPopup.hpp"
+#include "../popup/ConfirmPopup.hpp"
 
 #include "Constants.hpp"
 #include "../Window.hpp"
@@ -150,6 +150,7 @@ std::vector<Vector2i> line(int x0, int y0, int x1, int y1) {
 
 int main() {
 	std::cerr << "\033[38;5;13mThe FloodForge Level Editor is very WIP. Take caution.\033[0m" << std::endl;
+	Logger::log("The FloodForge Level Editor is very WIP. Take caution.");
 	std::srand(std::time(0));
 
 	glfwSetErrorCallback(error_callback);
@@ -162,7 +163,7 @@ int main() {
 	window->setBackgroundColour(0.3f, 0.3f, 0.3f);
 	
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		std::cerr << "Failed to initialize GLAD!" << std::endl;
+		Logger::logError("Failed to initialize GLAD!");
 		return -1;
 	}
 
@@ -283,7 +284,7 @@ int main() {
 				if (Popups::popups.size() > 0)
 					Popups::popups[0]->reject();
 				else
-					Popups::addPopup(new ConfirmPopup(window));
+					Popups::addPopup(new ConfirmPopup(window, "Quit?"));
 			}
 
 			previousKeys.insert(GLFW_KEY_ESCAPE);
@@ -490,7 +491,7 @@ int main() {
 			if (!wasSaving) {
 				project->save();
 				History::unsavedChanges = false;
-				std::cout << "Saved!" << std::endl;
+				Logger::log("Saved!");
 			}
 
 			wasSaving = true;

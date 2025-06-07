@@ -1,6 +1,9 @@
 output
 saves
 worlds
+log.txt
+
+assets/recents.txt
 
 FloodForge.exe
 FloodForge

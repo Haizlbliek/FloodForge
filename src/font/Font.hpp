@@ -12,6 +12,7 @@
 
 #include "../Utils.hpp"
 #include "../Draw.hpp"
+#include "../Logger.hpp"
 
 // American English
 #define CENTER_X  1
@@ -31,12 +32,11 @@
 
 class Font {
 	public:
-		Font(std::string name, int fontType)
-		 : name(name) {
-			std::cout << "Loading " << name << std::endl;
+		Font(std::string name, int fontType) : name(name) {
+			Logger::log("Loading ", name);
 			loadData(FONT_PATH + name + ".txt");
 			loadTexture(FONT_PATH + name + ".png", fontType);
-			std::cout << std::endl;
+			Logger::log();
 		}
 
 		~Font() {
@@ -58,8 +58,8 @@ class Font {
 
 			double scale = (1.0 / base) * fontSize;
 
-			double currentX = startX,
-				   currentY = startY;
+			double currentX = startX;
+			double currentY = startY;
 
 			double x, y;
 			double width, height;
@@ -181,7 +181,7 @@ class Font {
 			file.open(path);
 
 			if (!file.is_open()) {
-				std::cerr << "Failed to load font data for " << name << std::endl;
+				Logger::logError("Failed to load font data for ", name);
 				return;
 			}
 
@@ -256,13 +256,13 @@ class Font {
 
 			hasInvalidCharacter = (characters.count(145) > 0);
 
-			std::cout << characters.size() << " characters loaded" << std::endl;
+			Logger::log(characters.size(), " characters loaded");
 		}
 
 		void loadTexture(std::string path, int fontType) {
 			texture = ::loadTexture(path.c_str(), (fontType == FONT_SMOOTH) ? GL_LINEAR : GL_NEAREST);
 
-			std::cout << "Texture loaded" << std::endl;
+			Logger::log("Texture loaded");
 		}
 
 		std::string name;

@@ -5,6 +5,7 @@
 #include "../math/Quadruple.hpp"
 #include "Popups.hpp"
 #include "../font/Fonts.hpp"
+#include "../Settings.hpp"
 
 struct MDStyledText {
 	std::string text;
@@ -181,7 +182,7 @@ class MarkdownPopup : public Popup {
 		void loadFile(std::string filePath) {
 			file = std::ifstream(filePath);
 			if (!file.is_open() || !std::filesystem::exists(filePath)) {
-				std::cout << "No file found '" << filePath << "'" << std::endl;
+				Logger::log("No file found '", filePath, "'");
 				close();
 				return;
 			}

@@ -214,9 +214,9 @@ class MenuItems {
 					// int connectionB = roomB->getRoomEntranceId(Vector2i(connectionBX, connectionBY));
 
 					// if (connectionA == -1 || connectionB == -1) {
-					// 	std::cout << "Failed to load connection from " << roomAName << " to " << roomBName << std::endl;
-					// 	std::cout << "\t" << connectionAX << ", " << connectionAY << " - " << connectionA << std::endl;
-					// 	std::cout << "\t" << connectionBX << ", " << connectionBY << " - " << connectionB << std::endl;
+					// 	Logger::log("Failed to load connection from ", roomAName, " to ", roomBName);
+					// 	Logger::log("\t", connectionAX, ", ", connectionAY, " - ", connectionA);
+					// 	Logger::log("\t", connectionBX, ", ", connectionBY, " - ", connectionB);
 					// 	continue;
 					// }
 
@@ -234,7 +234,7 @@ class MenuItems {
 
 					if (startsWith(roomName, "gate")) {
 						replaceLastInstance(roomPath, roomsDirectory, "gates");
-						// std::cout << "Found gate " << roomName << std::endl;
+						// Logger::log("Found gate ", roomName);
 					}
 
 					Room *room = nullptr;
@@ -411,7 +411,7 @@ class MenuItems {
 			std::vector<std::string> splits = split(line, ':');
 
 			if (splits[0] == "LINEAGE" || splits[0][0] == '(') {
-				// std::cout << "Skipping parsing '" << line << "'\n";
+				Logger::log("Skipped parsing lineage: '", line, "'");
 				return;
 			}
 
@@ -442,7 +442,7 @@ class MenuItems {
 				}
 
 				if (!room->CreatureDenExists(denId)) {
-					std::cout << (roomName + " failed den " + std::to_string(denId)) << std::endl;
+					Logger::log(roomName, " failed den ", denId);
 					FailureController::fails.push_back(roomName + " failed den " + std::to_string(denId));
 					continue;
 				}
@@ -510,7 +510,7 @@ class MenuItems {
 			while (std::getline(worldFile, line)) {
 				if (line == "ROOMS") {
 					parseState = 1;
-					std::cout << "World - Rooms" << std::endl;
+					Logger::log("World - Rooms");
 					continue;
 				}
 
@@ -527,7 +527,7 @@ class MenuItems {
 
 				if (line == "CREATURES") {
 					parseState = 3;
-					std::cout << "World - Creatures" << std::endl;
+					Logger::log("World - Creatures");
 					continue;
 				}
 
@@ -551,11 +551,11 @@ class MenuItems {
 			}
 			worldFile.close();
 			
-			std::cout << "Loading connections" << std::endl;
+			Logger::log("Loading connections");
 
 			for (Quadruple<Room*, int, std::string, int> connectionData : connectionsToAdd) {
 				if (connectionData.second == -1 || connectionData.fourth == -1) {
-					std::cout << "Failed to load connection from " << connectionData.first->roomName << " to " << connectionData.third << std::endl;
+					Logger::log("Failed to load connection from ", connectionData.first->roomName, " to ", connectionData.third);
 					continue;
 				}
 
@@ -570,7 +570,7 @@ class MenuItems {
 				}
 
 				if (roomB == nullptr) {
-					std::cout << "Failed to load connection from " << roomA->roomName << " to " << connectionData.third << std::endl;
+					Logger::log("Failed to load connection from ", roomA->roomName, " to ", connectionData.third);
 					FailureController::fails.push_back("Failed to load connection from " + roomA->roomName + " to " + connectionData.third);
 					continue;
 				}
@@ -579,7 +579,7 @@ class MenuItems {
 				int connectionB = connectionData.fourth;
 				
 				if (!roomA->canConnect(connectionA) || !roomB->canConnect(connectionB)) {
-					std::cout << "Failed to load connection from " << roomA->roomName << " to " << connectionData.third << " - invalid room" << std::endl;
+					Logger::log("Failed to load connection from ", roomA->roomName, " to ", connectionData.third, " - invalid room");
 					FailureController::fails.push_back("Failed to load connection from " + roomA->roomName + " to " + connectionData.third + " - invalid room");
 					continue;
 				}
@@ -591,7 +591,7 @@ class MenuItems {
 				connections.push_back(connection);
 			}
 			
-			std::cout << "Connections loaded" << std::endl;
+			Logger::log("Connections loaded");
 		}
 
 		static RoomAttractiveness parseRoomAttractiveness(std::string value) {
@@ -611,7 +611,7 @@ class MenuItems {
 			while (std::getline(propertiesFile, line)) {
 				if (startsWith(line, "Subregion: ")) {
 					std::string subregionName = line.substr(line.find(':') + 2);
-					std::cout << "Subregion: " << subregionName << std::endl;
+					Logger::log("Subregion: ", subregionName);
 					subregions.push_back(subregionName);
 				} else if (startsWith(line, "Room_Attr: ")) {
 					std::string attractivenesses = line.substr(line.find(':') + 2);
@@ -672,9 +672,12 @@ class MenuItems {
 		static void exportMapFile() {
 			std::fstream file(exportDirectory / ("map_" + worldAcronym + ".txt"), std::ios::out | std::ios::trunc);
 
-			if (!file.is_open()) { std::cout << "Error opening map_" << worldAcronym << ".txt\n"; return; }
+			if (!file.is_open()) {
+				Logger::log("Error opening map_", worldAcronym, ".txt");
+				return;
+			}
 
-			std::cout << "Exporting rooms" << std::endl;
+			Logger::log("Exporting rooms");
 			for (Room *room : rooms) {
 				const Vector2 &roomPosition = room->Position();
 				Vector2 position = Vector2(
@@ -691,7 +694,7 @@ class MenuItems {
 				file << "\n";
 			}
 			
-			std::cout << "Exporting extra data" << std::endl;
+			Logger::log("Exporting extra data");
 			for (Room *room : rooms) {
 				file << "//FloodForge;ROOM|" << room->roomName;
 				if (room->data.hidden) file << "|hidden";
@@ -699,7 +702,7 @@ class MenuItems {
 				file << "\n";
 			}
 
-			std::cout << "Exporting connections" << std::endl;
+			Logger::log("Exporting connections");
 			for (Connection *connection : connections) {
 				if (connection->RoomA()->data.hidden || connection->RoomB()->data.hidden) continue;
 
@@ -731,7 +734,10 @@ class MenuItems {
 		static void exportWorldFile() {
 			std::fstream file(exportDirectory / ("world_" + worldAcronym + ".txt"), std::ios::out | std::ios::trunc);
 
-			if (!file.is_open()) { std::cout << "Error opening world_" << worldAcronym << ".txt\n"; return; }
+			if (!file.is_open()) {
+				Logger::log("Error opening world_", worldAcronym, ".txt");
+				return;
+			}
 
 			file << "ROOMS\n";
 			for (Room *room : rooms) {
@@ -907,9 +913,9 @@ class MenuItems {
 			}
 
 			if (stbi_write_png(outputPath.string().c_str(), width, height, 3, image.data(), width * 3)) {
-				std::cout << "Image saved successfully!" << std::endl;
+				Logger::log("Image saved successfully!");
 			} else {
-				std::cout << "Error saving image!" << std::endl;
+				Logger::log("Error saving image!");
 			}
 		}
 
