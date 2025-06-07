@@ -928,7 +928,7 @@ class MenuItems {
 				if (room->data.attractiveness.empty()) continue;
 				
 				
-				propertiesFile << "Room_Attr: " << room->roomName << ": ";
+				propertiesFile << "Room_Attr: " << toUpper(room->roomName) << ": ";
 				for (std::pair<std::string, RoomAttractiveness> attractivenss : room->data.attractiveness)  {
 					propertiesFile << attractivenss.first << "-";
 					if (attractivenss.second == RoomAttractiveness::NEUTRAL) propertiesFile << "Neutral";
