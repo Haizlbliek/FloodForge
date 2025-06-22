@@ -22,7 +22,8 @@ namespace Settings {
 		WarnMissingImages,
 		HideTutorial,
 		VisualMergeDefault,
-		KeepFilesystemPath
+		KeepFilesystemPath,
+		DebugVisibleOutputPadding
 	};
 
 	extern std::unordered_map<Setting, std::variant<double, int, bool, Colour, std::string>> settings;

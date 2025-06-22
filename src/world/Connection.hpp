@@ -10,11 +10,7 @@
 
 class Connection {
 	public:
-		Connection(Room *roomA, unsigned int connectionA, Room *roomB, unsigned int connectionB)
-		: roomA(roomA),
-		  roomB(roomB),
-		  connectionA(connectionA),
-		  connectionB(connectionB) {
+		Connection(Room *roomA, unsigned int connectionA, Room *roomB, unsigned int connectionB) : roomA(roomA), roomB(roomB), connectionA(connectionA), connectionB(connectionB) {
 			segments = 10;
 			directionStrength = 10.0;
 		}

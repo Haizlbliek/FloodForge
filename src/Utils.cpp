@@ -189,7 +189,6 @@ GLuint loadTexture(const char *filepath, int filter) {
 
 	GLenum format = nrChannels == 4 ? GL_RGBA : GL_RGB;
 	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-	// glGenerateMipmap(GL_TEXTURE_2D);
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -212,38 +211,25 @@ GLFWimage loadIcon(const char* filepath) {
 	icon.height = height;
 	icon.pixels = data;
 
-	// Generate the texture
-	// GLenum format = nrChannels == 4 ? GL_RGBA : GL_RGB;
-	// glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-	// glGenerateMipmap(GL_TEXTURE_2D);
-
-	// Free the image data after uploading it to the GPU
-	// stbi_image_free(data);
-
 	return icon;
 }
 
 void saveImage(GLFWwindow *window, const char *fileName) {
-	// Get the window size
 	int width, height;
-	glfwGetFramebufferSize(window, &width, &height); // Get the current framebuffer size
+	glfwGetFramebufferSize(window, &width, &height);
 
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-	// Allocate memory for the pixel data
-	unsigned char* pixels = new unsigned char[3 * width * height]; // 3 channels for RGB
-	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels); // Read pixel data from the framebuffer
+	unsigned char* pixels = new unsigned char[3 * width * height];
+	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
-	// Flip the image because OpenGL reads it upside down
 	unsigned char* flippedPixels = new unsigned char[3 * width * height];
 	for (int i = 0; i < height; ++i) {
 		memcpy(flippedPixels + i * 3 * width, pixels + (height - i - 1) * 3 * width, 3 * width);
 	}
 
-	// Write the flipped image data to a PNG file
 	stbi_write_png(fileName, width, height, 3, flippedPixels, width * 3);
 
-	// Clean up allocated memory
 	delete[] pixels;
 	delete[] flippedPixels;
 }

@@ -26,18 +26,9 @@
 
 #include "ExtraRoomData.hpp"
 
-//#define VISIBLE_OUTPUT_PADDING
-
 class Button {
 	public:
-		Button(std::string text, double x, double y, double width, double height, Font *font)
-		 : x(x),
-		   y(y),
-		   width(width),
-		   height(height),
-		   text(text),
-		   font(font) {
-			// Temp
+		Button(std::string text, double x, double y, double width, double height, Font *font) : x(x), y(y), width(width), height(height), text(text), font(font) {
 		}
 
 		Button *OnLeftPress(std::function<void(Button*)> listener) {
@@ -854,29 +845,29 @@ class MenuItems {
 
 			std::vector<unsigned char> image(width * height * 3);
 
-#ifdef VISIBLE_OUTPUT_PADDING
-			for (int x = 0; x < width; x++) {
-				for (int y = 0; y < height; y++) {
-					int i = y * width + x;
-
-					if (x < padding || (y % (height / 3)) < padding || x >= width - padding || (y % (height / 3)) >= height / 3 - padding) {
-						image[i * 3 + 0] = 0;
-						image[i * 3 + 1] = 255;
-						image[i * 3 + 2] = 255;
-					} else {
-						image[i * 3 + 0] = 0;
-						image[i * 3 + 1] = 255;
-						image[i * 3 + 2] = 0;
+			if (Settings::getSetting<bool>(Settings::Setting::DebugVisibleOutputPadding)) {
+				for (int x = 0; x < width; x++) {
+					for (int y = 0; y < height; y++) {
+						int i = y * width + x;
+	
+						if (x < padding || (y % (height / 3)) < padding || x >= width - padding || (y % (height / 3)) >= height / 3 - padding) {
+							image[i * 3 + 0] = 0;
+							image[i * 3 + 1] = 255;
+							image[i * 3 + 2] = 255;
+						} else {
+							image[i * 3 + 0] = 0;
+							image[i * 3 + 1] = 255;
+							image[i * 3 + 2] = 0;
+						}
 					}
 				}
+			} else {
+				for (int i = 0; i < width * height; i++) {
+					image[i * 3 + 0] = 0;
+					image[i * 3 + 1] = 255;
+					image[i * 3 + 2] = 0;
+				}
 			}
-#else
-			for (int i = 0; i < width * height; i++) {
-				image[i * 3 + 0] = 0;
-				image[i * 3 + 1] = 255;
-				image[i * 3 + 2] = 0;
-			}
-#endif
 
 			for (Room *room : rooms) {
 				if (room->isOffscreen()) continue;

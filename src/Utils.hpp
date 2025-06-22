@@ -57,10 +57,4 @@ std::vector<std::string> split(const std::string &text, char delimiter);
 
 void openURL(std::string url);
 
-// GL functions
-void glColour(Colour colour);
-
-void glColor(Colour color);
-
-
 GLuint loadShaders(const char* vertexPath, const char* fragmentPath);

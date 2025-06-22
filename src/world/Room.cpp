@@ -313,16 +313,6 @@ void Room::generateVBO() {
 				);
 			}
 
-			// 64 - Room Exit
-			// if (tileData & 4) {
-				// addQuad(
-				//     { x0 + 0.25f, y0 - 0.25f, 1.0, 0.0, 1.0 },
-				//     { x1 - 0.25f, y0 - 0.25f, 1.0, 0.0, 1.0 },
-				//     { x1 - 0.25f, y1 + 0.25f, 1.0, 0.0, 1.0 },
-				//     { x0 + 0.25f, y1 + 0.25f, 1.0, 0.0, 1.0 }
-				// );
-			// }
-
 			// 128 - Shortcut
 			if (tileData & 8) {
 				addQuad(

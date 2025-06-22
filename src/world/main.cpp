@@ -1034,11 +1034,6 @@ int main() {
 		window->clear();
 		glDisable(GL_DEPTH_TEST);
 
-		// Draw::color(0.0f, 0.0f, 0.0f);
-		// fillRect(-1.0, -1.0, 1.0, 1.0);
-
-		// glViewport(offsetX, offsetY, size, size);
-
 		setThemeColour(ThemeColour::Background);
 		Vector2 screenBounds = Vector2(width, height) / size;
 		fillRect(-screenBounds.x, -screenBounds.y, screenBounds.x, screenBounds.y);
@@ -1147,7 +1142,6 @@ int main() {
 					lastPoint = point;
 				}
 			}
-			// drawLine(connectionStart->x, connectionStart->y, connectionEnd->x, connectionEnd->y, 16.0 / lineSize);
 		}
 
 		if (selectingState == 1) {

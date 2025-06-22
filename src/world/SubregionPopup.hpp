@@ -48,8 +48,7 @@ class SubregionPopup : public Popup {
 					y -= 0.075;
 					id++;
 				}
-				
-				// int button = getButtonIndex(mouseX, mouseY);
+
 				drawSubregionButton(-2, "+ new subregion +", y, mouseX, mouseY);
 			}
 

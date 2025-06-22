@@ -14,6 +14,7 @@ void Settings::loadDefaults() {
 	settings[Setting::HideTutorial] = false;
 	settings[Setting::VisualMergeDefault] = false;
 	settings[Setting::KeepFilesystemPath] = true;
+	settings[Setting::DebugVisibleOutputPadding] = false;
 }
 
 void Settings::init() {
@@ -44,6 +45,7 @@ void Settings::init() {
 		else if (key == "HideTutorial") settings[Setting::HideTutorial] = boolValue;
 		else if (key == "VisualMergeDefault") settings[Setting::VisualMergeDefault] = boolValue;
 		else if (key == "KeepFilesystemPath") settings[Setting::KeepFilesystemPath] = boolValue;
+		else if (key == "DebugVisibleOutputPadding") settings[Setting::DebugVisibleOutputPadding] = boolValue;
 	}
 
 	settingsFile.close();
