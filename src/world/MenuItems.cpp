@@ -52,6 +52,24 @@ void Button::draw(Mouse *mouse, Vector2 screenBounds) {
 	font->writeCentred(text, x - screenBounds.x + (width * 0.5), y + height * -0.5 + screenBounds.y + 0.003, height - 0.01, CENTRE_XY);
 }
 
+void MenuItems::reset() {
+	if (std::find(rooms.begin(), rooms.end(), offscreenDen) != rooms.end()) {
+		offscreenDen = nullptr;
+	}
+	
+	for (Room *room : rooms) {
+		delete room;
+	}
+	rooms.clear();
+	for (Connection *connection : connections) delete connection;
+	connections.clear();
+	subregions.clear();
+	if (offscreenDen != nullptr) delete offscreenDen;
+	offscreenDen = nullptr;
+	extraProperties = "";
+	extraWorld = "";
+}
+
 void MenuItems::importWorldFile(std::filesystem::path path) {
 	RecentFiles::addPath(path);
 
@@ -73,21 +91,7 @@ void MenuItems::importWorldFile(std::filesystem::path path) {
 	
 	std::string propertiesFilePath = findFileCaseInsensitive(exportDirectory.string(), "properties.txt");
 	
-	if (std::find(rooms.begin(), rooms.end(), offscreenDen) != rooms.end()) {
-		offscreenDen = nullptr;
-	}
-	
-	for (Room *room : rooms) {
-		delete room;
-	}
-	rooms.clear();
-	for (Connection *connection : connections) delete connection;
-	connections.clear();
-	subregions.clear();
-	if (offscreenDen != nullptr) delete offscreenDen;
-	offscreenDen = nullptr;
-	extraProperties = "";
-	extraWorld = "";
+	reset();
 	
 	if (std::filesystem::exists(propertiesFilePath)) {
 		Logger::log("Found properties file, loading subregions");
@@ -366,6 +370,17 @@ void MenuItems::init(Window *window) {
 		[window](Button *button) {
 			visibleDevItems = !visibleDevItems;
 			button->Text(visibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden");
+		}
+	);
+
+	addButton("Refresh Region").OnLeftPress(
+		[window](Button *button) {
+			if (worldAcronym.empty() || exportDirectory.empty()) {
+				Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore refreshing"));
+				return;
+			}
+			
+			MenuItems::importWorldFile(findFileCaseInsensitive(exportDirectory.string(), "world_" + worldAcronym + ".txt"));
 		}
 	);
 

@@ -152,6 +152,8 @@ class MenuItems {
 			}
 		}
 
+		static void reset();
+
 		static void parseMap(std::filesystem::path mapFilePath, std::filesystem::path directory) {
 			std::fstream mapFile(mapFilePath);
 			
