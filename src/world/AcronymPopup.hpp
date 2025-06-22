@@ -15,7 +15,7 @@
 
 class AcronymPopup : public Popup {
 	public:
-		AcronymPopup(Window *window) : Popup(window) {
+		AcronymPopup() : Popup() {
 			window->addKeyCallback(this, keyCallback);
 
 			bounds = Rect(-0.25, -0.08, 0.25, 0.25);

@@ -32,7 +32,7 @@ void Project::save() {
 
 	Logger::log(filePath);
 	if (filePath.empty()) {
-		Popups::addPopup(new FilesystemPopup(window, std::regex(R"([^.]+\.level)"), "xxxx.level",
+		Popups::addPopup(new FilesystemPopup(std::regex(R"([^.]+\.level)"), "xxxx.level",
 			[this](std::set<std::string> newFilePaths) {
 				if (newFilePaths.empty()) return;
 

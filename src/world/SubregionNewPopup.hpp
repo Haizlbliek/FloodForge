@@ -16,7 +16,7 @@
 
 class SubregionNewPopup : public Popup {
 	public:
-		SubregionNewPopup(Window *window, std::set<Room*> rooms, int editIndex = -1) : Popup(window), rooms(rooms), editIndex(editIndex) {
+		SubregionNewPopup(std::set<Room*> rooms, int editIndex = -1) : Popup(), rooms(rooms), editIndex(editIndex) {
 			window->addKeyCallback(this, keyCallback);
 
 			bounds = Rect(-0.4, -0.08, 0.4, 0.25);

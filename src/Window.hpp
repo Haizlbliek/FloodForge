@@ -95,15 +95,19 @@ class Window {
 		Window() : Window(1024, 1024) {
 		}
 
-		Window(int width, int height) : width(width), height(height) {
+		Window(int width, int height, bool borderless = false, Window *sharedWindow = nullptr) : width(width), height(height) {
 			if (!glfwInit()) exit(EXIT_FAILURE);
 
 			// glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+			if (borderless) glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
-			glfwWindow = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
+			GLFWwindow *sharedGLFWWindow = nullptr;
+			if (sharedWindow != nullptr) sharedGLFWWindow = sharedWindow->getGLFWWindow();
+
+			glfwWindow = glfwCreateWindow(width, height, title.c_str(), NULL, sharedGLFWWindow);
 			if (!glfwWindow) {
 				glfwTerminate();
 				exit(EXIT_FAILURE);
@@ -341,7 +345,7 @@ class Window {
 			return nullptr;
 		}
 
-		GLFWwindow *getGLFWWindow() const { return glfwWindow;}
+		GLFWwindow *getGLFWWindow() const { return glfwWindow; }
 
 		int Width() const { return width; }
 		int Height() const { return height; }

@@ -10,8 +10,11 @@
 
 class Popup {
 	public:
-		Popup(Window *window);
-		virtual ~Popup() {}
+		Popup();
+
+		virtual ~Popup() {
+			delete window;
+		}
 
 		virtual void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
 
@@ -39,17 +42,19 @@ class Popup {
 
 		void offset(Vector2 offset);
 
+		Window *window;
+
 	protected:
 		bool hovered;
 		bool minimized = false;
-		
-		Window *window;
+
 		Rect bounds;
 };
 
 class Popups {
 	public:
-		static void init() {
+		static void init(Window *window) {
+			sharedWindow = window;
 			textureUI = loadTexture(BASE_PATH + "assets/ui.png");
 		}
 
@@ -66,4 +71,6 @@ class Popups {
 		static void removePopup(Popup *popup);
 
 		static bool hasPopup(std::string popupName);
+	
+		static Window *sharedWindow;
 };

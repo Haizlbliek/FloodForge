@@ -28,8 +28,7 @@ enum MDType {
 
 class MarkdownPopup : public Popup {
 	public:
-		MarkdownPopup(Window *window, std::string path)
-		: Popup(window) {
+		MarkdownPopup(std::string path) : Popup() {
 			bounds = Rect(-0.8, -0.8, 0.8, 0.8);
 			
 			loadFile(path);

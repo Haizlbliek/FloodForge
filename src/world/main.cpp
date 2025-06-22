@@ -444,7 +444,7 @@ void updateMain() {
 			if (Popups::popups.size() > 0)
 				Popups::popups[0]->reject();
 			else
-				Popups::addPopup((new ConfirmPopup(window, "Exit FloodForge?"))->OnOkay([&]() {
+				Popups::addPopup((new ConfirmPopup("Exit FloodForge?"))->OnOkay([&]() {
 					window->close();
 				}));
 		}
@@ -689,7 +689,7 @@ void updateMain() {
 	if (window->keyPressed(GLFW_KEY_S)) {
 		if (previousKeys.find(GLFW_KEY_S) == previousKeys.end()) {
 			if (selectedRooms.size() >= 1) {
-				Popups::addPopup(new SubregionPopup(window, selectedRooms));
+				Popups::addPopup(new SubregionPopup(selectedRooms));
 			} else {
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 					Room *room = *it;
@@ -698,7 +698,7 @@ void updateMain() {
 					if (room->inside(worldMouse)) {
 						std::set<Room*> roomGroup;
 						roomGroup.insert(room);
-						Popups::addPopup(new SubregionPopup(window, roomGroup));
+						Popups::addPopup(new SubregionPopup(roomGroup));
 
 						break;
 					}
@@ -714,7 +714,7 @@ void updateMain() {
 	if (window->keyPressed(GLFW_KEY_T)) {
 		if (previousKeys.find(GLFW_KEY_T) == previousKeys.end()) {
 			if (selectedRooms.size() >= 1) {
-				Popups::addPopup(new RoomTagPopup(window, selectedRooms));
+				Popups::addPopup(new RoomTagPopup(selectedRooms));
 			} else {
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
 					Room *room = *it;
@@ -725,7 +725,7 @@ void updateMain() {
 
 						std::set<Room*> roomGroup;
 						roomGroup.insert(room);
-						Popups::addPopup(new RoomTagPopup(window, roomGroup));
+						Popups::addPopup(new RoomTagPopup(roomGroup));
 
 						break;
 					}
@@ -858,7 +858,7 @@ void updateMain() {
 						shortcutPosition = Vector2(room->Width() * 0.5 - room->DenCount() * 2.0 + i * 4.0 + 2.5, -room->Height() * 0.25 - 0.5);
 
 						if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
-							Popups::addPopup(new DenPopup(window, room, i));
+							Popups::addPopup(new DenPopup(room, i));
 
 							found = true;
 							break;
@@ -869,7 +869,7 @@ void updateMain() {
 						shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
 
 						if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
-							Popups::addPopup(new DenPopup(window, room, room->DenId(shortcut)));
+							Popups::addPopup(new DenPopup(room, room->DenId(shortcut)));
 
 							found = true;
 							break;
@@ -887,7 +887,7 @@ void updateMain() {
 					if (room->inside(worldMouse)) {
 						if (!room->isOffscreen()) break;
 
-						Popups::addPopup(new DenPopup(window, room, offscreenDen->AddDen()));
+						Popups::addPopup(new DenPopup(room, offscreenDen->AddDen()));
 					}
 				}
 			}
@@ -901,7 +901,7 @@ void updateMain() {
 	if (window->keyPressed(GLFW_KEY_A)) {
 		if (previousKeys.find(GLFW_KEY_A) == previousKeys.end()) {
 			if (selectedRooms.size() > 0) {
-				Popups::addPopup(new RoomAttractivenessPopup(window, selectedRooms));
+				Popups::addPopup(new RoomAttractivenessPopup(selectedRooms));
 			} else {
 				Room *hoveringRoom = nullptr;
 				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
@@ -918,7 +918,7 @@ void updateMain() {
 				if (hoveringRoom != nullptr && !hoveringRoom->isOffscreen()) {
 					std::set<Room *> set;
 					set.insert(hoveringRoom);
-					Popups::addPopup(new RoomAttractivenessPopup(window, set));
+					Popups::addPopup(new RoomAttractivenessPopup(set));
 				}
 			}
 		}
@@ -982,14 +982,14 @@ int main() {
 	Settings::init();
 	Fonts::init();
 	MenuItems::init(window);
-	Popups::init();
+	Popups::init(window);
 	Shaders::init();
 	Draw::init();
 	CreatureTextures::init();
 	RecentFiles::init();
 	RoomHelpers::loadColours();
 
-	Popups::addPopup(new SplashArtPopup(window));
+	Popups::addPopup(new SplashArtPopup());
 
 	while (window->isOpen()) {
 		mouse->updateLastPressed();
@@ -1178,6 +1178,8 @@ int main() {
 
 		lastMousePosition.x = mouse->X();
 		lastMousePosition.y = mouse->Y();
+		
+		Logger::checkGLErrors("Main");
 	}
 
 	for (Room *room : rooms)

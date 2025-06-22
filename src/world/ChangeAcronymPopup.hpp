@@ -5,7 +5,7 @@
 
 class ChangeAcronymPopup : public AcronymPopup {
 	public:
-		ChangeAcronymPopup(Window *window) : AcronymPopup(window) {
+		ChangeAcronymPopup() : AcronymPopup() {
 		}
 
 		void accept() {

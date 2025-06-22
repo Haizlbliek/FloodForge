@@ -18,8 +18,7 @@
 
 class SplashArtPopup : public Popup {
 	public:
-		SplashArtPopup(Window *window)
-		: Popup(window) {
+		SplashArtPopup() : Popup() {
 			bounds = Rect(-1.0, -1.0, 1.0, 1.0);
 
 			splashart = new Texture(BASE_PATH + "assets/splash.png");
@@ -99,7 +98,7 @@ class SplashArtPopup : public Popup {
 				close();
 				
 				if (!Settings::getSetting<bool>(Settings::Setting::HideTutorial)) {
-					Popups::addPopup(new MarkdownPopup(window, BASE_PATH + "docs/controls.md"));
+					Popups::addPopup(new MarkdownPopup(BASE_PATH + "docs/controls.md"));
 				}
 			}
 		}

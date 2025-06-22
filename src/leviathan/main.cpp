@@ -168,7 +168,7 @@ int main() {
 		/// Draw UI
 		applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, screenBounds);
 
-		Popups::draw(screenMouse, screenBounds);
+		Popups::draw(window, screenMouse, screenBounds);
 		
 		window->render();
 		

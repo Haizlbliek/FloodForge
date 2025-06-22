@@ -25,11 +25,7 @@
 
 class FilesystemPopup : public Popup {
 	public:
-		FilesystemPopup(Window *window, std::regex regex, std::string hint, std::function<void(std::set<std::string>)> callback)
-		: Popup(window),
-		  regex(regex),
-		  hint(hint),
-		  callback(callback) {
+		FilesystemPopup(std::regex regex, std::string hint, std::function<void(std::set<std::string>)> callback) : Popup(), regex(regex), hint(hint), callback(callback) {
 			window->addKeyCallback(this, keyCallback);
 			window->addScrollCallback(this, scrollCallback);
 			setDirectory();
@@ -44,10 +40,7 @@ class FilesystemPopup : public Popup {
 			refresh();
 		}
 
-		FilesystemPopup(Window *window, int type, std::string hint, std::function<void(std::set<std::string>)> callback)
-		: Popup(window),
-		  hint(hint),
-		  callback(callback) {
+		FilesystemPopup(int type, std::string hint, std::function<void(std::set<std::string>)> callback) : Popup(), hint(hint), callback(callback) {
 			window->addKeyCallback(this, keyCallback);
 			window->addScrollCallback(this, scrollCallback);
 			called = false;
@@ -112,8 +105,6 @@ class FilesystemPopup : public Popup {
 
 			window->removeKeyCallback(this, keyCallback);
 			window->removeScrollCallback(this, scrollCallback);
-			
-			window = nullptr;
 			
 			if (!called) callback(std::set<std::string>());
 		}

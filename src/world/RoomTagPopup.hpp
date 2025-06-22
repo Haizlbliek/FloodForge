@@ -9,7 +9,7 @@
 
 class RoomTagPopup : public Popup {
 	public:
-		RoomTagPopup(Window *window, std::set<Room*> newRooms) : Popup(window) {
+		RoomTagPopup(std::set<Room*> newRooms) : Popup() {
 			for (Room *room : newRooms) rooms.insert(room);
 		}
 

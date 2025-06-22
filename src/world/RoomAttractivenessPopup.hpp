@@ -6,7 +6,7 @@
 
 class RoomAttractivenessPopup : public Popup {
 	public:
-		RoomAttractivenessPopup(Window *window, std::set<Room *> rooms) : rooms(rooms), Popup(window) {
+		RoomAttractivenessPopup(std::set<Room *> rooms) : rooms(rooms), Popup() {
 			bounds = Rect(-0.35, -0.35, 0.375 + 0.1, 0.35);
 			scroll = 0.0;
 			scrollTo = 0.0;

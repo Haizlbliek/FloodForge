@@ -19,7 +19,7 @@ enum SliderType {
 
 class DenPopup : public Popup {
 	public:
-		DenPopup(Window *window, Room *room, int den) : Popup(window) {
+		DenPopup(Room *room, int den) : Popup() {
 			bounds = Rect(-0.35, -0.35, 0.375 + 0.1, 0.35);
 			scrollA = 0.0;
 			scrollATo = 0.0;

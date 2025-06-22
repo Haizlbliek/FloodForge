@@ -284,7 +284,7 @@ int main() {
 				if (Popups::popups.size() > 0)
 					Popups::popups[0]->reject();
 				else
-					Popups::addPopup(new ConfirmPopup(window, "Quit?"));
+					Popups::addPopup(new ConfirmPopup("Quit?"));
 			}
 
 			previousKeys.insert(GLFW_KEY_ESCAPE);

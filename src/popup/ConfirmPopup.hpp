@@ -10,8 +10,7 @@
 
 class ConfirmPopup : public Popup {
 	public:
-		ConfirmPopup(Window *window, std::string question)
-		: Popup(window) {
+		ConfirmPopup(std::string question) : Popup() {
 			this->question = question;
 			bounds = Rect(-0.3, -0.15, 0.3, 0.15);
 		}

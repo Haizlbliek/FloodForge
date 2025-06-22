@@ -10,6 +10,7 @@
 GLuint Popups::textureUI = 0;
 std::vector<Popup*> Popups::popupTrash;
 std::vector<Popup*> Popups::popups;
+Window *Popups::sharedWindow = nullptr;
 
 void Popups::cleanup() {
 	for (Popup *popup : Popups::popupTrash) {
@@ -22,11 +23,13 @@ void Popups::cleanup() {
 	Popups::popupTrash.clear();
 }
 
-Popup::Popup(Window *window) : bounds(Rect(-0.5, -0.5, 0.5, 0.5)), window(window) {
+Popup::Popup() : bounds(Rect(-0.5, -0.5, 0.5, 0.5)) {
+	this->window = new Window(512, 512, true, Popups::sharedWindow);
 }
 
 void Popup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 	hovered = mouseInside;
+	Logger::checkGLErrors("Before popup draw");
 	
 	Draw::begin(Draw::QUADS);
 
@@ -118,6 +121,8 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenB
 	Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.05);
 	Draw::vertex(bounds.X1() - 0.10, bounds.Y1() - 0.05);
 	Draw::end();
+
+	Logger::checkGLErrors("After popup draw");
 }
 
 void Popup::mouseClick(double mouseX, double mouseY) {
@@ -167,8 +172,16 @@ void Popups::draw(Vector2 mouse, Vector2 screenBounds) {
 	for (Popup *popup : Popups::popups) {
 		Rect bounds = popup->Bounds();
 
+		Window *popupWindow = popup->window;
+		glfwMakeContextCurrent(popupWindow->getGLFWWindow());
+		popupWindow->clear();
+		glViewport(0, 0, 512, 512);
+		applyFrustumToOrthographic(Vector2(), 0.0f, Vector2(1, 1));
 		popup->draw(mouse.x, mouse.y, bounds.inside(mouse), screenBounds);
+		popupWindow->render();
 	}
+
+	glfwMakeContextCurrent(sharedWindow->getGLFWWindow());
 }
 
 bool Popups::hasPopup(std::string popupName) {

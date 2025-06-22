@@ -52,4 +52,13 @@ namespace Logger {
 			logFile.flush();
 		}
 	}
+	
+	void checkGLErrors(std::string where) {
+		GLenum err;
+		while ((err = glGetError()) != GL_NO_ERROR) {
+			std::stringstream ss;
+			ss << "GL Error: 0x" << std::hex << err << " (" << err << ")";
+			Logger::logError(where, ss.str());
+		}
+	}
 }

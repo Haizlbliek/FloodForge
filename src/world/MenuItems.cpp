@@ -131,7 +131,7 @@ void MenuItems::importWorldFile(std::filesystem::path path) {
 		for (std::string fail : FailureController::fails) {
 			fails += fail + "\n";
 		}
-		Popups::addPopup(new InfoPopup(window, fails));
+		Popups::addPopup(new InfoPopup(fails));
 		FailureController::fails.clear();
 	}
 }
@@ -144,7 +144,7 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 
 	if (std::filesystem::exists(toFile)) {
 		return nullptr;
-		// Popups::addPopup(new InfoPopup(window, "Couldn't complete the copy!\nRoom already exists!"));
+		// Popups::addPopup(new InfoPopup("Couldn't complete the copy!\nRoom already exists!"));
 	} else {
 		std::filesystem::copy_file(fromFile, toFile);
 		
@@ -178,18 +178,18 @@ void MenuItems::init(Window *window) {
 
 	addButton("New").OnLeftPress(
 		[window](Button *button) {
-			Popups::addPopup(new AcronymPopup(window));
+			Popups::addPopup(new AcronymPopup());
 		}
 	);
 
 	addButton("Add Room").OnLeftPress(
 		[window](Button *button) {
 			if (worldAcronym == "") {
-				Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore adding rooms."));
+				Popups::addPopup(new InfoPopup("You must create or import a region\nbefore adding rooms."));
 				return;
 			}
 
-			Popups::addPopup((new FilesystemPopup(window, std::regex("(([^._-]+)_[a-zA-Z0-9]+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"), "xx_a01.txt",
+			Popups::addPopup((new FilesystemPopup(std::regex("(([^._-]+)_[a-zA-Z0-9]+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"), "xx_a01.txt",
 				[&](std::set<std::string> pathStrings) {
 					if (pathStrings.empty()) return;
 
@@ -209,7 +209,7 @@ void MenuItems::init(Window *window) {
 								room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
 								rooms.push_back(room);
 							} else {
-								Popups::addPopup((new ConfirmPopup(window, "Change which acronym?"))
+								Popups::addPopup((new ConfirmPopup("Change which acronym?"))
 								->OkayText(toUpper(names[2]))
 								->OnOkay([names, roomFilePath, &window]() {
 									std::string roomPath = "gate_" + worldAcronym + "_" + names[1] + ".txt";
@@ -233,7 +233,7 @@ void MenuItems::init(Window *window) {
 								room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
 								rooms.push_back(room);
 							} else {
-								Popups::addPopup((new ConfirmPopup(window, "Copy room to " + worldAcronym + "-rooms?"))
+								Popups::addPopup((new ConfirmPopup("Copy room to " + worldAcronym + "-rooms?"))
 								->CancelText("Just Add")
 								->OnCancel([roomFilePath]() {
 									std::string roomName = roomFilePath.filename().string();
@@ -264,7 +264,7 @@ void MenuItems::init(Window *window) {
 
 	addButton("Import").OnLeftPress(
 		[window](Button *button) {
-			Popups::addPopup(new FilesystemPopup(window, std::regex("world_([^._-]+)\\.txt", std::regex_constants::icase), "world_xx.txt",
+			Popups::addPopup(new FilesystemPopup(std::regex("world_([^._-]+)\\.txt", std::regex_constants::icase), "world_xx.txt",
 				[window](std::set<std::string> pathStrings) {
 					if (pathStrings.empty()) return;
 
@@ -283,14 +283,14 @@ void MenuItems::init(Window *window) {
 				exportWorldFile();
 				exportImageFile(exportDirectory / ("map_" + worldAcronym + ".png"), exportDirectory / ("map_" + worldAcronym + "_2.png"));
 				exportPropertiesFile(exportDirectory / "properties.txt");
-				Popups::addPopup(new InfoPopup(window, "Exported successfully!"));
+				Popups::addPopup(new InfoPopup("Exported successfully!"));
 			} else {
 				if (worldAcronym == "") {
-					Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore exporting."));
+					Popups::addPopup(new InfoPopup("You must create or import a region\nbefore exporting."));
 					return;
 				}
 
-				Popups::addPopup(new FilesystemPopup(window, TYPE_FOLDER, "YOUR_MOD/world/xx/",
+				Popups::addPopup(new FilesystemPopup(TYPE_FOLDER, "YOUR_MOD/world/xx/",
 					[window](std::set<std::string> pathStrings) {
 						if (pathStrings.empty()) return;
 
@@ -300,7 +300,7 @@ void MenuItems::init(Window *window) {
 						exportWorldFile();
 						exportImageFile(exportDirectory / ("map_" + worldAcronym + ".png"), exportDirectory / ("map_" + worldAcronym + "_2.png"));
 						exportPropertiesFile(exportDirectory / "properties.txt");
-						Popups::addPopup(new InfoPopup(window, "Exported successfully!"));
+						Popups::addPopup(new InfoPopup("Exported successfully!"));
 					}
 				));
 			}
@@ -376,7 +376,7 @@ void MenuItems::init(Window *window) {
 	addButton("Refresh Region").OnLeftPress(
 		[window](Button *button) {
 			if (worldAcronym.empty() || exportDirectory.empty()) {
-				Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore refreshing"));
+				Popups::addPopup(new InfoPopup("You must create or import a region\nbefore refreshing"));
 				return;
 			}
 			
@@ -387,11 +387,11 @@ void MenuItems::init(Window *window) {
 	// addButton("Change Region Acronym").OnLeftPress(
 	//     [window](Button *button) {
 	//         if (worldAcronym == "") {
-	//             Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore changing the acronym."));
+	//             Popups::addPopup(new InfoPopup("You must create or import a region\nbefore changing the acronym."));
 	//             return;
 	//         }
 
-	//         Popups::addPopup(new ChangeAcronymPopup(window));
+	//         Popups::addPopup(new ChangeAcronymPopup());
 	//     }
 	// );
 

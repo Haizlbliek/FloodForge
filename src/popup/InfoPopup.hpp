@@ -15,13 +15,11 @@
 
 class InfoPopup : public Popup {
 	public:
-		InfoPopup(Window *window)
-		: Popup(window) {
+		InfoPopup() : Popup() {
 			bounds = Rect(-0.9, -0.1, 0.9, 0.1);
 		}
 
-		InfoPopup(Window *window, std::string warningText)
-		: Popup(window) {
+		InfoPopup(std::string warningText) : Popup() {
 			std::istringstream stream(warningText);
 			std::string line;
 

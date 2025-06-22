@@ -11,7 +11,7 @@
 
 class SubregionPopup : public Popup {
 	public:
-		SubregionPopup(Window *window, std::set<Room*> newRooms) : Popup(window) {
+		SubregionPopup(std::set<Room*> newRooms) : Popup() {
 			for (Room *room : newRooms) rooms.insert(room);
 		}
 
@@ -71,7 +71,7 @@ class SubregionPopup : public Popup {
 			if (button == -1) {
 			} else {
 				if (mouseX <= -0.35 && button >= 1 && button <= subregions.size()) {
-					Popups::addPopup(new SubregionNewPopup(window, rooms, button - 1));
+					Popups::addPopup(new SubregionNewPopup(rooms, button - 1));
 					close();
 				} else if (mouseX <= 0.325 && mouseX >= -0.325) {
 					if (button == 0) {
@@ -81,7 +81,7 @@ class SubregionPopup : public Popup {
 						setSubregion(button - 1);
 						close();
 					} else if (button == subregions.size() + 1) {
-						Popups::addPopup(new SubregionNewPopup(window, rooms));
+						Popups::addPopup(new SubregionNewPopup(rooms));
 						close();
 					}
 				} else if (mouseX >= 0.35) {
@@ -97,7 +97,7 @@ class SubregionPopup : public Popup {
 						if (canRemove) {
 							subregions.erase(subregions.begin() + (button - 1));
 						} else {
-							Popups::addPopup(new InfoPopup(window, "Can't remove subregion\nRooms still use it"));
+							Popups::addPopup(new InfoPopup("Can't remove subregion\nRooms still use it"));
 						}
 					}
 				}
