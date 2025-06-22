@@ -6,7 +6,9 @@
 #include "../popup/ConfirmPopup.hpp"
 #include "AcronymPopup.hpp"
 #include "ChangeAcronymPopup.hpp"
+
 #include "RecentFiles.hpp"
+#include "WorldGlobals.hpp"
 
 std::vector<Button*> MenuItems::buttons;
 
@@ -68,10 +70,17 @@ void MenuItems::reset() {
 	offscreenDen = nullptr;
 	extraProperties = "";
 	extraWorld = "";
+	exportDirectory = "";
+	worldAcronym = "";
+	selectedRooms.clear();
+	roomPossibleSelect = nullptr;
+	selectingState = 0;
 }
 
 void MenuItems::importWorldFile(std::filesystem::path path) {
 	RecentFiles::addPath(path);
+	
+	reset();
 
 	exportDirectory = path.parent_path();
 	worldAcronym = toLower(path.filename().string());
@@ -90,8 +99,6 @@ void MenuItems::importWorldFile(std::filesystem::path path) {
 	std::filesystem::path mapFilePath = findFileCaseInsensitive(exportDirectory.string(), "map_" + worldAcronym + ".txt");
 	
 	std::string propertiesFilePath = findFileCaseInsensitive(exportDirectory.string(), "properties.txt");
-	
-	reset();
 	
 	if (std::filesystem::exists(propertiesFilePath)) {
 		Logger::log("Found properties file, loading subregions");

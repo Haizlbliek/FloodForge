@@ -73,17 +73,11 @@ void AcronymPopup::accept() {
 	if (text.length() < 2) return;
 
 	close();
-	for (Room *room : rooms) delete room;
-	rooms.clear();
-	for (Connection *connection : connections) delete connection;
-	connections.clear();
-	subregions.clear();
+
+	MenuItems::reset();
 	offscreenDen = new OffscreenRoom("offscreenden" + toLower(text), "OffscreenDen" + text);
 	rooms.push_back(offscreenDen);
 	MenuItems::WorldAcronym(toLower(text));
-	MenuItems::extraProperties = "";
-	MenuItems::extraWorld = "";
-	MenuItems::exportDirectory = "";
 }
 
 char AcronymPopup::parseCharacter(char character, bool shiftPressed) {

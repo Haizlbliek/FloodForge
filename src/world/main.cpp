@@ -34,6 +34,7 @@
 #include "MenuItems.hpp"
 #include "DebugData.hpp"
 #include "RecentFiles.hpp"
+#include "WorldGlobals.hpp"
 
 #define TEXTURE_PATH (BASE_PATH + "assets/")
 
