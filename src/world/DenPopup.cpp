@@ -233,7 +233,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 			Draw::end();
 			Draw::useTexture(0);
 			glDisable(GL_BLEND);
-
+			
 			bool inside = rect.inside(mouseX, mouseY);
 
 			if (inside) {
@@ -319,7 +319,15 @@ void DenPopup::mouseClick(double mouseX, double mouseY) {
 					den.count = 0;
 				} else {
 					if (den.type == type || type == "UNKNOWN") {
-						den.count += 1;
+						if (window->modifierPressed(GLFW_MOD_SHIFT)) {
+							den.count -= 1;
+							if (den.count <= 0) {
+								den.type = "";
+								den.count = 0;
+							}
+						} else {
+							den.count += 1;
+						}
 					} else {
 						den.type = type;
 						den.count = 1;
