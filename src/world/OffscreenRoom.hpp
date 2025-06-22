@@ -7,6 +7,7 @@
 #include "Room.hpp"
 #include "DenPopup.hpp"
 #include "Globals.hpp"
+#include "Creatures.hpp"
 
 class OffscreenRoom : public Room {
 	public:
