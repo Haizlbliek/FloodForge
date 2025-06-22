@@ -91,7 +91,7 @@ namespace DebugData {
 					
 					if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
 						debugText.push_back("   Shortcut:");
-						debugText.push_back("Den: " + std::to_string(shortcut.x) + ", " + std::to_string(shortcut.y));
+						debugText.push_back("Den: " + std::to_string(shortcut.x) + ", " + std::to_string(shortcut.y) + ", " + room->CreatureDen(room->DenId(shortcut)).type);
 					}
 				}
 			}
