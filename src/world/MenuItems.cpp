@@ -12,8 +12,7 @@
 #include "WorldExporter.hpp"
 
 std::vector<Button*> MenuItems::buttons;
-
-Window *MenuItems::window = nullptr;
+std::vector<Button*> MenuItems::layerButtons;
 
 double MenuItems::currentButtonX = 0.01;
 
@@ -170,8 +169,39 @@ Button &MenuItems::addButton(std::string text) {
 	return *button;
 }
 
+void MenuItems::addLayerButton(std::string buttonName, int layer) {
+	Button *btn = MenuItems::addButton(buttonName)
+	.OnLeftPress(
+		[layer](Button *button) {
+			EditorState::visibleLayers[layer] = !EditorState::visibleLayers[layer];
+			button->Darken(!EditorState::visibleLayers[layer]);
+		}
+	)
+	->OnRightPress(
+		[layer](Button *button) {
+			bool alreadySolo = true;
+			for (int i = 0; i < LAYER_COUNT; i++) {
+				if (EditorState::visibleLayers[i] != (i == layer)) {
+					alreadySolo = false;
+					break;
+				}
+			}
+			
+			for (int i = 0; i < LAYER_COUNT; i++) {
+				if (i == layer) {
+					EditorState::visibleLayers[i] = true;
+				} else {
+					EditorState::visibleLayers[i] = alreadySolo;
+				}
+				MenuItems::layerButtons[i]->Darken(!EditorState::visibleLayers[i]);
+			}
+		}
+	);
+	
+	MenuItems::layerButtons.push_back(btn);
+}
+
 void MenuItems::init(Window *window) {
-	MenuItems::window = window;
 	MenuItems::loadTextures();
 	EditorState::region.acronym = "";
 
@@ -322,47 +352,9 @@ void MenuItems::init(Window *window) {
 		}
 	);
 
-	addButton("1")
-	.OnLeftPress(
-		[window](Button *button) {
-			EditorState::visibleLayers[LAYER_1] = !EditorState::visibleLayers[LAYER_1];
-			button->Darken(!EditorState::visibleLayers[LAYER_1]);
-		}
-	)
-	->OnRightPress(
-		[window](Button *button) {
-			// TODO LATER
-			// visibleLayers[0] = true; visibleLayers[1] = true; visibleLayers[2] = true;
-		}
-	);
-
-	addButton("2")
-	.OnLeftPress(
-		[window](Button *button) {
-			EditorState::visibleLayers[LAYER_2] = !EditorState::visibleLayers[LAYER_2];
-			button->Darken(!EditorState::visibleLayers[LAYER_2]);
-		}
-	)
-	->OnRightPress(
-		[window](Button *button) {
-			// TODO LATER
-			// visibleLayers[0] = true; visibleLayers[1] = true; visibleLayers[2] = true;
-		}
-	);
-
-	addButton("3")
-	.OnLeftPress(
-		[window](Button *button) {
-			EditorState::visibleLayers[LAYER_3] = !EditorState::visibleLayers[LAYER_3];
-			button->Darken(!EditorState::visibleLayers[LAYER_3]);
-		}
-	)
-	->OnRightPress(
-		[window](Button *button) {
-			// TODO LATER
-			// visibleLayers[0] = true; visibleLayers[1] = true; visibleLayers[2] = true;
-		}
-	);
+	for (int i = 0; i < LAYER_COUNT; i++) {
+		addLayerButton(std::to_string(i + 1), i);
+	}
 
 	addButton("Dev Items: Hidden")
 	.OnLeftPress(
@@ -384,14 +376,14 @@ void MenuItems::init(Window *window) {
 	);
 
 	// addButton("Change Region Acronym").OnLeftPress(
-	//     [window](Button *button) {
-	//         if (EditorState::region.acronym == "") {
-	//             Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore changing the acronym."));
-	//             return;
-	//         }
+	// 	[window](Button *button) {
+	// 		if (EditorState::region.acronym == "") {
+	// 			Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore changing the acronym."));
+	// 			return;
+	// 		}
 
-	//         Popups::addPopup(new ChangeAcronymPopup(window));
-	//     }
+	// 		Popups::addPopup(new ChangeAcronymPopup(window));
+	// 	}
 	// );
 }
 

@@ -77,6 +77,8 @@ class MenuItems {
 
 		static Button &addButton(std::string text);
 
+		static void addLayerButton(std::string buttonName, int layer);
+
 		static void init(Window *window);
 
 		static void cleanup();
@@ -93,8 +95,7 @@ class MenuItems {
 		static void repositionButtons();
 	
 		static std::vector<Button*> buttons;
-
-		static Window *window;
+		static std::vector<Button*> layerButtons;
 
 		static double currentButtonX;
 };

@@ -12,9 +12,7 @@
 #define ROOM_SNAP_NONE 0
 #define ROOM_SNAP_TILE 1
 
-#define LAYER_1 0
-#define LAYER_2 1
-#define LAYER_3 2
+#define LAYER_COUNT 3
 
 extern std::string ROOM_TAGS[9];
 extern std::string ROOM_TAG_NAMES[9];
