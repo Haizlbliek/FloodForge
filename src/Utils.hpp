@@ -58,3 +58,7 @@ std::vector<std::string> split(const std::string &text, char delimiter);
 void openURL(std::string url);
 
 GLuint loadShaders(const char* vertexPath, const char* fragmentPath);
+
+void replaceLastInstance(std::string& str, const std::string& old_sub, const std::string& new_sub);
+
+char parseCharacter(char character, bool shiftPressed);

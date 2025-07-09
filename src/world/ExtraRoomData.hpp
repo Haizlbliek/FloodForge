@@ -9,7 +9,7 @@
 
 class DevItem {
 	public:
-		DevItem() {}
+		DevItem() = default;
 		
 		std::string name = "";
 		GLuint texture = 0;
@@ -18,7 +18,7 @@ class DevItem {
 
 class ExtraRoomData {
 	public:
-		ExtraRoomData() {}
+		ExtraRoomData() = default;
 		
 		bool hidden = false;
 		bool merge = false;

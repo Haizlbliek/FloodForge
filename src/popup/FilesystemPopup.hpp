@@ -36,8 +36,8 @@ class FilesystemPopup : public Popup {
 			called = false;
 			forceRegex = true;
 			mode = 0;
-			scroll = 0;
-			scrollTo = 0;
+			currentScroll = 0;
+			targetScroll = 0;
 
 			openType = TYPE_FILE;
 
@@ -53,7 +53,7 @@ class FilesystemPopup : public Popup {
 			called = false;
 			forceRegex = true;
 			mode = 0;
-			scroll = 0;
+			currentScroll = 0;
 			
 			openType = type;
 
@@ -123,7 +123,7 @@ class FilesystemPopup : public Popup {
 			
 			if (minimized) return;
 
-			scroll += (scrollTo - scroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
+			currentScroll += (targetScroll - currentScroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 
 			frame++;
 
@@ -169,7 +169,7 @@ class FilesystemPopup : public Popup {
 			Fonts::rainworld->write(croppedPath, bounds.X0() + 0.19, bounds.Y1() - 0.07, 0.04);
 
 			double offsetY = (bounds.Y1() + bounds.Y0()) * 0.5;
-			double y = 0.35 - scroll + offsetY;
+			double y = 0.35 - currentScroll + offsetY;
 			bool hasExtras = false;
 
 			// New Directory
@@ -261,8 +261,8 @@ class FilesystemPopup : public Popup {
 			if (mode == 0) {
 				if (Rect(bounds.X0() + 0.02, bounds.Y1() - 0.12, bounds.X0() + 0.07, bounds.Y1() - 0.07).inside(mouseX, mouseY)) {
 					currentDirectory = std::filesystem::canonical(currentDirectory / "..");
-					scroll = 0.0;
-					scrollTo = 0.0;
+					currentScroll = 0.0;
+					targetScroll = 0.0;
 					refresh();
 					clampScroll();
 				}
@@ -274,18 +274,18 @@ class FilesystemPopup : public Popup {
 
 				if (Rect(bounds.X1() - 0.09, bounds.Y1() - 0.12, bounds.X1() - 0.04, bounds.Y1() - 0.07).inside(mouseX, mouseY)) {
 					mode = 1;
-					scroll = 0.0;
-					scrollTo = 0.0;
+					currentScroll = 0.0;
+					targetScroll = 0.0;
 					newDirectory = "";
 				}
 				
 				if (mouseX >= bounds.X0() + 0.1 && mouseX <= bounds.X1() - 0.1 && mouseY >= bounds.Y0() + 0.2 && mouseY <= bounds.Y1() - 0.15) {
-					int id = (-mouseY + (bounds.Y1() - 0.15) - scroll) / 0.06;
+					int id = (-mouseY + (bounds.Y1() - 0.15) - currentScroll) / 0.06;
 					
 					if (id < directories.size()) {
 						currentDirectory = std::filesystem::canonical(currentDirectory / directories[id].filename());
-						scroll = 0.0;
-						scrollTo = 0.0;
+						currentScroll = 0.0;
+						targetScroll = 0.0;
 						refresh();
 					} else {
 						id -= directories.size();
@@ -326,7 +326,7 @@ class FilesystemPopup : public Popup {
 		static void scrollCallback(void *object, double deltaX, double deltaY) {
 			FilesystemPopup *popup = static_cast<FilesystemPopup*>(object);
 
-			popup->scrollTo += deltaY * 0.06;
+			popup->targetScroll += deltaY * 0.06;
 			
 			popup->clampScroll();
 		}
@@ -397,8 +397,8 @@ class FilesystemPopup : public Popup {
 
 		std::set<std::string> selected;
 
-		double scroll;
-		double scrollTo;
+		double currentScroll;
+		double targetScroll;
 
 		bool called;
 		bool forceRegex;
@@ -504,16 +504,16 @@ class FilesystemPopup : public Popup {
 		void clampScroll() {
 			int size = directories.size() + files.size();
 
-			if (scrollTo < -size * 0.06 + 0.06) {
-				scrollTo = -size * 0.06 + 0.06;
-				if (scroll <= -size * 0.06 + 0.12) {
-					scroll = -size * 0.06 + 0.03;
+			if (targetScroll < -size * 0.06 + 0.06) {
+				targetScroll = -size * 0.06 + 0.06;
+				if (currentScroll <= -size * 0.06 + 0.12) {
+					currentScroll = -size * 0.06 + 0.03;
 				}
 			}
-			if (scrollTo > 0) {
-				scrollTo = 0;
-				if (scroll >= -0.06) {
-					scroll = 0.03;
+			if (targetScroll > 0) {
+				targetScroll = 0;
+				if (currentScroll >= -0.06) {
+					currentScroll = 0.03;
 				}
 			}
 		}

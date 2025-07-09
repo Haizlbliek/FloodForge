@@ -2,6 +2,14 @@
 
 #include "MenuItems.hpp"
 
+AcronymPopup::AcronymPopup(Window *window) : Popup(window) {
+	window->addKeyCallback(this, keyCallback);
+
+	bounds = Rect(-0.25, -0.08, 0.25, 0.25);
+
+	text = "";
+}
+
 void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
 	
@@ -74,10 +82,20 @@ void AcronymPopup::accept() {
 
 	close();
 
-	MenuItems::reset();
-	offscreenDen = new OffscreenRoom("offscreenden" + toLower(text), "OffscreenDen" + text);
-	rooms.push_back(offscreenDen);
-	MenuItems::WorldAcronym(toLower(text));
+	EditorState::region.reset();
+	EditorState::offscreenDen = new OffscreenRoom("offscreenden" + toLower(text), "OffscreenDen" + text);
+	EditorState::rooms.push_back(EditorState::offscreenDen);
+	EditorState::region.acronym = toLower(text);
+}
+
+void AcronymPopup::reject() {
+	close();
+}
+
+void AcronymPopup::close() {
+	Popups::removePopup(this);
+
+	window->removeKeyCallback(this, keyCallback);
 }
 
 char AcronymPopup::parseCharacter(char character, bool shiftPressed) {

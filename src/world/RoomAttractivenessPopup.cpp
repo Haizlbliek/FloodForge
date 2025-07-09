@@ -4,6 +4,17 @@ const RoomAttractiveness RoomAttractivenessPopup::attractivenessIds   [6] = { Ro
 const Colour             RoomAttractivenessPopup::attractivenessColors[6] = { Colour(0.5, 0.5, 0.5),       Colour(1.0, 1.0, 1.0),       Colour(1.0, 0.0, 0.0),         Colour(1.0, 1.0, 0.0),     Colour(0.0, 1.0, 0.0),    Colour(0.0, 1., 1.0)     };
 const std::string        RoomAttractivenessPopup::attractivenessNames [6] = { "DEFAULT",                   "NEUTRAL",                   "FORBIDDEN",                   "AVOID",                   "LIKE",                   "STAY"                   };
 
+RoomAttractivenessPopup::RoomAttractivenessPopup(Window *window, std::set<Room *> rooms) : rooms(rooms), Popup(window) {
+	bounds = Rect(-0.35, -0.35, 0.375 + 0.1, 0.35);
+	currentScroll = 0.0;
+	targetScroll = 0.0;
+
+	window->addScrollCallback(this, scrollCallback);
+}
+
+RoomAttractivenessPopup::~RoomAttractivenessPopup() {
+}
+
 void RoomAttractivenessPopup::close() {
 	Popup::close();
 
@@ -28,7 +39,7 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 	Draw::vertex(bounds.X0() + 0.6, bounds.Y1());
 	Draw::end();
 
-	scroll += (scrollTo - scroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
+	currentScroll += (targetScroll - currentScroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 
 	double centreX = bounds.X0() + 0.305;
 
@@ -67,7 +78,7 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 			std::string creatureType = CreatureTextures::creatures[id];
 
 			double rectX = centreX + (x - 0.5 * CREATURE_ROWS) * (buttonSize + buttonPadding) + buttonPadding * 0.5;
-			double rectY = (bounds.Y1() - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scroll;
+			double rectY = (bounds.Y1() - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - currentScroll;
 
 			Rect rect = Rect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
 
@@ -177,7 +188,7 @@ void RoomAttractivenessPopup::mouseClick(double mouseX, double mouseY) {
 			if (id >= countA) break;
 
 			double rectX = centreX + (x - 0.5 * CREATURE_ROWS) * (buttonSize + buttonPadding) + buttonPadding * 0.5;
-			double rectY = (bounds.Y1() - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scroll;
+			double rectY = (bounds.Y1() - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - currentScroll;
 
 			Rect rect = Rect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
 
@@ -193,6 +204,53 @@ void RoomAttractivenessPopup::mouseClick(double mouseX, double mouseY) {
 
 		if (Rect(bounds.X0() + 0.605, y - 0.02, bounds.X1() - 0.01, y + 0.02).inside(mouseX, mouseY)) {
 			selectAttractiveness = attractivenessIds[i];
+		}
+	}
+}
+
+void RoomAttractivenessPopup::scrollCallback(void *object, double deltaX, double deltaY) {
+	RoomAttractivenessPopup *popup = static_cast<RoomAttractivenessPopup*>(object);
+
+	if (!popup->hovered) return;
+
+	popup->targetScroll += deltaY * 0.06;
+
+	popup->clampScroll();
+}
+
+void RoomAttractivenessPopup::clampScroll() {
+	double width = 0.5;
+	double height = 0.5;
+
+	double buttonSize = std::min(width / 7.0, height / 7.0);
+	double buttonPadding = 0.02;
+
+	int items = CreatureTextures::creatures.size() / CREATURE_ROWS - 1;
+	double size = items * (buttonSize + buttonPadding);
+
+	if (targetScroll < -size) {
+		targetScroll = -size;
+		if (currentScroll <= -size + 0.06) {
+			currentScroll = -size - 0.03;
+		}
+	}
+
+	if (targetScroll > 0) {
+		targetScroll = 0;
+		if (currentScroll >= -0.06) {
+			currentScroll = 0.03;
+		}
+	}
+}
+
+void RoomAttractivenessPopup::setAllTo(RoomAttractiveness attr, std::string creature) {
+	for (Room *room : rooms) {
+		if (room->isOffscreen()) continue;
+
+		if (attr == RoomAttractiveness::DEFAULT) {
+			room->data.attractiveness.erase(creature);
+		} else {
+			room->data.attractiveness[creature] = attr;
 		}
 	}
 }

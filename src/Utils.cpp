@@ -368,7 +368,7 @@ std::vector<std::string> split(const std::string &text, char delimiter) {
 #include <windows.h>
 #include <shellapi.h>
 void openURL(std::string url) {
-	ShellExecuteA(NULL, NULL, url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+	ShellExecuteA(nullptr, nullptr, url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 #endif
 #ifdef __linux__
@@ -445,4 +445,42 @@ GLuint loadShaders(const char* vertexPath, const char* fragmentPath) {
 	glDeleteShader(fragmentShader);
 
 	return shaderProgram;
+}
+
+void replaceLastInstance(std::string& str, const std::string& old_sub, const std::string& new_sub) {
+	size_t pos = str.rfind(old_sub);
+	
+	if (pos != std::string::npos) {
+		str.replace(pos, old_sub.length(), new_sub);
+	}
+}
+
+char parseCharacter(char character, bool shiftPressed) {
+	if (!shiftPressed) return std::tolower(character);
+	
+	switch (character) {
+		case '1': return '!';
+		case '2': return '@';
+		case '3': return '#';
+		case '4': return '$';
+		case '5': return '%';
+		case '6': return '^';
+		case '7': return '&';
+		case '8': return '*';
+		case '9': return '(';
+		case '0': return ')';
+		case '`': return '~';
+		case '-': return '_';
+		case '=': return '+';
+		case '[': return '{';
+		case ']': return '}';
+		case ';': return ':';
+		case '\'': return '"';
+		case '\\': return '|';
+		case ',': return '<';
+		case '.': return '>';
+		case '/': return '?';
+	}
+
+	return std::toupper(character);
 }

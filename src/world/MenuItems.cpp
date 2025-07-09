@@ -8,7 +8,8 @@
 #include "ChangeAcronymPopup.hpp"
 
 #include "RecentFiles.hpp"
-#include "WorldGlobals.hpp"
+#include "WorldParser.hpp"
+#include "WorldExporter.hpp"
 
 std::vector<Button*> MenuItems::buttons;
 
@@ -16,20 +17,43 @@ Window *MenuItems::window = nullptr;
 
 double MenuItems::currentButtonX = 0.01;
 
-std::filesystem::path MenuItems::exportDirectory = "";
-std::string MenuItems::worldAcronym = "";
-std::string MenuItems::roomsDirectory = "";
-
-std::string MenuItems::extraProperties = "";
-std::string MenuItems::extraWorld = "";
-
 GLuint MenuItems::textureButtonNormal = 0;
 GLuint MenuItems::textureButtonNormalHover = 0;
 GLuint MenuItems::textureButtonPress = 0;
 GLuint MenuItems::textureButtonPressHover = 0;
 GLuint MenuItems::textureBar = 0;
 
-std::vector<std::pair<std::string, std::unordered_map<std::string, RoomAttractiveness>>> MenuItems::roomAttractiveness;
+Button::Button(std::string text, double x, double y, double width, double height, Font *font) : x(x), y(y), width(width), height(height), text(text), font(font) {
+}
+
+Button *Button::OnLeftPress(std::function<void(Button*)> listener) {
+	listenersLeft.push_back(listener);
+	return this;
+}
+
+Button *Button::OnRightPress(std::function<void(Button*)> listener) {
+	listenersRight.push_back(listener);
+	return this;
+}
+
+bool Button::isHovered(Mouse *mouse, Vector2 screenBounds) {
+	double mouseX = mouse->X() / 512.0 + screenBounds.x - 1.0;
+	double mouseY = -(mouse->Y() / 512.0 + screenBounds.y - 1.0);
+
+	return mouseX >= (x - 0.005) && mouseX <= (x + 0.005) + width && mouseY <= (y + 0.005) && mouseY >= (y - 0.005) - height;
+}
+
+void Button::update(Mouse *mouse, Vector2 screenBounds) {
+	pressed = isHovered(mouse, screenBounds) && (mouse->Left() || mouse->Right());
+
+	if (isHovered(mouse, screenBounds) && mouse->JustLeft()) {
+		press();
+	}
+
+	if (isHovered(mouse, screenBounds) && mouse->JustRight()) {
+		pressRight();
+	}
+}
 
 void Button::draw(Mouse *mouse, Vector2 screenBounds) {
 	Draw::color(1.0, 1.0, 1.0);
@@ -54,94 +78,39 @@ void Button::draw(Mouse *mouse, Vector2 screenBounds) {
 	font->writeCentred(text, x - screenBounds.x + (width * 0.5), y + height * -0.5 + screenBounds.y + 0.003, height - 0.01, CENTRE_XY);
 }
 
-void MenuItems::reset() {
-	if (std::find(rooms.begin(), rooms.end(), offscreenDen) != rooms.end()) {
-		offscreenDen = nullptr;
-	}
-	
-	for (Room *room : rooms) {
-		delete room;
-	}
-	rooms.clear();
-	for (Connection *connection : connections) delete connection;
-	connections.clear();
-	subregions.clear();
-	if (offscreenDen != nullptr) delete offscreenDen;
-	offscreenDen = nullptr;
-	extraProperties = "";
-	extraWorld = "";
-	exportDirectory = "";
-	worldAcronym = "";
-	selectedRooms.clear();
-	roomPossibleSelect = nullptr;
-	selectingState = 0;
+void Button::Text(const std::string text) {
+	this->text = text;
+	width = font->getTextWidth(text, height - 0.01) + 0.02;
 }
 
-void MenuItems::importWorldFile(std::filesystem::path path) {
-	RecentFiles::addPath(path);
-	
-	reset();
+std::string Button::Text() const { return text; }
 
-	exportDirectory = path.parent_path();
-	worldAcronym = toLower(path.filename().string());
-	worldAcronym = worldAcronym.substr(worldAcronym.find_last_of('_') + 1, worldAcronym.find_last_of('.') - worldAcronym.find_last_of('_') - 1);
-	
-	Logger::log("Opening world ", worldAcronym);
-	
-	std::filesystem::path roomsPath = findDirectoryCaseInsensitive(exportDirectory.parent_path().string(), worldAcronym + "-rooms");
-	if (roomsPath.empty()) {
-		roomsDirectory = "";
-		FailureController::fails.push_back("Cannot find rooms directory!");
-	} else {
-		roomsDirectory = roomsPath.filename().string();
-	}
-	
-	std::filesystem::path mapFilePath = findFileCaseInsensitive(exportDirectory.string(), "map_" + worldAcronym + ".txt");
-	
-	std::string propertiesFilePath = findFileCaseInsensitive(exportDirectory.string(), "properties.txt");
-	
-	if (std::filesystem::exists(propertiesFilePath)) {
-		Logger::log("Found properties file, loading subregions");
-	
-		parseProperties(propertiesFilePath);
-	}
-	
-	if (std::filesystem::exists(mapFilePath)) {
-		Logger::log("Loading map");
-	
-		parseMap(mapFilePath, exportDirectory);
-	} else {
-		Logger::log("Map file not found, loading world file");
-	}
-	
-	Logger::log("Loading world");
-	parseWorld(path, exportDirectory);
-	
-	Logger::log("Loading extra room data");
-	
-	for (Room *room : rooms) {
-		if (room->isOffscreen()) continue;
-	
-		for (auto x : roomAttractiveness) {
-			if (x.first != room->roomName) continue;
-			
-			room->data.attractiveness = x.second;
-			break;
-		}
-		loadExtraRoomData(findFileCaseInsensitive((exportDirectory.parent_path() / roomsDirectory).string(), room->roomName + "_settings.txt"), room->data);
-	}
-	
-	Logger::log("Extra room data - loaded");
-	
-	if (FailureController::fails.size() > 0) {
-		std::string fails = "";
-		for (std::string fail : FailureController::fails) {
-			fails += fail + "\n";
-		}
-		Popups::addPopup(new InfoPopup(window, fails));
-		FailureController::fails.clear();
+void Button::X(const double x) {
+	this->x = x;
+}
+
+Button &Button::Darken(bool newDarken) {
+	darken = newDarken;
+
+	return *this;
+}
+
+const double Button::Width() const {
+	return width;
+}
+
+void Button::press() {
+	for (const auto &listener : listenersLeft) {
+		listener(this);
 	}
 }
+
+void Button::pressRight() {
+	for (const auto &listener : listenersRight) {
+		listener(this);
+	}
+}
+
 
 Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 	std::string fromRoom = fromFile.filename().string();
@@ -158,9 +127,9 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 		bool initial = Settings::getSetting<bool>(Settings::Setting::WarnMissingImages);
 		Settings::settings[Settings::Setting::WarnMissingImages] = false;
 		Room *room = new Room(fromFile.string(), toRoom);
-		room->Position(cameraOffset);
+		room->position = EditorState::cameraOffset;
 		room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
-		rooms.push_back(room);
+		EditorState::rooms.push_back(room);
 		Settings::settings[Settings::Setting::WarnMissingImages] = initial;
 		
 		for (int i = 0; i < room->Images(); i++) {
@@ -178,10 +147,33 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 	}
 }
 
+
+
+void MenuItems::loadTextures() {
+	std::string texturePath = BASE_PATH + "assets/themes/" + currentThemeName + "/";
+
+	textureButtonNormal = loadTexture(texturePath + "ButtonNormal.png");
+	textureButtonNormalHover = loadTexture(texturePath + "ButtonNormalHover.png");
+	textureButtonPress = loadTexture(texturePath + "ButtonPress.png");
+	textureButtonPressHover = loadTexture(texturePath + "ButtonPressHover.png");
+	textureBar = loadTexture(texturePath + "Bar.png");
+}
+
+Button &MenuItems::addButton(std::string text) {
+	double x = currentButtonX;
+	double width = Fonts::rainworld->getTextWidth(text, 0.03) + 0.02;
+
+	currentButtonX += width + 0.04;
+	Button *button = new Button(text, x, -0.01, width, 0.04, Fonts::rainworld);
+	buttons.push_back(button);
+
+	return *button;
+}
+
 void MenuItems::init(Window *window) {
 	MenuItems::window = window;
 	MenuItems::loadTextures();
-	worldAcronym = "";
+	EditorState::region.acronym = "";
 
 	addButton("New").OnLeftPress(
 		[window](Button *button) {
@@ -191,7 +183,7 @@ void MenuItems::init(Window *window) {
 
 	addButton("Add Room").OnLeftPress(
 		[window](Button *button) {
-			if (worldAcronym == "") {
+			if (EditorState::region.acronym == "") {
 				Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore adding rooms."));
 				return;
 			}
@@ -208,56 +200,56 @@ void MenuItems::init(Window *window) {
 						if (acronym == "gates") {
 							std::vector<std::string> names = split(roomFilePath.filename().string(), '_');
 							names[2] = names[2].substr(0, names[2].find('.'));
-							if (toLower(names[1]) == worldAcronym || toLower(names[2]) == worldAcronym) {
+							if (toLower(names[1]) == EditorState::region.acronym || toLower(names[2]) == EditorState::region.acronym) {
 								std::string roomName = names[0].substr(0, names[0].find_last_of('.')); // Remove .txt
 		
 								Room *room = new Room(roomFilePath.string(), roomName);
-								room->Position(cameraOffset);
+								room->position = EditorState::cameraOffset;
 								room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
-								rooms.push_back(room);
+								EditorState::rooms.push_back(room);
 							} else {
 								Popups::addPopup((new ConfirmPopup(window, "Change which acronym?"))
 								->OkayText(toUpper(names[2]))
 								->OnOkay([names, roomFilePath, &window]() {
-									std::string roomPath = "gate_" + worldAcronym + "_" + names[1] + ".txt";
+									std::string roomPath = "gate_" + EditorState::region.acronym + "_" + names[1] + ".txt";
 
-									copyRoom(roomFilePath, roomFilePath.parent_path() / roomPath)->Tag("GATE");
+									copyRoom(roomFilePath, roomFilePath.parent_path() / roomPath)->SetTag("GATE");
 								})
 								->CancelText(toUpper(names[1]))
 								->OnCancel([names, roomFilePath, &window]() {
-									std::string roomPath = "gate_" + names[2] + "_" + worldAcronym + ".txt";
+									std::string roomPath = "gate_" + names[2] + "_" + EditorState::region.acronym + ".txt";
 
-									copyRoom(roomFilePath, roomFilePath.parent_path() / roomPath)->Tag("GATE");
+									copyRoom(roomFilePath, roomFilePath.parent_path() / roomPath)->SetTag("GATE");
 								}));
 							}
 						} else {
-							if (acronym == worldAcronym || exportDirectory.empty()) {
+							if (acronym == EditorState::region.acronym || EditorState::region.exportDirectory.empty()) {
 								std::string roomName = roomFilePath.filename().string();
 								roomName = roomName.substr(0, roomName.find_last_of('.')); // Remove .txt
 		
 								Room *room = new Room(roomFilePath.string(), roomName);
-								room->Position(cameraOffset);
+								room->position = EditorState::cameraOffset;
 								room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
-								rooms.push_back(room);
+								EditorState::rooms.push_back(room);
 							} else {
-								Popups::addPopup((new ConfirmPopup(window, "Copy room to " + worldAcronym + "-rooms?"))
+								Popups::addPopup((new ConfirmPopup(window, "Copy room to " + EditorState::region.acronym + "-rooms?"))
 								->CancelText("Just Add")
 								->OnCancel([roomFilePath]() {
 									std::string roomName = roomFilePath.filename().string();
 									roomName = roomName.substr(0, roomName.find_last_of('.')); // Remove .txt
 			
 									Room *room = new Room(roomFilePath.string(), roomName);
-									room->Position(cameraOffset);
+									room->position = EditorState::cameraOffset;
 									room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
-									rooms.push_back(room);
+									EditorState::rooms.push_back(room);
 								})
 								->OkayText("Yes")
 								->OnOkay([roomFilePath, &window]() {
 									std::string roomPath = roomFilePath.filename().string();
-									roomPath = worldAcronym + roomPath.substr(roomPath.find('_'));
+									roomPath = EditorState::region.acronym + roomPath.substr(roomPath.find('_'));
 
-									std::filesystem::path output = exportDirectory;
-									output = output.parent_path() / roomsDirectory;
+									std::filesystem::path output = EditorState::region.exportDirectory;
+									output = output.parent_path() / EditorState::region.roomsDirectory;
 	
 									copyRoom(roomFilePath, output / roomPath);
 								}));
@@ -277,7 +269,7 @@ void MenuItems::init(Window *window) {
 
 					std::filesystem::path path = *pathStrings.begin();
 
-					MenuItems::importWorldFile(path);
+					WorldParser::importWorldFile(path);
 				}
 			));
 		}
@@ -285,14 +277,14 @@ void MenuItems::init(Window *window) {
 
 	addButton("Export").OnLeftPress(
 		[window](Button *button) {
-			if (exportDirectory.string().length() > 0) {
-				exportMapFile();
-				exportWorldFile();
-				exportImageFile(exportDirectory / ("map_" + worldAcronym + ".png"), exportDirectory / ("map_" + worldAcronym + "_2.png"));
-				exportPropertiesFile(exportDirectory / "properties.txt");
+			if (EditorState::region.exportDirectory.string().length() > 0) {
+				WorldExporter::exportMapFile();
+				WorldExporter::exportWorldFile();
+				WorldExporter::exportImageFile(EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + ".png"), EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + "_2.png"));
+				WorldExporter::exportPropertiesFile(EditorState::region.exportDirectory / "properties.txt");
 				Popups::addPopup(new InfoPopup(window, "Exported successfully!"));
 			} else {
-				if (worldAcronym == "") {
+				if (EditorState::region.acronym == "") {
 					Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore exporting."));
 					return;
 				}
@@ -301,12 +293,12 @@ void MenuItems::init(Window *window) {
 					[window](std::set<std::string> pathStrings) {
 						if (pathStrings.empty()) return;
 
-						exportDirectory = *pathStrings.begin();
+						EditorState::region.exportDirectory = *pathStrings.begin();
 
-						exportMapFile();
-						exportWorldFile();
-						exportImageFile(exportDirectory / ("map_" + worldAcronym + ".png"), exportDirectory / ("map_" + worldAcronym + "_2.png"));
-						exportPropertiesFile(exportDirectory / "properties.txt");
+						WorldExporter::exportMapFile();
+						WorldExporter::exportWorldFile();
+						WorldExporter::exportImageFile(EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + ".png"), EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + "_2.png"));
+						WorldExporter::exportPropertiesFile(EditorState::region.exportDirectory / "properties.txt");
 						Popups::addPopup(new InfoPopup(window, "Exported successfully!"));
 					}
 				));
@@ -316,11 +308,11 @@ void MenuItems::init(Window *window) {
 
 	addButton("No Colours").OnLeftPress(
 		[window](Button *button) {
-			::roomColours = (::roomColours + 1) % 3;
+			EditorState::roomColours = (EditorState::roomColours + 1) % 3;
 
-			if (::roomColours == 0) {
+			if (EditorState::roomColours == 0) {
 				button->Text("No Colours");
-			} else if (::roomColours == 1) {
+			} else if (EditorState::roomColours == 1) {
 				button->Text("Layer Colours");
 			} else {
 				button->Text("Subregion Colours");
@@ -333,8 +325,8 @@ void MenuItems::init(Window *window) {
 	addButton("1")
 	.OnLeftPress(
 		[window](Button *button) {
-			visibleLayers[LAYER_1] = !visibleLayers[LAYER_1];
-			button->Darken(!visibleLayers[LAYER_1]);
+			EditorState::visibleLayers[LAYER_1] = !EditorState::visibleLayers[LAYER_1];
+			button->Darken(!EditorState::visibleLayers[LAYER_1]);
 		}
 	)
 	->OnRightPress(
@@ -347,8 +339,8 @@ void MenuItems::init(Window *window) {
 	addButton("2")
 	.OnLeftPress(
 		[window](Button *button) {
-			visibleLayers[LAYER_2] = !visibleLayers[LAYER_2];
-			button->Darken(!visibleLayers[LAYER_2]);
+			EditorState::visibleLayers[LAYER_2] = !EditorState::visibleLayers[LAYER_2];
+			button->Darken(!EditorState::visibleLayers[LAYER_2]);
 		}
 	)
 	->OnRightPress(
@@ -361,8 +353,8 @@ void MenuItems::init(Window *window) {
 	addButton("3")
 	.OnLeftPress(
 		[window](Button *button) {
-			visibleLayers[LAYER_3] = !visibleLayers[LAYER_3];
-			button->Darken(!visibleLayers[LAYER_3]);
+			EditorState::visibleLayers[LAYER_3] = !EditorState::visibleLayers[LAYER_3];
+			button->Darken(!EditorState::visibleLayers[LAYER_3]);
 		}
 	)
 	->OnRightPress(
@@ -375,25 +367,25 @@ void MenuItems::init(Window *window) {
 	addButton("Dev Items: Hidden")
 	.OnLeftPress(
 		[window](Button *button) {
-			visibleDevItems = !visibleDevItems;
-			button->Text(visibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden");
+			EditorState::visibleDevItems = !EditorState::visibleDevItems;
+			button->Text(EditorState::visibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden");
 		}
 	);
 
 	addButton("Refresh Region").OnLeftPress(
 		[window](Button *button) {
-			if (worldAcronym.empty() || exportDirectory.empty()) {
+			if (EditorState::region.acronym.empty() || EditorState::region.exportDirectory.empty()) {
 				Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore refreshing"));
 				return;
 			}
 			
-			MenuItems::importWorldFile(findFileCaseInsensitive(exportDirectory.string(), "world_" + worldAcronym + ".txt"));
+			WorldParser::importWorldFile(findFileCaseInsensitive(EditorState::region.exportDirectory.string(), "world_" + EditorState::region.acronym + ".txt"));
 		}
 	);
 
 	// addButton("Change Region Acronym").OnLeftPress(
 	//     [window](Button *button) {
-	//         if (worldAcronym == "") {
+	//         if (EditorState::region.acronym == "") {
 	//             Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore changing the acronym."));
 	//             return;
 	//         }
@@ -401,4 +393,46 @@ void MenuItems::init(Window *window) {
 	//         Popups::addPopup(new ChangeAcronymPopup(window));
 	//     }
 	// );
+}
+
+void MenuItems::cleanup() {
+	for (Button *button : buttons) {
+		delete button;
+	}
+
+	buttons.clear();
+}
+
+void MenuItems::draw(Mouse *mouse, Vector2 screenBounds) {
+	Draw::color(1.0, 1.0, 1.0);
+
+	Draw::useTexture(MenuItems::textureBar);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	Draw::begin(Draw::QUADS);
+	Draw::texCoord(-screenBounds.x, 0.0f); Draw::vertex(-screenBounds.x, screenBounds.y);
+	Draw::texCoord( screenBounds.x, 0.0f); Draw::vertex( screenBounds.x, screenBounds.y);
+	Draw::texCoord( screenBounds.x, 1.0f); Draw::vertex( screenBounds.x, screenBounds.y - 0.09f);
+	Draw::texCoord(-screenBounds.x, 1.0f); Draw::vertex(-screenBounds.x, screenBounds.y - 0.09f);
+	Draw::end();
+	glDisable(GL_BLEND);
+	Draw::useTexture(0);
+
+	glLineWidth(1);
+
+	for (Button *button : buttons) {
+		button->update(mouse, screenBounds);
+		button->draw(mouse, screenBounds);
+	}
+}
+
+void MenuItems::repositionButtons() {
+	currentButtonX = 0.01;
+
+	for (Button *button : buttons) {
+		button->X(currentButtonX);
+
+		currentButtonX += button->Width() + 0.04;
+	}
 }

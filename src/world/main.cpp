@@ -34,29 +34,12 @@
 #include "MenuItems.hpp"
 #include "DebugData.hpp"
 #include "RecentFiles.hpp"
-#include "WorldGlobals.hpp"
 
 #define TEXTURE_PATH (BASE_PATH + "assets/")
 
 #define clamp(x, a, b) x >= b ? b : (x <= a ? a : x)
 #define min(a, b) (a < b) ? a : b
 #define max(a, b) (a > b) ? a : b
-
-OffscreenRoom* offscreenDen = nullptr;
-std::vector<Room*> rooms;
-std::vector<Connection*> connections;
-std::vector<std::string> subregions;
-
-Vector2 cameraOffset = Vector2(0.0, 0.0);
-double cameraScale = 32.0;
-double selectorScale = 1.0;
-
-std::string ROOM_TAGS[9] = { "SHELTER", "ANCIENTSHELTER", "GATE", "SWARMROOM", "PERF_HEAVY", "SCAVOUTPOST", "SCAVTRADER", "NOTRACKERS", "ARENA" };
-std::string ROOM_TAG_NAMES[9] = { "Shelter", "Ancient Shelter", "Gate", "Swarm Room", "Performance Heavy", "Scavenger Outpost", "Scavenger Trader", "No Trackers", "Arena (MSC)" };
-
-int roomColours = 0;
-bool visibleLayers[] = { true, true, true };
-bool visibleDevItems = false;
 
 int transitionLayer(int layer) {
 	return (layer + 1) % 3;
@@ -76,18 +59,15 @@ bool cameraPanningBlocked = false;
 Vector2 cameraPanStartMouse = Vector2(0.0f, 0.0f);
 Vector2 cameraPanStart = Vector2(0.0f, 0.0f);
 Vector2 cameraPanTo = Vector2(0.0f, 0.0f);
-double cameraScaleTo = cameraScale;
+double cameraScaleTo = EditorState::cameraScale;
 
 Room *holdingRoom = nullptr;
 Popup *holdingPopup = nullptr;
 Vector2 holdingStart = Vector2(0.0f, 0.0f);
 int holdingType = 0;
 
-int selectingState = 0;
-Room *roomPossibleSelect = nullptr;
 Vector2 selectionStart;
 Vector2 selectionEnd;
-std::set<Room*> selectedRooms;
 int roomSnap = ROOM_SNAP_TILE;
 
 std::string line;
@@ -105,8 +85,20 @@ Vector2 screenMouse;
 bool mouseMoved;
 double lineSize;
 
-Mouse *mouse = nullptr;
-Window *window = nullptr;
+bool justPressed(int key) {
+	if (EditorState::window->keyPressed(key)) {
+		if (previousKeys.find(key) == previousKeys.end()) {
+			previousKeys.insert(key);
+			return true;
+		}
+		
+		previousKeys.insert(key);
+	} else {
+		previousKeys.erase(key);
+	}
+
+	return false;
+}
 
 void updateCamera() {
 	bool isHoveringPopup = false;
@@ -122,38 +114,38 @@ void updateCamera() {
 	/// Update Camera
 
 	//// Zooming
-	double scrollY = -window->getMouseScrollY();
+	double scrollY = -EditorState::window->getMouseScrollY();
 	if (isHoveringPopup) scrollY = 0.0;
 
 	if (scrollY < -10.0) scrollY = -10.0;
 	double zoom = std::pow(1.25, scrollY);
 
 	Vector2 previousWorldMouse = Vector2(
-		screenMouse.x * cameraScale + cameraOffset.x,
-		screenMouse.y * cameraScale + cameraOffset.y
+		screenMouse.x * EditorState::cameraScale + EditorState::cameraOffset.x,
+		screenMouse.y * EditorState::cameraScale + EditorState::cameraOffset.y
 	);
 
 	cameraScaleTo *= zoom;
-	cameraScale += (cameraScaleTo - cameraScale) * Settings::getSetting<double>(Settings::Setting::CameraZoomSpeed);
+	EditorState::cameraScale += (cameraScaleTo - EditorState::cameraScale) * Settings::getSetting<double>(Settings::Setting::CameraZoomSpeed);
 
 	worldMouse = Vector2(
-		screenMouse.x * cameraScale + cameraOffset.x,
-		screenMouse.y * cameraScale + cameraOffset.y
+		screenMouse.x * EditorState::cameraScale + EditorState::cameraOffset.x,
+		screenMouse.y * EditorState::cameraScale + EditorState::cameraOffset.y
 	);
 
-	cameraOffset.x += previousWorldMouse.x - worldMouse.x;
-	cameraOffset.y += previousWorldMouse.y - worldMouse.y;
+	EditorState::cameraOffset.x += previousWorldMouse.x - worldMouse.x;
+	EditorState::cameraOffset.y += previousWorldMouse.y - worldMouse.y;
 	cameraPanTo.x += previousWorldMouse.x - worldMouse.x;
 	cameraPanTo.y += previousWorldMouse.y - worldMouse.y;
 
 	//// Panning
-	if (mouse->Middle()) {
+	if (EditorState::mouse->Middle()) {
 		if (!cameraPanningBlocked && !cameraPanning) {
 			if (isHoveringPopup) cameraPanningBlocked = true;
 
 			if (!cameraPanningBlocked) {
-				cameraPanStart.x = cameraOffset.x;
-				cameraPanStart.y = cameraOffset.y;
+				cameraPanStart.x = EditorState::cameraOffset.x;
+				cameraPanStart.y = EditorState::cameraOffset.y;
 				cameraPanStartMouse.x = globalMouse.x;
 				cameraPanStartMouse.y = globalMouse.y;
 				cameraPanning = true;
@@ -161,20 +153,20 @@ void updateCamera() {
 		}
 
 		if (cameraPanning && !cameraPanningBlocked) {
-			cameraPanTo.x = cameraPanStart.x + cameraScale * (cameraPanStartMouse.x - globalMouse.x) / 512.0;
-			cameraPanTo.y = cameraPanStart.y + cameraScale * (cameraPanStartMouse.y - globalMouse.y) / -512.0;
+			cameraPanTo.x = cameraPanStart.x + EditorState::cameraScale * (cameraPanStartMouse.x - globalMouse.x) / 512.0;
+			cameraPanTo.y = cameraPanStart.y + EditorState::cameraScale * (cameraPanStartMouse.y - globalMouse.y) / -512.0;
 		}
 	} else {
 		cameraPanning = false;
 		cameraPanningBlocked = false;
 	}
 
-	cameraOffset.x += (cameraPanTo.x - cameraOffset.x) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
-	cameraOffset.y += (cameraPanTo.y - cameraOffset.y) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
+	EditorState::cameraOffset.x += (cameraPanTo.x - EditorState::cameraOffset.x) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
+	EditorState::cameraOffset.y += (cameraPanTo.y - EditorState::cameraOffset.y) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
 }
 
 void updateOriginalControls() {
-	if (mouse->Left()) {
+	if (EditorState::mouse->Left()) {
 		if (!leftMouseDown) {
 			for (Popup *popup : Popups::popups) {
 				Rect bounds = popup->Bounds();
@@ -185,63 +177,63 @@ void updateOriginalControls() {
 						holdingPopup = popup;
 						holdingStart = screenMouse;
 					}
-					selectingState = 2;
+					EditorState::selectingState = 2;
 					break;
 				}
 			}
 
-			if (selectingState == 0) {
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+			if (EditorState::selectingState == 0) {
+				for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 					Room *room = *it;
-					if (!visibleLayers[room->layer]) continue;
+					if (!EditorState::visibleLayers[room->layer]) continue;
 
 					if (room->inside(worldMouse)) {
 						holdingRoom = room;
 						holdingStart = worldMouse;
-						roomPossibleSelect = room;
-						selectingState = 3;
+						EditorState::roomPossibleSelect = room;
+						EditorState::selectingState = 3;
 						break;
 					}
 				}
 			}
 
-			if (selectingState == 0) {
-				if (window->modifierPressed(GLFW_MOD_SHIFT)) {
-					selectingState = 1;
+			if (EditorState::selectingState == 0) {
+				if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT)) {
+					EditorState::selectingState = 1;
 					selectionStart = worldMouse;
 					selectionEnd = worldMouse;
-					if (!window->modifierPressed(GLFW_MOD_CONTROL)) selectedRooms.clear();
+					if (!EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) EditorState::selectedRooms.clear();
 				} else {
-					selectingState = 5;
+					EditorState::selectingState = 5;
 					selectionStart = globalMouse;
 					selectionEnd = globalMouse;
 				}
 			}
 		} else {
-			if (selectingState == 3 && mouseMoved || selectingState == 4) {
-				if (selectingState == 3) {
-					if (window->modifierPressed(GLFW_MOD_SHIFT) || window->modifierPressed(GLFW_MOD_CONTROL)) {
-						selectedRooms.insert(roomPossibleSelect);
+			if (EditorState::selectingState == 3 && mouseMoved || EditorState::selectingState == 4) {
+				if (EditorState::selectingState == 3) {
+					if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT) || EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) {
+						EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 					} else {
-						if (selectedRooms.find(holdingRoom) == selectedRooms.end()) {
-							selectedRooms.clear();
-							selectedRooms.insert(roomPossibleSelect);
+						if (EditorState::selectedRooms.find(holdingRoom) == EditorState::selectedRooms.end()) {
+							EditorState::selectedRooms.clear();
+							EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 						}
 					}
-					rooms.erase(std::remove(rooms.begin(), rooms.end(), roomPossibleSelect), rooms.end());
-					rooms.push_back(roomPossibleSelect);
-					selectingState = 4;
+					EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), EditorState::roomPossibleSelect), EditorState::rooms.end());
+					EditorState::rooms.push_back(EditorState::roomPossibleSelect);
+					EditorState::selectingState = 4;
 				}
 
 				Vector2 offset = (worldMouse - holdingStart);
 				if (roomSnap == ROOM_SNAP_TILE) offset.round();
 
-				for (Room *room2 : selectedRooms) {
+				for (Room *room2 : EditorState::selectedRooms) {
 					if (roomSnap == ROOM_SNAP_TILE) {
-						room2->Position().round();
+						room2->position.round();
 					}
 
-					room2->Position().add(offset);
+					room2->position.add(offset);
 				}
 				holdingStart = holdingStart + offset;
 			}
@@ -251,15 +243,15 @@ void updateOriginalControls() {
 				holdingStart = screenMouse;
 			}
 
-			if (selectingState == 1) {
+			if (EditorState::selectingState == 1) {
 				selectionEnd = worldMouse;
 			}
 
-			if (selectingState == 5) {
+			if (EditorState::selectingState == 5) {
 				selectionEnd = globalMouse;
 
-				cameraPanTo.x += (selectionStart.x - selectionEnd.x) * cameraScale / 512;
-				cameraPanTo.y += (selectionStart.y - selectionEnd.y) * cameraScale / -512;
+				cameraPanTo.x += (selectionStart.x - selectionEnd.x) * EditorState::cameraScale / 512;
+				cameraPanTo.y += (selectionStart.y - selectionEnd.y) * EditorState::cameraScale / -512;
 
 				selectionStart = selectionEnd;
 			}
@@ -267,24 +259,23 @@ void updateOriginalControls() {
 
 		leftMouseDown = true;
 	} else {
-		if (selectingState == 3) {
-			rooms.erase(std::remove(rooms.begin(), rooms.end(), roomPossibleSelect), rooms.end());
-			rooms.push_back(roomPossibleSelect);
-			if (window->modifierPressed(GLFW_MOD_SHIFT) || window->modifierPressed(GLFW_MOD_CONTROL)) {
-				if (selectedRooms.find(roomPossibleSelect) != selectedRooms.end()) {
-					selectedRooms.erase(roomPossibleSelect);
+		if (EditorState::selectingState == 3) {
+			EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), EditorState::roomPossibleSelect), EditorState::rooms.end());
+			EditorState::rooms.push_back(EditorState::roomPossibleSelect);
+			if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT) || EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) {
+				if (EditorState::selectedRooms.find(EditorState::roomPossibleSelect) != EditorState::selectedRooms.end()) {
+					EditorState::selectedRooms.erase(EditorState::roomPossibleSelect);
 				} else {
-					selectedRooms.insert(roomPossibleSelect);
+					EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 				}
 			} else {
-				selectedRooms.clear();
-				selectedRooms.insert(roomPossibleSelect);
+				EditorState::selectedRooms.clear();
+				EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 			}
 			holdingType = 1;
 			if (roomSnap == ROOM_SNAP_TILE) {
-				for (Room *room2 : selectedRooms) {
-					room2->Position().x = round(room2->Position().x);
-					room2->Position().y = round(room2->Position().y);
+				for (Room *room2 : EditorState::selectedRooms) {
+					room2->position.round();
 				}
 			}
 		}
@@ -293,17 +284,17 @@ void updateOriginalControls() {
 		holdingRoom = nullptr;
 		holdingPopup = nullptr;
 
-		if (selectingState == 1) {
-			for (Room *room : rooms) {
-				if (room->intersects(selectionStart, selectionEnd)) selectedRooms.insert(room);
+		if (EditorState::selectingState == 1) {
+			for (Room *room : EditorState::rooms) {
+				if (room->intersects(selectionStart, selectionEnd)) EditorState::selectedRooms.insert(room);
 			}
 		}
-		selectingState = 0;
+		EditorState::selectingState = 0;
 	}
 }
 
 void updateFloodForgeControls() {
-	if (mouse->Left()) {
+	if (EditorState::mouse->Left()) {
 		if (!leftMouseDown) {
 			for (Popup *popup : Popups::popups) {
 				Rect bounds = popup->Bounds();
@@ -314,57 +305,59 @@ void updateFloodForgeControls() {
 						holdingPopup = popup;
 						holdingStart = screenMouse;
 					}
-					selectingState = 2;
+					EditorState::selectingState = 2;
 					break;
 				}
 			}
 
-			if (selectingState == 0) {
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+			if (EditorState::selectingState == 0) {
+				for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 					Room *room = *it;
-					if (!visibleLayers[room->layer]) continue;
+					if (!EditorState::visibleLayers[room->layer]) continue;
 
 					if (room->inside(worldMouse)) {
 						holdingRoom = room;
 						holdingStart = worldMouse;
-						roomPossibleSelect = room;
-						selectingState = 3;
+						EditorState::roomPossibleSelect = room;
+						EditorState::selectingState = 3;
 						break;
 					}
 				}
 			}
 
-			if (selectingState == 0) {
-				selectingState = 1;
+			if (EditorState::selectingState == 0) {
+				EditorState::selectingState = 1;
 				selectionStart = worldMouse;
 				selectionEnd = worldMouse;
-				if (!window->modifierPressed(GLFW_MOD_SHIFT) && !window->modifierPressed(GLFW_MOD_CONTROL)) selectedRooms.clear();
+				if (!EditorState::window->modifierPressed(GLFW_MOD_SHIFT) && !EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) {
+					EditorState::selectedRooms.clear();
+				}
 			}
 		} else {
-			if (selectingState == 3 && mouseMoved || selectingState == 4) {
-				if (selectingState == 3) {
-					if (window->modifierPressed(GLFW_MOD_SHIFT) || window->modifierPressed(GLFW_MOD_CONTROL)) {
-						selectedRooms.insert(roomPossibleSelect);
+			if (EditorState::selectingState == 3 && mouseMoved || EditorState::selectingState == 4) {
+				if (EditorState::selectingState == 3) {
+					if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT) || EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) {
+						EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 					} else {
-						if (selectedRooms.find(holdingRoom) == selectedRooms.end()) {
-							selectedRooms.clear();
-							selectedRooms.insert(roomPossibleSelect);
+						if (EditorState::selectedRooms.find(holdingRoom) == EditorState::selectedRooms.end()) {
+							EditorState::selectedRooms.clear();
+							EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 						}
 					}
-					rooms.erase(std::remove(rooms.begin(), rooms.end(), roomPossibleSelect), rooms.end());
-					rooms.push_back(roomPossibleSelect);
-					selectingState = 4;
+					EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), EditorState::roomPossibleSelect), EditorState::rooms.end());
+					EditorState::rooms.push_back(EditorState::roomPossibleSelect);
+					EditorState::selectingState = 4;
 				}
 
 				Vector2 offset = (worldMouse - holdingStart);
 				if (roomSnap == ROOM_SNAP_TILE) offset.round();
 
-				for (Room *room2 : selectedRooms) {
+				for (Room *room2 : EditorState::selectedRooms) {
 					if (roomSnap == ROOM_SNAP_TILE) {
-						room2->Position().round();
+						room2->position.round();
 					}
 
-					room2->Position().add(offset);
+					room2->position += offset;
 				}
 				holdingStart = holdingStart + offset;
 			}
@@ -374,7 +367,7 @@ void updateFloodForgeControls() {
 				holdingStart = screenMouse;
 			}
 
-			if (selectingState == 1) {
+			if (EditorState::selectingState == 1) {
 				selectionEnd = worldMouse;
 				// selectedRooms.clear();
 			}
@@ -382,24 +375,23 @@ void updateFloodForgeControls() {
 
 		leftMouseDown = true;
 	} else {
-		if (selectingState == 3) {
-			rooms.erase(std::remove(rooms.begin(), rooms.end(), roomPossibleSelect), rooms.end());
-			rooms.push_back(roomPossibleSelect);
-			if (window->modifierPressed(GLFW_MOD_SHIFT) || window->modifierPressed(GLFW_MOD_CONTROL)) {
-				if (selectedRooms.find(roomPossibleSelect) != selectedRooms.end()) {
-					selectedRooms.erase(roomPossibleSelect);
+		if (EditorState::selectingState == 3) {
+			EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), EditorState::roomPossibleSelect), EditorState::rooms.end());
+			EditorState::rooms.push_back(EditorState::roomPossibleSelect);
+			if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT) || EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) {
+				if (EditorState::selectedRooms.find(EditorState::roomPossibleSelect) != EditorState::selectedRooms.end()) {
+					EditorState::selectedRooms.erase(EditorState::roomPossibleSelect);
 				} else {
-					selectedRooms.insert(roomPossibleSelect);
+					EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 				}
 			} else {
-				selectedRooms.clear();
-				selectedRooms.insert(roomPossibleSelect);
+				EditorState::selectedRooms.clear();
+				EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 			}
 			holdingType = 1;
 			if (roomSnap == ROOM_SNAP_TILE) {
-				for (Room *room2 : selectedRooms) {
-					room2->Position().x = round(room2->Position().x);
-					room2->Position().y = round(room2->Position().y);
+				for (Room *room2 : EditorState::selectedRooms) {
+					room2->position.round();
 				}
 			}
 		}
@@ -408,71 +400,55 @@ void updateFloodForgeControls() {
 		holdingRoom = nullptr;
 		holdingPopup = nullptr;
 
-		if (selectingState == 1) {
-			for (Room *room : rooms) {
-				if (room->intersects(selectionStart, selectionEnd)) selectedRooms.insert(room);
+		if (EditorState::selectingState == 1) {
+			for (Room *room : EditorState::rooms) {
+				if (room->intersects(selectionStart, selectionEnd)) EditorState::selectedRooms.insert(room);
 			}
 		}
-		selectingState = 0;
+		EditorState::selectingState = 0;
 	}
 }
 
 void updateMain() {
 	updateCamera();
 
-	selectorScale = Settings::getSetting<bool>(Settings::Setting::SelectorScale) ? cameraScale / 16.0 : 1.0;
+	EditorState::selectorScale = Settings::getSetting<bool>(Settings::Setting::SelectorScale) ? EditorState::cameraScale / 16.0 : 1.0;
 
 	/// Update Inputs
 
-	if (window->modifierPressed(GLFW_MOD_ALT)) {
+	if (EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
 		roomSnap = ROOM_SNAP_NONE;
 	} else {
 		roomSnap = ROOM_SNAP_TILE;
 	}
 
-	if (window->keyPressed(GLFW_KEY_F11)) {
-		if (previousKeys.find(GLFW_KEY_F11) == previousKeys.end()) {
-			window->toggleFullscreen();
-		}
-
-		previousKeys.insert(GLFW_KEY_F11);
-	} else {
-		previousKeys.erase(GLFW_KEY_F11);
+	if (justPressed(GLFW_KEY_F11)) {
+		EditorState::window->toggleFullscreen();
 	}
 
-	if (window->keyPressed(GLFW_KEY_ESCAPE)) {
-		if (previousKeys.find(GLFW_KEY_ESCAPE) == previousKeys.end()) {
-			if (Popups::popups.size() > 0)
-				Popups::popups[0]->reject();
-			else
-				Popups::addPopup((new ConfirmPopup(window, "Exit FloodForge?"))->OnOkay([&]() {
-					window->close();
-				}));
+	if (justPressed(GLFW_KEY_ESCAPE)) {
+		if (Popups::popups.size() > 0) {
+			Popups::popups[0]->reject();
+		} else {
+			Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit FloodForge?"))->OnOkay([&]() {
+				EditorState::window->close();
+			}));
 		}
-
-		previousKeys.insert(GLFW_KEY_ESCAPE);
-	} else {
-		previousKeys.erase(GLFW_KEY_ESCAPE);
 	}
 
-	if (window->keyPressed(GLFW_KEY_ENTER)) {
-		if (previousKeys.find(GLFW_KEY_ENTER) == previousKeys.end()) {
-			if (Popups::popups.size() > 0)
-				Popups::popups[0]->accept();
+	if (justPressed(GLFW_KEY_ENTER)) {
+		if (Popups::popups.size() > 0) {
+			Popups::popups[0]->accept();
 		}
-
-		previousKeys.insert(GLFW_KEY_ENTER);
-	} else {
-		previousKeys.erase(GLFW_KEY_ENTER);
 	}
 
 	//// Connections
 	connectionError = "";
-	if (mouse->Right()) {
+	if (EditorState::mouse->Right()) {
 		Room *hoveringRoom = nullptr;
-		for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+		for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 			Room *room = (*it);
-			if (!visibleLayers[room->layer]) continue;
+			if (!EditorState::visibleLayers[room->layer]) continue;
 
 			if (room->inside(worldMouse)) {
 				hoveringRoom = room;
@@ -484,8 +460,8 @@ void updateMain() {
 
 		if (hoveringRoom != nullptr) {
 			tilePosition = Vector2i(
-				floor(worldMouse.x - hoveringRoom->Position().x),
-				-1 - floor(worldMouse.y - hoveringRoom->Position().y)
+				floor(worldMouse.x - hoveringRoom->position.x),
+				-1 - floor(worldMouse.y - hoveringRoom->position.y)
 			);
 		} else {
 			tilePosition = Vector2i(-1, -1);
@@ -499,7 +475,7 @@ void updateMain() {
 				int connectionId = hoveringRoom->getRoomEntranceId(tilePosition);
 
 				if (connectionId != -1 && !hoveringRoom->ConnectionUsed(connectionId)) {
-					connectionStart = new Vector2(floor(worldMouse.x - hoveringRoom->Position().x) + 0.5 + hoveringRoom->Position().x, floor(worldMouse.y - hoveringRoom->Position().y) + 0.5 + hoveringRoom->Position().y);
+					connectionStart = new Vector2(floor(worldMouse.x - hoveringRoom->position.x) + 0.5 + hoveringRoom->position.x, floor(worldMouse.y - hoveringRoom->position.y) + 0.5 + hoveringRoom->position.y);
 					connectionEnd   = new Vector2(connectionStart);
 					currentConnection = new Connection(hoveringRoom, connectionId, nullptr, 0);
 				}
@@ -514,23 +490,23 @@ void updateMain() {
 			}
 
 			if (connectionId != -1) {
-				connectionEnd->x = floor(worldMouse.x - hoveringRoom->Position().x) + 0.5 + hoveringRoom->Position().x;
-				connectionEnd->y = floor(worldMouse.y - hoveringRoom->Position().y) + 0.5 + hoveringRoom->Position().y;
-				currentConnection->RoomB(hoveringRoom);
-				currentConnection->ConnectionB(connectionId);
+				connectionEnd->x = floor(worldMouse.x - hoveringRoom->position.x) + 0.5 + hoveringRoom->position.x;
+				connectionEnd->y = floor(worldMouse.y - hoveringRoom->position.y) + 0.5 + hoveringRoom->position.y;
+				currentConnection->roomB = hoveringRoom;
+				currentConnection->connectionB = connectionId;
 
-				if (currentConnection->RoomA() == currentConnection->RoomB()) {
+				if (currentConnection->roomA == currentConnection->roomB) {
 					connectionError = "Can't connect to same room";
-				} else if (currentConnection->RoomB() != nullptr && currentConnection->RoomB()->ConnectionUsed(currentConnection->ConnectionB())) {
+				} else if (currentConnection->roomB != nullptr && currentConnection->roomB->ConnectionUsed(currentConnection->connectionB)) {
 					connectionError = "Already connected";
-				} else if (currentConnection->RoomA()->RoomUsed(currentConnection->RoomB()) || currentConnection->RoomB()->RoomUsed(currentConnection->RoomA())) {
+				} else if (currentConnection->roomA->RoomUsed(currentConnection->roomB) || currentConnection->roomB->RoomUsed(currentConnection->roomA)) {
 					connectionError = "Can't connect to room already connected to";
 				}
 			} else {
 				connectionEnd->x = worldMouse.x;
 				connectionEnd->y = worldMouse.y;
-				currentConnection->RoomB(nullptr);
-				currentConnection->ConnectionB(0);
+				currentConnection->roomB = nullptr;
+				currentConnection->connectionB = 0;
 				connectionError = "Needs to connect";
 			}
 		}
@@ -538,21 +514,21 @@ void updateMain() {
 		if (currentConnection != nullptr) {
 			bool valid = true;
 
-			if (currentConnection->RoomA() == currentConnection->RoomB()) valid = false;
-			if (currentConnection->RoomA() == nullptr) valid = false;
-			if (currentConnection->RoomB() == nullptr) valid = false;
+			if (currentConnection->roomA == currentConnection->roomB) valid = false;
+			if (currentConnection->roomA == nullptr) valid = false;
+			if (currentConnection->roomB == nullptr) valid = false;
 
-			if (currentConnection->RoomA() != nullptr && currentConnection->RoomB() != nullptr) {
-				if (currentConnection->RoomA()->ConnectionUsed(currentConnection->ConnectionA())) valid = false;
-				if (currentConnection->RoomB()->ConnectionUsed(currentConnection->ConnectionB())) valid = false;
-				if (currentConnection->RoomA()->RoomUsed(currentConnection->RoomB())) valid = false;
-				if (currentConnection->RoomB()->RoomUsed(currentConnection->RoomA())) valid = false;
+			if (currentConnection->roomA != nullptr && currentConnection->roomB != nullptr) {
+				if (currentConnection->roomA->ConnectionUsed(currentConnection->connectionA)) valid = false;
+				if (currentConnection->roomB->ConnectionUsed(currentConnection->connectionB)) valid = false;
+				if (currentConnection->roomA->RoomUsed(currentConnection->roomB)) valid = false;
+				if (currentConnection->roomB->RoomUsed(currentConnection->roomA)) valid = false;
 			}
 
 			if (valid) {
-				connections.push_back(currentConnection);
-				currentConnection->RoomA()->connect(currentConnection->RoomB(), currentConnection->ConnectionA());
-				currentConnection->RoomB()->connect(currentConnection->RoomA(), currentConnection->ConnectionB());
+				EditorState::connections.push_back(currentConnection);
+				currentConnection->roomA->connect(currentConnection->roomB, currentConnection->connectionA);
+				currentConnection->roomB->connect(currentConnection->roomA, currentConnection->connectionB);
 			} else {
 				delete currentConnection;
 			}
@@ -573,70 +549,89 @@ void updateMain() {
 		updateFloodForgeControls();
 	}
 
-	if (window->keyPressed(GLFW_KEY_I)) {
-		if (previousKeys.find(GLFW_KEY_I) == previousKeys.end()) {
-			for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-				Room *room = *it;
-				if (!visibleLayers[room->layer]) continue;
+	if (justPressed(GLFW_KEY_I)) {
+		for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+			Room *room = *it;
+			if (!EditorState::visibleLayers[room->layer]) continue;
 
-				if (room->inside(worldMouse)) {
-					rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
-					rooms.insert(rooms.begin(), room);
-					break;
-				}
+			if (room->inside(worldMouse)) {
+				EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), room), EditorState::rooms.end());
+				EditorState::rooms.insert(EditorState::rooms.begin(), room);
+				break;
+			}
+		}
+	}
+
+	if (justPressed(GLFW_KEY_X)) {
+		bool deleted = false;
+
+		for (auto it = EditorState::connections.rbegin(); it != EditorState::connections.rend(); it++) {
+			Connection *connection = *it;
+			if (!EditorState::visibleLayers[connection->roomA->layer]) continue;
+			if (!EditorState::visibleLayers[connection->roomB->layer]) continue;
+
+			if (connection->hovered(worldMouse, lineSize)) {
+				EditorState::connections.erase(std::remove(EditorState::connections.begin(), EditorState::connections.end(), connection), EditorState::connections.end());
+
+				connection->roomA->disconnect(connection->roomB, connection->connectionA);
+				connection->roomB->disconnect(connection->roomA, connection->connectionB);
+
+				delete connection;
+
+				deleted = true;
+
+				break;
 			}
 		}
 
-		previousKeys.insert(GLFW_KEY_I);
-	} else {
-		previousKeys.erase(GLFW_KEY_I);
-	}
+		if (!deleted) {
+			Room *hoveredRoom = nullptr;
+			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+				Room *room = *it;
+				if (!EditorState::visibleLayers[room->layer]) continue;
 
-	if (window->keyPressed(GLFW_KEY_X)) {
-		if (previousKeys.find(GLFW_KEY_X) == previousKeys.end()) {
-			bool deleted = false;
-
-			for (auto it = connections.rbegin(); it != connections.rend(); it++) {
-				Connection *connection = *it;
-				if (!visibleLayers[connection->RoomA()->layer]) continue;
-				if (!visibleLayers[connection->RoomB()->layer]) continue;
-
-				if (connection->hovered(worldMouse, lineSize)) {
-					connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
-
-					connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
-					connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
-
-					delete connection;
-
-					deleted = true;
-
+				if (room->inside(worldMouse)) {
+					if (room != EditorState::offscreenDen) hoveredRoom = room;
 					break;
 				}
 			}
 
-			if (!deleted) {
-				Room *hoveredRoom = nullptr;
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = *it;
-					if (!visibleLayers[room->layer]) continue;
+			if (hoveredRoom != nullptr) {
+				if (EditorState::selectedRooms.find(hoveredRoom) != EditorState::selectedRooms.end()) {
+					for (Room *room : EditorState::selectedRooms) {
+						EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), room), EditorState::rooms.end());
 
-					if (room->inside(worldMouse)) {
-						if (room != offscreenDen) hoveredRoom = room;
-						break;
+						EditorState::connections.erase(std::remove_if(EditorState::connections.begin(), EditorState::connections.end(),
+							[room](Connection *connection) {
+								if (connection->roomA == room || connection->roomB == room) {
+									connection->roomA->disconnect(connection->roomB, connection->connectionA);
+									connection->roomB->disconnect(connection->roomA, connection->connectionB);
+
+									delete connection;
+									return true;
+								}
+
+								return false;
+							}
+						), EditorState::connections.end());
+
+						delete room;
 					}
-				}
 
-				if (hoveredRoom != nullptr) {
-					if (selectedRooms.find(hoveredRoom) != selectedRooms.end()) {
-						for (Room *room : selectedRooms) {
-							rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
+					EditorState::selectedRooms.clear();
+				} else {
+					for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+						Room *room = *it;
+						if (!EditorState::visibleLayers[room->layer]) continue;
 
-							connections.erase(std::remove_if(connections.begin(), connections.end(),
+						if (room->inside(worldMouse)) {
+							EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), room), EditorState::rooms.end());
+
+							EditorState::connections.erase(std::remove_if(EditorState::connections.begin(), EditorState::connections.end(),
 								[room](Connection *connection) {
-									if (connection->RoomA() == room || connection->RoomB() == room) {
-										connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
-										connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
+									if (connection->roomA == room || connection->roomB == room) {
+										connection->roomA->disconnect(connection->roomB, connection->connectionA);
+										connection->roomB->disconnect(connection->roomA, connection->connectionB);
 
 										delete connection;
 										return true;
@@ -644,304 +639,231 @@ void updateMain() {
 
 									return false;
 								}
-							), connections.end());
+							), EditorState::connections.end());
 
 							delete room;
-						}
 
-						selectedRooms.clear();
-					} else {
-						for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-							Room *room = *it;
-							if (!visibleLayers[room->layer]) continue;
-
-							if (room->inside(worldMouse)) {
-								rooms.erase(std::remove(rooms.begin(), rooms.end(), room), rooms.end());
-
-								connections.erase(std::remove_if(connections.begin(), connections.end(),
-									[room](Connection *connection) {
-										if (connection->RoomA() == room || connection->RoomB() == room) {
-											connection->RoomA()->disconnect(connection->RoomB(), connection->ConnectionA());
-											connection->RoomB()->disconnect(connection->RoomA(), connection->ConnectionB());
-
-											delete connection;
-											return true;
-										}
-
-										return false;
-									}
-								), connections.end());
-
-								delete room;
-
-								break;
-							}
+							break;
 						}
 					}
 				}
 			}
 		}
-
-		previousKeys.insert(GLFW_KEY_X);
-	} else {
-		previousKeys.erase(GLFW_KEY_X);
 	}
 
-	if (window->keyPressed(GLFW_KEY_S)) {
-		if (previousKeys.find(GLFW_KEY_S) == previousKeys.end()) {
-			if (selectedRooms.size() >= 1) {
-				Popups::addPopup(new SubregionPopup(window, selectedRooms));
-			} else {
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = *it;
-					if (!visibleLayers[room->layer]) continue;
+	if (justPressed(GLFW_KEY_S)) {
+		if (EditorState::selectedRooms.size() >= 1) {
+			Popups::addPopup(new SubregionPopup(EditorState::window, EditorState::selectedRooms));
+		} else {
+			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+				Room *room = *it;
+				if (!EditorState::visibleLayers[room->layer]) continue;
 
-					if (room->inside(worldMouse)) {
-						std::set<Room*> roomGroup;
-						roomGroup.insert(room);
-						Popups::addPopup(new SubregionPopup(window, roomGroup));
+				if (room->inside(worldMouse)) {
+					std::set<Room*> roomGroup;
+					roomGroup.insert(room);
+					Popups::addPopup(new SubregionPopup(EditorState::window, roomGroup));
 
-						break;
-					}
+					break;
 				}
 			}
 		}
-
-		previousKeys.insert(GLFW_KEY_S);
-	} else {
-		previousKeys.erase(GLFW_KEY_S);
 	}
 
-	if (window->keyPressed(GLFW_KEY_T)) {
-		if (previousKeys.find(GLFW_KEY_T) == previousKeys.end()) {
-			if (selectedRooms.size() >= 1) {
-				Popups::addPopup(new RoomTagPopup(window, selectedRooms));
-			} else {
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = *it;
-					if (!visibleLayers[room->layer]) continue;
+	if (justPressed(GLFW_KEY_T)) {
+		if (EditorState::selectedRooms.size() >= 1) {
+			Popups::addPopup(new RoomTagPopup(EditorState::window, EditorState::selectedRooms));
+		} else {
+			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+				Room *room = *it;
+				if (!EditorState::visibleLayers[room->layer]) continue;
 
-					if (room->inside(worldMouse)) {
-						if (room->isOffscreen()) break;
+				if (room->inside(worldMouse)) {
+					if (room->isOffscreen()) break;
 
-						std::set<Room*> roomGroup;
-						roomGroup.insert(room);
-						Popups::addPopup(new RoomTagPopup(window, roomGroup));
+					std::set<Room*> roomGroup;
+					roomGroup.insert(room);
+					Popups::addPopup(new RoomTagPopup(EditorState::window, roomGroup));
 
-						break;
-					}
+					break;
 				}
 			}
 		}
-
-		previousKeys.insert(GLFW_KEY_T);
-	} else {
-		previousKeys.erase(GLFW_KEY_T);
 	}
 
-	if (window->keyPressed(GLFW_KEY_L)) {
-		if (previousKeys.find(GLFW_KEY_L) == previousKeys.end()) {
-			if (selectedRooms.size() > 0) {
-				int minimumLayer = 3;
+	if (justPressed(GLFW_KEY_L)) {
+		if (EditorState::selectedRooms.size() >= 1) {
+			int minimumLayer = 3;
 
-				for (Room *room : selectedRooms)
-					minimumLayer = min(minimumLayer, room->layer);
+			for (Room *room : EditorState::selectedRooms)
+				minimumLayer = min(minimumLayer, room->layer);
 
-				minimumLayer = transitionLayer(minimumLayer);
+			minimumLayer = transitionLayer(minimumLayer);
 
-				for (Room *room : selectedRooms)
-					room->layer = minimumLayer;
+			for (Room *room : EditorState::selectedRooms)
+				room->layer = minimumLayer;
 
-			} else {
-				Room *hoveringRoom = nullptr;
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = (*it);
-					if (!visibleLayers[room->layer]) continue;
+		} else {
+			Room *hoveringRoom = nullptr;
+			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+				Room *room = (*it);
+				if (!EditorState::visibleLayers[room->layer]) continue;
 
-					if (room->inside(worldMouse)) {
-						hoveringRoom = room;
-						break;
-					}
-				}
-
-				if (hoveringRoom != nullptr) {
-					hoveringRoom->layer = (transitionLayer(hoveringRoom->layer));
+				if (room->inside(worldMouse)) {
+					hoveringRoom = room;
+					break;
 				}
 			}
-		}
 
-		previousKeys.insert(GLFW_KEY_L);
-	} else {
-		previousKeys.erase(GLFW_KEY_L);
-	}
-
-	if (window->keyPressed(GLFW_KEY_G)) {
-		if (previousKeys.find(GLFW_KEY_G) == previousKeys.end()) {
-			if (selectedRooms.size() > 0) {
-				bool setMerge = true;
-
-				for (Room *room : selectedRooms)
-					if (room->data.merge) { setMerge = false; break; }
-
-				for (Room *room : selectedRooms)
-					room->data.merge = setMerge;
-			} else {
-				Room *hoveringRoom = nullptr;
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = (*it);
-
-					if (!visibleLayers[room->layer]) continue;
-
-					if (room->inside(worldMouse)) {
-						hoveringRoom = room;
-						break;
-					}
-				}
-
-				if (hoveringRoom != nullptr) {
-					hoveringRoom->data.merge = !hoveringRoom->data.merge;
-				}
+			if (hoveringRoom != nullptr) {
+				hoveringRoom->layer = (transitionLayer(hoveringRoom->layer));
 			}
 		}
-
-		previousKeys.insert(GLFW_KEY_G);
-	} else {
-		previousKeys.erase(GLFW_KEY_G);
 	}
 
-	if (window->keyPressed(GLFW_KEY_H)) {
-		if (previousKeys.find(GLFW_KEY_H) == previousKeys.end()) {
-			if (selectedRooms.size() > 0) {
-				bool setHidden = true;
+	if (justPressed(GLFW_KEY_G)) {
+		if (EditorState::selectedRooms.size() >= 1) {
+			bool setMerge = true;
 
-				for (Room *room : selectedRooms)
-					if (room->data.hidden) { setHidden = false; break; }
+			for (Room *room : EditorState::selectedRooms)
+				if (room->data.merge) { setMerge = false; break; }
 
-				for (Room *room : selectedRooms)
-					room->data.hidden = setHidden;
+			for (Room *room : EditorState::selectedRooms)
+				room->data.merge = setMerge;
+		} else {
+			Room *hoveringRoom = nullptr;
+			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+				Room *room = (*it);
 
-			} else {
-				Room *hoveringRoom = nullptr;
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = (*it);
+				if (!EditorState::visibleLayers[room->layer]) continue;
 
-					if (!visibleLayers[room->layer]) continue;
-
-					if (room->inside(worldMouse)) {
-						hoveringRoom = room;
-						break;
-					}
-				}
-
-				if (hoveringRoom != nullptr) {
-					hoveringRoom->data.hidden = !hoveringRoom->data.hidden;
+				if (room->inside(worldMouse)) {
+					hoveringRoom = room;
+					break;
 				}
 			}
-		}
 
-		previousKeys.insert(GLFW_KEY_H);
-	} else {
-		previousKeys.erase(GLFW_KEY_H);
+			if (hoveringRoom != nullptr) {
+				hoveringRoom->data.merge = !hoveringRoom->data.merge;
+			}
+		}
 	}
 
-	if (window->keyPressed(GLFW_KEY_C)) {
+	if (justPressed(GLFW_KEY_H)) {
+		if (EditorState::selectedRooms.size() >= 1) {
+			bool setHidden = true;
+
+			for (Room *room : EditorState::selectedRooms)
+				if (room->data.hidden) { setHidden = false; break; }
+
+			for (Room *room : EditorState::selectedRooms)
+				room->data.hidden = setHidden;
+
+		} else {
+			Room *hoveringRoom = nullptr;
+			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+				Room *room = (*it);
+
+				if (!EditorState::visibleLayers[room->layer]) continue;
+
+				if (room->inside(worldMouse)) {
+					hoveringRoom = room;
+					break;
+				}
+			}
+
+			if (hoveringRoom != nullptr) {
+				hoveringRoom->data.hidden = !hoveringRoom->data.hidden;
+			}
+		}
+	}
+
+	if (justPressed(GLFW_KEY_C)) {
 		bool found = false;
 
-		if (previousKeys.find(GLFW_KEY_C) == previousKeys.end()) {
-			for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-				Room *room = *it;
+		for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+			Room *room = *it;
 
-				Vector2 roomMouse = worldMouse - room->Position();
-				Vector2 shortcutPosition;
+			Vector2 roomMouse = worldMouse - room->position;
+			Vector2 shortcutPosition;
 
-				if (room->isOffscreen()) {
-					for (int i = 0; i < room->DenCount(); i++) {
-						shortcutPosition = Vector2(room->Width() * 0.5 - room->DenCount() * 2.0 + i * 4.0 + 2.5, -room->Height() * 0.25 - 0.5);
+			if (room->isOffscreen()) {
+				for (int i = 0; i < room->DenCount(); i++) {
+					shortcutPosition = Vector2(room->Width() * 0.5 - room->DenCount() * 2.0 + i * 4.0 + 2.5, -room->Height() * 0.25 - 0.5);
 
-						if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
-							Popups::addPopup(new DenPopup(window, room, i));
+					if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
+						Popups::addPopup(new DenPopup(EditorState::window, room, i));
 
-							found = true;
-							break;
-						}
-					}
-				} else {
-					for (Vector2i shortcut : room->DenEntrances()) {
-						shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
-
-						if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
-							Popups::addPopup(new DenPopup(window, room, room->DenId(shortcut)));
-
-							found = true;
-							break;
-						}
-					}
-				}
-
-				if (found) break;
-			}
-
-			if (!found) {
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = *it;
-
-					if (room->inside(worldMouse)) {
-						if (!room->isOffscreen()) break;
-
-						Popups::addPopup(new DenPopup(window, room, offscreenDen->AddDen()));
-					}
-				}
-			}
-		}
-
-		previousKeys.insert(GLFW_KEY_C);
-	} else {
-		previousKeys.erase(GLFW_KEY_C);
-	}
-
-	if (window->keyPressed(GLFW_KEY_A)) {
-		if (previousKeys.find(GLFW_KEY_A) == previousKeys.end()) {
-			if (selectedRooms.size() > 0) {
-				Popups::addPopup(new RoomAttractivenessPopup(window, selectedRooms));
-			} else {
-				Room *hoveringRoom = nullptr;
-				for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
-					Room *room = (*it);
-
-					if (!visibleLayers[room->layer]) continue;
-
-					if (room->inside(worldMouse)) {
-						hoveringRoom = room;
+						found = true;
 						break;
 					}
 				}
+			} else {
+				for (Vector2i shortcut : room->DenEntrances()) {
+					shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
 
-				if (hoveringRoom != nullptr && !hoveringRoom->isOffscreen()) {
-					std::set<Room *> set;
-					set.insert(hoveringRoom);
-					Popups::addPopup(new RoomAttractivenessPopup(window, set));
+					if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
+						Popups::addPopup(new DenPopup(EditorState::window, room, room->DenId(shortcut)));
+
+						found = true;
+						break;
+					}
+				}
+			}
+
+			if (found) break;
+		}
+
+		if (!found) {
+			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+				Room *room = *it;
+
+				if (room->inside(worldMouse)) {
+					if (!room->isOffscreen()) break;
+
+					Popups::addPopup(new DenPopup(EditorState::window, room, EditorState::offscreenDen->AddDen()));
 				}
 			}
 		}
+	}
 
-		previousKeys.insert(GLFW_KEY_A);
-	} else {
-		previousKeys.erase(GLFW_KEY_A);
+	if (justPressed(GLFW_KEY_A)) {
+		if (EditorState::selectedRooms.size() >= 1) {
+			Popups::addPopup(new RoomAttractivenessPopup(EditorState::window, EditorState::selectedRooms));
+		} else {
+			Room *hoveringRoom = nullptr;
+			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+				Room *room = (*it);
+
+				if (!EditorState::visibleLayers[room->layer]) continue;
+
+				if (room->inside(worldMouse)) {
+					hoveringRoom = room;
+					break;
+				}
+			}
+
+			if (hoveringRoom != nullptr && !hoveringRoom->isOffscreen()) {
+				std::set<Room *> set;
+				set.insert(hoveringRoom);
+				Popups::addPopup(new RoomAttractivenessPopup(EditorState::window, set));
+			}
+		}
 	}
 
 	bool found = false;
-	for (auto it = rooms.rbegin(); it != rooms.rend(); it++) {
+	for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 		Room *room = *it;
 		room->hoveredDen = -1;
 
-		Vector2 roomMouse = worldMouse - room->Position();
+		Vector2 roomMouse = worldMouse - room->position;
 		Vector2 shortcutPosition;
 
 		if (room->isOffscreen()) {
 			for (int i = 0; i < room->DenCount(); i++) {
 				shortcutPosition = Vector2(room->Width() * 0.5 - room->DenCount() * 2.0 + i * 4.0 + 2.5, -room->Height() * 0.25 - 0.5);
 
-				if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
+				if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
 					room->hoveredDen = i;
 
 					found = true;
@@ -952,7 +874,7 @@ void updateMain() {
 			for (Vector2i shortcut : room->DenEntrances()) {
 				shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
 
-				if (roomMouse.distanceTo(shortcutPosition) < selectorScale) {
+				if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
 					room->hoveredDen = room->DenId(shortcut) - room->RoomEntranceCount();
 
 					found = true;
@@ -964,16 +886,16 @@ void updateMain() {
 		if (found) break;
 	}
 
-	if (!Popups::hasPopup("DenPopup") && offscreenDen != nullptr) {
-		offscreenDen->cleanup();
+	if (!Popups::hasPopup("DenPopup") && EditorState::offscreenDen != nullptr) {
+		EditorState::offscreenDen->cleanup();
 	}
 }
 
 int main() {
-	window = new Window(1024, 1024);
-	window->setIcon(TEXTURE_PATH + "MainIcon.png");
-	window->setTitle("FloodForge World Editor");
-	mouse = window->GetMouse();
+	EditorState::window = new Window(1024, 1024);
+	EditorState::window->setIcon(TEXTURE_PATH + "MainIcon.png");
+	EditorState::window->setTitle("FloodForge World Editor");
+	EditorState::mouse = EditorState::window->GetMouse();
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		Logger::logError("Failed to initialize GLAD!");
@@ -982,7 +904,7 @@ int main() {
 
 	Settings::init();
 	Fonts::init();
-	MenuItems::init(window);
+	MenuItems::init(EditorState::window);
 	Popups::init();
 	Shaders::init();
 	Draw::init();
@@ -990,37 +912,37 @@ int main() {
 	RecentFiles::init();
 	RoomHelpers::loadColours();
 
-	Popups::addPopup(new SplashArtPopup(window));
+	Popups::addPopup(new SplashArtPopup(EditorState::window));
 
-	while (window->isOpen()) {
-		mouse->updateLastPressed();
+	while (EditorState::window->isOpen()) {
+		EditorState::mouse->updateLastPressed();
 		glfwPollEvents();
 
-		window->ensureFullscreen();
+		EditorState::window->ensureFullscreen();
 
 		int width;
 		int height;
-		glfwGetWindowSize(window->getGLFWWindow(), &width, &height);
+		glfwGetWindowSize(EditorState::window->getGLFWWindow(), &width, &height);
 		if (width == 0 || height == 0) continue;
 		float size = min(width, height);
 		float offsetX = (width * 0.5) - size * 0.5;
 		float offsetY = (height * 0.5) - size * 0.5;
 
-		mouseMoved = (mouse->X() != lastMousePosition.x || mouse->Y() != lastMousePosition.y);
+		mouseMoved = (EditorState::mouse->X() != lastMousePosition.x || EditorState::mouse->Y() != lastMousePosition.y);
 
 		globalMouse = Vector2(
-			(mouse->X() - offsetX) / size * 1024,
-			(mouse->Y() - offsetY) / size * 1024
+			(EditorState::mouse->X() - offsetX) / size * 1024,
+			(EditorState::mouse->Y() - offsetY) / size * 1024
 		);
 		screenMouse = Vector2(
 			(globalMouse.x / 1024.0) *  2.0 - 1.0,
 			(globalMouse.y / 1024.0) * -2.0 + 1.0
 		);
 
-		Mouse globalMouseObj = Mouse(window->getGLFWWindow(), globalMouse.x, globalMouse.y);
-		globalMouseObj.copyPressed(*mouse);
+		Mouse globalMouseObj = Mouse(EditorState::window->getGLFWWindow(), globalMouse.x, globalMouse.y);
+		globalMouseObj.copyPressed(*EditorState::mouse);
 
-		lineSize = 64.0 / cameraScale;
+		lineSize = 64.0 / EditorState::cameraScale;
 
 		// Update
 
@@ -1031,31 +953,31 @@ int main() {
 
 		glViewport(0, 0, width, height);
 
-		window->clear();
+		EditorState::window->clear();
 		glDisable(GL_DEPTH_TEST);
 
 		setThemeColour(ThemeColour::Background);
 		Vector2 screenBounds = Vector2(width, height) / size;
 		fillRect(-screenBounds.x, -screenBounds.y, screenBounds.x, screenBounds.y);
 
-		applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale * screenBounds);
+		applyFrustumToOrthographic(EditorState::cameraOffset, 0.0f, EditorState::cameraScale * screenBounds);
 
 		/// Draw Grid
 		glLineWidth(1);
 		setThemeColor(ThemeColour::Grid);
-		double gridStep = max(cameraScale / 16.0, 1.0);
+		double gridStep = max(EditorState::cameraScale / 16.0, 1.0);
 		gridStep = std::pow(2, std::ceil(std::log2(gridStep - 0.01)));
 		Draw::begin(Draw::LINES);
-		Vector2 offset = (cameraOffset / gridStep).rounded() * gridStep;
+		Vector2 offset = (EditorState::cameraOffset / gridStep).rounded() * gridStep;
 		Vector2 extraOffset = Vector2(fmod((screenBounds.x - 1.0) * gridStep * 16.0, gridStep), 0);
 		Vector2 gridScale = gridStep * 16.0 * screenBounds;
 		for (float x = -gridScale.x + offset.x; x < gridScale.x + offset.x; x += gridStep) {
-			Draw::vertex(x + extraOffset.x, -cameraScale * screenBounds.y + offset.y + extraOffset.y - gridStep);
-			Draw::vertex(x + extraOffset.x,  cameraScale * screenBounds.y + offset.y + extraOffset.y + gridStep);
+			Draw::vertex(x + extraOffset.x, -EditorState::cameraScale * screenBounds.y + offset.y + extraOffset.y - gridStep);
+			Draw::vertex(x + extraOffset.x,  EditorState::cameraScale * screenBounds.y + offset.y + extraOffset.y + gridStep);
 		}
 		for (float y = -gridScale.y + offset.y; y < gridScale.y + offset.y; y += gridStep) {
-			Draw::vertex(-cameraScale * screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
-			Draw::vertex( cameraScale * screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
+			Draw::vertex(-EditorState::cameraScale * screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
+			Draw::vertex( EditorState::cameraScale * screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
 		}
 		Draw::end();
 
@@ -1064,31 +986,31 @@ int main() {
 		/// Draw Rooms
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		for (Room *room : rooms) {
-			if (!visibleLayers[room->layer]) continue;
+		for (Room *room : EditorState::rooms) {
+			if (!EditorState::visibleLayers[room->layer]) continue;
 			if (!room->data.merge) continue;
 
 			room->drawBlack(worldMouse, lineSize, screenBounds);
 		}
-		for (Room *room : rooms) {
-			if (!visibleLayers[room->layer]) continue;
+		for (Room *room : EditorState::rooms) {
+			if (!EditorState::visibleLayers[room->layer]) continue;
 
 			if (!room->data.merge) {
 				room->drawBlack(worldMouse, lineSize, screenBounds);
 			}
 
 			room->draw(worldMouse, lineSize, screenBounds);
-			if (selectedRooms.find(room) != selectedRooms.end()) {
+			if (EditorState::selectedRooms.find(room) != EditorState::selectedRooms.end()) {
 				setThemeColour(ThemeColour::SelectionBorder);
-				strokeRect(room->Position().x, room->Position().y, room->Position().x + room->Width(), room->Position().y - room->Height(), 16.0f / lineSize);
+				strokeRect(room->position.x, room->position.y, room->position.x + room->Width(), room->position.y - room->Height(), 16.0f / lineSize);
 			}
 		}
 		glDisable(GL_BLEND);
 
 		/// Draw Connections
-		for (Connection *connection : connections) {
-			if (!visibleLayers[connection->RoomA()->layer]) continue;
-			if (!visibleLayers[connection->RoomB()->layer]) continue;
+		for (Connection *connection : EditorState::connections) {
+			if (!EditorState::visibleLayers[connection->roomA->layer]) continue;
+			if (!EditorState::visibleLayers[connection->roomB->layer]) continue;
 
 			connection->draw(worldMouse, lineSize);
 		}
@@ -1096,11 +1018,11 @@ int main() {
 		if (connectionStart != nullptr && connectionEnd != nullptr) {
 			bool valid = true;
 
-			if (currentConnection->RoomA() == currentConnection->RoomB()) valid = false;
-			if (currentConnection->RoomA() == nullptr) valid = false;
-			if (currentConnection->RoomB() == nullptr) valid = false;
-			if (currentConnection->RoomA() != nullptr && currentConnection->RoomA()->ConnectionUsed(currentConnection->ConnectionA())) valid = false;
-			if (currentConnection->RoomB() != nullptr && currentConnection->RoomB()->ConnectionUsed(currentConnection->ConnectionB())) valid = false;
+			if (currentConnection->roomA == currentConnection->roomB) valid = false;
+			if (currentConnection->roomA == nullptr) valid = false;
+			if (currentConnection->roomB == nullptr) valid = false;
+			if (currentConnection->roomA != nullptr && currentConnection->roomA->ConnectionUsed(currentConnection->connectionA)) valid = false;
+			if (currentConnection->roomB != nullptr && currentConnection->roomB->ConnectionUsed(currentConnection->connectionB)) valid = false;
 
 			if (valid) {
 				Draw::color(1.0f, 1.0f, 0.0f);
@@ -1119,10 +1041,10 @@ int main() {
 			if (Settings::getSetting<int>(Settings::Setting::ConnectionType) == 0) {
 				drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 16.0 / lineSize);
 			} else {
-				Vector2 directionA = currentConnection->RoomA()->getRoomEntranceDirectionVector(currentConnection->ConnectionA());
+				Vector2 directionA = currentConnection->roomA->getRoomEntranceDirectionVector(currentConnection->connectionA);
 				Vector2 directionB = Vector2(0, 0);
 
-				if (currentConnection->RoomB() != nullptr) directionB = currentConnection->RoomB()->getRoomEntranceDirectionVector(currentConnection->ConnectionB());
+				if (currentConnection->roomB != nullptr) directionB = currentConnection->roomB->getRoomEntranceDirectionVector(currentConnection->connectionB);
 
 				if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
 					directionStrength *= 0.3333;
@@ -1144,7 +1066,7 @@ int main() {
 			}
 		}
 
-		if (selectingState == 1) {
+		if (EditorState::selectingState == 1) {
 			glEnable(GL_BLEND);
 			Draw::color(0.1f, 0.1f, 0.1f, 0.125f);
 			fillRect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y);
@@ -1158,32 +1080,32 @@ int main() {
 
 		if (connectionError != "") {
 			Draw::color(1.0, 0.0, 0.0);
-			Fonts::rainworld->write(connectionError, mouse->X() / 512.0f - screenBounds.x, -mouse->Y() / 512.0f + screenBounds.y, 0.05);
+			Fonts::rainworld->write(connectionError, EditorState::mouse->X() / 512.0f - screenBounds.x, -EditorState::mouse->Y() / 512.0f + screenBounds.y, 0.05);
 		}
 
 		MenuItems::draw(&globalMouseObj, screenBounds);
 
 		Popups::draw(screenMouse, screenBounds);
 
-		DebugData::draw(window, worldMouse, lineSize, screenBounds);
+		DebugData::draw(EditorState::window, worldMouse, lineSize, screenBounds);
 
-		window->render();
+		EditorState::window->render();
 
 		Popups::cleanup();
 
-		lastMousePosition.x = mouse->X();
-		lastMousePosition.y = mouse->Y();
+		lastMousePosition.x = EditorState::mouse->X();
+		lastMousePosition.y = EditorState::mouse->Y();
 	}
 
-	for (Room *room : rooms)
+	for (Room *room : EditorState::rooms)
 		delete room;
 
-	rooms.clear();
+	EditorState::rooms.clear();
 
-	for (Connection *connection : connections)
+	for (Connection *connection : EditorState::connections)
 		delete connection;
 
-	connections.clear();
+	EditorState::connections.clear();
 
 	Fonts::cleanup();
 	MenuItems::cleanup();

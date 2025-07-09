@@ -6,16 +6,9 @@
 
 class RoomAttractivenessPopup : public Popup {
 	public:
-		RoomAttractivenessPopup(Window *window, std::set<Room *> rooms) : rooms(rooms), Popup(window) {
-			bounds = Rect(-0.35, -0.35, 0.375 + 0.1, 0.35);
-			scroll = 0.0;
-			scrollTo = 0.0;
+		RoomAttractivenessPopup(Window *window, std::set<Room *> rooms);
 
-			window->addScrollCallback(this, scrollCallback);
-		}
-
-		~RoomAttractivenessPopup() {
-		}
+		~RoomAttractivenessPopup();
 
 		void close();
 
@@ -23,15 +16,7 @@ class RoomAttractivenessPopup : public Popup {
 
 		void mouseClick(double mouseX, double mouseY);
 
-		static void scrollCallback(void *object, double deltaX, double deltaY) {
-			RoomAttractivenessPopup *popup = static_cast<RoomAttractivenessPopup*>(object);
-
-			if (!popup->hovered) return;
-
-			popup->scrollTo += deltaY * 0.06;
-
-			popup->clampScroll();
-		}
+		static void scrollCallback(void *object, double deltaX, double deltaY);
 
 		std::string PopupName() { return "RoomAttractivenessPopup"; }
 
@@ -43,43 +28,10 @@ class RoomAttractivenessPopup : public Popup {
 		RoomAttractiveness selectAttractiveness = RoomAttractiveness::NEUTRAL;
 		std::set<Room *> rooms;
 
-		double scroll;
-		double scrollTo;
+		double currentScroll;
+		double targetScroll;
 
-		void clampScroll() {
-			double width = 0.5;
-			double height = 0.5;
-
-			double buttonSize = std::min(width / 7.0, height / 7.0);
-			double buttonPadding = 0.02;
-
-			int items = CreatureTextures::creatures.size() / CREATURE_ROWS - 1;
-			double size = items * (buttonSize + buttonPadding);
-
-			if (scrollTo < -size) {
-				scrollTo = -size;
-				if (scroll <= -size + 0.06) {
-					scroll = -size - 0.03;
-				}
-			}
-
-			if (scrollTo > 0) {
-				scrollTo = 0;
-				if (scroll >= -0.06) {
-					scroll = 0.03;
-				}
-			}
-		}
+		void clampScroll();
 		
-		void setAllTo(RoomAttractiveness attr, std::string creature) {
-			for (Room *room : rooms) {
-				if (room->isOffscreen()) continue;
-
-				if (attr == RoomAttractiveness::DEFAULT) {
-					room->data.attractiveness.erase(creature);
-				} else {
-					room->data.attractiveness[creature] = attr;
-				}
-			}
-		}
+		void setAllTo(RoomAttractiveness attr, std::string creature);
 };

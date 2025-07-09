@@ -57,10 +57,10 @@ class MarkdownPopup : public Popup {
 				(((bounds.Y1() - bounds.Y0()) - padding * 2 - 0.05) / screenBounds.y) * 0.5 * windowHeight
 			);
 			
-			scroll += (scrollTo - scroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
+			currentScroll += (targetScroll - currentScroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 			
 			double x = bounds.X0();
-			double y = 0.75 + bounds.Y0() + 0.8f + scroll;
+			double y = 0.75 + bounds.Y0() + 0.8f + currentScroll;
 			
 			for (std::pair<MDType, std::vector<MDStyledText>> line : lines) {
 				if (line.first == MDType::TEXT) {
@@ -102,7 +102,7 @@ class MarkdownPopup : public Popup {
 				}
 			}
 			
-			maxScroll = -(y - scroll);
+			maxScroll = -(y - currentScroll);
 			
 			glDisable(GL_SCISSOR_TEST);
 		}
@@ -333,11 +333,11 @@ class MarkdownPopup : public Popup {
 		}
 		
 		void clampScroll() {
-			if (scrollTo < 0) {
-				scrollTo = 0;
+			if (targetScroll < 0) {
+				targetScroll = 0;
 			}
-			if (scrollTo >= maxScroll) {
-				scrollTo = maxScroll;
+			if (targetScroll >= maxScroll) {
+				targetScroll = maxScroll;
 			}
 		}
 
@@ -346,7 +346,7 @@ class MarkdownPopup : public Popup {
 
 			if (!popup->hovered) return;
 			
-			popup->scrollTo -= deltaY * 0.1;
+			popup->targetScroll -= deltaY * 0.1;
 			
 			popup->clampScroll();
 		}
@@ -357,7 +357,7 @@ class MarkdownPopup : public Popup {
 		
 		std::vector<Quadruple<double, double, std::string, Vector2>> links;
 		
-		double scroll = 0.0;
-		double scrollTo = 0.0;
+		double currentScroll = 0.0;
+		double targetScroll = 0.0;
 		double maxScroll = 0.0;
 };

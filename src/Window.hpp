@@ -103,7 +103,7 @@ class Window {
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-			glfwWindow = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
+			glfwWindow = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 			if (!glfwWindow) {
 				glfwTerminate();
 				exit(EXIT_FAILURE);
@@ -114,8 +114,9 @@ class Window {
 
 			mouse = new Mouse(glfwWindow);
 
-			// if (glfwRawMouseMotionSupported())
+			// if (glfwRawMouseMotionSupported()) {
 			// 	glfwSetInputMode(glfwWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+			// }
 
 			glfwSetWindowUserPointer(glfwWindow, this);
 
@@ -250,7 +251,7 @@ class Window {
 				int xpos = (mode->width - 1024) / 2;
 				int ypos = (mode->height - 1024) / 2;
 
-				glfwSetWindowMonitor(glfwWindow, NULL, xpos, ypos, 1024, 1024, 60);
+				glfwSetWindowMonitor(glfwWindow, nullptr, xpos, ypos, 1024, 1024, 60);
 				glfwSetWindowAttrib(glfwWindow, GLFW_DECORATED, GLFW_TRUE);
 			}
 		}

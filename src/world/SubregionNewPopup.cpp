@@ -2,6 +2,14 @@
 
 #include "MenuItems.hpp"
 
+SubregionNewPopup::SubregionNewPopup(Window *window, std::set<Room*> rooms, int editIndex) : Popup(window), rooms(rooms), editIndex(editIndex) {
+	window->addKeyCallback(this, keyCallback);
+
+	bounds = Rect(-0.4, -0.08, 0.4, 0.25);
+
+	text = editIndex == -1 ? "" : EditorState::subregions[editIndex];
+}
+
 void SubregionNewPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
 	
@@ -77,19 +85,57 @@ void SubregionNewPopup::accept() {
 	if (text.empty()) return;
 	
 	if (editIndex == -1) {
-		if (std::find(subregions.begin(), subregions.end(), text) != subregions.end())
+		if (std::find(EditorState::subregions.begin(), EditorState::subregions.end(), text) != EditorState::subregions.end()) {
 			return;
+		}
 	
-		subregions.push_back(text);
+		EditorState::subregions.push_back(text);
 		for (Room *room : rooms) {
-			room->subregion = std::distance(subregions.begin(), std::find(subregions.begin(), subregions.end(), text));
+			room->subregion = std::distance(EditorState::subregions.begin(), std::find(EditorState::subregions.begin(), EditorState::subregions.end(), text));
 		}
 	} else {
-		if (std::find(subregions.begin(), subregions.end(), text) != subregions.end())
+		if (std::find(EditorState::subregions.begin(), EditorState::subregions.end(), text) != EditorState::subregions.end()) {
 			return;
+		}
 	
-		subregions[editIndex] = text;
+		EditorState::subregions[editIndex] = text;
 	}
 
 	close();
+}
+
+void SubregionNewPopup::reject() {
+	close();
+}
+
+void SubregionNewPopup::close() {
+	Popups::removePopup(this);
+
+	window->removeKeyCallback(this, keyCallback);
+}
+
+void SubregionNewPopup::keyCallback(void *object, int action, int key) {
+	SubregionNewPopup *popup = static_cast<SubregionNewPopup*>(object);
+	
+	if (popup->minimized) return;
+
+	if (action == GLFW_PRESS) {
+		if (key >= 33 && key <= 126) {
+			char character = parseCharacter(key, popup->window->modifierPressed(GLFW_MOD_SHIFT));
+			
+			if (character == ':') return;
+			if (character == '<') return;
+			if (character == '>') return;
+
+			popup->text += character;
+		} else if (key == GLFW_KEY_SPACE) {
+			if (!popup->text.empty()) {
+				popup->text += " ";
+			}
+		} else if (key == GLFW_KEY_BACKSPACE) {
+			if (!popup->text.empty()) {
+				popup->text.pop_back();
+			}
+		}
+	}
 }

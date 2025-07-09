@@ -12,8 +12,9 @@ void RecentFiles::init() {
 	while (std::getline(recentsFile, line)) {
 		if (line.empty()) continue;
 		
-		if (std::filesystem::exists(line))
+		if (std::filesystem::exists(line)) {
 			recents.push_back(line);
+		}
 	}
 	
 	recentsFile.close();
