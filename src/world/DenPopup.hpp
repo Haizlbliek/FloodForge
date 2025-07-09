@@ -15,7 +15,7 @@ enum SliderType {
 #include "../popup/Popups.hpp"
 #include "Room.hpp"
 #include "Globals.hpp"
-#include "Creatures.hpp"
+#include "CreatureTextures.hpp"
 
 class DenPopup : public Popup {
 	public:

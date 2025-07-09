@@ -20,7 +20,6 @@
 #include "../font/Fonts.hpp"
 #include "../Logger.hpp"
 
-#include "FailureController.hpp"
 #include "ExtraRoomData.hpp"
 #include "Shaders.hpp"
 #include "Den.hpp"

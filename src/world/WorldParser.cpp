@@ -2,7 +2,7 @@
 
 #include "RecentFiles.hpp"
 #include "../popup/InfoPopup.hpp"
-#include "Creatures.hpp"
+#include "CreatureTextures.hpp"
 
 void WorldParser::importWorldFile(std::filesystem::path path) {
 	RecentFiles::addPath(path);
@@ -18,7 +18,7 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 	std::filesystem::path roomsPath = findDirectoryCaseInsensitive(EditorState::region.exportDirectory.parent_path().string(), EditorState::region.acronym + "-rooms");
 	if (roomsPath.empty()) {
 		EditorState::region.roomsDirectory = "";
-		FailureController::fails.push_back("Cannot find rooms directory!");
+		EditorState::fails.push_back("Cannot find rooms directory!");
 	} else {
 		EditorState::region.roomsDirectory = roomsPath.filename().string();
 	}
@@ -60,13 +60,13 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 	
 	Logger::log("Extra room data - loaded");
 	
-	if (FailureController::fails.size() > 0) {
+	if (EditorState::fails.size() > 0) {
 		std::string fails = "";
-		for (std::string fail : FailureController::fails) {
+		for (std::string fail : EditorState::fails) {
 			fails += fail + "\n";
 		}
 		Popups::addPopup(new InfoPopup(EditorState::window, fails));
-		FailureController::fails.clear();
+		EditorState::fails.clear();
 	}
 }
 
@@ -361,7 +361,7 @@ void WorldParser::parseWorldCreature(std::string line) {
 
 		if (!room->CreatureDenExists(denId)) {
 			Logger::log(roomName, " failed den ", denId);
-			FailureController::fails.push_back(roomName + " failed den " + std::to_string(denId));
+			EditorState::fails.push_back(roomName + " failed den " + std::to_string(denId));
 			continue;
 		}
 
@@ -489,7 +489,7 @@ void WorldParser::parseWorld(std::filesystem::path worldFilePath, std::filesyste
 
 		if (roomB == nullptr) {
 			Logger::log("Failed to load connection from ", roomA->roomName, " to ", connectionData.third);
-			FailureController::fails.push_back("Failed to load connection from " + roomA->roomName + " to " + connectionData.third);
+			EditorState::fails.push_back("Failed to load connection from " + roomA->roomName + " to " + connectionData.third);
 			continue;
 		}
 
@@ -498,7 +498,7 @@ void WorldParser::parseWorld(std::filesystem::path worldFilePath, std::filesyste
 		
 		if (!roomA->canConnect(connectionA) || !roomB->canConnect(connectionB)) {
 			Logger::log("Failed to load connection from ", roomA->roomName, " to ", connectionData.third, " - invalid room");
-			FailureController::fails.push_back("Failed to load connection from " + roomA->roomName + " to " + connectionData.third + " - invalid room");
+			EditorState::fails.push_back("Failed to load connection from " + roomA->roomName + " to " + connectionData.third + " - invalid room");
 			continue;
 		}
 

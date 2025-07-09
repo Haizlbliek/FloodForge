@@ -1,4 +1,4 @@
-#include "Creatures.hpp"
+#include "CreatureTextures.hpp"
 
 #include <fstream>
 #include <algorithm>

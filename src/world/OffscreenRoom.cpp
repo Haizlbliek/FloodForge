@@ -3,7 +3,7 @@
 #include "../math/Rect.hpp"
 
 #include "Globals.hpp"
-#include "Creatures.hpp"
+#include "CreatureTextures.hpp"
 
 bool OffscreenRoom::isOffscreen() {
 	return true;

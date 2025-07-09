@@ -22,7 +22,6 @@
 #include "Room.hpp"
 #include "OffscreenRoom.hpp"
 #include "DenPopup.hpp"
-#include "FailureController.hpp"
 
 #include "ExtraRoomData.hpp"
 

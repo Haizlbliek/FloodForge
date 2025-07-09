@@ -136,7 +136,7 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 			std::string image = findFileCaseInsensitive(fromFile.parent_path().string(), imagePath);
 			
 			if (image.empty()) {
-				FailureController::fails.push_back("Can't find '" + imagePath + "'");
+				EditorState::fails.push_back("Can't find '" + imagePath + "'");
 			} else {
 				std::filesystem::copy_file(image, toFile.parent_path() / (toRoom + "_" + std::to_string(i + 1) + ".png"));
 			}

@@ -1,9 +1,5 @@
 #include "Globals.hpp"
 
-// #include "Connection.hpp"
-// #include "../font/Fonts.hpp"
-// #include "../Utils.hpp"
-
 std::string ROOM_TAGS[9] = { "SHELTER", "ANCIENTSHELTER", "GATE", "SWARMROOM", "PERF_HEAVY", "SCAVOUTPOST", "SCAVTRADER", "NOTRACKERS", "ARENA" };
 std::string ROOM_TAG_NAMES[9] = { "Shelter", "Ancient Shelter", "Gate", "Swarm Room", "Performance Heavy", "Scavenger Outpost", "Scavenger Trader", "No Trackers", "Arena (MSC)" };
 
@@ -30,4 +26,6 @@ namespace EditorState {
 	int selectingState = 0;
 	Room *roomPossibleSelect = nullptr;
 	std::set<Room*> selectedRooms;
+
+	std::vector<std::string> fails;
 }

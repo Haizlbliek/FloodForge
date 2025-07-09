@@ -27,8 +27,6 @@ class AcronymPopup : public Popup {
 
 		void close();
 
-		static char parseCharacter(char character, bool shiftPressed);
-
 		static void keyCallback(void *object, int action, int key);
 
 	protected:

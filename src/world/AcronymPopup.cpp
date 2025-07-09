@@ -98,40 +98,6 @@ void AcronymPopup::close() {
 	window->removeKeyCallback(this, keyCallback);
 }
 
-char AcronymPopup::parseCharacter(char character, bool shiftPressed) {
-	if (!shiftPressed) return character;
-
-	if (std::islower(character)) {
-		return std::toupper(character);
-	}
-
-	switch (character) {
-		case '1': return '!';
-		case '2': return '@';
-		case '3': return '#';
-		case '4': return '$';
-		case '5': return '%';
-		case '6': return '^';
-		case '7': return '&';
-		case '8': return '*';
-		case '9': return '(';
-		case '0': return ')';
-		case '`': return '~';
-		case '-': return '_';
-		case '=': return '+';
-		case '[': return '{';
-		case ']': return '}';
-		case ';': return ':';
-		case '\'': return '"';
-		case '\\': return '|';
-		case ',': return '<';
-		case '.': return '>';
-		case '/': return '?';
-	}
-
-	return character;
-}
-
 void AcronymPopup::keyCallback(void *object, int action, int key) {
 	AcronymPopup *acronymWindow = static_cast<AcronymPopup*>(object);
 	

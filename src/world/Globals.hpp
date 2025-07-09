@@ -36,7 +36,7 @@ namespace EditorState {
 	extern std::vector<std::string> subregions;
 
 	extern int roomColours;
-	extern bool visibleLayers[3];
+	extern bool visibleLayers[LAYER_COUNT];
 	extern bool visibleDevItems;
 	
 	extern Region region;
@@ -44,4 +44,6 @@ namespace EditorState {
 	extern int selectingState;
 	extern std::set<Room*> selectedRooms;
 	extern Room *roomPossibleSelect;
+	
+	extern std::vector<std::string> fails;
 }

@@ -531,7 +531,7 @@ void Room::ensureConnections() {
 void Room::loadGeometry() {
 	std::fstream geometryFile(path);
 	if (!geometryFile.is_open() || !std::filesystem::exists(path)) {
-		FailureController::fails.push_back("Failed to load '" + roomName + "' - Doesn't exist");
+		EditorState::fails.push_back("Failed to load '" + roomName + "' - Doesn't exist");
 		Logger::log("Failed to load '", path, "' - Doesn't exist.");
 		width = 72;
 		height = 43;
@@ -631,7 +631,7 @@ void Room::checkImages() {
 		std::string foundPath = findFileCaseInsensitive(imageDir, imagePath);
 		
 		if (foundPath.empty()) {
-			FailureController::fails.push_back("Can't find '" + imagePath + "'");
+			EditorState::fails.push_back("Can't find '" + imagePath + "'");
 		}
 	}
 }
