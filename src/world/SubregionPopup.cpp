@@ -10,38 +10,31 @@ void SubregionPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
 	
 	if (minimized) return;
-
-	mouseX -= bounds.X0() + 0.5;
-	mouseY -= bounds.Y0() + 0.5;
-
-	Draw::pushMatrix();
-
-	Draw::translate(bounds.X0() + 0.5, bounds.Y0() + 0.5);
+	
+	double centreX = (bounds.X0() + bounds.X1()) * 0.5;
 
 	if (rooms.size() > 0) {
 		setThemeColour(ThemeColour::Text);
 		if (rooms.size() == 1) {
-			Fonts::rainworld->writeCentred(toUpper((*rooms.begin())->roomName), 0.0, 0.4, 0.04, CENTRE_XY);
+			Fonts::rainworld->writeCentred(toUpper((*rooms.begin())->roomName), centreX, bounds.Y1() - 0.09, 0.04, CENTRE_XY);
 		} else {
-			Fonts::rainworld->writeCentred("Selected Rooms", 0.0, 0.4, 0.04, CENTRE_XY);
+			Fonts::rainworld->writeCentred("Selected Rooms", centreX, bounds.Y1() - 0.07, 0.04, CENTRE_XY);
 		}
 
-		double y = 0.35;
-		drawSubregionButton(-1, "None", y, mouseX, mouseY);
+		double y = bounds.Y1() - 0.15;
+		drawSubregionButton(-1, "None", centreX, y, mouseX, mouseY);
 		y -= 0.075;
 
 		int id = 0;
 		for (std::string subregion : EditorState::subregions) {
-			drawSubregionButton(id, subregion, y, mouseX, mouseY);
+			drawSubregionButton(id, subregion, centreX, y, mouseX, mouseY);
 
 			y -= 0.075;
 			id++;
 		}
 
-		drawSubregionButton(-2, "+ new subregion +", y, mouseX, mouseY);
+		drawSubregionButton(-2, "+ new subregion +", centreX, y, mouseX, mouseY);
 	}
-
-	Draw::popMatrix();
 }
 
 void SubregionPopup::setSubregion(int subregion) {
@@ -51,8 +44,9 @@ void SubregionPopup::setSubregion(int subregion) {
 void SubregionPopup::mouseClick(double mouseX, double mouseY) {
 	Popup::mouseClick(mouseX, mouseY);
 
-	mouseX -= bounds.X0() + 0.5;
-	mouseY -= bounds.Y0() + 0.5;
+	double centreX = (bounds.X0() + bounds.X1()) * 0.5;
+	mouseX -= centreX;
+	mouseY -= (bounds.Y0() + bounds.Y1()) * 0.5;
 
 	int button = getButtonIndex(mouseX, mouseY);
 
@@ -100,9 +94,9 @@ int SubregionPopup::getButtonIndex(double mouseX, double mouseY) {
 	return floor((-mouseY + 0.35) / 0.075);
 }
 
-void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion, double y, double mouseX, double mouseY) {
+void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion, double centerX, double y, double mouseX, double mouseY) {
 	setThemeColour(ThemeColour::Button);
-	fillRect(-0.325, y, 0.325, y - 0.05);
+	fillRect(-0.325 + centerX, y, 0.325 + centerX, y - 0.05);
 
 	if (rooms.size() == 1) {
 		if ((*rooms.begin())->subregion == subregionId) {
@@ -113,35 +107,35 @@ void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion,
 	} else {
 		setThemeColour(ThemeColour::Text);
 	}
-	Fonts::rainworld->writeCentred(subregion, -0.025, y - 0.02, 0.04, CENTRE_XY);
+	Fonts::rainworld->writeCentred(subregion, centerX, y - 0.02, 0.04, CENTRE_XY);
 
-	if (Rect(-0.325, y, 0.325, y - 0.05).inside(mouseX, mouseY)) {
+	if (Rect(-0.325 + centerX, y, 0.325 + centerX, y - 0.05).inside(mouseX, mouseY)) {
 		setThemeColour(ThemeColour::BorderHighlight);
 	} else {
 		setThemeColour(ThemeColour::Border);
 	}
-	strokeRect(-0.325, y, 0.325, y - 0.05);
+	strokeRect(-0.325 + centerX, y, 0.325 + centerX, y - 0.05);
 
 	if (subregionId >= 0) {
 		setThemeColour(ThemeColour::Button);
-		fillRect(-0.4, y, -0.35, y - 0.05);
-		fillRect(0.35, y, 0.4, y - 0.05);
+		fillRect(-0.4 + centerX, y, -0.35 + centerX, y - 0.05);
+		fillRect(0.35 + centerX, y, 0.4 + centerX, y - 0.05);
 
 		setThemeColour(ThemeColour::Text);
-		Fonts::rainworld->writeCentred("E", -0.37, y, 0.04, CENTRE_X);
-		Fonts::rainworld->writeCentred("-", 0.37, y, 0.04, CENTRE_X);
+		Fonts::rainworld->writeCentred("E", -0.37 + centerX, y, 0.04, CENTRE_X);
+		Fonts::rainworld->writeCentred("-", 0.37 + centerX, y, 0.04, CENTRE_X);
 
-		if (Rect(-0.4, y, -0.35, y - 0.05).inside(mouseX, mouseY)) {
+		if (Rect(-0.4 + centerX, y, -0.35 + centerX, y - 0.05).inside(mouseX, mouseY)) {
 			setThemeColour(ThemeColour::BorderHighlight);
 		} else {
 			setThemeColour(ThemeColour::Border);
 		}
-		strokeRect(-0.4, y, -0.35, y - 0.05);
-		if (Rect(0.35, y, 0.4, y - 0.05).inside(mouseX, mouseY)) {
+		strokeRect(-0.4 + centerX, y, -0.35 + centerX, y - 0.05);
+		if (Rect(0.35 + centerX, y, 0.4 + centerX, y - 0.05).inside(mouseX, mouseY)) {
 			setThemeColour(ThemeColour::BorderHighlight);
 		} else {
 			setThemeColour(ThemeColour::Border);
 		}
-		strokeRect(0.35, y, 0.4, y - 0.05);
+		strokeRect(0.35 + centerX, y, 0.4 + centerX, y - 0.05);
 	}
 }

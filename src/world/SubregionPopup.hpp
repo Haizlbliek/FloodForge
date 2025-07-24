@@ -29,5 +29,5 @@ class SubregionPopup : public Popup {
 
 		int getButtonIndex(double mouseX, double mouseY);
 
-		void drawSubregionButton(int subregionId, std::string subregion, double y, double mouseX, double mouseY);
+		void drawSubregionButton(int subregionId, std::string subregion, double centreX, double y, double mouseX, double mouseY);
 };
