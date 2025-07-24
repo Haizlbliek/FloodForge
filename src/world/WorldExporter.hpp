@@ -16,5 +16,4 @@ class WorldExporter {
 		static void exportImageFile(std::filesystem::path outputPath, std::filesystem::path otherPath);
 
 		static void exportPropertiesFile(std::filesystem::path outputPath);
-
 };

@@ -16,6 +16,7 @@ class Region {
 
 		std::string extraProperties;
 		std::string extraWorld;
+		std::string complicatedCreatures;
 		std::string roomsDirectory;
 		std::filesystem::path exportDirectory;
 		

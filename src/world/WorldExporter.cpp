@@ -146,6 +146,8 @@ void WorldExporter::exportWorldFile() {
 
 		if (add) file << line.str() << "\n";
 	}
+	
+	file << EditorState::region.complicatedCreatures;
 
 	file << "END CREATURES\n";
 

@@ -19,6 +19,7 @@ void Region::reset() {
 	extraProperties = "";
 	extraWorld = "";
 	exportDirectory = "";
+	complicatedCreatures = "";
 	acronym = "";
 	EditorState::selectedRooms.clear();
 	EditorState::roomPossibleSelect = nullptr;

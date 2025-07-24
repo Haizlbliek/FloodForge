@@ -20,3 +20,4 @@ CHANGES.md
 
 .vscode/
 /.clangd
+*.tmp

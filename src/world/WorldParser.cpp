@@ -335,7 +335,8 @@ void WorldParser::parseWorldCreature(std::string line) {
 	std::vector<std::string> splits = split(line, ':');
 
 	if (splits[0] == "LINEAGE" || splits[0][0] == '(') {
-		Logger::log("Skipped parsing lineage: '", line, "'");
+		Logger::log("Skipped parsing complicated creature: '", line, "'");
+		EditorState::region.complicatedCreatures += line + "\n";
 		return;
 	}
 
