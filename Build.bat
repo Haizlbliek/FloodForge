@@ -37,7 +37,7 @@ if "%debug_mode%"=="false" (
 	set "compile_cmd=!compile_cmd! -mwindows"
 )
 if "%debug_mode%"=="true" (
-	set "compile_cmd=!compile_cmd! -g"
+	set "compile_cmd=!compile_cmd! -g -O0"
 )
 if "%release_mode%"=="true" (
 	set "compile_cmd=!compile_cmd! -static -O2"

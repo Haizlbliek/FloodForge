@@ -5,6 +5,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <csignal>
 
 #include "../Constants.hpp"
 #include "../Window.hpp"
@@ -891,7 +892,19 @@ void updateMain() {
 	}
 }
 
+void signalHandler(int signal) {
+	Logger::logError("Signal caught: ", signal);
+	std::exit(1);
+}
+
 int main() {
+	std::signal(SIGSEGV, signalHandler); // Segmentation fault
+	std::signal(SIGABRT, signalHandler); // Abort signal
+	std::signal(SIGFPE, signalHandler);  // Floating-point error
+	std::signal(SIGILL, signalHandler);  // Illegal instruction
+	std::signal(SIGINT, signalHandler);  // Ctrl+C
+	std::signal(SIGTERM, signalHandler); // Termination request
+
 	EditorState::window = new Window(1024, 1024);
 	EditorState::window->setIcon(TEXTURE_PATH + "MainIcon.png");
 	EditorState::window->setTitle("FloodForge World Editor");
@@ -946,7 +959,15 @@ int main() {
 
 		// Update
 
-		updateMain();
+		try {
+			updateMain();
+		} catch (const std::exception &e) {
+			Logger::logError("An exception was thrown during updateMain: ", e.what());
+			exit(1);
+		} catch (...) {
+			Logger::logError("An unknown exception was trown during updateMain");
+			exit(1);
+		}
 
 
 		// Draw

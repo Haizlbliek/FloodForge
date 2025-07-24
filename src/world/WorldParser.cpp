@@ -22,6 +22,7 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 	} else {
 		EditorState::region.roomsDirectory = roomsPath.filename().string();
 	}
+	Logger::log("Rooms directory: ", EditorState::region.roomsDirectory);
 	
 	std::filesystem::path mapFilePath = findFileCaseInsensitive(EditorState::region.exportDirectory.string(), "map_" + EditorState::region.acronym + ".txt");
 	
@@ -146,7 +147,7 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 		} else {
 			std::string roomName = toLower(line.substr(0, line.find(':')));
 
-			std::string roomPath = directory.string();
+			std::string roomPath = toLower(directory.string());
 			replaceLastInstance(roomPath, toLower(EditorState::region.acronym), EditorState::region.roomsDirectory);
 			roomPath = (std::filesystem::path(roomPath) / roomName).string();
 
@@ -189,7 +190,12 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 
 			std::getline(data, temp, '<');
 			std::getline(data, temp, '>'); // Layer
-			int layer = temp.empty() ? 0 : std::stoi(temp);
+			int layer = 0;
+			try {
+				layer = temp.empty() ? 0 : std::stoi(temp);
+			} catch (const std::invalid_argument &e) {
+				Logger::logError("Failed to load map line '", line, "' due to stoi on '", temp, "' (int layer)");
+			}
 			
 			std::getline(data, temp, '<');
 			std::getline(data, temp, '>'); // Subregion
@@ -351,7 +357,12 @@ void WorldParser::parseWorldCreature(std::string line) {
 
 	for (std::string creatureInDen : split(splits[1], ',')) {
 		std::vector<std::string> sections = split(creatureInDen, '-');
-		int denId = std::stoi(sections[0]);
+		int denId;
+		try {
+			denId = std::stoi(sections[0]);
+		} catch (const std::invalid_argument &e) {
+			Logger::logError("Failed to load creature line '", line, "' due to stoi for '", sections[0], "' (int denId)");
+		}
 		std::string creature = sections[1];
 
 		if (room == EditorState::offscreenDen) {
@@ -385,7 +396,11 @@ void WorldParser::parseWorldCreature(std::string line) {
 				}
 				den.count = 1;
 			} else {
-				den.count = std::stoi(sections[2]);
+				try {
+					den.count = std::stoi(sections[2]);
+				} catch (const std::invalid_argument &e) {
+					Logger::logError("Failed to load creature line '", line, "' due to stoi for '", sections[2], "' (den.count)");
+				}
 			}
 		} else if (sections.size() == 4) {
 			std::string tagString = "";
@@ -411,7 +426,11 @@ void WorldParser::parseWorldCreature(std::string line) {
 			} else {
 				den.tag = tag;
 			}
-			den.count = std::stoi(countString);
+			try {
+				den.count = std::stoi(countString);
+			} catch (const std::invalid_argument &e) {
+				Logger::logError("Failed to load creature line '", line, "' due to stoi on '", countString, "' (den.count)");
+			}
 		} else {
 			den.count = 1;
 		}
@@ -460,6 +479,7 @@ void WorldParser::parseWorld(std::filesystem::path worldFilePath, std::filesyste
 		}
 
 		if (line == "") continue;
+		if (startsWith(line, "//")) continue;
 
 		if (parseState == 1)
 			parseWorldRoom(line, directory, connectionsToAdd);
