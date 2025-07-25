@@ -165,39 +165,37 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		hasMapFile = false;
 	}
 
-	Rect bounds = Rect();
-	bounds.x0 = INFINITY;
-	bounds.x1 = -INFINITY;
-	bounds.y0 = INFINITY;
-	bounds.y1 = -INFINITY;
+	double mapScale = 3.0;
+	Vector2 topLeft = Vector2(INFINITY, INFINITY);
+	Vector2 bottomRight = Vector2(-INFINITY, -INFINITY);
 
 	for (Room *room : EditorState::rooms) {
 		if (room->isOffscreen()) continue;
 		if (room->data.hidden) continue;
 
-		double left = room->position.x;
-		double right = room->position.x + room->Width();
-		double top = -room->position.y + room->Height();
-		double bottom = -room->position.y;
-		bounds.x0 = std::min(bounds.x0, left);
-		bounds.x1 = std::max(bounds.x1, right);
-		bounds.y0 = std::min(bounds.y0, bottom);
-		bounds.y1 = std::max(bounds.y1, top);
+		double left = room->position.x - room->Width() * 0.5;
+		double right = room->position.x + room->Width() * 0.5;
+		double top = room->position.y - room->Height() * 0.5;
+		double bottom = room->position.y + room->Height() * 0.5;
+		topLeft.x = std::min(topLeft.x, left);
+		bottomRight.x = std::max(bottomRight.x, right);
+		topLeft.y = std::min(topLeft.y, top);
+		bottomRight.y = std::max(bottomRight.y, bottom);
 	}
 
-	const int padding = 10;
+	int layerHeight = int((bottomRight.y - topLeft.y) / mapScale) + 20;
 
-	const int width = std::floor(bounds.x1 - bounds.x0 + padding * 2);
-	const int height = std::floor(bounds.y1 - bounds.y0 + padding * 2) * LAYER_COUNT;
+	const int textureWidth = int((bottomRight.x - topLeft.x) / mapScale) + 20;
+	const int textureHeight = layerHeight * LAYER_COUNT;
 
-	std::vector<unsigned char> image(width * height * 3);
+	std::vector<unsigned char> image(textureWidth * textureHeight * 3);
 
 	if (Settings::getSetting<bool>(Settings::Setting::DebugVisibleOutputPadding)) {
-		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
-				int i = y * width + x;
+		for (int x = 0; x < textureWidth; x++) {
+			for (int y = 0; y < textureHeight; y++) {
+				int i = y * textureWidth + x;
 
-				if (x < padding || (y % (height / LAYER_COUNT)) < padding || x >= width - padding || (y % (height / LAYER_COUNT)) >= height / LAYER_COUNT - padding) {
+				if (x < 10 || (y % layerHeight) < 10 || x >= textureWidth - 10 || (y % layerHeight) >= layerHeight - 10) {
 					image[i * 3 + 0] = 0;
 					image[i * 3 + 1] = 255;
 					image[i * 3 + 2] = 255;
@@ -209,7 +207,7 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 			}
 		}
 	} else {
-		for (int i = 0; i < width * height; i++) {
+		for (int i = 0; i < textureWidth * textureHeight; i++) {
 			image[i * 3 + 0] = 0;
 			image[i * 3 + 1] = 255;
 			image[i * 3 + 2] = 0;
@@ -220,22 +218,36 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		if (room->isOffscreen()) continue;
 		if (room->data.hidden) continue;
 
-		// Top left corner
-		int x = std::floor(room->position.x - bounds.x0) + padding;
-		int y = std::floor(-room->position.y - bounds.y0) + padding;
-		y += (2 - room->layer) * height / LAYER_COUNT;
-		
-		if (hasMapFile) {
-			mapFile << toUpper(room->roomName) << ": " << x << "," << (height - y - room->Height()) << "," << room->Width() << "," << room->Height() << "\n";
-		}
+		Vector2i roomPosition = Vector2i(
+			int((room->position.x - topLeft.x - room->Width() * 0.5) / mapScale),
+			int((room->position.y - topLeft.y - room->Height() * 0.5) / mapScale)
+		);
+		int layerXOffset = 10;
+		int layerYOffset = room->layer * layerHeight + 10;
 
+		if (hasMapFile) {
+			mapFile << toUpper(room->roomName) << ": " << (roomPosition.x + layerXOffset) << "," << (roomPosition.y + layerYOffset) << "," << room->Width() << "," << room->Height() << "\n";
+		}
+		
 		for (int ox = 0; ox < room->Width(); ox++) {
 			for (int oy = 0; oy < room->Height(); oy++) {
-				int i = ((y + oy) * width + x + ox) * 3;
+				if (roomPosition.x + ox + layerXOffset < 0) {
+					continue;
+				}
+				if (roomPosition.x + ox + layerXOffset >= textureWidth) {
+					continue;
+				}
+				if (roomPosition.y + oy + layerYOffset < 0) {
+					continue;
+				}
+				if (roomPosition.y + oy + layerYOffset >= textureHeight) {
+					continue;
+				}
 
+				int i = ((roomPosition.y + oy) * textureWidth + roomPosition.x + ox) * 3;
 				unsigned int tileType = room->getTile(ox, oy) % 16;
 				unsigned int tileData = room->getTile(ox, oy) / 16;
-
+				
 				int r = 0;
 				int g = 0;
 				int b = 0;
@@ -264,7 +276,7 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		}
 	}
 
-	if (stbi_write_png(outputPath.string().c_str(), width, height, 3, image.data(), width * 3)) {
+	if (stbi_write_png(outputPath.string().c_str(), textureWidth, textureHeight, 3, image.data(), textureWidth * 3)) {
 		Logger::log("Image saved successfully!");
 	} else {
 		Logger::log("Error saving image!");
