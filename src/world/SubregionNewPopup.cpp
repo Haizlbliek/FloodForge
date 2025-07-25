@@ -15,12 +15,12 @@ void SubregionNewPopup::draw(double mouseX, double mouseY, bool mouseInside, Vec
 	
 	if (minimized) return;
 
-	mouseX -= bounds.X0() + 0.4;
-	mouseY -= bounds.Y0() + 0.08;
+	mouseX -= bounds.x0 + 0.4;
+	mouseY -= bounds.y0 + 0.08;
 
 	Draw::pushMatrix();
 
-	Draw::translate(bounds.X0() + 0.4, bounds.Y0() + 0.08);
+	Draw::translate(bounds.x0 + 0.4, bounds.y0 + 0.08);
 
 	setThemeColour(ThemeColour::Text);
 	glLineWidth(1);
@@ -69,8 +69,8 @@ void SubregionNewPopup::draw(double mouseX, double mouseY, bool mouseInside, Vec
 void SubregionNewPopup::mouseClick(double mouseX, double mouseY) {
 	Popup::mouseClick(mouseX, mouseY);
 
-	mouseX -= bounds.X0() + 0.4;
-	mouseY -= bounds.Y0() + 0.08;
+	mouseX -= bounds.x0 + 0.4;
+	mouseY -= bounds.y0 + 0.08;
 
 	if (Rect(-0.2, -0.03, -0.05, 0.03).inside(mouseX, mouseY)) {
 		reject();

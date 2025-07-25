@@ -11,4 +11,4 @@ VisualMergeDefault: true
 HideTutorial: false
 KeepFilesystemPath: true
 
-DebugVisibleOutputPadding: false
+DebugVisibleOutputPadding: true

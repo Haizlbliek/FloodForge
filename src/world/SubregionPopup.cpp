@@ -11,17 +11,17 @@ void SubregionPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 	
 	if (minimized) return;
 	
-	double centreX = (bounds.X0() + bounds.X1()) * 0.5;
+	double centreX = (bounds.x0 + bounds.x1) * 0.5;
 
 	if (rooms.size() > 0) {
 		setThemeColour(ThemeColour::Text);
 		if (rooms.size() == 1) {
-			Fonts::rainworld->writeCentred(toUpper((*rooms.begin())->roomName), centreX, bounds.Y1() - 0.09, 0.04, CENTRE_XY);
+			Fonts::rainworld->writeCentred(toUpper((*rooms.begin())->roomName), centreX, bounds.y1 - 0.09, 0.04, CENTRE_XY);
 		} else {
-			Fonts::rainworld->writeCentred("Selected Rooms", centreX, bounds.Y1() - 0.07, 0.04, CENTRE_XY);
+			Fonts::rainworld->writeCentred("Selected Rooms", centreX, bounds.y1 - 0.07, 0.04, CENTRE_XY);
 		}
 
-		double y = bounds.Y1() - 0.15;
+		double y = bounds.y1 - 0.15;
 		drawSubregionButton(-1, "None", centreX, y, mouseX, mouseY);
 		y -= 0.075;
 
@@ -44,9 +44,9 @@ void SubregionPopup::setSubregion(int subregion) {
 void SubregionPopup::mouseClick(double mouseX, double mouseY) {
 	Popup::mouseClick(mouseX, mouseY);
 
-	double centreX = (bounds.X0() + bounds.X1()) * 0.5;
+	double centreX = (bounds.x0 + bounds.x1) * 0.5;
 	mouseX -= centreX;
-	mouseY -= (bounds.Y0() + bounds.Y1()) * 0.5;
+	mouseY -= (bounds.y0 + bounds.y1) * 0.5;
 
 	int button = getButtonIndex(mouseX, mouseY);
 

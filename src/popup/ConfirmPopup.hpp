@@ -31,12 +31,12 @@ class ConfirmPopup : public Popup {
 			
 			if (minimized) return;
 			
-			mouseX -= bounds.X0() + 0.3;
-			mouseY -= bounds.Y0() + 0.15;
+			mouseX -= bounds.x0 + 0.3;
+			mouseY -= bounds.y0 + 0.15;
 
 			Draw::pushMatrix();
 
-			Draw::translate(bounds.X0() + 0.3, bounds.Y0() + 0.15);
+			Draw::translate(bounds.x0 + 0.3, bounds.y0 + 0.15);
 
 			setThemeColour(ThemeColour::Text);
 			Fonts::rainworld->writeCentred(question, 0.0, 0.04, 0.04, CENTRE_XY);
@@ -85,8 +85,8 @@ class ConfirmPopup : public Popup {
 		void mouseClick(double mouseX, double mouseY) {
 			Popup::mouseClick(mouseX, mouseY);
 
-			mouseX -= bounds.X0() + 0.3;
-			mouseY -= bounds.Y0() + 0.15;
+			mouseX -= bounds.x0 + 0.3;
+			mouseY -= bounds.y0 + 0.15;
 
 			if (Rect(-0.25, -0.09, -0.05, -0.03).inside(mouseX, mouseY)) {
 				reject();

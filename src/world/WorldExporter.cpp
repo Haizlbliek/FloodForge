@@ -165,25 +165,30 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		hasMapFile = false;
 	}
 
-	Rect bounds;
+	Rect bounds = Rect();
+	bounds.x0 = INFINITY;
+	bounds.x1 = -INFINITY;
+	bounds.y0 = INFINITY;
+	bounds.y1 = -INFINITY;
 
 	for (Room *room : EditorState::rooms) {
+		if (room->isOffscreen()) continue;
 		if (room->data.hidden) continue;
 
-		double left   = room->position.x;
-		double right  = room->position.x + room->Width();
-		double top    = -room->position.y + room->Height();
+		double left = room->position.x;
+		double right = room->position.x + room->Width();
+		double top = -room->position.y + room->Height();
 		double bottom = -room->position.y;
-		bounds.X0(std::min(bounds.X0(), left));
-		bounds.X1(std::max(bounds.X1(), right));
-		bounds.Y0(std::min(bounds.Y0(), bottom));
-		bounds.Y1(std::max(bounds.Y1(), top));
+		bounds.x0 = std::min(bounds.x0, left);
+		bounds.x1 = std::max(bounds.x1, right);
+		bounds.y0 = std::min(bounds.y0, bottom);
+		bounds.y1 = std::max(bounds.y1, top);
 	}
 
 	const int padding = 10;
 
-	const int width = std::floor(bounds.X1() - bounds.X0() + padding * 2);
-	const int height = std::floor(bounds.Y1() - bounds.Y0() + padding * 2) * 3;
+	const int width = std::floor(bounds.x1 - bounds.x0 + padding * 2);
+	const int height = std::floor(bounds.y1 - bounds.y0 + padding * 2) * LAYER_COUNT;
 
 	std::vector<unsigned char> image(width * height * 3);
 
@@ -192,7 +197,7 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 			for (int y = 0; y < height; y++) {
 				int i = y * width + x;
 
-				if (x < padding || (y % (height / 3)) < padding || x >= width - padding || (y % (height / 3)) >= height / 3 - padding) {
+				if (x < padding || (y % (height / LAYER_COUNT)) < padding || x >= width - padding || (y % (height / LAYER_COUNT)) >= height / LAYER_COUNT - padding) {
 					image[i * 3 + 0] = 0;
 					image[i * 3 + 1] = 255;
 					image[i * 3 + 2] = 255;
@@ -216,9 +221,9 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		if (room->data.hidden) continue;
 
 		// Top left corner
-		int x = std::floor(room->position.x - room->Width() * 0.0 - bounds.X0()) + padding;
-		int y = std::floor(-room->position.y - room->Height() * 0.0 - bounds.Y0()) + padding;
-		y += (2 - room->layer) * height / 3;
+		int x = std::floor(room->position.x - bounds.x0) + padding;
+		int y = std::floor(-room->position.y - bounds.y0) + padding;
+		y += (2 - room->layer) * height / LAYER_COUNT;
 		
 		if (hasMapFile) {
 			mapFile << toUpper(room->roomName) << ": " << x << "," << (height - y - room->Height()) << "," << room->Width() << "," << room->Height() << "\n";

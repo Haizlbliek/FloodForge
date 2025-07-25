@@ -19,7 +19,7 @@ class Popup {
 
 		virtual const Rect Bounds() {
 			if (minimized) {
-				return Rect(bounds.X0(), bounds.Y1() - 0.05, bounds.X1(), bounds.Y1());
+				return Rect(bounds.x0, bounds.y1 - 0.05, bounds.x1, bounds.y1);
 			}
 
 			return bounds;

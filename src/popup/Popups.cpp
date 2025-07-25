@@ -32,22 +32,22 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenB
 
 	if (minimized) {
 		setThemeColour(ThemeColour::Popup);
-		Draw::vertex(bounds.X0(), bounds.Y1() - 0.05);
-		Draw::vertex(bounds.X0(), bounds.Y1());
-		Draw::vertex(bounds.X1(), bounds.Y1());
-		Draw::vertex(bounds.X1(), bounds.Y1() - 0.05);
+		Draw::vertex(bounds.x0, bounds.y1 - 0.05);
+		Draw::vertex(bounds.x0, bounds.y1);
+		Draw::vertex(bounds.x1, bounds.y1);
+		Draw::vertex(bounds.x1, bounds.y1 - 0.05);
 	} else {
 		setThemeColour(ThemeColour::Popup);
-		Draw::vertex(bounds.X0(), bounds.Y0());
-		Draw::vertex(bounds.X0(), bounds.Y1());
-		Draw::vertex(bounds.X1(), bounds.Y1());
-		Draw::vertex(bounds.X1(), bounds.Y0());
+		Draw::vertex(bounds.x0, bounds.y0);
+		Draw::vertex(bounds.x0, bounds.y1);
+		Draw::vertex(bounds.x1, bounds.y1);
+		Draw::vertex(bounds.x1, bounds.y0);
 	}
 	setThemeColour(ThemeColour::PopupHeader);
-	Draw::vertex(bounds.X0(),  bounds.Y1() - 0.00);
-	Draw::vertex(bounds.X0(),  bounds.Y1() - 0.05);
-	Draw::vertex(bounds.X1(),  bounds.Y1() - 0.05);
-	Draw::vertex(bounds.X1(),  bounds.Y1() - 0.00);
+	Draw::vertex(bounds.x0,  bounds.y1 - 0.00);
+	Draw::vertex(bounds.x0,  bounds.y1 - 0.05);
+	Draw::vertex(bounds.x1,  bounds.y1 - 0.05);
+	Draw::vertex(bounds.x1,  bounds.y1 - 0.00);
 
 	Draw::end();
 
@@ -59,9 +59,9 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenB
 		glLineWidth(1);
 	}
 	if (minimized) {
-		strokeRect(bounds.X0(), bounds.Y1() - 0.05, bounds.X1(), bounds.Y1());
+		strokeRect(bounds.x0, bounds.y1 - 0.05, bounds.x1, bounds.y1);
 	} else {
-		strokeRect(bounds.X0(), bounds.Y0(), bounds.X1(), bounds.Y1());
+		strokeRect(bounds.x0, bounds.y0, bounds.x1, bounds.y1);
 	}
 
 	setThemeColour(ThemeColour::Text);
@@ -70,21 +70,21 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenB
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	Draw::begin(Draw::QUADS);
 
-	Draw::texCoord(0.00f, 0.00f); Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.00);
-	Draw::texCoord(0.25f, 0.00f); Draw::vertex(bounds.X1() - 0.00, bounds.Y1() - 0.00);
-	Draw::texCoord(0.25f, 0.25f); Draw::vertex(bounds.X1() - 0.00, bounds.Y1() - 0.05);
-	Draw::texCoord(0.00f, 0.25f); Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.05);
+	Draw::texCoord(0.00f, 0.00f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
+	Draw::texCoord(0.25f, 0.00f); Draw::vertex(bounds.x1 - 0.00, bounds.y1 - 0.00);
+	Draw::texCoord(0.25f, 0.25f); Draw::vertex(bounds.x1 - 0.00, bounds.y1 - 0.05);
+	Draw::texCoord(0.00f, 0.25f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
 
 	if (minimized) {
-		Draw::texCoord(0.75f, 0.25f); Draw::vertex(bounds.X1() - 0.10, bounds.Y1() - 0.00);
-		Draw::texCoord(1.00f, 0.25f); Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.00);
-		Draw::texCoord(1.00f, 0.50f); Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.05);
-		Draw::texCoord(0.75f, 0.50f); Draw::vertex(bounds.X1() - 0.10, bounds.Y1() - 0.05);
+		Draw::texCoord(0.75f, 0.25f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.00);
+		Draw::texCoord(1.00f, 0.25f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
+		Draw::texCoord(1.00f, 0.50f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
+		Draw::texCoord(0.75f, 0.50f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.05);
 	} else {
-		Draw::texCoord(0.50f, 0.25f); Draw::vertex(bounds.X1() - 0.10, bounds.Y1() - 0.00);
-		Draw::texCoord(0.75f, 0.25f); Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.00);
-		Draw::texCoord(0.75f, 0.50f); Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.05);
-		Draw::texCoord(0.50f, 0.50f); Draw::vertex(bounds.X1() - 0.10, bounds.Y1() - 0.05);
+		Draw::texCoord(0.50f, 0.25f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.00);
+		Draw::texCoord(0.75f, 0.25f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
+		Draw::texCoord(0.75f, 0.50f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
+		Draw::texCoord(0.50f, 0.50f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.05);
 	}
 
 	Draw::end();
@@ -93,37 +93,37 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenB
 
 	glLineWidth(1);
 	
-	if (mouseInside && mouseX >= bounds.X1() - 0.05 && mouseY >= bounds.Y1() - 0.05) {
+	if (mouseInside && mouseX >= bounds.x1 - 0.05 && mouseY >= bounds.y1 - 0.05) {
 		setThemeColour(ThemeColour::BorderHighlight);
 	} else {
 		setThemeColour(ThemeColour::Border);
 	}
 
 	Draw::begin(Draw::LINE_LOOP);
-	Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.00);
-	Draw::vertex(bounds.X1() - 0.00, bounds.Y1() - 0.00);
-	Draw::vertex(bounds.X1() - 0.00, bounds.Y1() - 0.05);
-	Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.05);
+	Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
+	Draw::vertex(bounds.x1 - 0.00, bounds.y1 - 0.00);
+	Draw::vertex(bounds.x1 - 0.00, bounds.y1 - 0.05);
+	Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
 	Draw::end();
 
-	if (mouseInside && mouseX >= bounds.X1() - 0.1 && mouseX <= bounds.X1() - 0.05 && mouseY >= bounds.Y1() - 0.05) {
+	if (mouseInside && mouseX >= bounds.x1 - 0.1 && mouseX <= bounds.x1 - 0.05 && mouseY >= bounds.y1 - 0.05) {
 		setThemeColour(ThemeColour::BorderHighlight);
 	} else {
 		setThemeColour(ThemeColour::Border);
 	}
 
 	Draw::begin(Draw::LINE_LOOP);
-	Draw::vertex(bounds.X1() - 0.10, bounds.Y1() - 0.00);
-	Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.00);
-	Draw::vertex(bounds.X1() - 0.05, bounds.Y1() - 0.05);
-	Draw::vertex(bounds.X1() - 0.10, bounds.Y1() - 0.05);
+	Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.00);
+	Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
+	Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
+	Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.05);
 	Draw::end();
 }
 
 void Popup::mouseClick(double mouseX, double mouseY) {
-	if (mouseX >= bounds.X1() - 0.05 && mouseY >= bounds.Y1() - 0.05) {
+	if (mouseX >= bounds.x1 - 0.05 && mouseY >= bounds.y1 - 0.05) {
 		close();
-	} else if (mouseX >= bounds.X1() - 0.1 && mouseY >= bounds.Y1() - 0.05) {
+	} else if (mouseX >= bounds.x1 - 0.1 && mouseY >= bounds.y1 - 0.05) {
 		minimized = !minimized;
 	}
 }
@@ -133,10 +133,10 @@ void Popup::close() {
 }
 
 bool Popup::drag(double mouseX, double mouseY) {
-	if (mouseX >= bounds.X1() - 0.1 && mouseY >= bounds.Y1() - 0.05)
+	if (mouseX >= bounds.x1 - 0.1 && mouseY >= bounds.y1 - 0.05)
 		return false;
 
-	return (mouseY >= bounds.Y1() - 0.05);
+	return (mouseY >= bounds.y1 - 0.05);
 }
 
 void Popup::offset(Vector2 offset) {

@@ -35,21 +35,21 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 		setThemeColour(ThemeColour::Border);
 	}
 	Draw::begin(Draw::LINES);
-	Draw::vertex(bounds.X0() + 0.6, bounds.Y0());
-	Draw::vertex(bounds.X0() + 0.6, bounds.Y1());
+	Draw::vertex(bounds.x0 + 0.6, bounds.y0);
+	Draw::vertex(bounds.x0 + 0.6, bounds.y1);
 	Draw::end();
 
 	currentScroll += (targetScroll - currentScroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 
-	double centreX = bounds.X0() + 0.305;
+	double centreX = bounds.x0 + 0.305;
 
 	double buttonSize = 0.5 / 7.0;
 	double buttonPadding = 0.02;
 
 	setThemeColour(ThemeColour::Text);
 	glLineWidth(1);
-	Fonts::rainworld->writeCentred("Creature type:", centreX, bounds.Y1() - 0.07, 0.035, CENTRE_X);
-	Fonts::rainworld->writeCentred("Attract:", bounds.X0() + 0.72, bounds.Y1() - 0.07, 0.035, CENTRE_X);
+	Fonts::rainworld->writeCentred("Creature type:", centreX, bounds.y1 - 0.07, 0.035, CENTRE_X);
+	Fonts::rainworld->writeCentred("Attract:", bounds.x0 + 0.72, bounds.y1 - 0.07, 0.035, CENTRE_X);
 
 	double countX = 0.0;
 	double countY = 0.0;
@@ -60,8 +60,8 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 	glfwGetWindowSize(window->getGLFWWindow(), &windowWidth, &windowHeight);
 
 	glEnable(GL_SCISSOR_TEST);
-	double clipBottom = ((bounds.Y0() + buttonPadding + screenBounds.y) * 0.5) * windowHeight;
-	double clipTop = ((bounds.Y1() - 0.1 - buttonPadding + screenBounds.y) * 0.5) * windowHeight;
+	double clipBottom = ((bounds.y0 + buttonPadding + screenBounds.y) * 0.5) * windowHeight;
+	double clipTop = ((bounds.y1 - 0.1 - buttonPadding + screenBounds.y) * 0.5) * windowHeight;
 	glScissor(0, clipBottom, windowWidth, clipTop - clipBottom);
 
 	int countA = CreatureTextures::creatures.size();
@@ -78,7 +78,7 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 			std::string creatureType = CreatureTextures::creatures[id];
 
 			double rectX = centreX + (x - 0.5 * CREATURE_ROWS) * (buttonSize + buttonPadding) + buttonPadding * 0.5;
-			double rectY = (bounds.Y1() - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - currentScroll;
+			double rectY = (bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - currentScroll;
 
 			Rect rect = Rect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
 
@@ -144,13 +144,13 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 	glDisable(GL_SCISSOR_TEST);
 
 	for (int i = 0; i < 6; i++) {
-		double y = bounds.Y1() - 0.165 - i * 0.09;
+		double y = bounds.y1 - 0.165 - i * 0.09;
 
 		Draw::color(attractivenessColors[i]);
-		Fonts::rainworld->writeCentred(attractivenessNames[i], bounds.X1() - 0.11, y, 0.03, CENTRE_XY);
+		Fonts::rainworld->writeCentred(attractivenessNames[i], bounds.x1 - 0.11, y, 0.03, CENTRE_XY);
 
 		if (selectAttractiveness == attractivenessIds[i]) {
-			strokeRect(bounds.X0() + 0.605, y - 0.02, bounds.X1() - 0.01, y + 0.02);
+			strokeRect(bounds.x0 + 0.605, y - 0.02, bounds.x1 - 0.01, y + 0.02);
 		}
 	}
 
@@ -171,7 +171,7 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 void RoomAttractivenessPopup::mouseClick(double mouseX, double mouseY) {
 	Popup::mouseClick(mouseX, mouseY);
 
-	double centreX = bounds.X0() + 0.305;
+	double centreX = bounds.x0 + 0.305;
 	double width = 0.5;
 	double height = 0.5;
 
@@ -188,7 +188,7 @@ void RoomAttractivenessPopup::mouseClick(double mouseX, double mouseY) {
 			if (id >= countA) break;
 
 			double rectX = centreX + (x - 0.5 * CREATURE_ROWS) * (buttonSize + buttonPadding) + buttonPadding * 0.5;
-			double rectY = (bounds.Y1() - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - currentScroll;
+			double rectY = (bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - currentScroll;
 
 			Rect rect = Rect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
 
@@ -200,9 +200,9 @@ void RoomAttractivenessPopup::mouseClick(double mouseX, double mouseY) {
 	}
 
 	for (int i = 0; i < 6; i++) {
-		double y = bounds.Y1() - 0.165 - i * 0.09;
+		double y = bounds.y1 - 0.165 - i * 0.09;
 
-		if (Rect(bounds.X0() + 0.605, y - 0.02, bounds.X1() - 0.01, y + 0.02).inside(mouseX, mouseY)) {
+		if (Rect(bounds.x0 + 0.605, y - 0.02, bounds.x1 - 0.01, y + 0.02).inside(mouseX, mouseY)) {
 			selectAttractiveness = attractivenessIds[i];
 		}
 	}

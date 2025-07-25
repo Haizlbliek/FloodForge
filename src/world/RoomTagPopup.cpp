@@ -11,12 +11,12 @@ void RoomTagPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 
 	
 	if (minimized) return;
 
-	mouseX -= bounds.X0() + 0.5;
-	mouseY -= bounds.Y0() + 0.5;
+	mouseX -= bounds.x0 + 0.5;
+	mouseY -= bounds.y0 + 0.5;
 
 	Draw::pushMatrix();
 
-	Draw::translate(bounds.X0() + 0.5, bounds.Y0() + 0.5);
+	Draw::translate(bounds.x0 + 0.5, bounds.y0 + 0.5);
 
 	if (rooms.size() > 0) {
 		setThemeColour(ThemeColour::Text);
@@ -26,7 +26,7 @@ void RoomTagPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 
 			Fonts::rainworld->writeCentred("Selected Rooms", 0.0, 0.4, 0.04, CENTRE_XY);
 		}
 
-		double y = bounds.Y1() - 0.15;
+		double y = bounds.y1 - 0.15;
 		drawTagButton("None", "", y, mouseX, mouseY);
 		y -= 0.075;
 
@@ -59,8 +59,8 @@ void RoomTagPopup::toggleTag(std::string tag) {
 void RoomTagPopup::mouseClick(double mouseX, double mouseY) {
 	Popup::mouseClick(mouseX, mouseY);
 
-	mouseX -= bounds.X0() + 0.5;
-	mouseY -= bounds.Y0() + 0.5;
+	mouseX -= bounds.x0 + 0.5;
+	mouseY -= bounds.y0 + 0.5;
 
 	int button = getButtonIndex(mouseX, mouseY);
 

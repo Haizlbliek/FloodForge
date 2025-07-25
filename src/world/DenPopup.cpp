@@ -25,7 +25,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 	bool hasHover = false;
 	std::string hoverText = "";
 
-	mouseOnRight = mouseX > (bounds.X1() - 0.2);
+	mouseOnRight = mouseX > (bounds.x1 - 0.2);
 	
 	Den &den = room->CreatureDen(this->den);
 	bool unknown = !CreatureTextures::known(den.type);
@@ -34,9 +34,9 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 	double sliderAt = den.data;
 
 	if (hasSlider) {
-		bounds.X1(bounds.X0() + 0.8 + 0.1);
+		bounds.x1 = bounds.x0 + 0.8 + 0.1;
 	} else {
-		bounds.X1(bounds.X0() + 0.8);
+		bounds.x1 = bounds.x0 + 0.8;
 	}
 
 	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
@@ -49,27 +49,27 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 		setThemeColour(ThemeColour::Border);
 	}
 	Draw::begin(Draw::LINES);
-	Draw::vertex(bounds.X0() + 0.6, bounds.Y0());
-	Draw::vertex(bounds.X0() + 0.6, bounds.Y1());
+	Draw::vertex(bounds.x0 + 0.6, bounds.y0);
+	Draw::vertex(bounds.x0 + 0.6, bounds.y1);
 	Draw::end();
 
 	if (hasSlider) {
 		setThemeColour(ThemeColour::Border);
 		Draw::begin(Draw::LINES);
-		Draw::vertex(bounds.X0() + 0.85, bounds.Y0() + 0.05);
-		Draw::vertex(bounds.X0() + 0.85, bounds.Y1() - 0.1);
+		Draw::vertex(bounds.x0 + 0.85, bounds.y0 + 0.05);
+		Draw::vertex(bounds.x0 + 0.85, bounds.y1 - 0.1);
 		Draw::end();
 
 		double progress = (sliderAt - sliderMin) / (sliderMax - sliderMin);
-		double sliderY = ((bounds.Y1() - bounds.Y0() - 0.2) * progress) + bounds.Y0() + 0.075;
-		fillRect(bounds.X0() + 0.825, sliderY - 0.005, bounds.X0() + 0.875, sliderY + 0.005);
+		double sliderY = ((bounds.y1 - bounds.y0 - 0.2) * progress) + bounds.y0 + 0.075;
+		fillRect(bounds.x0 + 0.825, sliderY - 0.005, bounds.x0 + 0.875, sliderY + 0.005);
 	}
 
 	
 	scrollA += (scrollATo - scrollA) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 	scrollB += (scrollBTo - scrollB) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 	
-	double centreX = bounds.X0() + 0.305;
+	double centreX = bounds.x0 + 0.305;
 	double width = 0.5;
 	double height = 0.5;
 
@@ -78,8 +78,8 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 
 	setThemeColour(ThemeColour::Text);
 	glLineWidth(1);
-	Fonts::rainworld->writeCentred("Creature type:", centreX, bounds.Y1() - 0.07, 0.035, CENTRE_X);
-	Fonts::rainworld->writeCentred("Tag:", bounds.X0() + 0.7, bounds.Y1() - 0.07, 0.035, CENTRE_X);
+	Fonts::rainworld->writeCentred("Creature type:", centreX, bounds.y1 - 0.07, 0.035, CENTRE_X);
+	Fonts::rainworld->writeCentred("Tag:", bounds.x0 + 0.7, bounds.y1 - 0.07, 0.035, CENTRE_X);
 
 	double countX = 0.0;
 	double countY = 0.0;
@@ -90,8 +90,8 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 	glfwGetWindowSize(window->getGLFWWindow(), &windowWidth, &windowHeight);
 
 	glEnable(GL_SCISSOR_TEST);
-	double clipBottom = ((bounds.Y0() + buttonPadding + screenBounds.y) * 0.5) * windowHeight;
-	double clipTop = ((bounds.Y1() - 0.1 - buttonPadding + screenBounds.y) * 0.5) * windowHeight;
+	double clipBottom = ((bounds.y0 + buttonPadding + screenBounds.y) * 0.5) * windowHeight;
+	double clipTop = ((bounds.y1 - 0.1 - buttonPadding + screenBounds.y) * 0.5) * windowHeight;
 	glScissor(0, clipBottom, windowWidth, clipTop - clipBottom);
 
 	int countA = CreatureTextures::creatures.size();
@@ -108,7 +108,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 			bool isSelected = den.type == creatureType || (unknown && creatureType == "UNKNOWN");
 
 			double rectX = centreX + (x - 0.5 * CREATURE_ROWS) * (buttonSize + buttonPadding) + buttonPadding * 0.5;
-			double rectY = (bounds.Y1() - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollA;
+			double rectY = (bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollA;
 
 			Rect rect = Rect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
 
@@ -181,7 +181,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 	}
 
 
-	double tagCentreX = bounds.X0() + 0.7;
+	double tagCentreX = bounds.x0 + 0.7;
 	int countB = CreatureTextures::creatureTags.size();
 
 	for (int y = 0; y <= (countB / 2); y++) {
@@ -195,7 +195,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 			bool isSelected = den.tag == creatureTag;
 
 			double rectX = tagCentreX + (x - 1.0) * (buttonSize + buttonPadding) + buttonPadding * 0.5;
-			double rectY = (bounds.Y1() - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollB;
+			double rectY = (bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollB;
 
 			Rect rect = Rect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
 
@@ -270,9 +270,9 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 	// UPDATE
 
 	if (hasSlider && window->GetMouse()->Left()) {
-		if (mouseX >= bounds.X0() + 0.825 && mouseX <= bounds.X0() + 0.875) {
-			if (mouseY >= bounds.Y0() + 0.05 && mouseY <= bounds.Y1() - 0.1) {
-				double P = (mouseY - bounds.Y0() - 0.075) / (bounds.Y1() - bounds.Y0() - 0.2);
+		if (mouseX >= bounds.x0 + 0.825 && mouseX <= bounds.x0 + 0.875) {
+			if (mouseY >= bounds.y0 + 0.05 && mouseY <= bounds.y1 - 0.1) {
+				double P = (mouseY - bounds.y0 - 0.075) / (bounds.y1 - bounds.y0 - 0.2);
 				P = std::clamp(P, 0.0, 1.0);
 				den.data = P * (sliderMax - sliderMin) + sliderMin;
 				if (sliderType == SliderType::SLIDER_INT) {
@@ -301,7 +301,7 @@ void DenPopup::mouseClick(double mouseX, double mouseY) {
 
 	Den &den = room->CreatureDen(this->den);
 	
-	double centreX = bounds.X0() + 0.305;
+	double centreX = bounds.x0 + 0.305;
 	double width = 0.5;
 	double height = 0.5;
 
@@ -317,7 +317,7 @@ void DenPopup::mouseClick(double mouseX, double mouseY) {
 			if (id >= countA) break;
 
 			double rectX = centreX + (x - 0.5 * CREATURE_ROWS) * (buttonSize + buttonPadding) + buttonPadding * 0.5;
-			double rectY = (bounds.Y1() - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollA;
+			double rectY = (bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollA;
 
 			Rect rect = Rect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
 
@@ -348,7 +348,7 @@ void DenPopup::mouseClick(double mouseX, double mouseY) {
 	}
 
 
-	double tagCentreX = bounds.X0() + 0.7;
+	double tagCentreX = bounds.x0 + 0.7;
 	int countB = CreatureTextures::creatureTags.size();
 
 	for (int y = 0; y <= (countB / 2); y++) {
@@ -358,7 +358,7 @@ void DenPopup::mouseClick(double mouseX, double mouseY) {
 			if (id >= countB) break;
 
 			double rectX = tagCentreX + (x - 1.0) * (buttonSize + buttonPadding) + buttonPadding * 0.5;
-			double rectY = (bounds.Y1() - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollB;
+			double rectY = (bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollB;
 
 			Rect rect = Rect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
 

@@ -42,8 +42,8 @@ class InfoPopup : public Popup {
 
 			int lineId = 0;
 			for (std::string line : warning) {
-				double y = -((lineId - warning.size() * 0.5) * 0.05) - 0.04 + (bounds.Y0() + bounds.Y1()) * 0.5;
-				Fonts::rainworld->writeCentred(line, (bounds.X0() + bounds.X1()) * 0.5, y, 0.04, CENTRE_XY);
+				double y = -((lineId - warning.size() * 0.5) * 0.05) - 0.04 + (bounds.y0 + bounds.y1) * 0.5;
+				Fonts::rainworld->writeCentred(line, (bounds.x0 + bounds.x1) * 0.5, y, 0.04, CENTRE_XY);
 
 				lineId++;
 			}

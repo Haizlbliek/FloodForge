@@ -46,17 +46,6 @@ class Rect {
 			return Rect(x, y, x + width, y + height);
 		}
 
-		void X0(const double x0) { this->x0 = x0; }
-		void Y0(const double y0) { this->y0 = y0; }
-		void X1(const double x1) { this->x1 = x1; }
-		void Y1(const double y1) { this->y1 = y1; }
-
-		const double X0() const { return x0; }
-		const double Y0() const { return y0; }
-		const double X1() const { return x1; }
-		const double Y1() const { return y1; }
-
-	private:
 		double x0;
 		double y0;
 		double x1;

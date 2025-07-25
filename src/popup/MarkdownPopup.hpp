@@ -51,16 +51,16 @@ class MarkdownPopup : public Popup {
 			double padding = 0.01;
 			glEnable(GL_SCISSOR_TEST);
 			glScissor(
-				((bounds.X0() + padding) / screenBounds.x + 1.0) * 0.5 * windowWidth,
- 				((bounds.Y0() + padding) / screenBounds.y + 1.0) * 0.5 * windowHeight,
-				(((bounds.X1() - bounds.X0()) - padding * 2) / screenBounds.x) * 0.5 * windowWidth,
-				(((bounds.Y1() - bounds.Y0()) - padding * 2 - 0.05) / screenBounds.y) * 0.5 * windowHeight
+				((bounds.x0 + padding) / screenBounds.x + 1.0) * 0.5 * windowWidth,
+ 				((bounds.y0 + padding) / screenBounds.y + 1.0) * 0.5 * windowHeight,
+				(((bounds.x1 - bounds.x0) - padding * 2) / screenBounds.x) * 0.5 * windowWidth,
+				(((bounds.y1 - bounds.y0) - padding * 2 - 0.05) / screenBounds.y) * 0.5 * windowHeight
 			);
 			
 			currentScroll += (targetScroll - currentScroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 			
-			double x = bounds.X0();
-			double y = 0.75 + bounds.Y0() + 0.8f + currentScroll;
+			double x = bounds.x0;
+			double y = 0.75 + bounds.y0 + 0.8f + currentScroll;
 			
 			for (std::pair<MDType, std::vector<MDStyledText>> line : lines) {
 				if (line.first == MDType::TEXT) {
@@ -95,8 +95,8 @@ class MarkdownPopup : public Popup {
 					y -= 0.03;
 					Draw::color(0.7, 0.7, 0.7);
 					Draw::begin(Draw::LINES);
-					Draw::vertex(bounds.X0() + 0.01, y);
-					Draw::vertex(bounds.X1() - 0.01, y);
+					Draw::vertex(bounds.x0 + 0.01, y);
+					Draw::vertex(bounds.x1 - 0.01, y);
 					Draw::end();
 					y -= 0.03;
 				}
