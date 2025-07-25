@@ -165,7 +165,6 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		hasMapFile = false;
 	}
 
-	double mapScale = 3.0;
 	Vector2 topLeft = Vector2(INFINITY, INFINITY);
 	Vector2 bottomRight = Vector2(-INFINITY, -INFINITY);
 
@@ -183,9 +182,9 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		bottomRight.y = std::max(bottomRight.y, bottom);
 	}
 
-	int layerHeight = int((bottomRight.y - topLeft.y) / mapScale) + 20;
+	int layerHeight = int(bottomRight.y - topLeft.y) + 20;
 
-	const int textureWidth = int((bottomRight.x - topLeft.x) / mapScale) + 20;
+	const int textureWidth = int(bottomRight.x - topLeft.x) + 20;
 	const int textureHeight = layerHeight * LAYER_COUNT;
 
 	std::vector<unsigned char> image(textureWidth * textureHeight * 3);
@@ -219,8 +218,8 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		if (room->data.hidden) continue;
 
 		Vector2i roomPosition = Vector2i(
-			int((room->position.x - topLeft.x - room->Width() * 0.5) / mapScale),
-			int((room->position.y - topLeft.y - room->Height() * 0.5) / mapScale)
+			int(room->position.x - topLeft.x - room->Width() * 0.5),
+			int(bottomRight.y - room->position.y - room->Height() * 0.5)
 		);
 		int layerXOffset = 10;
 		int layerYOffset = room->layer * layerHeight + 10;
@@ -244,7 +243,7 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 					continue;
 				}
 
-				int i = ((roomPosition.y + oy) * textureWidth + roomPosition.x + ox) * 3;
+				int i = ((roomPosition.y + layerYOffset + oy) * textureWidth + roomPosition.x + layerXOffset + ox) * 3;
 				unsigned int tileType = room->getTile(ox, oy) % 16;
 				unsigned int tileData = room->getTile(ox, oy) / 16;
 				
