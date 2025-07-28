@@ -170,12 +170,11 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 
 	for (Room *room : EditorState::rooms) {
 		if (room->isOffscreen()) continue;
-		if (room->data.hidden) continue;
 
-		double left = room->position.x - room->Width() * 0.5;
-		double right = room->position.x + room->Width() * 0.5;
-		double top = room->position.y - room->Height() * 0.5;
-		double bottom = room->position.y + room->Height() * 0.5;
+		double left = room->position.x;
+		double right = room->position.x + room->Width();
+		double top = room->position.y - room->Height();
+		double bottom = room->position.y;
 		topLeft.x = std::min(topLeft.x, left);
 		bottomRight.x = std::max(bottomRight.x, right);
 		topLeft.y = std::min(topLeft.y, top);
@@ -218,11 +217,11 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		if (room->data.hidden) continue;
 
 		Vector2i roomPosition = Vector2i(
-			int(room->position.x - topLeft.x - room->Width() * 0.5),
-			int(bottomRight.y - room->position.y - room->Height() * 0.5)
+			int(room->position.x - topLeft.x),
+			int(bottomRight.y - room->position.y)
 		);
 		int layerXOffset = 10;
-		int layerYOffset = room->layer * layerHeight + 10;
+		int layerYOffset = (2 - room->layer) * layerHeight + 10;
 
 		if (hasMapFile) {
 			mapFile << toUpper(room->roomName) << ": " << (roomPosition.x + layerXOffset) << "," << (roomPosition.y + layerYOffset) << "," << room->Width() << "," << room->Height() << "\n";
