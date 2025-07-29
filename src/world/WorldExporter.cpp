@@ -253,7 +253,7 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 				int g = 0;
 				int b = 0;
 
-				if (tileType == 0 || tileType == 4) {
+				if (tileType == 0 || tileType == 4 || tileType == 5) {
 					r = 255; g = 0; // #FF0000
 				}
 				if (tileType == 1) {
