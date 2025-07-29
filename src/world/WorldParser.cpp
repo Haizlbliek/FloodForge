@@ -100,14 +100,14 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 		} else {
 			std::string roomName = toLower(line.substr(0, line.find(':')));
 
-			std::string roomPath = toLower(directory.string());
-			replaceLastInstance(roomPath, toLower(EditorState::region.acronym), EditorState::region.roomsDirectory);
-			roomPath = (std::filesystem::path(roomPath) / roomName).string();
+			std::filesystem::path roomPath = directory.parent_path() / EditorState::region.roomsDirectory;
 
 			if (startsWith(roomName, "gate")) {
-				replaceLastInstance(roomPath, EditorState::region.roomsDirectory, "gates");
+				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path().string(), "gates");
 				Logger::log("Found gate ", roomName);
 			}
+			
+			roomPath = roomPath / roomName;
 
 			Room *room = nullptr;
 
@@ -120,7 +120,7 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 					room = EditorState::offscreenDen;
 				}
 			} else {
-				room = new Room(roomPath + ".txt", roomName);
+				room = new Room(roomPath.string() + ".txt", roomName);
 				EditorState::rooms.push_back(room);
 			}
 
@@ -232,16 +232,18 @@ void WorldParser::parseWorldRoom(std::string line, std::filesystem::path directo
 		if (startsWith(roomName, "offscreenden")) {
 			room = new OffscreenRoom(roomName, roomName);
 		} else {
-			std::string roomPath = directory.string();
-			replaceLastInstance(roomPath, EditorState::region.acronym, EditorState::region.roomsDirectory);
+			std::filesystem::path roomPath = directory.parent_path() / EditorState::region.roomsDirectory;
 
 			if (startsWith(roomName, "gate")) {
-				replaceLastInstance(roomPath, EditorState::region.roomsDirectory, "gates");
+				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path().string(), "gates");
 			}
 
-			roomPath = findFileCaseInsensitive(roomPath, roomName + ".txt");
+			std::string filePath = findFileCaseInsensitive(roomPath.string(), roomName + ".txt");
+			if (filePath.empty()) {
+				Logger::logError("File `", roomPath, "/", roomName, ".txt` could not be found.");
+			}
 
-			room = new Room(roomPath, roomName);
+			room = new Room(filePath, roomName);
 		}
 
 		EditorState::rooms.push_back(room);
