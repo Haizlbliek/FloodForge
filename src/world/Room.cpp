@@ -65,7 +65,7 @@ void RoomHelpers::drawTexture(GLuint texture, double rectX, double rectY, double
 	glDisable(GL_BLEND);
 }
 
-Room::Room(std::string path, std::string name) {
+Room::Room(std::filesystem::path path, std::string name) {
 	this->path = path;
 	this->roomName = toLower(name);
 
@@ -624,11 +624,11 @@ void Room::loadGeometry() {
 void Room::checkImages() {
 	if (!Settings::getSetting<bool>(Settings::Setting::WarnMissingImages)) return;
 	
-	std::string imageDir = path.substr(0, path.find_last_of(std::filesystem::path::preferred_separator));
+	std::filesystem::path imageDirectory = path.parent_path();
 	for (int i = 0; i < images; i++) {
 		std::string imagePath = roomName + "_" + std::to_string(i + 1) + ".png";
 		
-		std::string foundPath = findFileCaseInsensitive(imageDir, imagePath);
+		std::string foundPath = findFileCaseInsensitive(imageDirectory.string(), imagePath);
 		
 		if (foundPath.empty()) {
 			EditorState::fails.push_back("Can't find '" + imagePath + "'");

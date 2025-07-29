@@ -79,7 +79,7 @@ class Room {
 	public:
 		virtual bool isOffscreen() { return false; }
 
-		Room(std::string path, std::string name);
+		Room(std::filesystem::path path, std::string name);
 
 		virtual ~Room();
 
@@ -187,7 +187,7 @@ class Room {
 		GLuint vbo[2]; // first: vertices, second: indices
 		GLuint vao;
 
-		std::string path;
+		std::filesystem::path path;
 
 		int width;
 		int height;

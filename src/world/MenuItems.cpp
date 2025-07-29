@@ -125,7 +125,7 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 		
 		bool initial = Settings::getSetting<bool>(Settings::Setting::WarnMissingImages);
 		Settings::settings[Settings::Setting::WarnMissingImages] = false;
-		Room *room = new Room(fromFile.string(), toRoom);
+		Room *room = new Room(fromFile, toRoom);
 		room->position = EditorState::cameraOffset;
 		EditorState::rooms.push_back(room);
 		Settings::settings[Settings::Setting::WarnMissingImages] = initial;
@@ -232,7 +232,7 @@ void MenuItems::init(Window *window) {
 							if (toLower(names[1]) == EditorState::region.acronym || toLower(names[2]) == EditorState::region.acronym) {
 								std::string roomName = names[0].substr(0, names[0].find_last_of('.')); // Remove .txt
 		
-								Room *room = new Room(roomFilePath.string(), roomName);
+								Room *room = new Room(roomFilePath, roomName);
 								room->position = EditorState::cameraOffset;
 								EditorState::rooms.push_back(room);
 							} else {
@@ -255,7 +255,7 @@ void MenuItems::init(Window *window) {
 								std::string roomName = roomFilePath.filename().string();
 								roomName = roomName.substr(0, roomName.find_last_of('.')); // Remove .txt
 		
-								Room *room = new Room(roomFilePath.string(), roomName);
+								Room *room = new Room(roomFilePath, roomName);
 								room->position = EditorState::cameraOffset;
 								EditorState::rooms.push_back(room);
 							} else {
@@ -265,7 +265,7 @@ void MenuItems::init(Window *window) {
 									std::string roomName = roomFilePath.filename().string();
 									roomName = roomName.substr(0, roomName.find_last_of('.')); // Remove .txt
 			
-									Room *room = new Room(roomFilePath.string(), roomName);
+									Room *room = new Room(roomFilePath, roomName);
 									room->position = EditorState::cameraOffset;
 									EditorState::rooms.push_back(room);
 								})
