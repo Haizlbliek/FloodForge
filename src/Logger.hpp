@@ -52,4 +52,19 @@ namespace Logger {
 			logFile.flush();
 		}
 	}
+	
+	template<typename... Args>
+	inline void logWarning(const Args&... args) {
+		std::lock_guard<std::mutex> lock(logMutex);
+	
+		std::ostringstream oss;
+		writeStream(oss, "WARN: ", args...);
+		std::string line = oss.str();
+	
+		std::cout << "WARN: " << line << std::endl;
+		if (logFile.is_open()) {
+			logFile << line << std::endl;
+			logFile.flush();
+		}
+	}
 }

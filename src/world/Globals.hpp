@@ -6,6 +6,8 @@
 #include "../math/Vector.hpp"
 #include "../Window.hpp"
 
+#define FLOODFORGE_VERSION "v1.5.4"
+
 // For backwards-compatibility
 #define LAYER_HIDDEN 5
 

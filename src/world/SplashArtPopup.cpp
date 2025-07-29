@@ -41,7 +41,7 @@ void SplashArtPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 	Draw::color(1.0f, 1.0f, 1.0f);
 	Fonts::rodondo->writeCentred("FloodForge", 0.0, 0.3, 0.2, CENTRE_XY);
 	Fonts::rainworld->writeCentred("World Editor", 0.0, 0.1, 0.1, CENTRE_XY);
-	Fonts::rainworld->write("v1.5.4", -0.88, 0.63, 0.04);
+	Fonts::rainworld->write(FLOODFORGE_VERSION, -0.88, 0.63, 0.04);
 	
 	Draw::color(0.8f, 0.8f, 0.8f);
 	Fonts::rainworld->writeCentred("Recent worlds:", -0.88, -0.28, 0.03, CENTRE_Y);
