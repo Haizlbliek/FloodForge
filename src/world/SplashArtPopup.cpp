@@ -46,7 +46,7 @@ void SplashArtPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 	Draw::color(0.8f, 0.8f, 0.8f);
 	Fonts::rainworld->writeCentred("Recent worlds:", -0.88, -0.28, 0.03, CENTRE_Y);
 	
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 8; i++) {
 		if (i >= RecentFiles::recents.size()) break;
 
 		std::string recent = toLower(RecentFiles::recents[i].filename().string());
@@ -68,7 +68,7 @@ void SplashArtPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 
 void SplashArtPopup::mouseClick(double mouseX, double mouseY) {
 	if (mouseX >= -0.9 && mouseX <= 0.9 && mouseY <= -0.25 && mouseY >= -0.65) {
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 8; i++) {
 			if (i >= RecentFiles::recents.size()) break;
 
 			std::string recent = toLower(RecentFiles::recents[i].filename().string());

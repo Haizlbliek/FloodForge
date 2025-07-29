@@ -28,7 +28,7 @@ class SplashArtPopup : public Popup {
 
 		void mouseClick(double mouseX, double mouseY);
 		
-		bool canStack(std::string popupName) override { return popupName == "MarkdownPopup"; }
+		bool canStack(std::string popupName) override { return popupName == "MarkdownPopup" || popupName == "InfoPopup"; }
 		std::string PopupName() override { return "SplashArtPopup"; }
 
 	private:
