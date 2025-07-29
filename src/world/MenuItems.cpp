@@ -127,7 +127,6 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 		Settings::settings[Settings::Setting::WarnMissingImages] = false;
 		Room *room = new Room(fromFile.string(), toRoom);
 		room->position = EditorState::cameraOffset;
-		room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
 		EditorState::rooms.push_back(room);
 		Settings::settings[Settings::Setting::WarnMissingImages] = initial;
 		
@@ -235,7 +234,6 @@ void MenuItems::init(Window *window) {
 		
 								Room *room = new Room(roomFilePath.string(), roomName);
 								room->position = EditorState::cameraOffset;
-								room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
 								EditorState::rooms.push_back(room);
 							} else {
 								Popups::addPopup((new ConfirmPopup(window, "Change which acronym?"))
@@ -259,7 +257,6 @@ void MenuItems::init(Window *window) {
 		
 								Room *room = new Room(roomFilePath.string(), roomName);
 								room->position = EditorState::cameraOffset;
-								room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
 								EditorState::rooms.push_back(room);
 							} else {
 								Popups::addPopup((new ConfirmPopup(window, "Copy room to " + EditorState::region.acronym + "-rooms?"))
@@ -270,7 +267,6 @@ void MenuItems::init(Window *window) {
 			
 									Room *room = new Room(roomFilePath.string(), roomName);
 									room->position = EditorState::cameraOffset;
-									room->data.merge = Settings::getSetting<bool>(Settings::Setting::VisualMergeDefault);
 									EditorState::rooms.push_back(room);
 								})
 								->OkayText("Yes")

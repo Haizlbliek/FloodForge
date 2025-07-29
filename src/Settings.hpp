@@ -21,7 +21,6 @@ namespace Settings {
 		DefaultFilePath,
 		WarnMissingImages,
 		HideTutorial,
-		VisualMergeDefault,
 		KeepFilesystemPath,
 		DebugVisibleOutputPadding
 	};

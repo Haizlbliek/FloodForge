@@ -21,9 +21,13 @@ class ExtraRoomData {
 		ExtraRoomData() = default;
 		
 		bool hidden = false;
-		bool merge = false;
+		bool merge = true;
 		
 		std::vector<DevItem> devItems;
 		
 		std::unordered_map<std::string, RoomAttractiveness> attractiveness;
+		
+		bool empty() {
+			return !hidden && merge;
+		}
 };

@@ -29,9 +29,12 @@ void WorldExporter::exportMapFile() {
 	
 	Logger::log("Exporting extra data");
 	for (Room *room : EditorState::rooms) {
+		if (room->isOffscreen() || room->data.empty())
+			continue;
+
 		file << "//FloodForge;ROOM|" << room->roomName;
 		if (room->data.hidden) file << "|hidden";
-		if (room->data.merge) file << "|merge";
+		if (!room->data.merge) file << "|nomerge";
 		file << "\n";
 	}
 

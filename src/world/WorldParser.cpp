@@ -90,60 +90,13 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 					
 					if (key == "hidden") {
 						extraRoomData[data[1]].hidden = true;
-					} else if (key == "merge") {
-						extraRoomData[data[1]].merge = true;
+					} else if (key == "nomerge") {
+						extraRoomData[data[1]].merge = false;
 					}
 				}
 			}
 		} else if (startsWith(line, "Connection: ")) {
-			// line = line.substr(line.find(' ') + 1);
-
-			// std::string roomAName = line.substr(0, line.find(','));
-			// line = line.substr(line.find(',') + 1);
-			// std::string roomBName = line.substr(0, line.find(','));
-			// line = line.substr(line.find(',') + 1);
-
-			// int connectionAX = std::stoi(line.substr(0, line.find(',')));
-			// line = line.substr(line.find(',') + 1);
-			// int connectionAY = std::stoi(line.substr(0, line.find(',')));
-			// line = line.substr(line.find(',') + 1);
-			// int connectionBX = std::stoi(line.substr(0, line.find(',')));
-			// line = line.substr(line.find(',') + 1);
-			// int connectionBY = std::stoi(line.substr(0, line.find(',')));
-			// line = line.substr(line.find(',') + 1);
-
-			// Room *roomA = nullptr;
-			// Room *roomB = nullptr;
-
-			// for (Room *room : rooms) {
-			// 	if (room->RoomName() == roomAName) {
-			// 		roomA = room;
-			// 	}
-			// 	if (room->RoomName() == roomBName) {
-			// 		roomB = room;
-			// 	}
-			// }
-
-			// if (roomA == nullptr || roomB == nullptr) continue;
-
-			// connectionAY = roomA->Height() - connectionAY - 1;
-			// connectionBY = roomB->Height() - connectionBY - 1;
-
-			// int connectionA = roomA->getRoomEntranceId(Vector2i(connectionAX, connectionAY));
-			// int connectionB = roomB->getRoomEntranceId(Vector2i(connectionBX, connectionBY));
-
-			// if (connectionA == -1 || connectionB == -1) {
-			// 	Logger::log("Failed to load connection from ", roomAName, " to ", roomBName);
-			// 	Logger::log("\t", connectionAX, ", ", connectionAY, " - ", connectionA);
-			// 	Logger::log("\t", connectionBX, ", ", connectionBY, " - ", connectionB);
-			// 	continue;
-			// }
-
-			// roomA->connect(roomB, connectionA);
-			// roomB->connect(roomA, connectionB);
-
-			// Connection *connection = new Connection(roomA, connectionA, roomB, connectionB);
-			// connections.push_back(connection);
+			// Skip
 		} else {
 			std::string roomName = toLower(line.substr(0, line.find(':')));
 

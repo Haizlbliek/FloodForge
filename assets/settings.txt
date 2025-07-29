@@ -7,7 +7,6 @@ OriginalControls: false
 SelectorScale: false
 DefaultFilePath: 
 WarnMissingImages: false
-VisualMergeDefault: true
 HideTutorial: false
 KeepFilesystemPath: true
 
