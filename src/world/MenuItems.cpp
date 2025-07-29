@@ -303,6 +303,16 @@ void MenuItems::init(Window *window) {
 
 	addButton("Export").OnLeftPress(
 		[window](Button *button) {
+			std::filesystem::path lastExportDirectory = EditorState::region.exportDirectory;
+
+			if (!Settings::getSetting<bool>(Settings::Setting::UpdateWorldFiles)) {
+				EditorState::region.exportDirectory = std::filesystem::path(BASE_PATH) / "worlds" / EditorState::region.acronym;
+				Logger::log("Special exporting to directory: ", EditorState::region.exportDirectory.string());
+				if (!std::filesystem::exists(EditorState::region.exportDirectory)) {
+					std::filesystem::create_directories(EditorState::region.exportDirectory);
+				}
+			}
+
 			if (EditorState::region.exportDirectory.string().length() > 0) {
 				WorldExporter::exportMapFile();
 				WorldExporter::exportWorldFile();
@@ -329,6 +339,8 @@ void MenuItems::init(Window *window) {
 					}
 				));
 			}
+			
+			EditorState::region.exportDirectory = lastExportDirectory;
 		}
 	);
 

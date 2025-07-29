@@ -13,6 +13,7 @@ void Settings::loadDefaults() {
 	settings[Setting::WarnMissingImages] = false;
 	settings[Setting::HideTutorial] = false;
 	settings[Setting::KeepFilesystemPath] = true;
+	settings[Setting::UpdateWorldFiles] = true;
 	settings[Setting::DebugVisibleOutputPadding] = false;
 }
 
@@ -43,6 +44,7 @@ void Settings::init() {
 		else if (key == "WarnMissingImages") settings[Setting::WarnMissingImages] = boolValue;
 		else if (key == "HideTutorial") settings[Setting::HideTutorial] = boolValue;
 		else if (key == "KeepFilesystemPath") settings[Setting::KeepFilesystemPath] = boolValue;
+		else if (key == "UpdateWorldFiles") settings[Setting::UpdateWorldFiles] = boolValue;
 		else if (key == "DebugVisibleOutputPadding") settings[Setting::DebugVisibleOutputPadding] = boolValue;
 	}
 

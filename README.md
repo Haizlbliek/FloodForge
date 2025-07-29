@@ -84,19 +84,19 @@ Report it on the new [FloodForge Discord server](https://discord.gg/RBq8PDbCmB)!
 
 Settings are stored in `assets/settings.txt`
 
-| Setting           | Default Value | Allowed Values |
-|-------------------|---------------|----------------|
-| Theme             | N/A           | any folder in assets/themes/ |
-| CameraPanSpeed    | 0.4           | float          |
-| CameraZoomSpeed   | 0.4           | float          |
-| PopupScrollSpeed  | 0.4           | float          |
-| OriginalControls  | false         | true, false    |
-| ConnectionType    | bezier        | bezier, linear |
-| SelectorScale     | true          | true, false    |
-| DefaultFilePath   |               | string         |
-| WarnMissingImages | false         | true, false    |
-| HideTutorial      | false         | true, false    |
-| VisualMergeDefault| false         | true, false    |
+| Setting           | Default Value | Allowed Values | Description |
+|-------------------|---------------|----------------|-------------|
+| Theme             | N/A           | any folder in assets/themes/ | |
+| CameraPanSpeed    | 0.4           | float          | |
+| CameraZoomSpeed   | 0.4           | float          | |
+| PopupScrollSpeed  | 0.4           | float          | |
+| OriginalControls  | false         | true, false    | |
+| ConnectionType    | bezier        | bezier, linear | |
+| SelectorScale     | true          | true, false    | If true, creature icons stay the same size when zooming |
+| DefaultFilePath   |               | string         | |
+| WarnMissingImages | false         | true, false    | |
+| HideTutorial      | false         | true, false    | Prevents the tutorial from appearing when starting FloodForge |
+| UpdateWorldFiles  | true          | true, false    | Decide whether to modify imported world files when exporting, or to create new files in `worlds` |
 
 ## License
 

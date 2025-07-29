@@ -22,6 +22,7 @@ namespace Settings {
 		WarnMissingImages,
 		HideTutorial,
 		KeepFilesystemPath,
+		UpdateWorldFiles,
 		DebugVisibleOutputPadding
 	};
 
