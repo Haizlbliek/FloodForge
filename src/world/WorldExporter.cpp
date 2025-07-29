@@ -1,15 +1,18 @@
 #include "WorldExporter.hpp"
+#include "Backup.hpp"
 
 #include "../math/Rect.hpp"
 
 void WorldExporter::exportMapFile() {
-	std::fstream file(EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + ".txt"), std::ios::out | std::ios::trunc);
+	std::filesystem::path path = EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + ".txt");
+	Backup::backup(path);
+	std::fstream file(path, std::ios::out | std::ios::trunc);
 
 	if (!file.is_open()) {
 		Logger::log("Error opening map_", EditorState::region.acronym, ".txt");
 		return;
 	}
-
+	
 	Logger::log("Exporting rooms");
 	for (Room *room : EditorState::rooms) {
 		const Vector2 &roomPosition = room->position;
@@ -68,7 +71,9 @@ void WorldExporter::exportMapFile() {
 }
 
 void WorldExporter::exportWorldFile() {
-	std::fstream file(EditorState::region.exportDirectory / ("world_" + EditorState::region.acronym + ".txt"), std::ios::out | std::ios::trunc);
+	std::filesystem::path path = EditorState::region.exportDirectory / ("world_" + EditorState::region.acronym + ".txt");
+	Backup::backup(path);
+	std::fstream file(path, std::ios::out | std::ios::trunc);
 
 	if (!file.is_open()) {
 		Logger::log("Error opening world_", EditorState::region.acronym, ".txt");
@@ -160,7 +165,10 @@ void WorldExporter::exportWorldFile() {
 }
 
 void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::filesystem::path otherPath) {
-	std::fstream mapFile(EditorState::region.exportDirectory / ("map_image_" + EditorState::region.acronym + ".txt"), std::ios::out | std::ios::trunc);
+	std::filesystem::path mapPath = EditorState::region.exportDirectory / ("map_image_" + EditorState::region.acronym + ".txt");
+	Backup::backup(mapPath);
+	std::fstream mapFile(mapPath, std::ios::out | std::ios::trunc);
+
 	bool hasMapFile = true;
 
 	if (!mapFile.is_open()) {
@@ -277,6 +285,7 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		}
 	}
 
+	Backup::backup(outputPath);
 	if (stbi_write_png(outputPath.string().c_str(), textureWidth, textureHeight, 3, image.data(), textureWidth * 3)) {
 		Logger::log("Image saved successfully!");
 	} else {
@@ -287,6 +296,7 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 }
 
 void WorldExporter::exportPropertiesFile(std::filesystem::path outputPath) {
+	Backup::backup(outputPath);
 	std::fstream propertiesFile(outputPath, std::ios::out | std::ios::trunc);
 	
 	propertiesFile << EditorState::region.extraProperties;
