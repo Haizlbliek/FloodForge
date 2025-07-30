@@ -20,7 +20,7 @@ void Settings::loadDefaults() {
 void Settings::init() {
 	loadDefaults();
 
-	std::string settingsPath = BASE_PATH + "assets/settings.txt";
+	std::filesystem::path settingsPath = BASE_PATH / "assets" / "settings.txt";
 	if (!std::filesystem::exists(settingsPath)) return;
 
 	std::fstream settingsFile(settingsPath);
@@ -28,6 +28,7 @@ void Settings::init() {
 	std::string line;
 	while (std::getline(settingsFile, line)) {
 		if (line.empty()) continue;
+		if (line.back() == '\r') line.pop_back();
 
 		std::string key = line.substr(0, line.find_first_of(':'));
 		std::string value = line.substr(line.find_first_of(':') + 2);

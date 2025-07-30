@@ -78,6 +78,8 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 
 	std::string line;
 	while (std::getline(mapFile, line)) {
+		if (!line.empty() && line.back() == '\r') line.pop_back();
+
 		if (startsWith(line, "//FloodForge;")) {
 			line = line.substr(line.find(';') + 1);
 			std::vector<std::string> data = split(line, '|');
@@ -406,6 +408,8 @@ void WorldParser::parseWorld(std::filesystem::path worldFilePath, std::filesyste
 	int parseState = 0;
 	std::string line;
 	while (std::getline(worldFile, line)) {
+		if (!line.empty() && line.back() == '\r') line.pop_back();
+
 		if (line == "ROOMS") {
 			parseState = 1;
 			Logger::log("World - Rooms");
@@ -508,6 +512,8 @@ void WorldParser::parseProperties(std::string propertiesFilePath) {
 	
 	std::string line;
 	while (std::getline(propertiesFile, line)) {
+		if (!line.empty() && line.back() == '\r') line.pop_back();
+
 		if (startsWith(line, "Subregion: ")) {
 			std::string subregionName = line.substr(line.find(':') + 2);
 			Logger::log("Subregion: ", subregionName);
@@ -543,6 +549,7 @@ void WorldParser::loadExtraRoomData(std::string roomPath, ExtraRoomData &data) {
 
 	std::string line;
 	while (std::getline(file, line)) {
+		if (!line.empty() && line.back() == '\r') line.pop_back();
 		if (!startsWith(line, "PlacedObjects:")) continue;
 		
 		std::vector<std::string> splits = split(line.substr(line.find(':') + 1), ',');

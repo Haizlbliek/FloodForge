@@ -9,6 +9,7 @@
 #include <utility>
 #include <functional>
 #include <algorithm>
+#include <filesystem>
 
 #include "Logger.hpp"
 #include "math/Colour.hpp"
@@ -231,9 +232,14 @@ class Window {
 			return scrollY;
 		}
 
-		void setIcon(std::string path) {
+		void setIcon(std::filesystem::path path) {
 			GLFWimage images[1]; 
-			images[0].pixels = stbi_load(path.c_str(), &images[0].width, &images[0].height, 0, 4); //rgba channels 
+			images[0].pixels = stbi_load(path.string().c_str(), &images[0].width, &images[0].height, 0, 4); //rgba channels 
+			if (!images[0].pixels) {
+				Logger::logError("Failed to load icon: ", path);
+				return;
+			}
+
 			glfwSetWindowIcon(glfwWindow, 1, images); 
 			stbi_image_free(images[0].pixels);
 		}

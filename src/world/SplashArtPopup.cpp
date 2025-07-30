@@ -5,7 +5,7 @@
 SplashArtPopup::SplashArtPopup(Window *window) : Popup(window) {
 	bounds = Rect(-1.0, -1.0, 1.0, 1.0);
 
-	splashart = new Texture(BASE_PATH + "assets/splash.png");
+	splashart = new Texture((BASE_PATH / "assets" / "splash.png").string());
 }
 
 SplashArtPopup::~SplashArtPopup() {
@@ -82,7 +82,7 @@ void SplashArtPopup::mouseClick(double mouseX, double mouseY) {
 		close();
 		
 		if (!Settings::getSetting<bool>(Settings::Setting::HideTutorial)) {
-			Popups::addPopup(new MarkdownPopup(window, BASE_PATH + "docs/controls.md"));
+			Popups::addPopup(new MarkdownPopup(window, BASE_PATH / "docs" / "controls.md"));
 		}
 	}
 }

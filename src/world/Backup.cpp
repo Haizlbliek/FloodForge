@@ -10,7 +10,7 @@ void Backup::backup(std::filesystem::path file) {
 		return;
 	
 	// Identify file
-	std::filesystem::path backupDir = std::filesystem::path(BASE_PATH) / "backups";
+	std::filesystem::path backupDir = BASE_PATH / "backups";
 	std::filesystem::create_directories(backupDir);
 
 	std::string stem = file.stem().string();

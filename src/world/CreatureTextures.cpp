@@ -3,6 +3,9 @@
 #include <fstream>
 #include <algorithm>
 
+#include "../Constants.hpp"
+#include "../Logger.hpp"
+
 std::unordered_map<std::string, GLuint> CreatureTextures::creatureTextures;
 std::unordered_map<std::string, GLuint> CreatureTextures::creatureTagTextures;
 std::vector<std::string> CreatureTextures::creatures;
@@ -14,11 +17,13 @@ bool validExtension(std::string extension) {
 	return extension == ".png";
 }
 
-void CreatureTextures::loadCreaturesFromFolder(std::string path, bool include) {
+void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, bool include) {
 	loadCreaturesFromFolder(path, "", include);
 }
 
-void CreatureTextures::loadCreaturesFromFolder(std::string path, std::string prefix, bool include) {
+void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, std::string prefix, bool include) {
+	Logger::log("Loading creatures from: '", path, "'");
+
 	for (const auto& entry : std::filesystem::directory_iterator(path)) {
 		if (std::filesystem::is_regular_file(entry.path()) && validExtension(entry.path().extension().string())) {
 			std::string creature = prefix + entry.path().stem().string();
@@ -29,7 +34,8 @@ void CreatureTextures::loadCreaturesFromFolder(std::string path, std::string pre
 }
 
 void CreatureTextures::init() {
-	std::fstream modsFile("assets/creatures/mods.txt");
+	std::filesystem::path creaturesDirectory = BASE_PATH / "assets" / "creatures";
+	std::fstream modsFile(creaturesDirectory / "mods.txt");
 	if (!modsFile.is_open()) return;
 	
 	std::vector<std::string> mods;
@@ -37,19 +43,21 @@ void CreatureTextures::init() {
 	std::string line;
 	while (std::getline(modsFile, line)) {
 		if (line.empty()) continue;
+
+		if (line.back() == '\r') line.pop_back();
 		
 		mods.push_back(line);
 	}
 	
 	modsFile.close();
 
-	loadCreaturesFromFolder("assets/creatures/", true);
+	loadCreaturesFromFolder(creaturesDirectory, true);
 	for (std::string mod : mods) {
-		loadCreaturesFromFolder("assets/creatures/" + mod, true);
+		loadCreaturesFromFolder(creaturesDirectory / mod, true);
 	}
-	loadCreaturesFromFolder("assets/creatures/room/", "room-", false);
+	loadCreaturesFromFolder(creaturesDirectory / "room", "room-", false);
 	
-	for (const auto& entry : std::filesystem::directory_iterator("assets/creatures/TAGS/")) {
+	for (const auto& entry : std::filesystem::directory_iterator(creaturesDirectory / "TAGS")) {
 		if (std::filesystem::is_regular_file(entry.path()) && validExtension(entry.path().extension().string())) {
 			std::string tag = entry.path().stem().string();
 			creatureTags.push_back(tag);
@@ -68,7 +76,7 @@ void CreatureTextures::init() {
 		std::swap(*UNKNOWN_it, *(creatures.end() - 1));
 	}
 
-	std::fstream parseFile("assets/creatures/parse.txt");
+	std::fstream parseFile(creaturesDirectory / "parse.txt");
 	if (!parseFile.is_open()) return;
 
 	while (std::getline(parseFile, line)) {

@@ -149,13 +149,13 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 
 
 void MenuItems::loadTextures() {
-	std::string texturePath = BASE_PATH + "assets/themes/" + currentThemeName + "/";
+	std::filesystem::path texturePath = BASE_PATH / "assets" / "themes" / currentThemeName;
 
-	textureButtonNormal = loadTexture(texturePath + "ButtonNormal.png");
-	textureButtonNormalHover = loadTexture(texturePath + "ButtonNormalHover.png");
-	textureButtonPress = loadTexture(texturePath + "ButtonPress.png");
-	textureButtonPressHover = loadTexture(texturePath + "ButtonPressHover.png");
-	textureBar = loadTexture(texturePath + "Bar.png");
+	textureButtonNormal = loadTexture((texturePath / "ButtonNormal.png").string());
+	textureButtonNormalHover = loadTexture((texturePath / "ButtonNormalHover.png").string());
+	textureButtonPress = loadTexture((texturePath / "ButtonPress.png").string());
+	textureButtonPressHover = loadTexture((texturePath / "ButtonPressHover.png").string());
+	textureBar = loadTexture((texturePath / "Bar.png").string());
 }
 
 Button &MenuItems::addButton(std::string text) {
@@ -310,7 +310,7 @@ void MenuItems::init(Window *window) {
 			std::filesystem::path lastExportDirectory = EditorState::region.exportDirectory;
 
 			if (!Settings::getSetting<bool>(Settings::Setting::UpdateWorldFiles)) {
-				EditorState::region.exportDirectory = std::filesystem::path(BASE_PATH) / "worlds" / EditorState::region.acronym;
+				EditorState::region.exportDirectory = BASE_PATH / "worlds" / EditorState::region.acronym;
 				Logger::log("Special exporting to directory: ", EditorState::region.exportDirectory.string());
 				if (!std::filesystem::exists(EditorState::region.exportDirectory)) {
 					std::filesystem::create_directories(EditorState::region.exportDirectory);

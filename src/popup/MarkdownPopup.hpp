@@ -28,7 +28,7 @@ enum MDType {
 
 class MarkdownPopup : public Popup {
 	public:
-		MarkdownPopup(Window *window, std::string path)
+		MarkdownPopup(Window *window, std::filesystem::path path)
 		: Popup(window) {
 			bounds = Rect(-0.8, -0.8, 0.8, 0.8);
 			
@@ -179,7 +179,7 @@ class MarkdownPopup : public Popup {
 			}
 		}
 		
-		void loadFile(std::string filePath) {
+		void loadFile(std::filesystem::path filePath) {
 			file = std::ifstream(filePath);
 			if (!file.is_open() || !std::filesystem::exists(filePath)) {
 				Logger::log("No file found '", filePath, "'");

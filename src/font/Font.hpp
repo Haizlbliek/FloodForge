@@ -8,7 +8,7 @@
 #include <map>
 
 #include "../Constants.hpp"
-#define FONT_PATH (BASE_PATH + "assets/fonts/")
+#define FONT_PATH (BASE_PATH / "assets" / "fonts")
 
 #include "../Utils.hpp"
 #include "../Draw.hpp"
@@ -34,8 +34,8 @@ class Font {
 	public:
 		Font(std::string name, int fontType) : name(name) {
 			Logger::log("Loading ", name);
-			loadData(FONT_PATH + name + ".txt");
-			loadTexture(FONT_PATH + name + ".png", fontType);
+			loadData(FONT_PATH / (name + ".txt"));
+			loadTexture(FONT_PATH / (name + ".png"), fontType);
 			Logger::log();
 		}
 
@@ -176,7 +176,7 @@ class Font {
 			// int chnl;
 		};
 
-		void loadData(std::string path) {
+		void loadData(std::filesystem::path path) {
 			std::ifstream file;
 			file.open(path);
 
@@ -259,8 +259,8 @@ class Font {
 			Logger::log(characters.size(), " characters loaded");
 		}
 
-		void loadTexture(std::string path, int fontType) {
-			texture = ::loadTexture(path.c_str(), (fontType == FONT_SMOOTH) ? GL_LINEAR : GL_NEAREST);
+		void loadTexture(std::filesystem::path path, int fontType) {
+			texture = ::loadTexture(path.string().c_str(), (fontType == FONT_SMOOTH) ? GL_LINEAR : GL_NEAREST);
 
 			Logger::log("Texture loaded");
 		}

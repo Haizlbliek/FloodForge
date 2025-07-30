@@ -68,9 +68,7 @@ Colour parseHexColor(const std::string &hex) {
 }
 
 void loadTheme(std::string theme) {
-	if (!std::filesystem::exists(BASE_PATH + "assets/themes/" + theme)) return;
-
-	std::string themePath = BASE_PATH + "assets/themes/" + theme + "/theme.txt";
+	std::filesystem::path themePath = BASE_PATH / "assets" / "themes" / theme / "theme.txt";
 	if (!std::filesystem::exists(themePath)) return;
 
 	currentThemeName = theme;
@@ -81,6 +79,7 @@ void loadTheme(std::string theme) {
 	std::string line;
 	while (std::getline(themeFile, line)) {
 		if (line.empty()) continue;
+		if (line.back() == '\r') line.pop_back();
 
 		std::string colourString = line.substr(line.find_first_of(':') + 2);
 		colourString.erase(std::remove(colourString.begin(), colourString.end(), '\r'), colourString.end());

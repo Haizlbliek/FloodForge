@@ -36,8 +36,6 @@
 #include "DebugData.hpp"
 #include "RecentFiles.hpp"
 
-#define TEXTURE_PATH (BASE_PATH + "assets/")
-
 #define clamp(x, a, b) x >= b ? b : (x <= a ? a : x)
 #define min(a, b) (a < b) ? a : b
 #define max(a, b) (a > b) ? a : b
@@ -70,8 +68,6 @@ int holdingType = 0;
 Vector2 selectionStart;
 Vector2 selectionEnd;
 int roomSnap = ROOM_SNAP_TILE;
-
-std::string line;
 
 Vector2 *connectionStart = nullptr;
 Vector2 *connectionEnd = nullptr;
@@ -918,7 +914,8 @@ int main() {
 	std::signal(SIGTERM, signalHandler); // Termination request
 
 	EditorState::window = new Window(1024, 1024);
-	EditorState::window->setIcon(TEXTURE_PATH + "MainIcon.png");
+	Logger::log("Main icon path: ", BASE_PATH / "assets" / "mainIcon.png");
+	EditorState::window->setIcon(BASE_PATH / "assets" / "mainIcon.png");
 	EditorState::window->setTitle("FloodForge World Editor");
 	EditorState::mouse = EditorState::window->GetMouse();
 
