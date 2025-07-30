@@ -22,6 +22,7 @@ It aims for intuitive controls, clean ui, and as few dependencies as possible.
 | Show other rooms           | `I`       | Places hovered room behind all other rooms.                       |
 | Cancel/Exit                | `ESC`     | Closes menus or cancels actions.                                  |
 | Accept                     | `ENTER`   | Confirms selections or actions.                                   |
+| Open Tutorial              | `ALT+T`   | Opens the tutorial popup.                                         |
 
 ## Building
 

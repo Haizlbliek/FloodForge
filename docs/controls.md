@@ -35,6 +35,17 @@ S - Change Subregion
 A - Change Attractiveness
 H - Toggle Visibility
 I - Move to back
+ALT+T - Open Tutorial
+
+## Canon vs Dev positioning
+Rain World has the ability to have two different position types: *Canon* and *Dev*.
+- **Canon**: Shown on the in-game map. Uses all three layers, so rooms in different layers can overlap.
+- **Dev**: Used in tools like Cornifer and the dev map. Rooms are spread out to avoid overlap.
+
+You can switch between modes with the `Canon`/`Dev` button.
+Rooms are positioned according to the selected mode.
+Hold ALT to display the room's other position, shown at half transparency.
+Moving a room affects only the active mode. In order to move both positions, hold ALT while dragging.
 
 > **Tip!**
 > To hide this popup:

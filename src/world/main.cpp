@@ -447,6 +447,10 @@ void updateMain() {
 			Popups::popups[0]->accept();
 		}
 	}
+	
+	if (justPressed(GLFW_KEY_T) && EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
+		Popups::addPopup(new MarkdownPopup(EditorState::window, BASE_PATH / "docs" / "controls.md"));
+	}
 
 	//// Connections
 	connectionError = "";
