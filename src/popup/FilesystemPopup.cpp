@@ -273,7 +273,7 @@ void FilesystemPopup::mouseClick(double mouseX, double mouseY) {
 
 				if (id < files.size()) {
 					// called = true;
-					if (allowMultiple && (window->keyPressed(GLFW_KEY_LEFT_SHIFT) || window->keyPressed(GLFW_KEY_RIGHT_SHIFT))) {
+					if (allowMultiple && (window->modifierPressed(GLFW_MOD_SHIFT) || window->modifierPressed(GLFW_MOD_CONTROL))) {
 						if (selected.find(files[id].string()) == selected.end()) {
 							selected.insert(files[id].string());
 						} else {
