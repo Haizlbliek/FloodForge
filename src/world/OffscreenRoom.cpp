@@ -61,7 +61,7 @@ void OffscreenRoom::cleanup() {
 }
 
 int OffscreenRoom::denAt(double mouseX, double mouseY) {
-	Vector2 position = currentPosition();
+	Vector2 &position = currentPosition();
 
 	for (int i = 0; i < denEntrances.size(); i++) {
 		if (dens[i].type == "" || dens[i].count == 0) continue;
@@ -81,8 +81,8 @@ int OffscreenRoom::denAt(double mouseX, double mouseY) {
 	return -1;
 }
 
-void OffscreenRoom::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
-	Vector2 position = currentPosition();
+void OffscreenRoom::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType) {
+	Vector2 &position = positionType == CANON_POSITION ? canonPosition : devPosition;
 
 	Draw::color(RoomHelpers::RoomAir);
 	fillRect(position.x, position.y, position.x + width, position.y - height);

@@ -106,19 +106,19 @@ Room::~Room() {
 	glDeleteVertexArrays(1, &vao);
 }
 
-void Room::drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
+void Room::drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType) {
 	if (data.hidden) {
 		Draw::color(RoomHelpers::RoomSolid.r, RoomHelpers::RoomSolid.g, RoomHelpers::RoomSolid.b, 0.5);
 	} else {
 		Draw::color(RoomHelpers::RoomSolid.r, RoomHelpers::RoomSolid.g, RoomHelpers::RoomSolid.b, 1.0);
 	}
 	
-	Vector2 position = currentPosition();
+	Vector2 &position = positionType == CANON_POSITION ? canonPosition : devPosition;
 	fillRect(position.x, position.y - height, position.x + width, position.y);
 }
 
-void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
-	Vector2 position = currentPosition();
+void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType) {
+	Vector2 &position = positionType == CANON_POSITION ? canonPosition : devPosition;
 
 	if (!valid) {
 		Draw::color(1.0, 0.0, 0.0);
@@ -171,11 +171,14 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
 
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(EditorState::cameraOffset, EditorState::cameraScale * screenBounds).m);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position.x, position.y).m);
+	float alpha = tint.a;
 	if (data.hidden) {
-		glUniform4f(tintLoc, tint.r, tint.g, tint.b, 0.5f);
-	} else {
-		glUniform4f(tintLoc, tint.r, tint.g, tint.b, tint.a);
+		alpha = 0.5f;
 	}
+	if (positionType != EditorState::roomPositionType) {
+		alpha *= 0.5f;
+	}
+	glUniform4f(tintLoc, tint.r, tint.g, tint.b, alpha);
 
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
 
@@ -189,7 +192,7 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
 
 	glDisable(GL_BLEND);
 
-	if (EditorState::visibleDevItems) {
+	if (EditorState::visibleDevItems && positionType == EditorState::roomPositionType) {
 		for (DevItem item : data.devItems) {
 			if (item.texture == 0) continue;
 	
@@ -200,19 +203,21 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
 		}
 	}
 
-	for (int i = 0; i < denEntrances.size(); i++) {
-		if (dens[i].type == "" || dens[i].count == 0) continue;
-
-		double rectX = position.x + denEntrances[i].x;
-		double rectY = position.y - denEntrances[i].y;
-		double scale = EditorState::selectorScale;
-		
-		if (i == hoveredDen) scale *= 1.5;
-
-		RoomHelpers::drawTexture(CreatureTextures::getTexture(dens[i].type), rectX, rectY, scale);
-
-		Draw::color(1.0, 0.0, 0.0);
-		Fonts::rainworld->writeCentred(std::to_string(dens[i].count), rectX + 0.5 + scale * 0.25, rectY - 0.5 - scale * 0.5, 0.5 * scale, CENTRE_XY);
+	if (positionType == EditorState::roomPositionType) {
+		for (int i = 0; i < denEntrances.size(); i++) {
+			if (dens[i].type == "" || dens[i].count == 0) continue;
+	
+			double rectX = position.x + denEntrances[i].x;
+			double rectY = position.y - denEntrances[i].y;
+			double scale = EditorState::selectorScale;
+			
+			if (i == hoveredDen) scale *= 1.5;
+	
+			RoomHelpers::drawTexture(CreatureTextures::getTexture(dens[i].type), rectX, rectY, scale);
+	
+			Draw::color(1.0, 0.0, 0.0);
+			Fonts::rainworld->writeCentred(std::to_string(dens[i].count), rectX + 0.5 + scale * 0.25, rectY - 0.5 - scale * 0.5, 0.5 * scale, CENTRE_XY);
+		}
 	}
 
 	if (inside(mousePosition)) {
@@ -224,7 +229,7 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
 }
 
 bool Room::inside(Vector2 otherPosition) {
-	Vector2 position = currentPosition();
+	Vector2 &position = currentPosition();
 
 	return (
 		otherPosition.x >= position.x &&
@@ -235,7 +240,7 @@ bool Room::inside(Vector2 otherPosition) {
 }
 
 bool Room::intersects(Vector2 corner0, Vector2 corner1) {
-	Vector2 position = currentPosition();
+	Vector2 &position = currentPosition();
 
 	Vector2 cornerMin = Vector2::min(corner0, corner1);
 	Vector2 cornerMax = Vector2::max(corner0, corner1);
@@ -458,6 +463,14 @@ const std::vector<std::string> Room::Tags() const { return tags; }
 
 const int Room::Images() const { return images; }
 
+void Room::moveBoth() {
+	if (EditorState::roomPositionType == CANON_POSITION) {
+		devPosition = canonPosition;
+	} else {
+		canonPosition = devPosition;
+	}
+}
+
 Vector2 &Room::currentPosition() {
 	return EditorState::roomPositionType == CANON_POSITION ? canonPosition : devPosition;
 }
@@ -660,7 +673,7 @@ void Room::checkImages() {
 }
 
 void Room::generateVBO() {
-	Vector2 position = currentPosition();
+	Vector2 &position = currentPosition();
 
 	vertices.clear();
 	indices.clear();

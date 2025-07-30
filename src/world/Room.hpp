@@ -83,8 +83,8 @@ class Room {
 
 		virtual ~Room();
 
-		virtual void drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds);
-		virtual void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds);
+		virtual void drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType);
+		virtual void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType);
 
 		bool inside(Vector2 otherPosition);
 
@@ -168,6 +168,8 @@ class Room {
 		int hoveredDen = -1;
 
 		bool valid;
+		
+		void moveBoth();
 		
 		Vector2 &currentPosition();
 

@@ -230,12 +230,16 @@ void updateOriginalControls() {
 				if (roomSnap == ROOM_SNAP_TILE) offset.round();
 
 				for (Room *room2 : EditorState::selectedRooms) {
-					Vector2 roomPosition = room2->currentPosition();
+					Vector2 &roomPosition = room2->currentPosition();
 					if (roomSnap == ROOM_SNAP_TILE) {
 						roomPosition.round();
 					}
 
 					roomPosition.add(offset);
+
+					if (EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
+						room2->moveBoth();
+					}
 				}
 				holdingStart = holdingStart + offset;
 			}
@@ -355,12 +359,15 @@ void updateFloodForgeControls() {
 				if (roomSnap == ROOM_SNAP_TILE) offset.round();
 
 				for (Room *room2 : EditorState::selectedRooms) {
-					Vector2 roomPosition = room2->currentPosition();
+					Vector2 &roomPosition = room2->currentPosition();
 					if (roomSnap == ROOM_SNAP_TILE) {
 						roomPosition.round();
 					}
 
 					roomPosition.add(offset);
+					if (EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
+						room2->moveBoth();
+					}
 				}
 				holdingStart = holdingStart + offset;
 			}
@@ -462,7 +469,7 @@ void updateMain() {
 		Vector2i tilePosition;
 
 		if (hoveringRoom != nullptr) {
-			Vector2 roomPosition = hoveringRoom->currentPosition();
+			Vector2 &roomPosition = hoveringRoom->currentPosition();
 			tilePosition = Vector2i(
 				floor(worldMouse.x - roomPosition.x),
 				-1 - floor(worldMouse.y - roomPosition.y)
@@ -476,7 +483,7 @@ void updateMain() {
 			if (connectionEnd   != nullptr) { delete connectionEnd;   connectionEnd   = nullptr; }
 
 			if (hoveringRoom != nullptr) {
-				Vector2 roomPosition = hoveringRoom->currentPosition();
+				Vector2 &roomPosition = hoveringRoom->currentPosition();
 				int connectionId = hoveringRoom->getRoomEntranceId(tilePosition);
 
 				if (connectionId != -1 && !hoveringRoom->ConnectionUsed(connectionId)) {
@@ -495,7 +502,7 @@ void updateMain() {
 			}
 
 			if (connectionId != -1) {
-				Vector2 roomPosition = hoveringRoom->currentPosition();
+				Vector2 &roomPosition = hoveringRoom->currentPosition();
 				connectionEnd->x = floor(worldMouse.x - roomPosition.x) + 0.5 + roomPosition.x;
 				connectionEnd->y = floor(worldMouse.y - roomPosition.y) + 0.5 + roomPosition.y;
 				currentConnection->roomB = hoveringRoom;
@@ -1016,19 +1023,22 @@ int main() {
 			if (!EditorState::visibleLayers[room->layer]) continue;
 			if (!room->data.merge) continue;
 
-			room->drawBlack(worldMouse, lineSize, screenBounds);
+			room->drawBlack(worldMouse, lineSize, screenBounds, EditorState::roomPositionType);
 		}
 		for (Room *room : EditorState::rooms) {
 			if (!EditorState::visibleLayers[room->layer]) continue;
 
 			if (!room->data.merge) {
-				room->drawBlack(worldMouse, lineSize, screenBounds);
+				room->drawBlack(worldMouse, lineSize, screenBounds, EditorState::roomPositionType);
 			}
 
-			room->draw(worldMouse, lineSize, screenBounds);
+			room->draw(worldMouse, lineSize, screenBounds, EditorState::roomPositionType);
+			if (EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
+				room->draw(worldMouse, lineSize, screenBounds, (EditorState::roomPositionType == CANON_POSITION) ? DEV_POSITION : CANON_POSITION);
+			}
 			if (EditorState::selectedRooms.find(room) != EditorState::selectedRooms.end()) {
 				setThemeColour(ThemeColour::SelectionBorder);
-				Vector2 roomPosition = room->currentPosition();
+				Vector2 &roomPosition = room->currentPosition();
 				strokeRect(roomPosition.x, roomPosition.y, roomPosition.x + room->Width(), roomPosition.y - room->Height(), 16.0f / lineSize);
 			}
 		}
