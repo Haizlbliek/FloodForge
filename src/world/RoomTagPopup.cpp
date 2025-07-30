@@ -30,7 +30,7 @@ void RoomTagPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 
 		drawTagButton("None", "", y, mouseX, mouseY);
 		y -= 0.075;
 
-		for (int i = 0; i < 9; i++) {
+		for (int i = 0; i < ROOM_TAG_COUNT; i++) {
 			drawTagButton(ROOM_TAG_NAMES[i], ROOM_TAGS[i], y, mouseX, mouseY);
 
 			y -= 0.075;

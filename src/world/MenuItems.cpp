@@ -126,7 +126,8 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 		bool initial = Settings::getSetting<bool>(Settings::Setting::WarnMissingImages);
 		Settings::settings[Settings::Setting::WarnMissingImages] = false;
 		Room *room = new Room(fromFile, toRoom);
-		room->position = EditorState::cameraOffset;
+		room->canonPosition = EditorState::cameraOffset;
+		room->devPosition = EditorState::cameraOffset;
 		EditorState::rooms.push_back(room);
 		Settings::settings[Settings::Setting::WarnMissingImages] = initial;
 		
@@ -233,7 +234,8 @@ void MenuItems::init(Window *window) {
 								std::string roomName = names[0].substr(0, names[0].find_last_of('.')); // Remove .txt
 		
 								Room *room = new Room(roomFilePath, roomName);
-								room->position = EditorState::cameraOffset;
+								room->canonPosition = EditorState::cameraOffset;
+								room->devPosition = EditorState::cameraOffset;
 								EditorState::rooms.push_back(room);
 							} else {
 								Popups::addPopup((new ConfirmPopup(window, "Change which acronym?"))
@@ -256,7 +258,8 @@ void MenuItems::init(Window *window) {
 								roomName = roomName.substr(0, roomName.find_last_of('.')); // Remove .txt
 		
 								Room *room = new Room(roomFilePath, roomName);
-								room->position = EditorState::cameraOffset;
+								room->canonPosition = EditorState::cameraOffset;
+								room->devPosition = EditorState::cameraOffset;
 								EditorState::rooms.push_back(room);
 							} else {
 								Popups::addPopup((new ConfirmPopup(window, "Copy room to " + EditorState::region.acronym + "-rooms?"))
@@ -266,7 +269,8 @@ void MenuItems::init(Window *window) {
 									roomName = roomName.substr(0, roomName.find_last_of('.')); // Remove .txt
 			
 									Room *room = new Room(roomFilePath, roomName);
-									room->position = EditorState::cameraOffset;
+									room->canonPosition = EditorState::cameraOffset;
+									room->devPosition = EditorState::cameraOffset;
 									EditorState::rooms.push_back(room);
 								})
 								->OkayText("Yes")
@@ -380,6 +384,19 @@ void MenuItems::init(Window *window) {
 			}
 			
 			WorldParser::importWorldFile(findFileCaseInsensitive(EditorState::region.exportDirectory.string(), "world_" + EditorState::region.acronym + ".txt"));
+		}
+	);
+
+	addButton("Canon")
+	.OnLeftPress(
+		[window](Button *button) {
+			if (EditorState::roomPositionType == CANON_POSITION) {
+				EditorState::roomPositionType = DEV_POSITION;
+				button->Text("Dev");
+			} else {
+				EditorState::roomPositionType = CANON_POSITION;
+				button->Text("Canon");
+			}
 		}
 	);
 

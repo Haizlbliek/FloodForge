@@ -15,16 +15,19 @@ void WorldExporter::exportMapFile() {
 	
 	Logger::log("Exporting rooms");
 	for (Room *room : EditorState::rooms) {
-		const Vector2 &roomPosition = room->position;
-		Vector2 position = Vector2(
-			(roomPosition.x + room->Width() * 0.5) * 3.0,
-			(roomPosition.y - room->Height() * 0.5) * 3.0
+		Vector2 canonPosition = Vector2(
+			(room->canonPosition.x + room->Width() * 0.5) * 3.0,
+			(room->canonPosition.y - room->Height() * 0.5) * 3.0
+		);
+		Vector2 devPosition = Vector2(
+			(room->devPosition.x + room->Width() * 0.5) * 3.0,
+			(room->devPosition.y - room->Height() * 0.5) * 3.0
 		);
 
 		file << std::setprecision(12);
 		file << toUpper(room->roomName) << ": ";
-		file << position.x << "><" << position.y << "><"; // Canon Position
-		file << position.x << "><" << position.y << "><"; // Dev Position
+		file << canonPosition.x << "><" << canonPosition.y << "><";
+		file << devPosition.x << "><" << devPosition.y << "><";
 		file << room->layer << "><";
 		if (room->subregion > -1) file << EditorState::subregions[room->subregion];
 		file << "\n";
@@ -182,10 +185,10 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 	for (Room *room : EditorState::rooms) {
 		if (room->isOffscreen()) continue;
 
-		double left = room->position.x;
-		double right = room->position.x + room->Width();
-		double top = room->position.y - room->Height();
-		double bottom = room->position.y;
+		double left = room->canonPosition.x;
+		double right = room->canonPosition.x + room->Width();
+		double top = room->canonPosition.y - room->Height();
+		double bottom = room->canonPosition.y;
 		topLeft.x = std::min(topLeft.x, left);
 		bottomRight.x = std::max(bottomRight.x, right);
 		topLeft.y = std::min(topLeft.y, top);
@@ -228,8 +231,8 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		if (room->data.hidden) continue;
 
 		Vector2i roomPosition = Vector2i(
-			int(room->position.x - topLeft.x),
-			int(bottomRight.y - room->position.y)
+			int(room->canonPosition.x - topLeft.x),
+			int(bottomRight.y - room->canonPosition.y)
 		);
 		int layerXOffset = 10;
 		int layerYOffset = (2 - room->layer) * layerHeight + 10;

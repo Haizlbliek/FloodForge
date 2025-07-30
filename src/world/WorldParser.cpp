@@ -124,8 +124,6 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 				EditorState::rooms.push_back(room);
 			}
 
-			Vector2 &position = room->position;
-
 			std::string temp;
 			std::stringstream data(line.substr(line.find(':') + 1));
 
@@ -138,8 +136,13 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 			std::getline(data, temp, '>'); // Canon Y
 			double y = std::stod(temp) * scale;
 
-			std::getline(data, temp, '<'); // Dev X
-			std::getline(data, temp, '<'); // Dev Y
+			std::getline(data, temp, '<');
+			std::getline(data, temp, '>'); // Dev X
+			double devX = std::stod(temp) * scale;
+
+			std::getline(data, temp, '<');
+			std::getline(data, temp, '>'); // Dev Y
+			double devY = std::stod(temp) * scale;
 
 			std::getline(data, temp, '<');
 			std::getline(data, temp, '>'); // Layer
@@ -154,8 +157,10 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 			std::getline(data, temp, '>'); // Subregion
 			std::string subregion = temp;
 
-			position.x = x - room->Width() * 0.5;
-			position.y = y + room->Height() * 0.5;
+			room->canonPosition.x = x - room->Width() * 0.5;
+			room->canonPosition.y = y + room->Height() * 0.5;
+			room->devPosition.x = devX - room->Width() * 0.5;
+			room->devPosition.y = devY + room->Height() * 0.5;
 			room->layer = layer;
 			
 			// Backwards-Compatibility

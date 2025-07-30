@@ -69,7 +69,11 @@ Room::Room(std::filesystem::path path, std::string name) {
 	this->path = path;
 	this->roomName = toLower(name);
 
-	position = new Vector2(
+	canonPosition = new Vector2(
+		0.0f,
+		0.0f
+	);
+	devPosition = new Vector2(
 		0.0f,
 		0.0f
 	);
@@ -109,10 +113,13 @@ void Room::drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBound
 		Draw::color(RoomHelpers::RoomSolid.r, RoomHelpers::RoomSolid.g, RoomHelpers::RoomSolid.b, 1.0);
 	}
 	
+	Vector2 position = currentPosition();
 	fillRect(position.x, position.y - height, position.x + width, position.y);
 }
 
 void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
+	Vector2 position = currentPosition();
+
 	if (!valid) {
 		Draw::color(1.0, 0.0, 0.0);
 		
@@ -217,6 +224,8 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
 }
 
 bool Room::inside(Vector2 otherPosition) {
+	Vector2 position = currentPosition();
+
 	return (
 		otherPosition.x >= position.x &&
 		otherPosition.y >= position.y - height &&
@@ -226,6 +235,8 @@ bool Room::inside(Vector2 otherPosition) {
 }
 
 bool Room::intersects(Vector2 corner0, Vector2 corner1) {
+	Vector2 position = currentPosition();
+
 	Vector2 cornerMin = Vector2::min(corner0, corner1);
 	Vector2 cornerMax = Vector2::max(corner0, corner1);
 
@@ -253,6 +264,8 @@ bool Room::tileIsShortcut(int x, int y) const {
 }
 
 const std::vector<Vector2> Room::ShortcutEntranceOffsetPositions() const {
+	Vector2 position = staticCurrentPosition();
+
 	std::vector<Vector2> transformedEntrances;
 
 	for (const std::pair<Vector2i, int> &connection : shortcutEntrances) {
@@ -280,6 +293,8 @@ int Room::getShortcutEntranceId(const Vector2i &searchPosition) const {
 }
 
 const Vector2 Room::getRoomEntranceOffsetPosition(unsigned int connectionId) const {
+	Vector2 position = staticCurrentPosition();
+
 	Vector2i connection = getRoomEntrancePosition(connectionId);
 
 	return Vector2(
@@ -442,6 +457,14 @@ void Room::ToggleTag(const std::string newTag) {
 const std::vector<std::string> Room::Tags() const { return tags; }
 
 const int Room::Images() const { return images; }
+
+Vector2 &Room::currentPosition() {
+	return EditorState::roomPositionType == CANON_POSITION ? canonPosition : devPosition;
+}
+
+const Vector2 Room::staticCurrentPosition() const {
+	return EditorState::roomPositionType == CANON_POSITION ? canonPosition : devPosition;
+}
 
 std::vector<uint8_t> Room::parseStringToUint8Vector(const std::string& input) {
 	std::vector<uint8_t> result;
@@ -637,6 +660,8 @@ void Room::checkImages() {
 }
 
 void Room::generateVBO() {
+	Vector2 position = currentPosition();
+
 	vertices.clear();
 	indices.clear();
 	cur_index = 0;

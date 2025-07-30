@@ -1,7 +1,7 @@
 #include "Globals.hpp"
 
-std::string ROOM_TAGS[9] = { "SHELTER", "ANCIENTSHELTER", "GATE", "SWARMROOM", "PERF_HEAVY", "SCAVOUTPOST", "SCAVTRADER", "NOTRACKERS", "ARENA" };
-std::string ROOM_TAG_NAMES[9] = { "Shelter", "Ancient Shelter", "Gate", "Swarm Room", "Performance Heavy", "Scavenger Outpost", "Scavenger Trader", "No Trackers", "Arena (MSC)" };
+std::string ROOM_TAGS[ROOM_TAG_COUNT] = { "SHELTER", "ANCIENTSHELTER", "GATE", "SWARMROOM", "PERF_HEAVY", "SCAVOUTPOST", "SCAVTRADER", "NOTRACKERS", "ARENA" };
+std::string ROOM_TAG_NAMES[ROOM_TAG_COUNT] = { "Shelter", "Ancient Shelter", "Gate", "Swarm Room", "Performance Heavy", "Scavenger Outpost", "Scavenger Trader", "No Trackers", "Arena (MSC)" };
 
 
 namespace EditorState {
@@ -18,6 +18,7 @@ namespace EditorState {
 	double selectorScale = 1.0;
 
 	int roomColours = 0;
+	int roomPositionType = CANON_POSITION;
 	bool visibleLayers[] = { true, true, true };
 	bool visibleDevItems = false;
 	

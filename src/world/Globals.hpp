@@ -11,13 +11,19 @@
 // For backwards-compatibility
 #define LAYER_HIDDEN 5
 
+#define LAYER_COUNT 3
+#define ROOM_TAG_COUNT 9
+
+// Enums
 #define ROOM_SNAP_NONE 0
 #define ROOM_SNAP_TILE 1
 
-#define LAYER_COUNT 3
+#define CANON_POSITION 2
+#define DEV_POSITION 3
 
-extern std::string ROOM_TAGS[9];
-extern std::string ROOM_TAG_NAMES[9];
+
+extern std::string ROOM_TAGS[ROOM_TAG_COUNT];
+extern std::string ROOM_TAG_NAMES[ROOM_TAG_COUNT];
 
 #include "Room.hpp"
 #include "OffscreenRoom.hpp"
@@ -38,6 +44,7 @@ namespace EditorState {
 	extern std::vector<std::string> subregions;
 
 	extern int roomColours;
+	extern int roomPositionType;
 	extern bool visibleLayers[LAYER_COUNT];
 	extern bool visibleDevItems;
 	

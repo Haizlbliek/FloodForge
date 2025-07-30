@@ -67,7 +67,7 @@ namespace DebugData {
 		for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 			Room *room = *it;
 			
-			Vector2 roomMouse = mouse - room->position;
+			Vector2 roomMouse = mouse - room->currentPosition();
 			Vector2 shortcutPosition;
 			
 			if (room->isOffscreen()) {

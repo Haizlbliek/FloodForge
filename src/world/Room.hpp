@@ -155,7 +155,9 @@ class Room {
 
 		const int Images() const;
 
-		Vector2 position;
+		Vector2 canonPosition;
+		Vector2 devPosition;
+
 		std::string roomName = "";
 		int layer = 0;
 		int water = 0;
@@ -166,9 +168,13 @@ class Room {
 		int hoveredDen = -1;
 
 		bool valid;
+		
+		Vector2 &currentPosition();
 
 	protected:
 		Room() {}
+
+		const Vector2 staticCurrentPosition() const;
 
 		std::vector<uint8_t> parseStringToUint8Vector(const std::string& input);
 

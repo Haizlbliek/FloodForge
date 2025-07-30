@@ -10,7 +10,8 @@ void ChangeAcronymPopup::accept() {
 	if (EditorState::offscreenDen != nullptr) {
 		EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), EditorState::offscreenDen), EditorState::rooms.end());
 		OffscreenRoom *newOffscreenDen = new OffscreenRoom("offscreenden" + toLower(text), "OffscreenDen" + text);
-		newOffscreenDen->position = EditorState::offscreenDen->position;
+		newOffscreenDen->canonPosition = EditorState::offscreenDen->canonPosition;
+		newOffscreenDen->devPosition = EditorState::offscreenDen->devPosition;
 		newOffscreenDen->layer = EditorState::offscreenDen->layer;
 		newOffscreenDen->data.hidden = EditorState::offscreenDen->data.hidden;
 

@@ -13,7 +13,11 @@ OffscreenRoom::OffscreenRoom(std::string path, std::string name) {
 	this->path = path;
 	this->roomName = name;
 
-	position = new Vector2(
+	canonPosition = new Vector2(
+		0.0f,
+		0.0f
+	);
+	devPosition = new Vector2(
 		0.0f,
 		0.0f
 	);
@@ -57,6 +61,8 @@ void OffscreenRoom::cleanup() {
 }
 
 int OffscreenRoom::denAt(double mouseX, double mouseY) {
+	Vector2 position = currentPosition();
+
 	for (int i = 0; i < denEntrances.size(); i++) {
 		if (dens[i].type == "" || dens[i].count == 0) continue;
 
@@ -76,6 +82,8 @@ int OffscreenRoom::denAt(double mouseX, double mouseY) {
 }
 
 void OffscreenRoom::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds) {
+	Vector2 position = currentPosition();
+
 	Draw::color(RoomHelpers::RoomAir);
 	fillRect(position.x, position.y, position.x + width, position.y - height);
 
