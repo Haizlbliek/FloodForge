@@ -201,6 +201,8 @@ class MarkdownPopup : public Popup {
 					continue;
 				}
 
+				if (line.back() == '\r') line.pop_back();
+
 				if (startsWith(line, "# ")) {
 					type = MDType::H1;
 					line = line.substr(2);
