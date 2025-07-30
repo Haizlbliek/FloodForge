@@ -3,7 +3,6 @@
 FilesystemPopup::FilesystemPopup(Window *window, std::regex regex, std::string hint, std::function<void(std::set<std::string>)> callback) : Popup(window), regex(regex), hint(hint), callback(callback) {
 	window->addKeyCallback(this, keyCallback);
 	window->addScrollCallback(this, scrollCallback);
-	setDirectory();
 	called = false;
 	forceRegex = true;
 	mode = MODE_NORMAL;
@@ -16,6 +15,7 @@ FilesystemPopup::FilesystemPopup(Window *window, std::regex regex, std::string h
 	currentDrive = 0;
 	loadDrives();
 #endif
+	setDirectory();
 	refresh();
 }
 
@@ -26,6 +26,7 @@ FilesystemPopup::FilesystemPopup(Window *window, int type, std::string hint, std
 	forceRegex = true;
 	mode = MODE_NORMAL;
 	currentScroll = 0;
+	targetScroll = 0;
 	
 	openType = type;
 
@@ -390,7 +391,7 @@ void FilesystemPopup::setDirectory() {
 
 #ifdef _WIN32
 	for (char drive : drives) {
-		potentialPath = std::filesystem::path(std::to_string(drive)) / "Program Files (x86)\\Steam\\steamapps\\common\\Rain World\\RainWorld_Data\\StreamingAssets";
+		potentialPath = std::filesystem::path(std::string(1, drive) + ":\\") / "Program Files (x86)\\Steam\\steamapps\\common\\Rain World\\RainWorld_Data\\StreamingAssets";
 
 		if (std::filesystem::exists(potentialPath)) {
 			currentDirectory = potentialPath.string();
