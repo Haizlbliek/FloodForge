@@ -109,7 +109,7 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 				Logger::log("Found gate ", roomName);
 			}
 			
-			roomPath = roomPath / roomName;
+			roomPath = findFileCaseInsensitive(roomPath.string(), roomName + ".txt");
 
 			Room *room = nullptr;
 
@@ -122,7 +122,7 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 					room = EditorState::offscreenDen;
 				}
 			} else {
-				room = new Room(roomPath.string() + ".txt", roomName);
+				room = new Room(roomPath, roomName);
 				EditorState::rooms.push_back(room);
 			}
 
