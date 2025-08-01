@@ -63,6 +63,37 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 		double progress = (sliderAt - sliderMin) / (sliderMax - sliderMin);
 		double sliderY = ((bounds.y1 - bounds.y0 - 0.2) * progress) + bounds.y0 + 0.075;
 		fillRect(bounds.x0 + 0.825, sliderY - 0.005, bounds.x0 + 0.875, sliderY + 0.005);
+		
+		// Code for visible slider values
+		setThemeColour(ThemeColour::Text);
+		float number = den.data;
+		std::ostringstream ss;
+		
+		if (den.tag == "MEAN" || den.tag == "LENGTH") {
+    		ss << std::fixed << std::setprecision(2) << std::setw(3) << number;
+		} else if (den.tag == "SEED" || den.tag == "RotType") {
+    		ss << std::setw(5) << static_cast<int>(number);
+		} 
+		
+		std::string output = ss.str();	
+
+		if (den.tag == "MEAN" || den.tag == "LENGTH") {
+			if (den.data < 0){
+			Fonts::rainworld->writeCentred(ss.str(), bounds.x0 + 0.805, sliderY + 0.028, 0.026, CENTRE_Y);
+			} else if (den.data > 0){
+			Fonts::rainworld->writeCentred(ss.str(), bounds.x0 + 0.82, sliderY + 0.028, 0.026, CENTRE_Y);
+			} else if (den.data == 0){
+			Fonts::rainworld->writeCentred(ss.str(), bounds.x0 + 0.82, sliderY + 0.028, 0.026, CENTRE_Y);
+			}
+		}
+
+		if (den.tag == "SEED" || den.tag == "RotType") {
+			if (den.data < 4){
+			Fonts::rainworld->writeCentred(ss.str(), bounds.x0 + 0.81, sliderY + 0.028, 0.026, CENTRE_Y);
+			} else if (den.data > 3){
+			Fonts::rainworld->writeCentred(ss.str(), bounds.x0 + 0.809, sliderY + 0.028, 0.026, CENTRE_Y);
+			}
+		}
 	}
 
 	
