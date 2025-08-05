@@ -49,7 +49,7 @@ void FilesystemPopup::accept() {
 	if (mode == MODE_NORMAL) {
 		if (openType == TYPE_FOLDER) {
 			called = true;
-			std::set<std::string> output { currentDirectory.string() };
+			std::set<std::string> output { currentDirectory.generic_u8string() };
 			callback(output);
 		}
 		
@@ -138,7 +138,7 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 	drawBounds(Rect(bounds.x0 + 0.09, bounds.y1 - 0.12, bounds.x0 + 0.14, bounds.y1 - 0.07), mouseX, mouseY);
 	drawBounds(Rect(bounds.x1 - 0.09, bounds.y1 - 0.12, bounds.x1 - 0.04, bounds.y1 - 0.07), mouseX, mouseY);
 
-	std::string croppedPath = currentDirectory.string();
+	std::string croppedPath = currentDirectory.generic_u8string();
 	if (croppedPath.size() > 23) croppedPath = croppedPath.substr(croppedPath.size() - 23);
 
 	setThemeColour(ThemeColour::Text);
@@ -192,7 +192,7 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 		else
 			setThemeColour(ThemeColour::Text);
 
-		Fonts::rainworld->write(path.filename().string() + "/", bounds.x0 + 0.1, y, 0.04);
+		Fonts::rainworld->write(path.filename().generic_u8string() + "/", bounds.x0 + 0.1, y, 0.04);
 		setThemeColour(ThemeColour::TextDisabled);
 		drawIcon(5, y);
 		y -= 0.06;
@@ -212,11 +212,11 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 		else
 			setThemeColour(ThemeColour::Text);
 
-		if (selected.find(path.string()) != selected.end()) {
+		if (selected.find(path.generic_u8string()) != selected.end()) {
 			strokeRect(bounds.x0 + 0.09, y + 0.01, bounds.x1 - 0.09, y - 0.05);
 		}
 
-		Fonts::rainworld->write(path.filename().string(), bounds.x0 + 0.1, y, 0.04);
+		Fonts::rainworld->write(path.filename().generic_u8string(), bounds.x0 + 0.1, y, 0.04);
 		setThemeColour(ThemeColour::TextDisabled);
 		drawIcon(4, y);
 		y -= 0.06;
@@ -274,14 +274,14 @@ void FilesystemPopup::mouseClick(double mouseX, double mouseY) {
 				if (id < files.size()) {
 					// called = true;
 					if (allowMultiple && (window->modifierPressed(GLFW_MOD_SHIFT) || window->modifierPressed(GLFW_MOD_CONTROL))) {
-						if (selected.find(files[id].string()) == selected.end()) {
-							selected.insert(files[id].string());
+						if (selected.find(files[id].generic_u8string()) == selected.end()) {
+							selected.insert(files[id].generic_u8string());
 						} else {
-							selected.erase(files[id].string());
+							selected.erase(files[id].generic_u8string());
 						}
 					} else {
 						selected.clear();
-						selected.insert(files[id].string());
+						selected.insert(files[id].generic_u8string());
 					}
 					// close();
 				}
@@ -394,7 +394,7 @@ void FilesystemPopup::setDirectory() {
 		potentialPath = std::filesystem::path(std::string(1, drive) + ":\\") / "Program Files (x86)\\Steam\\steamapps\\common\\Rain World\\RainWorld_Data\\StreamingAssets";
 
 		if (std::filesystem::exists(potentialPath)) {
-			currentDirectory = potentialPath.string();
+			currentDirectory = potentialPath.generic_u8string();
 			return;
 		}
 	}
@@ -421,7 +421,7 @@ void FilesystemPopup::refresh() {
 			if (entry.is_directory()) {
 				directories.push_back(entry.path());
 			} else {
-				if (!forceRegex || std::regex_match(entry.path().filename().string(), regex))
+				if (!forceRegex || std::regex_match(entry.path().filename().generic_u8string(), regex))
 					files.push_back(entry.path());
 			}
 		}

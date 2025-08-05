@@ -13,8 +13,8 @@ void Backup::backup(std::filesystem::path file) {
 	std::filesystem::path backupDir = BASE_PATH / "backups";
 	std::filesystem::create_directories(backupDir);
 
-	std::string stem = file.stem().string();
-	std::string ext = file.extension().string();
+	std::string stem = file.stem().generic_u8string();
+	std::string ext = file.extension().generic_u8string();
 
 
 	// Delete old backups
@@ -23,7 +23,7 @@ void Backup::backup(std::filesystem::path file) {
 		if (!entry.is_regular_file())
 			continue;
 
-		std::string name = entry.path().filename().string();
+		std::string name = entry.path().filename().generic_u8string();
 		if (startsWith(name, stem + "-") && endsWith(name, ext))
 			matchingFiles.push_back(entry);
 	}

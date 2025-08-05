@@ -4,6 +4,7 @@
 
 #include "stb_image.h"
 #include "stb_image_write.h"
+#include "utf8.h"
 
 #include <iostream>
 #include <fstream>
@@ -249,8 +250,19 @@ bool endsWith(const std::string &str, const std::string &suffix) {
 }
 
 std::string toLower(const std::string &str) {
-	std::string output = str;
-	std::transform(output.begin(), output.end(), output.begin(), ::tolower);
+	std::string output;
+	utf8::iterator<std::string::const_iterator> it(str.begin(), str.begin(), str.end());
+	utf8::iterator<std::string::const_iterator> end(str.end(), str.begin(), str.end());
+
+	for (; it != end; ++it) {
+		char32_t cp = *it;
+		
+		if (cp <= 0x7F) {
+			cp = std::tolower(static_cast<unsigned char>(cp));
+		}
+		
+		utf8::append(cp, std::back_inserter(output));
+	}
 
 	return output;
 }
@@ -265,7 +277,7 @@ std::string toUpper(const std::string &str) {
 std::filesystem::path findDirectoryCaseInsensitive(const std::string &directory, const std::string &fileName) {
 	for (const auto &entry : std::filesystem::directory_iterator(directory)) {
 		if (entry.is_directory()) {
-			const std::string entryFileName = entry.path().filename().string();
+			const std::string entryFileName = entry.path().filename().generic_u8string();
 
 			if (toLower(entryFileName) == toLower(fileName)) {
 				return entry.path();
@@ -279,9 +291,9 @@ std::filesystem::path findDirectoryCaseInsensitive(const std::string &directory,
 std::string findFileCaseInsensitive(const std::string &directory, const std::string &fileName) {
 	for (const auto &entry : std::filesystem::directory_iterator(directory)) {
 		if (entry.is_regular_file()) {
-			const std::string entryFileName = entry.path().filename().string();
+			const std::string entryFileName = entry.path().filename().generic_u8string();
 			if (toLower(entryFileName) == toLower(fileName)) {
-				return entry.path().string();
+				return entry.path().generic_u8string();
 			}
 		}
 	}

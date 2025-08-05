@@ -5,7 +5,7 @@
 SplashArtPopup::SplashArtPopup(Window *window) : Popup(window) {
 	bounds = Rect(-1.0, -1.0, 1.0, 1.0);
 
-	splashart = new Texture((BASE_PATH / "assets" / "splash.png").string());
+	splashart = new Texture((BASE_PATH / "assets" / "splash.png").generic_u8string());
 }
 
 SplashArtPopup::~SplashArtPopup() {
@@ -49,7 +49,7 @@ void SplashArtPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 	for (int i = 0; i < 8; i++) {
 		if (i >= RecentFiles::recents.size()) break;
 
-		std::string recent = toLower(RecentFiles::recents[i].filename().string());
+		std::string recent = toLower(RecentFiles::recents[i].filename().generic_u8string());
 		double y = -0.33 - i * 0.04;
 		if (mouseX <= -0.4 && mouseY >= y - 0.015 && mouseY <= y + 0.015) {
 			Draw::color(0.25f, 0.25f, 0.25f);
@@ -71,7 +71,7 @@ void SplashArtPopup::mouseClick(double mouseX, double mouseY) {
 		for (int i = 0; i < 8; i++) {
 			if (i >= RecentFiles::recents.size()) break;
 
-			std::string recent = toLower(RecentFiles::recents[i].filename().string());
+			std::string recent = toLower(RecentFiles::recents[i].filename().generic_u8string());
 			double y = -0.33 - i * 0.04;
 			if (mouseX <= -0.4 && mouseY >= y - 0.015 && mouseY <= y + 0.015) {
 				close();

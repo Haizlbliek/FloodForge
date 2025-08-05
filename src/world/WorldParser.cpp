@@ -10,23 +10,23 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 	EditorState::region.reset();
 
 	EditorState::region.exportDirectory = path.parent_path();
-	EditorState::region.acronym = toLower(path.filename().string());
+	EditorState::region.acronym = toLower(path.filename().generic_u8string());
 	EditorState::region.acronym = EditorState::region.acronym.substr(EditorState::region.acronym.find_last_of('_') + 1, EditorState::region.acronym.find_last_of('.') - EditorState::region.acronym.find_last_of('_') - 1);
 	
 	Logger::log("Opening world ", EditorState::region.acronym);
 	
-	std::filesystem::path roomsPath = findDirectoryCaseInsensitive(EditorState::region.exportDirectory.parent_path().string(), EditorState::region.acronym + "-rooms");
+	std::filesystem::path roomsPath = findDirectoryCaseInsensitive(EditorState::region.exportDirectory.parent_path().generic_u8string(), EditorState::region.acronym + "-rooms");
 	if (roomsPath.empty()) {
 		EditorState::region.roomsDirectory = "";
 		EditorState::fails.push_back("Cannot find rooms directory!");
 	} else {
-		EditorState::region.roomsDirectory = roomsPath.filename().string();
+		EditorState::region.roomsDirectory = roomsPath.filename().generic_u8string();
 	}
 	Logger::log("Rooms directory: ", EditorState::region.roomsDirectory);
 	
-	std::filesystem::path mapFilePath = findFileCaseInsensitive(EditorState::region.exportDirectory.string(), "map_" + EditorState::region.acronym + ".txt");
+	std::filesystem::path mapFilePath = findFileCaseInsensitive(EditorState::region.exportDirectory.generic_u8string(), "map_" + EditorState::region.acronym + ".txt");
 	
-	std::string propertiesFilePath = findFileCaseInsensitive(EditorState::region.exportDirectory.string(), "properties.txt");
+	std::string propertiesFilePath = findFileCaseInsensitive(EditorState::region.exportDirectory.generic_u8string(), "properties.txt");
 	
 	if (std::filesystem::exists(propertiesFilePath)) {
 		Logger::log("Found properties file, loading subregions");
@@ -56,7 +56,7 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 			room->data.attractiveness = x.second;
 			break;
 		}
-		loadExtraRoomData(findFileCaseInsensitive((EditorState::region.exportDirectory.parent_path() / EditorState::region.roomsDirectory).string(), room->roomName + "_settings.txt"), room->data);
+		loadExtraRoomData(findFileCaseInsensitive((EditorState::region.exportDirectory.parent_path() / EditorState::region.roomsDirectory).generic_u8string(), room->roomName + "_settings.txt"), room->data);
 	}
 	
 	Logger::log("Extra room data - loaded");
@@ -105,11 +105,15 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 			std::filesystem::path roomPath = directory.parent_path() / EditorState::region.roomsDirectory;
 
 			if (startsWith(roomName, "gate")) {
-				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path().string(), "gates");
+				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path().generic_u8string(), "gates");
 				Logger::log("Found gate ", roomName);
 			}
 			
-			roomPath = findFileCaseInsensitive(roomPath.string(), roomName + ".txt");
+			std::filesystem::path filePath = findFileCaseInsensitive(roomPath.generic_u8string(), roomName + ".txt");
+			if (filePath.empty()) {
+				Logger::logError("File `", roomPath / roomName, ".txt` could not be found.");
+			}
+			Logger::log("Found room file: '", filePath, "'");
 
 			Room *room = nullptr;
 
@@ -122,7 +126,7 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 					room = EditorState::offscreenDen;
 				}
 			} else {
-				room = new Room(roomPath, roomName);
+				room = new Room(filePath, roomName);
 				EditorState::rooms.push_back(room);
 			}
 
@@ -242,13 +246,14 @@ void WorldParser::parseWorldRoom(std::string line, std::filesystem::path directo
 			std::filesystem::path roomPath = directory.parent_path() / EditorState::region.roomsDirectory;
 
 			if (startsWith(roomName, "gate")) {
-				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path().string(), "gates");
+				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path().generic_u8string(), "gates");
 			}
 
-			std::string filePath = findFileCaseInsensitive(roomPath.string(), roomName + ".txt");
+			std::string filePath = findFileCaseInsensitive(roomPath.generic_u8string(), roomName + ".txt");
 			if (filePath.empty()) {
 				Logger::logError("File `", roomPath, "/", roomName, ".txt` could not be found.");
 			}
+			Logger::log("Found room file: '", filePath, "'");
 
 			room = new Room(filePath, roomName);
 		}

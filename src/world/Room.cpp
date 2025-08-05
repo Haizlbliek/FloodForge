@@ -567,8 +567,8 @@ void Room::ensureConnections() {
 void Room::loadGeometry() {
 	std::fstream geometryFile(path);
 	if (!geometryFile.is_open() || !std::filesystem::exists(path)) {
-		EditorState::fails.push_back("Failed to load '" + roomName + "' - Doesn't exist");
-		Logger::log("Failed to load '", path, "' - Doesn't exist.");
+		EditorState::fails.push_back("Failed to load '" + path.generic_u8string() + "' / '" + roomName + "' - Doesn't exist.");
+		Logger::log("Failed to load '", path, "' / '", roomName, "' - Doesn't exist.");
 		width = 72;
 		height = 43;
 		water = -1;
@@ -664,7 +664,7 @@ void Room::checkImages() {
 	for (int i = 0; i < images; i++) {
 		std::string imagePath = roomName + "_" + std::to_string(i + 1) + ".png";
 		
-		std::string foundPath = findFileCaseInsensitive(imageDirectory.string(), imagePath);
+		std::string foundPath = findFileCaseInsensitive(imageDirectory.generic_u8string(), imagePath);
 		
 		if (foundPath.empty()) {
 			EditorState::fails.push_back("Can't find '" + imagePath + "'");

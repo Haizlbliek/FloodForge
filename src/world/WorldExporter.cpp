@@ -289,7 +289,7 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 	}
 
 	Backup::backup(outputPath);
-	if (stbi_write_png(outputPath.string().c_str(), textureWidth, textureHeight, 3, image.data(), textureWidth * 3)) {
+	if (stbi_write_png(outputPath.generic_u8string().c_str(), textureWidth, textureHeight, 3, image.data(), textureWidth * 3)) {
 		Logger::log("Image saved successfully!");
 	} else {
 		Logger::log("Error saving image!");

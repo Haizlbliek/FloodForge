@@ -50,7 +50,7 @@ class Popup {
 class Popups {
 	public:
 		static void init() {
-			textureUI = loadTexture((BASE_PATH / "assets" / "ui.png").string());
+			textureUI = loadTexture((BASE_PATH / "assets" / "ui.png").generic_u8string());
 		}
 
 		static GLuint textureUI;

@@ -25,10 +25,10 @@ void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, std::
 	Logger::log("Loading creatures from: '", path, "'");
 
 	for (const auto& entry : std::filesystem::directory_iterator(path)) {
-		if (std::filesystem::is_regular_file(entry.path()) && validExtension(entry.path().extension().string())) {
-			std::string creature = prefix + entry.path().stem().string();
+		if (std::filesystem::is_regular_file(entry.path()) && validExtension(entry.path().extension().generic_u8string())) {
+			std::string creature = prefix + entry.path().stem().generic_u8string();
 			if (include) creatures.push_back(creature);
-			creatureTextures[creature] = loadTexture(entry.path().string());
+			creatureTextures[creature] = loadTexture(entry.path().generic_u8string());
 		}
 	}
 }
@@ -58,10 +58,10 @@ void CreatureTextures::init() {
 	loadCreaturesFromFolder(creaturesDirectory / "room", "room-", false);
 	
 	for (const auto& entry : std::filesystem::directory_iterator(creaturesDirectory / "TAGS")) {
-		if (std::filesystem::is_regular_file(entry.path()) && validExtension(entry.path().extension().string())) {
-			std::string tag = entry.path().stem().string();
+		if (std::filesystem::is_regular_file(entry.path()) && validExtension(entry.path().extension().generic_u8string())) {
+			std::string tag = entry.path().stem().generic_u8string();
 			creatureTags.push_back(tag);
-			creatureTagTextures[tag] = loadTexture(entry.path().string());
+			creatureTagTextures[tag] = loadTexture(entry.path().generic_u8string());
 		}
 	}
 
