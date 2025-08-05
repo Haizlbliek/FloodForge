@@ -370,11 +370,6 @@ void FilesystemPopup::keyCallback(void *object, int action, int key) {
 }
 
 void FilesystemPopup::setDirectory() {
-	// TODO: Make this work
-	// if (!MenuItems::ExportDirectory().empty()) {
-	//     currentDirectory = MenuItems::ExportDirectory();
-	//     return;
-	// }
 	selected.clear();
 
 	if (!previousDirectory.empty() && std::filesystem::exists(previousDirectory)) {
