@@ -158,6 +158,14 @@ void drawLine(float x0, float y0, float x1, float y1, double thickness) {
 	Draw::end();
 }
 
+GLuint loadTexture(std::filesystem::path filepath) {
+	return loadTexture(filepath.string().c_str(), GL_NEAREST);
+}
+
+GLuint loadTexture(std::filesystem::path filepath, int filter) {
+	return loadTexture(filepath.string().c_str(), filter);
+}
+
 GLuint loadTexture(std::string filepath) {
 	return loadTexture(filepath.c_str(), GL_NEAREST);
 }

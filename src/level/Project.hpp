@@ -38,7 +38,7 @@ class Project {
 		void render();
 
 		static Project *load(std::string name);
-		static Project *loadFromPath(std::string path);
+		static Project *loadFromPath(std::filesystem::path path);
 
 		Grid *GetLayer(unsigned int layer) {
 			if (layer == 1) return layer1;
@@ -85,7 +85,7 @@ class Project {
 			levelData += getTileData() + "\n";
 
 			std::ofstream file;
-			file.open(OUTPUT_PATH + name + ".txt");
+			file.open(OUTPUT_PATH / (name + ".txt"));
 			file << levelData;
 			file.close();
 		}
@@ -156,7 +156,7 @@ class Project {
 		Grid *layer2;
 		Grid *layer3;
 
-		std::string filePath;
+		std::filesystem::path filePath;
 
 		Window *window;
 };

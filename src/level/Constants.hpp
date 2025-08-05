@@ -22,6 +22,6 @@
 #define DATA_ROCK 51
 
 #include "../Constants.hpp"
-#define TEXTURE_PATH (BASE_PATH + "assets/")
-#define SAVE_PATH    (BASE_PATH + "saves/")
-#define OUTPUT_PATH  (BASE_PATH + "output/")
+#define TEXTURE_PATH (BASE_PATH / "assets")
+#define SAVE_PATH    (BASE_PATH / "saves")
+#define OUTPUT_PATH  (BASE_PATH / "output")

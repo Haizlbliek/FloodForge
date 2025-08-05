@@ -33,7 +33,7 @@ void Project::save() {
 	Logger::log(filePath);
 	if (filePath.empty()) {
 		Popups::addPopup(new FilesystemPopup(window, std::regex(R"([^.]+\.level)"), "xxxx.level",
-			[this](std::set<std::string> newFilePaths) {
+			[this](std::set<std::filesystem::path> newFilePaths) {
 				if (newFilePaths.empty()) return;
 
 				filePath = *newFilePaths.begin();
@@ -74,7 +74,7 @@ void Project::save() {
 void Project::render() {
 	renderCollision();
 
-	Render::render(this, (OUTPUT_PATH + name + "_1.png").c_str());
+	Render::render(this, (OUTPUT_PATH / (name + "_1.png")).string().c_str());
 }
 
 std::vector<uint8_t> parseStringToUint8Vector(const std::string& input) {
@@ -91,10 +91,10 @@ std::vector<uint8_t> parseStringToUint8Vector(const std::string& input) {
 }
 
 Project *Project::load(std::string name) {
-	return Project::loadFromPath(SAVE_PATH + name + ".level");
+	return Project::loadFromPath(SAVE_PATH / (name + ".level"));
 }
 
-Project *Project::loadFromPath(std::string path) {
+Project *Project::loadFromPath(std::filesystem::path path) {
 	std::ifstream file;
 	file.open(path);
 
@@ -217,7 +217,7 @@ void Project::exportDrizzle() {
 		std::filesystem::create_directory(OUTPUT_PATH);
 	}
 	std::ofstream file;
-	file.open(OUTPUT_PATH + name + ".txt");
+	file.open(OUTPUT_PATH / (name + ".txt"));
 
 	// Level Data
 	file << "[";

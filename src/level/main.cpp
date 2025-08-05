@@ -158,7 +158,7 @@ int main() {
 	project = new Project("", 72, 43);
 
 	Window *window = new Window(1024, 1024);
-	window->setIcon(TEXTURE_PATH + "MainIcon.png");
+	window->setIcon(TEXTURE_PATH / "MainIcon.png");
 	window->setTitle("FloodForge Level Editor - " + project->Name());
 	window->setBackgroundColour(0.3f, 0.3f, 0.3f);
 	
@@ -173,11 +173,12 @@ int main() {
 	Fonts::init();
 	Popups::init();
 	Draw::init();
+	Settings::init();
 
-	GLuint textureSolids = loadTexture(TEXTURE_PATH + "solids.png");
-	GLuint textureShortcuts = loadTexture(TEXTURE_PATH + "shortcuts.png");
-	GLuint textureTools = loadTexture(TEXTURE_PATH + "tools.png");
-	GLuint textureItems = loadTexture(TEXTURE_PATH + "items.png");
+	GLuint textureSolids = loadTexture(TEXTURE_PATH / "solids.png");
+	GLuint textureShortcuts = loadTexture(TEXTURE_PATH / "shortcuts.png");
+	GLuint textureTools = loadTexture(TEXTURE_PATH / "tools.png");
+	GLuint textureItems = loadTexture(TEXTURE_PATH / "items.png");
 
 
 	bool popupVisible = false;
