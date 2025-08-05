@@ -448,7 +448,7 @@ void updateMain() {
 		}
 	}
 	
-	if (justPressed(GLFW_KEY_T) && EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
+	if (EditorState::window->modifierPressed(GLFW_MOD_ALT) && justPressed(GLFW_KEY_T)) {
 		Popups::addPopup(new MarkdownPopup(EditorState::window, BASE_PATH / "docs" / "controls.md"));
 	}
 
