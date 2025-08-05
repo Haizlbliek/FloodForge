@@ -219,11 +219,10 @@ void MenuItems::init(Window *window) {
 			}
 
 			Popups::addPopup((new FilesystemPopup(window, std::regex("(([^._-]+)_[a-zA-Z0-9]+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"), "xx_a01.txt",
-				[&](std::set<std::string> pathStrings) {
-					if (pathStrings.empty()) return;
+				[&](std::set<std::filesystem::path> paths) {
+					if (paths.empty()) return;
 
-					for (std::string pathString : pathStrings) {
-						std::filesystem::path roomFilePath = pathString;
+					for (std::filesystem::path roomFilePath : paths) {
 						std::string acronym = roomFilePath.parent_path().filename().generic_u8string();
 						acronym = acronym.substr(0, acronym.find_last_of('-'));
 						
@@ -294,12 +293,10 @@ void MenuItems::init(Window *window) {
 	addButton("Import").OnLeftPress(
 		[window](Button *button) {
 			Popups::addPopup(new FilesystemPopup(window, std::regex("world_([^._-]+)\\.txt", std::regex_constants::icase), "world_xx.txt",
-				[window](std::set<std::string> pathStrings) {
-					if (pathStrings.empty()) return;
+				[window](std::set<std::filesystem::path> paths) {
+					if (paths.empty()) return;
 
-					std::filesystem::path path = *pathStrings.begin();
-
-					WorldParser::importWorldFile(path);
+					WorldParser::importWorldFile(*paths.begin());
 				}
 			));
 		}
@@ -329,11 +326,14 @@ void MenuItems::init(Window *window) {
 					return;
 				}
 
-				Popups::addPopup(new FilesystemPopup(window, TYPE_FOLDER, "YOUR_MOD/world/xx/",
-					[window](std::set<std::string> pathStrings) {
+				Popups::addPopup(new FilesystemPopup(window, TYPE_FOLDER, "YOUR_MOD/world/",
+					[window](std::set<std::filesystem::path> pathStrings) {
 						if (pathStrings.empty()) return;
 
-						EditorState::region.exportDirectory = *pathStrings.begin();
+						EditorState::region.exportDirectory = *pathStrings.begin() / EditorState::region.acronym;
+						EditorState::region.roomsDirectory = EditorState::region.acronym + "-rooms";
+						std::filesystem::create_directories(EditorState::region.exportDirectory);
+						std::filesystem::create_directories(*pathStrings.begin() / EditorState::region.roomsDirectory);
 
 						WorldExporter::exportMapFile();
 						WorldExporter::exportWorldFile();

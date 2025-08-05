@@ -27,9 +27,9 @@
 
 class FilesystemPopup : public Popup {
 	public:
-		FilesystemPopup(Window *window, std::regex regex, std::string hint, std::function<void(std::set<std::string>)> callback);
+		FilesystemPopup(Window *window, std::regex regex, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback);
 
-		FilesystemPopup(Window *window, int type, std::string hint, std::function<void(std::set<std::string>)> callback);
+		FilesystemPopup(Window *window, int type, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback);
 
 		FilesystemPopup *AllowMultiple();
 
@@ -64,9 +64,9 @@ class FilesystemPopup : public Popup {
 		std::regex regex;
 		bool allowMultiple;
 
-		std::function<void(std::set<std::string>)> callback;
+		std::function<void(std::set<std::filesystem::path>)> callback;
 
-		std::set<std::string> selected;
+		std::set<std::filesystem::path> selected;
 
 		double currentScroll;
 		double targetScroll;

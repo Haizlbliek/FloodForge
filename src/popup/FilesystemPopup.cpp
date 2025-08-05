@@ -1,6 +1,6 @@
 #include "FilesystemPopup.hpp"
 
-FilesystemPopup::FilesystemPopup(Window *window, std::regex regex, std::string hint, std::function<void(std::set<std::string>)> callback) : Popup(window), regex(regex), hint(hint), callback(callback) {
+FilesystemPopup::FilesystemPopup(Window *window, std::regex regex, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback) : Popup(window), regex(regex), hint(hint), callback(callback) {
 	window->addKeyCallback(this, keyCallback);
 	window->addScrollCallback(this, scrollCallback);
 	called = false;
@@ -19,7 +19,7 @@ FilesystemPopup::FilesystemPopup(Window *window, std::regex regex, std::string h
 	refresh();
 }
 
-FilesystemPopup::FilesystemPopup(Window *window, int type, std::string hint, std::function<void(std::set<std::string>)> callback) : Popup(window), hint(hint), callback(callback) {
+FilesystemPopup::FilesystemPopup(Window *window, int type, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback) : Popup(window), hint(hint), callback(callback) {
 	window->addKeyCallback(this, keyCallback);
 	window->addScrollCallback(this, scrollCallback);
 	called = false;
@@ -49,7 +49,7 @@ void FilesystemPopup::accept() {
 	if (mode == MODE_NORMAL) {
 		if (openType == TYPE_FOLDER) {
 			called = true;
-			std::set<std::string> output { currentDirectory.generic_u8string() };
+			std::set<std::filesystem::path> output { currentDirectory };
 			callback(output);
 		}
 		
@@ -92,7 +92,7 @@ void FilesystemPopup::close() {
 	
 	window = nullptr;
 	
-	if (!called) callback(std::set<std::string>());
+	if (!called) callback(std::set<std::filesystem::path>());
 }
 
 void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
