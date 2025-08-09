@@ -21,6 +21,8 @@ class SubregionPopup : public Popup {
 
 		void mouseClick(double mouseX, double mouseY);
 		
+		void close();
+		
 		bool canStack(std::string popupName) { return popupName == "SubregionNewPopup" || popupName == "InfoPopup"; }
 		std::string PopupName() { return "SubregionPopup"; }
 
@@ -30,4 +32,11 @@ class SubregionPopup : public Popup {
 		int getButtonIndex(double mouseX, double mouseY);
 
 		void drawSubregionButton(int subregionId, std::string subregion, double centreX, double y, double mouseX, double mouseY);
+
+		static void scrollCallback(void *object, double deltaX, double deltaY);
+
+		void clampScroll();
+
+		double scroll;
+		double scrollTo;
 };

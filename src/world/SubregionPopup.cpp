@@ -2,6 +2,11 @@
 
 SubregionPopup::SubregionPopup(Window *window, std::set<Room*> newRooms) : Popup(window) {
 	for (Room *room : newRooms) rooms.insert(room);
+	
+	scroll = 0.0;
+	scrollTo = 0.0;
+
+	window->addScrollCallback(this, scrollCallback);
 }
 
 SubregionPopup::~SubregionPopup() {}
@@ -10,6 +15,8 @@ void SubregionPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
 	
 	if (minimized) return;
+
+	scroll += (scrollTo - scroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 	
 	double centreX = (bounds.x0 + bounds.x1) * 0.5;
 
@@ -21,7 +28,17 @@ void SubregionPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 			Fonts::rainworld->writeCentred("Selected Rooms", centreX, bounds.y1 - 0.07, 0.04, CENTRE_XY);
 		}
 
-		double y = bounds.y1 - 0.15;
+		int windowWidth;
+		int windowHeight;
+		glfwGetWindowSize(window->getGLFWWindow(), &windowWidth, &windowHeight);
+	
+		glEnable(GL_SCISSOR_TEST);
+		double clipBottom = ((bounds.y0 + 0.01 + screenBounds.y) * 0.5) * windowHeight;
+		double clipTop = ((bounds.y1 - 0.14 + screenBounds.y) * 0.5) * windowHeight;
+		glScissor(0, clipBottom, windowWidth, clipTop - clipBottom);
+
+
+		double y = bounds.y1 - 0.15 - scroll;
 		drawSubregionButton(-1, "None", centreX, y, mouseX, mouseY);
 		y -= 0.075;
 
@@ -34,6 +51,8 @@ void SubregionPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 		}
 
 		drawSubregionButton(-2, "+ new subregion +", centreX, y, mouseX, mouseY);
+	
+		glDisable(GL_SCISSOR_TEST);
 	}
 }
 
@@ -46,7 +65,7 @@ void SubregionPopup::mouseClick(double mouseX, double mouseY) {
 
 	double centreX = (bounds.x0 + bounds.x1) * 0.5;
 	mouseX -= centreX;
-	mouseY -= (bounds.y0 + bounds.y1) * 0.5;
+	mouseY -= (bounds.y0 + bounds.y1) * 0.5 - scroll;
 
 	int button = getButtonIndex(mouseX, mouseY);
 
@@ -84,6 +103,12 @@ void SubregionPopup::mouseClick(double mouseX, double mouseY) {
 			}
 		}
 	}
+}
+
+void SubregionPopup::close() {
+	Popups::removePopup(this);
+	
+	window->removeScrollCallback(this, scrollCallback);
 }
 
 int SubregionPopup::getButtonIndex(double mouseX, double mouseY) {
@@ -137,5 +162,37 @@ void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion,
 			setThemeColour(ThemeColour::Border);
 		}
 		strokeRect(0.35 + centerX, y, 0.4 + centerX, y - 0.05);
+	}
+}
+
+void SubregionPopup::scrollCallback(void *object, double deltaX, double deltaY) {
+	SubregionPopup *popup = static_cast<SubregionPopup*>(object);
+
+	if (!popup->hovered) return;
+
+	popup->scrollTo += deltaY * 0.075;
+	
+	popup->clampScroll();
+}
+
+
+void SubregionPopup::clampScroll() {
+	double width = 0.5;
+	double height = 0.5;
+
+	double maxScroll = (EditorState::subregions.size() - 3) * -0.075;
+
+	if (scrollTo < maxScroll) {
+		scrollTo = maxScroll;
+		if (scroll <= maxScroll + 0.06) {
+			scroll = maxScroll - 0.03;
+		}
+	}
+
+	if (scrollTo > 0) {
+		scrollTo = 0;
+		if (scroll >= -0.06) {
+			scroll = 0.03;
+		}
 	}
 }
