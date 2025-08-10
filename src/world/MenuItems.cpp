@@ -400,6 +400,14 @@ void MenuItems::init(Window *window) {
 		}
 	);
 
+	addButton("Sync Dev & Canon: On")
+	.OnLeftPress(
+		[window](Button *button) {
+			EditorState::syncDevAndCanon = !EditorState::syncDevAndCanon;
+			button->Text(EditorState::syncDevAndCanon ? "Sync Dev & Canon: On" : "Sync Dev & Canon: Off");
+		}
+	);
+
 	// addButton("Change Region Acronym").OnLeftPress(
 	// 	[window](Button *button) {
 	// 		if (EditorState::region.acronym == "") {
