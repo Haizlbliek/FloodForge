@@ -51,3 +51,22 @@ Moving a room affects only the active mode. In order to move both positions, hol
 > To hide this popup:
 > - Go into `assets/settings.txt`
 > - Add this line: `HideTutorial: true`
+
+## Adding custom creatures
+Some mods add creatures to the game, these will show up as `?` in FloodForge,
+to show the proper icon and be able to add the creature to new rooms:
+
+1. Add a folder inside `assets/creatures` with the mod name (e.g. `m4rblelous`).
+2. Inside, put a .png image for every creature you want to add.
+3. In `assets/creatures/mods.txt`, add a line with your directory name.
+
+> **Side note:**
+> Sometimes, mods add custom "parsings" for creature names, allowing alternate
+> IDs to be used. An example of this are most Lizards; The Green Lizard can be put
+> in the world file with either `GreenLizard` OR `Green`.
+> 
+> Adding your own is pretty simple,
+> In `assets/creatures/parse.txt` add a line with the format:
+> `Abbreviated Name>ActualID`
+> 
+> You can add as many as you like!
