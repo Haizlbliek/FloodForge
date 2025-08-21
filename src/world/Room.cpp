@@ -89,7 +89,7 @@ Room::Room(std::filesystem::path path, std::string name) {
 	water = -1;
 	subregion = -1;
 
-	images = 0;
+	cameras = 0;
 	data = ExtraRoomData();
 
 	loadGeometry();
@@ -461,8 +461,6 @@ void Room::ToggleTag(const std::string newTag) {
 }
 const std::vector<std::string> Room::Tags() const { return tags; }
 
-const int Room::Images() const { return images; }
-
 void Room::moveBoth() {
 	if (EditorState::roomPositionType == CANON_POSITION) {
 		devPosition = canonPosition;
@@ -600,7 +598,7 @@ void Room::loadGeometry() {
 	
 	std::getline(geometryFile, tempLine); // Cameras
 	std::vector<std::string> items = split(tempLine, '|');
-	images = items.size();
+	cameras = items.size();
 	
 	std::getline(geometryFile, tempLine); // Junk
 	std::getline(geometryFile, tempLine); // Junk
@@ -661,7 +659,7 @@ void Room::checkImages() {
 	if (!Settings::getSetting<bool>(Settings::Setting::WarnMissingImages)) return;
 	
 	std::filesystem::path imageDirectory = path.parent_path();
-	for (int i = 0; i < images; i++) {
+	for (int i = 0; i < cameras; i++) {
 		std::string imagePath = roomName + "_" + std::to_string(i + 1) + ".png";
 		
 		std::string foundPath = findFileCaseInsensitive(imageDirectory.generic_u8string(), imagePath);

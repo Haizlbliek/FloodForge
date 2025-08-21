@@ -153,8 +153,6 @@ class Room {
 		void ToggleTag(const std::string newTag);
 		const std::vector<std::string> Tags() const;
 
-		const int Images() const;
-
 		Vector2 canonPosition;
 		Vector2 devPosition;
 
@@ -162,6 +160,8 @@ class Room {
 		int layer = 0;
 		int water = 0;
 		int subregion = 0;
+
+		int cameras;
 
 		ExtraRoomData data;
 
@@ -202,7 +202,6 @@ class Room {
 
 		int *geometry;
 		std::vector<Den> dens;
-		int images;
 
 		std::vector<std::string> tags;
 

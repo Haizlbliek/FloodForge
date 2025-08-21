@@ -131,7 +131,7 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 		EditorState::rooms.push_back(room);
 		Settings::settings[Settings::Setting::WarnMissingImages] = initial;
 		
-		for (int i = 0; i < room->Images(); i++) {
+		for (int i = 0; i < room->cameras; i++) {
 			std::string imagePath = fromRoom + "_" + std::to_string(i + 1) + ".png";
 			std::string image = findFileCaseInsensitive(fromFile.parent_path().generic_u8string(), imagePath);
 			
