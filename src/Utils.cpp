@@ -296,6 +296,19 @@ std::filesystem::path findDirectoryCaseInsensitive(const std::string &directory,
 	return "";
 }
 
+std::filesystem::path findFileCaseInsensitive(const std::filesystem::path &directory, const std::string &fileName) {
+	for (const std::filesystem::directory_entry &entry : std::filesystem::directory_iterator(directory)) {
+		if (entry.is_regular_file()) {
+			const std::string entryFileName = entry.path().filename().generic_u8string();
+			if (toLower(entryFileName) == toLower(fileName)) {
+				return entry.path();
+			}
+		}
+	}
+
+	return "";
+}
+
 std::string findFileCaseInsensitive(const std::string &directory, const std::string &fileName) {
 	for (const auto &entry : std::filesystem::directory_iterator(directory)) {
 		if (entry.is_regular_file()) {

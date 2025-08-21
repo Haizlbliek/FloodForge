@@ -1,6 +1,9 @@
 #include "RecentFiles.hpp"
 
+#include "../Utils.hpp"
+
 std::vector<std::filesystem::path> RecentFiles::recents;
+std::vector<std::string> RecentFiles::recentsNames;
 
 void RecentFiles::init() {
 	std::filesystem::path recentsPath = BASE_PATH / "assets" / "recents.txt";
@@ -14,8 +17,25 @@ void RecentFiles::init() {
 
 		if (line.back() == '\r') line.pop_back();
 		
-		if (std::filesystem::exists(line)) {
-			recents.push_back(line);
+		std::filesystem::path path = line;
+		if (std::filesystem::exists(path)) {
+			recents.push_back(path);
+
+			std::filesystem::path displayNamePath = findFileCaseInsensitive(path.parent_path(), "displayname.txt");
+
+			if (displayNamePath.empty()) {
+				recentsNames.push_back("");
+			} else {
+				std::ifstream displayNameFile(displayNamePath);
+				if (std::getline(displayNameFile, line)) {
+					if (line.back() == '\r') line.pop_back();
+
+					recentsNames.push_back(line);
+				} else {
+					recentsNames.push_back("");
+				}
+				displayNameFile.close();
+			}
 		}
 	}
 	

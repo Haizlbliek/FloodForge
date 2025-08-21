@@ -15,6 +15,7 @@ class RecentFiles {
 		static void addPath(std::filesystem::path path);
 	
 		static std::vector<std::filesystem::path> recents;
+		static std::vector<std::string> recentsNames;
 	
 	private:
 		static void save();
