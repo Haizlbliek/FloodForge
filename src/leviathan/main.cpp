@@ -15,7 +15,7 @@
 #include "BodyChunk.hpp"
 #include "Globals.hpp"
 
-#define TEXTURE_PATH (BASE_PATH + "assets/")
+#define TEXTURE_PATH (BASE_PATH / "assets")
 
 #define clamp(x, a, b) x >= b ? b : (x <= a ? a : x)
 #define min(a, b) (a < b) ? a : b
@@ -76,7 +76,7 @@ void mainDraw() {
 
 int main() {
 	Window *window = new Window(1024, 1024);
-	window->setIcon(TEXTURE_PATH + "MainIcon.png");
+	window->setIcon(TEXTURE_PATH / "MainIcon.png");
 	window->setTitle("Leviathan");
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
