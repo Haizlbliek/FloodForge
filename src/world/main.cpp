@@ -233,7 +233,7 @@ void updateOriginalControls() {
 
 					roomPosition.add(offset);
 
-					if (EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
+					if (EditorState::syncDevAndCanon || EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
 						room2->moveBoth();
 					}
 				}
@@ -361,7 +361,7 @@ void updateFloodForgeControls() {
 					}
 
 					roomPosition.add(offset);
-					if (EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
+					if (EditorState::syncDevAndCanon || EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
 						room2->moveBoth();
 					}
 				}

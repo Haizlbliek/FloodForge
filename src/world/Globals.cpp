@@ -21,7 +21,8 @@ namespace EditorState {
 	int roomPositionType = CANON_POSITION;
 	bool visibleLayers[] = { true, true, true };
 	bool visibleDevItems = false;
-	
+	bool syncDevAndCanon = true;
+
 	Region region;
 
 	int selectingState = 0;
