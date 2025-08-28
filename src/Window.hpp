@@ -236,7 +236,7 @@ class Window {
 			GLFWimage images[1]; 
 			images[0].pixels = stbi_load(path.generic_u8string().c_str(), &images[0].width, &images[0].height, 0, 4); //rgba channels 
 			if (!images[0].pixels) {
-				Logger::logError("Failed to load icon: ", path);
+				Logger::error("Failed to load icon: ", path);
 				return;
 			}
 
@@ -387,7 +387,7 @@ class Window {
 
 			for (std::pair<void*, std::function<void(void*, int, int)>> callback : window->keyCallbacks) {
 				if (!callback.second) {
-					Logger::log("INVALID CALLBACK");
+					Logger::info("INVALID CALLBACK");
 					continue;
 				}
 

@@ -19,14 +19,14 @@ void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 
 
 	setThemeColour(ThemeColour::Text);
 	glLineWidth(1);
-	Fonts::rainworld->writeCentred("Enter Region Acronym:", centreX, bounds.y1 - 0.07, 0.035, CENTRE_X);
+	Fonts::rainworld->writeCentered("Enter Region Acronym:", centreX, bounds.y1 - 0.07, 0.035, CENTER_X);
 
 	if (text.length() < 2) {
 		Draw::color(1.0, 0.0, 0.0);
 	} else {
 		setThemeColour(ThemeColour::Text);
 	}
-	Fonts::rainworld->writeCentred(text, centreX, bounds.y1 - 0.13, 0.055, CENTRE_X);
+	Fonts::rainworld->writeCentered(text, centreX, bounds.y1 - 0.13, 0.055, CENTER_X);
 
 	setThemeColour(ThemeColour::Button);
 	fillRect(centreX - 0.2, bounds.y1 - 0.28, centreX - 0.05, bounds.y1 - 0.22);
@@ -39,14 +39,14 @@ void AcronymPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 
 	fillRect(centreX + 0.05, bounds.y1 - 0.28, centreX + 0.2, bounds.y1 - 0.22);
 
 	setThemeColour(ThemeColour::Text);
-	Fonts::rainworld->writeCentred("Cancel", centreX - 0.125, bounds.y1 - 0.25, 0.03, CENTRE_XY);
+	Fonts::rainworld->writeCentered("Cancel", centreX - 0.125, bounds.y1 - 0.25, 0.03, CENTER_XY);
 
 	if (text.length() < 2) {
 		setThemeColour(ThemeColour::TextDisabled);
 	} else {
 		setThemeColour(ThemeColour::Text);
 	}
-	Fonts::rainworld->writeCentred("Confirm", centreX + 0.125, bounds.y1 - 0.25, 0.03, CENTRE_XY);
+	Fonts::rainworld->writeCentered("Confirm", centreX + 0.125, bounds.y1 - 0.25, 0.03, CENTER_XY);
 
 	if (Rect(centreX - 0.2, bounds.y1 - 0.28, centreX - 0.05, bounds.y1 - 0.22).inside(mouseX, mouseY)) {
 		setThemeColour(ThemeColour::BorderHighlight);

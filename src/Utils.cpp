@@ -22,6 +22,14 @@
 #define M_PI_2 1.570796326795
 #endif
 
+void fillRect(Rect rect) {
+	fillRect(rect.x0, rect.y0, rect.x1, rect.y1);
+}
+
+void strokeRect(Rect rect) {
+	strokeRect(rect.x0, rect.y0, rect.x1, rect.y1);
+}
+
 void fillRect(float x0, float y0, float x1, float y1) {
 	Draw::begin(Draw::QUADS);
 	Draw::vertex(x0, y0);
@@ -183,7 +191,7 @@ GLuint loadTexture(const char *filepath, int filter) {
 
 	unsigned char* data = stbi_load(filepath, &width, &height, &nrChannels, 0);
 	if (!data) {
-		Logger::logError("Failed to load texture: ", filepath);
+		Logger::error("Failed to load texture: ", filepath);
 		return 0;
 	}
 
@@ -210,7 +218,7 @@ GLFWimage loadIcon(const char* filepath) {
 	int width, height, nrChannels;
 	unsigned char* data = stbi_load(filepath, &width, &height, &nrChannels, 0);
 	if (!data) {
-		Logger::logError("Failed to load texture: ", filepath);
+		Logger::error("Failed to load texture: ", filepath);
 		return GLFWimage();
 	}
 
@@ -282,7 +290,7 @@ std::string toUpper(const std::string &str) {
 	return output;
 }
 
-std::filesystem::path findDirectoryCaseInsensitive(const std::string &directory, const std::string &fileName) {
+std::filesystem::path findDirectoryCaseInsensitive(const std::filesystem::path &directory, const std::string &fileName) {
 	for (const auto &entry : std::filesystem::directory_iterator(directory)) {
 		if (entry.is_directory()) {
 			const std::string entryFileName = entry.path().filename().generic_u8string();
@@ -306,18 +314,6 @@ std::filesystem::path findFileCaseInsensitive(const std::filesystem::path &direc
 		}
 	}
 
-	return "";
-}
-
-std::string findFileCaseInsensitive(const std::string &directory, const std::string &fileName) {
-	for (const auto &entry : std::filesystem::directory_iterator(directory)) {
-		if (entry.is_regular_file()) {
-			const std::string entryFileName = entry.path().filename().generic_u8string();
-			if (toLower(entryFileName) == toLower(fileName)) {
-				return entry.path().generic_u8string();
-			}
-		}
-	}
 	return "";
 }
 
@@ -416,7 +412,7 @@ void openURL(std::string url) {
 std::string loadShaderSource(const char* filePath) {
 	std::ifstream shaderFile(filePath);
 	if (!shaderFile.is_open()) {
-		Logger::logError("Failed to open shader file: ", filePath);
+		Logger::error("Failed to open shader file: ", filePath);
 		return "";
 	}
 
@@ -438,7 +434,7 @@ GLuint compileShader(const std::string& source, GLenum shaderType) {
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
 		char* log = new char[logLength];
 		glGetShaderInfoLog(shader, logLength, &logLength, log);
-		Logger::logError("Shader compilation failed: ", log);
+		Logger::error("Shader compilation failed: ", log);
 		delete[] log;
 	}
 
@@ -458,7 +454,7 @@ GLuint linkShaders(GLuint vertexShader, GLuint fragmentShader) {
 		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
 		char* log = new char[logLength];
 		glGetProgramInfoLog(program, logLength, &logLength, log);
-		Logger::logError("Program linking failed: ", log);
+		Logger::error("Program linking failed: ", log);
 		delete[] log;
 	}
 

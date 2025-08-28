@@ -1,6 +1,7 @@
 #include "Room.hpp"
 
 #include "DenPopup.hpp"
+#include "ConditionalTimelineTextures.hpp"
 
 Colour RoomHelpers::RoomAir;
 Colour RoomHelpers::RoomSolid;
@@ -68,6 +69,7 @@ void RoomHelpers::drawTexture(GLuint texture, double rectX, double rectY, double
 Room::Room(std::filesystem::path path, std::string name) {
 	this->path = path;
 	this->roomName = toLower(name);
+	this->timelineType = RoomTimelineType::DEFAULT;
 
 	canonPosition = new Vector2(
 		0.0f,
@@ -216,8 +218,22 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, in
 			RoomHelpers::drawTexture(CreatureTextures::getTexture(dens[i].type), rectX, rectY, scale);
 	
 			Draw::color(1.0, 0.0, 0.0);
-			Fonts::rainworld->writeCentred(std::to_string(dens[i].count), rectX + 0.5 + scale * 0.25, rectY - 0.5 - scale * 0.5, 0.5 * scale, CENTRE_XY);
+			Fonts::rainworld->writeCentered(std::to_string(dens[i].count), rectX + 0.5 + scale * 0.25, rectY - 0.5 - scale * 0.5, 0.5 * scale, CENTER_XY);
 		}
+	}
+	
+	int i = 0;
+	for (std::string timeline : this->timelines) {
+		double rectX = position.x + i * 4.0 + 1.5;
+		double rectY = position.y - 1.5;
+		double scale = EditorState::selectorScale;
+
+		RoomHelpers::drawTexture(ConditionalTimelineTextures::getTexture(timeline), rectX, rectY, scale);
+		i++;
+	}
+	if (this->timelines.size() > 0 && this->timelineType == RoomTimelineType::HIDE_ROOM) {
+		Draw::color(1.0, 0.0, 0.0);
+		drawLine(position.x + 2.0 - EditorState::selectorScale * 0.5, position.y - 2.0, position.x + 2.0 + EditorState::selectorScale * 0.5 + (this->timelines.size() - 1) * 4.0, position.y - 2.0, EditorState::selectorScale * 4.0);
 	}
 
 	if (inside(mousePosition)) {
@@ -273,7 +289,7 @@ const std::vector<Vector2> Room::ShortcutEntranceOffsetPositions() const {
 
 	std::vector<Vector2> transformedEntrances;
 
-	for (const std::pair<Vector2i, int> &connection : shortcutEntrances) {
+	for (const std::pair<Vector2i, ShortcutType> &connection : shortcutEntrances) {
 		transformedEntrances.push_back(Vector2(
 			position.x + connection.first.x + 0.5,
 			position.y - connection.first.y - 0.5
@@ -286,7 +302,7 @@ const std::vector<Vector2> Room::ShortcutEntranceOffsetPositions() const {
 int Room::getShortcutEntranceId(const Vector2i &searchPosition) const {
 	unsigned int connectionId = 0;
 
-	for (const std::pair<Vector2i, int> &connection : shortcutEntrances) {
+	for (const std::pair<Vector2i, ShortcutType> &connection : shortcutEntrances) {
 		if (connection.first == searchPosition) {
 			return connectionId;
 		}
@@ -344,7 +360,7 @@ Direction Room::getRoomEntranceDirection(unsigned int connectionId) const {
 		return Direction::UP;
 	}
 
-	return UNKNOWN;
+	return Direction::UNKNOWN;
 }
 
 bool Room::canConnect(unsigned int connectionId) {
@@ -352,47 +368,12 @@ bool Room::canConnect(unsigned int connectionId) {
 	
 	return true;
 }
-
-void Room::connect(Room *room, unsigned int connectionId) {
-	roomConnections.insert(std::pair<Room*, unsigned int> { room, connectionId });
+void Room::connect(Connection *connection) {
+	connections.push_back(connection);
 }
 
-void Room::disconnect(Room *room, unsigned int connectionId) {
-	roomConnections.erase(std::pair<Room*, unsigned int> { room, connectionId });
-}
-
-bool Room::Connected(Room *room, unsigned int connectionId) const {
-	return roomConnections.find(std::pair<Room*, unsigned int> { room, connectionId }) != roomConnections.end();
-}
-
-bool Room::RoomUsed(Room *room) const {
-	for (std::pair<Room*, unsigned int> connection : roomConnections) {
-		if (connection.first == room) return true;
-	}
-
-	return false;
-}
-
-bool Room::ConnectionUsed(unsigned int connectionId) const {
-	for (std::pair<Room*, unsigned int> connection : roomConnections) {
-		if (connection.second == connectionId) return true;
-	}
-
-	return false;
-}
-
-const std::vector<Room*> Room::ConnectedRooms() const {
-	std::vector<Room*> connectedRooms;
-
-	for (std::pair<Room*, unsigned int> connection : roomConnections) {
-		connectedRooms.push_back(connection.first);
-	}
-
-	return connectedRooms;
-}
-
-const std::set<std::pair<Room*, unsigned int>> Room::RoomConnections() const {
-	return roomConnections;
+void Room::disconnect(Connection *connection) {
+	connections.erase(std::remove(connections.begin(), connections.end(), connection), connections.end());
 }
 
 int Room::RoomEntranceCount() const {
@@ -429,7 +410,7 @@ Den &Room::CreatureDen(int id) {
 
 Den &Room::CreatureDen01(int id) {
 	if (id < 0 || id >= dens.size()) {
-		Logger::log("INVALID DEN ", id);
+		Logger::info("INVALID DEN ", id);
 		throw "INVALID DEN";
 	}
 
@@ -566,7 +547,7 @@ void Room::loadGeometry() {
 	std::fstream geometryFile(path);
 	if (!geometryFile.is_open() || !std::filesystem::exists(path)) {
 		EditorState::fails.push_back("Failed to load '" + path.generic_u8string() + "' / '" + roomName + "' - Doesn't exist.");
-		Logger::log("Failed to load '", path, "' / '", roomName, "' - Doesn't exist.");
+		Logger::info("Failed to load '", path, "' / '", roomName, "' - Doesn't exist.");
 		width = 72;
 		height = 43;
 		water = -1;
@@ -662,7 +643,7 @@ void Room::checkImages() {
 	for (int i = 0; i < cameras; i++) {
 		std::string imagePath = roomName + "_" + std::to_string(i + 1) + ".png";
 		
-		std::string foundPath = findFileCaseInsensitive(imageDirectory.generic_u8string(), imagePath);
+		std::filesystem::path foundPath = findFileCaseInsensitive(imageDirectory, imagePath);
 		
 		if (foundPath.empty()) {
 			EditorState::fails.push_back("Can't find '" + imagePath + "'");

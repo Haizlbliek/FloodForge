@@ -43,6 +43,7 @@ namespace DebugData {
 			debugText.push_back("    Room:");
 			if (!hoveringRoom->valid) {
 				debugText.push_back("INVALID - Check `xx-rooms` folder");
+				debugText.push_back("Name: " + hoveringRoom->roomName);
 			} else {
 				debugText.push_back("Name: " + hoveringRoom->roomName);
 				debugText.push_back("Tags:" + tags);

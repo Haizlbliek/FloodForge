@@ -23,9 +23,9 @@ void SubregionPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 	if (rooms.size() > 0) {
 		setThemeColour(ThemeColour::Text);
 		if (rooms.size() == 1) {
-			Fonts::rainworld->writeCentred(toUpper((*rooms.begin())->roomName), centreX, bounds.y1 - 0.09, 0.04, CENTRE_XY);
+			Fonts::rainworld->writeCentered(toUpper((*rooms.begin())->roomName), centreX, bounds.y1 - 0.09, 0.04, CENTER_XY);
 		} else {
-			Fonts::rainworld->writeCentred("Selected Rooms", centreX, bounds.y1 - 0.07, 0.04, CENTRE_XY);
+			Fonts::rainworld->writeCentered("Selected Rooms", centreX, bounds.y1 - 0.07, 0.04, CENTER_XY);
 		}
 
 		int windowWidth;
@@ -132,7 +132,7 @@ void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion,
 	} else {
 		setThemeColour(ThemeColour::Text);
 	}
-	Fonts::rainworld->writeCentred(subregion, centerX, y - 0.02, 0.04, CENTRE_XY);
+	Fonts::rainworld->writeCentered(subregion, centerX, y - 0.02, 0.04, CENTER_XY);
 
 	if (Rect(-0.325 + centerX, y, 0.325 + centerX, y - 0.05).inside(mouseX, mouseY)) {
 		setThemeColour(ThemeColour::BorderHighlight);
@@ -147,8 +147,8 @@ void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion,
 		fillRect(0.35 + centerX, y, 0.4 + centerX, y - 0.05);
 
 		setThemeColour(ThemeColour::Text);
-		Fonts::rainworld->writeCentred("E", -0.37 + centerX, y, 0.04, CENTRE_X);
-		Fonts::rainworld->writeCentred("-", 0.37 + centerX, y, 0.04, CENTRE_X);
+		Fonts::rainworld->writeCentered("E", -0.37 + centerX, y, 0.04, CENTER_X);
+		Fonts::rainworld->writeCentered("-", 0.37 + centerX, y, 0.04, CENTER_X);
 
 		if (Rect(-0.4 + centerX, y, -0.35 + centerX, y - 0.05).inside(mouseX, mouseY)) {
 			setThemeColour(ThemeColour::BorderHighlight);

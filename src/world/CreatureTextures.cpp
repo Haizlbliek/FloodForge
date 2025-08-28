@@ -22,7 +22,7 @@ void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, bool 
 }
 
 void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, std::string prefix, bool include) {
-	Logger::log("Loading creatures from: '", path, "'");
+	Logger::info("Loading creatures from: '", path, "'");
 
 	for (const auto& entry : std::filesystem::directory_iterator(path)) {
 		if (std::filesystem::is_regular_file(entry.path()) && validExtension(entry.path().extension().generic_u8string())) {

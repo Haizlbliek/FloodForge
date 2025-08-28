@@ -80,7 +80,7 @@ int main() {
 	window->setTitle("Leviathan");
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		Logger::logError("Failed to initialize GLAD!");
+		Logger::error("Failed to initialize GLAD!");
 		return -1;
 	}
 

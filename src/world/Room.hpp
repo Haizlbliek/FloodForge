@@ -1,5 +1,7 @@
 #pragma once
 
+class Room;
+
 #include "../gl.h"
 
 #include <random>
@@ -20,6 +22,8 @@
 #include "../font/Fonts.hpp"
 #include "../Logger.hpp"
 
+#include "TimelineType.hpp"
+#include "Connection.hpp"
 #include "ExtraRoomData.hpp"
 #include "Shaders.hpp"
 #include "Den.hpp"
@@ -30,7 +34,7 @@
 #define CONNECTION_TYPE_MOLE 3
 #define CONNECTION_TYPE_SCAV 4
 
-enum ShortcutType {
+enum class ShortcutType {
 	ROOM,
 	DEN
 };
@@ -110,19 +114,9 @@ class Room {
 		
 		bool canConnect(unsigned int connectionId);
 
-		void connect(Room *room, unsigned int connectionId);
+		void connect(Connection *connection);
 
-		void disconnect(Room *room, unsigned int connectionId);
-
-		bool Connected(Room *room, unsigned int connectionId) const;
-
-		bool RoomUsed(Room *room) const;
-
-		bool ConnectionUsed(unsigned int connectionId) const;
-
-		const std::vector<Room*> ConnectedRooms() const;
-
-		const std::set<std::pair<Room*, unsigned int>> RoomConnections() const;
+		void disconnect(Connection *connection);
 
 		int RoomEntranceCount() const;
 
@@ -153,21 +147,22 @@ class Room {
 		void ToggleTag(const std::string newTag);
 		const std::vector<std::string> Tags() const;
 
+		int cameras;
+		std::string roomName = "";
+		int water = 0;
+		bool valid;
+
 		Vector2 canonPosition;
 		Vector2 devPosition;
-
-		std::string roomName = "";
 		int layer = 0;
-		int water = 0;
 		int subregion = 0;
-
-		int cameras;
-
+		std::vector<Connection*> connections;
 		ExtraRoomData data;
 
 		int hoveredDen = -1;
 
-		bool valid;
+		std::set<std::string> timelines;
+		RoomTimelineType timelineType;
 		
 		void moveBoth();
 		
@@ -205,7 +200,6 @@ class Room {
 
 		std::vector<std::string> tags;
 
-		std::set<std::pair<Room*, unsigned int>> roomConnections;
 		std::vector<Vector2i> roomEntrances;
 		std::vector<Vector2i> denEntrances;
 		std::vector<std::pair<Vector2i, ShortcutType>> shortcutEntrances;

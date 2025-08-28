@@ -150,7 +150,7 @@ std::vector<Vector2i> line(int x0, int y0, int x1, int y1) {
 
 int main() {
 	std::cerr << "\033[38;5;13mThe FloodForge Level Editor is very WIP. Take caution.\033[0m" << std::endl;
-	Logger::log("The FloodForge Level Editor is very WIP. Take caution.");
+	Logger::info("The FloodForge Level Editor is very WIP. Take caution.");
 	std::srand(std::time(0));
 
 	glfwSetErrorCallback(error_callback);
@@ -163,7 +163,7 @@ int main() {
 	window->setBackgroundColour(0.3f, 0.3f, 0.3f);
 	
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		Logger::logError("Failed to initialize GLAD!");
+		Logger::error("Failed to initialize GLAD!");
 		return -1;
 	}
 
@@ -492,7 +492,7 @@ int main() {
 			if (!wasSaving) {
 				project->save();
 				History::unsavedChanges = false;
-				Logger::log("Saved!");
+				Logger::info("Saved!");
 			}
 
 			wasSaving = true;

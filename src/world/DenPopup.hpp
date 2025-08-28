@@ -7,7 +7,7 @@
 
 #include "../gl.h"
 
-enum SliderType {
+enum class SliderType {
 	SLIDER_INT,
 	SLIDER_FLOAT
 };

@@ -88,7 +88,7 @@ void OffscreenRoom::draw(Vector2 mousePosition, double lineSize, Vector2 screenB
 	fillRect(position.x, position.y, position.x + width, position.y - height);
 
 	Draw::color(RoomHelpers::RoomSolid);
-	Fonts::rainworld->writeCentred(this->roomName, position.x + (width * 0.5), position.y - (height * 0.5), 5, CENTRE_XY);
+	Fonts::rainworld->writeCentered(this->roomName, position.x + (width * 0.5), position.y - (height * 0.5), 5, CENTER_XY);
 
 
 	for (int i = 0; i < denEntrances.size(); i++) {
@@ -103,7 +103,7 @@ void OffscreenRoom::draw(Vector2 mousePosition, double lineSize, Vector2 screenB
 		RoomHelpers::drawTexture(CreatureTextures::getTexture(dens[i].type), rectX, rectY, scale);
 
 		Draw::color(1.0, 0.0, 0.0);
-		Fonts::rainworld->writeCentred(std::to_string(dens[i].count), rectX + 0.5 + scale * 0.25, rectY - 0.5 - scale * 0.5, 0.5 * scale, CENTRE_XY);
+		Fonts::rainworld->writeCentered(std::to_string(dens[i].count), rectX + 0.5 + scale * 0.25, rectY - 0.5 - scale * 0.5, 0.5 * scale, CENTER_XY);
 
 	}
 

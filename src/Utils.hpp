@@ -8,13 +8,15 @@
 
 #include "math/Colour.hpp"
 #include "math/Vector.hpp"
+#include "math/Rect.hpp"
 
+void fillRect(Rect rect);
 void fillRect(float x0, float y0, float x1, float y1);
 
 void textureRect(float x0, float y0, float x1, float y1);
 
+void strokeRect(Rect rect);
 void strokeRect(float x0, float y0, float x1, float y1);
-
 void strokeRect(float x0, float y0, float x1, float y1, double thickness);
 
 void drawLine(float x0, float y0, float x1, float y1, double thickness);
@@ -45,11 +47,9 @@ std::string toLower(const std::string &str);
 
 std::string toUpper(const std::string &str);
 
-std::filesystem::path findDirectoryCaseInsensitive(const std::string &directory, const std::string &fileName);
+std::filesystem::path findDirectoryCaseInsensitive(const std::filesystem::path &directory, const std::string &fileName);
 
 std::filesystem::path findFileCaseInsensitive(const std::filesystem::path &directory, const std::string &fileName);
-
-std::string findFileCaseInsensitive(const std::string &directory, const std::string &fileName);
 
 void applyFrustumToOrthographic(Vector2 position, float rotation, Vector2 scale, float left, float right, float bottom, float top, float nearVal, float farVal);
 

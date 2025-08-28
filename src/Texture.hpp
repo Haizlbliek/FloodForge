@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <filesystem>
 
 #include "gl.h"
 #include "stb_image.h"
@@ -15,7 +16,7 @@ class Texture {
 
 			unsigned char* data = stbi_load(filepath, &width, &height, &nrChannels, 0);
 			if (!data) {
-				Logger::logError("Failed to load texture: ", filepath);
+				Logger::error("Failed to load texture: ", filepath);
 				return;
 			}
 
@@ -32,6 +33,10 @@ class Texture {
 
 			stbi_image_free(data);
 		}
+
+		Texture(std::filesystem::path filepath) : Texture(filepath.generic_u8string(), GL_NEAREST) {}
+
+		Texture(std::filesystem::path filepath, int filter) : Texture(filepath.generic_u8string(), filter) {}
 
 		Texture(const char *filepath) : Texture(filepath, GL_NEAREST) {}
 

@@ -24,7 +24,7 @@ namespace Logger {
 	}
 	
 	template<typename... Args>
-	inline void log(const Args&... args) {
+	inline void info(const Args&... args) {
 		std::lock_guard<std::mutex> lock(logMutex);
 	
 		std::ostringstream oss;
@@ -39,7 +39,7 @@ namespace Logger {
 	}
 	
 	template<typename... Args>
-	inline void logError(const Args&... args) {
+	inline void error(const Args&... args) {
 		std::lock_guard<std::mutex> lock(logMutex);
 	
 		std::ostringstream oss;
@@ -54,7 +54,7 @@ namespace Logger {
 	}
 	
 	template<typename... Args>
-	inline void logWarning(const Args&... args) {
+	inline void warn(const Args&... args) {
 		std::lock_guard<std::mutex> lock(logMutex);
 	
 		std::ostringstream oss;

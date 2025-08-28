@@ -74,7 +74,7 @@ void Button::draw(Mouse *mouse, Vector2 screenBounds) {
 	Draw::useTexture(0);
 
 	setThemeColour(ThemeColour::Text);
-	font->writeCentred(text, x - screenBounds.x + (width * 0.5), y + height * -0.5 + screenBounds.y + 0.003, height - 0.01, CENTRE_XY);
+	font->writeCentered(text, x - screenBounds.x + (width * 0.5), y + height * -0.5 + screenBounds.y + 0.003, height - 0.01, CENTER_XY);
 }
 
 void Button::Text(const std::string text) {
@@ -112,10 +112,8 @@ void Button::pressRight() {
 
 
 Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
-	std::string fromRoom = fromFile.filename().generic_u8string();
-	fromRoom = fromRoom.substr(0, fromRoom.find_last_of('.'));
-	std::string toRoom = toFile.filename().generic_u8string();
-	toRoom = toRoom.substr(0, toRoom.find_last_of('.'));
+	std::string fromRoom = fromFile.stem().generic_u8string();
+	std::string toRoom = toFile.stem().generic_u8string();
 
 	if (std::filesystem::exists(toFile)) {
 		return nullptr;
@@ -133,7 +131,7 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 		
 		for (int i = 0; i < room->cameras; i++) {
 			std::string imagePath = fromRoom + "_" + std::to_string(i + 1) + ".png";
-			std::string image = findFileCaseInsensitive(fromFile.parent_path().generic_u8string(), imagePath);
+			std::filesystem::path image = findFileCaseInsensitive(fromFile.parent_path(), imagePath);
 			
 			if (image.empty()) {
 				EditorState::fails.push_back("Can't find '" + imagePath + "'");
@@ -151,11 +149,11 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 void MenuItems::loadTextures() {
 	std::filesystem::path texturePath = BASE_PATH / "assets" / "themes" / currentThemeName;
 
-	textureButtonNormal = loadTexture((texturePath / "ButtonNormal.png").generic_u8string());
-	textureButtonNormalHover = loadTexture((texturePath / "ButtonNormalHover.png").generic_u8string());
-	textureButtonPress = loadTexture((texturePath / "ButtonPress.png").generic_u8string());
-	textureButtonPressHover = loadTexture((texturePath / "ButtonPressHover.png").generic_u8string());
-	textureBar = loadTexture((texturePath / "Bar.png").generic_u8string());
+	textureButtonNormal = loadTexture(texturePath / "ButtonNormal.png");
+	textureButtonNormalHover = loadTexture(texturePath / "ButtonNormalHover.png");
+	textureButtonPress = loadTexture(texturePath / "ButtonPress.png");
+	textureButtonPressHover = loadTexture(texturePath / "ButtonPressHover.png");
+	textureBar = loadTexture(texturePath / "Bar.png");
 }
 
 Button &MenuItems::addButton(std::string text) {
@@ -253,8 +251,7 @@ void MenuItems::init(Window *window) {
 							}
 						} else {
 							if (acronym == EditorState::region.acronym || EditorState::region.exportDirectory.empty()) {
-								std::string roomName = roomFilePath.filename().generic_u8string();
-								roomName = roomName.substr(0, roomName.find_last_of('.')); // Remove .txt
+								std::string roomName = roomFilePath.stem().generic_u8string();
 		
 								Room *room = new Room(roomFilePath, roomName);
 								room->canonPosition = EditorState::cameraOffset;
@@ -264,8 +261,7 @@ void MenuItems::init(Window *window) {
 								Popups::addPopup((new ConfirmPopup(window, "Copy room to " + EditorState::region.acronym + "-rooms?"))
 								->CancelText("Just Add")
 								->OnCancel([roomFilePath]() {
-									std::string roomName = roomFilePath.filename().generic_u8string();
-									roomName = roomName.substr(0, roomName.find_last_of('.')); // Remove .txt
+									std::string roomName = roomFilePath.stem().generic_u8string();
 			
 									Room *room = new Room(roomFilePath, roomName);
 									room->canonPosition = EditorState::cameraOffset;
@@ -276,11 +272,8 @@ void MenuItems::init(Window *window) {
 								->OnOkay([roomFilePath, &window]() {
 									std::string roomPath = roomFilePath.filename().generic_u8string();
 									roomPath = EditorState::region.acronym + roomPath.substr(roomPath.find('_'));
-
-									std::filesystem::path output = EditorState::region.exportDirectory;
-									output = output.parent_path() / EditorState::region.roomsDirectory;
 	
-									copyRoom(roomFilePath, output / roomPath);
+									copyRoom(roomFilePath, EditorState::region.roomsDirectory / roomPath);
 								}));
 							}
 						}
@@ -308,13 +301,13 @@ void MenuItems::init(Window *window) {
 
 			if (!Settings::getSetting<bool>(Settings::Setting::UpdateWorldFiles)) {
 				EditorState::region.exportDirectory = BASE_PATH / "worlds" / EditorState::region.acronym;
-				Logger::log("Special exporting to directory: ", EditorState::region.exportDirectory.generic_u8string());
+				Logger::info("Special exporting to directory: ", EditorState::region.exportDirectory.generic_u8string());
 				if (!std::filesystem::exists(EditorState::region.exportDirectory)) {
 					std::filesystem::create_directories(EditorState::region.exportDirectory);
 				}
 			}
 
-			if (EditorState::region.exportDirectory.generic_u8string().length() > 0) {
+			if (!EditorState::region.exportDirectory.empty()) {
 				WorldExporter::exportMapFile();
 				WorldExporter::exportWorldFile();
 				WorldExporter::exportImageFile(EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + ".png"), EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + "_2.png"));
@@ -331,9 +324,9 @@ void MenuItems::init(Window *window) {
 						if (pathStrings.empty()) return;
 
 						EditorState::region.exportDirectory = *pathStrings.begin() / EditorState::region.acronym;
-						EditorState::region.roomsDirectory = EditorState::region.acronym + "-rooms";
+						EditorState::region.roomsDirectory = *pathStrings.begin() / (EditorState::region.acronym + "-rooms");
 						std::filesystem::create_directories(EditorState::region.exportDirectory);
-						std::filesystem::create_directories(*pathStrings.begin() / EditorState::region.roomsDirectory);
+						std::filesystem::create_directories(EditorState::region.roomsDirectory);
 
 						WorldExporter::exportMapFile();
 						WorldExporter::exportWorldFile();
@@ -383,7 +376,7 @@ void MenuItems::init(Window *window) {
 				return;
 			}
 			
-			WorldParser::importWorldFile(findFileCaseInsensitive(EditorState::region.exportDirectory.generic_u8string(), "world_" + EditorState::region.acronym + ".txt"));
+			WorldParser::importWorldFile(findFileCaseInsensitive(EditorState::region.exportDirectory, "world_" + EditorState::region.acronym + ".txt"));
 		}
 	);
 

@@ -1,6 +1,6 @@
 #pragma once
 
-enum RoomAttractiveness {
+enum class RoomAttractiveness {
 	DEFAULT,
 	NEUTRAL,
 	FORBIDDEN,

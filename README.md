@@ -20,6 +20,7 @@ It aims for intuitive controls, clean ui, and as few dependencies as possible.
 | Change Room Attractiveness | `A`       | Change the attractiveness of a room for specific creatures.       |
 | Hide / Show                | `H`       | Toggle visibility of hovered room.                                |
 | Show other rooms           | `I`       | Places hovered room behind all other rooms.                       |
+| Edit conditionals          | `D`       | Opens a popup to edit connection conditionals.                    |
 | Cancel/Exit                | `ESC`     | Closes menus or cancels actions.                                  |
 | Accept                     | `ENTER`   | Confirms selections or actions.                                   |
 | Open Tutorial              | `ALT+T`   | Opens the tutorial popup.                                         |

@@ -11,6 +11,17 @@
 #include "ExtraRoomData.hpp"
 #include "Globals.hpp"
 
+struct ConditionalConnection {
+	Room* roomA;
+	int connectionA;
+	std::string roomBName;
+	Room *roomB;
+	int connectionB;
+
+	std::set<std::string> timelines;
+	ConnectionTimelineType timelineType;
+};
+
 class WorldParser {
 	public:
 		static void importWorldFile(std::filesystem::path path);
@@ -23,11 +34,13 @@ class WorldParser {
 
 		static void parseWorldCreature(std::string line);
 
+		static void parseWorldConditionalLink(std::string link, std::vector<ConditionalConnection> &connectionsToAdd);
+
 		static void parseWorld(std::filesystem::path worldFilePath, std::filesystem::path directory);
 
 		static RoomAttractiveness parseRoomAttractiveness(std::string value);
 
-		static void parseProperties(std::string propertiesFilePath);
+		static void parseProperties(std::filesystem::path propertiesFilePath);
 
-		static void loadExtraRoomData(std::string roomPath, ExtraRoomData &data);
+		static void loadExtraRoomData(std::filesystem::path roomPath, ExtraRoomData &data);
 };

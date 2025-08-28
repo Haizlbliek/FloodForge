@@ -76,15 +76,15 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenB
 	Draw::texCoord(0.00f, 0.25f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
 
 	if (minimized) {
-		Draw::texCoord(0.75f, 0.25f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.00);
-		Draw::texCoord(1.00f, 0.25f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
-		Draw::texCoord(1.00f, 0.50f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
-		Draw::texCoord(0.75f, 0.50f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.05);
+		Draw::texCoord(0.25f, 0.50f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.00);
+		Draw::texCoord(0.50f, 0.50f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
+		Draw::texCoord(0.50f, 0.75f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
+		Draw::texCoord(0.25f, 0.75f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.05);
 	} else {
-		Draw::texCoord(0.50f, 0.25f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.00);
-		Draw::texCoord(0.75f, 0.25f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
-		Draw::texCoord(0.75f, 0.50f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
-		Draw::texCoord(0.50f, 0.50f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.05);
+		Draw::texCoord(0.00f, 0.50f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.00);
+		Draw::texCoord(0.25f, 0.50f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
+		Draw::texCoord(0.25f, 0.75f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
+		Draw::texCoord(0.00f, 0.75f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.05);
 	}
 
 	Draw::end();

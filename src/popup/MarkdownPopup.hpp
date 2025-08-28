@@ -17,7 +17,7 @@ struct MDStyledText {
 	std::string url = "";
 };
 
-enum MDType {
+enum class MDType {
 	TEXT,
 	H1,
 	H2,
@@ -182,7 +182,7 @@ class MarkdownPopup : public Popup {
 		void loadFile(std::filesystem::path filePath) {
 			file = std::ifstream(filePath);
 			if (!file.is_open() || !std::filesystem::exists(filePath)) {
-				Logger::log("No file found '", filePath, "'");
+				Logger::info("No file found '", filePath, "'");
 				close();
 				return;
 			}

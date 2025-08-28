@@ -128,7 +128,7 @@ void Draw::init() {
 		glGetShaderiv(vtxShader, GL_INFO_LOG_LENGTH, &strlen);
 		log.resize(strlen);
 		glGetShaderInfoLog(vtxShader, (GLsizei)log.size(), &strlen, &log.front());
-		Logger::logError("Shader compilation failed: ", log);
+		Logger::error("Shader compilation failed: ", log);
 	}
 
 	// create fragment shader
@@ -142,7 +142,7 @@ void Draw::init() {
 		glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, &strlen);
 		log.resize(strlen);
 		glGetShaderInfoLog(fragShader, (GLsizei)log.size(), &strlen, &log.front());
-		Logger::logError("Shader compilation failed: ", log);
+		Logger::error("Shader compilation failed: ", log);
 	}
 
 	if (success)
@@ -158,7 +158,7 @@ void Draw::init() {
 			glGetProgramiv(fragShader, GL_INFO_LOG_LENGTH, &strlen);
 			log.resize(strlen);
 			glGetProgramInfoLog(fragShader, (GLsizei)log.size(), &strlen, &log.front());
-			Logger::logError("Shader linking failed: ", log);
+			Logger::error("Shader linking failed: ", log);
 		}
 
 		drawState.mvpUniform = glGetUniformLocation(program, "uMvp");
@@ -297,7 +297,7 @@ static void pushIndex(uint32_t idx) {
 
 void Draw::begin(Draw::PrimitiveType primType) {
 	if (drawState.drawActive) {
-		Logger::logError("ERROR: Draw::begin called when Draw operation was already active.");
+		Logger::error("ERROR: Draw::begin called when Draw operation was already active.");
 		return;
 	}
 
@@ -324,7 +324,7 @@ void Draw::color(const col4 &col) {
 template <bool flushOnEnd>
 static void processVertex(const vec3 &pos) {
 	if (!drawState.drawActive) {
-		Logger::logError("ERROR: Draw::vertex called before Draw::begin.");
+		Logger::error("ERROR: Draw::vertex called before Draw::begin.");
 		return;
 	}
 	
@@ -447,7 +447,7 @@ void Draw::vertex(const vec3 &pos) {
 
 void Draw::end() {
 	if (!drawState.drawActive) {
-		Logger::logError("ERROR: Draw::end called without an active Draw operation.");
+		Logger::error("ERROR: Draw::end called without an active Draw operation.");
 		return;
 	}
 
@@ -476,7 +476,7 @@ static void matrixChange() {
 
 #define VALIDATE_MATRIX_OPERATION() \
 	if (drawState.drawActive) { \
-		Logger::logError("ERROR: Attempt to modify render matrix with a Draw operation already active."); \
+		Logger::error("ERROR: Attempt to modify render matrix with a Draw operation already active."); \
 		return; \
 	}
 

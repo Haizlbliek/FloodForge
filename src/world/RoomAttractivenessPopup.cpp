@@ -48,8 +48,8 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 
 	setThemeColour(ThemeColour::Text);
 	glLineWidth(1);
-	Fonts::rainworld->writeCentred("Creature type:", centreX, bounds.y1 - 0.07, 0.035, CENTRE_X);
-	Fonts::rainworld->writeCentred("Attract:", bounds.x0 + 0.72, bounds.y1 - 0.07, 0.035, CENTRE_X);
+	Fonts::rainworld->writeCentered("Creature type:", centreX, bounds.y1 - 0.07, 0.035, CENTER_X);
+	Fonts::rainworld->writeCentered("Attract:", bounds.x0 + 0.72, bounds.y1 - 0.07, 0.035, CENTER_X);
 
 	double countX = 0.0;
 	double countY = 0.0;
@@ -135,7 +135,7 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 			if (index == room->data.attractiveness.end()) {
 				Draw::color(attractivenessColors[0]);
 			} else {
-				Draw::color(attractivenessColors[index->second]);
+				Draw::color(attractivenessColors[(int) index->second]);
 			}
 			fillRect(rectX - 0.005, rectY - 0.005, rectX + 0.015, rectY + 0.015);
 		}
@@ -147,7 +147,7 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 		double y = bounds.y1 - 0.165 - i * 0.09;
 
 		Draw::color(attractivenessColors[i]);
-		Fonts::rainworld->writeCentred(attractivenessNames[i], bounds.x1 - 0.11, y, 0.03, CENTRE_XY);
+		Fonts::rainworld->writeCentered(attractivenessNames[i], bounds.x1 - 0.11, y, 0.03, CENTER_XY);
 
 		if (selectAttractiveness == attractivenessIds[i]) {
 			strokeRect(bounds.x0 + 0.605, y - 0.02, bounds.x1 - 0.01, y + 0.02);
@@ -163,7 +163,7 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 		setThemeColour(ThemeColour::Border);
 		strokeRect(mouseX, mouseY, mouseX + width, mouseY + 0.06);
 		setThemeColour(ThemeColour::Text);
-		Fonts::rainworld->writeCentred(hoverText, mouseX + 0.01, mouseY + 0.03, 0.04, CENTRE_Y);
+		Fonts::rainworld->writeCentered(hoverText, mouseX + 0.01, mouseY + 0.03, 0.04, CENTER_Y);
 	}
 }
 

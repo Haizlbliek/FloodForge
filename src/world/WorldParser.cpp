@@ -13,39 +13,36 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 	EditorState::region.acronym = toLower(path.filename().generic_u8string());
 	EditorState::region.acronym = EditorState::region.acronym.substr(EditorState::region.acronym.find_last_of('_') + 1, EditorState::region.acronym.find_last_of('.') - EditorState::region.acronym.find_last_of('_') - 1);
 	
-	Logger::log("Opening world ", EditorState::region.acronym);
+	Logger::info("Opening world ", EditorState::region.acronym);
 	
-	std::filesystem::path roomsPath = findDirectoryCaseInsensitive(EditorState::region.exportDirectory.parent_path().generic_u8string(), EditorState::region.acronym + "-rooms");
-	if (roomsPath.empty()) {
-		EditorState::region.roomsDirectory = "";
+	EditorState::region.roomsDirectory = findDirectoryCaseInsensitive(EditorState::region.exportDirectory.parent_path(), EditorState::region.acronym + "-rooms");
+	if (EditorState::region.roomsDirectory.empty()) {
 		EditorState::fails.push_back("Cannot find rooms directory!");
-	} else {
-		EditorState::region.roomsDirectory = roomsPath.filename().generic_u8string();
 	}
-	Logger::log("Rooms directory: ", EditorState::region.roomsDirectory);
+	Logger::info("Rooms directory: ", EditorState::region.roomsDirectory);
 	
-	std::filesystem::path mapFilePath = findFileCaseInsensitive(EditorState::region.exportDirectory.generic_u8string(), "map_" + EditorState::region.acronym + ".txt");
+	std::filesystem::path mapFilePath = findFileCaseInsensitive(EditorState::region.exportDirectory, "map_" + EditorState::region.acronym + ".txt");
 	
-	std::string propertiesFilePath = findFileCaseInsensitive(EditorState::region.exportDirectory.generic_u8string(), "properties.txt");
+	std::filesystem::path propertiesFilePath = findFileCaseInsensitive(EditorState::region.exportDirectory, "properties.txt");
 	
 	if (std::filesystem::exists(propertiesFilePath)) {
-		Logger::log("Found properties file, loading subregions");
+		Logger::info("Found properties file, loading subregions");
 	
 		parseProperties(propertiesFilePath);
 	}
 	
 	if (std::filesystem::exists(mapFilePath)) {
-		Logger::log("Loading map");
+		Logger::info("Loading map");
 	
 		parseMap(mapFilePath, EditorState::region.exportDirectory);
 	} else {
-		Logger::log("Map file not found, loading world file");
+		Logger::info("Map file not found, loading world file");
 	}
 	
-	Logger::log("Loading world");
+	Logger::info("Loading world");
 	parseWorld(path, EditorState::region.exportDirectory);
 	
-	Logger::log("Loading extra room data");
+	Logger::info("Loading extra room data");
 	
 	for (Room *room : EditorState::rooms) {
 		if (room->isOffscreen()) continue;
@@ -56,10 +53,10 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 			room->data.attractiveness = x.second;
 			break;
 		}
-		loadExtraRoomData(findFileCaseInsensitive((EditorState::region.exportDirectory.parent_path() / EditorState::region.roomsDirectory).generic_u8string(), room->roomName + "_settings.txt"), room->data);
+		loadExtraRoomData(findFileCaseInsensitive(EditorState::region.roomsDirectory, room->roomName + "_settings.txt"), room->data);
 	}
 	
-	Logger::log("Extra room data - loaded");
+	Logger::info("Extra room data - loaded");
 	
 	if (EditorState::fails.size() > 0) {
 		std::string fails = "";
@@ -102,24 +99,25 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 		} else {
 			std::string roomName = toLower(line.substr(0, line.find(':')));
 
-			std::filesystem::path roomPath = directory.parent_path() / EditorState::region.roomsDirectory;
+			std::filesystem::path roomPath = EditorState::region.roomsDirectory;
 
 			if (startsWith(roomName, "gate")) {
-				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path().generic_u8string(), "gates");
-				Logger::log("Found gate ", roomName);
+				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path(), "gates");
+				Logger::info("Found gate ", roomName);
 			}
 			
-			std::filesystem::path filePath = findFileCaseInsensitive(roomPath.generic_u8string(), roomName + ".txt");
+			std::filesystem::path filePath = findFileCaseInsensitive(roomPath, roomName + ".txt");
 			if (filePath.empty()) {
-				Logger::logError("File `", roomPath / roomName, ".txt` could not be found.");
+				Logger::error("File `", roomPath / roomName, ".txt` could not be found.");
 			}
-			Logger::log("Found room file: '", filePath, "'");
 
 			Room *room = nullptr;
 
 			if (startsWith(roomName, "offscreenden")) {
 				if (EditorState::offscreenDen == nullptr) {
-					EditorState::offscreenDen = new OffscreenRoom(roomName, roomName);
+					size_t colonPos = line.find(':');
+					std::string offscreenName = (colonPos != std::string::npos) ? line.substr(0, colonPos) : line;
+					EditorState::offscreenDen = new OffscreenRoom(roomName, offscreenName);
 					EditorState::rooms.push_back(EditorState::offscreenDen);
 					room = EditorState::offscreenDen;
 				} else {
@@ -156,7 +154,7 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 			try {
 				layer = temp.empty() ? 0 : std::stoi(temp);
 			} catch (const std::invalid_argument &e) {
-				Logger::logError("Failed to load map line '", line, "' due to stoi on '", temp, "' (int layer)");
+				Logger::error("Failed to load map line '", line, "' due to stoi on '", temp, "' (int layer)");
 			}
 			
 			std::getline(data, temp, '<');
@@ -243,17 +241,16 @@ void WorldParser::parseWorldRoom(std::string line, std::filesystem::path directo
 		if (startsWith(roomName, "offscreenden")) {
 			room = new OffscreenRoom(roomName, roomName);
 		} else {
-			std::filesystem::path roomPath = directory.parent_path() / EditorState::region.roomsDirectory;
+			std::filesystem::path roomPath = EditorState::region.roomsDirectory;
 
 			if (startsWith(roomName, "gate")) {
-				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path().generic_u8string(), "gates");
+				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path(), "gates");
 			}
 
-			std::string filePath = findFileCaseInsensitive(roomPath.generic_u8string(), roomName + ".txt");
+			std::filesystem::path filePath = findFileCaseInsensitive(roomPath, roomName + ".txt");
 			if (filePath.empty()) {
-				Logger::logError("File `", roomPath, "/", roomName, ".txt` could not be found.");
+				Logger::error("File `", roomPath, "/", roomName, ".txt` could not be found.");
 			}
-			Logger::log("Found room file: '", filePath, "'");
 
 			room = new Room(filePath, roomName);
 		}
@@ -302,7 +299,7 @@ void WorldParser::parseWorldCreature(std::string line) {
 	std::vector<std::string> splits = split(line, ':');
 
 	if (splits[0] == "LINEAGE" || splits[0][0] == '(') {
-		Logger::log("Skipped parsing complicated creature: '", line, "'");
+		Logger::info("Skipped parsing complicated creature: '", line, "'");
 		EditorState::region.complicatedCreatures += line + "\n";
 		return;
 	}
@@ -329,7 +326,7 @@ void WorldParser::parseWorldCreature(std::string line) {
 		try {
 			denId = std::stoi(sections[0]);
 		} catch (const std::invalid_argument &e) {
-			Logger::logError("Failed to load creature line '", line, "' due to stoi for '", sections[0], "' (int denId)");
+			Logger::error("Failed to load creature line '", line, "' due to stoi for '", sections[0], "' (int denId)");
 		}
 		std::string creature = sections[1];
 
@@ -339,7 +336,7 @@ void WorldParser::parseWorldCreature(std::string line) {
 		}
 
 		if (!room->CreatureDenExists(denId)) {
-			Logger::log(roomName, " failed den ", denId);
+			Logger::info(roomName, " failed den ", denId);
 			EditorState::fails.push_back(roomName + " failed den " + std::to_string(denId));
 			continue;
 		}
@@ -367,7 +364,7 @@ void WorldParser::parseWorldCreature(std::string line) {
 				try {
 					den.count = std::stoi(sections[2]);
 				} catch (const std::invalid_argument &e) {
-					Logger::logError("Failed to load creature line '", line, "' due to stoi for '", sections[2], "' (den.count)");
+					Logger::error("Failed to load creature line '", line, "' due to stoi for '", sections[2], "' (den.count)");
 				}
 			}
 		} else if (sections.size() == 4) {
@@ -397,10 +394,235 @@ void WorldParser::parseWorldCreature(std::string line) {
 			try {
 				den.count = std::stoi(countString);
 			} catch (const std::invalid_argument &e) {
-				Logger::logError("Failed to load creature line '", line, "' due to stoi on '", countString, "' (den.count)");
+				Logger::error("Failed to load creature line '", line, "' due to stoi on '", countString, "' (den.count)");
 			}
 		} else {
 			den.count = 1;
+		}
+	}
+}
+
+void WorldParser::parseWorldConditionalLink(std::string link, std::vector<ConditionalConnection> &connectionsToAdd) {
+	std::vector<std::string> parts = split(link, ':');
+	if (parts.size() != 3 && parts.size() != 4) {
+		Logger::warn("Skipping line due to improper length");
+		Logger::warn("> ", link);
+		return;
+	}
+
+	std::vector<std::string> timelines = split(parts[0], ',');
+
+	if (parts.size() == 3) {
+		std::string roomName = toLower(parts[2]);
+		Room *room = nullptr;
+		for (Room *otherRoom : EditorState::rooms) {
+			if (toLower(otherRoom->roomName) == roomName) {
+				room = otherRoom;
+				break;
+			}
+		}
+
+		if (room == nullptr) {
+			Logger::warn("Skipping line due to missing room: ", roomName);
+			Logger::warn("> ", link);
+			return;
+		}
+
+		std::string mod = toLower(parts[1]);
+
+		if (mod == "exclusiveroom") {
+			if (room->timelineType == RoomTimelineType::HIDE_ROOM) {
+				Logger::warn("Skipping line due to invalid EXCLUSIVEROOM: ", roomName);
+				Logger::warn("> ", link);
+				return;
+			}
+
+			room->timelineType = RoomTimelineType::EXCLUSIVE_ROOM;
+			for (std::string timeline : timelines) {
+				room->timelines.insert(timeline);
+			}
+		} else if (mod == "hideroom") {
+			if (room->timelineType == RoomTimelineType::EXCLUSIVE_ROOM) {
+				Logger::warn("Skipping line due to invalid HIDEROOM: ", roomName);
+				Logger::warn("> ", link);
+				return;
+			}
+
+			room->timelineType = RoomTimelineType::HIDE_ROOM;
+			for (std::string timeline : timelines) {
+				room->timelines.insert(timeline);
+			}
+		}
+
+		return;
+	}
+
+	std::string roomName = toLower(parts[1]);
+	Room *room = nullptr;
+	for (Room *otherRoom : EditorState::rooms) {
+		if (toLower(otherRoom->roomName) == roomName) {
+			room = otherRoom;
+			break;
+		}
+	}
+
+	if (room == nullptr) {
+		Logger::warn("Skipping line due to missing room: ", roomName);
+		Logger::warn("> ", link);
+		return;
+	}
+
+	std::string currentConnection = toLower(parts[2]);
+
+	bool isCurrentDisconnected = false;
+	int disconnectedId = -1;
+	try {
+		disconnectedId = std::stoi(currentConnection);
+		isCurrentDisconnected = true;
+	} catch (...) {
+		isCurrentDisconnected = false;
+	}
+
+	std::string toConnection = toLower(parts[3]);
+
+	if (currentConnection == toConnection) {
+		Logger::warn("Skipping line due to no change");
+		Logger::warn("> ", link);
+		return;
+	}
+
+	if (toConnection == "disconnected") {
+		Connection *connection = nullptr;
+		for (Connection *otherConnection : room->connections) {
+			Room *otherRoom = (otherConnection->roomA == room) ? otherConnection->roomB : otherConnection->roomA;
+
+			if (toLower(otherRoom->roomName) == currentConnection) {
+				connection = otherConnection;
+				break;
+			}
+		}
+
+		if (connection == nullptr) {
+			Logger::warn("Skipping line due to missing connection");
+			Logger::warn("> ", link);
+			return;
+		}
+
+		if (connection->timelineType == ConnectionTimelineType::ONLY) {
+			for (std::string timeline : timelines) {
+				connection->timelines.erase(timeline);
+			}
+		} else {
+			connection->timelineType = ConnectionTimelineType::EXCEPT;
+			for (std::string timeline : timelines) {
+				connection->timelines.insert(timeline);
+			}
+		}
+	} else {
+		int connectionId = -1;
+
+		if (isCurrentDisconnected) {
+			std::string timeline = timelines[0];
+			std::vector<bool> connected(room->RoomEntranceCount(), false);
+			for (Connection *connection : room->connections) {
+				if (!connection->allowsTimeline(timeline)) continue;
+
+				connected[connection->roomA == room ? connection->connectionA : connection->connectionB] = true;
+			}
+
+			for (int i = 0; i < connected.size(); i++) {
+				if (!connected[i]) {
+					disconnectedId--;
+					if (disconnectedId == 0) {
+						connectionId = i;
+						break;
+					}
+				}
+			}
+		} else {
+			Connection *connection = nullptr;
+			for (Connection *otherConnection : room->connections) {
+				Room *otherRoom = (otherConnection->roomA == room) ? otherConnection->roomB : otherConnection->roomA;
+	
+				if (toLower(otherRoom->roomName) == currentConnection) {
+					connection = otherConnection;
+					break;
+				}
+			}
+	
+			if (connection == nullptr) {
+				Logger::warn("Line missing connection, adding new connection anyways");
+				Logger::warn("> ", link);
+			} else {
+				connectionId = (connection->roomA == room) ? connection->connectionA : connection->connectionB;
+
+				if (connection->timelineType == ConnectionTimelineType::ONLY) {
+					for (std::string timeline : timelines) {
+						connection->timelines.erase(timeline);
+					}
+				} else {
+					connection->timelineType = ConnectionTimelineType::EXCEPT;
+	
+					for (std::string timeline : timelines) {
+						connection->timelines.insert(timeline);
+					}
+				}
+			}
+		}
+
+		Connection *connection = nullptr;
+		for (Connection *otherConnection : room->connections) {
+			Room *otherRoom = (otherConnection->roomA == room) ? otherConnection->roomB : otherConnection->roomA;
+
+			if (toLower(otherRoom->roomName) == toConnection) {
+				connection = otherConnection;
+				break;
+			}
+		}
+
+		if (connection != nullptr) {
+			if (connection->timelineType == ConnectionTimelineType::EXCEPT) {
+				for (std::string timeline : timelines) {
+					connection->timelines.erase(timeline);
+				}
+			} else {
+				connection->timelineType = ConnectionTimelineType::ONLY;
+
+				for (std::string timeline : timelines) {
+					connection->timelines.insert(timeline);
+				}
+			}
+		} else {
+			if (connectionId == -1) {
+				Logger::warn("Connection id cannot be inferred");
+				Logger::warn("> ", link);
+				return;
+			}
+
+			for (ConditionalConnection &connectionData : connectionsToAdd) {
+				if (connectionData.roomB == nullptr && toLower(connectionData.roomA->roomName) == toConnection && connectionData.roomBName == toLower(room->roomName)) {
+					Logger::warn("Connection exists, setting roomB");
+					connectionData.roomB = room;
+					connectionData.connectionB = connectionId;
+					return;
+				}
+			}
+
+			Logger::warn("No connection exists, creating new");
+
+			std::set<std::string> connectionTimelines;
+			for (std::string timeline : timelines) {
+				connectionTimelines.insert(timeline);
+			}
+			connectionsToAdd.push_back({
+				room,
+				connectionId,
+				toConnection,
+				nullptr,
+				-1,
+				connectionTimelines,
+				ConnectionTimelineType::ONLY
+			});
 		}
 	}
 }
@@ -409,20 +631,28 @@ void WorldParser::parseWorld(std::filesystem::path worldFilePath, std::filesyste
 	std::fstream worldFile(worldFilePath);
 
 	std::vector<Quadruple<Room*, int, std::string, int>> connectionsToAdd;
+	std::vector<std::string> conditionalLinks;
 
-	int parseState = 0;
+	enum class ParseState {
+		None,
+		DuringConditionalLinks,
+		DuringRooms,
+		DuringCreatures
+	};
+
+	ParseState parseState = ParseState::None;
 	std::string line;
 	while (std::getline(worldFile, line)) {
 		if (!line.empty() && line.back() == '\r') line.pop_back();
 
 		if (line == "ROOMS") {
-			parseState = 1;
-			Logger::log("World - Rooms");
+			parseState = ParseState::DuringRooms;
+			Logger::info("World - Rooms");
 			continue;
 		}
 
 		if (line == "END ROOMS") {
-			parseState = 2;
+			parseState = ParseState::None;
 	
 			if (EditorState::offscreenDen == nullptr) {
 				EditorState::offscreenDen = new OffscreenRoom("offscreenden" + EditorState::region.acronym, "OffscreenDen" + toUpper(EditorState::region.acronym));
@@ -433,17 +663,28 @@ void WorldParser::parseWorld(std::filesystem::path worldFilePath, std::filesyste
 		}
 
 		if (line == "CREATURES") {
-			parseState = 3;
-			Logger::log("World - Creatures");
+			parseState = ParseState::DuringCreatures;
+			Logger::info("World - Creatures");
 			continue;
 		}
 
 		if (line == "END CREATURES") {
-			parseState = 4;
+			parseState = ParseState::None;
 			continue;
 		}
 
-		if (parseState == 4) {
+		if (line == "CONDITIONAL LINKS") {
+			parseState = ParseState::DuringConditionalLinks;
+			Logger::info("World - Conditional Links");
+			continue;
+		}
+
+		if (line == "END CONDITIONAL LINKS") {
+			parseState = ParseState::None;
+			continue;
+		}
+
+		if (parseState == ParseState::None) {
 			EditorState::region.extraWorld += line + "\n";
 			continue;
 		}
@@ -451,19 +692,25 @@ void WorldParser::parseWorld(std::filesystem::path worldFilePath, std::filesyste
 		if (line == "") continue;
 		if (startsWith(line, "//")) continue;
 
-		if (parseState == 1)
+		if (parseState == ParseState::DuringRooms) {
 			parseWorldRoom(line, directory, connectionsToAdd);
-		
-		if (parseState == 3)
+		}
+
+		if (parseState == ParseState::DuringCreatures) {
 			parseWorldCreature(line);
+		}
+
+		if (parseState == ParseState::DuringConditionalLinks) {
+			conditionalLinks.push_back(line);
+		}
 	}
 	worldFile.close();
-	
-	Logger::log("Loading connections");
 
-	for (Quadruple<Room*, int, std::string, int> connectionData : connectionsToAdd) {
+	Logger::info("Loading connections");
+
+	for (Quadruple<Room*, int, std::string, int> &connectionData : connectionsToAdd) {
 		if (connectionData.second == -1 || connectionData.fourth == -1) {
-			Logger::log("Failed to load connection from ", connectionData.first->roomName, " to ", connectionData.third);
+			Logger::info("Failed to load connection from ", connectionData.first->roomName, " to ", connectionData.third);
 			continue;
 		}
 
@@ -478,7 +725,7 @@ void WorldParser::parseWorld(std::filesystem::path worldFilePath, std::filesyste
 		}
 
 		if (roomB == nullptr) {
-			Logger::log("Failed to load connection from ", roomA->roomName, " to ", connectionData.third);
+			Logger::info("Failed to load connection from ", roomA->roomName, " to ", connectionData.third);
 			EditorState::fails.push_back("Failed to load connection from " + roomA->roomName + " to " + connectionData.third);
 			continue;
 		}
@@ -487,19 +734,55 @@ void WorldParser::parseWorld(std::filesystem::path worldFilePath, std::filesyste
 		int connectionB = connectionData.fourth;
 		
 		if (!roomA->canConnect(connectionA) || !roomB->canConnect(connectionB)) {
-			Logger::log("Failed to load connection from ", roomA->roomName, " to ", connectionData.third, " - invalid room");
+			Logger::info("Failed to load connection from ", roomA->roomName, " to ", connectionData.third, " - invalid room");
 			EditorState::fails.push_back("Failed to load connection from " + roomA->roomName + " to " + connectionData.third + " - invalid room");
 			continue;
 		}
 
-		roomA->connect(roomB, connectionA);
-		roomB->connect(roomA, connectionB);
-
 		Connection *connection = new Connection(roomA, connectionA, roomB, connectionB);
 		EditorState::connections.push_back(connection);
+
+		roomA->connect(connection);
+		roomB->connect(connection);
 	}
 	
-	Logger::log("Connections loaded");
+	Logger::info("Connections loaded");
+
+	Logger::info("Loading Conditional Links");
+
+	std::vector<ConditionalConnection> conditionalConnectionsToAdd;
+	for (std::string link : conditionalLinks) {
+		parseWorldConditionalLink(link, conditionalConnectionsToAdd);
+	}
+	for (ConditionalConnection &connectionData : conditionalConnectionsToAdd) {
+		if (connectionData.roomB == nullptr) {
+			Logger::info("Connection missing roomB");
+			continue;
+		}
+
+		if (connectionData.connectionA == -1 || connectionData.connectionB == -1) {
+			Logger::info("Failed to load connection from ", connectionData.roomA->roomName, " to ", connectionData.roomB->roomName);
+			continue;
+		}
+		
+		if (!connectionData.roomA->canConnect(connectionData.connectionA) || !connectionData.roomB->canConnect(connectionData.connectionB)) {
+			Logger::info("Failed to load connection from ", connectionData.roomA->roomName, " to ", connectionData.roomB->roomName, " - invalid room");
+			EditorState::fails.push_back("Failed to load connection from " + connectionData.roomA->roomName + " to " + connectionData.roomB->roomName + " - invalid room");
+			continue;
+		}
+
+		Connection *connection = new Connection(connectionData.roomA, connectionData.connectionA, connectionData.roomB, connectionData.connectionB);
+		for (std::string timeline : connectionData.timelines) {
+			connection->timelines.insert(timeline);
+		}
+		connection->timelineType= connectionData.timelineType;
+		EditorState::connections.push_back(connection);
+
+		connectionData.roomA->connect(connection);
+		connectionData.roomB->connect(connection);
+	}
+
+	Logger::info("Conditional Links loaded");
 }
 
 RoomAttractiveness WorldParser::parseRoomAttractiveness(std::string value) {
@@ -512,7 +795,7 @@ RoomAttractiveness WorldParser::parseRoomAttractiveness(std::string value) {
 	return RoomAttractiveness::DEFAULT;
 }
 
-void WorldParser::parseProperties(std::string propertiesFilePath) {
+void WorldParser::parseProperties(std::filesystem::path propertiesFilePath) {
 	std::fstream propertiesFile(propertiesFilePath);
 	
 	std::string line;
@@ -521,7 +804,7 @@ void WorldParser::parseProperties(std::string propertiesFilePath) {
 
 		if (startsWith(line, "Subregion: ")) {
 			std::string subregionName = line.substr(line.find(':') + 2);
-			Logger::log("Subregion: ", subregionName);
+			Logger::info("Subregion: ", subregionName);
 			EditorState::subregions.push_back(subregionName);
 		} else if (startsWith(line, "Room_Attr: ")) {
 			std::string attractivenesses = line.substr(line.find(':') + 2);
@@ -545,7 +828,7 @@ void WorldParser::parseProperties(std::string propertiesFilePath) {
 	propertiesFile.close();
 }
 
-void WorldParser::loadExtraRoomData(std::string roomPath, ExtraRoomData &data) {
+void WorldParser::loadExtraRoomData(std::filesystem::path roomPath, ExtraRoomData &data) {
 	if (roomPath == "") return;
 
 	std::fstream file(roomPath, std::ios::in | std::ios::binary);

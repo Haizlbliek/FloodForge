@@ -11,7 +11,7 @@ GLuint Shaders::roomShader = 0;
 void Shaders::init() {
 	Shaders::roomShader = loadShaders((BASE_PATH / "assets" / "shaders" / "room.vertex").generic_u8string().c_str(), (BASE_PATH / "assets" / "shaders" / "room.frag").generic_u8string().c_str());
 
-	Logger::log("Shaders initialized");
+	Logger::info("Shaders initialized");
 }
 
 void Shaders::cleanup() {

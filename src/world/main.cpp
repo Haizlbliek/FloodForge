@@ -26,6 +26,8 @@
 #include "RoomTagPopup.hpp"
 #include "DenPopup.hpp"
 #include "RoomAttractivenessPopup.hpp"
+#include "ConditionalPopup.hpp"
+#include "ConditionalTimelineTextures.hpp"
 
 #include "Shaders.hpp"
 #include "Globals.hpp"
@@ -44,7 +46,11 @@ int transitionLayer(int layer) {
 	return (layer + 1) % 3;
 }
 
-
+enum class ConnectionState {
+	None,
+	NoConnection,
+	Connection
+};
 
 
 
@@ -72,9 +78,9 @@ int roomSnap = ROOM_SNAP_TILE;
 Vector2 *connectionStart = nullptr;
 Vector2 *connectionEnd = nullptr;
 Connection *currentConnection = nullptr;
+bool currentConnectionValid = false;
 std::string connectionError = "";
-
-int connectionState = 0;
+ConnectionState connectionState = ConnectionState::None;
 
 Vector2 worldMouse;
 Vector2 globalMouse;
@@ -478,23 +484,24 @@ void updateMain() {
 			tilePosition = Vector2i(-1, -1);
 		}
 
-		if (connectionState == 0) {
+		if (connectionState == ConnectionState::None) {
 			if (connectionStart != nullptr) { delete connectionStart; connectionStart = nullptr; }
-			if (connectionEnd   != nullptr) { delete connectionEnd;   connectionEnd   = nullptr; }
+			if (connectionEnd != nullptr) { delete connectionEnd; connectionEnd = nullptr; }
 
 			if (hoveringRoom != nullptr) {
 				Vector2 &roomPosition = hoveringRoom->currentPosition();
 				int connectionId = hoveringRoom->getRoomEntranceId(tilePosition);
 
-				if (connectionId != -1 && !hoveringRoom->ConnectionUsed(connectionId)) {
+				if (connectionId != -1) {
 					connectionStart = new Vector2(floor(worldMouse.x - roomPosition.x) + 0.5 + roomPosition.x, floor(worldMouse.y - roomPosition.y) + 0.5 + roomPosition.y);
-					connectionEnd   = new Vector2(connectionStart);
+					connectionEnd = new Vector2(connectionStart);
 					currentConnection = new Connection(hoveringRoom, connectionId, nullptr, 0);
+					currentConnectionValid = false;
 				}
 			}
 
-			connectionState = (connectionStart == nullptr) ? 2 : 1;
-		} else if (connectionState == 1) {
+			connectionState = (connectionStart == nullptr) ? ConnectionState::NoConnection : ConnectionState::Connection;
+		} else if (connectionState == ConnectionState::Connection) {
 			int connectionId = -1;
 
 			if (hoveringRoom != nullptr) {
@@ -507,41 +514,38 @@ void updateMain() {
 				connectionEnd->y = floor(worldMouse.y - roomPosition.y) + 0.5 + roomPosition.y;
 				currentConnection->roomB = hoveringRoom;
 				currentConnection->connectionB = connectionId;
+				currentConnectionValid = true;
 
 				if (currentConnection->roomA == currentConnection->roomB) {
 					connectionError = "Can't connect to same room";
-				} else if (currentConnection->roomB != nullptr && currentConnection->roomB->ConnectionUsed(currentConnection->connectionB)) {
-					connectionError = "Already connected";
-				} else if (currentConnection->roomA->RoomUsed(currentConnection->roomB) || currentConnection->roomB->RoomUsed(currentConnection->roomA)) {
-					connectionError = "Can't connect to room already connected to";
+					currentConnectionValid = false;
+				} else {
+					for (Connection *other : currentConnection->roomB->connections) {
+						if (
+							(other->roomA == currentConnection->roomB && other->connectionA == currentConnection->connectionB) &&
+							(other->roomB == currentConnection->roomA && other->connectionB == currentConnection->connectionA)
+						) {
+							connectionError = "Can't perform same connection twice";
+							currentConnectionValid = false;
+							break;
+						}
+					}
 				}
 			} else {
 				connectionEnd->x = worldMouse.x;
 				connectionEnd->y = worldMouse.y;
 				currentConnection->roomB = nullptr;
 				currentConnection->connectionB = 0;
+				currentConnectionValid = false;
 				connectionError = "Needs to connect";
 			}
 		}
 	} else {
 		if (currentConnection != nullptr) {
-			bool valid = true;
-
-			if (currentConnection->roomA == currentConnection->roomB) valid = false;
-			if (currentConnection->roomA == nullptr) valid = false;
-			if (currentConnection->roomB == nullptr) valid = false;
-
-			if (currentConnection->roomA != nullptr && currentConnection->roomB != nullptr) {
-				if (currentConnection->roomA->ConnectionUsed(currentConnection->connectionA)) valid = false;
-				if (currentConnection->roomB->ConnectionUsed(currentConnection->connectionB)) valid = false;
-				if (currentConnection->roomA->RoomUsed(currentConnection->roomB)) valid = false;
-				if (currentConnection->roomB->RoomUsed(currentConnection->roomA)) valid = false;
-			}
-
-			if (valid) {
+			if (currentConnectionValid) {
 				EditorState::connections.push_back(currentConnection);
-				currentConnection->roomA->connect(currentConnection->roomB, currentConnection->connectionA);
-				currentConnection->roomB->connect(currentConnection->roomA, currentConnection->connectionB);
+				currentConnection->roomA->connect(currentConnection);
+				currentConnection->roomB->connect(currentConnection);
 			} else {
 				delete currentConnection;
 			}
@@ -550,9 +554,9 @@ void updateMain() {
 		}
 
 		if (connectionStart != nullptr) { delete connectionStart; connectionStart = nullptr; }
-		if (connectionEnd   != nullptr) { delete connectionEnd;   connectionEnd   = nullptr; }
+		if (connectionEnd != nullptr) { delete connectionEnd; connectionEnd = nullptr; }
 
-		connectionState = 0;
+		connectionState = ConnectionState::None;
 	}
 
 	//// Holding
@@ -586,8 +590,8 @@ void updateMain() {
 			if (connection->hovered(worldMouse, lineSize)) {
 				EditorState::connections.erase(std::remove(EditorState::connections.begin(), EditorState::connections.end(), connection), EditorState::connections.end());
 
-				connection->roomA->disconnect(connection->roomB, connection->connectionA);
-				connection->roomB->disconnect(connection->roomA, connection->connectionB);
+				connection->roomA->disconnect(connection);
+				connection->roomB->disconnect(connection);
 
 				delete connection;
 
@@ -617,8 +621,8 @@ void updateMain() {
 						EditorState::connections.erase(std::remove_if(EditorState::connections.begin(), EditorState::connections.end(),
 							[room](Connection *connection) {
 								if (connection->roomA == room || connection->roomB == room) {
-									connection->roomA->disconnect(connection->roomB, connection->connectionA);
-									connection->roomB->disconnect(connection->roomA, connection->connectionB);
+									connection->roomA->disconnect(connection);
+									connection->roomB->disconnect(connection);
 
 									delete connection;
 									return true;
@@ -643,8 +647,8 @@ void updateMain() {
 							EditorState::connections.erase(std::remove_if(EditorState::connections.begin(), EditorState::connections.end(),
 								[room](Connection *connection) {
 									if (connection->roomA == room || connection->roomB == room) {
-										connection->roomA->disconnect(connection->roomB, connection->connectionA);
-										connection->roomB->disconnect(connection->roomA, connection->connectionB);
+										connection->roomA->disconnect(connection);
+										connection->roomB->disconnect(connection);
 
 										delete connection;
 										return true;
@@ -864,6 +868,48 @@ void updateMain() {
 		}
 	}
 
+	if (justPressed(GLFW_KEY_D)) {
+		Connection *openForConnection = nullptr;
+		for (auto it = EditorState::connections.rbegin(); it != EditorState::connections.rend(); it++) {
+			Connection *connection = *it;
+			if (!EditorState::visibleLayers[connection->roomA->layer]) continue;
+			if (!EditorState::visibleLayers[connection->roomB->layer]) continue;
+
+			if (connection->hovered(worldMouse, lineSize)) {
+				openForConnection = connection;
+
+				break;
+			}
+		}
+
+		if (openForConnection != nullptr) {
+			std::set<Room *> set;
+			Popups::addPopup(new ConditionalPopup(EditorState::window, openForConnection, set));
+		} else {
+			if (EditorState::selectedRooms.size() >= 1) {
+				Popups::addPopup(new ConditionalPopup(EditorState::window, nullptr, EditorState::selectedRooms));
+			} else {
+				Room *hoveringRoom = nullptr;
+				for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+					Room *room = (*it);
+	
+					if (!EditorState::visibleLayers[room->layer]) continue;
+	
+					if (room->inside(worldMouse)) {
+						hoveringRoom = room;
+						break;
+					}
+				}
+	
+				if (hoveringRoom != nullptr && !hoveringRoom->isOffscreen()) {
+					std::set<Room *> set;
+					set.insert(hoveringRoom);
+					Popups::addPopup(new ConditionalPopup(EditorState::window, nullptr, set));
+				}
+			}
+		}
+	}
+
 	bool found = false;
 	for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 		Room *room = *it;
@@ -905,26 +951,28 @@ void updateMain() {
 }
 
 void signalHandler(int signal) {
-	Logger::logError("Signal caught: ", signal);
+	Logger::error("Signal caught: ", signal);
 	std::exit(1);
 }
 
 int main() {
+#ifdef NDEBUG
 	std::signal(SIGSEGV, signalHandler); // Segmentation fault
 	std::signal(SIGABRT, signalHandler); // Abort signal
 	std::signal(SIGFPE, signalHandler);  // Floating-point error
 	std::signal(SIGILL, signalHandler);  // Illegal instruction
 	std::signal(SIGINT, signalHandler);  // Ctrl+C
 	std::signal(SIGTERM, signalHandler); // Termination request
+#endif
 
 	EditorState::window = new Window(1024, 1024);
-	Logger::log("Main icon path: ", BASE_PATH / "assets" / "mainIcon.png");
+	Logger::info("Main icon path: ", BASE_PATH / "assets" / "mainIcon.png");
 	EditorState::window->setIcon(BASE_PATH / "assets" / "mainIcon.png");
 	EditorState::window->setTitle("FloodForge World Editor");
 	EditorState::mouse = EditorState::window->GetMouse();
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		Logger::logError("Failed to initialize GLAD!");
+		Logger::error("Failed to initialize GLAD!");
 		return -1;
 	}
 
@@ -935,6 +983,7 @@ int main() {
 	Shaders::init();
 	Draw::init();
 	CreatureTextures::init();
+	ConditionalTimelineTextures::init();
 	RecentFiles::init();
 	RoomHelpers::loadColours();
 
@@ -961,7 +1010,7 @@ int main() {
 			(EditorState::mouse->Y() - offsetY) / size * 1024
 		);
 		screenMouse = Vector2(
-			(globalMouse.x / 1024.0) *  2.0 - 1.0,
+			(globalMouse.x / 1024.0) * 2.0 - 1.0,
 			(globalMouse.y / 1024.0) * -2.0 + 1.0
 		);
 
@@ -975,10 +1024,10 @@ int main() {
 		try {
 			updateMain();
 		} catch (const std::exception &e) {
-			Logger::logError("An exception was thrown during updateMain: ", e.what());
+			Logger::error("An exception was thrown during updateMain: ", e.what());
 			exit(1);
 		} catch (...) {
-			Logger::logError("An unknown exception was trown during updateMain");
+			Logger::error("An unknown exception was thrown during updateMain");
 			exit(1);
 		}
 
@@ -1054,15 +1103,7 @@ int main() {
 		}
 
 		if (connectionStart != nullptr && connectionEnd != nullptr) {
-			bool valid = true;
-
-			if (currentConnection->roomA == currentConnection->roomB) valid = false;
-			if (currentConnection->roomA == nullptr) valid = false;
-			if (currentConnection->roomB == nullptr) valid = false;
-			if (currentConnection->roomA != nullptr && currentConnection->roomA->ConnectionUsed(currentConnection->connectionA)) valid = false;
-			if (currentConnection->roomB != nullptr && currentConnection->roomB->ConnectionUsed(currentConnection->connectionB)) valid = false;
-
-			if (valid) {
+			if (currentConnectionValid) {
 				Draw::color(1.0f, 1.0f, 0.0f);
 			} else {
 				Draw::color(1.0f, 0.0f, 0.0f);
@@ -1118,7 +1159,7 @@ int main() {
 
 		if (connectionError != "") {
 			Draw::color(1.0, 0.0, 0.0);
-			Fonts::rainworld->write(connectionError, EditorState::mouse->X() / 512.0f - screenBounds.x, -EditorState::mouse->Y() / 512.0f + screenBounds.y, 0.05);
+			Fonts::rainworld->writeCentered(connectionError, EditorState::mouse->X() / 512.0f - screenBounds.x, -EditorState::mouse->Y() / 512.0f + screenBounds.y, 0.05, CENTER_X);
 		}
 
 		MenuItems::draw(&globalMouseObj, screenBounds);

@@ -116,7 +116,7 @@ class MenuItems {
 
 							std::filesystem::path path = *paths.begin();
 
-							Logger::log("Opening ", path);
+							Logger::info("Opening ", path);
 
 							delete project;
 							project = Project::loadFromPath(path);
@@ -129,7 +129,7 @@ class MenuItems {
 
 					// if (path == "") return;
 
-					// Logger::log("Opening ", path);
+					// Logger::info("Opening ", path);
 
 					// delete project;
 					// project = Project::loadFromPath(path);
@@ -149,11 +149,11 @@ class MenuItems {
 				[](Button *button) {
 					int screenWidth = 0;
 					int screenHeight = 0;
-					Logger::log("Enter room width (screens) ");
+					Logger::info("Enter room width (screens) ");
 					std::cin >> screenWidth;
-					Logger::log("Enter room height (screens) ");
+					Logger::info("Enter room height (screens) ");
 					std::cin >> screenHeight;
-					Logger::log(screenWidth, " ", screenHeight);
+					Logger::info(screenWidth, " ", screenHeight);
 					project->resize(52 * screenWidth + 20, 40 * screenHeight + 3);
 				}
 			));

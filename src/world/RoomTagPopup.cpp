@@ -21,9 +21,9 @@ void RoomTagPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 
 	if (rooms.size() > 0) {
 		setThemeColour(ThemeColour::Text);
 		if (rooms.size() == 1) {
-			Fonts::rainworld->writeCentred((*rooms.begin())->roomName, 0.0, 0.4, 0.04, CENTRE_XY);
+			Fonts::rainworld->writeCentered((*rooms.begin())->roomName, 0.0, 0.4, 0.04, CENTER_XY);
 		} else {
-			Fonts::rainworld->writeCentred("Selected Rooms", 0.0, 0.4, 0.04, CENTRE_XY);
+			Fonts::rainworld->writeCentered("Selected Rooms", 0.0, 0.4, 0.04, CENTER_XY);
 		}
 
 		double y = bounds.y1 - 0.15;
@@ -100,7 +100,7 @@ void RoomTagPopup::drawTagButton(std::string tag, std::string tagId, double y, d
 	} else {
 		setThemeColour(ThemeColour::Text);
 	}
-	Fonts::rainworld->writeCentred(tag, 0, y - 0.02, 0.04, CENTRE_XY);
+	Fonts::rainworld->writeCentered(tag, 0, y - 0.02, 0.04, CENTER_XY);
 
 	if (Rect(-0.4, y, 0.4, y - 0.05).inside(mouseX, mouseY)) {
 		setThemeColour(ThemeColour::BorderHighlight);

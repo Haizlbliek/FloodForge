@@ -4,16 +4,18 @@
 #include "../math/Rect.hpp"
 
 void WorldExporter::exportMapFile() {
+	Logger::info("Exporting map file");
+
 	std::filesystem::path path = EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + ".txt");
 	Backup::backup(path);
 	std::fstream file(path, std::ios::out | std::ios::trunc);
 
 	if (!file.is_open()) {
-		Logger::log("Error opening map_", EditorState::region.acronym, ".txt");
+		Logger::info("Error opening map_", EditorState::region.acronym, ".txt");
 		return;
 	}
-	
-	Logger::log("Exporting rooms");
+
+	Logger::info("- Rooms");
 	for (Room *room : EditorState::rooms) {
 		Vector2 canonPosition = Vector2(
 			(room->canonPosition.x + room->Width() * 0.5) * 3.0,
@@ -33,7 +35,7 @@ void WorldExporter::exportMapFile() {
 		file << "\n";
 	}
 	
-	Logger::log("Exporting extra data");
+	Logger::info("- FloodForge Data");
 	for (Room *room : EditorState::rooms) {
 		if (room->isOffscreen() || room->data.empty())
 			continue;
@@ -44,7 +46,7 @@ void WorldExporter::exportMapFile() {
 		file << "\n";
 	}
 
-	Logger::log("Exporting connections");
+	Logger::info("- Connections");
 	for (Connection *connection : EditorState::connections) {
 		if (connection->roomA->data.hidden || connection->roomB->data.hidden) continue;
 
@@ -65,51 +67,183 @@ void WorldExporter::exportMapFile() {
 		file << toUpper(connection->roomB->roomName) << ",";
 		file << connectionA.x << "," << connectionA.y << ",";
 		file << connectionB.x << "," << connectionB.y << ",";
-		file << connection->roomA->getRoomEntranceDirection(connection->connectionA) << ",";
-		file << connection->roomB->getRoomEntranceDirection(connection->connectionB);
+		file << (int) connection->roomA->getRoomEntranceDirection(connection->connectionA) << ",";
+		file << (int) connection->roomB->getRoomEntranceDirection(connection->connectionB);
 		file << "\n";
 	}
 
 	file.close();
 }
 
+void parseConditionalLinkConnection(std::fstream &file, Room *room, Connection *connection, std::vector<std::string> &timelines, std::map<std::string, std::vector<std::pair<std::string, bool>>> &state, std::vector<std::pair<std::string, bool>> &defaultState) {
+	Room *otherRoom = nullptr;
+	int connectionId = -1;
+	if (connection->roomA == room) {
+		otherRoom = connection->roomB;
+		connectionId = connection->connectionA;
+	} else {
+		otherRoom = connection->roomA;
+		connectionId = connection->connectionB;
+	}
+	if (otherRoom == nullptr || connectionId == -1) return;
+
+	for (std::string timeline : connection->timelines) {
+		if (state.count(timeline) == 0) {
+			state[timeline] = defaultState;
+			timelines.push_back(timeline);
+		}
+
+		if (connection->timelineType == ConnectionTimelineType::ONLY) {
+			file << timeline << " : " << toUpper(room->roomName) << " : ";
+
+			if (state[timeline][connectionId].first == "DISCONNECTED") {
+				int disconnectedBefore = 0;
+				for (int i = 0; i < connectionId; i++) {
+					if (state[timeline][i].first == "DISCONNECTED") {
+						disconnectedBefore++;
+					}
+				}
+				file << (disconnectedBefore + 1);
+			} else {
+				file << state[timeline][connectionId].first;
+			}
+			file << " : " << toUpper(otherRoom->roomName) << "\n";
+
+			if (toUpper(otherRoom->roomName) != state[timeline][connectionId].first) {
+				state[timeline][connectionId] = { toUpper(otherRoom->roomName), true };
+			}
+		}
+		else if (connection->timelineType == ConnectionTimelineType::EXCEPT) {
+			for (std::string otherTimeline : timelines) {
+				if (otherTimeline == timeline) continue;
+				if (!state[otherTimeline][connectionId].second) continue;
+
+				file << otherTimeline << " : " << toUpper(room->roomName) << " : ";
+				if (state[otherTimeline][connectionId].first == "DISCONNECTED") {
+					int disconnectedBefore = 0;
+					for (int i = 0; i < connectionId; i++) {
+						if (state[otherTimeline][i].first == "DISCONNECTED") {
+							disconnectedBefore++;
+						}
+					}
+					file << (disconnectedBefore + 1);
+				} else {
+					file << state[otherTimeline][connectionId].first;
+				}
+				file << " : " << toUpper(otherRoom->roomName) << "\n";
+			}
+
+			file << timeline << " : " << toUpper(room->roomName) << " : ";
+			if (state[timeline][connectionId].second) {
+				if (state[timeline][connectionId].first == "DISCONNECTED") {
+					int disconnectedBefore = 0;
+					for (int i = 0; i < connectionId; i++) {
+						if (state[timeline][i].first == "DISCONNECTED") {
+							disconnectedBefore++;
+						}
+					}
+					file << (disconnectedBefore + 1);
+				} else {
+					file << state[timeline][connectionId].first;
+				}
+			} else {
+				file << toUpper(otherRoom->roomName);
+			}
+			file << " : " << defaultState[connectionId].first << "\n";
+
+			if (toUpper(otherRoom->roomName) != defaultState[connectionId].first) {
+				defaultState[connectionId] = { toUpper(otherRoom->roomName), false };
+			}
+		}
+	}
+}
+
 void WorldExporter::exportWorldFile() {
+	Logger::info("Exporting world file");
+
 	std::filesystem::path path = EditorState::region.exportDirectory / ("world_" + EditorState::region.acronym + ".txt");
 	Backup::backup(path);
 	std::fstream file(path, std::ios::out | std::ios::trunc);
 
 	if (!file.is_open()) {
-		Logger::log("Error opening world_", EditorState::region.acronym, ".txt");
+		Logger::info("Error opening world_", EditorState::region.acronym, ".txt");
 		return;
 	}
+	
+	std::map<std::string, std::vector<std::pair<std::string, bool>>> roomDefaultStates;
 
+	Logger::info("- Conditional Links");
+	file << "CONDITIONAL LINKS\n";
+	for (Room *room : EditorState::rooms) {
+		if (room->isOffscreen()) continue;
+
+		std::vector<std::string> timelines;
+		std::map<std::string, std::vector<std::pair<std::string, bool>>> state;
+		std::vector<std::pair<std::string, bool>> defaultState(room->RoomEntranceCount(), { "DISCONNECTED", false });
+		for (Connection *connection : room->connections) {
+			if (connection->timelineType != ConnectionTimelineType::ALL) continue;
+
+			if (connection->roomA == room) {
+				defaultState[connection->connectionA] = { toUpper(connection->roomB->roomName), false };
+			} else {
+				defaultState[connection->connectionB] = { toUpper(connection->roomA->roomName), false };
+			}
+		}
+
+		for (Connection *connection : room->connections) {
+			if (connection->timelineType != ConnectionTimelineType::EXCEPT || connection->timelines.size() == 0) continue;
+
+			parseConditionalLinkConnection(file, room, connection, timelines, state, defaultState);
+		}
+
+		for (Connection *connection : room->connections) {
+			if (connection->timelineType != ConnectionTimelineType::ONLY || connection->timelines.size() == 0) continue;
+
+			parseConditionalLinkConnection(file, room, connection, timelines, state, defaultState);
+		}
+
+		roomDefaultStates[room->roomName] = defaultState;
+
+		if (room->timelineType == RoomTimelineType::DEFAULT || room->timelines.size() == 0) {
+			continue;
+		}
+
+		bool first = true;
+		for (std::string timeline : room->timelines) {
+			if (!first) file << ",";
+			first = false;
+			file << timeline;
+		}
+
+		file << " : " << ((room->timelineType == RoomTimelineType::EXCLUSIVE_ROOM) ? "EXCLUSIVEROOM" : "HIDEROOM");
+		file << " : " << toUpper(room->roomName) << "\n";
+	}
+	file << "END CONDITIONAL LINKS\n\n";
+
+	Logger::info("- Rooms");
 	file << "ROOMS\n";
 	for (Room *room : EditorState::rooms) {
 		if (room->isOffscreen()) continue;
 
 		file << toUpper(room->roomName) << " : ";
 
-		std::vector<std::string> connections(room->RoomEntranceCount(), "DISCONNECTED");
-
-		for (std::pair<Room*, unsigned int> connection : room->RoomConnections()) {
-			connections[connection.second] = toUpper(connection.first->roomName);
-		}
+		std::vector<std::pair<std::string, bool>> connections = roomDefaultStates[room->roomName];
 
 		for (int i = 0; i < room->RoomEntranceCount(); i++) {
 			if (i > 0) file << ", ";
 
-			file << connections[i];
+			file << connections[i].first;
 		}
 
 		for (std::string tag : room->Tags()) {
 			file << " : " << tag;
 		}
-		// if (room->SetTag() != "") file << " : " << room->SetTag();
 
 		file << "\n";
 	}
 	file << "END ROOMS\n\n";
 
+	Logger::info("- Creatures");
 	file << "CREATURES\n";
 
 	for (Room *room : EditorState::rooms) {
@@ -168,6 +302,8 @@ void WorldExporter::exportWorldFile() {
 }
 
 void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::filesystem::path otherPath) {
+	Logger::info("Exporting image file");
+
 	std::filesystem::path mapPath = EditorState::region.exportDirectory / ("map_image_" + EditorState::region.acronym + ".txt");
 	Backup::backup(mapPath);
 	std::fstream mapFile(mapPath, std::ios::out | std::ios::trunc);
@@ -175,7 +311,7 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 	bool hasMapFile = true;
 
 	if (!mapFile.is_open()) {
-		Logger::log("Error creating map_image_", EditorState::region.acronym, ".txt");
+		Logger::info("Error creating map_image_", EditorState::region.acronym, ".txt");
 		hasMapFile = false;
 	}
 
@@ -290,15 +426,17 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 
 	Backup::backup(outputPath);
 	if (stbi_write_png(outputPath.generic_u8string().c_str(), textureWidth, textureHeight, 3, image.data(), textureWidth * 3)) {
-		Logger::log("Image saved successfully!");
+		Logger::info("Image file exported");
 	} else {
-		Logger::log("Error saving image!");
+		Logger::error("Exporting image failed");
 	}
 	
 	if (hasMapFile) mapFile.close();
 }
 
 void WorldExporter::exportPropertiesFile(std::filesystem::path outputPath) {
+	Logger::info("Exporting properties file");
+
 	Backup::backup(outputPath);
 	std::fstream propertiesFile(outputPath, std::ios::out | std::ios::trunc);
 	

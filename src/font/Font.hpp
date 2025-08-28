@@ -14,29 +14,20 @@
 #include "../Draw.hpp"
 #include "../Logger.hpp"
 
-// American English
 #define CENTER_X  1
 #define CENTER_Y  2
 #define CENTER_XY 3
-#define CENTER_YX 3
 
-// British English
-#define CENTRE_X  1
-#define CENTRE_Y  2
-#define CENTRE_XY 3
-#define CENTRE_YX 3
-
-// Font Types
 #define FONT_SMOOTH 0
 #define FONT_SHARP  1
 
 class Font {
 	public:
 		Font(std::string name, int fontType) : name(name) {
-			Logger::log("Loading ", name);
+			Logger::info("Loading ", name);
 			loadData(FONT_PATH / (name + ".txt"));
 			loadTexture(FONT_PATH / (name + ".png"), fontType);
-			Logger::log();
+			Logger::info();
 		}
 
 		~Font() {
@@ -125,7 +116,7 @@ class Font {
 			return textWidth;
 		}
 
-		void writeCentred(std::string text, float startX, float startY, float fontSize, unsigned int centreFlags) {
+		void writeCentered(std::string text, float startX, float startY, float fontSize, unsigned int centreFlags) {
 			const double scale = (1.0 / base) * fontSize;
 
 			float textWidth = 0.0f;
@@ -152,14 +143,10 @@ class Font {
 				characterIndex++;
 			}
 
-			if (centreFlags & CENTRE_X) startX -= textWidth * 0.5;
-			if (centreFlags & CENTRE_Y) startY += textHeight * 0.5;
+			if (centreFlags & CENTER_X) startX -= textWidth * 0.5;
+			if (centreFlags & CENTER_Y) startY += textHeight * 0.5;
 
 			write(text, startX, startY, fontSize);
-		}
-
-		void writeCentered(std::string text, float startX, float startY, float fontSize, unsigned int centerFlags) {
-			writeCentred(text, startX, startY, fontSize, centerFlags);
 		}
 
 	private:
@@ -181,7 +168,7 @@ class Font {
 			file.open(path);
 
 			if (!file.is_open()) {
-				Logger::logError("Failed to load font data for ", name);
+				Logger::error("Failed to load font data for ", name);
 				return;
 			}
 
@@ -256,13 +243,13 @@ class Font {
 
 			hasInvalidCharacter = (characters.count(21) > 0);
 
-			Logger::log(characters.size(), " characters loaded");
+			Logger::info(characters.size(), " characters loaded");
 		}
 
 		void loadTexture(std::filesystem::path path, int fontType) {
 			texture = ::loadTexture(path.string().c_str(), (fontType == FONT_SMOOTH) ? GL_LINEAR : GL_NEAREST);
 
-			Logger::log("Texture loaded");
+			Logger::info("Texture loaded");
 		}
 
 		std::string name;

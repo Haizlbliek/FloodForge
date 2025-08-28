@@ -30,7 +30,7 @@ void Project::save() {
 	// 	break;
 	// }
 
-	Logger::log(filePath);
+	Logger::info(filePath);
 	if (filePath.empty()) {
 		Popups::addPopup(new FilesystemPopup(window, std::regex(R"([^.]+\.level)"), "xxxx.level",
 			[this](std::set<std::filesystem::path> newFilePaths) {
@@ -99,7 +99,7 @@ Project *Project::loadFromPath(std::filesystem::path path) {
 	file.open(path);
 
 	if (!file.is_open()) {
-		Logger::logError("Failed to open file!");
+		Logger::error("Failed to open file!");
 		return nullptr;
 	}
 

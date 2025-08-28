@@ -272,16 +272,17 @@ void FilesystemPopup::mouseClick(double mouseX, double mouseY) {
 				id -= directories.size();
 
 				if (id < files.size()) {
+					std::string filePath = files[id].generic_u8string();
 					// called = true;
 					if (allowMultiple && (window->modifierPressed(GLFW_MOD_SHIFT) || window->modifierPressed(GLFW_MOD_CONTROL))) {
-						if (selected.find(files[id].generic_u8string()) == selected.end()) {
-							selected.insert(files[id].generic_u8string());
+						if (selected.find(filePath) == selected.end()) {
+							selected.insert(filePath);
 						} else {
-							selected.erase(files[id].generic_u8string());
+							selected.erase(filePath);
 						}
 					} else {
 						selected.clear();
-						selected.insert(files[id].generic_u8string());
+						selected.insert(filePath);
 					}
 					// close();
 				}
@@ -315,6 +316,8 @@ void FilesystemPopup::mouseClick(double mouseX, double mouseY) {
 void FilesystemPopup::scrollCallback(void *object, double deltaX, double deltaY) {
 	FilesystemPopup *popup = static_cast<FilesystemPopup*>(object);
 
+	if (!popup->hovered) return;
+
 	popup->targetScroll += deltaY * 0.06;
 	
 	popup->clampScroll();
@@ -330,12 +333,12 @@ void FilesystemPopup::keyCallback(void *object, int action, int key) {
 	FilesystemPopup *popup = static_cast<FilesystemPopup*>(object);
 
 	if (!popup) {
-		Logger::logError("Error: popup is nullptr.");
+		Logger::error("Error: popup is nullptr.");
 		return;
 	}
 
 	if (!popup->window) {
-		Logger::logError("Error: popup->window is nullptr.");
+		Logger::error("Error: popup->window is nullptr.");
 		return;
 	}
 
@@ -469,7 +472,7 @@ void FilesystemPopup::loadDrives() {
 	DWORD size = GetLogicalDriveStringsA(driveData.size(), driveData.data());
 
 	if (size == 0) {
-		Logger::logError("Failed to get drive data");
+		Logger::error("Failed to get drive data");
 		return;
 	}
 	
