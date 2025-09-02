@@ -68,31 +68,16 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 		float number = den.data;
 		std::ostringstream ss;
 
-		if (den.tag == "MEAN" || den.tag == "LENGTH") {
+		if (den.tag == "MEAN" || den.tag == "LENGTH")
 			ss << std::fixed << std::setprecision(2) << std::setw(3) << number;
-		} else if (den.tag == "SEED" || den.tag == "RotType") {
+		else if (den.tag == "SEED" || den.tag == "RotType")
 			ss << std::setw(5) << static_cast<int>(number);
-		}
-
-		std::string output = ss.str();
 
 		if (den.tag == "MEAN" || den.tag == "LENGTH") {
-			if (den.data < 0){
-				Fonts::rainworld->writeCentered(ss.str(), bounds.x0 + 0.805, sliderY + 0.028, 0.026, CENTER_Y);
-			} else if (den.data > 0){
-				Fonts::rainworld->writeCentered(ss.str(), bounds.x0 + 0.82, sliderY + 0.028, 0.026, CENTER_Y);
-			} else if (den.data == 0){
-				Fonts::rainworld->writeCentered(ss.str(), bounds.x0 + 0.82, sliderY + 0.028, 0.026, CENTER_Y);
-			}
-		}
-
-		if (den.tag == "SEED" || den.tag == "RotType") {
-			if (den.data < 4){
-				Fonts::rainworld->writeCentered(ss.str(), bounds.x0 + 0.81, sliderY + 0.028, 0.026, CENTER_Y);
-			} else if (den.data > 3){
-				Fonts::rainworld->writeCentered(ss.str(), bounds.x0 + 0.809, sliderY + 0.028, 0.026, CENTER_Y);
-			}
-		}
+			if (den.data < 0) Fonts::rainworld->writeCentered(output, bounds.x0 + 0.805, sliderY + 0.028, 0.026, CENTER_Y);
+			else Fonts::rainworld->writeCentered(output, bounds.x0 + 0.82, sliderY + 0.028, 0.026, CENTER_Y);
+		} else if (den.tag == "RotType") Fonts::rainworld->writeCentered(output, bounds.x0 + 0.81, sliderY + 0.028, 0.026, CENTER_Y);
+		  else if (den.tag == "SEED") Fonts::rainworld->writeCentered(output, bounds.x0 + 0.809, sliderY + 0.028, 0.026, CENTER_Y);
 	}
 
 	scrollA += (scrollATo - scrollA) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
