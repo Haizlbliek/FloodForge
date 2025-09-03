@@ -5,6 +5,7 @@
 #include "../Theme.hpp"
 #include "../font/Fonts.hpp"
 #include "../Settings.hpp"
+#include <cmath>
 
 DenPopup::DenPopup(Window *window, Room *room, int den) : Popup(window) {
 	bounds = Rect(-0.35, -0.35, 0.375 + 0.1, 0.35);
@@ -74,7 +75,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 			ss << std::setw(5) << static_cast<int>(number);
 
 		if (den.tag == "MEAN" || den.tag == "LENGTH") {
-			if (den.data < 0) Fonts::rainworld->writeCentered(output, bounds.x0 + 0.805, sliderY + 0.028, 0.026, CENTER_Y);
+			if (signbit(den.data)) Fonts::rainworld->writeCentered(output, bounds.x0 + 0.805, sliderY + 0.028, 0.026, CENTER_Y);
 			else Fonts::rainworld->writeCentered(output, bounds.x0 + 0.82, sliderY + 0.028, 0.026, CENTER_Y);
 		} else if (den.tag == "RotType") Fonts::rainworld->writeCentered(output, bounds.x0 + 0.81, sliderY + 0.028, 0.026, CENTER_Y);
 		  else if (den.tag == "SEED") Fonts::rainworld->writeCentered(output, bounds.x0 + 0.809, sliderY + 0.028, 0.026, CENTER_Y);
