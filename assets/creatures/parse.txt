@@ -6,6 +6,7 @@ White>WhiteLizard
 Black>BlackLizard
 Cyan>CyanLizard
 Red>RedLizard
+Small Centipede>SmallCentipede
 Cent>Centipede
 Centi>Centipede
 Red Centipede>RedCentipede

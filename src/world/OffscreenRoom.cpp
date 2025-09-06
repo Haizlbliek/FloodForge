@@ -38,47 +38,13 @@ OffscreenRoom::OffscreenRoom(std::string path, std::string name) {
 	data = ExtraRoomData();
 }
 
-OffscreenRoom::~OffscreenRoom() {
-}
-
-int OffscreenRoom::AddDen() {
-	dens.push_back(Den("", 0, "", 0.0));
-	denEntrances.push_back(Vector2i(0, 0));
-
-	return dens.size() - 1;
-}
-
-void OffscreenRoom::cleanup() {
-	int index = 0;
-	denEntrances.erase(std::remove_if(denEntrances.begin(), denEntrances.end(), [&](Vector2i &denCoord) {
-		Den &den = dens[index++];
-
-		return den.count == 0 || den.type == "";
-	}), denEntrances.end());
-	dens.erase(std::remove_if(dens.begin(), dens.end(), [](Den &den) {
-		return den.count == 0 || den.type == "";
-	}), dens.end());
-}
-
-int OffscreenRoom::denAt(double mouseX, double mouseY) {
-	Vector2 &position = currentPosition();
-
-	for (int i = 0; i < denEntrances.size(); i++) {
-		if (dens[i].type == "" || dens[i].count == 0) continue;
-
-		double rectX = position.x + width * 0.5 - denEntrances.size() * 2.0 + i * 4.0 + 2.0;
-		double rectY = position.y - height * 0.25;
-		
-		double size = 2.0;
-
-		Rect rect = Rect(rectX - size, rectY - size, rectX + size, rectY + size);
-
-		if (rect.inside(mouseX, mouseY)) {
-			return i;
-		}
+Den &OffscreenRoom::getDen() {
+	if (dens.size() == 0) {
+		dens.push_back(Den());
+		denEntrances.push_back({ 0, 0 });
 	}
 
-	return -1;
+	return dens[0];
 }
 
 void OffscreenRoom::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType) {
@@ -90,23 +56,13 @@ void OffscreenRoom::draw(Vector2 mousePosition, double lineSize, Vector2 screenB
 	Draw::color(RoomHelpers::RoomSolid);
 	Fonts::rainworld->writeCentered(this->roomName, position.x + (width * 0.5), position.y - (height * 0.5), 5, CENTER_XY);
 
-
-	for (int i = 0; i < denEntrances.size(); i++) {
-		if (dens[i].type == "" || dens[i].count == 0) continue;
-
-		double rectX = position.x + width * 0.5 - denEntrances.size() * 2.0 + i * 4.0 + 2.0;
-		double rectY = position.y - height * 0.25;
-		double scale = EditorState::selectorScale;
-
-		if (i == hoveredDen) scale *= 1.5;
-
-		RoomHelpers::drawTexture(CreatureTextures::getTexture(dens[i].type), rectX, rectY, scale);
-
-		Draw::color(1.0, 0.0, 0.0);
-		Fonts::rainworld->writeCentered(std::to_string(dens[i].count), rectX + 0.5 + scale * 0.25, rectY - 0.5 - scale * 0.5, 0.5 * scale, CENTER_XY);
-
-	}
-
+	getDen();
+	Room::drawDen(
+		dens[0],
+		position.x + width * 0.5,
+		position.y - height * 0.25,
+		0 == hoveredDen
+	);
 
 	if (inside(mousePosition)) {
 		Draw::color(0.00f, 0.75f, 0.00f);

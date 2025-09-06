@@ -379,6 +379,28 @@ double lineDistance(Vector2 vector, Vector2 pointA, Vector2 pointB) {
 	return closestPoint.distanceTo(vector);
 }
 
+std::vector<std::string> split(const std::string &text, std::string delimiter) {
+	std::vector<std::string> tokens;
+	std::string token;
+
+	int i = 0;
+	while (i < text.size()) {
+		int found = text.find(delimiter, i);
+		if (found == std::string::npos) {
+			found = text.size();
+		}
+
+		token = text.substr(i, found - i);
+		token.erase(0, token.find_first_not_of(" \t\n"));
+		token.erase(token.find_last_not_of(" \t\n") + 1);
+		tokens.push_back(token);
+
+		i = found + delimiter.size();
+	}
+
+	return tokens;
+}
+
 std::vector<std::string> split(const std::string &text, char delimiter) {
 	std::vector<std::string> tokens;
 	std::string token;

@@ -296,15 +296,29 @@ void WorldParser::parseWorldRoom(std::string line, std::filesystem::path directo
 }
 
 void WorldParser::parseWorldCreature(std::string line) {
-	std::vector<std::string> splits = split(line, ':');
+	std::vector<std::string> splits = split(line, " : ");
+	ConnectionTimelineType timelineType = ConnectionTimelineType::ALL;
+	std::set<std::string> timelines;
 
-	if (splits[0] == "LINEAGE" || splits[0][0] == '(') {
-		Logger::info("Skipped parsing complicated creature: '", line, "'");
-		EditorState::region.complicatedCreatures += line + "\n";
-		return;
+	if (splits[0][0] == '(') {
+		std::string v = splits[0].substr(1, splits[0].find(')') - 1);
+		splits[0] = splits[0].substr(splits[0].find(')') + 1);
+		if (startsWith(v, "X-") || startsWith(v, "x-")) {
+			timelineType = ConnectionTimelineType::EXCEPT;
+			v = v.substr(2);
+		} else {
+			timelineType = ConnectionTimelineType::ONLY;
+		}
+
+		for (std::string timeline : split(v, ',')) {
+			timelines.insert(timeline);
+		}
 	}
 
 	std::string roomName = toLower(splits[0]);
+	if (splits[0] == "LINEAGE") {
+		roomName = toLower(splits[1]);
+	}
 	Room *room = nullptr;
 
 	for (Room *otherRoom : EditorState::rooms) {
@@ -318,86 +332,170 @@ void WorldParser::parseWorldCreature(std::string line) {
 		room = EditorState::offscreenDen;
 	}
 
-	if (room == nullptr) return;
+	if (room == nullptr) {
+		Logger::info("Skipped line due to missing room:");
+		Logger::info("> ", line);
+		EditorState::region.complicatedCreatures += line + "\n";
+		return;
+	}
 
-	for (std::string creatureInDen : split(splits[1], ',')) {
-		std::vector<std::string> sections = split(creatureInDen, '-');
-		int denId;
+	if (splits[0] == "LINEAGE") {
+		int denId = -1;
 		try {
-			denId = std::stoi(sections[0]);
+			denId = std::stoi(splits[2]);
 		} catch (const std::invalid_argument &e) {
-			Logger::error("Failed to load creature line '", line, "' due to stoi for '", sections[0], "' (int denId)");
+			Logger::error("Failed to load creature line '", line, "' due to stoi for '", splits[2], "' (int denId LINEAGE)");
+			return;
 		}
-		std::string creature = sections[1];
 
 		if (room == EditorState::offscreenDen) {
-			denId = EditorState::offscreenDen->DenCount();
-			EditorState::offscreenDen->AddDen();
+			denId = 0;
+			EditorState::offscreenDen->getDen();
 		}
 
 		if (!room->CreatureDenExists(denId)) {
 			Logger::info(roomName, " failed den ", denId);
 			EditorState::fails.push_back(roomName + " failed den " + std::to_string(denId));
-			continue;
+			return;
 		}
 
 		Den &den = room->CreatureDen(denId);
-		den.type = CreatureTextures::parse(creature);
+		den.creatures.push_back(DenLineage("", 0, "", 0.0));
+		DenLineage &lineage = den.creatures[den.creatures.size() - 1];
+		lineage.timelineType = timelineType;
+		for (std::string timeline : timelines) {
+			lineage.timelines.insert(timeline);
+		}
+		DenCreature *creature = &lineage;
+		bool first = true;
+		for (std::string creatureInDen : split(splits[3], ',')) {
+			if (!first) {
+				creature->lineageTo = new DenCreature("", 0, "", 0.0);
+				creature = creature->lineageTo;
+			}
+			first = false;
 
-		if (sections.size() == 3) {
-			if (sections[2][0] == '{') {
-				std::string tag = sections[2].substr(1, sections[2].size() - 2);
-				if (startsWith(tag, "Mean")) {
-					den.tag = "MEAN";
-					den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
-				} else if (startsWith(tag, "Seed")) {
-					den.tag = "SEED";
-					den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
-				} else if (tag.find(':') != -1) {
-					den.tag = "LENGTH";
-					den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
-				} else {
-					den.tag = tag;
-				}
-				den.count = 1;
-			} else {
-				try {
-					den.count = std::stoi(sections[2]);
-				} catch (const std::invalid_argument &e) {
-					Logger::error("Failed to load creature line '", line, "' due to stoi for '", sections[2], "' (den.count)");
-				}
-			}
-		} else if (sections.size() == 4) {
-			std::string tagString = "";
-			std::string countString = "";
-			if (sections[2][0] == '{') {
-				tagString = sections[2];
-				countString = sections[3];
-			} else {
-				countString = sections[2];
-				tagString = sections[3];
-			}
-
-			std::string tag = tagString.substr(1, tagString.size() - 2);
-			if (startsWith(tag, "Mean")) {
-				den.tag = "MEAN";
-				den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
-			} else if (startsWith(tag, "Seed")) {
-				den.tag = "SEED";
-				den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
-			} else if (tag.find(':') != -1) {
-				den.tag = "LENGTH";
-				den.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
-			} else {
-				den.tag = tag;
-			}
+			std::vector<std::string> sections = split(creatureInDen, '-');
+			creature->type = CreatureTextures::parse(sections[0]);
+			creature->count = 1;
 			try {
-				den.count = std::stoi(countString);
-			} catch (const std::invalid_argument &e) {
-				Logger::error("Failed to load creature line '", line, "' due to stoi on '", countString, "' (den.count)");
+				creature->lineageChance = std::stod(sections[sections.size() - 1]);
+			} catch (const std::invalid_argument) {
+				Logger::error("Failed to load creature line '", line, "' due to stod for '", sections[sections.size() - 1], "' (creature->lineageChance)");
 			}
-		} else {
-			den.count = 1;
+
+			if (sections.size() == 3) {
+				if (sections[1][0] == '{') {
+					std::string tag = sections[1].substr(1, sections[1].size() - 2);
+					if (startsWith(tag, "Mean")) {
+						creature->tag = "MEAN";
+						creature->data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					} else if (startsWith(tag, "Seed")) {
+						creature->tag = "SEED";
+						creature->data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					} else if (startsWith(tag, "RotType")) {
+						creature->tag = "RotType";
+						creature->data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					} else if (tag.find(':') != -1) {
+						creature->tag = "LENGTH";
+						creature->data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					} else {
+						creature->tag = tag;
+					}
+				}
+			}
+		}
+	} else {
+		for (std::string creatureInDen : split(splits[1], ',')) {
+			std::vector<std::string> sections = split(creatureInDen, '-');
+			int denId;
+			try {
+				denId = std::stoi(sections[0]);
+			} catch (const std::invalid_argument &e) {
+				Logger::error("Failed to load creature line '", line, "' due to stoi for '", sections[0], "' (int denId)");
+				return;
+			}
+			std::string creature = sections[1];
+	
+			if (room == EditorState::offscreenDen) {
+				denId = 0;
+				EditorState::offscreenDen->getDen();
+			}
+	
+			if (!room->CreatureDenExists(denId)) {
+				Logger::info(roomName, " failed den ", denId);
+				EditorState::fails.push_back(roomName + " failed den " + std::to_string(denId));
+				continue;
+			}
+	
+			Den &den = room->CreatureDen(denId);
+			DenLineage denCreature = DenLineage("", 0, "", 0.0);
+			denCreature.timelineType = timelineType;
+			for (std::string timeline : timelines) {
+				denCreature.timelines.insert(timeline);
+			}
+			denCreature.type = CreatureTextures::parse(creature);
+	
+			if (sections.size() == 3) {
+				if (sections[2][0] == '{') {
+					std::string tag = sections[2].substr(1, sections[2].size() - 2);
+					if (startsWith(tag, "Mean")) {
+						denCreature.tag = "MEAN";
+						denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					} else if (startsWith(tag, "Seed")) {
+						denCreature.tag = "SEED";
+						denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					} else if (startsWith(tag, "RotType")) {
+						denCreature.tag = "RotType";
+						denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					} else if (tag.find(':') != -1) {
+						denCreature.tag = "LENGTH";
+						denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					} else {
+						denCreature.tag = tag;
+					}
+					denCreature.count = 1;
+				} else {
+					try {
+						denCreature.count = std::stoi(sections[2]);
+					} catch (const std::invalid_argument &e) {
+						Logger::error("Failed to load creature line '", line, "' due to stoi for '", sections[2], "' (den.count)");
+					}
+				}
+			} else if (sections.size() == 4) {
+				std::string tagString = "";
+				std::string countString = "";
+				if (sections[2][0] == '{') {
+					tagString = sections[2];
+					countString = sections[3];
+				} else {
+					countString = sections[2];
+					tagString = sections[3];
+				}
+	
+				std::string tag = tagString.substr(1, tagString.size() - 2);
+				if (startsWith(tag, "Mean")) {
+					denCreature.tag = "MEAN";
+					denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+				} else if (startsWith(tag, "Seed")) {
+					denCreature.tag = "SEED";
+					denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+				} else if (tag.find(':') != -1) {
+					denCreature.tag = "LENGTH";
+					denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+				} else {
+					denCreature.tag = tag;
+				}
+				try {
+					denCreature.count = std::stoi(countString);
+				} catch (const std::invalid_argument &e) {
+					Logger::error("Failed to load creature line '", line, "' due to stoi on '", countString, "' (den.count)");
+				}
+			} else {
+				denCreature.count = 1;
+			}
+
+			den.creatures.push_back(denCreature);
 		}
 	}
 }
@@ -601,14 +699,11 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 
 			for (ConditionalConnection &connectionData : connectionsToAdd) {
 				if (connectionData.roomB == nullptr && toLower(connectionData.roomA->roomName) == toConnection && connectionData.roomBName == toLower(room->roomName)) {
-					Logger::warn("Connection exists, setting roomB");
 					connectionData.roomB = room;
 					connectionData.connectionB = connectionId;
 					return;
 				}
 			}
-
-			Logger::warn("No connection exists, creating new");
 
 			std::set<std::string> connectionTimelines;
 			for (std::string timeline : timelines) {

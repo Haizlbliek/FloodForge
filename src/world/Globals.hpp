@@ -6,7 +6,7 @@
 #include "../math/Vector.hpp"
 #include "../Window.hpp"
 
-#define FLOODFORGE_VERSION "v1.5.5"
+#define FLOODFORGE_VERSION "v1.5.6-beta1"
 
 // For backwards-compatibility
 #define LAYER_HIDDEN 5
@@ -47,12 +47,17 @@ namespace EditorState {
 	extern int roomPositionType;
 	extern bool visibleLayers[LAYER_COUNT];
 	extern bool visibleDevItems;
-	
+
 	extern Region region;
 
 	extern int selectingState;
 	extern std::set<Room*> selectedRooms;
 	extern Room *roomPossibleSelect;
-	
+
 	extern std::vector<std::string> fails;
+
+	extern bool denPopupLineageExtended;
+	extern bool denPopupTagsExtended;
+
+	extern Vector2i windowSize;
 }

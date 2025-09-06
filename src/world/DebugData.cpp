@@ -72,21 +72,42 @@ namespace DebugData {
 			Vector2 shortcutPosition;
 			
 			if (room->isOffscreen()) {
-				for (int i = 0; i < room->DenCount(); i++) {
-					shortcutPosition = Vector2(room->Width() * 0.5 - room->DenCount() * 2.0 + i * 4.0 + 2.5, -room->Height() * 0.25 - 0.5);
-					
-					if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
-						debugText.push_back("   Shortcut:");
-						debugText.push_back("Den: Offscreen - " + std::to_string(i));
+				shortcutPosition = Vector2(room->Width() * 0.5 + 0.5, -room->Height() * 0.25 - 0.5);
+
+				if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
+					debugText.push_back("   Shortcut - Offscreen:");
+					debugText.push_back("Den:");
+					EditorState::offscreenDen->getDen();
+					for (DenLineage &lineage : room->CreatureDen01(0).creatures) {
+						DenCreature *creature = &lineage;
+						std::string line = "";
+						line += creature->type + " x " + std::to_string(creature->count);
+						while (creature->lineageTo != nullptr) {
+							creature = creature->lineageTo;
+							line += " --" + std::to_string(int(creature->lineageChance * 100)) + "%-> ";
+							line += creature->type + " x " + std::to_string(creature->count);
+						}
+						debugText.push_back(line);
 					}
 				}
 			} else {
 				for (Vector2i shortcut : room->DenEntrances()) {
 					shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
-					
+
 					if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
 						debugText.push_back("   Shortcut:");
-						debugText.push_back("Den: " + std::to_string(shortcut.x) + ", " + std::to_string(shortcut.y) + ", " + room->CreatureDen(room->DenId(shortcut)).type);
+						debugText.push_back("Den: " + std::to_string(shortcut.x) + ", " + std::to_string(shortcut.y));
+						for (DenLineage &lineage : room->CreatureDen(room->DenId(shortcut)).creatures) {
+							DenCreature *creature = &lineage;
+							std::string line = "";
+							line += creature->type + " x " + std::to_string(creature->count);
+							while (creature->lineageTo != nullptr) {
+								creature = creature->lineageTo;
+								line += " --" + std::to_string(int(creature->lineageChance * 100)) + "%-> ";
+								line += creature->type + " x " + std::to_string(creature->count);
+							}
+							debugText.push_back(line);
+						}
 					}
 				}
 			}

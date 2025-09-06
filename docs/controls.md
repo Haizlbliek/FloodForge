@@ -35,6 +35,7 @@ S - Change Subregion
 A - Change Attractiveness
 H - Toggle Visibility
 I - Move to back
+D - Change Conditionals
 ALT+T - Open Tutorial
 
 ## Canon vs Dev positioning

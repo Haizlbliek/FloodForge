@@ -54,15 +54,10 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 	double countX = 0.0;
 	double countY = 0.0;
 
-
-	int windowWidth;
-	int windowHeight;
-	glfwGetWindowSize(window->getGLFWWindow(), &windowWidth, &windowHeight);
-
 	glEnable(GL_SCISSOR_TEST);
-	double clipBottom = ((bounds.y0 + buttonPadding + screenBounds.y) * 0.5) * windowHeight;
-	double clipTop = ((bounds.y1 - 0.1 - buttonPadding + screenBounds.y) * 0.5) * windowHeight;
-	glScissor(0, clipBottom, windowWidth, clipTop - clipBottom);
+	double clipBottom = ((bounds.y0 + buttonPadding + screenBounds.y) * 0.5) * EditorState::windowSize.y;
+	double clipTop = ((bounds.y1 - 0.1 - buttonPadding + screenBounds.y) * 0.5) * EditorState::windowSize.y;
+	glScissor(0, clipBottom, EditorState::windowSize.x, clipTop - clipBottom);
 
 	int countA = CreatureTextures::creatures.size();
 	countA -= 2;

@@ -27,15 +27,11 @@ void SubregionPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 		} else {
 			Fonts::rainworld->writeCentered("Selected Rooms", centreX, bounds.y1 - 0.07, 0.04, CENTER_XY);
 		}
-
-		int windowWidth;
-		int windowHeight;
-		glfwGetWindowSize(window->getGLFWWindow(), &windowWidth, &windowHeight);
 	
 		glEnable(GL_SCISSOR_TEST);
-		double clipBottom = ((bounds.y0 + 0.01 + screenBounds.y) * 0.5) * windowHeight;
-		double clipTop = ((bounds.y1 - 0.14 + screenBounds.y) * 0.5) * windowHeight;
-		glScissor(0, clipBottom, windowWidth, clipTop - clipBottom);
+		double clipBottom = ((bounds.y0 + 0.01 + screenBounds.y) * 0.5) * EditorState::windowSize.y;
+		double clipTop = ((bounds.y1 - 0.14 + screenBounds.y) * 0.5) * EditorState::windowSize.y;
+		glScissor(0, clipBottom, EditorState::windowSize.x, clipTop - clipBottom);
 
 
 		double y = bounds.y1 - 0.15 - scroll;

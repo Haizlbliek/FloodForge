@@ -59,6 +59,8 @@ Vector2 bezierCubic(double t, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3);
 
 double lineDistance(Vector2 vector, Vector2 pointA, Vector2 pointB);
 
+std::vector<std::string> split(const std::string &text, std::string delimiter);
+
 std::vector<std::string> split(const std::string &text, char delimiter);
 
 void openURL(std::string url);

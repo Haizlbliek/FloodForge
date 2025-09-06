@@ -247,49 +247,161 @@ void WorldExporter::exportWorldFile() {
 	file << "CREATURES\n";
 
 	for (Room *room : EditorState::rooms) {
-		std::stringstream line;
-		bool add = false;
+		for (int i = 0; i < room->DenCount(); i++) {
+			std::vector<const DenLineage *> nonLineageCreatures;
 
-		if (room == EditorState::offscreenDen) {
-			line << "OFFSCREEN : ";
-		} else {
-			line << toUpper(room->roomName) << " : ";
+			const Den &den = room->CreatureDen01(i);
+			for (int j = 0; j < den.creatures.size(); j++) {
+				const DenLineage &creature = den.creatures[j];
+
+				if (creature.lineageTo != nullptr) continue;
+
+				if (creature.type.empty() || creature.count == 0) continue;
+
+				nonLineageCreatures.push_back(&creature);
+			}
+
+			for (int j = 0; j < nonLineageCreatures.size(); j++) {
+				const DenLineage *mainCreature = nonLineageCreatures[j];
+				if (mainCreature == nullptr) continue;
+
+				std::vector<const DenLineage *> sameTimelineCreatures;
+				sameTimelineCreatures.push_back(mainCreature);
+				nonLineageCreatures[j] = nullptr;
+				for (int k = j + 1; k < nonLineageCreatures.size(); k++) {
+					const DenLineage *otherCreature = nonLineageCreatures[k];
+					if (otherCreature == nullptr) continue;
+
+					if (mainCreature->timelinesMatch(otherCreature)) {
+						sameTimelineCreatures.push_back(otherCreature);
+						nonLineageCreatures[k] = nullptr;
+					}
+				}
+
+				if (mainCreature->timelineType != ConnectionTimelineType::ALL) {
+					file << "(";
+					if (mainCreature->timelineType == ConnectionTimelineType::EXCEPT) {
+						file << "X-";
+					}
+					bool first = true;
+					for (std::string timeline : mainCreature->timelines) {
+						if (!first) file << ",";
+						first = false;
+
+						file << timeline;
+					}
+					file << ")";
+				}
+	
+				if (room == EditorState::offscreenDen) {
+					file << "OFFSCREEN : ";
+				} else {
+					file << toUpper(room->roomName) << " : ";
+				}
+
+				bool first = true;
+
+				for (const DenLineage *creature : sameTimelineCreatures) {
+					if (!first) file << ", ";
+					first = false;
+
+					if (room == EditorState::offscreenDen) {
+						file << "0-" << creature->type;
+					} else {
+						file << (i + room->RoomEntranceCount()) << "-" << creature->type;
+					}
+					if (!creature->tag.empty()) {
+						if (creature->tag == "MEAN") {
+							file << "-{Mean:" << creature->data << "}";
+						} else if (creature->tag == "LENGTH") {
+							if (creature->type == "PoleMimic") {
+								file << "-{" << int(creature->data) << "}";
+							} else {
+								file << "-{" << creature->data << "}";
+							}
+						} else if (creature->tag == "SEED") {
+							file << "-{Seed:" << int(creature->data) << "}";
+						} else if (creature->tag == "RotType") {
+							file << "-{RotType:" << int(creature->data) << "}";
+						} else {
+							file << "-{" << creature->tag << "}";
+						}
+					}
+					if (creature->count > 1) file << "-" << creature->count;
+				}
+
+				file << "\n";
+			}
 		}
 
-		bool first = true;
 		for (int i = 0; i < room->DenCount(); i++) {
 			const Den &den = room->CreatureDen01(i);
-			if (den.type.empty() || den.count == 0)
-				continue;
+			for (int j = 0; j < den.creatures.size(); j++) {
+				const DenLineage &lineage = den.creatures[j];
+				const DenCreature *creature = &den.creatures[j];
 
-			if (!first) line << ", ";
-			first = false;
+				if (creature->lineageTo == nullptr) continue;
 
-			if (room == EditorState::offscreenDen) {
-				line << "0-" << den.type;
-			} else {
-				line << (i + room->RoomEntranceCount()) << "-" << den.type;
-			}
-			if (!den.tag.empty()) {
-				if (den.tag == "MEAN") {
-					line << "-{Mean:" << den.data << "}";
-				} else if (den.tag == "LENGTH") {
-					if (den.type == "PoleMimic") {
-						line << "-{" << int(den.data) << "}";
-					} else {
-						line << "-{" << den.data << "}";
+				if (lineage.timelineType != ConnectionTimelineType::ALL && lineage.timelines.size() > 0) {
+					file << "(";
+					if (lineage.timelineType == ConnectionTimelineType::EXCEPT) {
+						file << "X-";
 					}
-				} else if (den.tag == "SEED") {
-					line << "-{Seed:" << int(den.data) << "}";
+					bool first = true;
+					for (std::string timeline : lineage.timelines) {
+						if (!first) file << ",";
+						first = false;
+
+						file << timeline;
+					}
+					file << ")";
+				}
+
+				file << "LINEAGE : ";
+
+				if (room == EditorState::offscreenDen) {
+					file << "OFFSCREEN : ";
 				} else {
-					line << "-{" << den.tag << "}";
+					file << toUpper(room->roomName) << " : ";
+				}
+
+				if (room == EditorState::offscreenDen) {
+					file << "0 : ";
+				} else {
+					file << (i + room->RoomEntranceCount()) << " : ";
+				}
+
+				while (creature != nullptr) {
+					file << ((creature->type.empty() || creature->count == 0) ? "NONE" : creature->type);
+
+					if (!creature->tag.empty()) {
+						if (creature->tag == "MEAN") {
+							file << "-{Mean:" << creature->data << "}";
+						} else if (creature->tag == "LENGTH") {
+							if (creature->type == "PoleMimic") {
+								file << "-{" << int(creature->data) << "}";
+							} else {
+								file << "-{" << creature->data << "}";
+							}
+						} else if (creature->tag == "SEED") {
+							file << "-{Seed:" << int(creature->data) << "}";
+						} else if (creature->tag == "RotType") {
+							file << "-{RotType:" << int(creature->data) << "}";
+						} else {
+							file << "-{" << creature->tag << "}";
+						}
+					}
+
+					if (creature->lineageTo == nullptr) {
+						file << "-0\n";
+						break;
+					}
+					file << "-" << std::clamp(creature->lineageChance, 0.0, 1.0) << ", ";
+
+					creature = creature->lineageTo;
 				}
 			}
-			if (den.count > 1) line << "-" << den.count;
-			add = true;
 		}
-
-		if (add) file << line.str() << "\n";
 	}
 	
 	file << EditorState::region.complicatedCreatures;

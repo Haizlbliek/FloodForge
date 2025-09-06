@@ -15,12 +15,18 @@ void ChangeAcronymPopup::accept() {
 		newOffscreenDen->layer = EditorState::offscreenDen->layer;
 		newOffscreenDen->data.hidden = EditorState::offscreenDen->data.hidden;
 
-		for (const Den &oldDen : EditorState::offscreenDen->Dens()) {
-			Den &newDen = newOffscreenDen->CreatureDen01(newOffscreenDen->AddDen());
-			newDen.count = oldDen.count;
-			newDen.data = oldDen.data;
-			newDen.tag = oldDen.tag;
-			newDen.type = oldDen.type;
+		{
+			Den &oldDen = EditorState::offscreenDen->getDen();
+	
+			Den &newDen = newOffscreenDen->getDen();
+			newDen.creatures.push_back(DenLineage(oldDen.creatures[0].type, oldDen.creatures[0].count, oldDen.creatures[0].tag, oldDen.creatures[0].data));
+			DenCreature *creature = &newDen.creatures[0];
+			const DenCreature *oldCreature = &oldDen.creatures[0];
+			while (oldCreature->lineageTo != nullptr) {
+				creature->lineageTo = new DenCreature(oldCreature->lineageTo->type, oldCreature->lineageTo->count, oldCreature->lineageTo->tag, oldCreature->lineageTo->data);
+				creature = creature->lineageTo;
+				oldCreature = oldCreature->lineageTo;
+			}
 		}
 
 		EditorState::rooms.push_back(newOffscreenDen);

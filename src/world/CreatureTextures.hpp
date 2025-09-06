@@ -8,7 +8,7 @@
 
 #include "../Utils.hpp"
 
-#define CREATURE_ROWS 6
+#define CREATURE_ROWS 7
 
 namespace CreatureTextures {
 	extern std::unordered_map<std::string, GLuint> creatureTextures;

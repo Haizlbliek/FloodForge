@@ -8,13 +8,7 @@ class OffscreenRoom : public Room {
 
 		OffscreenRoom(std::string path, std::string name);
 
-		~OffscreenRoom();
-
-		int AddDen();
-
-		void cleanup();
-
-		int denAt(double mouseX, double mouseY);
+		Den &getDen();
 
 		void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType) override;
 };

@@ -18,6 +18,8 @@
 #include "../Draw.hpp"
 #include "../Settings.hpp"
 
+#include "../ui/UI.hpp"
+
 #include "../popup/Popups.hpp"
 #include "../popup/MarkdownPopup.hpp"
 #include "../popup/ConfirmPopup.hpp"
@@ -171,7 +173,8 @@ void updateCamera() {
 void updateOriginalControls() {
 	if (EditorState::mouse->Left()) {
 		if (!leftMouseDown) {
-			for (Popup *popup : Popups::popups) {
+			for (int i = Popups::popups.size() - 1; i >= 0; i--) {
+				Popup *popup = Popups::popups[i];
 				Rect bounds = popup->Bounds();
 
 				if (bounds.inside(screenMouse)) {
@@ -304,7 +307,8 @@ void updateOriginalControls() {
 void updateFloodForgeControls() {
 	if (EditorState::mouse->Left()) {
 		if (!leftMouseDown) {
-			for (Popup *popup : Popups::popups) {
+			for (int i = Popups::popups.size() - 1; i >= 0; i--) {
+				Popup *popup = Popups::popups[i];
 				Rect bounds = popup->Bounds();
 
 				if (bounds.inside(screenMouse)) {
@@ -440,7 +444,7 @@ void updateMain() {
 
 	if (justPressed(GLFW_KEY_ESCAPE)) {
 		if (Popups::popups.size() > 0) {
-			Popups::popups[0]->reject();
+			Popups::popups[Popups::popups.size() - 1]->reject();
 		} else {
 			Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit FloodForge?"))->OnOkay([&]() {
 				EditorState::window->close();
@@ -616,6 +620,8 @@ void updateMain() {
 			if (hoveredRoom != nullptr) {
 				if (EditorState::selectedRooms.find(hoveredRoom) != EditorState::selectedRooms.end()) {
 					for (Room *room : EditorState::selectedRooms) {
+						if (room == EditorState::offscreenDen) continue;
+
 						EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), room), EditorState::rooms.end());
 
 						EditorState::connections.erase(std::remove_if(EditorState::connections.begin(), EditorState::connections.end(),
@@ -809,7 +815,7 @@ void updateMain() {
 					shortcutPosition = Vector2(room->Width() * 0.5 - room->DenCount() * 2.0 + i * 4.0 + 2.5, -room->Height() * 0.25 - 0.5);
 
 					if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
-						Popups::addPopup(new DenPopup(EditorState::window, room, i));
+						Popups::addPopup(new DenPopup(EditorState::window, room->CreatureDen01(i)));
 
 						found = true;
 						break;
@@ -820,7 +826,7 @@ void updateMain() {
 					shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
 
 					if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
-						Popups::addPopup(new DenPopup(EditorState::window, room, room->DenId(shortcut)));
+						Popups::addPopup(new DenPopup(EditorState::window, room->CreatureDen(room->DenId(shortcut))));
 
 						found = true;
 						break;
@@ -838,7 +844,7 @@ void updateMain() {
 				if (room->inside(worldMouse)) {
 					if (!room->isOffscreen()) break;
 
-					Popups::addPopup(new DenPopup(EditorState::window, room, EditorState::offscreenDen->AddDen()));
+					Popups::addPopup(new DenPopup(EditorState::window, EditorState::offscreenDen->getDen()));
 				}
 			}
 		}
@@ -883,11 +889,10 @@ void updateMain() {
 		}
 
 		if (openForConnection != nullptr) {
-			std::set<Room *> set;
-			Popups::addPopup(new ConditionalPopup(EditorState::window, openForConnection, set));
+			Popups::addPopup(new ConditionalPopup(EditorState::window, openForConnection));
 		} else {
 			if (EditorState::selectedRooms.size() >= 1) {
-				Popups::addPopup(new ConditionalPopup(EditorState::window, nullptr, EditorState::selectedRooms));
+				Popups::addPopup(new ConditionalPopup(EditorState::window, EditorState::selectedRooms));
 			} else {
 				Room *hoveringRoom = nullptr;
 				for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
@@ -904,7 +909,7 @@ void updateMain() {
 				if (hoveringRoom != nullptr && !hoveringRoom->isOffscreen()) {
 					std::set<Room *> set;
 					set.insert(hoveringRoom);
-					Popups::addPopup(new ConditionalPopup(EditorState::window, nullptr, set));
+					Popups::addPopup(new ConditionalPopup(EditorState::window, set));
 				}
 			}
 		}
@@ -944,10 +949,6 @@ void updateMain() {
 
 		if (found) break;
 	}
-
-	if (!Popups::hasPopup("DenPopup") && EditorState::offscreenDen != nullptr) {
-		EditorState::offscreenDen->cleanup();
-	}
 }
 
 void signalHandler(int signal) {
@@ -976,6 +977,7 @@ int main() {
 		return -1;
 	}
 
+	UI::init();
 	Settings::init();
 	Fonts::init();
 	MenuItems::init(EditorState::window);
@@ -995,13 +997,11 @@ int main() {
 
 		EditorState::window->ensureFullscreen();
 
-		int width;
-		int height;
-		glfwGetWindowSize(EditorState::window->getGLFWWindow(), &width, &height);
-		if (width == 0 || height == 0) continue;
-		float size = min(width, height);
-		float offsetX = (width * 0.5) - size * 0.5;
-		float offsetY = (height * 0.5) - size * 0.5;
+		glfwGetWindowSize(EditorState::window->getGLFWWindow(), &EditorState::windowSize.x, &EditorState::windowSize.y);
+		if (EditorState::windowSize.x == 0 || EditorState::windowSize.y == 0) continue;
+		float size = min(EditorState::windowSize.x, EditorState::windowSize.y);
+		float offsetX = (EditorState::windowSize.x * 0.5) - size * 0.5;
+		float offsetY = (EditorState::windowSize.y * 0.5) - size * 0.5;
 
 		mouseMoved = (EditorState::mouse->X() != lastMousePosition.x || EditorState::mouse->Y() != lastMousePosition.y);
 
@@ -1013,6 +1013,10 @@ int main() {
 			(globalMouse.x / 1024.0) * 2.0 - 1.0,
 			(globalMouse.y / 1024.0) * -2.0 + 1.0
 		);
+		UI::mouse.x = screenMouse.x;
+		UI::mouse.y = screenMouse.y;
+		UI::mouse.lastLeftMouse = UI::mouse.leftMouse;
+		UI::mouse.leftMouse = EditorState::mouse->Left();
 
 		Mouse globalMouseObj = Mouse(EditorState::window->getGLFWWindow(), globalMouse.x, globalMouse.y);
 		globalMouseObj.copyPressed(*EditorState::mouse);
@@ -1034,13 +1038,13 @@ int main() {
 
 		// Draw
 
-		glViewport(0, 0, width, height);
+		glViewport(0, 0, EditorState::windowSize.x, EditorState::windowSize.y);
 
 		EditorState::window->clear();
 		glDisable(GL_DEPTH_TEST);
 
 		setThemeColour(ThemeColour::Background);
-		Vector2 screenBounds = Vector2(width, height) / size;
+		Vector2 screenBounds = Vector2(EditorState::windowSize.x, EditorState::windowSize.y) / size;
 		fillRect(-screenBounds.x, -screenBounds.y, screenBounds.x, screenBounds.y);
 
 		applyFrustumToOrthographic(EditorState::cameraOffset, 0.0f, EditorState::cameraScale * screenBounds);
@@ -1191,6 +1195,7 @@ int main() {
 	Shaders::cleanup();
 	Draw::cleanup();
 	Settings::cleanup();
+	UI::cleanup();
 
 	return 0;
 }

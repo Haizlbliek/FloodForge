@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "../ui/UI.hpp"
 #include "../Theme.hpp"
 #include "../Draw.hpp"
 
@@ -164,11 +165,23 @@ void Popups::removePopup(Popup *popup) {
 }
 
 void Popups::draw(Vector2 mouse, Vector2 screenBounds) {
-	for (Popup *popup : Popups::popups) {
-		Rect bounds = popup->Bounds();
+	Popup *mousePopup = nullptr;
+	for (int i = Popups::popups.size() - 1; i >= 0; i--) {
+		Popup *popup = Popups::popups[i];
 
-		popup->draw(mouse.x, mouse.y, bounds.inside(mouse), screenBounds);
+		if (popup->Bounds().inside(mouse)) {
+			mousePopup = popup;
+			break;
+		}
 	}
+
+	for (Popup *popup : Popups::popups) {
+		bool hovered = popup->Bounds().inside(mouse);
+
+		UI::mouse.disabled = popup != mousePopup;
+		popup->draw(mouse.x, mouse.y, hovered, screenBounds);
+	}
+	UI::mouse.disabled = false;
 }
 
 bool Popups::hasPopup(std::string popupName) {

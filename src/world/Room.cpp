@@ -207,33 +207,24 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, in
 
 	if (positionType == EditorState::roomPositionType) {
 		for (int i = 0; i < denEntrances.size(); i++) {
-			if (dens[i].type == "" || dens[i].count == 0) continue;
-	
-			double rectX = position.x + denEntrances[i].x;
-			double rectY = position.y - denEntrances[i].y;
-			double scale = EditorState::selectorScale;
-			
-			if (i == hoveredDen) scale *= 1.5;
-	
-			RoomHelpers::drawTexture(CreatureTextures::getTexture(dens[i].type), rectX, rectY, scale);
-	
-			Draw::color(1.0, 0.0, 0.0);
-			Fonts::rainworld->writeCentered(std::to_string(dens[i].count), rectX + 0.5 + scale * 0.25, rectY - 0.5 - scale * 0.5, 0.5 * scale, CENTER_XY);
+			drawDen(dens[i], position.x + denEntrances[i].x, position.y - denEntrances[i].y, i == hoveredDen);
 		}
 	}
-	
-	int i = 0;
-	for (std::string timeline : this->timelines) {
-		double rectX = position.x + i * 4.0 + 1.5;
-		double rectY = position.y - 1.5;
-		double scale = EditorState::selectorScale;
 
-		RoomHelpers::drawTexture(ConditionalTimelineTextures::getTexture(timeline), rectX, rectY, scale);
-		i++;
-	}
-	if (this->timelines.size() > 0 && this->timelineType == RoomTimelineType::HIDE_ROOM) {
-		Draw::color(1.0, 0.0, 0.0);
-		drawLine(position.x + 2.0 - EditorState::selectorScale * 0.5, position.y - 2.0, position.x + 2.0 + EditorState::selectorScale * 0.5 + (this->timelines.size() - 1) * 4.0, position.y - 2.0, EditorState::selectorScale * 4.0);
+	if (this->timelineType != RoomTimelineType::DEFAULT) {
+		int i = 0;
+		for (std::string timeline : this->timelines) {
+			double rectX = position.x + i * 4.0 + 1.5;
+			double rectY = position.y - 1.5;
+			double scale = EditorState::selectorScale;
+	
+			RoomHelpers::drawTexture(ConditionalTimelineTextures::getTexture(timeline), rectX, rectY, scale);
+			i++;
+		}
+		if (this->timelines.size() > 0 && this->timelineType == RoomTimelineType::HIDE_ROOM) {
+			Draw::color(1.0, 0.0, 0.0);
+			drawLine(position.x + 2.0 - EditorState::selectorScale * 0.5, position.y - 2.0, position.x + 2.0 + EditorState::selectorScale * 0.5 + (this->timelines.size() - 1) * 4.0, position.y - 2.0, EditorState::selectorScale * 4.0);
+		}
 	}
 
 	if (inside(mousePosition)) {
@@ -242,6 +233,39 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, in
 		setThemeColour(ThemeColour::RoomBorder);
 	}
 	strokeRect(position.x, position.y, position.x + width, position.y - height);
+}
+
+void Room::drawDen(Den &den, double x, double y, bool hovered) {
+	for (int j = 0; j < den.creatures.size(); j++) {
+		DenCreature *creature = &den.creatures[j];
+		if (creature->type.empty() && creature->lineageTo == nullptr) continue;
+
+		double scale = EditorState::selectorScale;
+		double rectX = x + j * scale * 1.0 - (den.creatures.size() - 1) * 0.5 * scale;
+		double rectY = y;
+		
+		if (hovered) scale *= 1.5;
+
+		if (!creature->type.empty()) {
+			RoomHelpers::drawTexture(CreatureTextures::getTexture(creature->type), rectX, rectY, scale);
+		}
+
+		if (creature->lineageTo == nullptr) {
+			Draw::color(1.0, 1.0, 1.0);
+			Fonts::rainworld->writeCentered(std::to_string(creature->count), rectX + 0.5 + scale * 0.25, rectY - 0.5 - scale * 0.5, 0.5 * scale, CENTER_XY);
+		} else {
+			while (creature->lineageTo != nullptr) {
+				double chance = creature->lineageChance;
+				creature = creature->lineageTo;
+				rectY -= EditorState::selectorScale;
+				if (!creature->type.empty()) {
+					RoomHelpers::drawTexture(CreatureTextures::getTexture(creature->type), rectX, rectY, scale);
+				}
+				Draw::color(1.0, 1.0, 1.0);
+				Fonts::rainworld->writeCentered(std::to_string(int(chance * 100)) + "%", rectX + 0.5 + scale * 0.25, rectY + EditorState::selectorScale - 0.4 - scale * 0.5, 0.3 * scale, CENTER_XY);
+			}
+		}
+	}
 }
 
 bool Room::inside(Vector2 otherPosition) {
@@ -423,10 +447,6 @@ const int Room::DenCount() const {
 
 const std::vector<Vector2i> Room::DenEntrances() const {
 	return denEntrances;
-}
-
-const std::vector<Den> Room::Dens() const {
-	return dens;
 }
 
 const int Room::Width() const { return width; }
@@ -632,7 +652,7 @@ void Room::loadGeometry() {
 	ensureConnections();
 
 	for (Vector2i denLocation : denEntrances) {
-		dens.push_back(Den("", 0, "", 0.0));
+		dens.push_back(Den());
 	}
 }
 

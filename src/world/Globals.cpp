@@ -29,4 +29,9 @@ namespace EditorState {
 	std::set<Room*> selectedRooms;
 
 	std::vector<std::string> fails;
+
+	bool denPopupLineageExtended = false;
+	bool denPopupTagsExtended = false;
+
+	Vector2i windowSize = { 0, 0 };
 }

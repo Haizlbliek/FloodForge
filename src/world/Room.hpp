@@ -90,6 +90,8 @@ class Room {
 		virtual void drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType);
 		virtual void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType);
 
+		void drawDen(Den &den, double x, double y, bool hovered);
+
 		bool inside(Vector2 otherPosition);
 
 		bool intersects(Vector2 corner0, Vector2 corner1);
@@ -138,8 +140,6 @@ class Room {
 
 		const std::vector<Vector2i> DenEntrances() const;
 
-		const std::vector<Den> Dens() const;
-
 		const int Width() const;
 		const int Height() const;
 
@@ -163,9 +163,11 @@ class Room {
 
 		std::set<std::string> timelines;
 		RoomTimelineType timelineType;
-		
+
+		std::vector<Den> dens;
+
 		void moveBoth();
-		
+
 		Vector2 &currentPosition();
 
 	protected:
@@ -196,7 +198,6 @@ class Room {
 		int height;
 
 		int *geometry;
-		std::vector<Den> dens;
 
 		std::vector<std::string> tags;
 
