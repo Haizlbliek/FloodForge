@@ -129,6 +129,14 @@ void Popup::mouseClick(double mouseX, double mouseY) {
 	}
 }
 
+const Rect Popup::Bounds() {
+	if (minimized) {
+		return Rect(bounds.x0, bounds.y1 - 0.05, bounds.x1, bounds.y1);
+	}
+
+	return bounds;
+}
+
 void Popup::close() {
 	Popups::removePopup(this);
 }

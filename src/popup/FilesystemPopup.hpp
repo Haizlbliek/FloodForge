@@ -44,7 +44,7 @@ class FilesystemPopup : public Popup {
 		void drawBounds(Rect rect, double mouseX, double mouseY);
 
 		void mouseClick(double mouseX, double mouseY);
-		
+
 		static void scrollCallback(void *object, double deltaX, double deltaY);
 
 		static char parseCharacter(char character, bool shiftPressed);
@@ -53,7 +53,7 @@ class FilesystemPopup : public Popup {
 
 		bool canStack(std::string popupName) { return popupName == "InfoPopup" || popupName == "ConfirmPopup"; }
 		std::string PopupName() { return "FilesystemPopup"; }
-	
+
 	private:
 		std::filesystem::path currentDirectory;
 		static std::filesystem::path previousDirectory;

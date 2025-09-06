@@ -17,13 +17,7 @@ class Popup {
 
 		virtual void mouseClick(double mouseX, double mouseY);
 
-		virtual const Rect Bounds() {
-			if (minimized) {
-				return Rect(bounds.x0, bounds.y1 - 0.05, bounds.x1, bounds.y1);
-			}
-
-			return bounds;
-		}
+		virtual const Rect Bounds();
 
 		virtual void close();
 

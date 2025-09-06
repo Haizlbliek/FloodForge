@@ -27,7 +27,7 @@ FilesystemPopup::FilesystemPopup(Window *window, int type, std::string hint, std
 	mode = MODE_NORMAL;
 	currentScroll = 0;
 	targetScroll = 0;
-	
+
 	openType = type;
 
 #ifdef _WIN32
@@ -52,7 +52,7 @@ void FilesystemPopup::accept() {
 			std::set<std::filesystem::path> output { currentDirectory };
 			callback(output);
 		}
-		
+
 		if (openType == TYPE_FILE) {
 			called = true;
 			callback(selected);
@@ -89,15 +89,15 @@ void FilesystemPopup::close() {
 
 	window->removeKeyCallback(this, keyCallback);
 	window->removeScrollCallback(this, scrollCallback);
-	
+
 	window = nullptr;
-	
+
 	if (!called) callback(std::set<std::filesystem::path>());
 }
 
 void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
 	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
-	
+
 	if (minimized) return;
 
 	currentScroll += (targetScroll - currentScroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
@@ -117,7 +117,7 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 		}
 
 		Fonts::rainworld->write("Show all", bounds.x0 + 0.09, bounds.y0 + 0.09, 0.04);
-		
+
 		setThemeColour(ThemeColour::TextDisabled);
 		Fonts::rainworld->write(hint, bounds.x0 + 0.35, bounds.y0 + 0.09, 0.04);
 	} else {
@@ -221,7 +221,7 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 		drawIcon(4, y);
 		y -= 0.06;
 	}
-	
+
 	// ...
 	if (hasExtras) {
 		setThemeColour(ThemeColour::TextDisabled);
@@ -259,10 +259,10 @@ void FilesystemPopup::mouseClick(double mouseX, double mouseY) {
 			targetScroll = 0.0;
 			newDirectory = "";
 		}
-		
+
 		if (mouseX >= bounds.x0 + 0.1 && mouseX <= bounds.x1 - 0.1 && mouseY >= bounds.y0 + 0.2 && mouseY <= bounds.y1 - 0.15) {
 			int id = (-mouseY + (bounds.y1 - 0.15) - currentScroll) / 0.06;
-			
+
 			if (id < directories.size()) {
 				currentDirectory = std::filesystem::canonical(currentDirectory / directories[id].filename());
 				currentScroll = 0.0;
@@ -296,7 +296,7 @@ void FilesystemPopup::mouseClick(double mouseX, double mouseY) {
 				clampScroll();
 			}
 		}
-		
+
 		if (Rect(bounds.x1 - 0.17, bounds.y0 + 0.09, bounds.x1 - 0.05, bounds.y0 + 0.04).inside(mouseX, mouseY)) {
 			accept();
 		}
@@ -319,7 +319,7 @@ void FilesystemPopup::scrollCallback(void *object, double deltaX, double deltaY)
 	if (!popup->hovered) return;
 
 	popup->targetScroll += deltaY * 0.06;
-	
+
 	popup->clampScroll();
 }
 
@@ -351,7 +351,7 @@ void FilesystemPopup::keyCallback(void *object, int action, int key) {
 			popup->newDirectory += character;
 			popup->frame = 0;
 		}
-		
+
 		if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9) {
 			popup->newDirectory += key;
 			popup->frame = 0;
@@ -360,13 +360,13 @@ void FilesystemPopup::keyCallback(void *object, int action, int key) {
 		if (key == GLFW_KEY_SPACE) {
 			if (!popup->newDirectory.empty())
 				popup->newDirectory += " ";
-			
+
 			popup->frame = 0;
 		}
 
 		if (key == GLFW_KEY_BACKSPACE) {
 			if (!popup->newDirectory.empty()) popup->newDirectory.pop_back();
-			
+
 			popup->frame = 0;
 		}
 	}
@@ -475,7 +475,7 @@ void FilesystemPopup::loadDrives() {
 		Logger::error("Failed to get drive data");
 		return;
 	}
-	
+
 	for (char* drive = driveData.data(); *drive; drive += std::strlen(drive) + 1) {
 		drives.push_back(drive[0]);
 	}

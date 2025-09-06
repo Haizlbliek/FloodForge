@@ -1,0 +1,322 @@
+#include "MarkdownPopup.hpp"
+
+MarkdownPopup::MarkdownPopup(Window *window, std::filesystem::path path) : Popup(window) {
+	bounds = Rect(-0.8, -0.8, 0.8, 0.8);
+
+	loadFile(path);
+
+	window->addScrollCallback(this, scrollCallback);
+}
+
+void MarkdownPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
+	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+
+	if (minimized) return;
+
+	links.clear();
+
+	int windowWidth;
+	int windowHeight;
+	glfwGetWindowSize(window->getGLFWWindow(), &windowWidth, &windowHeight);
+
+	double padding = 0.01;
+	glEnable(GL_SCISSOR_TEST);
+	glScissor(
+		((bounds.x0 + padding) / screenBounds.x + 1.0) * 0.5 * windowWidth,
+ 				((bounds.y0 + padding) / screenBounds.y + 1.0) * 0.5 * windowHeight,
+		(((bounds.x1 - bounds.x0) - padding * 2) / screenBounds.x) * 0.5 * windowWidth,
+		(((bounds.y1 - bounds.y0) - padding * 2 - 0.05) / screenBounds.y) * 0.5 * windowHeight
+	);
+
+	currentScroll += (targetScroll - currentScroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
+
+	double x = bounds.x0;
+	double y = 0.75 + bounds.y0 + 0.8f + currentScroll;
+
+	for (std::pair<MDType, std::vector<MDStyledText>> line : lines) {
+		if (line.first == MDType::TEXT) {
+			Draw::color(1.0, 1.0, 1.0);
+			writeLine(line.second, x + 0.02, y, 0.03);
+			y -= 0.05;
+		} else if (line.first == MDType::QUOTE) {
+			Draw::color(0.7, 0.7, 0.7);
+			Draw::begin(Draw::LINES);
+			Draw::vertex(-0.77, y);
+			Draw::vertex(-0.77, y - 0.04);
+			Draw::end();
+			Draw::color(1.0, 1.0, 1.0);
+			writeLine(line.second, x + 0.05, y, 0.03);
+			y -= 0.04;
+		} else if (line.first == MDType::H1) {
+			Draw::color(1.0, 1.0, 1.0);
+			y -= 0.02;
+			writeLine(line.second, x + 0.03, y, 0.08);
+			y -= 0.11;
+		} else if (line.first == MDType::H2) {
+			Draw::color(1.0, 1.0, 1.0);
+			y -= 0.02;
+			writeLine(line.second, x + 0.02, y, 0.05);
+			y -= 0.08;
+		} else if (line.first == MDType::H3) {
+			Draw::color(0.8, 0.8, 0.8);
+			y -= 0.01;
+			writeLine(line.second, x + 0.02, y, 0.04);
+			y -= 0.06;
+		} else if (line.first == MDType::HORIZONTAL_RULE) {
+			y -= 0.03;
+			Draw::color(0.7, 0.7, 0.7);
+			Draw::begin(Draw::LINES);
+			Draw::vertex(bounds.x0 + 0.01, y);
+			Draw::vertex(bounds.x1 - 0.01, y);
+			Draw::end();
+			y -= 0.03;
+		}
+	}
+
+	maxScroll = -(y - currentScroll);
+
+	glDisable(GL_SCISSOR_TEST);
+}
+
+void MarkdownPopup::close() {
+	Popup::close();
+
+	window->removeScrollCallback(this, scrollCallback);
+}
+
+void MarkdownPopup::mouseClick(double mouseX, double mouseY) {
+	Popup::mouseClick(mouseX, mouseY);
+
+	for (Quadruple<double, double, std::string, Vector2> link : links) {
+		if (
+			(mouseX >= link.first && mouseX <= link.first + link.fourth.x) &&
+			(mouseY >= link.second && mouseY <= link.second + link.fourth.y)
+		) {
+			openURL(link.third);
+		}
+	}
+}
+
+void MarkdownPopup::writeLine(std::vector<MDStyledText> line, double x, double &y, double size) {
+	for (MDStyledText &seg : line) {
+		double width = Fonts::rainworld->getTextWidth(seg.text, size);
+
+		float matrix[16] = {
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, (float) (y - size), 0, 1
+		};
+		if (seg.italic) {
+			matrix[4] = 0.2f;
+		}
+		Draw::pushMatrix();
+		Draw::multMatrix(matrix);
+
+		if (seg.code) {
+			x += 0.02;
+			strokeRect(x - 0.01, -0.005, x + width + 0.01, size + 0.005);
+		}
+
+		if (seg.bold) {
+			Fonts::rainworld->write(seg.text, x + 0.003, size, size);
+			Fonts::rainworld->write(seg.text, x, size, size);
+		} else {
+			Fonts::rainworld->write(seg.text, x, size, size);
+		}
+
+		if (seg.strikethrough) {
+			drawLine(x, size * 0.4, x + width, size * 0.4, 0.1);
+		}
+
+		if (seg.underline) {
+			drawLine(x, 0.0, x + width, 0.0, 0.1);
+		}
+
+		if (!seg.url.empty()) {
+			links.push_back(Quadruple<double, double, std::string, Vector2>( x, y - size, seg.url, Vector2(width, size) ));
+		}
+
+		if (seg.code) {
+			x += 0.02;
+		}
+
+		Draw::popMatrix();
+
+		x += width;
+	}
+}
+
+void MarkdownPopup::loadFile(std::filesystem::path filePath) {
+	file = std::ifstream(filePath);
+	if (!file.is_open() || !std::filesystem::exists(filePath)) {
+		Logger::info("No file found '", filePath, "'");
+		close();
+		return;
+	}
+
+	int addNewline = 0;
+	std::string line;
+	while (std::getline(file, line)) {
+		MDType type = MDType::TEXT;
+		if (line.empty()) {
+			if (addNewline == 1) {
+				addNewline = 2;
+			} else {
+				addNewline = 0;
+			}
+
+			continue;
+		}
+
+		if (line.back() == '\r') line.pop_back();
+
+		if (startsWith(line, "# ")) {
+			type = MDType::H1;
+			line = line.substr(2);
+			addNewline = 0;
+		} else if (startsWith(line, "## ")) {
+			type = MDType::H2;
+			line = line.substr(3);
+			addNewline = 0;
+		} else if (startsWith(line, "### ")) {
+			type = MDType::H3;
+			line = line.substr(4);
+			addNewline = 0;
+		} else if (startsWith(line, "> ")) {
+			if (addNewline == 2) {
+				lines.push_back({ MDType::TEXT, {} });
+			}
+			addNewline = 1;
+
+			type = MDType::QUOTE;
+			line = line.substr(2);
+		} else if (startsWith(line, "---") && (line.find_first_not_of('-') == std::string::npos)) {
+			lines.push_back({ MDType::HORIZONTAL_RULE, {} });
+			addNewline = 0;
+			continue;
+		} else if (startsWith(line, "***") && (line.find_first_not_of('*') == std::string::npos)) {
+			lines.push_back({ MDType::HORIZONTAL_RULE, {} });
+			addNewline = 0;
+			continue;
+		} else if (startsWith(line, "___") && (line.find_first_not_of('_') == std::string::npos)) {
+			lines.push_back({ MDType::HORIZONTAL_RULE, {} });
+			addNewline = 0;
+			continue;
+		} else {
+			if (addNewline == 2) {
+				lines.push_back({ MDType::TEXT, {} });
+			}
+			addNewline = 1;
+		}
+
+		lines.push_back({ type, parseStyledText(line) });
+	}
+
+	file.close();
+}
+
+std::vector<MDStyledText> MarkdownPopup::parseStyledText(const std::string &line) {
+	std::vector<MDStyledText> result;
+
+	bool bold = false, italic = false, underline = false, strikethrough = false, code = false;
+	std::string current = "";
+
+	bool inLink = false;
+
+	for (int i = 0; i < line.length(); i++) {
+		if (line[i] == '\\') {
+			if (i + 1 < line.length()) {
+				current += line[i + 1];
+				i++;
+			}
+		} else if (code) {
+			if (line[i] == '`') {
+				code = false;
+				result.push_back({ current, false, false, false, false, true });
+				current = "";
+			} else {
+				current += line[i];
+			}
+		} else {
+			if (line[i] == '`') {
+				result.push_back({ current, italic, bold, underline, strikethrough, false });
+				current = "";
+				code = true;
+			} else if (line[i] == '*' && i + 1 < line.length() && line[i + 1] == '*') {
+				result.push_back({ current, italic, bold, underline, strikethrough, false });
+				current = "";
+				bold = !bold;
+				i++;
+			} else if (line[i] == '~' && i + 1 < line.length() && line[i + 1] == '~') {
+				result.push_back({ current, italic, bold, underline, strikethrough, false });
+				current = "";
+				strikethrough = !strikethrough;
+				i++;
+			} else if (line[i] == '_' && i + 1 < line.length() && line[i + 1] == '_') {
+				result.push_back({ current, italic, bold, underline, strikethrough, false });
+				current = "";
+				underline = !underline;
+				i++;
+			} else if (line[i] == '*' || line[i] == '_') {
+				result.push_back({ current, italic, bold, underline, strikethrough, false });
+				current = "";
+				italic = !italic;
+			} else if (line[i] == '[') {
+				result.push_back({ current + " ", italic, bold, underline, strikethrough, false });
+				current = "";
+				inLink = true;
+			} else if (line[i] == ']') {
+				if (!inLink) {
+					current += ']';
+					continue;
+				}
+
+				result.push_back({ current });
+			} else if (line[i] == '(') {
+				if (!inLink) {
+					current += '(';
+					continue;
+				}
+
+				current = "";
+			} else if (line[i] == ')') {
+				if (!inLink) {
+					current += ')';
+					continue;
+				}
+
+				MDStyledText last = result.back();
+				result.pop_back();
+				result.push_back({ (last.text), italic, bold, true, strikethrough, false, current });
+				current = "";
+				inLink = false;
+			} else {
+				current += line[i];
+			}
+		}
+	}
+
+	if (!current.empty()) result.push_back({ current, false, false, false, false });
+
+	return result;
+}
+
+void MarkdownPopup::clampScroll() {
+	if (targetScroll < 0) {
+		targetScroll = 0;
+	}
+	if (targetScroll >= maxScroll) {
+		targetScroll = maxScroll;
+	}
+}
+
+void MarkdownPopup::scrollCallback(void *object, double deltaX, double deltaY) {
+	MarkdownPopup *popup = static_cast<MarkdownPopup*>(object);
+
+	if (!popup->hovered) return;
+
+	popup->targetScroll -= deltaY * 0.1;
+
+	popup->clampScroll();
+}

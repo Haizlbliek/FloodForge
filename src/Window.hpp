@@ -20,63 +20,32 @@
 
 class Mouse {
 	public:
-		Mouse(GLFWwindow *glfwWindow, double x, double y)
-		 : x(x),
-		   y(y),
-		   glfwWindow(glfwWindow) {
+		Mouse(GLFWwindow *glfwWindow, double x, double y) : x(x), y(y), glfwWindow(glfwWindow) {
 		}
 
-		Mouse(GLFWwindow *glfwWindow)
-		 : x(0.0),
-		   y(0.0),
-		   glfwWindow(glfwWindow) {
+		Mouse(GLFWwindow *glfwWindow) : x(0.0), y(0.0), glfwWindow(glfwWindow) {
 		}
 
 		double X() { return x; }
 		double Y() { return y; }
 
-		void update(GLFWwindow *glfwWindow, double x, double y) {
-			if (this->glfwWindow != glfwWindow) return;
+		void update(GLFWwindow *glfwWindow, double x, double y);
 
-			this->x = x;
-			this->y = y;
-		}
+		void updateLastPressed();
 
-		void updateLastPressed() {
-			lastFrameLeft = Left();
-			lastFrameMiddle = Middle();
-			lastFrameRight = Right();
-		}
+		bool Left() const;
 
-		bool Left() const {
-			return GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_LEFT);
-		}
+		bool Middle() const;
 
-		bool Middle() const {
-			return GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE);
-		}
+		bool Right() const;
 
-		bool Right() const {
-			return GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_RIGHT);
-		}
+		bool JustLeft() const;
 
-		bool JustLeft() const {
-			return (!lastFrameLeft) && (GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_LEFT));
-		}
+		bool JustMiddle() const;
 
-		bool JustMiddle() const {
-			return (!lastFrameMiddle) && (GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_MIDDLE));
-		}
+		bool JustRight() const;
 
-		bool JustRight() const {
-			return (!lastFrameRight) && (GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_RIGHT));
-		}
-
-		void copyPressed(Mouse &otherMouse) {
-			this->lastFrameLeft = otherMouse.lastFrameLeft;
-			this->lastFrameMiddle = otherMouse.lastFrameMiddle;
-			this->lastFrameRight = otherMouse.lastFrameRight;
-		}
+		void copyPressed(Mouse &otherMouse);
 
 		void setCursor(unsigned int cursorMode);
 
@@ -93,308 +62,74 @@ class Mouse {
 
 class Window {
 	public:
-		Window() : Window(1024, 1024) {
-		}
+		Window();
 
-		Window(int width, int height) : width(width), height(height) {
-			if (!glfwInit()) exit(EXIT_FAILURE);
+		Window(int width, int height);
 
-			// glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		~Window();
 
-			glfwWindow = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
-			if (!glfwWindow) {
-				glfwTerminate();
-				exit(EXIT_FAILURE);
-			}
-			glfwMakeContextCurrent(glfwWindow);
-			glfwSwapInterval(1);
-			// InitOpenGLExtensions();
+		void close() const;
 
-			mouse = new Mouse(glfwWindow);
+		void terminate() const;
 
-			// if (glfwRawMouseMotionSupported()) {
-			// 	glfwSetInputMode(glfwWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-			// }
+		bool isOpen() const;
 
-			glfwSetWindowUserPointer(glfwWindow, this);
+		void clear() const;
 
-			glfwSetKeyCallback(glfwWindow, Window::keyCallback);
-			glfwSetCursorPosCallback(glfwWindow, Window::mouseCallback);
-			glfwSetInputMode(glfwWindow, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
-			glfwSetScrollCallback(glfwWindow, Window::scrollCallback);
+		void render() const;
 
-			// glClearColor(0.0, 0.0, 0.0, 1.0);
-			// glViewport(0, 0, width, height);
+		void setTitle(const std::string title);
 
-			backgroundColour = Colour(0.0, 0.0, 0.0, 1.0);
+		void setTitle(const char *title);
 
-			scrollXAccumulator = 0.0;
-			scrollYAccumulator = 0.0;
-			fullscreen = false;
+		Mouse *GetMouse() const;
 
-			cursorDefault = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-			cursorPointer = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
-		}
+		void setBackgroundColour(const Colour backgroundColour);
 
-		~Window() {
-			glfwDestroyWindow(glfwWindow);
-			
-			delete mouse;
-		}
+		void setBackgroundColour(const float r, const float g, const float b);
 
-		void close() const {
-			glfwSetWindowShouldClose(glfwWindow, GLFW_TRUE);
-		}
+		bool keyPressed(uint16_t key);
 
-		void terminate() const {
-			glfwDestroyWindow(glfwWindow);
-			glfwTerminate();
-		}
+		bool modifierPressed(uint16_t modifier);
 
-		bool isOpen() const {
-			return !glfwWindowShouldClose(glfwWindow);
-		}
+		double getMouseScrollX();
 
-		void clear() const {
-			glClearColor(
-				backgroundColour.r,
-				backgroundColour.g,
-				backgroundColour.b,
-				1.0
-			);
+		double getMouseScrollY();
 
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		}
+		void setIcon(std::filesystem::path path);
 
-		void render() const {
-			glfwMakeContextCurrent(glfwWindow);
-			glfwSwapBuffers(glfwWindow);
-		}
+		void setFullscreen(bool fullscreen);
 
-		void setTitle(const std::string title) {
-			setTitle(title.c_str());
-		}
+		void toggleFullscreen();
 
-		void setTitle(const char *title) {
-			this->title = title;
-			glfwSetWindowTitle(glfwWindow, title);
-		}
+		void ensureFullscreen();
 
-		Mouse *GetMouse() const {
-			return mouse;
-		}
+		void addKeyCallback(void *object, std::function<void(void*, int, int)> callback);
 
-		void setBackgroundColour(const Colour backgroundColour) {
-			this->backgroundColour.copy(backgroundColour);
-		}
+		void removeKeyCallback(void *object, std::function<void(void*, int, int)> callback);
 
-		void setBackgroundColour(const float r, const float g, const float b) {
-			backgroundColour.r = r;
-			backgroundColour.g = g;
-			backgroundColour.b = b;
-		}
+		void addScrollCallback(void *object, std::function<void(void*, double, double)> callback);
 
-		bool keyPressed(uint16_t key) {
-			return GLFW_PRESS == glfwGetKey(glfwWindow, key);
-		}
-		
-		bool modifierPressed(uint16_t modifier) {
-			switch (modifier) {
-				case GLFW_MOD_CONTROL:
-					return keyPressed(GLFW_KEY_LEFT_CONTROL) || keyPressed(GLFW_KEY_RIGHT_CONTROL) || keyPressed(GLFW_KEY_LEFT_SUPER) || keyPressed(GLFW_KEY_RIGHT_SUPER);
+		void removeScrollCallback(void *object, std::function<void(void*, double, double)> callback);
 
-				case GLFW_MOD_SHIFT:
-					return (keyPressed(GLFW_KEY_LEFT_SHIFT) || keyPressed(GLFW_KEY_RIGHT_SHIFT)) ^ capslock;
+		void clearCallbacks(void *object);
 
-				case GLFW_MOD_ALT:
-					return keyPressed(GLFW_KEY_LEFT_ALT) || keyPressed(GLFW_KEY_RIGHT_ALT);
-			}
+		std::string getClipboard();
 
-			return false;
-		}
+		GLFWcursor *getCursor(unsigned int cursor);
 
-		double getMouseScrollX() {
-			double scrollX = scrollXAccumulator;
-
-			scrollXAccumulator = 0.0;
-
-			return scrollX;
-		}
-
-		double getMouseScrollY() {
-			double scrollY = scrollYAccumulator;
-
-			scrollYAccumulator = 0.0;
-
-			return scrollY;
-		}
-
-		void setIcon(std::filesystem::path path) {
-			GLFWimage images[1]; 
-			images[0].pixels = stbi_load(path.generic_u8string().c_str(), &images[0].width, &images[0].height, 0, 4); //rgba channels 
-			if (!images[0].pixels) {
-				Logger::error("Failed to load icon: ", path);
-				return;
-			}
-
-			glfwSetWindowIcon(glfwWindow, 1, images); 
-			stbi_image_free(images[0].pixels);
-		}
-
-		void setFullscreen(bool fullscreen) {
-			this->fullscreen = fullscreen;
-
-			GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-			const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-
-			if (fullscreen) {
-				glfwSetWindowMonitor(glfwWindow, nullptr, 0, 0, mode->width, mode->height, 0);
-				glfwSetWindowAttrib(glfwWindow, GLFW_DECORATED, GLFW_FALSE);
-			} else {
-				int xpos = (mode->width - 1024) / 2;
-				int ypos = (mode->height - 1024) / 2;
-
-				glfwSetWindowMonitor(glfwWindow, nullptr, xpos, ypos, 1024, 1024, 60);
-				glfwSetWindowAttrib(glfwWindow, GLFW_DECORATED, GLFW_TRUE);
-			}
-		}
-
-		void toggleFullscreen() {
-			setFullscreen(!fullscreen);
-		}
-
-		void ensureFullscreen() {
-			if (fullscreen) setFullscreen(fullscreen);
-		}
-
-		void addKeyCallback(void *object, std::function<void(void*, int, int)> callback) {
-			keyCallbacks.push_back(std::pair<void*, std::function<void(void*, int, int)>> { object, callback });
-		}
-
-		void removeKeyCallback(void *object, std::function<void(void*, int, int)> callback) {
-			auto pair = std::pair<void*, std::function<void(void*, int, int)>> { object, callback };
-	
-			keyCallbacks.erase(
-				std::remove_if(
-					keyCallbacks.begin(),
-					keyCallbacks.end(),
-					[&pair](const std::pair<void*, std::function<void(void*, int, int)>>& p) {
-						return p.first == pair.first && p.second.target<void(void*, int, int)>() == pair.second.target<void(void*, int, int)>();
-					}
-				),
-				keyCallbacks.end()
-			);
-		}
-
-		void addScrollCallback(void *object, std::function<void(void*, double, double)> callback) {
-			scrollCallbacks.push_back(std::pair<void*, std::function<void(void*, double, double)>> { object, callback });
-		}
-
-		void removeScrollCallback(void *object, std::function<void(void*, double, double)> callback) {
-			auto pair = std::pair<void*, std::function<void(void*, double, double)>> { object, callback };
-	
-			scrollCallbacks.erase(
-				std::remove_if(
-					scrollCallbacks.begin(),
-					scrollCallbacks.end(),
-					[&pair](const std::pair<void*, std::function<void(void*, double, double)>>& p) {
-						return p.first == pair.first && p.second.target<void(void*, double, double)>() == pair.second.target<void(void*, double, double)>();
-					}
-				),
-				scrollCallbacks.end()
-			);
-		}
-
-		void clearCallbacks(void *object) {
-			keyCallbacks.erase(
-				std::remove_if(
-					keyCallbacks.begin(),
-					keyCallbacks.end(),
-					[&object](const std::pair<void*, std::function<void(void*, int, int)>>& p) {
-						return p.first == object;
-					}
-				),
-				keyCallbacks.end()
-			);
-			
-			scrollCallbacks.erase(
-				std::remove_if(
-					scrollCallbacks.begin(),
-					scrollCallbacks.end(),
-					[&object](const std::pair<void*, std::function<void(void*, double, double)>>& p) {
-						return p.first == object;
-					}
-				),
-				scrollCallbacks.end()
-			);
-		}
-
-		std::string getClipboard() {
-			const char* clipboardText = glfwGetClipboardString(glfwWindow);
-
-			return clipboardText ? std::string(clipboardText) : std::string();
-		}
-
-
-		GLFWcursor *getCursor(unsigned int cursor) {
-			switch (cursor) {
-				case CURSOR_DEFAULT: return cursorDefault;
-				case CURSOR_POINTER: return cursorPointer;
-			}
-
-			return nullptr;
-		}
-
-		GLFWwindow *getGLFWWindow() const { return glfwWindow;}
+		GLFWwindow *getGLFWWindow() const;
 
 		int Width() const { return width; }
 		int Height() const { return height; }
 
 	private:
-		static void mouseCallback(GLFWwindow *glfwWindow, double x, double y) {
-			// Retrieve the Window instance from the user pointer
-			Window* window = static_cast<Window*>(glfwGetWindowUserPointer(glfwWindow));
+		static void mouseCallback(GLFWwindow *glfwWindow, double x, double y);
 
-			if (!window) return;
+		static void scrollCallback(GLFWwindow *glfwWindow, double scrollX, double scrollY);
 
-			window->mouse->update(glfwWindow, x, y);
-		}
+		static void keyCallback(GLFWwindow *glfwWindow, int key, int scancode, int action, int mods);
 
-		static void scrollCallback(GLFWwindow *glfwWindow, double scrollX, double scrollY) {
-			Window* window = static_cast<Window*>(glfwGetWindowUserPointer(glfwWindow));
-
-			if (!window) return;
-
-			window->scrollXAccumulator += scrollX;
-			window->scrollYAccumulator += scrollY;
-
-			for (std::pair<void*, std::function<void(void*, double, double)>> callback : window->scrollCallbacks) {
-				callback.second(callback.first, scrollX, scrollY);
-			}
-		}
-
-		static void keyCallback(GLFWwindow *glfwWindow, int key, int scancode, int action, int mods) {
-			Window* window = static_cast<Window*>(glfwGetWindowUserPointer(glfwWindow));
-
-			if (!window) return;
-			
-			if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-				window->capslock = (mods & GLFW_MOD_CAPS_LOCK) > 0;
-			}
-
-			for (std::pair<void*, std::function<void(void*, int, int)>> callback : window->keyCallbacks) {
-				if (!callback.second) {
-					Logger::info("INVALID CALLBACK");
-					continue;
-				}
-
-				callback.second(callback.first, action, key);
-			}
-		}
-		
 		GLFWwindow *glfwWindow;
 
 		std::string title;
@@ -416,6 +151,6 @@ class Window {
 
 		std::vector<std::pair<void*, std::function<void(void*, int, int)>>> keyCallbacks;
 		std::vector<std::pair<void*, std::function<void(void*, double, double)>>> scrollCallbacks;
-		
+
 		bool capslock;
 };
