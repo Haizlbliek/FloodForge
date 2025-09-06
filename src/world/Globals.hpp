@@ -42,6 +42,7 @@ namespace EditorState {
 	extern std::vector<Room*> rooms;
 	extern std::vector<Connection*> connections;
 	extern std::vector<std::string> subregions;
+	extern int screenCount;
 
 	extern int roomColours;
 	extern int roomPositionType;

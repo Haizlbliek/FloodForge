@@ -29,6 +29,10 @@ namespace DebugData {
 
 		std::vector<std::string> debugText;
 
+		debugText.push_back("    Count:");
+		debugText.push_back("Rooms: " + std::to_string(EditorState::rooms.size()));
+		debugText.push_back("Screens: " + std::to_string(EditorState::screenCount));
+
 		if (hoveringConnection != nullptr) {
 			debugText.push_back("    Connection:");
 			debugText.push_back("Room A: " + hoveringConnection->roomA->roomName);

@@ -97,6 +97,8 @@ Room::Room(std::filesystem::path path, std::string name) {
 	loadGeometry();
 	generateVBO();
 	checkImages();
+
+	EditorState::screenCount += cameras;
 }
 
 Room::~Room() {
@@ -106,6 +108,8 @@ Room::~Room() {
 
 	glDeleteBuffers(2, vbo);
 	glDeleteVertexArrays(1, &vao);
+
+	EditorState::screenCount -= cameras;
 }
 
 void Room::drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType) {

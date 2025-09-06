@@ -12,7 +12,8 @@ namespace EditorState {
 	std::vector<Room*> rooms;
 	std::vector<Connection*> connections;
 	std::vector<std::string> subregions;
-	
+	int screenCount = 0;
+
 	Vector2 cameraOffset = Vector2(0.0, 0.0);
 	double cameraScale = 32.0;
 	double selectorScale = 1.0;
@@ -21,7 +22,7 @@ namespace EditorState {
 	int roomPositionType = CANON_POSITION;
 	bool visibleLayers[] = { true, true, true };
 	bool visibleDevItems = false;
-	
+
 	Region region;
 
 	int selectingState = 0;

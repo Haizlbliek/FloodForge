@@ -24,6 +24,7 @@ OffscreenRoom::OffscreenRoom(std::string path, std::string name) {
 
 	width = 72;
 	height = 43;
+	cameras = 0;
 
 	valid = true;
 	
