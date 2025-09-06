@@ -1,0 +1,17 @@
+IndigoLizard
+BasiliskLizard
+BlizzardLizard
+Loach
+Barnacle
+ScavengerTemplar
+ScavengerDisciple
+BigMoth
+SmallMoth
+SkyWhale
+BoxWorm
+FireSprite
+DrillCrab
+Frog
+Tardigrade
+Rat
+BoneShaker

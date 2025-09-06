@@ -16,6 +16,7 @@ namespace CreatureTextures {
 	extern std::vector<std::string> creatures;
 	extern std::vector<std::string> creatureTags;
 	extern std::unordered_map<std::string, std::string> parseMap;
+	extern std::vector<std::string> creatureOrder;
 	
 	extern GLuint UNKNOWN;
 

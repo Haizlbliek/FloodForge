@@ -11,6 +11,7 @@ std::unordered_map<std::string, GLuint> CreatureTextures::creatureTagTextures;
 std::vector<std::string> CreatureTextures::creatures;
 std::vector<std::string> CreatureTextures::creatureTags;
 std::unordered_map<std::string, std::string> CreatureTextures::parseMap;
+std::vector<std::string> CreatureTextures::creatureOrder;
 GLuint CreatureTextures::UNKNOWN = 0;
 
 bool validExtension(std::string extension) {
@@ -19,6 +20,21 @@ bool validExtension(std::string extension) {
 
 void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, bool include) {
 	loadCreaturesFromFolder(path, "", include);
+
+	if (!include) return;
+
+	std::ifstream orderFile(path / "order.txt");
+	if (!orderFile.is_open()) return;
+
+	std::string line;
+	while (std::getline(orderFile, line)) {
+		if (line.empty()) continue;
+		if (startsWith(line, "//")) continue;
+
+		creatureOrder.push_back(line);
+	}
+
+	orderFile.close();
 }
 
 void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, std::string prefix, bool include) {
@@ -51,6 +67,7 @@ void CreatureTextures::init() {
 	
 	modsFile.close();
 
+	creatureOrder.push_back("CLEAR");
 	loadCreaturesFromFolder(creaturesDirectory, true);
 	for (std::string mod : mods) {
 		loadCreaturesFromFolder(creaturesDirectory / mod, true);
@@ -87,6 +104,16 @@ void CreatureTextures::init() {
 	}
 	
 	parseFile.close();
+
+	for (std::string creature : creatures) {
+		if (creature == "CLEAR" || creature == "UNKNOWN") continue;
+
+		if (std::find(creatureOrder.begin(), creatureOrder.end(), creature) == creatureOrder.end()) {
+			creatureOrder.push_back(creature);
+		}
+	}
+
+	creatureOrder.push_back("UNKNOWN");
 }
 
 GLuint CreatureTextures::getTexture(std::string type) {

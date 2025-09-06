@@ -92,7 +92,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 		Fonts::rainworld->writeCentered("Creature type:", centreX, bounds.y1 - 0.07, 0.035, CENTER_X);
 		glEnable(GL_SCISSOR_TEST);
 
-		int countA = CreatureTextures::creatures.size();
+		int countA = CreatureTextures::creatureOrder.size();
 		if (!unknown) countA--;
 
 		if (creature != nullptr) {
@@ -102,7 +102,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 
 					if (id >= countA) break;
 
-					std::string creatureType = CreatureTextures::creatures[id];
+					std::string creatureType = CreatureTextures::creatureOrder[id];
 
 					bool isSelected = creature->type == creatureType || (unknown && creatureType == "UNKNOWN");
 
@@ -112,11 +112,11 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 						buttonSize, buttonSize
 					);
 
-					GLuint texture = CreatureTextures::getTexture(CreatureTextures::creatures[id]);
+					GLuint texture = CreatureTextures::getTexture(creatureType);
 
 					int w, h;
 					glBindTexture(GL_TEXTURE_2D, texture);
-					glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &w);
+					glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
 					glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -143,12 +143,11 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 
 
 					if (response.clicked) {
-						std::string type = CreatureTextures::creatures[id];
-						if (type == "CLEAR") {
+						if (creatureType == "CLEAR") {
 							creature->type = "";
 							creature->count = 0;
 						} else {
-							if (creature->type == type || type == "UNKNOWN") {
+							if (creature->type == creatureType || creatureType == "UNKNOWN") {
 								if (window->modifierPressed(GLFW_MOD_SHIFT)) {
 									creature->count -= 1;
 									if (creature->count <= 0) {
@@ -159,7 +158,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 									creature->count += 1;
 								}
 							} else {
-								creature->type = type;
+								creature->type = creatureType;
 								creature->count = 1;
 							}
 						}
