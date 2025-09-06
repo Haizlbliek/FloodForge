@@ -8,6 +8,7 @@
 
 std::unordered_map<std::string, GLuint> ConditionalTimelineTextures::textures;
 std::vector<std::string> ConditionalTimelineTextures::timelines;
+GLuint ConditionalTimelineTextures::UNKNOWN = 0;
 
 void ConditionalTimelineTextures::init() {
 	std::filesystem::path timelinesDirectory = BASE_PATH / "assets" / "timelines";
@@ -19,6 +20,10 @@ void ConditionalTimelineTextures::init() {
 			std::string creature = entry.path().stem().generic_u8string();
 			timelines.push_back(creature);
 			textures[creature] = loadTexture(entry.path().generic_u8string());
+
+			if (creature == "UNKNOWN") {
+				UNKNOWN = textures[creature];
+			}
 		}
 	}
 
@@ -32,8 +37,14 @@ GLuint ConditionalTimelineTextures::getTexture(std::string type) {
 	std::unordered_map<std::string, GLuint>::iterator index = textures.find(type);
 
 	if (index == textures.end()) {
-		return textures["UNKNOWN"];
+		return UNKNOWN;
 	}
 
 	return (*index).second;
+}
+
+bool ConditionalTimelineTextures::hasTimeline(std::string timeline) {
+	std::unordered_map<std::string, GLuint>::iterator index = textures.find(timeline);
+
+	return index != textures.end();
 }

@@ -16,4 +16,6 @@ namespace ConditionalTimelineTextures {
 	GLuint getTexture(std::string type);
 
 	void init();
+
+	bool hasTimeline(std::string timeline);
 };
