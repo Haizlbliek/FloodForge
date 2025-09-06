@@ -2,10 +2,10 @@
 
 #include <algorithm>
 
-#include "../Theme.hpp"
-#include "../font/Fonts.hpp"
-#include "../Settings.hpp"
-#include "../ui/UI.hpp"
+#include "../../Theme.hpp"
+#include "../../font/Fonts.hpp"
+#include "../../Settings.hpp"
+#include "../../ui/UI.hpp"
 
 #include "ConditionalPopup.hpp"
 

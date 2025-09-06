@@ -21,7 +21,7 @@
 #include "Globals.hpp"
 #include "Room.hpp"
 #include "OffscreenRoom.hpp"
-#include "DenPopup.hpp"
+#include "popup/DenPopup.hpp"
 
 #include "ExtraRoomData.hpp"
 

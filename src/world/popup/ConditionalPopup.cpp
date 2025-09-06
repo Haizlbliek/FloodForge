@@ -1,7 +1,7 @@
 #include "ConditionalPopup.hpp"
 
-#include "../ui/UI.hpp"
-#include "ConditionalTimelineTextures.hpp"
+#include "../../ui/UI.hpp"
+#include "../ConditionalTimelineTextures.hpp"
 
 #define TIMELINE_ROWS 8
 

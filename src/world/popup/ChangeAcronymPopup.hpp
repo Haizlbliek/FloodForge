@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AcronymPopup.hpp"
-#include "MenuItems.hpp"
+#include "../MenuItems.hpp"
 
 class ChangeAcronymPopup : public AcronymPopup {
 	public:

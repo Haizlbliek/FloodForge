@@ -1,6 +1,6 @@
 #include "SplashArtPopup.hpp"
 
-#include "WorldParser.hpp"
+#include "../WorldParser.hpp"
 
 SplashArtPopup::SplashArtPopup(Window *window) : Popup(window) {
 	bounds = Rect(-1.0, -1.0, 1.0, 1.0);

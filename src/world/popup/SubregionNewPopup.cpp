@@ -1,6 +1,6 @@
 #include "SubregionNewPopup.hpp"
 
-#include "MenuItems.hpp"
+#include "../MenuItems.hpp"
 
 SubregionNewPopup::SubregionNewPopup(Window *window, std::set<Room*> rooms, int editIndex) : Popup(window), rooms(rooms), editIndex(editIndex) {
 	window->addKeyCallback(this, keyCallback);

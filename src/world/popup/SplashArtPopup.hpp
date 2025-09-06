@@ -1,20 +1,20 @@
 #pragma once
 
-#include "../gl.h"
+#include "../../gl.h"
 
 #include <iostream>
 #include <string>
 #include <vector>
 #include <sstream>
 
-#include "../Window.hpp"
-#include "../Draw.hpp"
-#include "../font/Fonts.hpp"
-#include "../popup/MarkdownPopup.hpp"
-#include "../popup/Popups.hpp"
+#include "../../Window.hpp"
+#include "../../Draw.hpp"
+#include "../../font/Fonts.hpp"
+#include "../../popup/MarkdownPopup.hpp"
+#include "../../popup/Popups.hpp"
 
-#include "MenuItems.hpp"
-#include "RecentFiles.hpp"
+#include "../MenuItems.hpp"
+#include "../RecentFiles.hpp"
 
 class SplashArtPopup : public Popup {
 	public:

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../popup/Popups.hpp"
-#include "Connection.hpp"
+#include "../../popup/Popups.hpp"
+#include "../Connection.hpp"
 
 class ConditionalPopup : public Popup {
 	public:

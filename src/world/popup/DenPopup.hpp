@@ -5,17 +5,17 @@
 #include <vector>
 #include <iostream>
 
-#include "../gl.h"
+#include "../../gl.h"
 
 enum class SliderType {
 	SLIDER_INT,
 	SLIDER_FLOAT
 };
 
-#include "../popup/Popups.hpp"
-#include "Room.hpp"
-#include "Globals.hpp"
-#include "CreatureTextures.hpp"
+#include "../../popup/Popups.hpp"
+#include "../Room.hpp"
+#include "../Globals.hpp"
+#include "../CreatureTextures.hpp"
 
 class DenPopup : public Popup {
 	public:

@@ -1,6 +1,6 @@
 #include "AcronymPopup.hpp"
 
-#include "MenuItems.hpp"
+#include "../MenuItems.hpp"
 
 AcronymPopup::AcronymPopup(Window *window) : Popup(window) {
 	window->addKeyCallback(this, keyCallback);

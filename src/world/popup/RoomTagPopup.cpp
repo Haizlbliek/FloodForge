@@ -1,6 +1,6 @@
 #include "RoomTagPopup.hpp"
 
-#include "Globals.hpp"
+#include "../Globals.hpp"
 
 RoomTagPopup::RoomTagPopup(Window *window, std::set<Room*> newRooms) : Popup(window) {
 	for (Room *room : newRooms) rooms.insert(room);

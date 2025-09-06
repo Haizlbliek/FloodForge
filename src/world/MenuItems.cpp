@@ -4,8 +4,8 @@
 #include "../popup/FilesystemPopup.hpp"
 #include "../popup/InfoPopup.hpp"
 #include "../popup/ConfirmPopup.hpp"
-#include "AcronymPopup.hpp"
-#include "ChangeAcronymPopup.hpp"
+#include "popup/AcronymPopup.hpp"
+#include "popup/ChangeAcronymPopup.hpp"
 
 #include "RecentFiles.hpp"
 #include "WorldParser.hpp"

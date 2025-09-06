@@ -1,18 +1,18 @@
 #pragma once
 
-#include "../gl.h"
+#include "../../gl.h"
 
 #include <iostream>
 #include <algorithm>
 #include <cctype>
 
-#include "../Window.hpp"
-#include "../Theme.hpp"
+#include "../../Window.hpp"
+#include "../../Theme.hpp"
 
-#include "../popup/Popups.hpp"
+#include "../../popup/Popups.hpp"
 
-#include "Globals.hpp"
-#include "Room.hpp"
+#include "../Globals.hpp"
+#include "../Room.hpp"
 
 class SubregionNewPopup : public Popup {
 	public:

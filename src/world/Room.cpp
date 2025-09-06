@@ -1,6 +1,6 @@
 #include "Room.hpp"
 
-#include "DenPopup.hpp"
+#include "popup/DenPopup.hpp"
 #include "ConditionalTimelineTextures.hpp"
 
 Colour RoomHelpers::RoomAir;

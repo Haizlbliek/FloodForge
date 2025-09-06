@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../Window.hpp"
-#include "../Utils.hpp"
+#include "../../Window.hpp"
+#include "../../Utils.hpp"
 
-#include "../popup/Popups.hpp"
-#include "../popup/InfoPopup.hpp"
+#include "../../popup/Popups.hpp"
+#include "../../popup/InfoPopup.hpp"
 
-#include "Room.hpp"
+#include "../Room.hpp"
 #include "SubregionNewPopup.hpp"
 
 class SubregionPopup : public Popup {

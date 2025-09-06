@@ -1,17 +1,17 @@
 #pragma once
 
-#include "../gl.h"
+#include "../../gl.h"
 
 #include <iostream>
 #include <algorithm>
 #include <cctype>
 
-#include "../Window.hpp"
-#include "../Theme.hpp"
+#include "../../Window.hpp"
+#include "../../Theme.hpp"
 
-#include "Globals.hpp"
-#include "Room.hpp"
-#include "../popup/Popups.hpp"
+#include "../Globals.hpp"
+#include "../Room.hpp"
+#include "../../popup/Popups.hpp"
 
 class AcronymPopup : public Popup {
 	public:
