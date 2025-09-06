@@ -83,18 +83,36 @@ void SubregionPopup::mouseClick(double mouseX, double mouseY) {
 			}
 		} else if (mouseX >= 0.35) {
 			if (button != 0 && button <= EditorState::subregions.size()) {
-				bool canRemove = true;
-				for (Room *otherRoom : rooms) {
-					if (otherRoom->subregion == button - 1) {
-						canRemove = false;
-						break;
-					}
-				}
-
-				if (canRemove) {
+				if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT)) {
 					EditorState::subregions.erase(EditorState::subregions.begin() + (button - 1));
+
+					for (Room *otherRoom : EditorState::rooms) {
+						if (otherRoom->subregion == button - 1) {
+							otherRoom->subregion = -1;
+						} else if (otherRoom->subregion > button - 1) {
+							otherRoom->subregion--;
+						}
+					}
 				} else {
-					Popups::addPopup(new InfoPopup(window, "Can't remove subregion\nRooms still use it"));
+					bool canRemove = true;
+					for (Room *otherRoom : EditorState::rooms) {
+						if (otherRoom->subregion == button - 1) {
+							canRemove = false;
+							break;
+						}
+					}
+	
+					if (canRemove) {
+						EditorState::subregions.erase(EditorState::subregions.begin() + (button - 1));
+	
+						for (Room *otherRoom : EditorState::rooms) {
+							if (otherRoom->subregion >= button - 1) {
+								otherRoom->subregion--;
+							}
+						}
+					} else {
+						Popups::addPopup(new InfoPopup(window, "Cannot remove subregion if assigned to rooms\n(Hold shift to force)"));
+					}
 				}
 			}
 		}
