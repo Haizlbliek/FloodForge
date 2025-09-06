@@ -6,6 +6,10 @@ SplashArtPopup::SplashArtPopup(Window *window) : Popup(window) {
 	bounds = Rect(-1.0, -1.0, 1.0, 1.0);
 
 	splashart = new Texture(BASE_PATH / "assets" / "splash.png");
+
+	std::ifstream versionFile(BASE_PATH / "assets" / "version.txt");
+	std::getline(versionFile, version);
+	versionFile.close();
 }
 
 SplashArtPopup::~SplashArtPopup() {
@@ -41,7 +45,7 @@ void SplashArtPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 	Draw::color(1.0f, 1.0f, 1.0f);
 	Fonts::rodondo->writeCentered("FloodForge", 0.0, 0.3, 0.2, CENTER_XY);
 	Fonts::rainworld->writeCentered("World Editor", 0.0, 0.1, 0.1, CENTER_XY);
-	Fonts::rainworld->write(FLOODFORGE_VERSION, -0.88, 0.63, 0.04);
+	Fonts::rainworld->write(version, -0.88, 0.63, 0.04);
 	
 	Draw::color(0.8f, 0.8f, 0.8f);
 	Fonts::rainworld->writeCentered("Recent worlds:", -0.88, -0.28, 0.03, CENTER_Y);
