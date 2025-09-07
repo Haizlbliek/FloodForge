@@ -11,6 +11,8 @@
 GLuint Popups::textureUI = 0;
 std::vector<Popup*> Popups::popupTrash;
 std::vector<Popup*> Popups::popups;
+Popup* Popups::holdingPopup;
+Vector2 Popups::holdingStart;
 
 void Popups::cleanup() {
 	for (Popup *popup : Popups::popupTrash) {
@@ -178,8 +180,28 @@ void Popups::draw(Vector2 screenBounds) {
 		Popup *popup = Popups::popups[i];
 
 		if (popup->Bounds().inside(UI::mouse)) {
+			if (UI::mouse.justClicked()) {
+				popup->mouseClick(UI::mouse.x, UI::mouse.y);
+				if (popup->drag(UI::mouse.x, UI::mouse.y)) {
+					Popups::holdingPopup = popup;
+					Popups::holdingStart.x = UI::mouse.x;
+					Popups::holdingStart.y = UI::mouse.y;
+				}
+			}
 			mousePopup = popup;
 			break;
+		}
+	}
+
+	if (Popups::holdingPopup != nullptr) {
+		if (UI::mouse.leftMouse) {
+			if (holdingPopup != nullptr) {
+				holdingPopup->offset(Vector2 { UI::mouse.x, UI::mouse.y } - holdingStart);
+				holdingStart.x = UI::mouse.x;
+				holdingStart.y = UI::mouse.y;
+			}
+		} else {
+			holdingPopup = nullptr;
 		}
 	}
 

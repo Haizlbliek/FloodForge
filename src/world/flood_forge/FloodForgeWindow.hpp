@@ -34,7 +34,6 @@ namespace FloodForgeWindow {
 	extern double cameraScaleTo;
 	
 	extern Room *holdingRoom;
-	extern Popup *holdingPopup;
 	extern Vector2 holdingStart;
 	extern int holdingType;
 	

@@ -21,6 +21,7 @@
 #include "../ui/UI.hpp"
 
 #include "../popup/Popups.hpp"
+#include "../popup/ConfirmPopup.hpp"
 #include "popup/SplashArtPopup.hpp"
 #include "ConditionalTimelineTextures.hpp"
 
@@ -30,7 +31,6 @@
 #include "OffscreenRoom.hpp"
 #include "Connection.hpp"
 #include "MenuItems.hpp"
-#include "DebugData.hpp"
 #include "RecentFiles.hpp"
 
 #include "flood_forge/FloodForgeWindow.hpp"
@@ -43,6 +43,32 @@ Vector2 worldMouse;
 void signalHandler(int signal) {
 	Logger::error("Signal caught: ", signal);
 	std::exit(1);
+}
+
+void updateGlobalInputs() {
+	if (EditorState::window->justPressed(GLFW_KEY_F11)) {
+		EditorState::window->toggleFullscreen();
+	}
+
+	if (EditorState::window->justPressed(GLFW_KEY_ESCAPE)) {
+		if (Popups::popups.size() > 0) {
+			Popups::popups[Popups::popups.size() - 1]->reject();
+		} else {
+			Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit FloodForge?"))->OnOkay([&]() {
+				EditorState::window->close();
+			}));
+		}
+	}
+
+	if (EditorState::window->justPressed(GLFW_KEY_ENTER)) {
+		if (Popups::popups.size() > 0) {
+			Popups::popups[0]->accept();
+		}
+	}
+
+	if (EditorState::window->modifierPressed(GLFW_MOD_ALT) && EditorState::window->justPressed(GLFW_KEY_T)) {
+		Popups::addPopup(new MarkdownPopup(EditorState::window, BASE_PATH / "docs" / "controls.md"));
+	}
 }
 
 int main() {
@@ -105,6 +131,17 @@ int main() {
 
 		EditorState::screenBounds = Vector2(EditorState::windowSize.x, EditorState::windowSize.y) / size;
 
+
+		glViewport(0, 0, EditorState::windowSize.x, EditorState::windowSize.y);
+	
+		EditorState::window->clear();
+		glDisable(GL_DEPTH_TEST);
+	
+		setThemeColour(ThemeColour::Background);
+		fillRect(-EditorState::screenBounds.x, -EditorState::screenBounds.y, EditorState::screenBounds.x, EditorState::screenBounds.y);
+
+		updateGlobalInputs();
+
 		FloodForgeWindow::Draw();
 
 		/// Draw UI
@@ -113,11 +150,6 @@ int main() {
 		MenuItems::draw();
 
 		Popups::draw(EditorState::screenBounds);
-
-		DebugData::draw(EditorState::window, Vector2(
-			UI::mouse.x * EditorState::cameraScale + EditorState::cameraOffset.x,
-			UI::mouse.y * EditorState::cameraScale + EditorState::cameraOffset.y
-		), EditorState::screenBounds);
 
 		EditorState::window->render();
 

@@ -5,6 +5,7 @@
 #include "../../Logger.hpp"
 #include "../Globals.hpp"
 #include "../../ui/UI.hpp"
+#include "../DebugData.hpp"
 
 #include "../../popup/MarkdownPopup.hpp"
 #include "../../popup/ConfirmPopup.hpp"
@@ -26,7 +27,6 @@ Vector2 FloodForgeWindow::cameraPanTo = Vector2(0.0f, 0.0f);
 double FloodForgeWindow::cameraScaleTo = EditorState::cameraScale;
 
 Room *FloodForgeWindow::holdingRoom = nullptr;
-Popup *FloodForgeWindow::holdingPopup = nullptr;
 Vector2 FloodForgeWindow::holdingStart = Vector2(0.0f, 0.0f);
 int FloodForgeWindow::holdingType = 0;
 
@@ -111,22 +111,6 @@ void FloodForgeWindow::updateCamera() {
 void FloodForgeWindow::updateOriginalControls() {
 	if (EditorState::mouse->Left()) {
 		if (EditorState::mouse->JustLeft()) {
-			for (int i = Popups::popups.size() - 1; i >= 0; i--) {
-				Popup *popup = Popups::popups[i];
-				Rect bounds = popup->Bounds();
-
-				if (bounds.inside(UI::mouse)) {
-					popup->mouseClick(UI::mouse.x, UI::mouse.y);
-					if (popup->drag(UI::mouse.x, UI::mouse.y)) {
-						holdingPopup = popup;
-						holdingStart.x = UI::mouse.x;
-						holdingStart.y = UI::mouse.y;
-					}
-					EditorState::selectingState = 2;
-					break;
-				}
-			}
-
 			if (EditorState::selectingState == 0) {
 				for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 					Room *room = *it;
@@ -188,12 +172,6 @@ void FloodForgeWindow::updateOriginalControls() {
 				holdingStart = holdingStart + offset;
 			}
 
-			if (holdingPopup != nullptr) {
-				holdingPopup->offset(Vector2 { UI::mouse.x, UI::mouse.y } - holdingStart);
-				holdingStart.x = UI::mouse.x;
-				holdingStart.y = UI::mouse.y;
-			}
-
 			if (EditorState::selectingState == 1) {
 				selectionEnd = worldMouse;
 			}
@@ -230,7 +208,6 @@ void FloodForgeWindow::updateOriginalControls() {
 		}
 
 		holdingRoom = nullptr;
-		holdingPopup = nullptr;
 
 		if (EditorState::selectingState == 1) {
 			for (Room *room : EditorState::rooms) {
@@ -244,22 +221,6 @@ void FloodForgeWindow::updateOriginalControls() {
 void FloodForgeWindow::updateFloodForgeControls() {
 	if (EditorState::mouse->Left()) {
 		if (EditorState::mouse->JustLeft()) {
-			for (int i = Popups::popups.size() - 1; i >= 0; i--) {
-				Popup *popup = Popups::popups[i];
-				Rect bounds = popup->Bounds();
-
-				if (bounds.inside(UI::mouse)) {
-					popup->mouseClick(UI::mouse.x, UI::mouse.y);
-					if (popup->drag(UI::mouse.x, UI::mouse.y)) {
-						holdingPopup = popup;
-						holdingStart.x = UI::mouse.x;
-						holdingStart.y = UI::mouse.y;
-					}
-					EditorState::selectingState = 2;
-					break;
-				}
-			}
-
 			if (EditorState::selectingState == 0) {
 				for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 					Room *room = *it;
@@ -316,12 +277,6 @@ void FloodForgeWindow::updateFloodForgeControls() {
 				holdingStart = holdingStart + offset;
 			}
 
-			if (holdingPopup != nullptr) {
-				holdingPopup->offset(Vector2 { UI::mouse.x, UI::mouse.y } - holdingStart);
-				holdingStart.x = UI::mouse.x;
-				holdingStart.y = UI::mouse.y;
-			}
-
 			if (EditorState::selectingState == 1) {
 				selectionEnd = worldMouse;
 				// selectedRooms.clear();
@@ -350,7 +305,6 @@ void FloodForgeWindow::updateFloodForgeControls() {
 		}
 
 		holdingRoom = nullptr;
-		holdingPopup = nullptr;
 
 		if (EditorState::selectingState == 1) {
 			for (Room *room : EditorState::rooms) {
@@ -927,15 +881,6 @@ void FloodForgeWindow::Draw() {
 
 
 	// Draw
-
-	glViewport(0, 0, EditorState::windowSize.x, EditorState::windowSize.y);
-
-	EditorState::window->clear();
-	glDisable(GL_DEPTH_TEST);
-
-	setThemeColour(ThemeColour::Background);
-	fillRect(-EditorState::screenBounds.x, -EditorState::screenBounds.y, EditorState::screenBounds.x, EditorState::screenBounds.y);
-
 	applyFrustumToOrthographic(EditorState::cameraOffset, 0.0f, EditorState::cameraScale * EditorState::screenBounds);
 
 	/// Draw Grid
@@ -1062,4 +1007,9 @@ void FloodForgeWindow::Draw() {
 		Draw::color(1.0, 0.0, 0.0);
 		Fonts::rainworld->writeCentered(connectionError, EditorState::mouse->X() / 512.0f - EditorState::screenBounds.x, -EditorState::mouse->Y() / 512.0f + EditorState::screenBounds.y, 0.05, CENTER_X);
 	}
+
+	DebugData::draw(EditorState::window, Vector2(
+		UI::mouse.x * EditorState::cameraScale + EditorState::cameraOffset.x,
+		UI::mouse.y * EditorState::cameraScale + EditorState::cameraOffset.y
+	), EditorState::screenBounds);
 }

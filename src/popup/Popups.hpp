@@ -50,6 +50,8 @@ class Popups {
 		static GLuint textureUI;
 		static std::vector<Popup*> popupTrash;
 		static std::vector<Popup*> popups;
+		static Popup *holdingPopup;
+		static Vector2 holdingStart;
 
 		static void cleanup();
 
