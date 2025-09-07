@@ -36,6 +36,7 @@ A - Change Attractiveness
 H - Toggle Visibility
 I - Move to back
 D - Change Conditionals
+R - Open room in Droplet
 ALT+T - Open Tutorial
 
 ## Canon vs Dev positioning

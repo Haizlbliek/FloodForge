@@ -344,7 +344,7 @@ void FilesystemPopup::keyCallback(void *object, int action, int key) {
 
 	if (popup->mode == MODE_NORMAL) return;
 
-	if (action == GLFW_PRESS) {
+	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
 		if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
 			char character = parseCharacter(key, popup->window->keyPressed(GLFW_KEY_LEFT_SHIFT) || popup->window->keyPressed(GLFW_KEY_RIGHT_SHIFT));
 

@@ -24,6 +24,7 @@ It aims for intuitive controls, clean ui, and as few dependencies as possible.
 | Cancel/Exit                | `ESC`     | Closes menus or cancels actions.                                  |
 | Accept                     | `ENTER`   | Confirms selections or actions.                                   |
 | Open Tutorial              | `ALT+T`   | Opens the tutorial popup.                                         |
+| Open Droplet Editor        | `R`       | Opens the droplet level editor.                                   |
 
 ## Building
 
@@ -102,8 +103,8 @@ Settings are stored in `assets/settings.txt`
 
 ## License
 
-FloodForge is licensed under the [GPL-3.0 License](LICENSE).  
-Please refer to the `LICENSE` file for full details.  
+FloodForge is licensed under the [GPL-3.0 License](LICENSE).
+Please refer to the `LICENSE` file for full details.
 
 ### GLFW License
 
@@ -112,7 +113,7 @@ The license is at the top of both `.h` files (`include/GLFW/glfw3.h`, `include/G
 
 ### Asset Licenses
 
-- Fonts: See associated `README` and license files in the `fonts/` directory.  
-- Bitmap Fonts: Generated using [Snow Bamboo](https://snowb.org).  
-- Splash Screen Art: Rendered from Rain World's Shoreline map.  
+- Fonts: See associated `README` and license files in the `fonts/` directory.
+- Bitmap Fonts: Generated using [Snow Bamboo](https://snowb.org).
+- Splash Screen Art: Rendered from Rain World's Shoreline map.
 - All other artwork: Hand-created by the FloodForge team.

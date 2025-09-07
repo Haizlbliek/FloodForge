@@ -29,6 +29,7 @@
 #include "popup/DenPopup.hpp"
 #include "popup/RoomAttractivenessPopup.hpp"
 #include "popup/ConditionalPopup.hpp"
+#include "popup/CreateRoomPopup.hpp"
 #include "ConditionalTimelineTextures.hpp"
 
 #include "Shaders.hpp"
@@ -96,7 +97,7 @@ bool justPressed(int key) {
 			previousKeys.insert(key);
 			return true;
 		}
-		
+
 		previousKeys.insert(key);
 	} else {
 		previousKeys.erase(key);
@@ -427,6 +428,7 @@ void updateFloodForgeControls() {
 
 void updateMain() {
 	updateCamera();
+	UI::update();
 
 	EditorState::selectorScale = Settings::getSetting<bool>(Settings::Setting::SelectorScale) ? EditorState::cameraScale / 16.0 : 1.0;
 
@@ -457,7 +459,7 @@ void updateMain() {
 			Popups::popups[0]->accept();
 		}
 	}
-	
+
 	if (EditorState::window->modifierPressed(GLFW_MOD_ALT) && justPressed(GLFW_KEY_T)) {
 		Popups::addPopup(new MarkdownPopup(EditorState::window, BASE_PATH / "docs" / "controls.md"));
 	}
@@ -569,6 +571,8 @@ void updateMain() {
 	} else {
 		updateFloodForgeControls();
 	}
+
+	if (!Popups::popups.empty()) return;
 
 	if (justPressed(GLFW_KEY_I)) {
 		for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
@@ -897,20 +901,44 @@ void updateMain() {
 				Room *hoveringRoom = nullptr;
 				for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 					Room *room = (*it);
-	
+
 					if (!EditorState::visibleLayers[room->layer]) continue;
-	
+
 					if (room->inside(worldMouse)) {
 						hoveringRoom = room;
 						break;
 					}
 				}
-	
+
 				if (hoveringRoom != nullptr && !hoveringRoom->isOffscreen()) {
 					std::set<Room *> set;
 					set.insert(hoveringRoom);
 					Popups::addPopup(new ConditionalPopup(EditorState::window, set));
 				}
+			}
+		}
+	}
+
+	if (justPressed(GLFW_KEY_R)) {
+		if (EditorState::region.acronym == "") {
+			Popups::addPopup(new InfoPopup(EditorState::window, "You must create or import a region\nbefore creating or editing a room."));
+		} else {
+			Room *hoveringRoom = nullptr;
+			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+				Room *room = (*it);
+	
+				if (!EditorState::visibleLayers[room->layer]) continue;
+	
+				if (room->inside(worldMouse)) {
+					hoveringRoom = room;
+					break;
+				}
+			}
+	
+			if (hoveringRoom == nullptr || hoveringRoom->isOffscreen()) {
+				Popups::addPopup(new CreateRoomPopup(EditorState::window));
+				EditorState::placingRoom = true;
+				EditorState::placingRoomPosition = worldMouse;
 			}
 		}
 	}
@@ -977,7 +1005,7 @@ int main() {
 		return -1;
 	}
 
-	UI::init();
+	UI::init(EditorState::window);
 	Settings::init();
 	Fonts::init();
 	MenuItems::init(EditorState::window);
@@ -1093,8 +1121,16 @@ int main() {
 			if (EditorState::selectedRooms.find(room) != EditorState::selectedRooms.end()) {
 				setThemeColour(ThemeColour::SelectionBorder);
 				Vector2 &roomPosition = room->currentPosition();
-				strokeRect(roomPosition.x, roomPosition.y, roomPosition.x + room->Width(), roomPosition.y - room->Height(), 16.0f / lineSize);
+				strokeRect(Rect::fromSize(roomPosition.x, roomPosition.y, room->Width(), -room->Height()), 16.0f / lineSize);
 			}
+		}
+
+		if (EditorState::placingRoom) {
+			Draw::color(Color(1.0, 1.0, 1.0, 0.5));
+			fillRect(Rect(
+				EditorState::placingRoomPosition.x - EditorState::placingRoomSize.x * 0.5, EditorState::placingRoomPosition.y - EditorState::placingRoomSize.y * 0.5,
+				EditorState::placingRoomPosition.x + EditorState::placingRoomSize.x * 0.5, EditorState::placingRoomPosition.y + EditorState::placingRoomSize.y * 0.5
+			));
 		}
 		glDisable(GL_BLEND);
 

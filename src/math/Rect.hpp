@@ -64,6 +64,10 @@ class Rect {
 			return Rect(x, y, x + width, y + height);
 		}
 
+		static Rect fromSize(Vector2 pos, Vector2 size) {
+			return Rect(pos.x, pos.y, pos.x + size.x, pos.y + size.y);
+		}
+
 		double CenterX() const {
 			return (x0 + x1) * 0.5;
 		}

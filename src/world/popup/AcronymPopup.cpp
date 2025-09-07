@@ -103,7 +103,7 @@ void AcronymPopup::keyCallback(void *object, int action, int key) {
 	
 	if (acronymWindow->minimized) return;
 
-	if (action == GLFW_PRESS) {
+	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
 		if (key == GLFW_KEY_V && (acronymWindow->window->keyPressed(GLFW_KEY_LEFT_CONTROL) || acronymWindow->window->keyPressed(GLFW_KEY_RIGHT_CONTROL))) {
 			std::string clipboardText = toUpper(acronymWindow->window->getClipboard());
 

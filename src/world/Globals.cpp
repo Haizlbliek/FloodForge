@@ -14,6 +14,10 @@ namespace EditorState {
 	std::vector<std::string> subregions;
 	int screenCount = 0;
 
+	Vector2 placingRoomPosition;
+	Vector2i placingRoomSize = { 48, 35 };
+	bool placingRoom;
+
 	Vector2 cameraOffset = Vector2(0.0, 0.0);
 	double cameraScale = 32.0;
 	double selectorScale = 1.0;

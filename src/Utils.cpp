@@ -26,10 +26,6 @@ void fillRect(Rect rect) {
 	fillRect(rect.x0, rect.y0, rect.x1, rect.y1);
 }
 
-void strokeRect(Rect rect) {
-	strokeRect(rect.x0, rect.y0, rect.x1, rect.y1);
-}
-
 void fillRect(float x0, float y0, float x1, float y1) {
 	Draw::begin(Draw::QUADS);
 	Draw::vertex(x0, y0);
@@ -46,6 +42,14 @@ void textureRect(float x0, float y0, float x1, float y1) {
 	Draw::texCoord(1, 1); Draw::vertex(x1, y1);
 	Draw::texCoord(0, 1); Draw::vertex(x0, y1);
 	Draw::end();
+}
+
+void strokeRect(Rect rect) {
+	strokeRect(rect.x0, rect.y0, rect.x1, rect.y1);
+}
+
+void strokeRect(Rect rect, double thickness) {
+	strokeRect(rect.x0, rect.y0, rect.x1, rect.y1, thickness);
 }
 
 void strokeRect(float x0, float y0, float x1, float y1) {
@@ -534,4 +538,10 @@ char parseCharacter(char character, bool shiftPressed) {
 	}
 
 	return std::toupper(character);
+}
+
+std::string toFixed(double x, int decimals) {
+	std::stringstream ss;
+	ss << std::fixed << std::setprecision(decimals) << x;
+	return ss.str();
 }

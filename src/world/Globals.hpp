@@ -42,6 +42,10 @@ namespace EditorState {
 	extern std::vector<std::string> subregions;
 	extern int screenCount;
 
+	extern Vector2 placingRoomPosition;
+	extern Vector2i placingRoomSize;
+	extern bool placingRoom;
+
 	extern int roomColours;
 	extern int roomPositionType;
 	extern bool visibleLayers[LAYER_COUNT];

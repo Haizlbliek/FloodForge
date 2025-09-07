@@ -4,17 +4,130 @@
 #include "../Theme.hpp"
 #include "../Utils.hpp"
 
+Window *UI::window = nullptr;
 UIMouse UI::mouse = UIMouse(0, 0);
 bool UI::clipped = false;
 Rect UI::clipRect;
+UI::Editable *UI::currentEditable = nullptr;
+int UI::selectTime = 0;
+int UI::selectIndex = 0;
+
+UI::Editable::~Editable() {
+	UI::Delete(*this);
+}
 
 UI::ButtonResponse::operator bool() const {
 	return clicked;
 }
 
-void UI::init() {}
+void UI::init(Window *window) {
+	UI::window = window;
+	UI::window->addKeyCallback(0, UI::_keyCallback);
+}
 
-void UI::cleanup() {}
+void UI::update() {
+	if (UI::currentEditable == nullptr) {
+		selectTime = 0;
+		return;
+	}
+
+	selectTime = (selectTime + 1) % 60;
+}
+
+void UI::cleanup() {
+	UI::window->removeKeyCallback(0, UI::_keyCallback);
+}
+
+static void UI::_keyCallback(void *object, int action, int key) {
+	if (action != GLFW_PRESS && action != GLFW_REPEAT) return;
+	if (UI::currentEditable == nullptr) return;
+
+	UI::TextInputEditable *editable = static_cast<UI::TextInputEditable *>(UI::currentEditable);
+
+	if (editable == nullptr) return;
+
+	if (key == GLFW_KEY_ENTER) {
+		editable->submitted = true;
+		UI::updateTextInput(*editable);
+		UI::currentEditable = nullptr;
+		return;
+	}
+
+	if (key == GLFW_KEY_LEFT) {
+		UI::selectIndex = std::max(UI::selectIndex - 1, 0);
+		UI::selectTime = 0;
+	}
+
+	if (key == GLFW_KEY_RIGHT) {
+		UI::selectIndex = std::min(UI::selectIndex + 1, int(editable->value.size()));
+		UI::selectTime = 0;
+	}
+
+	char write = 0;
+	if (editable->type == UI::TextInputEditableType::Text) {
+		if (key >= 33 && key <= 126) {
+			write = parseCharacter(key, UI::window->modifierPressed(GLFW_MOD_SHIFT));
+		}
+
+		if (key == GLFW_KEY_BACKSPACE) {
+			write = 1;
+		}
+	} else {
+		if (editable->type == UI::TextInputEditableType::SignedFloat || editable->type == UI::TextInputEditableType::SignedInteger) {
+			if (key == '-') {
+				write = '-';
+			}
+		}
+		if (editable->type == UI::TextInputEditableType::SignedFloat || editable->type == UI::TextInputEditableType::UnsignedFloat) {
+			if (key == '.') {
+				write = '.';
+			}
+		}
+
+		if (key >= '0' && key <= '9') {
+			write = key;
+		}
+
+		if (key == GLFW_KEY_BACKSPACE) {
+			write = 1;
+		}
+	}
+
+	if (write == 0) return;
+	if (write == 1) {
+		UI::selectTime = 0;
+		if (UI::selectIndex != 0) {
+			editable->value = editable->value.substr(0, selectIndex - 1) + editable->value.substr(selectIndex);
+			UI::selectIndex--;
+		}
+
+		return;
+	}
+	editable->value = editable->value.substr(0, selectIndex) + write + editable->value.substr(selectIndex);
+	UI::selectIndex++;
+}
+
+void UI::updateTextInput(TextInputEditable &edit) {
+	if (edit.type == UI::TextInputEditableType::Text) return;
+
+	if (edit.type == UI::TextInputEditableType::SignedFloat || edit.type == UI::TextInputEditableType::UnsignedFloat) {
+		try {
+			edit.value = toFixed(std::stod(edit.value), edit.floatDecimalCount);
+		} catch (std::invalid_argument) {
+			edit.value = "0.";
+			for (int i = 0; i < edit.floatDecimalCount; i++) {
+				edit.value += "0";
+			}
+		}
+	}
+	else if (edit.type == UI::TextInputEditableType::SignedInteger || edit.type == UI::TextInputEditableType::UnsignedInteger) {
+		try {
+			edit.value = std::to_string(std::stoi(edit.value));
+		} catch (std::invalid_argument) {
+			edit.value = "0";
+		}
+	}
+}
 
 UI::ButtonResponse UI::Button(Rect rect, ButtonMods mods) {
 	bool can = UI::canClick();
@@ -39,7 +152,7 @@ UI::ButtonResponse UI::TextButton(Rect rect, std::string text, ButtonMods mods) 
 	setThemeColour(mods.disabled ? ThemeColour::ButtonDisabled : ThemeColour::Button);
 	fillRect(rect);
 
-	setThemeColor(mods.disabled ? ThemeColour::TextDisabled : ((highlight || mods.selected) ? ThemeColour::TextHighlight : ThemeColour::Text));
+	setThemeColor(mods.disabled ? ThemeColour::TextDisabled : (mods.selected ? ThemeColour::TextHighlight : ThemeColour::Text));
 	Fonts::rainworld->writeCentered(text, rect.CenterX(), rect.CenterY(), 0.03, CENTER_XY);
 
 	setThemeColor(mods.disabled ? ThemeColour::Border : ((highlight || mods.selected) ? ThemeColour::BorderHighlight : ThemeColour::Border));
@@ -79,6 +192,49 @@ UI::ButtonResponse UI::TextureButton(UVRect rect, TextureButtonMods mods) {
 	};
 }
 
+UI::TextInputResponse UI::TextInput(Rect rect, UI::TextInputEditable &edit, TextInputMods mods) {
+	bool selected = UI::currentEditable == &edit;
+	bool can = canClick();
+	bool highlight = can && rect.inside(UI::mouse) && !mods.disabled;
+	bool submitted = edit.submitted;
+	edit.submitted = false;
+
+	setThemeColour(mods.disabled ? ThemeColour::ButtonDisabled : ThemeColour::Button);
+	fillRect(rect);
+
+	setThemeColor(mods.disabled ? ThemeColour::TextDisabled : (selected ? ThemeColour::TextHighlight : ThemeColour::Text));
+	Fonts::rainworld->writeCentered(edit.value, rect.x0 + 0.01, rect.CenterY(), 0.03, CENTER_Y);
+	if (selected && UI::selectTime < 30) {
+		double width = Fonts::rainworld->getTextWidth(edit.value.substr(0, UI::selectIndex), 0.03);
+		Draw::begin(Draw::LINES);
+		Draw::vertex(rect.x0 + 0.012 + width, rect.CenterY() - 0.02);
+		Draw::vertex(rect.x0 + 0.012 + width, rect.CenterY() + 0.02);
+		Draw::end();
+	}
+
+	setThemeColor(mods.disabled ? ThemeColour::Border : ((highlight || selected) ? ThemeColour::BorderHighlight : ThemeColour::Border));
+	strokeRect(rect);
+
+	if (highlight && UI::mouse.justClicked() && !mods.disabled) {
+		if (selected) {
+			UI::updateTextInput(edit);
+			UI::currentEditable = nullptr;
+			submitted = true;
+		} else {
+			UI::selectTime = 0;
+			UI::currentEditable = &edit;
+			UI::selectIndex = edit.value.size();
+		}
+	}
+
+	return {
+		UI::currentEditable == &edit,
+		highlight,
+		submitted
+	};
+}
+
+
 bool UI::canClick() {
 	if (UI::mouse.disabled) return false;
 	if (!clipped) return true;
@@ -93,4 +249,10 @@ void UI::clip() {
 void UI::clip(const Rect rect) {
 	clipped = true;
 	clipRect = rect;
+}
+
+void UI::Delete(const UI::Editable &editable) {
+	if (UI::currentEditable == &editable) {
+		UI::currentEditable = nullptr;
+	}
 }

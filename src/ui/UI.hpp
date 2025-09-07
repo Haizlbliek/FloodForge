@@ -4,6 +4,7 @@
 #include "../math/Rect.hpp"
 #include "../math/UVRect.hpp"
 #include "../math/Colour.hpp"
+#include "../Window.hpp"
 
 #include "UIMouse.hpp"
 
@@ -13,6 +14,39 @@ namespace UI {
 
 		bool clicked;
 		bool hovered;
+	};
+
+	struct TextInputResponse {
+		bool focused;
+		bool hovered;
+		bool submitted;
+	};
+
+	struct Editable {
+		bool submitted;
+
+		~Editable();
+	};
+
+	enum TextInputEditableType {
+		Text,
+		UnsignedFloat,
+		SignedFloat,
+		UnsignedInteger,
+		SignedInteger
+	};
+
+	struct TextInputEditable : Editable {
+		TextInputEditable(TextInputEditableType type, std::string text, int floatDecimalCount = 1) {
+			this->type = type;
+			this->value = text;
+			this->floatDecimalCount = floatDecimalCount;
+		}
+
+		TextInputEditableType type = TextInputEditableType::Text;
+		int floatDecimalCount = 1;
+
+		std::string value;
 	};
 
 	class ButtonMods {
@@ -57,20 +91,39 @@ namespace UI {
 			}
 	};
 
+	class TextInputMods {
+		public:
+			bool disabled = false;
+
+			TextInputMods &Disabled(bool v = true) {
+				disabled = v;
+				return *this;
+			}
+	};
+
 	bool canClick();
 
 	void clip();
 	void clip(const Rect rect);
 
-	void init();
-
+	void init(Window *window);
+	void update();
 	void cleanup();
+
+	void updateTextInput(TextInputEditable &edit);
 
 	UI::ButtonResponse Button(Rect rect, ButtonMods mods = {});
 	UI::ButtonResponse TextButton(Rect rect, std::string text, ButtonMods mods = {});
 	UI::ButtonResponse TextureButton(UVRect rect, TextureButtonMods mods = {});
+	UI::TextInputResponse TextInput(Rect rect, TextInputEditable &edit, TextInputMods mods = {});
 
+	void Delete(const Editable &editable);
+	static void _keyCallback(void *object, int action, int key);
+	extern Window *window;
 	extern UIMouse mouse;
 	extern bool clipped;
 	extern Rect clipRect;
+	extern Editable *currentEditable;
+	extern int selectTime;
+	extern int selectIndex;
 }

@@ -131,6 +131,8 @@ GLuint CreatureTextures::getTexture(std::string type) {
 }
 
 std::string CreatureTextures::parse(std::string originalName) {
+	if (originalName == "NONE") return "";
+
 	if (parseMap.find(originalName) == parseMap.end()) {
 		return originalName;
 	}

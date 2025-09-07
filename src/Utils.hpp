@@ -16,6 +16,7 @@ void fillRect(float x0, float y0, float x1, float y1);
 void textureRect(float x0, float y0, float x1, float y1);
 
 void strokeRect(Rect rect);
+void strokeRect(Rect rect, double thickness);
 void strokeRect(float x0, float y0, float x1, float y1);
 void strokeRect(float x0, float y0, float x1, float y1, double thickness);
 
@@ -70,3 +71,5 @@ GLuint loadShaders(const char* vertexPath, const char* fragmentPath);
 void replaceLastInstance(std::string& str, const std::string& old_sub, const std::string& new_sub);
 
 char parseCharacter(char character, bool shiftPressed);
+
+std::string toFixed(double x, int decimals);

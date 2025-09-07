@@ -119,7 +119,7 @@ void SubregionNewPopup::keyCallback(void *object, int action, int key) {
 	
 	if (popup->minimized) return;
 
-	if (action == GLFW_PRESS) {
+	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
 		if (key >= 33 && key <= 126) {
 			char character = parseCharacter(key, popup->window->modifierPressed(GLFW_MOD_SHIFT));
 			

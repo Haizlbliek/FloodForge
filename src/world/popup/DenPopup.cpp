@@ -743,7 +743,7 @@ void DenPopup::keyCallback(void *object, int action, int key) {
 
 	int chance = int(denWindow->selectedLineageChance->lineageChance * 100.0);
 
-	if (action == GLFW_PRESS) {
+	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
 		if (key >= 48 && key <= 57) {
 			int number = key - 48;
 			if (chance > 99) return;
