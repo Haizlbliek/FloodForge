@@ -145,14 +145,18 @@ UI::ButtonResponse UI::Button(Rect rect, ButtonMods mods) {
 	};
 }
 
-UI::ButtonResponse UI::TextButton(Rect rect, std::string text, ButtonMods mods) {
+UI::ButtonResponse UI::TextButton(Rect rect, std::string text, TextButtonMods mods) {
 	bool can = UI::canClick();
 	bool highlight = can && rect.inside(UI::mouse);
 
 	setThemeColour(mods.disabled ? ThemeColour::ButtonDisabled : ThemeColour::Button);
 	fillRect(rect);
 
-	setThemeColor(mods.disabled ? ThemeColour::TextDisabled : (mods.selected ? ThemeColour::TextHighlight : ThemeColour::Text));
+	if (mods.overrideTextColor) {
+		Draw::color(mods.textColor);
+	} else {
+		setThemeColor(mods.disabled ? ThemeColour::TextDisabled : (mods.selected ? ThemeColour::TextHighlight : ThemeColour::Text));
+	}
 	Fonts::rainworld->writeCentered(text, rect.CenterX(), rect.CenterY(), 0.03, CENTER_XY);
 
 	setThemeColor(mods.disabled ? ThemeColour::Border : ((highlight || mods.selected) ? ThemeColour::BorderHighlight : ThemeColour::Border));

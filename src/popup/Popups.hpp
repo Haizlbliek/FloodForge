@@ -53,7 +53,7 @@ class Popups {
 
 		static void cleanup();
 
-		static void draw(Vector2 mouse, Vector2 screenBounds);
+		static void draw(Vector2 screenBounds);
 		
 		static void addPopup(Popup *popup);
 

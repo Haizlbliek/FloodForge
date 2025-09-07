@@ -87,8 +87,8 @@ class Room {
 
 		virtual ~Room();
 
-		virtual void drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType);
-		virtual void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType);
+		virtual void drawBlack(Vector2 mousePosition, int positionType);
+		virtual void draw(Vector2 mousePosition, int positionType);
 
 		void drawDen(Den &den, double x, double y, bool hovered);
 

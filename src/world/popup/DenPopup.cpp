@@ -418,7 +418,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 					bool selected = creature == selectedLineageChance;
 					std::string text = std::to_string(int(creature->lineageChance * 100)) + (selected ? "" : "%");
 
-					if (UI::TextButton(inputRect, text, UI::ButtonMods().Selected(selected))) {
+					if (UI::TextButton(inputRect, text, UI::TextButtonMods().Selected(selected))) {
 						selected = !selected;
 						if (!selected) submitChance();
 						selectedLineageChance = selected ? creature : nullptr;

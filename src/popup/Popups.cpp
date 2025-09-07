@@ -172,22 +172,22 @@ void Popups::removePopup(Popup *popup) {
 	Popups::popupTrash.push_back(popup);
 }
 
-void Popups::draw(Vector2 mouse, Vector2 screenBounds) {
+void Popups::draw(Vector2 screenBounds) {
 	Popup *mousePopup = nullptr;
 	for (int i = Popups::popups.size() - 1; i >= 0; i--) {
 		Popup *popup = Popups::popups[i];
 
-		if (popup->Bounds().inside(mouse)) {
+		if (popup->Bounds().inside(UI::mouse)) {
 			mousePopup = popup;
 			break;
 		}
 	}
 
 	for (Popup *popup : Popups::popups) {
-		bool hovered = popup->Bounds().inside(mouse);
+		bool hovered = popup->Bounds().inside(UI::mouse);
 
 		UI::mouse.disabled = popup != mousePopup;
-		popup->draw(mouse.x, mouse.y, hovered, screenBounds);
+		popup->draw(UI::mouse.x, UI::mouse.y, hovered, screenBounds);
 	}
 	UI::mouse.disabled = false;
 }

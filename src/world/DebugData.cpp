@@ -1,7 +1,7 @@
 #include "DebugData.hpp"
 
 namespace DebugData {
-	void draw(Window *window, Vector2 mouse, double lineSize, Vector2 screenBounds) {
+	void draw(Window *window, Vector2 mouse, Vector2 screenBounds) {
 		Connection *hoveringConnection = nullptr;
 		Room *hoveringRoom = nullptr;
 
@@ -10,7 +10,7 @@ namespace DebugData {
 			if (!EditorState::visibleLayers[connection->roomA->layer]) continue;
 			if (!EditorState::visibleLayers[connection->roomB->layer]) continue;
 
-			if (connection->hovered(mouse, lineSize)) {
+			if (connection->hovered(mouse, EditorState::lineSize)) {
 				hoveringConnection = connection;
 
 				break;

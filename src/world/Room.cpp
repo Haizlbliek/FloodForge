@@ -112,7 +112,7 @@ Room::~Room() {
 	EditorState::screenCount -= cameras;
 }
 
-void Room::drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType) {
+void Room::drawBlack(Vector2 mousePosition, int positionType) {
 	if (data.hidden) {
 		Draw::color(RoomHelpers::RoomSolid.r, RoomHelpers::RoomSolid.g, RoomHelpers::RoomSolid.b, 0.5);
 	} else {
@@ -123,7 +123,7 @@ void Room::drawBlack(Vector2 mousePosition, double lineSize, Vector2 screenBound
 	fillRect(position.x, position.y - height, position.x + width, position.y);
 }
 
-void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType) {
+void Room::draw(Vector2 mousePosition, int positionType) {
 	Vector2 &position = positionType == CANON_POSITION ? canonPosition : devPosition;
 
 	if (!valid) {
@@ -175,7 +175,7 @@ void Room::draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, in
 	GLuint modelLoc = glGetUniformLocation(Shaders::roomShader, "model");
 	GLuint tintLoc = glGetUniformLocation(Shaders::roomShader, "tintColour");
 
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(EditorState::cameraOffset, EditorState::cameraScale * screenBounds).m);
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(EditorState::cameraOffset, EditorState::cameraScale * EditorState::screenBounds).m);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position.x, position.y).m);
 	float alpha = tint.a;
 	if (data.hidden) {

@@ -10,6 +10,7 @@
 #include <functional>
 #include <algorithm>
 #include <filesystem>
+#include <set>
 
 #include "Logger.hpp"
 #include "math/Colour.hpp"
@@ -45,6 +46,8 @@ class Mouse {
 
 		bool JustRight() const;
 
+		bool Moved() const;
+
 		void copyPressed(Mouse &otherMouse);
 
 		void setCursor(unsigned int cursorMode);
@@ -53,6 +56,7 @@ class Mouse {
 		double x;
 		double y;
 
+		bool moved;
 		bool lastFrameLeft;
 		bool lastFrameMiddle;
 		bool lastFrameRight;
@@ -116,6 +120,9 @@ class Window {
 
 		std::string getClipboard();
 
+		bool justPressed(int key);
+
+
 		GLFWcursor *getCursor(unsigned int cursor);
 
 		GLFWwindow *getGLFWWindow() const;
@@ -153,4 +160,6 @@ class Window {
 		std::vector<std::pair<void*, std::function<void(void*, double, double)>>> scrollCallbacks;
 
 		bool capslock;
+
+		std::set<int> previousKeys;
 };

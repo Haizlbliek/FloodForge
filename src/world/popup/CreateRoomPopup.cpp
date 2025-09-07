@@ -94,8 +94,8 @@ void CreateRoomPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 	Fonts::rainworld->writeCentered("---- Fill Layers ----", bounds.x0 + 0.01, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
-	if (UI::TextButton(Rect::fromSize(bounds.x0 + 0.01, y, 0.05, 0.05), "1", UI::ButtonMods().Selected(fillLayer1))) { fillLayer1 = !fillLayer1; }
-	if (UI::TextButton(Rect::fromSize(bounds.x0 + 0.07, y, 0.05, 0.05), "2", UI::ButtonMods().Selected(fillLayer2))) { fillLayer2 = !fillLayer2; }
+	if (UI::TextButton(Rect::fromSize(bounds.x0 + 0.01, y, 0.05, 0.05), "1", UI::TextButtonMods().Selected(fillLayer1))) { fillLayer1 = !fillLayer1; }
+	if (UI::TextButton(Rect::fromSize(bounds.x0 + 0.07, y, 0.05, 0.05), "2", UI::TextButtonMods().Selected(fillLayer2))) { fillLayer2 = !fillLayer2; }
 
 	y -= 0.06;
 	setThemeColor(ThemeColour::Text);
@@ -145,7 +145,7 @@ void CreateRoomPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 	if (heightResponse.focused) canCreate = false;
 	if (std::stoi(height.value) <= 0) canCreate = false;
 
-	if (UI::TextButton(Rect(bounds.x0 + 0.01, bounds.y0 + 0.06, bounds.x0 + 0.26, bounds.y0 + 0.01), "Create", UI::ButtonMods().Disabled(!canCreate))) {
+	if (UI::TextButton(Rect(bounds.x0 + 0.01, bounds.y0 + 0.06, bounds.x0 + 0.26, bounds.y0 + 0.01), "Create", UI::TextButtonMods().Disabled(!canCreate))) {
 		std::string name = toUpper(EditorState::region.acronym) + "_" + roomName.value;
 		std::filesystem::path filePath = findFileCaseInsensitive(EditorState::region.roomsDirectory, name + ".txt");
 		if (!filePath.empty()) {

@@ -27,53 +27,27 @@
 
 class Button {
 	public:
-		Button(std::string text, double x, double y, double width, double height, Font *font);
+		Button(std::string text, Rect rect);
 
-		Button *OnLeftPress(std::function<void(Button*)> listener);
+		Button *OnPress(std::function<void(Button*)> listener);
 
-		Button *OnRightPress(std::function<void(Button*)> listener);
-
-		bool isHovered(Mouse *mouse, Vector2 screenBounds);
-
-		void update(Mouse *mouse, Vector2 screenBounds);
-
-		void draw(Mouse *mouse, Vector2 screenBounds);
+		void draw();
 
 		void Text(const std::string text);
 
 		std::string Text() const;
 
-		void X(const double x);
-
-		Button &Darken(bool newDarken);
-
-		const double Width() const;
+		Rect rect;
+		bool darken = false;
 
 	private:
-		void press();
-
-		void pressRight();
-
-		std::vector<std::function<void(Button*)>> listenersLeft;
-		std::vector<std::function<void(Button*)>> listenersRight;
-
-		bool pressed = false;
-
-		double x;
-		double y;
-		double width;
-		double height;
+		std::function<void(Button*)> listener;
 
 		std::string text;
-		Font *font;
-
-		bool darken = false;
 };
 
 class MenuItems {
 	public:
-		static void loadTextures();
-
 		static Button &addButton(std::string text);
 
 		static void addLayerButton(std::string buttonName, int layer);
@@ -82,17 +56,11 @@ class MenuItems {
 
 		static void cleanup();
 
-		static void draw(Mouse *mouse, Vector2 screenBounds);
-
-		static GLuint textureButtonNormal;
-		static GLuint textureButtonNormalHover;
-		static GLuint textureButtonPress;
-		static GLuint textureButtonPressHover;
-		static GLuint textureBar;
+		static void draw();
 
 	private:
 		static void repositionButtons();
-	
+
 		static std::vector<Button*> buttons;
 		static std::vector<Button*> layerButtons;
 

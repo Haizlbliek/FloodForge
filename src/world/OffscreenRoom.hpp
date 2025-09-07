@@ -10,5 +10,5 @@ class OffscreenRoom : public Room {
 
 		Den &getDen();
 
-		void draw(Vector2 mousePosition, double lineSize, Vector2 screenBounds, int positionType) override;
+		void draw(Vector2 mousePosition, int positionType) override;
 };

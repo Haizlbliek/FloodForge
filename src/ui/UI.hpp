@@ -91,6 +91,33 @@ namespace UI {
 			}
 	};
 
+	class TextButtonMods : public ButtonMods {
+		public:
+			bool overrideTextColor = false;
+			Color textColor = Color(1.0, 1.0, 1.0);
+
+			TextButtonMods &Selected(bool v = true) {
+				selected = v;
+				return *this;
+			}
+
+			TextButtonMods &Disabled(bool v = true) {
+				disabled = v;
+				return *this;
+			}
+
+			TextButtonMods &TextColor() {
+				overrideTextColor = false;
+				return *this;
+			}
+
+			TextButtonMods &TextColor(Color v) {
+				textColor = v;
+				overrideTextColor = true;
+				return *this;
+			}
+	};
+
 	class TextInputMods {
 		public:
 			bool disabled = false;
@@ -113,7 +140,7 @@ namespace UI {
 	void updateTextInput(TextInputEditable &edit);
 
 	UI::ButtonResponse Button(Rect rect, ButtonMods mods = {});
-	UI::ButtonResponse TextButton(Rect rect, std::string text, ButtonMods mods = {});
+	UI::ButtonResponse TextButton(Rect rect, std::string text, TextButtonMods mods = {});
 	UI::ButtonResponse TextureButton(UVRect rect, TextureButtonMods mods = {});
 	UI::TextInputResponse TextInput(Rect rect, TextInputEditable &edit, TextInputMods mods = {});
 

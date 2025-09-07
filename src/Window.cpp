@@ -11,6 +11,7 @@ void Mouse::setCursor(unsigned int cursorMode) {
 void Mouse::update(GLFWwindow *glfwWindow, double x, double y) {
 	if (this->glfwWindow != glfwWindow) return;
 
+	this->moved = x != this->x || y != this->y;
 	this->x = x;
 	this->y = y;
 }
@@ -43,6 +44,10 @@ bool Mouse::JustMiddle() const {
 
 bool Mouse::JustRight() const {
 	return (!lastFrameRight) && (GLFW_PRESS == glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_RIGHT));
+}
+
+bool Mouse::Moved() const {
+	return moved;
 }
 
 void Mouse::copyPressed(Mouse &otherMouse) {
@@ -288,6 +293,23 @@ std::string Window::getClipboard() {
 	return clipboardText ? std::string(clipboardText) : std::string();
 }
 
+bool Window::justPressed(int key) {
+	if (this->keyPressed(key)) {
+		if (this->previousKeys.find(key) == this->previousKeys.end()) {
+			this->previousKeys.insert(key);
+			return true;
+		}
+
+		this->previousKeys.insert(key);
+	} else {
+		this->previousKeys.erase(key);
+	}
+
+	return false;
+}
+
+
+
 GLFWcursor *Window::getCursor(unsigned int cursor) {
 	switch (cursor) {
 		case CURSOR_DEFAULT: return cursorDefault;
@@ -298,6 +320,9 @@ GLFWcursor *Window::getCursor(unsigned int cursor) {
 }
 
 GLFWwindow *Window::getGLFWWindow() const { return glfwWindow;}
+
+
+
 
 void Window::mouseCallback(GLFWwindow *glfwWindow, double x, double y) {
 	// Retrieve the Window instance from the user pointer

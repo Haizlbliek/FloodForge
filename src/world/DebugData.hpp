@@ -7,5 +7,5 @@
 #include "Globals.hpp"
 
 namespace DebugData {
-	void draw(Window *window, Vector2 mouse, double lineSize, Vector2 screenBounds);
+	void draw(Window *window, Vector2 mouse, Vector2 screenBounds);
 }

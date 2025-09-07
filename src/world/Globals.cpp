@@ -38,5 +38,8 @@ namespace EditorState {
 	bool denPopupLineageExtended = false;
 	bool denPopupTagsExtended = false;
 
+	Vector2 globalMouse;
+	Vector2 screenBounds;
 	Vector2i windowSize = { 0, 0 };
+	double lineSize = 0.0;
 }

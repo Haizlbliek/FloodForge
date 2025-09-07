@@ -7,6 +7,8 @@
 #include "popup/AcronymPopup.hpp"
 #include "popup/ChangeAcronymPopup.hpp"
 
+#include "../ui/UI.hpp"
+
 #include "RecentFiles.hpp"
 #include "WorldParser.hpp"
 #include "WorldExporter.hpp"
@@ -16,99 +18,30 @@ std::vector<Button*> MenuItems::layerButtons;
 
 double MenuItems::currentButtonX = 0.01;
 
-GLuint MenuItems::textureButtonNormal = 0;
-GLuint MenuItems::textureButtonNormalHover = 0;
-GLuint MenuItems::textureButtonPress = 0;
-GLuint MenuItems::textureButtonPressHover = 0;
-GLuint MenuItems::textureBar = 0;
-
-Button::Button(std::string text, double x, double y, double width, double height, Font *font) : x(x), y(y), width(width), height(height), text(text), font(font) {
+Button::Button(std::string text, Rect rect) : rect(rect), text(text) {
+	Text(text);
 }
 
-Button *Button::OnLeftPress(std::function<void(Button*)> listener) {
-	listenersLeft.push_back(listener);
+Button *Button::OnPress(std::function<void(Button*)> listener) {
+	this->listener = listener;
 	return this;
 }
 
-Button *Button::OnRightPress(std::function<void(Button*)> listener) {
-	listenersRight.push_back(listener);
-	return this;
-}
+void Button::draw() {
+	UI::TextButtonMods mods = UI::TextButtonMods();
+	if (darken) mods.TextColor(currentTheme[ThemeColour::TextDisabled]);
 
-bool Button::isHovered(Mouse *mouse, Vector2 screenBounds) {
-	double mouseX = mouse->X() / 512.0 + screenBounds.x - 1.0;
-	double mouseY = -(mouse->Y() / 512.0 + screenBounds.y - 1.0);
-
-	return mouseX >= (x - 0.005) && mouseX <= (x + 0.005) + width && mouseY <= (y + 0.005) && mouseY >= (y - 0.005) - height;
-}
-
-void Button::update(Mouse *mouse, Vector2 screenBounds) {
-	pressed = isHovered(mouse, screenBounds) && (mouse->Left() || mouse->Right());
-
-	if (isHovered(mouse, screenBounds) && mouse->JustLeft()) {
-		press();
+	if (UI::TextButton(Rect(rect.x0 - EditorState::screenBounds.x, rect.y0 + EditorState::screenBounds.y, rect.x1 - EditorState::screenBounds.x, rect.y1 + EditorState::screenBounds.y), text, mods)) {
+		listener(this);
 	}
-
-	if (isHovered(mouse, screenBounds) && mouse->JustRight()) {
-		pressRight();
-	}
-}
-
-void Button::draw(Mouse *mouse, Vector2 screenBounds) {
-	Draw::color(1.0, 1.0, 1.0);
-	
-	GLuint texture = 0;
-	bool dark = darken || pressed;
-	if (isHovered(mouse, screenBounds)) {
-		texture = dark ? MenuItems::textureButtonPressHover : MenuItems::textureButtonNormalHover;
-	} else {
-		texture = dark ? MenuItems::textureButtonPress : MenuItems::textureButtonNormal;
-	}
-
-	Draw::useTexture(texture);
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	nineSlice(x - 0.005 - screenBounds.x, y + 0.005 + screenBounds.y, x + 0.005 + width - screenBounds.x, y - 0.005 - height + screenBounds.y, 0.02);
-	glDisable(GL_BLEND);
-	Draw::useTexture(0);
-
-	setThemeColour(ThemeColour::Text);
-	font->writeCentered(text, x - screenBounds.x + (width * 0.5), y + height * -0.5 + screenBounds.y + 0.003, height - 0.01, CENTER_XY);
 }
 
 void Button::Text(const std::string text) {
 	this->text = text;
-	width = font->getTextWidth(text, height - 0.01) + 0.02;
+	rect = Rect::fromSize(rect.x0, rect.y0, Fonts::rainworld->getTextWidth(text, 0.03) + 0.02, rect.y1 - rect.y0);
 }
 
 std::string Button::Text() const { return text; }
-
-void Button::X(const double x) {
-	this->x = x;
-}
-
-Button &Button::Darken(bool newDarken) {
-	darken = newDarken;
-
-	return *this;
-}
-
-const double Button::Width() const {
-	return width;
-}
-
-void Button::press() {
-	for (const auto &listener : listenersLeft) {
-		listener(this);
-	}
-}
-
-void Button::pressRight() {
-	for (const auto &listener : listenersRight) {
-		listener(this);
-	}
-}
 
 
 Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
@@ -120,7 +53,7 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 		// Popups::addPopup(new InfoPopup(window, "Couldn't complete the copy!\nRoom already exists!"));
 	} else {
 		std::filesystem::copy_file(fromFile, toFile);
-		
+
 		bool initial = Settings::getSetting<bool>(Settings::Setting::WarnMissingImages);
 		Settings::settings[Settings::Setting::WarnMissingImages] = false;
 		Room *room = new Room(fromFile, toRoom);
@@ -128,11 +61,11 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 		room->devPosition = EditorState::cameraOffset;
 		EditorState::rooms.push_back(room);
 		Settings::settings[Settings::Setting::WarnMissingImages] = initial;
-		
+
 		for (int i = 0; i < room->cameras; i++) {
 			std::string imagePath = fromRoom + "_" + std::to_string(i + 1) + ".png";
 			std::filesystem::path image = findFileCaseInsensitive(fromFile.parent_path(), imagePath);
-			
+
 			if (image.empty()) {
 				EditorState::fails.push_back("Can't find '" + imagePath + "'");
 			} else {
@@ -145,71 +78,54 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 }
 
 
-
-void MenuItems::loadTextures() {
-	std::filesystem::path texturePath = BASE_PATH / "assets" / "themes" / currentThemeName;
-
-	textureButtonNormal = loadTexture(texturePath / "ButtonNormal.png");
-	textureButtonNormalHover = loadTexture(texturePath / "ButtonNormalHover.png");
-	textureButtonPress = loadTexture(texturePath / "ButtonPress.png");
-	textureButtonPressHover = loadTexture(texturePath / "ButtonPressHover.png");
-	textureBar = loadTexture(texturePath / "Bar.png");
-}
-
 Button &MenuItems::addButton(std::string text) {
-	double x = currentButtonX;
-	double width = Fonts::rainworld->getTextWidth(text, 0.03) + 0.02;
-
-	currentButtonX += width + 0.04;
-	Button *button = new Button(text, x, -0.01, width, 0.04, Fonts::rainworld);
+	Button *button = new Button(text, Rect::fromSize(currentButtonX, -0.05, 0.0, 0.04));
+	currentButtonX = button->rect.x1 + 0.01;
 	buttons.push_back(button);
-
 	return *button;
 }
 
 void MenuItems::addLayerButton(std::string buttonName, int layer) {
 	Button *btn = MenuItems::addButton(buttonName)
-	.OnLeftPress(
+	.OnPress(
 		[layer](Button *button) {
-			EditorState::visibleLayers[layer] = !EditorState::visibleLayers[layer];
-			button->Darken(!EditorState::visibleLayers[layer]);
-		}
-	)
-	->OnRightPress(
-		[layer](Button *button) {
-			bool alreadySolo = true;
-			for (int i = 0; i < LAYER_COUNT; i++) {
-				if (EditorState::visibleLayers[i] != (i == layer)) {
-					alreadySolo = false;
-					break;
+			if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT)) {
+				bool alreadySolo = true;
+				for (int i = 0; i < LAYER_COUNT; i++) {
+					if (EditorState::visibleLayers[i] != (i == layer)) {
+						alreadySolo = false;
+						break;
+					}
 				}
-			}
-			
-			for (int i = 0; i < LAYER_COUNT; i++) {
-				if (i == layer) {
-					EditorState::visibleLayers[i] = true;
-				} else {
-					EditorState::visibleLayers[i] = alreadySolo;
+
+				for (int i = 0; i < LAYER_COUNT; i++) {
+					if (i == layer) {
+						EditorState::visibleLayers[i] = true;
+					} else {
+						EditorState::visibleLayers[i] = alreadySolo;
+					}
+					MenuItems::layerButtons[i]->darken = !EditorState::visibleLayers[i];
 				}
-				MenuItems::layerButtons[i]->Darken(!EditorState::visibleLayers[i]);
+			} else {
+				EditorState::visibleLayers[layer] = !EditorState::visibleLayers[layer];
+				button->darken = !EditorState::visibleLayers[layer];
 			}
 		}
 	);
-	
+
 	MenuItems::layerButtons.push_back(btn);
 }
 
 void MenuItems::init(Window *window) {
-	MenuItems::loadTextures();
 	EditorState::region.acronym = "";
 
-	addButton("New").OnLeftPress(
+	addButton("New").OnPress(
 		[window](Button *button) {
 			Popups::addPopup(new AcronymPopup(window));
 		}
 	);
 
-	addButton("Add Room").OnLeftPress(
+	addButton("Add Room").OnPress(
 		[window](Button *button) {
 			if (EditorState::region.acronym == "") {
 				Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore adding rooms."));
@@ -223,13 +139,13 @@ void MenuItems::init(Window *window) {
 					for (std::filesystem::path roomFilePath : paths) {
 						std::string acronym = roomFilePath.parent_path().filename().generic_u8string();
 						acronym = acronym.substr(0, acronym.find_last_of('-'));
-						
+
 						if (acronym == "gates") {
 							std::vector<std::string> names = split(roomFilePath.filename().generic_u8string(), '_');
 							names[2] = names[2].substr(0, names[2].find('.'));
 							if (toLower(names[1]) == EditorState::region.acronym || toLower(names[2]) == EditorState::region.acronym) {
 								std::string roomName = names[0].substr(0, names[0].find_last_of('.')); // Remove .txt
-		
+
 								Room *room = new Room(roomFilePath, roomName);
 								room->canonPosition = EditorState::cameraOffset;
 								room->devPosition = EditorState::cameraOffset;
@@ -252,7 +168,7 @@ void MenuItems::init(Window *window) {
 						} else {
 							if (acronym == EditorState::region.acronym || EditorState::region.exportDirectory.empty()) {
 								std::string roomName = roomFilePath.stem().generic_u8string();
-		
+
 								Room *room = new Room(roomFilePath, roomName);
 								room->canonPosition = EditorState::cameraOffset;
 								room->devPosition = EditorState::cameraOffset;
@@ -262,7 +178,7 @@ void MenuItems::init(Window *window) {
 								->CancelText("Just Add")
 								->OnCancel([roomFilePath]() {
 									std::string roomName = roomFilePath.stem().generic_u8string();
-			
+
 									Room *room = new Room(roomFilePath, roomName);
 									room->canonPosition = EditorState::cameraOffset;
 									room->devPosition = EditorState::cameraOffset;
@@ -272,7 +188,7 @@ void MenuItems::init(Window *window) {
 								->OnOkay([roomFilePath, &window]() {
 									std::string roomPath = roomFilePath.filename().generic_u8string();
 									roomPath = EditorState::region.acronym + roomPath.substr(roomPath.find('_'));
-	
+
 									copyRoom(roomFilePath, EditorState::region.roomsDirectory / roomPath);
 								}));
 							}
@@ -283,7 +199,7 @@ void MenuItems::init(Window *window) {
 		}
 	);
 
-	addButton("Import").OnLeftPress(
+	addButton("Import").OnPress(
 		[window](Button *button) {
 			Popups::addPopup(new FilesystemPopup(window, std::regex("world_([^._-]+)\\.txt", std::regex_constants::icase), "world_xx.txt",
 				[window](std::set<std::filesystem::path> paths) {
@@ -295,7 +211,7 @@ void MenuItems::init(Window *window) {
 		}
 	);
 
-	addButton("Export").OnLeftPress(
+	addButton("Export").OnPress(
 		[window](Button *button) {
 			std::filesystem::path lastExportDirectory = EditorState::region.exportDirectory;
 
@@ -336,12 +252,12 @@ void MenuItems::init(Window *window) {
 					}
 				));
 			}
-			
+
 			EditorState::region.exportDirectory = lastExportDirectory;
 		}
 	);
 
-	addButton("No Colours").OnLeftPress(
+	addButton("No Colours").OnPress(
 		[window](Button *button) {
 			EditorState::roomColours = (EditorState::roomColours + 1) % 3;
 
@@ -362,26 +278,26 @@ void MenuItems::init(Window *window) {
 	}
 
 	addButton("Dev Items: Hidden")
-	.OnLeftPress(
+	.OnPress(
 		[window](Button *button) {
 			EditorState::visibleDevItems = !EditorState::visibleDevItems;
 			button->Text(EditorState::visibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden");
 		}
 	);
 
-	addButton("Refresh Region").OnLeftPress(
+	addButton("Refresh Region").OnPress(
 		[window](Button *button) {
 			if (EditorState::region.acronym.empty() || EditorState::region.exportDirectory.empty()) {
 				Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore refreshing"));
 				return;
 			}
-			
+
 			WorldParser::importWorldFile(findFileCaseInsensitive(EditorState::region.exportDirectory, "world_" + EditorState::region.acronym + ".txt"));
 		}
 	);
 
 	addButton("Canon")
-	.OnLeftPress(
+	.OnPress(
 		[window](Button *button) {
 			if (EditorState::roomPositionType == CANON_POSITION) {
 				EditorState::roomPositionType = DEV_POSITION;
@@ -393,7 +309,7 @@ void MenuItems::init(Window *window) {
 		}
 	);
 
-	// addButton("Change Region Acronym").OnLeftPress(
+	// addButton("Change Region Acronym").OnPress(
 	// 	[window](Button *button) {
 	// 		if (EditorState::region.acronym == "") {
 	// 			Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore changing the acronym."));
@@ -413,27 +329,22 @@ void MenuItems::cleanup() {
 	buttons.clear();
 }
 
-void MenuItems::draw(Mouse *mouse, Vector2 screenBounds) {
-	Draw::color(1.0, 1.0, 1.0);
-
-	Draw::useTexture(MenuItems::textureBar);
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	Draw::begin(Draw::QUADS);
-	Draw::texCoord(-screenBounds.x, 0.0f); Draw::vertex(-screenBounds.x, screenBounds.y);
-	Draw::texCoord( screenBounds.x, 0.0f); Draw::vertex( screenBounds.x, screenBounds.y);
-	Draw::texCoord( screenBounds.x, 1.0f); Draw::vertex( screenBounds.x, screenBounds.y - 0.09f);
-	Draw::texCoord(-screenBounds.x, 1.0f); Draw::vertex(-screenBounds.x, screenBounds.y - 0.09f);
-	Draw::end();
-	glDisable(GL_BLEND);
-	Draw::useTexture(0);
-
+void MenuItems::draw() {
 	glLineWidth(1);
 
+	Rect rect = Rect(-EditorState::screenBounds.x, EditorState::screenBounds.y, EditorState::screenBounds.x, EditorState::screenBounds.y - 0.06);
+
+	setThemeColor(ThemeColour::Popup);
+	fillRect(rect);
+
+	setThemeColor(ThemeColour::Border);
+	Draw::begin(Draw::LINES);
+	Draw::vertex(rect.x0, rect.y0);
+	Draw::vertex(rect.x1, rect.y0);
+	Draw::end();
+
 	for (Button *button : buttons) {
-		button->update(mouse, screenBounds);
-		button->draw(mouse, screenBounds);
+		button->draw();
 	}
 }
 
@@ -441,8 +352,9 @@ void MenuItems::repositionButtons() {
 	currentButtonX = 0.01;
 
 	for (Button *button : buttons) {
-		button->X(currentButtonX);
+		button->rect.x1 = button->rect.x1 - button->rect.x0 + currentButtonX;
+		button->rect.x0 = currentButtonX;
 
-		currentButtonX += button->Width() + 0.04;
+		currentButtonX = button->rect.x1 + 0.01;
 	}
 }

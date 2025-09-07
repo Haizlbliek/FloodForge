@@ -62,5 +62,8 @@ namespace EditorState {
 	extern bool denPopupLineageExtended;
 	extern bool denPopupTagsExtended;
 
+	extern Vector2 globalMouse;
+	extern Vector2 screenBounds;
 	extern Vector2i windowSize;
+	extern double lineSize;
 }
