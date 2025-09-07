@@ -68,7 +68,7 @@ Colour parseHexColor(const std::string &hex) {
 }
 
 void loadTheme(std::string theme) {
-	std::filesystem::path themePath = BASE_PATH / "assets" / "themes" / theme / "theme.txt";
+	std::filesystem::path themePath = BASE_PATH / "assets" / "themes" / (theme + ".txt");
 	if (!std::filesystem::exists(themePath)) return;
 
 	currentThemeName = theme;
