@@ -159,6 +159,8 @@ void CreateRoomPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 		room->canonPosition = EditorState::placingRoomPosition - Vector2{ EditorState::placingRoomSize.x * 0.5, EditorState::placingRoomSize.y * -0.5 };
 		room->devPosition = EditorState::placingRoomPosition - Vector2{ EditorState::placingRoomSize.x * 0.5, EditorState::placingRoomSize.y * -0.5 };
 		EditorState::rooms.push_back(room);
+		EditorState::dropletOpen = true;
+		EditorState::dropletRoom = room;
 	}
 }
 

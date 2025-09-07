@@ -32,6 +32,9 @@ namespace EditorState {
 	extern Mouse *mouse;
 	extern Window *window;
 
+	extern bool dropletOpen;
+
+	// FloodForge
 	extern Vector2 cameraOffset;
 	extern double cameraScale;
 	extern double selectorScale;
@@ -66,4 +69,7 @@ namespace EditorState {
 	extern Vector2 screenBounds;
 	extern Vector2i windowSize;
 	extern double lineSize;
+
+	// Droplet
+	extern Room* dropletRoom;
 }

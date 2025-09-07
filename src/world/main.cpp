@@ -33,6 +33,7 @@
 #include "MenuItems.hpp"
 #include "RecentFiles.hpp"
 
+#include "droplet/DropletWindow.hpp"
 #include "flood_forge/FloodForgeWindow.hpp"
 
 Vector2 lastMousePosition;
@@ -142,7 +143,11 @@ int main() {
 
 		updateGlobalInputs();
 
-		FloodForgeWindow::Draw();
+		if (EditorState::dropletOpen) {
+			DropletWindow::Draw();
+		} else {
+			FloodForgeWindow::Draw();
+		}
 
 		/// Draw UI
 		applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, EditorState::screenBounds);

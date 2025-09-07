@@ -8,6 +8,9 @@ namespace EditorState {
 	Mouse *mouse = nullptr;
 	Window *window = nullptr;
 
+	bool dropletOpen;
+
+	// FloodForge
 	OffscreenRoom* offscreenDen = nullptr;
 	std::vector<Room*> rooms;
 	std::vector<Connection*> connections;
@@ -42,4 +45,7 @@ namespace EditorState {
 	Vector2 screenBounds;
 	Vector2i windowSize = { 0, 0 };
 	double lineSize = 0.0;
+
+	// Droplet
+	Room *dropletRoom;
 }

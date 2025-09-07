@@ -828,6 +828,9 @@ void FloodForgeWindow::updateMain() {
 				Popups::addPopup(new CreateRoomPopup(EditorState::window));
 				EditorState::placingRoom = true;
 				EditorState::placingRoomPosition = worldMouse;
+			} else {
+				EditorState::dropletOpen = true;
+				EditorState::dropletRoom = hoveringRoom;
 			}
 		}
 	}
