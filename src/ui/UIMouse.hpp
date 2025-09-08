@@ -7,6 +7,8 @@ struct UIMouse {
 	double y;
 	bool leftMouse;
 	bool lastLeftMouse;
+	bool rightMouse;
+	bool lastRightMouse;
 	bool disabled;
 
 	bool justClicked();

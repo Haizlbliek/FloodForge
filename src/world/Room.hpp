@@ -151,6 +151,9 @@ class Room {
 		std::string roomName = "";
 		int water = 0;
 		bool valid;
+		int width;
+		int height;
+		int *geometry;
 
 		Vector2 canonPosition;
 		Vector2 devPosition;
@@ -193,11 +196,6 @@ class Room {
 		GLuint vao;
 
 		std::filesystem::path path;
-
-		int width;
-		int height;
-
-		int *geometry;
 
 		std::vector<std::string> tags;
 

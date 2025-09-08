@@ -127,6 +127,8 @@ int main() {
 		UI::mouse.y = (EditorState::globalMouse.y / 1024.0) * -2.0 + 1.0;
 		UI::mouse.lastLeftMouse = UI::mouse.leftMouse;
 		UI::mouse.leftMouse = EditorState::mouse->Left();
+		UI::mouse.lastRightMouse = UI::mouse.rightMouse;
+		UI::mouse.rightMouse = EditorState::mouse->Right();
 
 		EditorState::lineSize = 64.0 / EditorState::cameraScale;
 

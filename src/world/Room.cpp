@@ -643,6 +643,9 @@ void Room::loadGeometry() {
 					geometry[tileId] += 256;
 					shortcutEntrances.push_back(std::make_pair( Vector2i(tileId / height, tileId % height), ShortcutType::DEN ));
 					break;
+				case 6: // Background Solid
+					geometry[tileId] += 512;
+					break;
 			}
 		}
 
@@ -699,12 +702,23 @@ void Room::generateVBO() {
 
 			// Background air
 			if (tileType != 1 && tileType != 4) {
-				addQuad(
-					{ x0, y0, RoomHelpers::RoomAir },
-					{ x1, y0, RoomHelpers::RoomAir },
-					{ x1, y1, RoomHelpers::RoomAir },
-					{ x0, y1, RoomHelpers::RoomAir }
-				);
+				if (tileData & 32) {
+					Color color = RoomHelpers::RoomAir.mix(RoomHelpers::RoomSolid, 0.25);
+
+					addQuad(
+						{ x0, y0, color },
+						{ x1, y0, color },
+						{ x1, y1, color },
+						{ x0, y1, color }
+					);
+				} else {
+					addQuad(
+						{ x0, y0, RoomHelpers::RoomAir },
+						{ x1, y0, RoomHelpers::RoomAir },
+						{ x1, y1, RoomHelpers::RoomAir },
+						{ x0, y1, RoomHelpers::RoomAir }
+					);
+				}
 			}
 
 			// Shortcut Entrance
