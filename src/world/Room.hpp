@@ -140,6 +140,8 @@ class Room {
 
 		const std::vector<Vector2i> DenEntrances() const;
 
+		bool InBounds(int x, int y) const;
+
 		const int Width() const;
 		const int Height() const;
 

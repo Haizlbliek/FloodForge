@@ -30,3 +30,33 @@ void LevelUtils::createLevelFiles(std::filesystem::path directory, std::string r
 	geo << "\n";
 	geo.close();
 }
+
+std::vector<Vector2i> LevelUtils::line(int x0, int y0, int x1, int y1) {
+	std::vector<Vector2i> points;
+
+	int dx = abs(x1 - x0);
+	int dy = abs(y1 - y0);
+	int sx = (x0 < x1) ? 1 : -1;
+	int sy = (y0 < y1) ? 1 : -1;
+	int error = dx - dy;
+
+	while (true) {
+		points.push_back(Vector2i(x0, y0));
+
+		if (x0 == x1 && y0 == y1) {
+			break;
+		}
+
+		int e2 = 2 * error;
+		if (e2 > -dy) {
+			error -= dy;
+			x0 += sx;
+		}
+		if (e2 < dx) {
+			error += dx;
+			y0 += sy;
+		}
+	}
+
+	return points;
+}

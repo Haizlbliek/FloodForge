@@ -1,15 +1,91 @@
 #include "DropletWindow.hpp"
 
 #include "../../Utils.hpp"
-#include "../../math/Vector.hpp"
 #include "../../ui/UI.hpp"
 #include "../Globals.hpp"
+#include "../../popup/Popups.hpp"
+
+#include "LevelUtils.hpp"
+
+Vector2 DropletWindow::cameraOffset;
+double DropletWindow::cameraScale = 40.0;
+double DropletWindow::cameraScaleTo = 40.0;
+
+bool DropletWindow::cameraPanning = false;
+bool DropletWindow::cameraPanningBlocked = false;
+Vector2 DropletWindow::cameraPanStartMouse = Vector2(0.0f, 0.0f);
+Vector2 DropletWindow::cameraPanStart = Vector2(0.0f, 0.0f);
+Vector2 DropletWindow::cameraPanTo = Vector2(0.0f, 0.0f);
+
+Vector2i DropletWindow::mouseTile;
+Vector2i DropletWindow::lastMouseTile;
+bool DropletWindow::lastMouseDrawing;
+
+void DropletWindow::UpdateCamera() {
+	bool isHoveringPopup = false;
+	for (Popup *popup : Popups::popups) {
+		Rect bounds = popup->Bounds();
+
+		if (bounds.inside(UI::mouse)) {
+			isHoveringPopup = true;
+			break;
+		}
+	}
+
+	double scrollY = -EditorState::window->getMouseScrollY();
+	double zoom = std::pow(1.25, scrollY);
+
+	Vector2 previousWorldMouse = Vector2(
+		UI::mouse.x * cameraScale + cameraOffset.x,
+		UI::mouse.y * cameraScale + cameraOffset.y
+	);
+
+	cameraScaleTo *= zoom;
+	cameraScaleTo = std::clamp(cameraScaleTo, 2.5, 40.0);
+	cameraScale += (cameraScaleTo - cameraScale) * Settings::getSetting<double>(Settings::Setting::CameraZoomSpeed);
+
+	Vector2 worldMouse = Vector2(
+		UI::mouse.x * cameraScale + cameraOffset.x,
+		UI::mouse.y * cameraScale + cameraOffset.y
+	);
+
+	cameraOffset.x += previousWorldMouse.x - worldMouse.x;
+	cameraOffset.y += previousWorldMouse.y - worldMouse.y;
+	cameraPanTo.x += previousWorldMouse.x - worldMouse.x;
+	cameraPanTo.y += previousWorldMouse.y - worldMouse.y;
+
+	// Panning
+	if (EditorState::mouse->Middle()) {
+		if (!cameraPanningBlocked && !cameraPanning) {
+			if (isHoveringPopup) cameraPanningBlocked = true;
+
+			if (!cameraPanningBlocked) {
+				cameraPanStart.x = cameraOffset.x;
+				cameraPanStart.y = cameraOffset.y;
+				cameraPanStartMouse.x = EditorState::globalMouse.x;
+				cameraPanStartMouse.y = EditorState::globalMouse.y;
+				cameraPanning = true;
+			}
+		}
+
+		if (cameraPanning && !cameraPanningBlocked) {
+			cameraPanTo.x = cameraPanStart.x + cameraScale * (cameraPanStartMouse.x - EditorState::globalMouse.x) / 512.0;
+			cameraPanTo.y = cameraPanStart.y + cameraScale * (cameraPanStartMouse.y - EditorState::globalMouse.y) / -512.0;
+		}
+	} else {
+		cameraPanning = false;
+		cameraPanningBlocked = false;
+	}
+
+	cameraOffset.x += (cameraPanTo.x - cameraOffset.x) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
+	cameraOffset.y += (cameraPanTo.y - cameraOffset.y) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
+}
 
 void DropletWindow::Draw() {
+	UpdateCamera();
+
 	Room *room = EditorState::dropletRoom;
 
-	double cameraScale = 40.0;
-	Vector2 cameraOffset = Vector2(0.0, 0.0);//Vector2(-room->width * 0.5, room->height * 0.5);
 	applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale * EditorState::screenBounds);
 
 	Rect rect = Rect::fromSize(0.0, 0.0, room->width, -room->height);
@@ -72,20 +148,41 @@ void DropletWindow::Draw() {
 	setThemeColor(ThemeColour::RoomBorder);
 	strokeRect(rect);
 
-	Vector2i mouseTile = {
+	mouseTile = {
 		int(UI::mouse.x * cameraScale + cameraOffset.x),
 		-int(UI::mouse.y * cameraScale + cameraOffset.y)
 	};
-	if (mouseTile.x >= 0 && mouseTile.x < room->width && mouseTile.y >= 0 && mouseTile.y < room->height) {
-		setThemeColor(ThemeColour::RoomBorderHighlight);
-		strokeRect(Rect::fromSize(rect.x0 + mouseTile.x, rect.y1 - mouseTile.y - 1, 1.0, 1.0));
 
-		if (UI::mouse.leftMouse) {
-			room->geometry[mouseTile.x * room->height + mouseTile.y] = 1;
+	if ((UI::mouse.leftMouse || UI::mouse.rightMouse) && (lastMouseTile.x != mouseTile.x || lastMouseTile.y != mouseTile.y)) {
+		std::vector<Vector2i> drawLine;
+		drawLine = LevelUtils::line(lastMouseTile.x, lastMouseTile.y, mouseTile.x, mouseTile.y);
+
+		for (Vector2i point : drawLine) {
+			if (room->InBounds(point.x, point.y)) {
+				if (UI::mouse.leftMouse) {
+					room->geometry[point.x * room->height + point.y] = 1;
+				}
+		
+				if (UI::mouse.rightMouse) {
+					room->geometry[point.x * room->height + point.y] = 0;
+				}
+			}
 		}
-
-		if (UI::mouse.rightMouse) {
-			room->geometry[mouseTile.x * room->height + mouseTile.y] = 0;
+	} else if ((UI::mouse.leftMouse && !UI::mouse.lastLeftMouse) || (UI::mouse.rightMouse && !UI::mouse.lastRightMouse)) {
+		if (room->InBounds(mouseTile.x, mouseTile.y)) {
+			if (UI::mouse.leftMouse) {
+				room->geometry[mouseTile.x * room->height + mouseTile.y] = 1;
+			}
+	
+			if (UI::mouse.rightMouse) {
+				room->geometry[mouseTile.x * room->height + mouseTile.y] = 0;
+			}
 		}
 	}
+
+	setThemeColor(ThemeColour::RoomBorderHighlight);
+	strokeRect(Rect::fromSize(rect.x0 + mouseTile.x, rect.y1 - mouseTile.y - 1, 1.0, 1.0));
+
+	lastMouseTile = mouseTile;
+	lastMouseDrawing = UI::mouse.leftMouse || UI::mouse.rightMouse;
 }

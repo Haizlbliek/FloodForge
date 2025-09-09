@@ -1,8 +1,17 @@
 #include "ConfirmPopup.hpp"
 
+#include "../ui/UI.hpp"
+
 ConfirmPopup::ConfirmPopup(Window *window, std::string question) : Popup(window) {
-	this->question = question;
-	bounds = Rect(-0.3, -0.15, 0.3, 0.15);
+	std::istringstream stream(question);
+	std::string line;
+
+	while (std::getline(stream, line)) {
+		this->question.push_back(line);
+	}
+
+	double height = this->question.size() * 0.05 + 0.06 + 0.07;
+	bounds = Rect(-0.4, -height * 0.5, 0.4, height * 0.5);
 }
 
 ConfirmPopup *ConfirmPopup::CancelText(std::string text) {
@@ -20,45 +29,27 @@ void ConfirmPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 
 
 	if (minimized) return;
 
-	mouseX -= bounds.x0 + 0.3;
-	mouseY -= bounds.y0 + 0.15;
-
-	Draw::pushMatrix();
-
-	Draw::translate(bounds.x0 + 0.3, bounds.y0 + 0.15);
-
 	setThemeColour(ThemeColour::Text);
-	Fonts::rainworld->writeCentered(question, 0.0, 0.04, 0.04, CENTER_XY);
+	int lineId = 0;
+	for (std::string line : question) {
+		double y = bounds.y1 - 0.08 - 0.05 * lineId;
+		Fonts::rainworld->writeCentered(line, 0.0, y, 0.04, CENTER_XY);
 
-	setThemeColour(ThemeColour::Button);
-	fillRect(-0.25,  -0.09, -0.05, -0.03);
-	fillRect( 0.05, -0.09,  0.25,  -0.03);
-
-	setThemeColour(ThemeColour::Text);
-	Fonts::rainworld->writeCentered(buttonCancel, -0.15, -0.06, 0.03, CENTER_XY);
-	Fonts::rainworld->writeCentered(buttonOkay, 0.15, -0.06, 0.03, CENTER_XY);
-
-	if (Rect(-0.2, -0.09, -0.05, -0.03).inside(mouseX, mouseY)) {
-		setThemeColour(ThemeColour::BorderHighlight);
-		strokeRect(-0.25, -0.09, -0.05, -0.03);
-	} else {
-		setThemeColour(ThemeColour::Border);
-		strokeRect(-0.25, -0.09, -0.05, -0.03);
+		lineId++;
 	}
 
-	if (Rect(0.05, -0.09, 0.2, -0.03).inside(mouseX, mouseY)) {
-		setThemeColour(ThemeColour::BorderHighlight);
-		strokeRect(0.05, -0.09, 0.25, -0.03);
-	} else {
-		setThemeColour(ThemeColour::Border);
-		strokeRect(0.05, -0.09, 0.25, -0.03);
+	if (UI::TextButton(Rect(bounds.x0 + 0.01, bounds.y0 + 0.06, bounds.CenterX() - 0.005, bounds.y0 + 0.01), buttonCancel)) {
+		reject();
 	}
 
-	Draw::popMatrix();
+	if (UI::TextButton(Rect(bounds.CenterX() + 0.005, bounds.y0 + 0.06, bounds.x1 - 0.01, bounds.y0 + 0.01), buttonOkay)) {
+		accept();
+	}
 }
 
 void ConfirmPopup::accept() {
 	close();
+
 	for (const auto &listener : listenersOkay) {
 		listener();
 	}
@@ -66,23 +57,9 @@ void ConfirmPopup::accept() {
 
 void ConfirmPopup::reject() {
 	close();
+
 	for (const auto &listener : listenersCancel) {
 		listener();
-	}
-}
-
-void ConfirmPopup::mouseClick(double mouseX, double mouseY) {
-	Popup::mouseClick(mouseX, mouseY);
-
-	mouseX -= bounds.x0 + 0.3;
-	mouseY -= bounds.y0 + 0.15;
-
-	if (Rect(-0.25, -0.09, -0.05, -0.03).inside(mouseX, mouseY)) {
-		reject();
-	}
-
-	if (Rect(0.05, -0.09, 0.25, -0.03).inside(mouseX, mouseY)) {
-		accept();
 	}
 }
 

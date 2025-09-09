@@ -453,6 +453,10 @@ const std::vector<Vector2i> Room::DenEntrances() const {
 	return denEntrances;
 }
 
+bool Room::InBounds(int x, int y) const {
+	return x >= 0 && x < width && y >= 0 && y < height;
+}
+
 const int Room::Width() const { return width; }
 const int Room::Height() const { return height; }
 

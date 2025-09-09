@@ -2,6 +2,9 @@
 
 #include "../gl.h"
 
+#include <vector>
+#include <string>
+
 #include "../Window.hpp"
 #include "../Theme.hpp"
 #include "../font/Fonts.hpp"
@@ -22,8 +25,6 @@ class ConfirmPopup : public Popup {
 
 		void reject();
 
-		void mouseClick(double mouseX, double mouseY);
-
 		ConfirmPopup *OnOkay(std::function<void()> listener);
 
 		ConfirmPopup *OnCancel(std::function<void()> listener);
@@ -32,7 +33,7 @@ class ConfirmPopup : public Popup {
 		std::string PopupName() { return "ConfirmPopup"; }
 
 	private:
-		std::string question;
+		std::vector<std::string> question;
 		std::string buttonOkay = "Okay";
 		std::string buttonCancel = "Cancel";
 

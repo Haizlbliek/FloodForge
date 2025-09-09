@@ -55,9 +55,15 @@ void updateGlobalInputs() {
 		if (Popups::popups.size() > 0) {
 			Popups::popups[Popups::popups.size() - 1]->reject();
 		} else {
-			Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit FloodForge?"))->OnOkay([&]() {
-				EditorState::window->close();
-			}));
+			if (EditorState::dropletOpen) {
+				Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit Droplet?\nUnsaved changes will be lost"))->OnOkay([&]() {
+					EditorState::dropletOpen = false;
+				}));
+			} else {
+				Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit FloodForge?"))->OnOkay([&]() {
+					EditorState::window->close();
+				}));
+			}
 		}
 	}
 
