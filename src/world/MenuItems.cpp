@@ -13,12 +13,15 @@
 #include "WorldParser.hpp"
 #include "WorldExporter.hpp"
 
+#include "droplet/DropletWindow.hpp"
+
 std::vector<Button*> MenuItems::buttons;
 std::vector<Button*> MenuItems::layerButtons;
+int MenuItems::currentLayer = MENU_LAYER_FLOOD_FORGE;
 
 double MenuItems::currentButtonX = 0.01;
 
-Button::Button(std::string text, Rect rect) : rect(rect), text(text) {
+Button::Button(std::string text, Rect rect, int layer) : rect(rect), text(text), layer(layer) {
 	Text(text);
 }
 
@@ -78,28 +81,28 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 }
 
 
-Button &MenuItems::addButton(std::string text) {
-	Button *button = new Button(text, Rect::fromSize(currentButtonX, -0.05, 0.0, 0.04));
+Button &MenuItems::addButton(std::string text, int layer) {
+	Button *button = new Button(text, Rect::fromSize(currentButtonX, -0.05, 0.0, 0.04), layer);
 	currentButtonX = button->rect.x1 + 0.01;
 	buttons.push_back(button);
 	return *button;
 }
 
-void MenuItems::addLayerButton(std::string buttonName, int layer) {
-	Button *btn = MenuItems::addButton(buttonName)
+void MenuItems::addLayerButton(std::string buttonName, int worldLayer, int layer) {
+	Button *btn = MenuItems::addButton(buttonName, layer)
 	.OnPress(
-		[layer](Button *button) {
+		[worldLayer](Button *button) {
 			if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT)) {
 				bool alreadySolo = true;
 				for (int i = 0; i < LAYER_COUNT; i++) {
-					if (EditorState::visibleLayers[i] != (i == layer)) {
+					if (EditorState::visibleLayers[i] != (i == worldLayer)) {
 						alreadySolo = false;
 						break;
 					}
 				}
 
 				for (int i = 0; i < LAYER_COUNT; i++) {
-					if (i == layer) {
+					if (i == worldLayer) {
 						EditorState::visibleLayers[i] = true;
 					} else {
 						EditorState::visibleLayers[i] = alreadySolo;
@@ -107,8 +110,8 @@ void MenuItems::addLayerButton(std::string buttonName, int layer) {
 					MenuItems::layerButtons[i]->darken = !EditorState::visibleLayers[i];
 				}
 			} else {
-				EditorState::visibleLayers[layer] = !EditorState::visibleLayers[layer];
-				button->darken = !EditorState::visibleLayers[layer];
+				EditorState::visibleLayers[worldLayer] = !EditorState::visibleLayers[worldLayer];
+				button->darken = !EditorState::visibleLayers[worldLayer];
 			}
 		}
 	);
@@ -116,23 +119,29 @@ void MenuItems::addLayerButton(std::string buttonName, int layer) {
 	MenuItems::layerButtons.push_back(btn);
 }
 
-void MenuItems::init(Window *window) {
+void MenuItems::init() {
 	EditorState::region.acronym = "";
+	currentLayer = MENU_LAYER_FLOOD_FORGE;
 
-	addButton("New").OnPress(
-		[window](Button *button) {
-			Popups::addPopup(new AcronymPopup(window));
+	initFloodForge();
+	initDroplet();
+}
+
+void MenuItems::initFloodForge() {
+	addButton("New", MENU_LAYER_FLOOD_FORGE).OnPress(
+		[](Button *button) {
+			Popups::addPopup(new AcronymPopup(EditorState::window));
 		}
 	);
 
-	addButton("Add Room").OnPress(
-		[window](Button *button) {
+	addButton("Add Room", MENU_LAYER_FLOOD_FORGE).OnPress(
+		[](Button *button) {
 			if (EditorState::region.acronym == "") {
-				Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore adding rooms."));
+				Popups::addPopup(new InfoPopup(EditorState::window, "You must create or import a region\nbefore adding rooms."));
 				return;
 			}
 
-			Popups::addPopup((new FilesystemPopup(window, std::regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"), "xx_a01.txt",
+			Popups::addPopup((new FilesystemPopup(EditorState::window, std::regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"), "xx_a01.txt",
 				[&](std::set<std::filesystem::path> paths) {
 					if (paths.empty()) return;
 
@@ -151,15 +160,15 @@ void MenuItems::init(Window *window) {
 								room->devPosition = EditorState::cameraOffset;
 								EditorState::rooms.push_back(room);
 							} else {
-								Popups::addPopup((new ConfirmPopup(window, "Change which acronym?"))
+								Popups::addPopup((new ConfirmPopup(EditorState::window, "Change which acronym?"))
 								->OkayText(toUpper(names[2]))
-								->OnOkay([names, roomFilePath, &window]() {
+								->OnOkay([names, roomFilePath]() {
 									std::string roomPath = "gate_" + EditorState::region.acronym + "_" + names[1] + ".txt";
 
 									copyRoom(roomFilePath, roomFilePath.parent_path() / roomPath)->SetTag("GATE");
 								})
 								->CancelText(toUpper(names[1]))
-								->OnCancel([names, roomFilePath, &window]() {
+								->OnCancel([names, roomFilePath]() {
 									std::string roomPath = "gate_" + names[2] + "_" + EditorState::region.acronym + ".txt";
 
 									copyRoom(roomFilePath, roomFilePath.parent_path() / roomPath)->SetTag("GATE");
@@ -174,7 +183,7 @@ void MenuItems::init(Window *window) {
 								room->devPosition = EditorState::cameraOffset;
 								EditorState::rooms.push_back(room);
 							} else {
-								Popups::addPopup((new ConfirmPopup(window, "Copy room to " + EditorState::region.acronym + "-rooms?"))
+								Popups::addPopup((new ConfirmPopup(EditorState::window, "Copy room to " + EditorState::region.acronym + "-rooms?"))
 								->CancelText("Just Add")
 								->OnCancel([roomFilePath]() {
 									std::string roomName = roomFilePath.stem().generic_u8string();
@@ -185,7 +194,7 @@ void MenuItems::init(Window *window) {
 									EditorState::rooms.push_back(room);
 								})
 								->OkayText("Yes")
-								->OnOkay([roomFilePath, &window]() {
+								->OnOkay([roomFilePath]() {
 									std::string roomPath = roomFilePath.filename().generic_u8string();
 									roomPath = EditorState::region.acronym + roomPath.substr(roomPath.find('_'));
 
@@ -199,10 +208,10 @@ void MenuItems::init(Window *window) {
 		}
 	);
 
-	addButton("Import").OnPress(
-		[window](Button *button) {
-			Popups::addPopup(new FilesystemPopup(window, std::regex("world_([^._-]+)\\.txt", std::regex_constants::icase), "world_xx.txt",
-				[window](std::set<std::filesystem::path> paths) {
+	addButton("Import", MENU_LAYER_FLOOD_FORGE).OnPress(
+		[](Button *button) {
+			Popups::addPopup(new FilesystemPopup(EditorState::window, std::regex("world_([^._-]+)\\.txt", std::regex_constants::icase), "world_xx.txt",
+				[](std::set<std::filesystem::path> paths) {
 					if (paths.empty()) return;
 
 					WorldParser::importWorldFile(*paths.begin());
@@ -211,8 +220,8 @@ void MenuItems::init(Window *window) {
 		}
 	);
 
-	addButton("Export").OnPress(
-		[window](Button *button) {
+	addButton("Export", MENU_LAYER_FLOOD_FORGE).OnPress(
+		[](Button *button) {
 			std::filesystem::path lastExportDirectory = EditorState::region.exportDirectory;
 
 			if (!Settings::getSetting<bool>(Settings::Setting::UpdateWorldFiles)) {
@@ -228,15 +237,15 @@ void MenuItems::init(Window *window) {
 				WorldExporter::exportWorldFile();
 				WorldExporter::exportImageFile(EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + ".png"), EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + "_2.png"));
 				WorldExporter::exportPropertiesFile(EditorState::region.exportDirectory / "properties.txt");
-				Popups::addPopup(new InfoPopup(window, "Exported successfully!"));
+				Popups::addPopup(new InfoPopup(EditorState::window, "Exported successfully!"));
 			} else {
 				if (EditorState::region.acronym == "") {
-					Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore exporting."));
+					Popups::addPopup(new InfoPopup(EditorState::window, "You must create or import a region\nbefore exporting."));
 					return;
 				}
 
-				Popups::addPopup(new FilesystemPopup(window, TYPE_FOLDER, "YOUR_MOD/world/",
-					[window](std::set<std::filesystem::path> pathStrings) {
+				Popups::addPopup(new FilesystemPopup(EditorState::window, TYPE_FOLDER, "YOUR_MOD/world/",
+					[](std::set<std::filesystem::path> pathStrings) {
 						if (pathStrings.empty()) return;
 
 						EditorState::region.exportDirectory = *pathStrings.begin() / EditorState::region.acronym;
@@ -248,7 +257,7 @@ void MenuItems::init(Window *window) {
 						WorldExporter::exportWorldFile();
 						WorldExporter::exportImageFile(EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + ".png"), EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + "_2.png"));
 						WorldExporter::exportPropertiesFile(EditorState::region.exportDirectory / "properties.txt");
-						Popups::addPopup(new InfoPopup(window, "Exported successfully!"));
+						Popups::addPopup(new InfoPopup(EditorState::window, "Exported successfully!"));
 					}
 				));
 			}
@@ -257,8 +266,8 @@ void MenuItems::init(Window *window) {
 		}
 	);
 
-	addButton("No Colours").OnPress(
-		[window](Button *button) {
+	addButton("No Colours", MENU_LAYER_FLOOD_FORGE).OnPress(
+		[](Button *button) {
 			EditorState::roomColours = (EditorState::roomColours + 1) % 3;
 
 			if (EditorState::roomColours == 0) {
@@ -274,21 +283,20 @@ void MenuItems::init(Window *window) {
 	);
 
 	for (int i = 0; i < LAYER_COUNT; i++) {
-		addLayerButton(std::to_string(i + 1), i);
+		addLayerButton(std::to_string(i + 1), i, MENU_LAYER_FLOOD_FORGE);
 	}
 
-	addButton("Dev Items: Hidden")
-	.OnPress(
-		[window](Button *button) {
+	addButton("Dev Items: Hidden", MENU_LAYER_FLOOD_FORGE).OnPress(
+		[](Button *button) {
 			EditorState::visibleDevItems = !EditorState::visibleDevItems;
 			button->Text(EditorState::visibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden");
 		}
 	);
 
-	addButton("Refresh Region").OnPress(
-		[window](Button *button) {
+	addButton("Refresh Region", MENU_LAYER_FLOOD_FORGE).OnPress(
+		[](Button *button) {
 			if (EditorState::region.acronym.empty() || EditorState::region.exportDirectory.empty()) {
-				Popups::addPopup(new InfoPopup(window, "You must create or import a region\nbefore refreshing"));
+				Popups::addPopup(new InfoPopup(EditorState::window, "You must create or import a region\nbefore refreshing"));
 				return;
 			}
 
@@ -296,9 +304,8 @@ void MenuItems::init(Window *window) {
 		}
 	);
 
-	addButton("Canon")
-	.OnPress(
-		[window](Button *button) {
+	addButton("Canon", MENU_LAYER_FLOOD_FORGE).OnPress(
+		[](Button *button) {
 			if (EditorState::roomPositionType == CANON_POSITION) {
 				EditorState::roomPositionType = DEV_POSITION;
 				button->Text("Dev");
@@ -321,12 +328,33 @@ void MenuItems::init(Window *window) {
 	// );
 }
 
+void MenuItems::initDroplet() {
+	addButton("Export Geometry", MENU_LAYER_DROPLET).OnPress(
+		[](Button *button) {
+			DropletWindow::exportGeometry();
+		}
+	);
+
+	addButton("Render", MENU_LAYER_DROPLET).OnPress(
+		[](Button *button) {
+			DropletWindow::render();
+		}
+	);
+}
+
 void MenuItems::cleanup() {
 	for (Button *button : buttons) {
 		delete button;
 	}
 
 	buttons.clear();
+}
+
+void MenuItems::setLayer(int layer) {
+	if (currentLayer == layer) return;
+
+	currentLayer = layer;
+	repositionButtons();
 }
 
 void MenuItems::draw() {
@@ -344,6 +372,8 @@ void MenuItems::draw() {
 	Draw::end();
 
 	for (Button *button : buttons) {
+		if (button->layer != currentLayer) continue;
+
 		button->draw();
 	}
 }
@@ -352,6 +382,8 @@ void MenuItems::repositionButtons() {
 	currentButtonX = 0.01;
 
 	for (Button *button : buttons) {
+		if (button->layer != currentLayer) continue;
+
 		button->rect.x1 = button->rect.x1 - button->rect.x0 + currentButtonX;
 		button->rect.x0 = currentButtonX;
 

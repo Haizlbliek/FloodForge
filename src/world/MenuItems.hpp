@@ -25,9 +25,12 @@
 
 #include "ExtraRoomData.hpp"
 
+#define MENU_LAYER_FLOOD_FORGE 0
+#define MENU_LAYER_DROPLET 1
+
 class Button {
 	public:
-		Button(std::string text, Rect rect);
+		Button(std::string text, Rect rect, int layer);
 
 		Button *OnPress(std::function<void(Button*)> listener);
 
@@ -39,6 +42,7 @@ class Button {
 
 		Rect rect;
 		bool darken = false;
+		int layer;
 
 	private:
 		std::function<void(Button*)> listener;
@@ -48,15 +52,19 @@ class Button {
 
 class MenuItems {
 	public:
-		static Button &addButton(std::string text);
+		static Button &addButton(std::string text, int layer);
 
-		static void addLayerButton(std::string buttonName, int layer);
+		static void addLayerButton(std::string buttonName, int worldLayer, int layer);
 
-		static void init(Window *window);
+		static void init();
+		static void initFloodForge();
+		static void initDroplet();
 
 		static void cleanup();
 
 		static void draw();
+
+		static void setLayer(int layer);
 
 	private:
 		static void repositionButtons();
@@ -65,4 +73,5 @@ class MenuItems {
 		static std::vector<Button*> layerButtons;
 
 		static double currentButtonX;
+		static int currentLayer;
 };

@@ -13,18 +13,11 @@ void LevelUtils::createLevelFiles(std::filesystem::path directory, std::string r
 	geo << "\n";
 	geo << "\n";
 	geo << "\n";
-	geo << "\n";
+	geo << "0\n";
 	geo << "\n";
 	for (int y = 0; y < height; y++) {
 		for (int x = 0; x < width; x++) {
-			geo << (fillLayer1 ? "1|" : "0|");
-		}
-	}
-	geo << "\n";
-	geo << "A\n";
-	for (int y = 0; y < height; y++) {
-		for (int x = 0; x < width; x++) {
-			geo << (fillLayer2 ? "1|" : "0|");
+			geo << (fillLayer1 ? "1|" : (fillLayer2 ? "0,6|" : "0|"));
 		}
 	}
 	geo << "\n";

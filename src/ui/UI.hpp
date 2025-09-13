@@ -68,6 +68,7 @@ namespace UI {
 	class TextureButtonMods : public ButtonMods {
 		public:
 			unsigned int textureId;
+			Vector2 textureScale = Vector2(1.0, 1.0);
 			Color textureColor = Color(1.0, 1.0, 1.0);
 
 			TextureButtonMods &Selected(bool v = true) {
@@ -87,6 +88,16 @@ namespace UI {
 
 			TextureButtonMods &TextureColor(Color v) {
 				textureColor = v;
+				return *this;
+			}
+
+			TextureButtonMods &TextureScale(float v) {
+				textureScale = Vector2(v, v);
+				return *this;
+			}
+
+			TextureButtonMods &TextureScale(Vector2 v) {
+				textureScale = v;
 				return *this;
 			}
 	};

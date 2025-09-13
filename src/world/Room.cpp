@@ -650,16 +650,65 @@ void Room::loadGeometry() {
 				case 6: // Background Solid
 					geometry[tileId] += 512;
 					break;
+				case 12: // Scavenger Den
+					geometry[tileId] += 4096;
+					break;
+				case 9: // Wack a Mole
+					geometry[tileId] += 8192;
+					break;
+				case 10: // Garbage Worm
+					geometry[tileId] += 16384;
+					break;
+				case 11: // Wormgrass
+					geometry[tileId] += 32768;
+					break;
+				case 7: // Batfly Hive
+					geometry[tileId] += 65536;
+					break;
+				case 8: // Waterfall
+					geometry[tileId] += 131072;
+					break;
 			}
 		}
 
 		tileId++;
-
 	}
 
 	geometryFile.close();
-
 	valid = true;
+
+	tileId = 0;
+	for (int x = 0; x < width; x++) {
+		for (int y = 0; y < height; y++) {
+			if ((geometry[tileId] & 15) == 2) {
+				int bits = 0;
+				bits += ((getTile(x - 1, y) & 15) == 1) * 1;
+				bits += ((getTile(x + 1, y) & 15) == 1) * 2;
+				bits += ((getTile(x, y - 1) & 15) == 1) * 4;
+				bits += ((getTile(x, y + 1) & 15) == 1) * 8;
+				int type = -1;
+
+				if (bits == 1 + 4) {
+					type = 0;
+				} else if (bits == 1 + 8) {
+					type = 1;
+				} else if (bits == 2 + 4) {
+					type = 2;
+				} else if (bits == 2 + 8) {
+					type = 3;
+				}
+
+				if (type == -1) {
+					Logger::warn("Invalid slope type ", roomName, " (", x, ", ", y, ")");
+				} else {
+					geometry[tileId] += 1024 * type;
+				}
+			}
+
+			tileId++;
+		}
+	}
+
 	ensureConnections();
 
 	for (Vector2i denLocation : denEntrances) {
@@ -683,7 +732,7 @@ void Room::checkImages() {
 }
 
 void Room::generateVBO() {
-	Vector2 &position = currentPosition();
+	Vector2 position = Vector2(0.0, 0.0);
 
 	vertices.clear();
 	indices.clear();
@@ -880,4 +929,11 @@ void Room::addQuad(const Vertex &a, const Vertex &b, const Vertex &c, const Vert
 	indices.push_back(cur_index + 3);
 	indices.push_back(cur_index + 0);
 	cur_index += 4;
+}
+
+void Room::regeneateGeometry() {
+	glDeleteBuffers(2, vbo);
+	glDeleteVertexArrays(1, &vao);
+
+	generateVBO();
 }

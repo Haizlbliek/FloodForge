@@ -179,10 +179,10 @@ UI::ButtonResponse UI::TextureButton(UVRect rect, TextureButtonMods mods) {
 	Draw::useTexture(mods.textureId);
 	Draw::color(mods.textureColor);
 	Draw::begin(Draw::QUADS);
-	Draw::texCoord(rect.uv0.x, rect.uv0.y); Draw::vertex(rect.x0, rect.y0);
-	Draw::texCoord(rect.uv1.x, rect.uv1.y); Draw::vertex(rect.x1, rect.y0);
-	Draw::texCoord(rect.uv2.x, rect.uv2.y); Draw::vertex(rect.x1, rect.y1);
-	Draw::texCoord(rect.uv3.x, rect.uv3.y); Draw::vertex(rect.x0, rect.y1);
+	Draw::texCoord(rect.uv0.x, rect.uv0.y); Draw::vertex(MathUtils::lerp(rect.x1, rect.x0, 0.5 + mods.textureScale.x * 0.5), MathUtils::lerp(rect.y1, rect.y0, 0.5 + mods.textureScale.y * 0.5));
+	Draw::texCoord(rect.uv1.x, rect.uv1.y); Draw::vertex(MathUtils::lerp(rect.x0, rect.x1, 0.5 + mods.textureScale.x * 0.5), MathUtils::lerp(rect.y1, rect.y0, 0.5 + mods.textureScale.y * 0.5));
+	Draw::texCoord(rect.uv2.x, rect.uv2.y); Draw::vertex(MathUtils::lerp(rect.x0, rect.x1, 0.5 + mods.textureScale.x * 0.5), MathUtils::lerp(rect.y0, rect.y1, 0.5 + mods.textureScale.y * 0.5));
+	Draw::texCoord(rect.uv3.x, rect.uv3.y); Draw::vertex(MathUtils::lerp(rect.x1, rect.x0, 0.5 + mods.textureScale.x * 0.5), MathUtils::lerp(rect.y0, rect.y1, 0.5 + mods.textureScale.y * 0.5));
 	Draw::end();
 	Draw::useTexture(0);
 	glDisable(GL_BLEND);

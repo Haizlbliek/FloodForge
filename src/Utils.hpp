@@ -11,15 +11,15 @@
 #include "math/Rect.hpp"
 
 void fillRect(Rect rect);
+void fillRect(UVRect rect);
 void fillRect(float x0, float y0, float x1, float y1);
-
-void textureRect(float x0, float y0, float x1, float y1);
 
 void strokeRect(Rect rect);
 void strokeRect(Rect rect, double thickness);
 void strokeRect(float x0, float y0, float x1, float y1);
 void strokeRect(float x0, float y0, float x1, float y1, double thickness);
 
+void drawLine(float x0, float y0, float x1, float y1);
 void drawLine(float x0, float y0, float x1, float y1, double thickness);
 
 void nineSlice(double x0, double y0, double x1, double y1, double thickness);

@@ -175,6 +175,8 @@ class Room {
 
 		Vector2 &currentPosition();
 
+		void regeneateGeometry();
+
 	protected:
 		Room() {}
 

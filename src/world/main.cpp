@@ -58,6 +58,7 @@ void updateGlobalInputs() {
 			if (EditorState::dropletOpen) {
 				Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit Droplet?\nUnsaved changes will be lost"))->OnOkay([&]() {
 					EditorState::dropletOpen = false;
+					EditorState::dropletRoom->regeneateGeometry();
 				}));
 			} else {
 				Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit FloodForge?"))->OnOkay([&]() {
@@ -99,10 +100,11 @@ int main() {
 		return -1;
 	}
 
+	DropletWindow::init();
 	UI::init(EditorState::window);
 	Settings::init();
 	Fonts::init();
-	MenuItems::init(EditorState::window);
+	MenuItems::init();
 	Popups::init();
 	Shaders::init();
 	Draw::init();
@@ -152,8 +154,10 @@ int main() {
 		updateGlobalInputs();
 
 		if (EditorState::dropletOpen) {
+			MenuItems::setLayer(MENU_LAYER_DROPLET);
 			DropletWindow::Draw();
 		} else {
+			MenuItems::setLayer(MENU_LAYER_FLOOD_FORGE);
 			FloodForgeWindow::Draw();
 		}
 
@@ -182,6 +186,7 @@ int main() {
 
 	EditorState::connections.clear();
 
+	DropletWindow::cleanup();
 	Fonts::cleanup();
 	MenuItems::cleanup();
 	Shaders::cleanup();
