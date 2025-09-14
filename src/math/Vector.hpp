@@ -37,6 +37,10 @@ struct BasicVector2 {
 		);
 	}
 
+	double length() {
+		return std::sqrt(x * x + y * y);
+	}
+
 	double distanceTo(const BasicVector2<T> &other) {
 		return std::sqrt(pow(x - other.x, 2) + pow(y - other.y, 2));
 	}

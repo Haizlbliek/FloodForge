@@ -4,6 +4,7 @@
 #include "../../ui/UI.hpp"
 #include "../Globals.hpp"
 #include "../../popup/Popups.hpp"
+#include "../../popup/InfoPopup.hpp"
 
 #include "LevelUtils.hpp"
 
@@ -19,6 +20,7 @@ Vector2 DropletWindow::cameraPanStartMouse = Vector2(0.0f, 0.0f);
 Vector2 DropletWindow::cameraPanStart = Vector2(0.0f, 0.0f);
 Vector2 DropletWindow::cameraPanTo = Vector2(0.0f, 0.0f);
 
+Vector2 DropletWindow::transformedMouse;
 Rect DropletWindow::roomRect;
 Vector2i DropletWindow::mouseTile;
 Vector2i DropletWindow::lastMouseTile;
@@ -31,6 +33,9 @@ std::string DropletWindow::TAB_NAMES[4] = { "Environment", "Geometry", "Cameras"
 std::string DropletWindow::GEOMETRY_TOOL_NAMES[16] = { "Wall", "Slope", "Platform", "Background Wall", "Horizontal Pole", "Vertical Pole", "Spear", "Rock", "Shortcut", "Room Exit", "Creature Den", "Wack a Mole Hole", "Scavenger Den", "Garbage Worm Den", "Wormgrass", "Batfly Hive" };
 
 DropletWindow::GeometryTool DropletWindow::selectedTool = DropletWindow::GeometryTool::WALL;
+
+std::vector<DropletWindow::Camera> DropletWindow::cameras;
+DropletWindow::Camera *DropletWindow::selectedCamera = nullptr;
 
 void DropletWindow::init() {
 	toolsTexture = new Texture(BASE_PATH / "assets" / "tools.png");
@@ -321,7 +326,7 @@ void applyTool(int x, int y, DropletWindow::GeometryTool tool) {
 	}
 }
 
-void DropletWindow::UpdateGeometry() {
+void DropletWindow::UpdateGeometryTab() {
 	if (!(UI::mouse.leftMouse || UI::mouse.rightMouse)) {
 		if (EditorState::window->justPressed(GLFW_KEY_A)) {
 			DropletWindow::selectedTool = (DropletWindow::GeometryTool) (((int) DropletWindow::selectedTool + 15) % 16);
@@ -361,6 +366,119 @@ void DropletWindow::UpdateGeometry() {
 	}
 
 	lastMouseDrawing = UI::mouse.leftMouse || UI::mouse.rightMouse;
+}
+
+bool drawCameraAngle(double x, double y, Vector2 &angle, bool dragging) {
+	bool hovered = !DropletWindow::blockMouse && (DropletWindow::transformedMouse.distanceTo(Vector2(x, y)) < 4.0 || DropletWindow::transformedMouse.distanceTo(Vector2(x + 4.0 * angle.x, y + 4.0 * angle.y)) < 0.05 * DropletWindow::cameraScale);
+	Draw::color(Color(0.0, 1.0, 0.0, hovered ? 1.0 : 0.5));
+	strokeCircle(x, y, 4.0, 20);
+	drawLine(x, y, x + angle.x * 4.0, y + angle.y * 4.0);
+	strokeCircle(x, y, angle.length() * 4.0, 20);
+	fillCircle(x + angle.x * 4.0, y + angle.y * 4.0, 0.01 * DropletWindow::cameraScale, 8);
+
+	if (dragging) {
+		angle.x = (DropletWindow::transformedMouse.x - x) / 4.0;
+		angle.y = (DropletWindow::transformedMouse.y - y) / 4.0;
+		if (!EditorState::window->modifierPressed(GLFW_MOD_SHIFT)) {
+			double len = angle.length();
+			if (len > 1.0) {
+				angle = angle / len;
+			}
+		}
+		return true;
+	}
+	if (hovered && UI::mouse.justClicked()) {
+		angle.x = (DropletWindow::transformedMouse.x - x) / 4.0;
+		angle.y = (DropletWindow::transformedMouse.y - y) / 4.0;
+		return true;
+	}
+	if (hovered && UI::mouse.rightMouse && !UI::mouse.lastRightMouse) {
+		angle.x = 0.0;
+		angle.y = 0.0;
+	}
+
+	return false;
+}
+
+void DropletWindow::UpdateCameraTab() {
+	static Camera *draggingCamera = nullptr;
+	static int draggingCameraAngle = -1;
+	static Vector2 dragStart;
+
+	if (!UI::mouse.leftMouse) {
+		draggingCamera = nullptr;
+		draggingCameraAngle = -1;
+	}
+
+	Vector2 cameraSizeTiles(70, 40);
+	Vector2 cameraSizeLarge(68.3, 38.4);
+	Vector2 cameraSizeSmall(51.2, 38.4);
+	glEnable(GL_BLEND);
+	int i = 1;
+	bool newSelectedCamera = false;
+	for (Camera &camera : DropletWindow::cameras) {
+		bool selected = DropletWindow::selectedCamera == &camera;
+		Vector2 center(camera.position.x + cameraSizeTiles.x * 0.5, camera.position.y + cameraSizeTiles.y * 0.5);
+		Draw::color(Color(0.0, 1.0, 0.0, selected ? 0.25 : 0.15));
+		Draw::begin(Draw::QUADS);
+		Draw::vertex(camera.position.x + camera.angle0.x * 4.0, -camera.position.y + camera.angle0.y * 4.0);
+		Draw::vertex(camera.position.x + camera.angle1.x * 4.0 + cameraSizeTiles.x, -camera.position.y + camera.angle1.y * 4.0);
+		Draw::vertex(camera.position.x + camera.angle2.x * 4.0 + cameraSizeTiles.x, -camera.position.y + camera.angle2.y * 4.0 - cameraSizeTiles.y);
+		Draw::vertex(camera.position.x + camera.angle3.x * 4.0, -camera.position.y + camera.angle3.y * 4.0 - cameraSizeTiles.y);
+		Draw::end();
+		Draw::color(Color(0.0, 0.0, 0.0));
+		strokeRect(Rect::fromSize(center.x - cameraSizeLarge.x * 0.5, -center.y - cameraSizeLarge.y * 0.5, cameraSizeLarge.x, cameraSizeLarge.y));
+		drawLine(camera.position.x, -center.y, camera.position.x + cameraSizeTiles.x, -center.y);
+		drawLine(center.x, -camera.position.y, center.x, -camera.position.y - cameraSizeTiles.y);
+		Draw::color(Color(0.0, 1.0, 0.0));
+		strokeRect(Rect::fromSize(center.x - cameraSizeSmall.x * 0.5, -center.y - cameraSizeSmall.y * 0.5, cameraSizeSmall.x, cameraSizeSmall.y));
+		Draw::color(Color(1.0));
+		Fonts::rainworld->writeCentered(std::to_string(i), center.x, -center.y, 0.0625 * cameraScale, CENTER_XY);
+		i++;
+
+		if (selected) {
+			if (drawCameraAngle(camera.position.x,                     -camera.position.y,                     camera.angle0, draggingCamera == &camera && draggingCameraAngle == 0)) { newSelectedCamera = true; draggingCamera = &camera; draggingCameraAngle = 0; }
+			if (drawCameraAngle(camera.position.x + cameraSizeTiles.x, -camera.position.y,                     camera.angle1, draggingCamera == &camera && draggingCameraAngle == 1)) { newSelectedCamera = true; draggingCamera = &camera; draggingCameraAngle = 1; }
+			if (drawCameraAngle(camera.position.x + cameraSizeTiles.x, -camera.position.y - cameraSizeTiles.y, camera.angle2, draggingCamera == &camera && draggingCameraAngle == 2)) { newSelectedCamera = true; draggingCamera = &camera; draggingCameraAngle = 2; }
+			if (drawCameraAngle(camera.position.x,                     -camera.position.y - cameraSizeTiles.y, camera.angle3, draggingCamera == &camera && draggingCameraAngle == 3)) { newSelectedCamera = true; draggingCamera = &camera; draggingCameraAngle = 3; }
+		}
+
+		if (draggingCamera == &camera && draggingCameraAngle == -1) {
+			camera.position += (DropletWindow::transformedMouse - dragStart) * Vector2(1, -1);
+			dragStart = DropletWindow::transformedMouse;
+		}
+
+		if (!newSelectedCamera && !DropletWindow::blockMouse && UI::mouse.justClicked() && Rect(camera.position.x, -camera.position.y, camera.position.x + cameraSizeTiles.x, -camera.position.y - cameraSizeTiles.y).inside(transformedMouse.x, transformedMouse.y)) {
+			newSelectedCamera = true;
+			DropletWindow::selectedCamera = &camera;
+			draggingCamera = &camera;
+			draggingCameraAngle = -1;
+			dragStart = DropletWindow::transformedMouse;
+		}
+	}
+	glDisable(GL_BLEND);
+
+	if (UI::mouse.justClicked() && !newSelectedCamera) {
+		DropletWindow::selectedCamera = nullptr;
+	}
+
+	if (EditorState::window->justPressed(GLFW_KEY_C)) {
+		Camera camera;
+		camera.position = DropletWindow::transformedMouse * Vector2(1, -1) - cameraSizeTiles * 0.5;
+		DropletWindow::cameras.push_back(camera);
+		DropletWindow::selectedCamera = &DropletWindow::cameras[DropletWindow::cameras.size() - 1];
+	}
+
+	if (EditorState::window->justPressed(GLFW_KEY_X) && DropletWindow::selectedCamera != nullptr) {
+		if (DropletWindow::cameras.size() == 1) {
+			Popups::addPopup(new InfoPopup(EditorState::window, "Cannot delete last camera"));
+		} else {
+			DropletWindow::cameras.erase(std::remove_if(DropletWindow::cameras.begin(), DropletWindow::cameras.end(), [](const DropletWindow::Camera &other) {
+				return &other == DropletWindow::selectedCamera;
+			}), DropletWindow::cameras.end());
+			DropletWindow::selectedCamera = nullptr;
+		}
+	}
 }
 
 void DropletWindow::Draw() {
@@ -534,6 +652,11 @@ void DropletWindow::Draw() {
 	setThemeColor(ThemeColour::RoomBorder);
 	strokeRect(roomRect);
 
+	transformedMouse = Vector2(
+		UI::mouse.x * cameraScale + cameraOffset.x,
+		UI::mouse.y * cameraScale + cameraOffset.y
+	);
+	lastMouseTile = mouseTile;
 	mouseTile = {
 		int(std::floor(UI::mouse.x * cameraScale + cameraOffset.x)),
 		-int(std::ceil(UI::mouse.y * cameraScale + cameraOffset.y))
@@ -541,9 +664,8 @@ void DropletWindow::Draw() {
 
 	blockMouse = UI::mouse.y >= (EditorState::screenBounds.y - 0.12) || UI::mouse.x >= (EditorState::screenBounds.x - 0.41);
 
-	if (currentTab == DropletWindow::EditorTab::GEOMETRY) UpdateGeometry();
-
-	lastMouseTile = mouseTile;
+	if (currentTab == DropletWindow::EditorTab::GEOMETRY) UpdateGeometryTab();
+	if (currentTab == DropletWindow::EditorTab::CAMERA) UpdateCameraTab();
 
 	// Draw UI
 	applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, EditorState::screenBounds);
@@ -610,12 +732,84 @@ void DropletWindow::Draw() {
 	}
 }
 
+void setCameraAngle(std::string from, Vector2 &angle) {
+	try {
+		double theta = std::stod(from.substr(0, from.find(','))) * (3.141592653589 / 180.0);
+		double radius = std::stod(from.substr(from.find(',') + 1));
+
+		angle.x = sin(theta) * radius;
+		angle.y = cos(theta) * radius;
+	} catch (std::invalid_argument) {
+		Logger::warn("Failed parsing camera angle: ", from);
+	}
+}
+
+void DropletWindow::loadRoom() {
+	cameras.clear();
+
+	std::fstream geometryFile(EditorState::dropletRoom->path);
+	if (!geometryFile.is_open() || !std::filesystem::exists(EditorState::dropletRoom->path)) {
+		Logger::error("Failed to open droplet room file: ", EditorState::dropletRoom->path);
+		return;
+	}
+
+	std::string tempLine;
+	for (int i = 0; i < 4; i++) std::getline(geometryFile, tempLine);
+	std::vector<std::string> camerasData = split(tempLine, '|');
+	Logger::info("Found ", camerasData.size(), " camera(s)");
+	for (std::string cameraData : camerasData) {
+		std::string xStr = cameraData.substr(0, cameraData.find(','));
+		std::string yStr = cameraData.substr(cameraData.find(',') + 1);
+		int x = 0, y = 0;
+		try {
+			x = std::stoi(xStr);
+			y = std::stoi(yStr);
+		} catch (std::invalid_argument) {
+			Logger::warn("Can't open droplet room due to invalid camera positions (", xStr, ", ", yStr, ")");
+		}
+
+		Camera camera;
+		camera.position = Vector2(x / 20.0, y / 20.0);
+		cameras.push_back(camera);
+	}
+
+	for (int i = 0; i < 9; i++) std::getline(geometryFile, tempLine);
+	if (!tempLine.empty() && startsWith(tempLine, "camera angles:")) {
+		std::vector<std::string> angleData = split(tempLine.substr(tempLine.find(':') + 1), '|');
+		for (int i = 0; i < cameras.size(); i++) {
+			if (i >= angleData.size()) break;
+
+			Camera &camera = cameras[i];
+			std::vector<std::string> angles = split(angleData[i], ';');
+			if (angles.size() != 4) {
+				Logger::warn("Failed to parse camera ", i, "; Not enough camera angles");
+				continue;
+			}
+			setCameraAngle(angles[0], camera.angle0);
+			setCameraAngle(angles[1], camera.angle1);
+			setCameraAngle(angles[2], camera.angle2);
+			setCameraAngle(angles[3], camera.angle3);
+		}
+	}
+
+	geometryFile.close();
+}
+
 void DropletWindow::exportGeometry() {
 	std::ofstream geo(EditorState::region.roomsDirectory / (EditorState::dropletRoom->roomName + ".txt"));
 	geo << EditorState::dropletRoom->roomName << "\n";
 	geo << EditorState::dropletRoom->width << "*" << EditorState::dropletRoom->height << "|-1|0\n";
 	geo << "0.0000*1.0000|0|0\n";
-	geo << "-220,-50\n";
+	{
+		bool first = true;
+		for (Camera camera : DropletWindow::cameras) {
+			if (!first) geo << "|";
+			first = false;
+	
+			geo << int(std::round(camera.position.x * 20.0)) << "," << int(std::round(camera.position.y * 20.0));
+		}
+		geo << "\n";
+	}
 	geo << "Border: Passable\n";
 	geo << "\n";
 	geo << "\n";
@@ -668,6 +862,20 @@ void DropletWindow::exportGeometry() {
 		}
 	}
 	geo << "\n";
+	{
+		geo << "camera angles:";
+		bool first = true;
+		for (Camera camera : DropletWindow::cameras) {
+			if (!first) geo << "|";
+			first = false;
+	
+			geo << (std::atan2(camera.angle0.x, camera.angle0.y) * (180.0 / 3.141592653589)) << "," << camera.angle0.length() << ";";
+			geo << (std::atan2(camera.angle1.x, camera.angle1.y) * (180.0 / 3.141592653589)) << "," << camera.angle1.length() << ";";
+			geo << (std::atan2(camera.angle2.x, camera.angle2.y) * (180.0 / 3.141592653589)) << "," << camera.angle2.length() << ";";
+			geo << (std::atan2(camera.angle3.x, camera.angle3.y) * (180.0 / 3.141592653589)) << "," << camera.angle3.length();
+		}
+		geo << "\n";
+	}
 	geo.close();
 }
 

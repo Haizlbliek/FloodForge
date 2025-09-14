@@ -175,6 +175,7 @@ class Room {
 
 		Vector2 &currentPosition();
 
+		std::filesystem::path path;
 		void regeneateGeometry();
 
 	protected:
@@ -198,8 +199,6 @@ class Room {
 		size_t cur_index;
 		GLuint vbo[2]; // first: vertices, second: indices
 		GLuint vao;
-
-		std::filesystem::path path;
 
 		std::vector<std::string> tags;
 

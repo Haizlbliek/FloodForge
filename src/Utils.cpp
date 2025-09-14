@@ -68,6 +68,30 @@ void strokeRect(float x0, float y0, float x1, float y1, double thickness) {
 	drawLine(x0, y1, x0, y0, thickness);
 }
 
+void fillCircle(float x, float y, float radius, int resolution) {
+	Draw::begin(Draw::QUADS);
+	for (int i = 0; i <= resolution; i++) {
+		float r = i / (float) resolution * 6.283185;
+		if (i != 0) {
+			Draw::vertex(x + std::cos(r) * radius, y + std::sin(r) * radius);
+			Draw::vertex(x, y);
+		}
+		if (i != resolution) {
+			Draw::vertex(x, y);
+			Draw::vertex(x + std::cos(r) * radius, y + std::sin(r) * radius);
+		}
+	}
+	Draw::end();
+}
+
+void strokeCircle(float x, float y, float radius, int resolution) {
+	Draw::begin(Draw::LINE_LOOP);
+	for (int i = 0; i < resolution; i++) {
+		float r = i / (float) resolution * 6.283185;
+		Draw::vertex(x + std::cos(r) * radius, y + std::sin(r) * radius);
+	}
+	Draw::end();
+}
 
 void nineSlice(double x0, double y0, double x1, double y1, double thickness) {
 	double t = 1.0 / 3.0;

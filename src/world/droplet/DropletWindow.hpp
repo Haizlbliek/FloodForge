@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "../../math/Vector.hpp"
 #include "../../math/Rect.hpp"
 #include "../../Texture.hpp"
@@ -31,12 +32,24 @@ namespace DropletWindow {
 		BATFLY_HIVE
 	};
 
+	class Camera {
+		public:
+			Vector2 position;
+			Vector2 angle0;
+			Vector2 angle1;
+			Vector2 angle2;
+			Vector2 angle3;
+	};
+
 	void init();
 	void cleanup();
 
+	void loadRoom();
+
 	void UpdateCamera();
 
-	void UpdateGeometry();
+	void UpdateGeometryTab();
+	void UpdateCameraTab();
 
 	void Draw();
 
@@ -56,6 +69,7 @@ namespace DropletWindow {
 	extern Vector2 cameraPanTo;
 	extern double cameraScaleTo;
 
+	extern Vector2 transformedMouse;
 	extern Rect roomRect;
 	extern Vector2i mouseTile;
 	extern Vector2i lastMouseTile;
@@ -68,4 +82,7 @@ namespace DropletWindow {
 	extern std::string GEOMETRY_TOOL_NAMES[16];
 
 	extern GeometryTool selectedTool;
+
+	extern std::vector<Camera> cameras;
+	extern Camera *selectedCamera;
 }

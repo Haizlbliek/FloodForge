@@ -22,6 +22,9 @@ void strokeRect(float x0, float y0, float x1, float y1, double thickness);
 void drawLine(float x0, float y0, float x1, float y1);
 void drawLine(float x0, float y0, float x1, float y1, double thickness);
 
+void fillCircle(float x, float y, float radius, int resolution);
+void strokeCircle(float x, float y, float radius, int resolution);
+
 void nineSlice(double x0, double y0, double x1, double y1, double thickness);
 
 GLuint loadTexture(std::filesystem::path filepath);

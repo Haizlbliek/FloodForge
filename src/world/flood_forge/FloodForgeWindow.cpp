@@ -17,6 +17,8 @@
 #include "../popup/ConditionalPopup.hpp"
 #include "../popup/CreateRoomPopup.hpp"
 
+#include "../droplet/DropletWindow.hpp"
+
 Vector2 FloodForgeWindow::worldMouse;
 
 bool FloodForgeWindow::cameraPanning = false;
@@ -831,6 +833,7 @@ void FloodForgeWindow::updateMain() {
 			} else {
 				EditorState::dropletOpen = true;
 				EditorState::dropletRoom = hoveringRoom;
+				DropletWindow::loadRoom();
 			}
 		}
 	}
