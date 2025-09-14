@@ -67,7 +67,7 @@ void DropletWindow::UpdateCamera() {
 	);
 
 	cameraScaleTo *= zoom;
-	cameraScaleTo = std::clamp(cameraScaleTo, 2.5, 40.0);
+	cameraScaleTo = std::clamp(cameraScaleTo, 2.5, 1.0 * std::max(EditorState::dropletRoom->width, EditorState::dropletRoom->height));
 	cameraScale += (cameraScaleTo - cameraScale) * Settings::getSetting<double>(Settings::Setting::CameraZoomSpeed);
 
 	Vector2 worldMouse = Vector2(
@@ -119,10 +119,10 @@ void verifyShortcut(int x, int y) {
 		(EditorState::dropletRoom->getTile(x - 1, y + 1) % 16 == 1) && (EditorState::dropletRoom->getTile(x + 1, y + 1) % 16 == 1)
 	) {
 		int dir = 0;
-		dir += (EditorState::dropletRoom->getTile(x - 1, y) == 0) ? 1 : 0;
-		dir += (EditorState::dropletRoom->getTile(x + 1, y) == 0) ? 2 : 0;
-		dir += (EditorState::dropletRoom->getTile(x, y - 1) == 0) ? 4 : 0;
-		dir += (EditorState::dropletRoom->getTile(x, y + 1) == 0) ? 8 : 0;
+		dir += (EditorState::dropletRoom->getTile(x - 1, y) % 16 == 0 || EditorState::dropletRoom->getTile(x - 1, y) % 16 == 2) ? 1 : 0;
+		dir += (EditorState::dropletRoom->getTile(x + 1, y) % 16 == 0 || EditorState::dropletRoom->getTile(x + 1, y) % 16 == 2) ? 2 : 0;
+		dir += (EditorState::dropletRoom->getTile(x, y - 1) % 16 == 0 || EditorState::dropletRoom->getTile(x, y - 1) % 16 == 2) ? 4 : 0;
+		dir += (EditorState::dropletRoom->getTile(x, y + 1) % 16 == 0 || EditorState::dropletRoom->getTile(x, y + 1) % 16 == 2) ? 8 : 0;
 		dir += (EditorState::dropletRoom->getTile(x - 1, y) & 128) > 0 ? 16 : 0;
 		dir += (EditorState::dropletRoom->getTile(x + 1, y) & 128) > 0 ? 32 : 0;
 		dir += (EditorState::dropletRoom->getTile(x, y - 1) & 128) > 0 ? 64 : 0;
@@ -136,7 +136,9 @@ void verifyShortcut(int x, int y) {
 	if (shorcutEntrance) {
 		EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & ~15) | 4;
 	} else {
-		EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & ~15) | 1;
+		if (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] % 16 == 4) {
+			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & ~15) | 1;
+		}
 	}
 }
 
@@ -307,8 +309,10 @@ void applyTool(int x, int y, DropletWindow::GeometryTool tool) {
 				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~256;
 				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~4096;
 				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~8192;
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & ~15) | 1;
-	
+				if (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] % 16 == 4) {
+					EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & ~15) | 1;
+				}
+
 				verifyShortcut(x - 1, y);
 				verifyShortcut(x + 1, y);
 				verifyShortcut(x, y - 1);
