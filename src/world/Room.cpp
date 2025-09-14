@@ -589,7 +589,7 @@ void Room::loadGeometry() {
 
 	std::string tempLine;
 
-	std::getline(geometryFile, tempLine);
+	std::getline(geometryFile, tempLine); // Room name
 	std::getline(geometryFile, tempLine, '*');
 	width = std::stoi(tempLine);
 	std::getline(geometryFile, tempLine, '|');
@@ -600,17 +600,19 @@ void Room::loadGeometry() {
 		std::getline(geometryFile, tempLine, '|');
 		water = std::stoi(tempLine);
 		if (water == 0) water = -1;
-		std::getline(geometryFile, tempLine); // Junk
+		std::getline(geometryFile, tempLine); // Junk - Get to end of line
 	}
 
-	std::getline(geometryFile, tempLine); // Junk
+	std::getline(geometryFile, tempLine); // Junk - Lighting
 	
 	std::getline(geometryFile, tempLine); // Cameras
 	std::vector<std::string> items = split(tempLine, '|');
 	cameras = items.size();
-	
-	std::getline(geometryFile, tempLine); // Junk
-	std::getline(geometryFile, tempLine); // Junk
+
+	std::getline(geometryFile, tempLine); // Junk - Border
+	std::getline(geometryFile, tempLine); // Objects
+	std::vector<std::string> objects = split(tempLine, '|');
+
 	std::getline(geometryFile, tempLine); // Junk
 	std::getline(geometryFile, tempLine); // Junk
 	std::getline(geometryFile, tempLine); // Junk
@@ -707,6 +709,24 @@ void Room::loadGeometry() {
 
 			tileId++;
 		}
+	}
+
+	for (std::string object : objects) {
+		std::vector<std::string> item = split(object, ',');
+		if (item.size() != 3) {
+			Logger::warn("Failed to parse object: ", object);
+			continue;
+		}
+		int x, y;
+		try {
+			x = std::stoi(item[1]) - 1;
+			y = std::stoi(item[2]) - 1;
+		} catch (std::invalid_argument) {
+			Logger::warn("Failed to parse object: ", object);
+			continue;
+		}
+
+		geometry[y + x * height] += item[0] == "0" ? 262144 : 524288;
 	}
 
 	ensureConnections();

@@ -324,6 +324,20 @@ void applyTool(int x, int y, DropletWindow::GeometryTool tool) {
 			verifyShortcut(x, y + 1);
 		}
 	}
+	else if (tool == DropletWindow::GeometryTool::ROCK) {
+		if (UI::mouse.rightMouse) {
+			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~262144;
+		} else {
+			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 262144;
+		}
+	}
+	else if (tool == DropletWindow::GeometryTool::SPEAR) {
+		if (UI::mouse.rightMouse) {
+			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~524288;
+		} else {
+			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 524288;
+		}
+	}
 }
 
 void DropletWindow::UpdateGeometryTab() {
@@ -644,6 +658,14 @@ void DropletWindow::Draw() {
 				setThemeColor(ThemeColour::RoomShortcutDot);
 				fillRect(UVRect(x0, y0, x1, y1).uv(0.75, 0.5, 1.0, 0.75));
 			}
+			if ((geo & 262144) > 0) {
+				setThemeColor(ThemeColour::RoomShortcutDot);
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.5, 0.5, 0.75));
+			}
+			if ((geo & 524288) > 0) {
+				setThemeColor(ThemeColour::RoomShortcutDot);
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.5, 0.25, 0.75));
+			}
 		}
 	}
 	Draw::useTexture(0);
@@ -811,6 +833,17 @@ void DropletWindow::exportGeometry() {
 		geo << "\n";
 	}
 	geo << "Border: Passable\n";
+	for (int x = 0; x < EditorState::dropletRoom->width; x++) {
+		for (int y = 0; y < EditorState::dropletRoom->height; y++) {
+			int tile = EditorState::dropletRoom->getTile(x, y);
+			if ((tile & 262144) > 0) {
+				geo << "0," << (x + 1) << "," << (y + 1) << "|";
+			}
+			if ((tile & 524288) > 0) {
+				geo << "1," << (x + 1) << "," << (y + 1) << "|";
+			}
+		}
+	}
 	geo << "\n";
 	geo << "\n";
 	geo << "\n";
