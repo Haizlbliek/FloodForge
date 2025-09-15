@@ -7,6 +7,7 @@
 #include "../../popup/InfoPopup.hpp"
 
 #include "LevelUtils.hpp"
+#include "../Backup.hpp"
 
 Texture *DropletWindow::shortcutsTexture = nullptr;
 Texture *DropletWindow::toolsTexture = nullptr;
@@ -156,6 +157,9 @@ void applyTool(int x, int y, DropletWindow::GeometryTool tool) {
 			bits += ((EditorState::dropletRoom->getTile(x, y - 1) & 15) == 1) ? 4 : 0;
 			bits += ((EditorState::dropletRoom->getTile(x, y + 1) & 15) == 1) ? 8 : 0;
 			int type = -1;
+			if ((EditorState::dropletRoom->getTile(x - 1, y) & 15) == 2 || (EditorState::dropletRoom->getTile(x + 1, y) & 15) == 2 || (EditorState::dropletRoom->getTile(x, y - 1) & 15) == 2 || (EditorState::dropletRoom->getTile(x, y + 1) & 15) == 2) {
+				bits = -1;
+			}
 
 			if (bits == 1 + 4) {
 				type = 0;
@@ -916,7 +920,94 @@ void DropletWindow::exportGeometry() {
 	geo.close();
 }
 
+#define CAMERA_TEXTURE_WIDTH 1400
+#define CAMERA_TEXTURE_HEIGHT 800
+
+bool validSlopePos(int geo, Vector2 tp) {
+	int type = (geo & (1024 | 2048)) / 1024;
+
+	double x = std::fmod(tp.x - 0.5, 1.0);
+	double y = std::fmod(tp.y - 0.5, 1.0);
+	switch (type) {
+		case 0: return 1.0 - x > y;
+		case 1: return 1.0 - x > 1.0 - y;
+		case 2: return x > y;
+		case 3: return x > 1.0 - y;
+	}
+
+	return false;
+}
+
+void renderCamera(DropletWindow::Camera &camera, std::filesystem::path outputPath) {
+	std::vector<unsigned char> image(CAMERA_TEXTURE_WIDTH * CAMERA_TEXTURE_HEIGHT * 3);
+
+	// (121, 0, 0) -> L1 solid
+	// (131, 0, 0) -> L2 solid
+
+	// (91, 0, 0) -> L1 dark
+	// (151, 0, 0) -> L1 light
+	// (101, 0, 0) -> L2 dark
+	// (161, 0, 0) -> L2 light
+
+	for (int x = 0; x < CAMERA_TEXTURE_WIDTH; x++) {
+		for (int y = 0; y < CAMERA_TEXTURE_HEIGHT; y++) {
+			int id = (x + y * CAMERA_TEXTURE_WIDTH) * 3;
+			Vector2 tp = Vector2(
+				camera.position.x + x * 1.0 / 20.0,
+				camera.position.y + y * 1.0 / 20.0
+			);
+			Vector2i tile = Vector2i(std::round(tp.x), std::round(tp.y));
+			int geo = EditorState::dropletRoom->getTile(tile.x, tile.y);
+			if ((geo & 128) > 0 && (std::abs(std::fmod(tp.y + 0.5, 1.0) - 0.5) + std::abs(std::fmod(tp.x + 0.5, 1.0) - 0.5)) < 0.25) {
+				image[id + 0] = 31;
+				image[id + 1] = 8;
+				image[id + 2] = 0;
+			} else if (geo % 16 == 1 || geo % 16 == 4) {
+				image[id + 0] = 121;
+				image[id + 1] = 0;
+				image[id + 2] = 0;
+			} else if (geo % 16 == 3 && std::fmod(tp.y, 1.0) > 0.5) {
+				image[id + 0] = 157;
+				image[id + 1] = 16;
+				image[id + 2] = 0;
+			} else if (geo % 16 == 2 && validSlopePos(geo, tp)) {
+				image[id + 0] = 121;
+				image[id + 1] = 0;
+				image[id + 2] = 0;
+			} else if ((geo & 16) > 0 && std::abs(std::fmod(tp.x + 0.5, 1.0) - 0.5) < 0.1) {
+				image[id + 0] = 95;
+				image[id + 1] = 0;
+				image[id + 2] = 0;
+			} else if ((geo & 32) > 0 && std::abs(std::fmod(tp.y + 0.5, 1.0) - 0.5) < 0.1) {
+				image[id + 0] = 95;
+				image[id + 1] = 0;
+				image[id + 2] = 0;
+			} else {
+				if ((geo & 512) > 0) {
+					image[id + 0] = 131;
+					image[id + 1] = 0;
+					image[id + 2] = 0;
+				} else {
+					image[id + 0] = 255;
+					image[id + 1] = 255;
+					image[id + 2] = 255;
+				}
+			}
+		}
+	}
+
+	Backup::backup(outputPath);
+	if (stbi_write_png(outputPath.generic_u8string().c_str(), CAMERA_TEXTURE_WIDTH, CAMERA_TEXTURE_HEIGHT, 3, image.data(), CAMERA_TEXTURE_WIDTH * 3)) {
+		Logger::info("Screen exported");
+	} else {
+		Logger::error("Exporting screen failed");
+	}
+}
+
 void DropletWindow::render() {
 	exportGeometry();
-	// TODO
+
+	for (int i = 0; i < cameras.size(); i++) {
+		renderCamera(cameras[i], EditorState::region.roomsDirectory / (EditorState::dropletRoom->roomName + "_" + std::to_string(i + 1) + ".png"));
+	}
 }
