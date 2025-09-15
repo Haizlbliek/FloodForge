@@ -30,7 +30,7 @@ bool DropletWindow::blockMouse = false;
 
 DropletWindow::EditorTab DropletWindow::currentTab;
 
-std::string DropletWindow::TAB_NAMES[4] = { "Environment", "Geometry", "Cameras", "Generator" };
+std::string DropletWindow::TAB_NAMES[3] = { "Environment", "Geometry", "Cameras" };
 std::string DropletWindow::GEOMETRY_TOOL_NAMES[16] = { "Wall", "Slope", "Platform", "Background Wall", "Horizontal Pole", "Vertical Pole", "Spear", "Rock", "Shortcut", "Room Exit", "Creature Den", "Wack a Mole Hole", "Scavenger Den", "Garbage Worm Den", "Wormgrass", "Batfly Hive" };
 
 DropletWindow::GeometryTool DropletWindow::selectedTool = DropletWindow::GeometryTool::WALL;
@@ -40,6 +40,9 @@ DropletWindow::Camera *DropletWindow::selectedCamera = nullptr;
 
 bool DropletWindow::enclosedRoom = false;
 bool DropletWindow::waterInFront = false;
+
+int *DropletWindow::backupGeometry = nullptr;
+int DropletWindow::backupWater;
 
 void DropletWindow::init() {
 	toolsTexture = new Texture(BASE_PATH / "assets" / "tools.png");
@@ -585,7 +588,6 @@ void DropletWindow::Draw() {
 	if (EditorState::window->justPressed(GLFW_KEY_1)) currentTab = DropletWindow::EditorTab::DETAILS;
 	if (EditorState::window->justPressed(GLFW_KEY_2)) currentTab = DropletWindow::EditorTab::GEOMETRY;
 	if (EditorState::window->justPressed(GLFW_KEY_3)) currentTab = DropletWindow::EditorTab::CAMERA;
-	if (EditorState::window->justPressed(GLFW_KEY_4)) currentTab = DropletWindow::EditorTab::GENERATOR;
 
 	UpdateCamera();
 
@@ -862,7 +864,7 @@ void DropletWindow::Draw() {
 
 	Vector2 tabPosition = Vector2(-EditorState::screenBounds.x + 0.01, EditorState::screenBounds.y - 0.12);
 	double tabHeight = 0.05;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 3; i++) {
 		double tabWidth = std::max(0.15, Fonts::rainworld->getTextWidth(TAB_NAMES[i], 0.03) + 0.04);
 		Rect tab = Rect::fromSize(tabPosition, Vector2(tabWidth, tabHeight));
 		bool selected = i == (int) DropletWindow::currentTab;
@@ -901,6 +903,16 @@ void setCameraAngle(std::string from, Vector2 &angle) {
 	} catch (std::invalid_argument) {
 		Logger::warn("Failed parsing camera angle: ", from);
 	}
+}
+
+void backup() {
+	if (DropletWindow::backupGeometry != nullptr) delete[] DropletWindow::backupGeometry;
+
+	DropletWindow::backupGeometry = new int[EditorState::dropletRoom->width * EditorState::dropletRoom->height];
+	for (int i = 0; i < EditorState::dropletRoom->width * EditorState::dropletRoom->height; i++) {
+		DropletWindow::backupGeometry[i] = EditorState::dropletRoom->geometry[i];
+	}
+	DropletWindow::backupWater = EditorState::dropletRoom->water;
 }
 
 void DropletWindow::loadRoom() {
@@ -965,6 +977,18 @@ void DropletWindow::loadRoom() {
 	}
 
 	geometryFile.close();
+
+	backup();
+}
+
+void DropletWindow::resetChanges() {
+	for (int i = 0; i < EditorState::dropletRoom->width * EditorState::dropletRoom->height; i++) {
+		EditorState::dropletRoom->geometry[i] = DropletWindow::backupGeometry[i];
+	}
+	EditorState::dropletRoom->water = DropletWindow::backupWater;
+
+	delete[] DropletWindow::backupGeometry;
+	DropletWindow::backupGeometry = nullptr;
 }
 
 void DropletWindow::exportGeometry() {
@@ -1061,6 +1085,8 @@ void DropletWindow::exportGeometry() {
 		geo << "\n";
 	}
 	geo.close();
+
+	backup();
 }
 
 #define CAMERA_TEXTURE_WIDTH 1400

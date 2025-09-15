@@ -58,6 +58,7 @@ void updateGlobalInputs() {
 			if (EditorState::dropletOpen) {
 				Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit Droplet?\nUnsaved changes will be lost"))->OnOkay([&]() {
 					EditorState::dropletOpen = false;
+					DropletWindow::resetChanges();
 					EditorState::dropletRoom->regeneateGeometry();
 				}));
 			} else {

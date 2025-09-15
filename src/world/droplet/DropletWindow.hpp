@@ -9,8 +9,7 @@ namespace DropletWindow {
 	enum class EditorTab {
 		DETAILS,
 		GEOMETRY,
-		CAMERA,
-		GENERATOR
+		CAMERA
 	};
 
 	enum class GeometryTool {
@@ -45,6 +44,7 @@ namespace DropletWindow {
 	void cleanup();
 
 	void loadRoom();
+	void resetChanges();
 
 	void Draw();
 
@@ -74,7 +74,7 @@ namespace DropletWindow {
 
 	extern EditorTab currentTab;
 
-	extern std::string TAB_NAMES[4];
+	extern std::string TAB_NAMES[3];
 	extern std::string GEOMETRY_TOOL_NAMES[16];
 
 	extern GeometryTool selectedTool;
@@ -84,4 +84,7 @@ namespace DropletWindow {
 
 	extern bool enclosedRoom;
 	extern bool waterInFront;
+
+	extern int *backupGeometry;
+	extern int backupWater;
 }

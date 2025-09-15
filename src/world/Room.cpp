@@ -954,5 +954,33 @@ void Room::regeneateGeometry() {
 	glDeleteBuffers(2, vbo);
 	glDeleteVertexArrays(1, &vao);
 
+	shortcutEntrances.clear();
+	denEntrances.clear();
+	roomEntrances.clear();
+
+	int tileId = 0;
+	for (int x = 0; x < width; x++) {
+		for (int y = 0; y < height; y++) {
+			if ((geometry[tileId] & 64) > 0) { // Exit
+				shortcutEntrances.push_back(std::make_pair( Vector2i(tileId / height, tileId % height), ShortcutType::ROOM ));
+			}
+			if ((geometry[tileId] & 256) > 0) { // Den
+				shortcutEntrances.push_back(std::make_pair( Vector2i(tileId / height, tileId % height), ShortcutType::DEN ));
+			}
+
+			tileId++;
+		}
+	}
+
+	ensureConnections();
+
+	// TODO: Parse dens
+	while (dens.size() < denEntrances.size()) {
+		dens.push_back(Den());
+	}
+	while (dens.size() > denEntrances.size()) {
+		dens.pop_back();
+	}
+
 	generateVBO();
 }
