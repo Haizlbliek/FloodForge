@@ -46,11 +46,6 @@ namespace DropletWindow {
 
 	void loadRoom();
 
-	void UpdateCamera();
-
-	void UpdateGeometryTab();
-	void UpdateCameraTab();
-
 	void Draw();
 
 	void exportGeometry();
@@ -86,4 +81,7 @@ namespace DropletWindow {
 
 	extern std::vector<Camera> cameras;
 	extern Camera *selectedCamera;
+
+	extern bool enclosedRoom;
+	extern bool waterInFront;
 }

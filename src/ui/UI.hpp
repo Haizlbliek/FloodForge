@@ -5,6 +5,7 @@
 #include "../math/UVRect.hpp"
 #include "../math/Colour.hpp"
 #include "../Window.hpp"
+#include "../Texture.hpp"
 
 #include "UIMouse.hpp"
 
@@ -20,6 +21,11 @@ namespace UI {
 		bool focused;
 		bool hovered;
 		bool submitted;
+	};
+
+	struct CheckBoxResponse {
+		bool clicked;
+		bool checked;
 	};
 
 	struct Editable {
@@ -154,6 +160,7 @@ namespace UI {
 	UI::ButtonResponse TextButton(Rect rect, std::string text, TextButtonMods mods = {});
 	UI::ButtonResponse TextureButton(UVRect rect, TextureButtonMods mods = {});
 	UI::TextInputResponse TextInput(Rect rect, TextInputEditable &edit, TextInputMods mods = {});
+	UI::CheckBoxResponse CheckBox(Rect rect, bool &value);
 
 	void Delete(const Editable &editable);
 	static void _keyCallback(void *object, int action, int key);
@@ -164,4 +171,5 @@ namespace UI {
 	extern Editable *currentEditable;
 	extern int selectTime;
 	extern int selectIndex;
+	extern Texture *uiTexture;
 }

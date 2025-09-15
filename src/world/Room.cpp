@@ -193,7 +193,7 @@ void Room::draw(Vector2 mousePosition, int positionType) {
 
 	if (water != -1) {
 		Draw::color(0.0, 0.0, 0.5, 0.5);
-		fillRect(position.x, position.y - (height - std::min(water, height)), position.x + width, position.y - height);
+		fillRect(position.x, position.y - (height - std::min(water + 0.5, (double) height)), position.x + width, position.y - height);
 	}
 
 	glDisable(GL_BLEND);
@@ -599,7 +599,6 @@ void Room::loadGeometry() {
 	} else {
 		std::getline(geometryFile, tempLine, '|');
 		water = std::stoi(tempLine);
-		if (water == 0) water = -1;
 		std::getline(geometryFile, tempLine); // Junk - Get to end of line
 	}
 

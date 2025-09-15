@@ -11,6 +11,7 @@ Rect UI::clipRect;
 UI::Editable *UI::currentEditable = nullptr;
 int UI::selectTime = 0;
 int UI::selectIndex = 0;
+Texture *UI::uiTexture = nullptr;
 
 UI::Editable::~Editable() {
 	UI::Delete(*this);
@@ -23,6 +24,8 @@ UI::ButtonResponse::operator bool() const {
 void UI::init(Window *window) {
 	UI::window = window;
 	UI::window->addKeyCallback(0, UI::_keyCallback);
+
+	uiTexture = new Texture(BASE_PATH / "assets" / "ui.png");
 }
 
 void UI::update() {
@@ -36,6 +39,8 @@ void UI::update() {
 
 void UI::cleanup() {
 	UI::window->removeKeyCallback(0, UI::_keyCallback);
+
+	delete uiTexture;
 }
 
 static void UI::_keyCallback(void *object, int action, int key) {
@@ -238,6 +243,14 @@ UI::TextInputResponse UI::TextInput(Rect rect, UI::TextInputEditable &edit, Text
 	};
 }
 
+UI::CheckBoxResponse UI::CheckBox(Rect rect, bool &value) {
+	if (UI::TextureButton(UVRect(rect.x0, rect.y0, rect.x1, rect.y1).uv(value ? 0.75 : 0.5, 0.25, value ? 1.0 : 0.75, 0.5), UI::TextureButtonMods().TextureId(UI::uiTexture->ID()))) {
+		value = !value;
+		return { true, value };
+	}
+
+	return { false, value };
+}
 
 bool UI::canClick() {
 	if (UI::mouse.disabled) return false;
