@@ -811,8 +811,10 @@ void FloodForgeWindow::updateMain() {
 	}
 
 	if (EditorState::window->justPressed(GLFW_KEY_R)) {
-		if (EditorState::region.acronym == "") {
+		if (EditorState::region.acronym.empty()) {
 			Popups::addPopup(new InfoPopup(EditorState::window, "You must create or import a region\nbefore creating or editing a room."));
+		} else if (EditorState::region.exportDirectory.empty()) {
+			Popups::addPopup(new InfoPopup(EditorState::window, "You must export your region\nbefore creating or editing a room."));
 		} else {
 			Room *hoveringRoom = nullptr;
 			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
