@@ -54,6 +54,7 @@ namespace DropletWindow {
 	void Draw();
 
 	void exportGeometry();
+	void exportProject(std::filesystem::path path);
 	void render();
 
 	extern Texture *toolsTexture;

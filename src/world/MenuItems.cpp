@@ -340,6 +340,16 @@ void MenuItems::initDroplet() {
 			DropletWindow::render();
 		}
 	);
+
+	addButton("Export Leditor Project", MENU_LAYER_DROPLET).OnPress(
+		[](Button *button) {
+			Popups::addPopup(new FilesystemPopup(EditorState::window, TYPE_FOLDER, "Data/LevelEditorProjects", [](std::set<std::filesystem::path> paths) {
+				if (paths.size() != 1) return;
+
+				DropletWindow::exportProject(*paths.begin());
+			}));
+		}
+	);
 }
 
 void MenuItems::cleanup() {

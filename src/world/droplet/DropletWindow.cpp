@@ -1011,3 +1011,81 @@ void DropletWindow::render() {
 		renderCamera(cameras[i], EditorState::region.roomsDirectory / (EditorState::dropletRoom->roomName + "_" + std::to_string(i + 1) + ".png"));
 	}
 }
+
+void DropletWindow::exportProject(std::filesystem::path path) {
+	std::ofstream project(path / (EditorState::dropletRoom->roomName + ".txt"));
+	project << "[";
+	for (int x = -12; x < EditorState::dropletRoom->width + 12; x++) {
+		if (x != -12) project << ", ";
+
+		project << "[";
+		for (int y = -3; y < EditorState::dropletRoom->height + 5; y++) {
+			if (y != -3) project << ", ";
+			int geo = EditorState::dropletRoom->getTile(x, y);
+			int solidA = 0;
+			std::vector<std::string> flags;
+			if (geo % 16 == 1) solidA = 1;
+			else if (geo % 16 == 3) solidA = 6;
+			else if (geo % 16 == 2) solidA = 2 + ((geo & 2048) > 0) + ((geo & 1024) > 0 ? 0 : 2);
+			else if (geo % 16 == 4) { solidA = 7; flags.push_back("4"); }
+			if ((geo & 16) > 0) flags.push_back("2");
+			if ((geo & 32) > 0) flags.push_back("1");
+			if ((geo & 64) > 0) flags.push_back("6");
+			if ((geo & 128) > 0) flags.push_back("5");
+			if ((geo & 256) > 0) flags.push_back("7");
+			if ((geo & 4096) > 0) flags.push_back("21");
+			if ((geo & 8192) > 0) flags.push_back("19");
+			if ((geo & 16384) > 0) flags.push_back("13");
+			if ((geo & 32768) > 0) flags.push_back("20");
+			if ((geo & 65536) > 0) flags.push_back("3");
+			if ((geo & 131072) > 0) flags.push_back("18");
+			if ((geo & 262144) > 0) flags.push_back("9");
+			if ((geo & 524288) > 0) flags.push_back("10");
+
+			project << "[";
+			project << "[" << solidA << ", [";
+			bool first = true;
+			for (std::string flag : flags) {
+				if (!first) project << ", ";
+				first = false;
+				project << flag;
+			}
+			project << "]], ";
+			project << "[" << (((geo & 512) > 0) ? "1" : "0") << ", []], ";
+			project << "[0, []]";
+			project << "]";
+		}
+		project << "]";
+	}
+	project << "]\n";
+	project << "[#lastKeys: [], #Keys: [], #workLayer: 1, #lstMsPs: point(0, 0), #tlMatrix: [], #defaultMaterial: \"Standard\", #toolType: \"material\", #toolData: \"Big Metal\", #tmPos: point(1, 1), #tmSavPosL: [], #specialEdit: 0]\n";
+	project << "[#lastKeys: [], #Keys: [], #lstMsPs: point(0, 0), #effects: [], #emPos: point(1, 1), #editEffect: 0, #selectEditEffect: 0, #mode: \"createNew\", #brushSize: 5]\n";
+	project << "[#pos: point(0, 0), #rot: 0, #sz: point(" << std::to_string(EditorState::dropletRoom->width) << ", " << std::to_string(EditorState::dropletRoom->height) << "), #col: 1, #Keys: [#m1: 0, #m2: 0, #w: 0, #a: 0, #s: 0, #d: 0, #r: 0, #f: 0, #z: 0, #m: 0], #lastKeys: [#m1: 0, #m2: 0, #w: 0, #a: 0, #s: 0, #d: 0, #r: 0, #f: 0, #z: 0, #m: 0], #lastTm: 0, #lightAngle: 180, #flatness: 1, #lightRect: rect(1000, 1000, -1000, -1000), #paintShape: \"pxl\"]\n";
+	project << "[#timeLimit: 4800, #defaultTerrain: 0, #maxFlies: 10, #flySpawnRate: 50, #lizards: [], #ambientSounds: [], #music: \"NONE\", #tags: [], #lightType: \"Static\", #waterDrips: 1, #lightRect: rect(0, 0, 1040, 800), #Matrix: []]\n";
+	project << "[#mouse: 1, #lastMouse: 0, #mouseClick: 0, #pal: 1, #pals: [[#detCol: color( 255, 0, 0 )]], #eCol1: 1, #eCol2: 2, #totEcols: 5, #tileSeed: 225, #colGlows: [0, 0], #size: point(" << std::to_string(EditorState::dropletRoom->width + 24) << ", " << std::to_string(EditorState::dropletRoom->height + 8) << "), #extraTiles: [12, 3, 12, 5], #light: 1]\n";
+	project << "[#cameras: [";
+	{
+		bool first = true;
+		for (Camera &camera : cameras) {
+			if (!first) project << ", ";
+			first = false;
+			project << "point(" << std::to_string((camera.position.x + 12.0) * 20.0) << ", " << std::to_string((camera.position.y + 3.0) * 20.0) << ")";
+		}
+	}
+	project << "], #selectedCamera: 0, #quads: [";
+	{
+		bool first = true;
+		for (Camera &camera : cameras) {
+			if (!first) project << ", ";
+			first = false;
+			project << "[[" << (std::atan2(camera.angle0.x, camera.angle0.y) * (180.0 / 3.141592653589)) << ", " << camera.angle0.length() << "], ";
+			project << "[" << (std::atan2(camera.angle1.x, camera.angle1.y) * (180.0 / 3.141592653589)) << ", " << camera.angle1.length() << "], ";
+			project << "[" << (std::atan2(camera.angle2.x, camera.angle2.y) * (180.0 / 3.141592653589)) << ", " << camera.angle2.length() << "], ";
+			project << "[" << (std::atan2(camera.angle3.x, camera.angle3.y) * (180.0 / 3.141592653589)) << ", " << camera.angle3.length() << "]]";
+		}
+	}
+	project << "], #Keys: [#n: 0, #d: 0, #e: 0, #p: 0], #lastKeys: [#n: 0, #d: 0, #e: 0, #p: 0]]\n";
+	project << "[#waterLevel: -1, #waterInFront: 1, #waveLength: 60, #waveAmplitude: 5, #waveSpeed: 10]\n";
+	project << "[#props: [], #lastKeys: [#w: 0, #a: 0, #s: 0, #d: 0, #L: 0, #n: 0, #m1: 0, #m2: 0, #c: 0, #z: 0], #Keys: [#w: 0, #a: 0, #s: 0, #d: 0, #L: 0, #n: 0, #m1: 0, #m2: 0, #c: 0, #z: 0], #workLayer: 1, #lstMsPs: point(0, 0), #pmPos: point(1, 1), #pmSavPosL: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], #propRotation: 0, #propStretchX: 1, #propStretchY: 1, #propFlipX: 1, #propFlipY: 1, #depth: 0, #color: 0]\n";
+	project.close();
+}
