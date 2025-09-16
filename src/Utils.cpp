@@ -4,7 +4,7 @@
 
 #include "stb_image.h"
 #include "stb_image_write.h"
-#include "utf8.h"
+#include "utf8proc.h"
 
 #include <iostream>
 #include <fstream>
@@ -302,26 +302,57 @@ bool endsWith(const std::string &str, const std::string &suffix) {
 
 std::string toLower(const std::string &str) {
 	std::string output;
-	utf8::iterator<std::string::const_iterator> it(str.begin(), str.begin(), str.end());
-	utf8::iterator<std::string::const_iterator> end(str.end(), str.begin(), str.end());
+	const char* ptr = str.c_str();
+	const char* end = ptr + str.length();
 
-	for (; it != end; ++it) {
-		char32_t cp = *it;
-		
-		if (cp <= 0x7F) {
-			cp = std::tolower(static_cast<unsigned char>(cp));
+	while (ptr < end) {
+		utf8proc_int32_t codepoint;
+		ssize_t bytes_read = utf8proc_iterate((uint8_t*)ptr, end - ptr, &codepoint);
+
+		if (bytes_read <= 0) {
+			break;
 		}
-		
-		utf8::append(cp, std::back_inserter(output));
-	}
 
+		utf8proc_int32_t lower_codepoint = utf8proc_tolower(codepoint);
+
+		uint8_t buffer[4];
+		int bytes_written = utf8proc_encode_char(lower_codepoint, buffer);
+
+		if (bytes_written <= 0) {
+			break;
+		}
+
+		output.append((char*)buffer, bytes_written);
+		ptr += bytes_read;
+	}
 	return output;
 }
 
 std::string toUpper(const std::string &str) {
-	std::string output = str;
-	std::transform(output.begin(), output.end(), output.begin(), ::toupper);
+	std::string output;
+	const char* ptr = str.c_str();
+	const char* end = ptr + str.length();
 
+	while (ptr < end) {
+		utf8proc_int32_t codepoint;
+		ssize_t bytes_read = utf8proc_iterate((uint8_t*)ptr, end - ptr, &codepoint);
+
+		if (bytes_read <= 0) {
+			break;
+		}
+
+		utf8proc_int32_t lower_codepoint = utf8proc_toupper(codepoint);
+
+		uint8_t buffer[4];
+		int bytes_written = utf8proc_encode_char(lower_codepoint, buffer);
+
+		if (bytes_written <= 0) {
+			break;
+		}
+
+		output.append((char*)buffer, bytes_written);
+		ptr += bytes_read;
+	}
 	return output;
 }
 
