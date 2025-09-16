@@ -93,7 +93,7 @@ void parseConditionalLinkConnection(std::fstream &file, Room *room, Connection *
 			timelines.push_back(timeline);
 		}
 
-		if (connection->timelineType == ConnectionTimelineType::ONLY) {
+		if (connection->timelineType == TimelineType::ONLY) {
 			file << timeline << " : " << toUpper(room->roomName) << " : ";
 
 			if (state[timeline][connectionId].first == "DISCONNECTED") {
@@ -113,7 +113,7 @@ void parseConditionalLinkConnection(std::fstream &file, Room *room, Connection *
 				state[timeline][connectionId] = { toUpper(otherRoom->roomName), true };
 			}
 		}
-		else if (connection->timelineType == ConnectionTimelineType::EXCEPT) {
+		else if (connection->timelineType == TimelineType::EXCEPT) {
 			for (std::string otherTimeline : timelines) {
 				if (otherTimeline == timeline) continue;
 				if (!state[otherTimeline][connectionId].second) continue;
@@ -181,7 +181,7 @@ void WorldExporter::exportWorldFile() {
 		std::map<std::string, std::vector<std::pair<std::string, bool>>> state;
 		std::vector<std::pair<std::string, bool>> defaultState(room->RoomEntranceCount(), { "DISCONNECTED", false });
 		for (Connection *connection : room->connections) {
-			if (connection->timelineType != ConnectionTimelineType::ALL) continue;
+			if (connection->timelineType != TimelineType::ALL) continue;
 
 			if (connection->roomA == room) {
 				defaultState[connection->connectionA] = { toUpper(connection->roomB->roomName), false };
@@ -191,20 +191,20 @@ void WorldExporter::exportWorldFile() {
 		}
 
 		for (Connection *connection : room->connections) {
-			if (connection->timelineType != ConnectionTimelineType::EXCEPT || connection->timelines.size() == 0) continue;
+			if (connection->timelineType != TimelineType::EXCEPT || connection->timelines.size() == 0) continue;
 
 			parseConditionalLinkConnection(file, room, connection, timelines, state, defaultState);
 		}
 
 		for (Connection *connection : room->connections) {
-			if (connection->timelineType != ConnectionTimelineType::ONLY || connection->timelines.size() == 0) continue;
+			if (connection->timelineType != TimelineType::ONLY || connection->timelines.size() == 0) continue;
 
 			parseConditionalLinkConnection(file, room, connection, timelines, state, defaultState);
 		}
 
 		roomDefaultStates[room->roomName] = defaultState;
 
-		if (room->timelineType == RoomTimelineType::DEFAULT || room->timelines.size() == 0) {
+		if (room->timelineType == TimelineType::ALL || room->timelines.size() == 0) {
 			continue;
 		}
 
@@ -215,7 +215,7 @@ void WorldExporter::exportWorldFile() {
 			file << timeline;
 		}
 
-		file << " : " << ((room->timelineType == RoomTimelineType::EXCLUSIVE_ROOM) ? "EXCLUSIVEROOM" : "HIDEROOM");
+		file << " : " << ((room->timelineType == TimelineType::ONLY) ? "EXCLUSIVEROOM" : "HIDEROOM");
 		file << " : " << toUpper(room->roomName) << "\n";
 	}
 	file << "END CONDITIONAL LINKS\n\n";
@@ -278,9 +278,9 @@ void WorldExporter::exportWorldFile() {
 					}
 				}
 
-				if (mainCreature->timelineType != ConnectionTimelineType::ALL) {
+				if (mainCreature->timelineType != TimelineType::ALL) {
 					file << "(";
-					if (mainCreature->timelineType == ConnectionTimelineType::EXCEPT) {
+					if (mainCreature->timelineType == TimelineType::EXCEPT) {
 						file << "X-";
 					}
 					bool first = true;
@@ -342,9 +342,9 @@ void WorldExporter::exportWorldFile() {
 
 				if (creature->lineageTo == nullptr) continue;
 
-				if (lineage.timelineType != ConnectionTimelineType::ALL && lineage.timelines.size() > 0) {
+				if (lineage.timelineType != TimelineType::ALL && lineage.timelines.size() > 0) {
 					file << "(";
-					if (lineage.timelineType == ConnectionTimelineType::EXCEPT) {
+					if (lineage.timelineType == TimelineType::EXCEPT) {
 						file << "X-";
 					}
 					bool first = true;

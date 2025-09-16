@@ -19,11 +19,9 @@ enum class SliderType {
 
 class DenPopup : public Popup {
 	public:
-		DenPopup(Window *window, Den &den);
+		DenPopup(Den &den);
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
-
-		void mouseClick(double mouseX, double mouseY);
+		void draw();
 
 		void accept();
 

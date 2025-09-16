@@ -9,7 +9,7 @@
 
 #include "ConditionalPopup.hpp"
 
-DenPopup::DenPopup(Window *window, Den &den) : Popup(window), den(den) {
+DenPopup::DenPopup(Den &den) : Popup(), den(den) {
 	bounds = Rect(-0.35, -0.35, 0.375 + 0.1, 0.35);
 	scrollA = 0.0;
 	scrollATo = 0.0;
@@ -20,8 +20,8 @@ DenPopup::DenPopup(Window *window, Den &den) : Popup(window), den(den) {
 
 	mouseClickSlider = false;
 
-	window->addScrollCallback(this, scrollCallback);
-	window->addKeyCallback(this, keyCallback);
+	UI::window->addScrollCallback(this, scrollCallback);
+	UI::window->addKeyCallback(this, keyCallback);
 
 	this->selectedCreature = 0;
 
@@ -33,12 +33,12 @@ DenPopup::DenPopup(Window *window, Den &den) : Popup(window), den(den) {
 	ensureFlag(*this->selectedLineage);
 }
 
-void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
-	lineageSidebarWidth = 0.22;
+void DenPopup::draw() {
+	lineageSidebarWidth = EditorState::denPopupLineageExtended ? 0.22 : 0.0;
 
 	std::string hoverText = "";
 
-	mouseSection = (mouseX > (bounds.x0 + 0.6 + lineageSidebarWidth)) ? 2 : (mouseX > bounds.x0 + lineageSidebarWidth) ? 1 : 0;
+	mouseSection = (UI::mouse.x > (bounds.x0 + 0.6 + lineageSidebarWidth)) ? 2 : (UI::mouse.x > bounds.x0 + lineageSidebarWidth) ? 1 : 0;
 
 	DenCreature *creature = selectedLineage;
 	bool unknown = creature == nullptr ? false : !CreatureTextures::known(creature->type);
@@ -59,7 +59,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 		bounds.x1 += lineageSidebarWidth;
 	}
 
-	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+	Popup::draw();
 
 	if (minimized) return;
 
@@ -79,9 +79,9 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 	double countY = 0.0;
 
 	glEnable(GL_SCISSOR_TEST);
-	double clipBottom = ((bounds.y0 + 0.01 + buttonPadding + screenBounds.y) * 0.5) * EditorState::windowSize.y;
-	double clipTop = ((bounds.y1 - 0.1 - buttonPadding + screenBounds.y) * 0.5) * EditorState::windowSize.y;
-	glScissor(0, clipBottom, EditorState::windowSize.x, clipTop - clipBottom);
+	double clipBottom = ((bounds.y0 + 0.01 + buttonPadding + UI::screenBounds.y) * 0.5) * UI::window->Height();
+	double clipTop = ((bounds.y1 - 0.1 - buttonPadding + UI::screenBounds.y) * 0.5) * UI::window->Height();
+	glScissor(0, clipBottom, UI::window->Width(), clipTop - clipBottom);
 	UI::clip(Rect(-INFINITY, bounds.y0 + 0.01 + buttonPadding, INFINITY, bounds.y1 - 0.1));
 
 	// Draw creatures
@@ -148,7 +148,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 							creature->count = 0;
 						} else {
 							if (creature->type == creatureType || creatureType == "UNKNOWN") {
-								if (window->modifierPressed(GLFW_MOD_SHIFT)) {
+								if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
 									creature->count -= 1;
 									if (creature->count <= 0) {
 										creature->type = "";
@@ -246,6 +246,10 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 			}
 
 			if (hasSlider) {
+				if (UI::mouse.justClicked() && (UI::mouse.x >= mainX + 0.825 && UI::mouse.x <= mainX + 0.875) && (UI::mouse.y >= bounds.y0 + 0.05 && UI::mouse.y <= bounds.y1 - 0.1)) {
+					mouseClickSlider = true;
+				}
+
 				glDisable(GL_SCISSOR_TEST);
 
 				setThemeColour(ThemeColour::Border);
@@ -320,7 +324,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 
 		if (UI::TextureButton(
 			UVRect::fromSize(bounds.x0 + 0.01, bounds.y1 - 0.19, 0.04, 0.04).uv(0.5, 0.5, 0.75, 0.75),
-			UI::TextureButtonMods().TextureId(Popups::textureUI).Disabled(selectedCreature == 0).TextureColor((selectedCreature == 0) ? Color(0.5, 0.5, 0.5) : Color(1.0, 1.0, 1.0))
+			UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(selectedCreature == 0).TextureColor((selectedCreature == 0) ? Color(0.5, 0.5, 0.5) : Color(1.0, 1.0, 1.0))
 		)) {
 			selectedCreature--;
 			if (selectedCreature < 0) {
@@ -332,7 +336,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 
 		if (UI::TextureButton(
 			UVRect::fromSize(bounds.x0 + 0.06, bounds.y1 - 0.19, 0.04, 0.04).uv(0.0, 0.0, 0.25, 0.25),
-			UI::TextureButtonMods().TextureId(Popups::textureUI).Disabled(den.creatures.size() == 0).TextureColor((den.creatures.size() == 0) ? Color(0.5, 0.5, 0.5) : Color(1.0, 1.0, 1.0))
+			UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(den.creatures.size() == 0).TextureColor((den.creatures.size() == 0) ? Color(0.5, 0.5, 0.5) : Color(1.0, 1.0, 1.0))
 		)) {
 			den.creatures.erase(std::next(den.creatures.begin(), selectedCreature));
 			selectedCreature--;
@@ -343,7 +347,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 
 		if (UI::TextureButton(
 			UVRect::fromSize(bounds.x0 + 0.11, bounds.y1 - 0.19, 0.04, 0.04).uv(0.25, 0.5, 0.5, 0.75),
-			UI::TextureButtonMods().TextureId(Popups::textureUI)
+			UI::TextureButtonMods().TextureId(UI::uiTexture)
 		)) {
 			selectedCreature = den.creatures.size();
 			den.creatures.push_back(DenLineage("", 0, "", 0.0));
@@ -353,7 +357,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 
 		if (UI::TextureButton(
 			UVRect::fromSize(bounds.x0 + 0.16, bounds.y1 - 0.19, 0.04, 0.04).uv(0.75, 0.5, 1.0, 0.75),
-			UI::TextureButtonMods().TextureId(Popups::textureUI).Disabled(selectedCreature >= den.creatures.size() - 1).TextureColor((selectedCreature >= den.creatures.size() - 1) ? Color(0.5, 0.5, 0.5) : Color(1.0, 1.0, 1.0))
+			UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(selectedCreature >= den.creatures.size() - 1).TextureColor((selectedCreature >= den.creatures.size() - 1) ? Color(0.5, 0.5, 0.5) : Color(1.0, 1.0, 1.0))
 		)) {
 			selectedCreature++;
 			if (selectedCreature >= den.creatures.size()) {
@@ -363,9 +367,9 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 			ensureFlag(*this->selectedLineage);
 		}
 
-		double clipBottom = ((bounds.y0 + 0.01 + buttonPadding + screenBounds.y) * 0.5) * EditorState::windowSize.y;
-		double clipTop = ((bounds.y1 - 0.185 - buttonPadding + screenBounds.y) * 0.5) * EditorState::windowSize.y;
-		glScissor(0, clipBottom, EditorState::windowSize.x, clipTop - clipBottom);
+		double clipBottom = ((bounds.y0 + 0.01 + buttonPadding + UI::screenBounds.y) * 0.5) * UI::window->Height();
+		double clipTop = ((bounds.y1 - 0.185 - buttonPadding + UI::screenBounds.y) * 0.5) * UI::window->Height();
+		glScissor(0, clipBottom, UI::window->Width(), clipTop - clipBottom);
 		UI::clip(Rect(-INFINITY, bounds.y0 + 0.01 + buttonPadding, INFINITY, bounds.y1 - 0.185));
 
 		if (den.creatures.size() != 0 && selectedCreature != -1) {
@@ -428,7 +432,7 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 				UVRect deleteRect = UVRect::fromSize(creatureRect.x0 + buttonSize + buttonPadding, creatureRect.y0 + buttonSize * 0.25, buttonSize * 0.5, buttonSize * 0.5);
 				deleteRect.uv(0.0, 0.0, 0.25, 0.25);
 
-				if (UI::TextureButton(deleteRect, UI::TextureButtonMods().TextureId(Popups::textureUI))) {
+				if (UI::TextureButton(deleteRect, UI::TextureButtonMods().TextureId(UI::uiTexture))) {
 					if (lastCreature == nullptr) {
 						if (creature->lineageTo == nullptr) {
 							creature->type = "";
@@ -469,21 +473,21 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 			UVRect addRect = UVRect::fromSize(bounds.x0 + 0.01, bounds.y1 - 0.19 - scrollL - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize);
 			addRect.uv(0.25, 0.5, 0.5, 0.75);
 
-			if (UI::TextureButton(addRect, UI::TextureButtonMods().TextureId(Popups::textureUI))) {
+			if (UI::TextureButton(addRect, UI::TextureButtonMods().TextureId(UI::uiTexture))) {
 				creature->lineageTo = new DenCreature("", 0, "", 0.0);
 				selectedLineage = creature->lineageTo;
 			}
 
 			UVRect moreRect = UVRect::fromSize(bounds.x0 + 0.01 + buttonSize + buttonPadding, bounds.y1 - 0.19 - scrollL - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize);
 			moreRect.uv(0.75, 0.0, 1.0, 0.25);
-			UI::ButtonResponse response = UI::TextureButton(moreRect, UI::TextureButtonMods().TextureId(Popups::textureUI));
+			UI::ButtonResponse response = UI::TextureButton(moreRect, UI::TextureButtonMods().TextureId(UI::uiTexture));
 
 			if (response.hovered) {
 				hoverText = "Edit conditionals";
 			}
 
 			if (response.clicked) {
-				Popups::addPopup(new ConditionalPopup(EditorState::window, &den.creatures[selectedCreature]));
+				Popups::addPopup(new ConditionalPopup(&den.creatures[selectedCreature]));
 			}
 		}
 	}
@@ -510,16 +514,16 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		if (UI::TextureButton(rectLineage, UI::TextureButtonMods().TextureId(Popups::textureUI))) {
+		if (UI::TextureButton(rectLineage, UI::TextureButtonMods().TextureId(UI::uiTexture))) {
 			EditorState::denPopupLineageExtended = !EditorState::denPopupLineageExtended;
 			if (EditorState::denPopupLineageExtended) {
-				bounds.x0 -= lineageSidebarWidth;
+				bounds.x0 -= 0.22;
 			} else {
-				bounds.x0 += lineageSidebarWidth;
+				bounds.x0 += 0.22;
 			}
 		}
 
-		if (UI::TextureButton(rectTags, UI::TextureButtonMods().TextureId(Popups::textureUI))) {
+		if (UI::TextureButton(rectTags, UI::TextureButtonMods().TextureId(UI::uiTexture))) {
 			EditorState::denPopupTagsExtended = !EditorState::denPopupTagsExtended;
 		}
 
@@ -527,11 +531,11 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 	}
 
 	if (hasSlider && mouseClickSlider && creature != nullptr) {
-		if (!window->GetMouse()->Left()) {
+		if (!UI::window->GetMouse()->Left()) {
 			mouseClickSlider = false;
 		}
 
-		double P = (mouseY - bounds.y0 - 0.075) / (bounds.y1 - bounds.y0 - 0.2);
+		double P = (UI::mouse.y - bounds.y0 - 0.075) / (bounds.y1 - bounds.y0 - 0.2);
 		P = std::clamp(P, 0.0, 1.0);
 		creature->data = P * (sliderMax - sliderMin) + sliderMin;
 		if (sliderType == SliderType::SLIDER_INT) {
@@ -540,30 +544,15 @@ void DenPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 scre
 	}
 
 	// Hovers
-	if (!hoverText.empty() && mouseInside) {
+	if (!hoverText.empty() && hovered) {
 		double width = Fonts::rainworld->getTextWidth(hoverText, 0.04) + 0.02;
+		Rect rect = Rect::fromSize(UI::mouse.x, UI::mouse.y, width, 0.06);
 		setThemeColour(ThemeColour::Popup);
-		fillRect(mouseX, mouseY, mouseX + width, mouseY + 0.06);
+		fillRect(rect);
 		setThemeColour(ThemeColour::Border);
-		strokeRect(mouseX, mouseY, mouseX + width, mouseY + 0.06);
+		strokeRect(rect);
 		setThemeColour(ThemeColour::Text);
-		Fonts::rainworld->writeCentered(hoverText, mouseX + 0.01, mouseY + 0.03, 0.04, CENTER_Y);
-	}
-}
-
-
-void DenPopup::mouseClick(double mouseX, double mouseY) {
-	Popup::mouseClick(mouseX, mouseY);
-
-	double mainX = bounds.x0;
-	if (EditorState::denPopupLineageExtended) mainX += lineageSidebarWidth;
-
-	if (hasSlider) {
-		if (mouseX >= mainX + 0.825 && mouseX <= mainX + 0.875) {
-			if (mouseY >= bounds.y0 + 0.05 && mouseY <= bounds.y1 - 0.1) {
-				mouseClickSlider = true;
-			}
-		}
+		Fonts::rainworld->writeCentered(hoverText, UI::mouse.x + 0.01, UI::mouse.y + 0.03, 0.04, CENTER_Y);
 	}
 }
 
@@ -572,8 +561,8 @@ void DenPopup::accept() {}
 void DenPopup::close() {
 	Popups::removePopup(this);
 
-	window->removeScrollCallback(this, scrollCallback);
-	window->removeKeyCallback(this, keyCallback);
+	UI::window->removeScrollCallback(this, scrollCallback);
+	UI::window->removeKeyCallback(this, keyCallback);
 }
 
 void DenPopup::scrollCallback(void *object, double deltaX, double deltaY) {

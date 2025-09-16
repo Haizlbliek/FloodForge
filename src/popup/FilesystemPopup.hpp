@@ -19,17 +19,16 @@
 
 #include "Popups.hpp"
 
-#define TYPE_FILE 0
-#define TYPE_FOLDER 1
-
-#define MODE_NORMAL 2
-#define MODE_NEW_DIRECTORY 3
-
 class FilesystemPopup : public Popup {
 	public:
-		FilesystemPopup(Window *window, std::regex regex, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback);
+		enum class FilesystemType {
+			FILE,
+			FOLDER
+		};
 
-		FilesystemPopup(Window *window, int type, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback);
+		FilesystemPopup(std::regex regex, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback);
+
+		FilesystemPopup(FilesystemType type, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback);
 
 		FilesystemPopup *AllowMultiple();
 
@@ -39,11 +38,9 @@ class FilesystemPopup : public Popup {
 
 		void close();
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
+		void draw();
 
 		void drawBounds(Rect rect, double mouseX, double mouseY);
-
-		void mouseClick(double mouseX, double mouseY);
 
 		static void scrollCallback(void *object, double deltaX, double deltaY);
 
@@ -55,6 +52,11 @@ class FilesystemPopup : public Popup {
 		std::string PopupName() { return "FilesystemPopup"; }
 
 	private:
+		enum class FilesystemMode {
+			NORMAL,
+			NEW_DIRECTORY
+		};
+
 		std::filesystem::path currentDirectory;
 		static std::filesystem::path previousDirectory;
 
@@ -72,12 +74,12 @@ class FilesystemPopup : public Popup {
 		double targetScroll;
 
 		bool called;
-		bool forceRegex;
+		bool showAll;
 
-		int mode;
+		FilesystemMode mode;
 		int frame = 0;
 
-		int openType;
+		FilesystemType openType;
 		std::string hint;
 
 		std::string newDirectory;

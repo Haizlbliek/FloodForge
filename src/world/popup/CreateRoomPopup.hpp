@@ -10,9 +10,9 @@
 
 class CreateRoomPopup : public Popup {
 	public:
-		CreateRoomPopup(Window *window);
+		CreateRoomPopup();
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
+		void draw();
 
 		void close();
 

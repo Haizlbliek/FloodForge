@@ -15,11 +15,11 @@
 
 class InfoPopup : public Popup {
 	public:
-		InfoPopup(Window *window);
+		InfoPopup();
 
-		InfoPopup(Window *window, std::string warningText);
+		InfoPopup(std::string warningText);
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
+		void draw();
 
 		std::string PopupName() { return "InfoPopup"; }
 

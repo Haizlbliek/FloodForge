@@ -6,15 +6,13 @@
 
 class RoomAttractivenessPopup : public Popup {
 	public:
-		RoomAttractivenessPopup(Window *window, std::set<Room *> rooms);
+		RoomAttractivenessPopup(std::set<Room *> rooms);
 
 		~RoomAttractivenessPopup();
 
 		void close();
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
-
-		void mouseClick(double mouseX, double mouseY);
+		void draw();
 
 		static void scrollCallback(void *object, double deltaX, double deltaY);
 

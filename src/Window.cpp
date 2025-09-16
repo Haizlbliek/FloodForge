@@ -223,6 +223,8 @@ void Window::toggleFullscreen() {
 
 void Window::ensureFullscreen() {
 	if (fullscreen) setFullscreen(fullscreen);
+
+	glfwGetWindowSize(glfwWindow, &width, &height);
 }
 
 void Window::addKeyCallback(void *object, std::function<void(void*, int, int)> callback) {

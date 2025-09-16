@@ -1,18 +1,20 @@
 #include "SubregionPopup.hpp"
 
-SubregionPopup::SubregionPopup(Window *window, std::set<Room*> newRooms) : Popup(window) {
+#include "../../ui/UI.hpp"
+
+SubregionPopup::SubregionPopup(std::set<Room*> newRooms) : Popup() {
 	for (Room *room : newRooms) rooms.insert(room);
 	
 	scroll = 0.0;
 	scrollTo = 0.0;
 
-	window->addScrollCallback(this, scrollCallback);
+	UI::window->addScrollCallback(this, scrollCallback);
 }
 
 SubregionPopup::~SubregionPopup() {}
 
-void SubregionPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
-	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+void SubregionPopup::draw() {
+	Popup::draw();
 	
 	if (minimized) return;
 
@@ -29,24 +31,24 @@ void SubregionPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 		}
 	
 		glEnable(GL_SCISSOR_TEST);
-		double clipBottom = ((bounds.y0 + 0.01 + screenBounds.y) * 0.5) * EditorState::windowSize.y;
-		double clipTop = ((bounds.y1 - 0.14 + screenBounds.y) * 0.5) * EditorState::windowSize.y;
-		glScissor(0, clipBottom, EditorState::windowSize.x, clipTop - clipBottom);
+		double clipBottom = ((bounds.y0 + 0.01 + UI::screenBounds.y) * 0.5) * UI::window->Height();
+		double clipTop = ((bounds.y1 - 0.14 + UI::screenBounds.y) * 0.5) * UI::window->Height();
+		glScissor(0, clipBottom, UI::window->Width(), clipTop - clipBottom);
 
 
 		double y = bounds.y1 - 0.15 - scroll;
-		drawSubregionButton(-1, "None", centreX, y, mouseX, mouseY);
+		drawSubregionButton(-1, "None", centreX, y);
 		y -= 0.075;
 
 		int id = 0;
 		for (std::string subregion : EditorState::subregions) {
-			drawSubregionButton(id, subregion, centreX, y, mouseX, mouseY);
+			drawSubregionButton(id, subregion, centreX, y);
 
 			y -= 0.075;
 			id++;
 		}
 
-		drawSubregionButton(-2, "+ new subregion +", centreX, y, mouseX, mouseY);
+		drawSubregionButton(-2, "+ new subregion +", centreX, y);
 	
 		glDisable(GL_SCISSOR_TEST);
 	}
@@ -56,73 +58,10 @@ void SubregionPopup::setSubregion(int subregion) {
 	for (Room *room : rooms) room->subregion = subregion;
 }
 
-void SubregionPopup::mouseClick(double mouseX, double mouseY) {
-	Popup::mouseClick(mouseX, mouseY);
-
-	double centreX = (bounds.x0 + bounds.x1) * 0.5;
-	mouseX -= centreX;
-	mouseY -= (bounds.y0 + bounds.y1) * 0.5 - scroll;
-
-	int button = getButtonIndex(mouseX, mouseY);
-
-	if (button == -1) {
-	} else {
-		if (mouseX <= -0.35 && button >= 1 && button <= EditorState::subregions.size()) {
-			Popups::addPopup(new SubregionNewPopup(window, rooms, button - 1));
-			close();
-		} else if (mouseX <= 0.325 && mouseX >= -0.325) {
-			if (button == 0) {
-				setSubregion(-1);
-				close();
-			} else if (button <= EditorState::subregions.size()) {
-				setSubregion(button - 1);
-				close();
-			} else if (button == EditorState::subregions.size() + 1) {
-				Popups::addPopup(new SubregionNewPopup(window, rooms));
-				close();
-			}
-		} else if (mouseX >= 0.35) {
-			if (button != 0 && button <= EditorState::subregions.size()) {
-				if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT)) {
-					EditorState::subregions.erase(EditorState::subregions.begin() + (button - 1));
-
-					for (Room *otherRoom : EditorState::rooms) {
-						if (otherRoom->subregion == button - 1) {
-							otherRoom->subregion = -1;
-						} else if (otherRoom->subregion > button - 1) {
-							otherRoom->subregion--;
-						}
-					}
-				} else {
-					bool canRemove = true;
-					for (Room *otherRoom : EditorState::rooms) {
-						if (otherRoom->subregion == button - 1) {
-							canRemove = false;
-							break;
-						}
-					}
-	
-					if (canRemove) {
-						EditorState::subregions.erase(EditorState::subregions.begin() + (button - 1));
-	
-						for (Room *otherRoom : EditorState::rooms) {
-							if (otherRoom->subregion >= button - 1) {
-								otherRoom->subregion--;
-							}
-						}
-					} else {
-						Popups::addPopup(new InfoPopup(window, "Cannot remove subregion if assigned to rooms\n(Hold shift to force)"));
-					}
-				}
-			}
-		}
-	}
-}
-
 void SubregionPopup::close() {
 	Popups::removePopup(this);
-	
-	window->removeScrollCallback(this, scrollCallback);
+
+	UI::window->removeScrollCallback(this, scrollCallback);
 }
 
 int SubregionPopup::getButtonIndex(double mouseX, double mouseY) {
@@ -133,49 +72,64 @@ int SubregionPopup::getButtonIndex(double mouseX, double mouseY) {
 	return floor((-mouseY + 0.35) / 0.075);
 }
 
-void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion, double centerX, double y, double mouseX, double mouseY) {
-	setThemeColour(ThemeColour::Button);
-	fillRect(-0.325 + centerX, y, 0.325 + centerX, y - 0.05);
-
+void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion, double centerX, double y) {
+	Rect rect(-0.325 + centerX, y, 0.325 + centerX, y - 0.05);
+	bool selected = false;
 	if (rooms.size() == 1) {
-		if ((*rooms.begin())->subregion == subregionId) {
-			setThemeColour(ThemeColour::BorderHighlight);
+		selected = (*rooms.begin())->subregion == subregionId;
+	}
+	if (UI::TextButton(rect, subregion, UI::TextButtonMods().Selected(selected))) {
+		if (subregionId == -1) {
+			setSubregion(-1);
+			close();
+		} else if (subregionId <= EditorState::subregions.size()) {
+			setSubregion(subregionId);
+			close();
 		} else {
-			setThemeColour(ThemeColour::Text);
+			Popups::addPopup(new SubregionNewPopup(rooms));
+			close();
 		}
-	} else {
-		setThemeColour(ThemeColour::Text);
 	}
-	Fonts::rainworld->writeCentered(subregion, centerX, y - 0.02, 0.04, CENTER_XY);
-
-	if (Rect(-0.325 + centerX, y, 0.325 + centerX, y - 0.05).inside(mouseX, mouseY)) {
-		setThemeColour(ThemeColour::BorderHighlight);
-	} else {
-		setThemeColour(ThemeColour::Border);
-	}
-	strokeRect(-0.325 + centerX, y, 0.325 + centerX, y - 0.05);
 
 	if (subregionId >= 0) {
-		setThemeColour(ThemeColour::Button);
-		fillRect(-0.4 + centerX, y, -0.35 + centerX, y - 0.05);
-		fillRect(0.35 + centerX, y, 0.4 + centerX, y - 0.05);
-
-		setThemeColour(ThemeColour::Text);
-		Fonts::rainworld->writeCentered("E", -0.37 + centerX, y, 0.04, CENTER_X);
-		Fonts::rainworld->writeCentered("-", 0.37 + centerX, y, 0.04, CENTER_X);
-
-		if (Rect(-0.4 + centerX, y, -0.35 + centerX, y - 0.05).inside(mouseX, mouseY)) {
-			setThemeColour(ThemeColour::BorderHighlight);
-		} else {
-			setThemeColour(ThemeColour::Border);
+		if (UI::TextButton(Rect(bounds.x0 + 0.01, y, -0.335 + centerX, y - 0.05), "Edit")) {
+			Popups::addPopup(new SubregionNewPopup(rooms, subregionId));
+			close();
 		}
-		strokeRect(-0.4 + centerX, y, -0.35 + centerX, y - 0.05);
-		if (Rect(0.35 + centerX, y, 0.4 + centerX, y - 0.05).inside(mouseX, mouseY)) {
-			setThemeColour(ThemeColour::BorderHighlight);
-		} else {
-			setThemeColour(ThemeColour::Border);
+
+		if (UI::TextButton(Rect(0.335 + centerX, y, 0.4 + centerX, y - 0.05), "X")) {
+			if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
+				EditorState::subregions.erase(EditorState::subregions.begin() + subregionId);
+
+				for (Room *otherRoom : EditorState::rooms) {
+					if (otherRoom->subregion == subregionId) {
+						otherRoom->subregion = -1;
+					} else if (otherRoom->subregion > subregionId) {
+						otherRoom->subregion--;
+					}
+				}
+			} else {
+				bool canRemove = true;
+				for (Room *otherRoom : EditorState::rooms) {
+					if (otherRoom->subregion == subregionId) {
+						canRemove = false;
+						break;
+					}
+				}
+
+				if (canRemove) {
+					EditorState::subregions.erase(EditorState::subregions.begin() + subregionId);
+
+					for (Room *otherRoom : EditorState::rooms) {
+						if (otherRoom->subregion >= subregionId) {
+							otherRoom->subregion--;
+						}
+					}
+				} else {
+					Popups::addPopup(new InfoPopup("Cannot remove subregion if assigned to rooms\n(Hold shift to force)"));
+				}
+			}
 		}
-		strokeRect(0.35 + centerX, y, 0.4 + centerX, y - 0.05);
 	}
 }
 

@@ -1,8 +1,9 @@
 #include "SplashArtPopup.hpp"
 
 #include "../WorldParser.hpp"
+#include "../../ui/UI.hpp"
 
-SplashArtPopup::SplashArtPopup(Window *window) : Popup(window) {
+SplashArtPopup::SplashArtPopup() : Popup() {
 	bounds = Rect(-1.0, -1.0, 1.0, 1.0);
 
 	splashart = new Texture(BASE_PATH / "assets" / "splash.png");
@@ -20,7 +21,7 @@ const Rect SplashArtPopup::Bounds() {
 	return Rect(-100.0, -100.0, 100.0, 100.0);
 }
 
-void SplashArtPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
+void SplashArtPopup::draw() {
 	Draw::color(0.0, 0.0, 0.0);
 	fillRect(-0.9, -0.65, 0.9, 0.65);
 
@@ -59,9 +60,16 @@ void SplashArtPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 		}
 
 		double y = -0.33 - i * 0.04;
-		if (mouseX <= -0.4 && mouseY >= y - 0.015 && mouseY <= y + 0.015) {
+		Rect rect(-0.89, y - 0.02, -0.4, y + 0.015);
+		if (rect.inside(UI::mouse)) {
 			Draw::color(0.25f, 0.25f, 0.25f);
-			fillRect(-0.89, y - 0.02, -0.4, y + 0.015);
+			fillRect(rect);
+
+			if (UI::mouse.justClicked()) {
+				close();
+				WorldParser::importWorldFile(RecentFiles::recents[i]);
+				return;
+			}
 		}
 		Draw::color(1.0f, 1.0f, 1.0f);
 		Fonts::rainworld->writeCentered(recent, -0.88, y, 0.03, CENTER_Y);
@@ -72,25 +80,12 @@ void SplashArtPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector
 	Draw::vertex(-0.9, -0.25);
 	Draw::vertex(0.9, -0.25);
 	Draw::end();
-}
 
-void SplashArtPopup::mouseClick(double mouseX, double mouseY) {
-	if (mouseX >= -0.9 && mouseX <= 0.9 && mouseY <= -0.25 && mouseY >= -0.65) {
-		for (int i = 0; i < 8; i++) {
-			if (i >= RecentFiles::recents.size()) break;
-
-			std::string recent = toLower(RecentFiles::recents[i].filename().generic_u8string());
-			double y = -0.33 - i * 0.04;
-			if (mouseX <= -0.4 && mouseY >= y - 0.015 && mouseY <= y + 0.015) {
-				close();
-				WorldParser::importWorldFile(RecentFiles::recents[i]);
-			}
-		}
-	} else {
+	if (UI::mouse.justClicked()) {
 		close();
-		
+
 		if (!Settings::getSetting<bool>(Settings::Setting::HideTutorial)) {
-			Popups::addPopup(new MarkdownPopup(window, BASE_PATH / "docs" / "controls.md"));
+			Popups::addPopup(new MarkdownPopup(BASE_PATH / "docs" / "controls.md"));
 		}
 	}
 }

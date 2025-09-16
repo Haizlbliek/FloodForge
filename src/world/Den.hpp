@@ -26,7 +26,7 @@ class DenLineage : public DenCreature {
 		bool timelinesMatch(const DenLineage *other) const;
 
 		std::set<std::string> timelines;
-		ConnectionTimelineType timelineType;
+		TimelineType timelineType;
 };
 
 class Den {

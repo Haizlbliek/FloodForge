@@ -4,7 +4,7 @@
 Connection::Connection(Room *roomA, unsigned int connectionA, Room *roomB, unsigned int connectionB) : roomA(roomA), roomB(roomB), connectionA(connectionA), connectionB(connectionB) {
 	segments = 10;
 	directionStrength = 10.0;
-	timelineType = ConnectionTimelineType::ALL;
+	timelineType = TimelineType::ALL;
 }
 
 void drawTexturedRect(GLuint texture, Rect rect) {
@@ -87,9 +87,9 @@ void Connection::draw(Vector2 mousePosition, double lineSize) {
 		center = bezierCubic(0.5, pointA, pointA + directionA, pointB + directionB, pointB);
 	}
 	
-	if (timelines.size() == 0 || timelineType == ConnectionTimelineType::ALL) return;
+	if (timelines.size() == 0 || timelineType == TimelineType::ALL) return;
 
-	if (timelineType == ConnectionTimelineType::EXCEPT) {
+	if (timelineType == TimelineType::EXCEPT) {
 		Draw::color(1.0, 0.0, 0.0);
 		double xSize = 2.25 / lineSize;
 		drawLine(center.x - xSize, center.y - xSize, center.x + xSize, center.y + xSize, 16.0 / lineSize);
@@ -159,9 +159,9 @@ bool Connection::collides(Vector2 vector) {
 }
 
 bool Connection::allowsTimeline(std::string timeline) {
-	if (timelineType == ConnectionTimelineType::ALL) return true;
-	if (timelineType == ConnectionTimelineType::ONLY) return timelines.find(timeline) != timelines.end();
-	if (timelineType == ConnectionTimelineType::EXCEPT) return timelines.find(timeline) == timelines.end();
+	if (timelineType == TimelineType::ALL) return true;
+	if (timelineType == TimelineType::ONLY) return timelines.find(timeline) != timelines.end();
+	if (timelineType == TimelineType::EXCEPT) return timelines.find(timeline) == timelines.end();
 
 	return false;
 }

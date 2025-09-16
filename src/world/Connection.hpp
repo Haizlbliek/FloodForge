@@ -30,7 +30,7 @@ class Connection {
 		unsigned int connectionB;
 
 		std::set<std::string> timelines;
-		ConnectionTimelineType timelineType;
+		TimelineType timelineType;
 
 	private:
 		int segments;

@@ -15,20 +15,18 @@
 
 class AcronymPopup : public Popup {
 	public:
-		AcronymPopup(Window *window);
+		AcronymPopup();
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
-
-		void mouseClick(double mouseX, double mouseY);
-
-		void accept();
-
-		void reject();
+		void draw();
 
 		void close();
 
-		static void keyCallback(void *object, int action, int key);
+		virtual std::string banLetters() { return "_/\\"; };
+
+		virtual void submit(std::string acronym);
 
 	protected:
-		std::string text;
+		std::string setTo;
+		bool needsSet = false;
+		bool canClose;
 };

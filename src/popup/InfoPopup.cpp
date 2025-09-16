@@ -1,10 +1,10 @@
 #include "InfoPopup.hpp"
 
-InfoPopup::InfoPopup(Window *window) : Popup(window) {
+InfoPopup::InfoPopup() : Popup() {
 	bounds = Rect(-0.9, -0.1, 0.9, 0.1);
 }
 
-InfoPopup::InfoPopup(Window *window, std::string warningText) : Popup(window) {
+InfoPopup::InfoPopup(std::string warningText) : Popup() {
 	std::istringstream stream(warningText);
 	std::string line;
 
@@ -16,8 +16,8 @@ InfoPopup::InfoPopup(Window *window, std::string warningText) : Popup(window) {
 	bounds = Rect(-0.9, -height * 0.5, 0.9, height * 0.5);
 }
 
-void InfoPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
-	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+void InfoPopup::draw() {
+	Popup::draw();
 	
 	if (minimized) return;
 

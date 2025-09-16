@@ -11,15 +11,13 @@
 
 class SubregionPopup : public Popup {
 	public:
-		SubregionPopup(Window *window, std::set<Room*> newRooms);
+		SubregionPopup(std::set<Room*> newRooms);
 
 		~SubregionPopup();
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
+		void draw();
 
 		void setSubregion(int subregion);
-
-		void mouseClick(double mouseX, double mouseY);
 		
 		void close();
 		
@@ -31,7 +29,7 @@ class SubregionPopup : public Popup {
 
 		int getButtonIndex(double mouseX, double mouseY);
 
-		void drawSubregionButton(int subregionId, std::string subregion, double centreX, double y, double mouseX, double mouseY);
+		void drawSubregionButton(int subregionId, std::string subregion, double centreX, double y);
 
 		static void scrollCallback(void *object, double deltaX, double deltaY);
 

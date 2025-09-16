@@ -1,15 +1,19 @@
 #include "FilesystemPopup.hpp"
 
-FilesystemPopup::FilesystemPopup(Window *window, std::regex regex, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback) : Popup(window), regex(regex), hint(hint), callback(callback) {
-	window->addKeyCallback(this, keyCallback);
-	window->addScrollCallback(this, scrollCallback);
+#include "../ui/UI.hpp"
+
+// TODO
+
+FilesystemPopup::FilesystemPopup(std::regex regex, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback) : Popup(), regex(regex), hint(hint), callback(callback) {
+	UI::window->addKeyCallback(this, keyCallback);
+	UI::window->addScrollCallback(this, scrollCallback);
 	called = false;
-	forceRegex = true;
-	mode = MODE_NORMAL;
+	showAll = false;
+	mode = FilesystemMode::NORMAL;
 	currentScroll = 0;
 	targetScroll = 0;
 
-	openType = TYPE_FILE;
+	openType = FilesystemType::FILE;
 
 #ifdef _WIN32
 	currentDrive = 0;
@@ -19,12 +23,12 @@ FilesystemPopup::FilesystemPopup(Window *window, std::regex regex, std::string h
 	refresh();
 }
 
-FilesystemPopup::FilesystemPopup(Window *window, int type, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback) : Popup(window), hint(hint), callback(callback) {
-	window->addKeyCallback(this, keyCallback);
-	window->addScrollCallback(this, scrollCallback);
+FilesystemPopup::FilesystemPopup(FilesystemType type, std::string hint, std::function<void(std::set<std::filesystem::path>)> callback) : Popup(), hint(hint), callback(callback) {
+	UI::window->addKeyCallback(this, keyCallback);
+	UI::window->addScrollCallback(this, scrollCallback);
 	called = false;
-	forceRegex = true;
-	mode = MODE_NORMAL;
+	showAll = false;
+	mode = FilesystemMode::NORMAL;
 	currentScroll = 0;
 	targetScroll = 0;
 
@@ -46,14 +50,14 @@ FilesystemPopup *FilesystemPopup::AllowMultiple() {
 void FilesystemPopup::accept() {
 	previousDirectory = currentDirectory;
 
-	if (mode == MODE_NORMAL) {
-		if (openType == TYPE_FOLDER) {
+	if (mode == FilesystemMode::NORMAL) {
+		if (openType == FilesystemType::FOLDER) {
 			called = true;
 			std::set<std::filesystem::path> output { currentDirectory };
 			callback(output);
 		}
 
-		if (openType == TYPE_FILE) {
+		if (openType == FilesystemType::FILE) {
 			called = true;
 			callback(selected);
 		}
@@ -61,42 +65,40 @@ void FilesystemPopup::accept() {
 		close();
 	}
 
-	if (mode == MODE_NEW_DIRECTORY) {
+	if (mode == FilesystemMode::NEW_DIRECTORY) {
 		if (newDirectory.empty() || std::filesystem::exists(currentDirectory / newDirectory)) {
-			mode = MODE_NORMAL;
+			mode = FilesystemMode::NORMAL;
 			newDirectory = "";
 			return;
 		}
 
 		std::filesystem::create_directory(currentDirectory / newDirectory);
-		mode = MODE_NORMAL;
+		mode = FilesystemMode::NORMAL;
 		newDirectory = "";
 		refresh();
 	}
 }
 
 void FilesystemPopup::reject() {
-	if (mode == MODE_NORMAL) close();
+	if (mode == FilesystemMode::NORMAL) close();
 
-	if (mode == MODE_NEW_DIRECTORY) {
+	if (mode == FilesystemMode::NEW_DIRECTORY) {
 		newDirectory = "";
-		mode = MODE_NORMAL;
+		mode = FilesystemMode::NORMAL;
 	}
 }
 
 void FilesystemPopup::close() {
 	Popups::removePopup(this);
 
-	window->removeKeyCallback(this, keyCallback);
-	window->removeScrollCallback(this, scrollCallback);
-
-	window = nullptr;
+	UI::window->removeKeyCallback(this, keyCallback);
+	UI::window->removeScrollCallback(this, scrollCallback);
 
 	if (!called) callback(std::set<std::filesystem::path>());
 }
 
-void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
-	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+void FilesystemPopup::draw() {
+	Popup::draw();
 
 	if (minimized) return;
 
@@ -104,18 +106,36 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 
 	frame++;
 
-	setThemeColour(ThemeColour::Text);
-	drawIcon(1, bounds.x0 + 0.02, bounds.y1 - 0.07);
-	drawIcon(2, bounds.x0 + 0.09, bounds.y1 - 0.07);
-	drawIcon(5, bounds.x1 - 0.09, bounds.y1 - 0.07);
+	// Up Directory
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.02, bounds.y1 - 0.12, 0.05, 0.05).uv(0.25, 0.25, 0.5, 0.0))) {
+		currentDirectory = std::filesystem::canonical(currentDirectory / "..");
+		currentScroll = 0.0;
+		targetScroll = 0.0;
+		refresh();
+		clampScroll();
+	}
 
-	if (openType == TYPE_FILE) {
-		if (forceRegex) {
-			drawIcon(6, bounds.x0 + 0.02, bounds.y0 + 0.09);
-		} else {
-			drawIcon(7, bounds.x0 + 0.02, bounds.y0 + 0.09);
+	// Refresh
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.09, bounds.y1 - 0.12, 0.05, 0.05).uv(0.5, 0.25, 0.75, 0.0))) {
+		refresh();
+		clampScroll();
+	}
+
+	// New Directory
+	if (UI::TextureButton(UVRect::fromSize(bounds.x1 - 0.09, bounds.y1 - 0.12, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.25))) {
+		mode = FilesystemMode::NEW_DIRECTORY;
+		currentScroll = 0.0;
+		targetScroll = 0.0;
+		newDirectory = "";
+	}
+
+	if (openType == FilesystemType::FILE) {
+		if (UI::CheckBox(Rect::fromSize(bounds.x0 + 0.02, bounds.y0 + 0.04, 0.05, 0.05), showAll)) {
+			refresh();
+			clampScroll();
 		}
 
+		setThemeColour(ThemeColour::Text);
 		Fonts::rainworld->write("Show all", bounds.x0 + 0.09, bounds.y0 + 0.09, 0.04);
 
 		setThemeColour(ThemeColour::TextDisabled);
@@ -125,18 +145,9 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 		Fonts::rainworld->write(hint, bounds.x0 + 0.02, bounds.y0 + 0.09, 0.04);
 	}
 
-	if (selected.empty() && openType == TYPE_FILE) {
-		setThemeColour(ThemeColour::TextDisabled);
-	} else {
-		setThemeColour(ThemeColour::Text);
+	if (UI::TextButton(Rect(bounds.x1 - 0.16, bounds.y0 + 0.09, bounds.x1 - 0.05, bounds.y0 + 0.04), "Open", UI::TextButtonMods().Disabled(selected.empty() && openType == FilesystemType::FILE))) {
+		accept();
 	}
-	Fonts::rainworld->write("Open", bounds.x1 - 0.17, bounds.y0 + 0.09, 0.04);
-	drawBounds(Rect(bounds.x1 - 0.17, bounds.y0 + 0.09, bounds.x1 - 0.05, bounds.y0 + 0.04), mouseX, mouseY);
-
-	setThemeColour(ThemeColour::Text);
-	drawBounds(Rect(bounds.x0 + 0.02, bounds.y1 - 0.12, bounds.x0 + 0.07, bounds.y1 - 0.07), mouseX, mouseY);
-	drawBounds(Rect(bounds.x0 + 0.09, bounds.y1 - 0.12, bounds.x0 + 0.14, bounds.y1 - 0.07), mouseX, mouseY);
-	drawBounds(Rect(bounds.x1 - 0.09, bounds.y1 - 0.12, bounds.x1 - 0.04, bounds.y1 - 0.07), mouseX, mouseY);
 
 	std::string croppedPath = currentDirectory.generic_u8string();
 	if (croppedPath.size() > 23) croppedPath = croppedPath.substr(croppedPath.size() - 23);
@@ -145,8 +156,11 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 	Fonts::rainworld->write(croppedPath, bounds.x0 + 0.23, bounds.y1 - 0.07, 0.04);
 
 #ifdef _WIN32
-	Fonts::rainworld->write(std::string(1, drives[currentDrive]) + ":", bounds.x0 + 0.16, bounds.y1 - 0.07, 0.05);
-	drawBounds(Rect(bounds.x0 + 0.16, bounds.y1 - 0.12, bounds.x0 + 0.21, bounds.y1 - 0.07), mouseX, mouseY);
+	if (UI::TextButton(Rect(bounds.x0 + 0.16, bounds.y1 - 0.12, bounds.x0 + 0.21, bounds.y1 - 0.07), std::string(1, drives[currentDrive]) + ":")) {
+		currentDrive = (currentDrive + 1) % drives.size();
+		currentDirectory = std::filesystem::path(std::string(1, drives[currentDrive]) + ":\\");
+		refresh();
+	}
 #endif
 
 	double offsetY = (bounds.y1 + bounds.y0) * 0.5;
@@ -154,7 +168,7 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 	bool hasExtras = false;
 
 	// New Directory
-	if (mode == MODE_NEW_DIRECTORY) {
+	if (mode == FilesystemMode::NEW_DIRECTORY) {
 		if (y > -0.35 + offsetY) {
 			if (y > 0.375 + offsetY) {
 				y -= 0.06;
@@ -179,6 +193,8 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 		}
 	}
 
+	bool refreshing = false;
+
 	// Directories
 	for (std::filesystem::path path : directories) {
 		if (y <= -0.30 + offsetY) { hasExtras = true; break; }
@@ -187,19 +203,28 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 			continue;
 		}
 
-		if (mouseX >= bounds.x0 + 0.1 && mouseX <= bounds.x1 - 0.1 && mouseY <= y && mouseY >= y - 0.06)
-			setThemeColour(ThemeColour::TextHighlight);
-		else
-			setThemeColour(ThemeColour::Text);
+		Rect rect = Rect(bounds.x0 + 0.1, y, bounds.x1 - 0.1, y - 0.06);
+		setThemeColour(rect.inside(UI::mouse) ? ThemeColour::TextHighlight : ThemeColour::Text);
 
 		Fonts::rainworld->write(path.filename().generic_u8string() + "/", bounds.x0 + 0.1, y, 0.04);
 		setThemeColour(ThemeColour::TextDisabled);
 		drawIcon(5, y);
+
+		if (rect.inside(UI::mouse) && UI::mouse.justClicked()) {
+			currentDirectory = std::filesystem::canonical(currentDirectory / path.filename());
+			currentScroll = 0.0;
+			targetScroll = 0.0;
+			refresh();
+			refreshing = true;
+			break;
+		}
+
 		y -= 0.06;
 	}
 
 	// Files
 	for (std::filesystem::path path : files) {
+		if (refreshing) break;
 		if (y <= -0.30 + offsetY) { hasExtras = true; break; }
 
 		if (y > 0.375 + offsetY) {
@@ -207,11 +232,21 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 			continue;
 		}
 
-		if (mouseX >= bounds.x0 + 0.1 && mouseX <= bounds.x1 - 0.1 && mouseY <= y && mouseY >= y - 0.06)
-			setThemeColour(ThemeColour::TextHighlight);
-		else
-			setThemeColour(ThemeColour::Text);
+		Rect rect = Rect(bounds.x0 + 0.1, y, bounds.x1 - 0.1, y - 0.06);
+		if (rect.inside(UI::mouse) && UI::mouse.justClicked()) {
+			if (allowMultiple && (UI::window->modifierPressed(GLFW_MOD_SHIFT) || UI::window->modifierPressed(GLFW_MOD_CONTROL))) {
+				if (selected.find(path) == selected.end()) {
+					selected.insert(path);
+				} else {
+					selected.erase(path);
+				}
+			} else {
+				selected.clear();
+				selected.insert(path);
+			}
+		}
 
+		setThemeColour(rect.inside(UI::mouse) ? ThemeColour::TextHighlight : ThemeColour::Text);
 		if (selected.find(path.generic_u8string()) != selected.end()) {
 			strokeRect(bounds.x0 + 0.09, y + 0.01, bounds.x1 - 0.09, y - 0.05);
 		}
@@ -219,11 +254,12 @@ void FilesystemPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 		Fonts::rainworld->write(path.filename().generic_u8string(), bounds.x0 + 0.1, y, 0.04);
 		setThemeColour(ThemeColour::TextDisabled);
 		drawIcon(4, y);
+
 		y -= 0.06;
 	}
 
 	// ...
-	if (hasExtras) {
+	if (hasExtras && !refreshing) {
 		setThemeColour(ThemeColour::TextDisabled);
 		Fonts::rainworld->write("...", bounds.x0 + 0.1, ceil(y / 0.06) * 0.06, 0.04);
 	}
@@ -234,83 +270,6 @@ void FilesystemPopup::drawBounds(Rect rect, double mouseX, double mouseY) {
 
 	setThemeColour(ThemeColour::BorderHighlight);
 	strokeRect(rect.x0, rect.y0, rect.x1, rect.y1);
-}
-
-void FilesystemPopup::mouseClick(double mouseX, double mouseY) {
-	Popup::mouseClick(mouseX, mouseY);
-
-	if (mode == MODE_NORMAL) {
-		if (Rect(bounds.x0 + 0.02, bounds.y1 - 0.12, bounds.x0 + 0.07, bounds.y1 - 0.07).inside(mouseX, mouseY)) {
-			currentDirectory = std::filesystem::canonical(currentDirectory / "..");
-			currentScroll = 0.0;
-			targetScroll = 0.0;
-			refresh();
-			clampScroll();
-		}
-
-		if (Rect(bounds.x0 + 0.09, bounds.y1 - 0.12, bounds.x0 + 0.14, bounds.y1 - 0.07).inside(mouseX, mouseY)) {
-			refresh();
-			clampScroll();
-		}
-
-		if (Rect(bounds.x1 - 0.09, bounds.y1 - 0.12, bounds.x1 - 0.04, bounds.y1 - 0.07).inside(mouseX, mouseY)) {
-			mode = MODE_NEW_DIRECTORY;
-			currentScroll = 0.0;
-			targetScroll = 0.0;
-			newDirectory = "";
-		}
-
-		if (mouseX >= bounds.x0 + 0.1 && mouseX <= bounds.x1 - 0.1 && mouseY >= bounds.y0 + 0.2 && mouseY <= bounds.y1 - 0.15) {
-			int id = (-mouseY + (bounds.y1 - 0.15) - currentScroll) / 0.06;
-
-			if (id < directories.size()) {
-				currentDirectory = std::filesystem::canonical(currentDirectory / directories[id].filename());
-				currentScroll = 0.0;
-				targetScroll = 0.0;
-				refresh();
-			} else {
-				id -= directories.size();
-
-				if (id < files.size()) {
-					std::string filePath = files[id].generic_u8string();
-					// called = true;
-					if (allowMultiple && (window->modifierPressed(GLFW_MOD_SHIFT) || window->modifierPressed(GLFW_MOD_CONTROL))) {
-						if (selected.find(filePath) == selected.end()) {
-							selected.insert(filePath);
-						} else {
-							selected.erase(filePath);
-						}
-					} else {
-						selected.clear();
-						selected.insert(filePath);
-					}
-					// close();
-				}
-			}
-		}
-
-		if (openType == TYPE_FILE) {
-			if (Rect(bounds.x0 + 0.02, bounds.y0 + 0.09, bounds.x0 + 0.07, bounds.y0 + 0.04).inside(mouseX, mouseY)) {
-				forceRegex = !forceRegex;
-				refresh();
-				clampScroll();
-			}
-		}
-
-		if (Rect(bounds.x1 - 0.17, bounds.y0 + 0.09, bounds.x1 - 0.05, bounds.y0 + 0.04).inside(mouseX, mouseY)) {
-			accept();
-		}
-
-#ifdef _WIN32
-		if (Rect(bounds.x0 + 0.16, bounds.y1 - 0.12, bounds.x0 + 0.21, bounds.y1 - 0.07).inside(mouseX, mouseY)) {
-			currentDrive = (currentDrive + 1) % drives.size();
-			currentDirectory = std::filesystem::path(std::string(1, drives[currentDrive]) + ":\\");
-			refresh();
-		}
-#endif
-	} else if (mode == MODE_NEW_DIRECTORY) {
-		accept();
-	}
 }
 
 void FilesystemPopup::scrollCallback(void *object, double deltaX, double deltaY) {
@@ -337,16 +296,11 @@ void FilesystemPopup::keyCallback(void *object, int action, int key) {
 		return;
 	}
 
-	if (!popup->window) {
-		Logger::error("Error: popup->window is nullptr.");
-		return;
-	}
-
-	if (popup->mode == MODE_NORMAL) return;
+	if (popup->mode == FilesystemMode::NORMAL) return;
 
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
 		if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
-			char character = parseCharacter(key, popup->window->keyPressed(GLFW_KEY_LEFT_SHIFT) || popup->window->keyPressed(GLFW_KEY_RIGHT_SHIFT));
+			char character = parseCharacter(key, UI::window->keyPressed(GLFW_KEY_LEFT_SHIFT) || UI::window->keyPressed(GLFW_KEY_RIGHT_SHIFT));
 
 			popup->newDirectory += character;
 			popup->frame = 0;
@@ -362,6 +316,10 @@ void FilesystemPopup::keyCallback(void *object, int action, int key) {
 				popup->newDirectory += " ";
 
 			popup->frame = 0;
+		}
+
+		if (key == GLFW_KEY_ENTER) {
+			popup->accept();
 		}
 
 		if (key == GLFW_KEY_BACKSPACE) {
@@ -419,7 +377,7 @@ void FilesystemPopup::refresh() {
 			if (entry.is_directory()) {
 				directories.push_back(entry.path());
 			} else {
-				if (!forceRegex || std::regex_match(entry.path().filename().generic_u8string(), regex))
+				if (showAll || std::regex_match(entry.path().filename().generic_u8string(), regex))
 					files.push_back(entry.path());
 			}
 		}
@@ -431,7 +389,7 @@ void FilesystemPopup::drawIcon(int type, double y) {
 }
 
 void FilesystemPopup::drawIcon(int type, double x, double y) {
-	Draw::useTexture(Popups::textureUI);
+	Draw::useTexture(UI::uiTexture->ID());
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	Draw::begin(Draw::QUADS);

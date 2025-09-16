@@ -13,13 +13,13 @@
 
 class ConfirmPopup : public Popup {
 	public:
-		ConfirmPopup(Window *window, std::string question);
-\
+		ConfirmPopup(std::string question);
+
 		ConfirmPopup *CancelText(std::string text);
 
 		ConfirmPopup *OkayText(std::string text);
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
+		void draw();
 
 		void accept();
 

@@ -1,15 +1,17 @@
 #include "RoomAttractivenessPopup.hpp"
 
+#include "../../ui/UI.hpp"
+
 const RoomAttractiveness RoomAttractivenessPopup::attractivenessIds   [6] = { RoomAttractiveness::DEFAULT, RoomAttractiveness::NEUTRAL, RoomAttractiveness::FORBIDDEN, RoomAttractiveness::AVOID, RoomAttractiveness::LIKE, RoomAttractiveness::STAY };
 const Colour             RoomAttractivenessPopup::attractivenessColors[6] = { Colour(0.5, 0.5, 0.5),       Colour(1.0, 1.0, 1.0),       Colour(1.0, 0.0, 0.0),         Colour(1.0, 1.0, 0.0),     Colour(0.0, 1.0, 0.0),    Colour(0.0, 1., 1.0)     };
 const std::string        RoomAttractivenessPopup::attractivenessNames [6] = { "DEFAULT",                   "NEUTRAL",                   "FORBIDDEN",                   "AVOID",                   "LIKE",                   "STAY"                   };
 
-RoomAttractivenessPopup::RoomAttractivenessPopup(Window *window, std::set<Room *> rooms) : rooms(rooms), Popup(window) {
+RoomAttractivenessPopup::RoomAttractivenessPopup(std::set<Room *> rooms) : rooms(rooms), Popup() {
 	bounds = Rect(-0.35, -0.35, 0.375 + 0.1, 0.35);
 	currentScroll = 0.0;
 	targetScroll = 0.0;
 
-	window->addScrollCallback(this, scrollCallback);
+	UI::window->addScrollCallback(this, scrollCallback);
 }
 
 RoomAttractivenessPopup::~RoomAttractivenessPopup() {
@@ -18,14 +20,13 @@ RoomAttractivenessPopup::~RoomAttractivenessPopup() {
 void RoomAttractivenessPopup::close() {
 	Popup::close();
 
-	window->removeScrollCallback(this, scrollCallback);
+	UI::window->removeScrollCallback(this, scrollCallback);
 }
 
-void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
-	bool hasHover = false;
+void RoomAttractivenessPopup::draw() {
 	std::string hoverText = "";
 
-	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+	Popup::draw();
 
 	if (minimized) return;
 
@@ -55,9 +56,9 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 	double countY = 0.0;
 
 	glEnable(GL_SCISSOR_TEST);
-	double clipBottom = ((bounds.y0 + buttonPadding + screenBounds.y) * 0.5) * EditorState::windowSize.y;
-	double clipTop = ((bounds.y1 - 0.1 - buttonPadding + screenBounds.y) * 0.5) * EditorState::windowSize.y;
-	glScissor(0, clipBottom, EditorState::windowSize.x, clipTop - clipBottom);
+	double clipBottom = ((bounds.y0 + buttonPadding + UI::screenBounds.y) * 0.5) * UI::window->Height();
+	double clipTop = ((bounds.y1 - 0.1 - buttonPadding + UI::screenBounds.y) * 0.5) * UI::window->Height();
+	glScissor(0, clipBottom, UI::window->Width(), clipTop - clipBottom);
 
 	int countA = CreatureTextures::creatures.size();
 	countA -= 2;
@@ -75,18 +76,9 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 			double rectX = centreX + (x - 0.5 * CREATURE_ROWS) * (buttonSize + buttonPadding) + buttonPadding * 0.5;
 			double rectY = (bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - currentScroll;
 
-			Rect rect = Rect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
-
-			setThemeColour(ThemeColour::Button);
-			fillRect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
+			UVRect rect = UVRect::fromSize(rectX, rectY, buttonSize, buttonSize);
 
 			GLuint texture = CreatureTextures::getTexture(CreatureTextures::creatures[id]);
-
-			Draw::color(1.0f, 1.0f, 1.0f);
-			glEnable(GL_BLEND);
-			Draw::useTexture(texture);
-			Draw::begin(Draw::QUADS);
-
 			int w, h;
 			glBindTexture(GL_TEXTURE_2D, texture);
 			glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &w);
@@ -94,7 +86,6 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 			glBindTexture(GL_TEXTURE_2D, 0);
-
 
 			float ratio = (float(w) / float(h) + 1.0) * 0.5;
 			float uvx = 1.0 / ratio;
@@ -109,22 +100,15 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 			}
 			uvx *= 0.5;
 			uvy *= 0.5;
-			Draw::texCoord(0.5 - uvx, 0.5 + uvy); Draw::vertex(rectX, rectY);
-			Draw::texCoord(0.5 + uvx, 0.5 + uvy); Draw::vertex(rectX + buttonSize, rectY);
-			Draw::texCoord(0.5 + uvx, 0.5 - uvy); Draw::vertex(rectX + buttonSize, rectY + buttonSize);
-			Draw::texCoord(0.5 - uvx, 0.5 - uvy); Draw::vertex(rectX, rectY + buttonSize);
-			Draw::end();
-			Draw::useTexture(0);
-			glDisable(GL_BLEND);
 
-			if (rect.inside(mouseX, mouseY)) {
-				setThemeColour(ThemeColour::BorderHighlight);
-				hasHover = true;
+			rect.uv(0.5 - uvx, 0.5 + uvy, 0.5 + uvx, 0.5 - uvy);
+			UI::ButtonResponse response = UI::TextureButton(rect, UI::TextureButtonMods().TextureId(texture));
+			if (response.hovered) {
 				hoverText = creatureType;
-			} else {
-				setThemeColour(ThemeColour::Border);
 			}
-			strokeRect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
+			if (response.clicked) {
+				setAllTo(selectAttractiveness, creatureType);
+			}
 
 			std::unordered_map<std::string, RoomAttractiveness>::iterator index = room->data.attractiveness.find(creatureType);
 			if (index == room->data.attractiveness.end()) {
@@ -141,65 +125,23 @@ void RoomAttractivenessPopup::draw(double mouseX, double mouseY, bool mouseInsid
 	for (int i = 0; i < 6; i++) {
 		double y = bounds.y1 - 0.165 - i * 0.09;
 
-		Draw::color(attractivenessColors[i]);
-		Fonts::rainworld->writeCentered(attractivenessNames[i], bounds.x1 - 0.11, y, 0.03, CENTER_XY);
-
-		if (selectAttractiveness == attractivenessIds[i]) {
-			strokeRect(bounds.x0 + 0.605, y - 0.02, bounds.x1 - 0.01, y + 0.02);
+		Rect rect(bounds.x0 + 0.605, y - 0.02, bounds.x1 - 0.01, y + 0.02);
+		if (UI::TextButton(rect, attractivenessNames[i], UI::TextButtonMods().Selected(selectAttractiveness == attractivenessIds[i]))) {
+			selectAttractiveness = attractivenessIds[i];
 		}
 	}
 
 	// Hovers
 
-	if (hasHover && mouseInside) {
+	if (!hoverText.empty() && hovered) {
 		double width = Fonts::rainworld->getTextWidth(hoverText, 0.04) + 0.02;
+		Rect rect = Rect::fromSize(UI::mouse.x, UI::mouse.y, width, 0.06);
 		setThemeColour(ThemeColour::Popup);
-		fillRect(mouseX, mouseY, mouseX + width, mouseY + 0.06);
+		fillRect(rect);
 		setThemeColour(ThemeColour::Border);
-		strokeRect(mouseX, mouseY, mouseX + width, mouseY + 0.06);
+		strokeRect(rect);
 		setThemeColour(ThemeColour::Text);
-		Fonts::rainworld->writeCentered(hoverText, mouseX + 0.01, mouseY + 0.03, 0.04, CENTER_Y);
-	}
-}
-
-
-void RoomAttractivenessPopup::mouseClick(double mouseX, double mouseY) {
-	Popup::mouseClick(mouseX, mouseY);
-
-	double centreX = bounds.x0 + 0.305;
-	double width = 0.5;
-	double height = 0.5;
-
-	double buttonSize = std::min(width / 7.0, height / 7.0);
-	double buttonPadding = 0.02;
-
-	int countA = CreatureTextures::creatures.size();
-	countA -= 2;
-
-	for (int y = 0; y <= (countA / CREATURE_ROWS); y++) {
-		for (int x = 0; x < CREATURE_ROWS; x++) {
-			int id = x + y * CREATURE_ROWS + 1;
-
-			if (id >= countA) break;
-
-			double rectX = centreX + (x - 0.5 * CREATURE_ROWS) * (buttonSize + buttonPadding) + buttonPadding * 0.5;
-			double rectY = (bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - currentScroll;
-
-			Rect rect = Rect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
-
-			if (rect.inside(mouseX, mouseY)) {
-				std::string type = CreatureTextures::creatures[id];
-				setAllTo(selectAttractiveness, type);
-			}
-		}
-	}
-
-	for (int i = 0; i < 6; i++) {
-		double y = bounds.y1 - 0.165 - i * 0.09;
-
-		if (Rect(bounds.x0 + 0.605, y - 0.02, bounds.x1 - 0.01, y + 0.02).inside(mouseX, mouseY)) {
-			selectAttractiveness = attractivenessIds[i];
-		}
+		Fonts::rainworld->writeCentered(hoverText, UI::mouse.x + 0.01, UI::mouse.y + 0.03, 0.04, CENTER_Y);
 	}
 }
 

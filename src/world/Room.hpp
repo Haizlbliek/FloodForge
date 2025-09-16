@@ -167,7 +167,7 @@ class Room {
 		int hoveredDen = -1;
 
 		std::set<std::string> timelines;
-		RoomTimelineType timelineType;
+		TimelineType timelineType;
 
 		std::vector<Den> dens;
 

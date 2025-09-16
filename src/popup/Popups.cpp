@@ -8,11 +8,13 @@
 
 #include "FilesystemPopup.hpp"
 
-GLuint Popups::textureUI = 0;
 std::vector<Popup*> Popups::popupTrash;
 std::vector<Popup*> Popups::popups;
 Popup* Popups::holdingPopup;
 Vector2 Popups::holdingStart;
+
+void Popups::init() {
+}
 
 void Popups::cleanup() {
 	for (Popup *popup : Popups::popupTrash) {
@@ -25,41 +27,27 @@ void Popups::cleanup() {
 	Popups::popupTrash.clear();
 }
 
-Popup::Popup(Window *window) : bounds(Rect(-0.5, -0.5, 0.5, 0.5)), window(window) {
+Popup::Popup() : bounds(Rect(-0.5, -0.5, 0.5, 0.5)) {
 }
 
-void Popup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
-	hovered = mouseInside;
-	
-	Draw::begin(Draw::QUADS);
+void Popup::draw() {
+	hovered = Bounds().inside(UI::mouse);
 
 	if (minimized) {
 		setThemeColour(ThemeColour::Popup);
-		Draw::vertex(bounds.x0, bounds.y1 - 0.05);
-		Draw::vertex(bounds.x0, bounds.y1);
-		Draw::vertex(bounds.x1, bounds.y1);
-		Draw::vertex(bounds.x1, bounds.y1 - 0.05);
+		fillRect(bounds.x0, bounds.y1 - 0.05, bounds.x1, bounds.y1);
 	} else {
 		setThemeColour(ThemeColour::Popup);
-		Draw::vertex(bounds.x0, bounds.y0);
-		Draw::vertex(bounds.x0, bounds.y1);
-		Draw::vertex(bounds.x1, bounds.y1);
-		Draw::vertex(bounds.x1, bounds.y0);
+		fillRect(bounds.x0, bounds.y0, bounds.x1, bounds.y1);
 	}
+
 	setThemeColour(ThemeColour::PopupHeader);
-	Draw::vertex(bounds.x0,  bounds.y1 - 0.00);
-	Draw::vertex(bounds.x0,  bounds.y1 - 0.05);
-	Draw::vertex(bounds.x1,  bounds.y1 - 0.05);
-	Draw::vertex(bounds.x1,  bounds.y1 - 0.00);
+	fillRect(bounds.x0, bounds.y1 - 0.05, bounds.x1, bounds.y1);
 
-	Draw::end();
-
-	if (mouseInside) {
+	if (hovered) {
 		setThemeColour(ThemeColour::BorderHighlight);
-		glLineWidth(2);
 	} else {
 		setThemeColour(ThemeColour::Border);
-		glLineWidth(1);
 	}
 	if (minimized) {
 		strokeRect(bounds.x0, bounds.y1 - 0.05, bounds.x1, bounds.y1);
@@ -67,66 +55,17 @@ void Popup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenB
 		strokeRect(bounds.x0, bounds.y0, bounds.x1, bounds.y1);
 	}
 
-	setThemeColour(ThemeColour::Text);
-	Draw::useTexture(Popups::textureUI);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	Draw::begin(Draw::QUADS);
-
-	Draw::texCoord(0.00f, 0.00f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
-	Draw::texCoord(0.25f, 0.00f); Draw::vertex(bounds.x1 - 0.00, bounds.y1 - 0.00);
-	Draw::texCoord(0.25f, 0.25f); Draw::vertex(bounds.x1 - 0.00, bounds.y1 - 0.05);
-	Draw::texCoord(0.00f, 0.25f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
-
-	if (minimized) {
-		Draw::texCoord(0.25f, 0.50f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.00);
-		Draw::texCoord(0.50f, 0.50f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
-		Draw::texCoord(0.50f, 0.75f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
-		Draw::texCoord(0.25f, 0.75f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.05);
-	} else {
-		Draw::texCoord(0.00f, 0.50f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.00);
-		Draw::texCoord(0.25f, 0.50f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
-		Draw::texCoord(0.25f, 0.75f); Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
-		Draw::texCoord(0.00f, 0.75f); Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.05);
-	}
-
-	Draw::end();
-	Draw::useTexture(0);
-	glDisable(GL_BLEND);
-
-	glLineWidth(1);
-	
-	if (mouseInside && mouseX >= bounds.x1 - 0.05 && mouseY >= bounds.y1 - 0.05) {
-		setThemeColour(ThemeColour::BorderHighlight);
-	} else {
-		setThemeColour(ThemeColour::Border);
-	}
-
-	Draw::begin(Draw::LINE_LOOP);
-	Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
-	Draw::vertex(bounds.x1 - 0.00, bounds.y1 - 0.00);
-	Draw::vertex(bounds.x1 - 0.00, bounds.y1 - 0.05);
-	Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
-	Draw::end();
-
-	if (mouseInside && mouseX >= bounds.x1 - 0.1 && mouseX <= bounds.x1 - 0.05 && mouseY >= bounds.y1 - 0.05) {
-		setThemeColour(ThemeColour::BorderHighlight);
-	} else {
-		setThemeColour(ThemeColour::Border);
-	}
-
-	Draw::begin(Draw::LINE_LOOP);
-	Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.00);
-	Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.00);
-	Draw::vertex(bounds.x1 - 0.05, bounds.y1 - 0.05);
-	Draw::vertex(bounds.x1 - 0.10, bounds.y1 - 0.05);
-	Draw::end();
-}
-
-void Popup::mouseClick(double mouseX, double mouseY) {
-	if (mouseX >= bounds.x1 - 0.05 && mouseY >= bounds.y1 - 0.05) {
+	if (UI::TextureButton(UVRect(bounds.x1 - 0.05, bounds.y1 - 0.05, bounds.x1, bounds.y1).uv(0.0, 0.0, 0.25, 0.25), UI::TextureButtonMods().TextureId(UI::uiTexture))) {
 		close();
-	} else if (mouseX >= bounds.x1 - 0.1 && mouseY >= bounds.y1 - 0.05) {
+	}
+
+	UVRect minimizeButton = UVRect(bounds.x1 - 0.1, bounds.y1 - 0.05, bounds.x1 - 0.05, bounds.y1);
+	if (minimized) {
+		minimizeButton.uv(0.25, 0.5, 0.5, 0.75);
+	} else {
+		minimizeButton.uv(0.0, 0.5, 0.25, 0.75);
+	}
+	if (UI::TextureButton(minimizeButton, UI::TextureButtonMods().TextureId(UI::uiTexture))) {
 		minimized = !minimized;
 	}
 }
@@ -180,13 +119,10 @@ void Popups::draw(Vector2 screenBounds) {
 		Popup *popup = Popups::popups[i];
 
 		if (popup->Bounds().inside(UI::mouse)) {
-			if (UI::mouse.justClicked()) {
-				popup->mouseClick(UI::mouse.x, UI::mouse.y);
-				if (popup->drag(UI::mouse.x, UI::mouse.y)) {
-					Popups::holdingPopup = popup;
-					Popups::holdingStart.x = UI::mouse.x;
-					Popups::holdingStart.y = UI::mouse.y;
-				}
+			if (UI::mouse.justClicked() && popup->drag(UI::mouse.x, UI::mouse.y)) {
+				Popups::holdingPopup = popup;
+				Popups::holdingStart.x = UI::mouse.x;
+				Popups::holdingStart.y = UI::mouse.y;
 			}
 			mousePopup = popup;
 			break;
@@ -206,10 +142,8 @@ void Popups::draw(Vector2 screenBounds) {
 	}
 
 	for (Popup *popup : Popups::popups) {
-		bool hovered = popup->Bounds().inside(UI::mouse);
-
 		UI::mouse.disabled = popup != mousePopup;
-		popup->draw(UI::mouse.x, UI::mouse.y, hovered, screenBounds);
+		popup->draw();
 	}
 	UI::mouse.disabled = false;
 }

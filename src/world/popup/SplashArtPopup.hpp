@@ -18,15 +18,13 @@
 
 class SplashArtPopup : public Popup {
 	public:
-		SplashArtPopup(Window *window);
+		SplashArtPopup();
 
 		~SplashArtPopup();
 		
 		const Rect Bounds() override;
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
-
-		void mouseClick(double mouseX, double mouseY);
+		void draw();
 		
 		bool canStack(std::string popupName) override { return popupName == "MarkdownPopup" || popupName == "InfoPopup"; }
 		std::string PopupName() override { return "SplashArtPopup"; }

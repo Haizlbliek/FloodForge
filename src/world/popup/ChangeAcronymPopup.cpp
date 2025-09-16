@@ -1,15 +1,15 @@
 #include "ChangeAcronymPopup.hpp"
 
-ChangeAcronymPopup::ChangeAcronymPopup(Window *window) : AcronymPopup(window) {
+ChangeAcronymPopup::ChangeAcronymPopup() : AcronymPopup() {
 }
 
-void ChangeAcronymPopup::accept() {
-	if (text.length() < 2) return;
+void ChangeAcronymPopup::submit(std::string acronym) {
+	if (acronym.length() < 2) return;
 
 	close();
 	if (EditorState::offscreenDen != nullptr) {
 		EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), EditorState::offscreenDen), EditorState::rooms.end());
-		OffscreenRoom *newOffscreenDen = new OffscreenRoom("offscreenden" + toLower(text), "OffscreenDen" + text);
+		OffscreenRoom *newOffscreenDen = new OffscreenRoom("offscreenden" + toLower(acronym), "OffscreenDen" + toUpper(acronym));
 		newOffscreenDen->canonPosition = EditorState::offscreenDen->canonPosition;
 		newOffscreenDen->devPosition = EditorState::offscreenDen->devPosition;
 		newOffscreenDen->layer = EditorState::offscreenDen->layer;
@@ -37,8 +37,8 @@ void ChangeAcronymPopup::accept() {
 	for (Room *room : EditorState::rooms) {
 		if (room == EditorState::offscreenDen) continue;
 
-		room->roomName = toLower(text) + room->roomName.substr(room->roomName.find('_'));
+		room->roomName = toLower(acronym) + room->roomName.substr(room->roomName.find('_'));
 	}
 
-	EditorState::region.acronym = toLower(text);
+	EditorState::region.acronym = toLower(acronym);
 }

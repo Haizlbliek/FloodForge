@@ -63,7 +63,7 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 		for (std::string fail : EditorState::fails) {
 			fails += fail + "\n";
 		}
-		Popups::addPopup(new InfoPopup(EditorState::window, fails));
+		Popups::addPopup(new InfoPopup(fails));
 		EditorState::fails.clear();
 	}
 }
@@ -297,17 +297,17 @@ void WorldParser::parseWorldRoom(std::string line, std::filesystem::path directo
 
 void WorldParser::parseWorldCreature(std::string line) {
 	std::vector<std::string> splits = split(line, " : ");
-	ConnectionTimelineType timelineType = ConnectionTimelineType::ALL;
+	TimelineType timelineType = TimelineType::ALL;
 	std::set<std::string> timelines;
 
 	if (splits[0][0] == '(') {
 		std::string v = splits[0].substr(1, splits[0].find(')') - 1);
 		splits[0] = splits[0].substr(splits[0].find(')') + 1);
 		if (startsWith(v, "X-") || startsWith(v, "x-")) {
-			timelineType = ConnectionTimelineType::EXCEPT;
+			timelineType = TimelineType::EXCEPT;
 			v = v.substr(2);
 		} else {
-			timelineType = ConnectionTimelineType::ONLY;
+			timelineType = TimelineType::ONLY;
 		}
 
 		for (std::string timeline : split(v, ',')) {
@@ -529,24 +529,24 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 		std::string mod = toLower(parts[1]);
 
 		if (mod == "exclusiveroom") {
-			if (room->timelineType == RoomTimelineType::HIDE_ROOM) {
+			if (room->timelineType == TimelineType::EXCEPT) {
 				Logger::warn("Skipping line due to invalid EXCLUSIVEROOM: ", roomName);
 				Logger::warn("> ", link);
 				return;
 			}
 
-			room->timelineType = RoomTimelineType::EXCLUSIVE_ROOM;
+			room->timelineType = TimelineType::ONLY;
 			for (std::string timeline : timelines) {
 				room->timelines.insert(timeline);
 			}
 		} else if (mod == "hideroom") {
-			if (room->timelineType == RoomTimelineType::EXCLUSIVE_ROOM) {
+			if (room->timelineType == TimelineType::ONLY) {
 				Logger::warn("Skipping line due to invalid HIDEROOM: ", roomName);
 				Logger::warn("> ", link);
 				return;
 			}
 
-			room->timelineType = RoomTimelineType::HIDE_ROOM;
+			room->timelineType = TimelineType::EXCEPT;
 			for (std::string timeline : timelines) {
 				room->timelines.insert(timeline);
 			}
@@ -606,12 +606,12 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 			return;
 		}
 
-		if (connection->timelineType == ConnectionTimelineType::ONLY) {
+		if (connection->timelineType == TimelineType::ONLY) {
 			for (std::string timeline : timelines) {
 				connection->timelines.erase(timeline);
 			}
 		} else {
-			connection->timelineType = ConnectionTimelineType::EXCEPT;
+			connection->timelineType = TimelineType::EXCEPT;
 			for (std::string timeline : timelines) {
 				connection->timelines.insert(timeline);
 			}
@@ -654,12 +654,12 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 			} else {
 				connectionId = (connection->roomA == room) ? connection->connectionA : connection->connectionB;
 
-				if (connection->timelineType == ConnectionTimelineType::ONLY) {
+				if (connection->timelineType == TimelineType::ONLY) {
 					for (std::string timeline : timelines) {
 						connection->timelines.erase(timeline);
 					}
 				} else {
-					connection->timelineType = ConnectionTimelineType::EXCEPT;
+					connection->timelineType = TimelineType::EXCEPT;
 	
 					for (std::string timeline : timelines) {
 						connection->timelines.insert(timeline);
@@ -679,12 +679,12 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 		}
 
 		if (connection != nullptr) {
-			if (connection->timelineType == ConnectionTimelineType::EXCEPT) {
+			if (connection->timelineType == TimelineType::EXCEPT) {
 				for (std::string timeline : timelines) {
 					connection->timelines.erase(timeline);
 				}
 			} else {
-				connection->timelineType = ConnectionTimelineType::ONLY;
+				connection->timelineType = TimelineType::ONLY;
 
 				for (std::string timeline : timelines) {
 					connection->timelines.insert(timeline);
@@ -716,7 +716,7 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 				nullptr,
 				-1,
 				connectionTimelines,
-				ConnectionTimelineType::ONLY
+				TimelineType::ONLY
 			});
 		}
 	}

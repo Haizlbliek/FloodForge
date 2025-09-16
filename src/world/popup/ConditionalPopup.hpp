@@ -5,22 +5,23 @@
 
 class ConditionalPopup : public Popup {
 	public:
-		ConditionalPopup(Window *window, Connection *connection);
+		ConditionalPopup(Connection *connection);
 
-		ConditionalPopup(Window *window, std::set<Room*> rooms);
+		ConditionalPopup(std::set<Room*> rooms);
 
-		ConditionalPopup(Window *window, DenLineage *lineage);
+		ConditionalPopup(DenLineage *lineage);
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
-
-		void mouseClick(double mouseX, double mouseY);
+		void draw();
 
 		std::string PopupName() { return "ConditionalPopup"; }
 
-	private:
-		ConditionalPopup(Window *window);
+	protected:
+		ConditionalPopup();
 
-		void drawButton(Rect rect, std::string text, bool selected, double mouseX, double mouseY);
+		const TimelineType timelineType() const;
+		void timelineType(TimelineType type);
+
+		void drawButton(Rect rect, std::string text, TimelineType type);
 
 		Connection *connection;
 		std::set<Room*> rooms;

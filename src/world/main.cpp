@@ -36,47 +36,42 @@
 #include "droplet/DropletWindow.hpp"
 #include "flood_forge/FloodForgeWindow.hpp"
 
-Vector2 lastMousePosition;
-
-
-Vector2 worldMouse;
-
 void signalHandler(int signal) {
 	Logger::error("Signal caught: ", signal);
 	std::exit(1);
 }
 
 void updateGlobalInputs() {
-	if (EditorState::window->justPressed(GLFW_KEY_F11)) {
-		EditorState::window->toggleFullscreen();
+	if (UI::window->justPressed(GLFW_KEY_F11)) {
+		UI::window->toggleFullscreen();
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_ESCAPE)) {
+	if (UI::window->justPressed(GLFW_KEY_ESCAPE)) {
 		if (Popups::popups.size() > 0) {
 			Popups::popups[Popups::popups.size() - 1]->reject();
 		} else {
 			if (EditorState::dropletOpen) {
-				Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit Droplet?\nUnsaved changes will be lost"))->OnOkay([&]() {
+				Popups::addPopup((new ConfirmPopup("Exit Droplet?\nUnsaved changes will be lost"))->OnOkay([&]() {
 					EditorState::dropletOpen = false;
 					DropletWindow::resetChanges();
 					EditorState::dropletRoom->regeneateGeometry();
 				}));
 			} else {
-				Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit FloodForge?"))->OnOkay([&]() {
-					EditorState::window->close();
+				Popups::addPopup((new ConfirmPopup("Exit FloodForge?"))->OnOkay([&]() {
+					UI::window->close();
 				}));
 			}
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_ENTER)) {
+	if (UI::window->justPressed(GLFW_KEY_ENTER)) {
 		if (Popups::popups.size() > 0) {
 			Popups::popups[0]->accept();
 		}
 	}
 
-	if (EditorState::window->modifierPressed(GLFW_MOD_ALT) && EditorState::window->justPressed(GLFW_KEY_T)) {
-		Popups::addPopup(new MarkdownPopup(EditorState::window, BASE_PATH / "docs" / "controls.md"));
+	if (UI::window->modifierPressed(GLFW_MOD_ALT) && UI::window->justPressed(GLFW_KEY_T)) {
+		Popups::addPopup(new MarkdownPopup(BASE_PATH / "docs" / "controls.md"));
 	}
 }
 
@@ -90,11 +85,10 @@ int main() {
 	std::signal(SIGTERM, signalHandler); // Termination request
 #endif
 
-	EditorState::window = new Window(1024, 1024);
+	UI::window = new Window(1024, 1024);
 	Logger::info("Main icon path: ", BASE_PATH / "assets" / "mainIcon.png");
-	EditorState::window->setIcon(BASE_PATH / "assets" / "mainIcon.png");
-	EditorState::window->setTitle("FloodForge World Editor");
-	EditorState::mouse = EditorState::window->GetMouse();
+	UI::window->setIcon(BASE_PATH / "assets" / "mainIcon.png");
+	UI::window->setTitle("FloodForge World Editor");
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		Logger::error("Failed to initialize GLAD!");
@@ -102,7 +96,7 @@ int main() {
 	}
 
 	DropletWindow::init();
-	UI::init(EditorState::window);
+	UI::init(UI::window);
 	Settings::init();
 	Fonts::init();
 	MenuItems::init();
@@ -114,43 +108,45 @@ int main() {
 	RecentFiles::init();
 	RoomHelpers::loadColours();
 
-	Popups::addPopup(new SplashArtPopup(EditorState::window));
+	Popups::addPopup(new SplashArtPopup());
 
-	while (EditorState::window->isOpen()) {
-		EditorState::mouse->updateLastPressed();
+	while (UI::window->isOpen()) {
+		UI::window->GetMouse()->updateLastPressed();
 		glfwPollEvents();
 
-		EditorState::window->ensureFullscreen();
+		UI::window->ensureFullscreen();
 
-		glfwGetWindowSize(EditorState::window->getGLFWWindow(), &EditorState::windowSize.x, &EditorState::windowSize.y);
-		if (EditorState::windowSize.x == 0 || EditorState::windowSize.y == 0) continue;
-		float size = std::min(EditorState::windowSize.x, EditorState::windowSize.y);
-		float offsetX = (EditorState::windowSize.x * 0.5) - size * 0.5;
-		float offsetY = (EditorState::windowSize.y * 0.5) - size * 0.5;
+		if (UI::window->Width() == 0 || UI::window->Height() == 0) continue;
+		float size = std::min(UI::window->Width(), UI::window->Height());
+		float offsetX = (UI::window->Width() * 0.5) - size * 0.5;
+		float offsetY = (UI::window->Height() * 0.5) - size * 0.5;
 
 		EditorState::globalMouse = Vector2(
-			(EditorState::mouse->X() - offsetX) / size * 1024,
-			(EditorState::mouse->Y() - offsetY) / size * 1024
+			(UI::window->GetMouse()->X() - offsetX) / size * 1024,
+			(UI::window->GetMouse()->Y() - offsetY) / size * 1024
 		);
+		UI::mouse.lastX = UI::mouse.x;
+		UI::mouse.lastY = UI::mouse.y;
 		UI::mouse.x = (EditorState::globalMouse.x / 1024.0) * 2.0 - 1.0;
 		UI::mouse.y = (EditorState::globalMouse.y / 1024.0) * -2.0 + 1.0;
 		UI::mouse.lastLeftMouse = UI::mouse.leftMouse;
-		UI::mouse.leftMouse = EditorState::mouse->Left();
+		UI::mouse.leftMouse = UI::window->GetMouse()->Left();
+		UI::mouse.lastMiddleMouse = UI::mouse.middleMouse;
+		UI::mouse.middleMouse = UI::window->GetMouse()->Middle();
 		UI::mouse.lastRightMouse = UI::mouse.rightMouse;
-		UI::mouse.rightMouse = EditorState::mouse->Right();
+		UI::mouse.rightMouse = UI::window->GetMouse()->Right();
 
 		EditorState::lineSize = 64.0 / EditorState::cameraScale;
 
-		EditorState::screenBounds = Vector2(EditorState::windowSize.x, EditorState::windowSize.y) / size;
+		UI::screenBounds = Vector2(UI::window->Width(), UI::window->Height()) / size;
 
-
-		glViewport(0, 0, EditorState::windowSize.x, EditorState::windowSize.y);
+		glViewport(0, 0, UI::window->Width(), UI::window->Height());
 	
-		EditorState::window->clear();
+		UI::window->clear();
 		glDisable(GL_DEPTH_TEST);
 	
 		setThemeColour(ThemeColour::Background);
-		fillRect(-EditorState::screenBounds.x, -EditorState::screenBounds.y, EditorState::screenBounds.x, EditorState::screenBounds.y);
+		fillRect(-UI::screenBounds.x, -UI::screenBounds.y, UI::screenBounds.x, UI::screenBounds.y);
 
 		updateGlobalInputs();
 
@@ -163,18 +159,15 @@ int main() {
 		}
 
 		/// Draw UI
-		applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, EditorState::screenBounds);
+		applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, UI::screenBounds);
 
 		MenuItems::draw();
 
-		Popups::draw(EditorState::screenBounds);
+		Popups::draw(UI::screenBounds);
 
-		EditorState::window->render();
+		UI::window->render();
 
 		Popups::cleanup();
-
-		lastMousePosition.x = EditorState::mouse->X();
-		lastMousePosition.y = EditorState::mouse->Y();
 	}
 
 	for (Room *room : EditorState::rooms)

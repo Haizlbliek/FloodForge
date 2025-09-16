@@ -86,7 +86,7 @@ void UpdateCamera() {
 		}
 	}
 
-	double scrollY = -EditorState::window->getMouseScrollY();
+	double scrollY = -UI::window->getMouseScrollY();
 	double zoom = std::pow(1.25, scrollY);
 
 	Vector2 previousWorldMouse = Vector2(
@@ -109,7 +109,7 @@ void UpdateCamera() {
 	DropletWindow::cameraPanTo.y += previousWorldMouse.y - worldMouse.y;
 
 	// Panning
-	if (EditorState::mouse->Middle()) {
+	if (UI::mouse.middleMouse) {
 		if (!DropletWindow::cameraPanningBlocked && !DropletWindow::cameraPanning) {
 			if (isHoveringPopup) DropletWindow::cameraPanningBlocked = true;
 
@@ -131,8 +131,8 @@ void UpdateCamera() {
 		DropletWindow::cameraPanningBlocked = false;
 	}
 
-	DropletWindow::cameraPanTo.x = std::clamp(DropletWindow::cameraPanTo.x, -(EditorState::screenBounds.x - 0.41) * DropletWindow::cameraScale, EditorState::screenBounds.x * DropletWindow::cameraScale + EditorState::dropletRoom->width);
-	DropletWindow::cameraPanTo.y = std::clamp(DropletWindow::cameraPanTo.y, -(EditorState::screenBounds.y - 0.12) * DropletWindow::cameraScale - EditorState::dropletRoom->height, EditorState::screenBounds.y * DropletWindow::cameraScale);
+	DropletWindow::cameraPanTo.x = std::clamp(DropletWindow::cameraPanTo.x, -(UI::screenBounds.x - 0.41) * DropletWindow::cameraScale, UI::screenBounds.x * DropletWindow::cameraScale + EditorState::dropletRoom->width);
+	DropletWindow::cameraPanTo.y = std::clamp(DropletWindow::cameraPanTo.y, -(UI::screenBounds.y - 0.12) * DropletWindow::cameraScale - EditorState::dropletRoom->height, UI::screenBounds.y * DropletWindow::cameraScale);
 
 	DropletWindow::cameraOffset.x += (DropletWindow::cameraPanTo.x - DropletWindow::cameraOffset.x) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
 	DropletWindow::cameraOffset.y += (DropletWindow::cameraPanTo.y - DropletWindow::cameraOffset.y) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
@@ -226,7 +226,7 @@ void UpdateDetailsTab() {
 			movingNode->pos.x = nodeMouse.x;
 			movingNode->pos.y = nodeMouse.y;
 
-			if (Rect::fromSize(-EditorState::screenBounds.x + 0.01, -EditorState::screenBounds.y + 0.01, 0.1, 0.1).inside(UI::mouse)) {
+			if (Rect::fromSize(-UI::screenBounds.x + 0.01, -UI::screenBounds.y + 0.01, 0.1, 0.1).inside(UI::mouse)) {
 				trashCanState = 2;
 
 				if (!UI::mouse.leftMouse) {
@@ -263,7 +263,7 @@ void UpdateDetailsTab() {
 	else {
 		trashCanState = 0;
 
-		if (!DropletWindow::blockMouse && EditorState::window->keyPressed(GLFW_KEY_W) && EditorState::dropletRoom->water != -1) {
+		if (!DropletWindow::blockMouse && UI::window->keyPressed(GLFW_KEY_W) && EditorState::dropletRoom->water != -1) {
 			EditorState::dropletRoom->water = EditorState::dropletRoom->height - DropletWindow::mouseTile.y - 1;
 			if (EditorState::dropletRoom->water < 0) EditorState::dropletRoom->water = 0;
 			waterNeedsRefresh = true;
@@ -569,19 +569,19 @@ void UpdateGeometryTab() {
 	if (!(UI::mouse.leftMouse || UI::mouse.rightMouse)) {
 		int tool = (int) DropletWindow::selectedTool;
 
-		if (EditorState::window->justPressed(GLFW_KEY_A)) {
+		if (UI::window->justPressed(GLFW_KEY_A)) {
 			tool = ((tool + 3) % 4) + (tool & 0b1100);
 		}
 	
-		if (EditorState::window->justPressed(GLFW_KEY_D)) {
+		if (UI::window->justPressed(GLFW_KEY_D)) {
 			tool = ((tool + 1) % 4) + (tool & 0b1100);
 		}
 	
-		if (EditorState::window->justPressed(GLFW_KEY_W)) {
+		if (UI::window->justPressed(GLFW_KEY_W)) {
 			tool = ((tool + 12) % 16);
 		}
 	
-		if (EditorState::window->justPressed(GLFW_KEY_S)) {
+		if (UI::window->justPressed(GLFW_KEY_S)) {
 			tool = ((tool + 4) % 16);
 		}
 
@@ -602,11 +602,11 @@ void UpdateGeometryTab() {
 				rectDrawing = -1;
 			}
 		}
-		else if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT) && (UI::mouse.leftMouse || UI::mouse.rightMouse)) {
+		else if (UI::window->modifierPressed(GLFW_MOD_SHIFT) && (UI::mouse.leftMouse || UI::mouse.rightMouse)) {
 			rectDrawing = UI::mouse.leftMouse ? 0 : 1;
 			rectStart = DropletWindow::mouseTile;
 		}
-		else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::WALL && EditorState::window->keyPressed(GLFW_KEY_Q) && (UI::mouse.leftMouse || UI::mouse.rightMouse) && EditorState::dropletRoom->InBounds(DropletWindow::mouseTile.x, DropletWindow::mouseTile.y)) {
+		else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::WALL && UI::window->keyPressed(GLFW_KEY_Q) && (UI::mouse.leftMouse || UI::mouse.rightMouse) && EditorState::dropletRoom->InBounds(DropletWindow::mouseTile.x, DropletWindow::mouseTile.y)) {
 			std::vector<Vector2i> items;
 			std::vector<Vector2i> visited;
 			int setTo = UI::mouse.leftMouse ? 1 : 0;
@@ -683,7 +683,7 @@ bool drawCameraAngle(double x, double y, Vector2 &angle, bool dragging) {
 	if (dragging) {
 		angle.x = (DropletWindow::transformedMouse.x - x) / 4.0;
 		angle.y = (DropletWindow::transformedMouse.y - y) / 4.0;
-		if (!EditorState::window->modifierPressed(GLFW_MOD_SHIFT)) {
+		if (!UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
 			double len = angle.length();
 			if (len > 1.0) {
 				angle = angle / len;
@@ -766,16 +766,16 @@ void UpdateCameraTab() {
 		DropletWindow::selectedCamera = nullptr;
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_C)) {
+	if (UI::window->justPressed(GLFW_KEY_C)) {
 		DropletWindow::Camera camera;
 		camera.position = DropletWindow::transformedMouse * Vector2(1, -1) - cameraSizeTiles * 0.5;
 		DropletWindow::cameras.push_back(camera);
 		DropletWindow::selectedCamera = &DropletWindow::cameras[DropletWindow::cameras.size() - 1];
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_X) && DropletWindow::selectedCamera != nullptr) {
+	if (UI::window->justPressed(GLFW_KEY_X) && DropletWindow::selectedCamera != nullptr) {
 		if (DropletWindow::cameras.size() == 1) {
-			Popups::addPopup(new InfoPopup(EditorState::window, "Cannot delete last camera"));
+			Popups::addPopup(new InfoPopup("Cannot delete last camera"));
 		} else {
 			DropletWindow::cameras.erase(std::remove_if(DropletWindow::cameras.begin(), DropletWindow::cameras.end(), [](const DropletWindow::Camera &other) {
 				return &other == DropletWindow::selectedCamera;
@@ -804,14 +804,14 @@ void drawWater(bool border) {
 
 void DropletWindow::Draw() {
 	if (!UI::mouse.leftMouse && !UI::mouse.rightMouse) {
-		if (EditorState::window->justPressed(GLFW_KEY_1)) currentTab = DropletWindow::EditorTab::DETAILS;
-		if (EditorState::window->justPressed(GLFW_KEY_2)) currentTab = DropletWindow::EditorTab::GEOMETRY;
-		if (EditorState::window->justPressed(GLFW_KEY_3)) currentTab = DropletWindow::EditorTab::CAMERA;
+		if (UI::window->justPressed(GLFW_KEY_1)) currentTab = DropletWindow::EditorTab::DETAILS;
+		if (UI::window->justPressed(GLFW_KEY_2)) currentTab = DropletWindow::EditorTab::GEOMETRY;
+		if (UI::window->justPressed(GLFW_KEY_3)) currentTab = DropletWindow::EditorTab::CAMERA;
 	}
 
 	UpdateCamera();
 
-	applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale * EditorState::screenBounds);
+	applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale * UI::screenBounds);
 
 	roomRect = Rect::fromSize(0.0, 0.0, EditorState::dropletRoom->width, -EditorState::dropletRoom->height);
 
@@ -1011,18 +1011,18 @@ void DropletWindow::Draw() {
 		-int(std::ceil(UI::mouse.y * cameraScale + cameraOffset.y))
 	};
 
-	blockMouse = UI::mouse.y >= (EditorState::screenBounds.y - 0.12) || UI::mouse.x >= (EditorState::screenBounds.x - 0.41);
+	blockMouse = UI::mouse.y >= (UI::screenBounds.y - 0.12) || UI::mouse.x >= (UI::screenBounds.x - 0.41);
 
 	if (currentTab == DropletWindow::EditorTab::DETAILS) UpdateDetailsTab();
 	if (currentTab == DropletWindow::EditorTab::GEOMETRY) UpdateGeometryTab();
 	if (currentTab == DropletWindow::EditorTab::CAMERA) UpdateCameraTab();
 
 	// Draw UI
-	applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, EditorState::screenBounds);
+	applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, UI::screenBounds);
 	glLineWidth(1);
 
 	//-- Sidebar
-	Rect sidebar(EditorState::screenBounds.x - 0.41, EditorState::screenBounds.y - 0.12, EditorState::screenBounds.x, -EditorState::screenBounds.y);
+	Rect sidebar(UI::screenBounds.x - 0.41, UI::screenBounds.y - 0.12, UI::screenBounds.x, -UI::screenBounds.y);
 	setThemeColor(ThemeColour::Popup);
 	fillRect(sidebar);
 	setThemeColor(ThemeColour::Border);
@@ -1088,19 +1088,19 @@ void DropletWindow::Draw() {
 				Draw::color(1.0, 1.0, 1.0);
 			}
 
-			strokeRect(Rect::fromSize(-EditorState::screenBounds.x + 0.01, -EditorState::screenBounds.y + 0.01, 0.1, 0.1));
-			Fonts::rainworld->writeCentered("Trash", -EditorState::screenBounds.x + 0.06, -EditorState::screenBounds.y + 0.13, 0.03, CENTER_XY);
+			strokeRect(Rect::fromSize(-UI::screenBounds.x + 0.01, -UI::screenBounds.y + 0.01, 0.1, 0.1));
+			Fonts::rainworld->writeCentered("Trash", -UI::screenBounds.x + 0.06, -UI::screenBounds.y + 0.13, 0.03, CENTER_XY);
 		}
 	}
 
 	//-- Tabs
-	Rect tabPositions(-EditorState::screenBounds.x, EditorState::screenBounds.y - 0.06, EditorState::screenBounds.x, EditorState::screenBounds.y - 0.12);
+	Rect tabPositions(-UI::screenBounds.x, UI::screenBounds.y - 0.06, UI::screenBounds.x, UI::screenBounds.y - 0.12);
 	setThemeColor(ThemeColour::Popup);
 	fillRect(tabPositions);
 	setThemeColor(ThemeColour::Border);
 	drawLine(tabPositions.x0, tabPositions.y0, tabPositions.x1, tabPositions.y0);
 
-	Vector2 tabPosition = Vector2(-EditorState::screenBounds.x + 0.01, EditorState::screenBounds.y - 0.12);
+	Vector2 tabPosition = Vector2(-UI::screenBounds.x + 0.01, UI::screenBounds.y - 0.12);
 	double tabHeight = 0.05;
 	for (int i = 0; i < 3; i++) {
 		double tabWidth = std::max(0.15, Fonts::rainworld->getTextWidth(TAB_NAMES[i], 0.03) + 0.04);

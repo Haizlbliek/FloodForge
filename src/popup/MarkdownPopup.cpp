@@ -1,15 +1,17 @@
 #include "MarkdownPopup.hpp"
 
-MarkdownPopup::MarkdownPopup(Window *window, std::filesystem::path path) : Popup(window) {
+#include"../ui/UI.hpp"
+
+MarkdownPopup::MarkdownPopup(std::filesystem::path path) : Popup() {
 	bounds = Rect(-0.8, -0.8, 0.8, 0.8);
 
 	loadFile(path);
 
-	window->addScrollCallback(this, scrollCallback);
+	UI::window->addScrollCallback(this, scrollCallback);
 }
 
-void MarkdownPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
-	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+void MarkdownPopup::draw() {
+	Popup::draw();
 
 	if (minimized) return;
 
@@ -17,15 +19,15 @@ void MarkdownPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2
 
 	int windowWidth;
 	int windowHeight;
-	glfwGetWindowSize(window->getGLFWWindow(), &windowWidth, &windowHeight);
+	glfwGetWindowSize(UI::window->getGLFWWindow(), &windowWidth, &windowHeight);
 
 	double padding = 0.01;
 	glEnable(GL_SCISSOR_TEST);
 	glScissor(
-		((bounds.x0 + padding) / screenBounds.x + 1.0) * 0.5 * windowWidth,
- 				((bounds.y0 + padding) / screenBounds.y + 1.0) * 0.5 * windowHeight,
-		(((bounds.x1 - bounds.x0) - padding * 2) / screenBounds.x) * 0.5 * windowWidth,
-		(((bounds.y1 - bounds.y0) - padding * 2 - 0.05) / screenBounds.y) * 0.5 * windowHeight
+		((bounds.x0 + padding) / UI::screenBounds.x + 1.0) * 0.5 * windowWidth,
+ 				((bounds.y0 + padding) / UI::screenBounds.y + 1.0) * 0.5 * windowHeight,
+		(((bounds.x1 - bounds.x0) - padding * 2) / UI::screenBounds.x) * 0.5 * windowWidth,
+		(((bounds.y1 - bounds.y0) - padding * 2 - 0.05) / UI::screenBounds.y) * 0.5 * windowHeight
 	);
 
 	currentScroll += (targetScroll - currentScroll) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
@@ -81,20 +83,7 @@ void MarkdownPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2
 void MarkdownPopup::close() {
 	Popup::close();
 
-	window->removeScrollCallback(this, scrollCallback);
-}
-
-void MarkdownPopup::mouseClick(double mouseX, double mouseY) {
-	Popup::mouseClick(mouseX, mouseY);
-
-	for (Quadruple<double, double, std::string, Vector2> link : links) {
-		if (
-			(mouseX >= link.first && mouseX <= link.first + link.fourth.x) &&
-			(mouseY >= link.second && mouseY <= link.second + link.fourth.y)
-		) {
-			openURL(link.third);
-		}
-	}
+	UI::window->removeScrollCallback(this, scrollCallback);
 }
 
 void MarkdownPopup::writeLine(std::vector<MDStyledText> line, double x, double &y, double size) {
@@ -134,7 +123,9 @@ void MarkdownPopup::writeLine(std::vector<MDStyledText> line, double x, double &
 		}
 
 		if (!seg.url.empty()) {
-			links.push_back(Quadruple<double, double, std::string, Vector2>( x, y - size, seg.url, Vector2(width, size) ));
+			if (UI::mouse.justClicked() && UI::mouse.x >= x && UI::mouse.x <= x + width && UI::mouse.y <= y && UI::mouse.y >= y - size) {
+				openURL(seg.url);
+			}
 		}
 
 		if (seg.code) {

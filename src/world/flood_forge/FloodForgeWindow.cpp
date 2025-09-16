@@ -59,7 +59,7 @@ void FloodForgeWindow::updateCamera() {
 	/// Update Camera
 
 	//// Zooming
-	double scrollY = -EditorState::window->getMouseScrollY();
+	double scrollY = -UI::window->getMouseScrollY();
 	if (isHoveringPopup) scrollY = 0.0;
 
 	if (scrollY < -10.0) scrollY = -10.0;
@@ -84,7 +84,7 @@ void FloodForgeWindow::updateCamera() {
 	cameraPanTo.y += previousWorldMouse.y - worldMouse.y;
 
 	//// Panning
-	if (EditorState::mouse->Middle()) {
+	if (UI::mouse.middleMouse) {
 		if (!cameraPanningBlocked && !cameraPanning) {
 			if (isHoveringPopup) cameraPanningBlocked = true;
 
@@ -111,8 +111,8 @@ void FloodForgeWindow::updateCamera() {
 }
 
 void FloodForgeWindow::updateOriginalControls() {
-	if (EditorState::mouse->Left()) {
-		if (EditorState::mouse->JustLeft()) {
+	if (UI::mouse.leftMouse) {
+		if (!UI::mouse.lastLeftMouse) {
 			if (EditorState::selectingState == 0) {
 				for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 					Room *room = *it;
@@ -129,11 +129,11 @@ void FloodForgeWindow::updateOriginalControls() {
 			}
 
 			if (EditorState::selectingState == 0) {
-				if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT)) {
+				if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
 					EditorState::selectingState = 1;
 					selectionStart = worldMouse;
 					selectionEnd = worldMouse;
-					if (!EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) EditorState::selectedRooms.clear();
+					if (!UI::window->modifierPressed(GLFW_MOD_CONTROL)) EditorState::selectedRooms.clear();
 				} else {
 					EditorState::selectingState = 5;
 					selectionStart = EditorState::globalMouse;
@@ -141,9 +141,9 @@ void FloodForgeWindow::updateOriginalControls() {
 				}
 			}
 		} else {
-			if (EditorState::selectingState == 3 && EditorState::mouse->Moved() || EditorState::selectingState == 4) {
+			if (EditorState::selectingState == 3 && UI::mouse.moved() || EditorState::selectingState == 4) {
 				if (EditorState::selectingState == 3) {
-					if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT) || EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) {
+					if (UI::window->modifierPressed(GLFW_MOD_SHIFT) || UI::window->modifierPressed(GLFW_MOD_CONTROL)) {
 						EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 					} else {
 						if (EditorState::selectedRooms.find(holdingRoom) == EditorState::selectedRooms.end()) {
@@ -167,7 +167,7 @@ void FloodForgeWindow::updateOriginalControls() {
 
 					roomPosition.add(offset);
 
-					if (EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
+					if (UI::window->modifierPressed(GLFW_MOD_ALT)) {
 						room2->moveBoth();
 					}
 				}
@@ -191,7 +191,7 @@ void FloodForgeWindow::updateOriginalControls() {
 		if (EditorState::selectingState == 3) {
 			EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), EditorState::roomPossibleSelect), EditorState::rooms.end());
 			EditorState::rooms.push_back(EditorState::roomPossibleSelect);
-			if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT) || EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) {
+			if (UI::window->modifierPressed(GLFW_MOD_SHIFT) || UI::window->modifierPressed(GLFW_MOD_CONTROL)) {
 				if (EditorState::selectedRooms.find(EditorState::roomPossibleSelect) != EditorState::selectedRooms.end()) {
 					EditorState::selectedRooms.erase(EditorState::roomPossibleSelect);
 				} else {
@@ -221,8 +221,8 @@ void FloodForgeWindow::updateOriginalControls() {
 }
 
 void FloodForgeWindow::updateFloodForgeControls() {
-	if (EditorState::mouse->Left()) {
-		if (EditorState::mouse->JustLeft()) {
+	if (UI::mouse.leftMouse) {
+		if (!UI::mouse.lastLeftMouse) {
 			if (EditorState::selectingState == 0) {
 				for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 					Room *room = *it;
@@ -242,14 +242,14 @@ void FloodForgeWindow::updateFloodForgeControls() {
 				EditorState::selectingState = 1;
 				selectionStart = worldMouse;
 				selectionEnd = worldMouse;
-				if (!EditorState::window->modifierPressed(GLFW_MOD_SHIFT) && !EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) {
+				if (!UI::window->modifierPressed(GLFW_MOD_SHIFT) && !UI::window->modifierPressed(GLFW_MOD_CONTROL)) {
 					EditorState::selectedRooms.clear();
 				}
 			}
 		} else {
-			if (EditorState::selectingState == 3 && EditorState::mouse->Moved() || EditorState::selectingState == 4) {
+			if (EditorState::selectingState == 3 && UI::mouse.moved() || EditorState::selectingState == 4) {
 				if (EditorState::selectingState == 3) {
-					if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT) || EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) {
+					if (UI::window->modifierPressed(GLFW_MOD_SHIFT) || UI::window->modifierPressed(GLFW_MOD_CONTROL)) {
 						EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 					} else {
 						if (EditorState::selectedRooms.find(holdingRoom) == EditorState::selectedRooms.end()) {
@@ -272,7 +272,7 @@ void FloodForgeWindow::updateFloodForgeControls() {
 					}
 
 					roomPosition.add(offset);
-					if (EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
+					if (UI::window->modifierPressed(GLFW_MOD_ALT)) {
 						room2->moveBoth();
 					}
 				}
@@ -288,7 +288,7 @@ void FloodForgeWindow::updateFloodForgeControls() {
 		if (EditorState::selectingState == 3) {
 			EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), EditorState::roomPossibleSelect), EditorState::rooms.end());
 			EditorState::rooms.push_back(EditorState::roomPossibleSelect);
-			if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT) || EditorState::window->modifierPressed(GLFW_MOD_CONTROL)) {
+			if (UI::window->modifierPressed(GLFW_MOD_SHIFT) || UI::window->modifierPressed(GLFW_MOD_CONTROL)) {
 				if (EditorState::selectedRooms.find(EditorState::roomPossibleSelect) != EditorState::selectedRooms.end()) {
 					EditorState::selectedRooms.erase(EditorState::roomPossibleSelect);
 				} else {
@@ -325,39 +325,39 @@ void FloodForgeWindow::updateMain() {
 
 	/// Update Inputs
 
-	if (EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
+	if (UI::window->modifierPressed(GLFW_MOD_ALT)) {
 		roomSnap = ROOM_SNAP_NONE;
 	} else {
 		roomSnap = ROOM_SNAP_TILE;
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_F11)) {
-		EditorState::window->toggleFullscreen();
+	if (UI::window->justPressed(GLFW_KEY_F11)) {
+		UI::window->toggleFullscreen();
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_ESCAPE)) {
+	if (UI::window->justPressed(GLFW_KEY_ESCAPE)) {
 		if (Popups::popups.size() > 0) {
 			Popups::popups[Popups::popups.size() - 1]->reject();
 		} else {
-			Popups::addPopup((new ConfirmPopup(EditorState::window, "Exit FloodForge?"))->OnOkay([&]() {
-				EditorState::window->close();
+			Popups::addPopup((new ConfirmPopup("Exit FloodForge?"))->OnOkay([&]() {
+				UI::window->close();
 			}));
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_ENTER)) {
+	if (UI::window->justPressed(GLFW_KEY_ENTER)) {
 		if (Popups::popups.size() > 0) {
 			Popups::popups[0]->accept();
 		}
 	}
 
-	if (EditorState::window->modifierPressed(GLFW_MOD_ALT) && EditorState::window->justPressed(GLFW_KEY_T)) {
-		Popups::addPopup(new MarkdownPopup(EditorState::window, BASE_PATH / "docs" / "controls.md"));
+	if (UI::window->modifierPressed(GLFW_MOD_ALT) && UI::window->justPressed(GLFW_KEY_T)) {
+		Popups::addPopup(new MarkdownPopup(BASE_PATH / "docs" / "controls.md"));
 	}
 
 	//// Connections
 	connectionError = "";
-	if (EditorState::mouse->Right()) {
+	if (UI::mouse.rightMouse) {
 		Room *hoveringRoom = nullptr;
 		for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 			Room *room = (*it);
@@ -465,7 +465,7 @@ void FloodForgeWindow::updateMain() {
 
 	if (!Popups::popups.empty()) return;
 
-	if (EditorState::window->justPressed(GLFW_KEY_I)) {
+	if (UI::window->justPressed(GLFW_KEY_I)) {
 		for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 			Room *room = *it;
 			if (!EditorState::visibleLayers[room->layer]) continue;
@@ -478,7 +478,7 @@ void FloodForgeWindow::updateMain() {
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_X)) {
+	if (UI::window->justPressed(GLFW_KEY_X)) {
 		bool deleted = false;
 
 		for (auto it = EditorState::connections.rbegin(); it != EditorState::connections.rend(); it++) {
@@ -569,9 +569,9 @@ void FloodForgeWindow::updateMain() {
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_S)) {
+	if (UI::window->justPressed(GLFW_KEY_S)) {
 		if (EditorState::selectedRooms.size() >= 1) {
-			Popups::addPopup(new SubregionPopup(EditorState::window, EditorState::selectedRooms));
+			Popups::addPopup(new SubregionPopup(EditorState::selectedRooms));
 		} else {
 			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 				Room *room = *it;
@@ -580,7 +580,7 @@ void FloodForgeWindow::updateMain() {
 				if (room->inside(worldMouse)) {
 					std::set<Room*> roomGroup;
 					roomGroup.insert(room);
-					Popups::addPopup(new SubregionPopup(EditorState::window, roomGroup));
+					Popups::addPopup(new SubregionPopup(roomGroup));
 
 					break;
 				}
@@ -588,9 +588,9 @@ void FloodForgeWindow::updateMain() {
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_T)) {
+	if (UI::window->justPressed(GLFW_KEY_T)) {
 		if (EditorState::selectedRooms.size() >= 1) {
-			Popups::addPopup(new RoomTagPopup(EditorState::window, EditorState::selectedRooms));
+			Popups::addPopup(new RoomTagPopup(EditorState::selectedRooms));
 		} else {
 			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 				Room *room = *it;
@@ -601,7 +601,7 @@ void FloodForgeWindow::updateMain() {
 
 					std::set<Room*> roomGroup;
 					roomGroup.insert(room);
-					Popups::addPopup(new RoomTagPopup(EditorState::window, roomGroup));
+					Popups::addPopup(new RoomTagPopup(roomGroup));
 
 					break;
 				}
@@ -609,7 +609,7 @@ void FloodForgeWindow::updateMain() {
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_L)) {
+	if (UI::window->justPressed(GLFW_KEY_L)) {
 		if (EditorState::selectedRooms.size() >= 1) {
 			int minimumLayer = 3;
 
@@ -639,7 +639,7 @@ void FloodForgeWindow::updateMain() {
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_G)) {
+	if (UI::window->justPressed(GLFW_KEY_G)) {
 		if (EditorState::selectedRooms.size() >= 1) {
 			bool setMerge = true;
 
@@ -667,7 +667,7 @@ void FloodForgeWindow::updateMain() {
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_H)) {
+	if (UI::window->justPressed(GLFW_KEY_H)) {
 		if (EditorState::selectedRooms.size() >= 1) {
 			bool setHidden = true;
 
@@ -696,7 +696,7 @@ void FloodForgeWindow::updateMain() {
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_C)) {
+	if (UI::window->justPressed(GLFW_KEY_C)) {
 		bool found = false;
 
 		for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
@@ -710,7 +710,7 @@ void FloodForgeWindow::updateMain() {
 					shortcutPosition = Vector2(room->Width() * 0.5 - room->DenCount() * 2.0 + i * 4.0 + 2.5, -room->Height() * 0.25 - 0.5);
 
 					if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
-						Popups::addPopup(new DenPopup(EditorState::window, room->CreatureDen01(i)));
+						Popups::addPopup(new DenPopup(room->CreatureDen01(i)));
 
 						found = true;
 						break;
@@ -721,7 +721,7 @@ void FloodForgeWindow::updateMain() {
 					shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
 
 					if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
-						Popups::addPopup(new DenPopup(EditorState::window, room->CreatureDen(room->DenId(shortcut))));
+						Popups::addPopup(new DenPopup(room->CreatureDen(room->DenId(shortcut))));
 
 						found = true;
 						break;
@@ -739,15 +739,15 @@ void FloodForgeWindow::updateMain() {
 				if (room->inside(worldMouse)) {
 					if (!room->isOffscreen()) break;
 
-					Popups::addPopup(new DenPopup(EditorState::window, EditorState::offscreenDen->getDen()));
+					Popups::addPopup(new DenPopup(EditorState::offscreenDen->getDen()));
 				}
 			}
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_A)) {
+	if (UI::window->justPressed(GLFW_KEY_A)) {
 		if (EditorState::selectedRooms.size() >= 1) {
-			Popups::addPopup(new RoomAttractivenessPopup(EditorState::window, EditorState::selectedRooms));
+			Popups::addPopup(new RoomAttractivenessPopup(EditorState::selectedRooms));
 		} else {
 			Room *hoveringRoom = nullptr;
 			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
@@ -764,12 +764,12 @@ void FloodForgeWindow::updateMain() {
 			if (hoveringRoom != nullptr && !hoveringRoom->isOffscreen()) {
 				std::set<Room *> set;
 				set.insert(hoveringRoom);
-				Popups::addPopup(new RoomAttractivenessPopup(EditorState::window, set));
+				Popups::addPopup(new RoomAttractivenessPopup(set));
 			}
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_D)) {
+	if (UI::window->justPressed(GLFW_KEY_D)) {
 		Connection *openForConnection = nullptr;
 		for (auto it = EditorState::connections.rbegin(); it != EditorState::connections.rend(); it++) {
 			Connection *connection = *it;
@@ -784,10 +784,10 @@ void FloodForgeWindow::updateMain() {
 		}
 
 		if (openForConnection != nullptr) {
-			Popups::addPopup(new ConditionalPopup(EditorState::window, openForConnection));
+			Popups::addPopup(new ConditionalPopup(openForConnection));
 		} else {
 			if (EditorState::selectedRooms.size() >= 1) {
-				Popups::addPopup(new ConditionalPopup(EditorState::window, EditorState::selectedRooms));
+				Popups::addPopup(new ConditionalPopup(EditorState::selectedRooms));
 			} else {
 				Room *hoveringRoom = nullptr;
 				for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
@@ -804,17 +804,17 @@ void FloodForgeWindow::updateMain() {
 				if (hoveringRoom != nullptr && !hoveringRoom->isOffscreen()) {
 					std::set<Room *> set;
 					set.insert(hoveringRoom);
-					Popups::addPopup(new ConditionalPopup(EditorState::window, set));
+					Popups::addPopup(new ConditionalPopup(set));
 				}
 			}
 		}
 	}
 
-	if (EditorState::window->justPressed(GLFW_KEY_R)) {
+	if (UI::window->justPressed(GLFW_KEY_R)) {
 		if (EditorState::region.acronym.empty()) {
-			Popups::addPopup(new InfoPopup(EditorState::window, "You must create or import a region\nbefore creating or editing a room."));
+			Popups::addPopup(new InfoPopup("You must create or import a region\nbefore creating or editing a room."));
 		} else if (EditorState::region.exportDirectory.empty()) {
-			Popups::addPopup(new InfoPopup(EditorState::window, "You must export your region\nbefore creating or editing a room."));
+			Popups::addPopup(new InfoPopup("You must export your region\nbefore creating or editing a room."));
 		} else {
 			Room *hoveringRoom = nullptr;
 			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
@@ -829,7 +829,7 @@ void FloodForgeWindow::updateMain() {
 			}
 	
 			if (hoveringRoom == nullptr || hoveringRoom->isOffscreen()) {
-				Popups::addPopup(new CreateRoomPopup(EditorState::window));
+				Popups::addPopup(new CreateRoomPopup());
 				EditorState::placingRoom = true;
 				EditorState::placingRoomPosition = worldMouse;
 			} else {
@@ -889,7 +889,7 @@ void FloodForgeWindow::Draw() {
 
 
 	// Draw
-	applyFrustumToOrthographic(EditorState::cameraOffset, 0.0f, EditorState::cameraScale * EditorState::screenBounds);
+	applyFrustumToOrthographic(EditorState::cameraOffset, 0.0f, EditorState::cameraScale * UI::screenBounds);
 
 	/// Draw Grid
 	glLineWidth(1);
@@ -898,15 +898,15 @@ void FloodForgeWindow::Draw() {
 	gridStep = std::pow(2, std::ceil(std::log2(gridStep - 0.01)));
 	Draw::begin(Draw::LINES);
 	Vector2 offset = (EditorState::cameraOffset / gridStep).rounded() * gridStep;
-	Vector2 extraOffset = Vector2(fmod((EditorState::screenBounds.x - 1.0) * gridStep * 16.0, gridStep), 0);
-	Vector2 gridScale = gridStep * 16.0 * EditorState::screenBounds;
+	Vector2 extraOffset = Vector2(fmod((UI::screenBounds.x - 1.0) * gridStep * 16.0, gridStep), 0);
+	Vector2 gridScale = gridStep * 16.0 * UI::screenBounds;
 	for (float x = -gridScale.x + offset.x; x < gridScale.x + offset.x; x += gridStep) {
-		Draw::vertex(x + extraOffset.x, -EditorState::cameraScale * EditorState::screenBounds.y + offset.y + extraOffset.y - gridStep);
-		Draw::vertex(x + extraOffset.x,  EditorState::cameraScale * EditorState::screenBounds.y + offset.y + extraOffset.y + gridStep);
+		Draw::vertex(x + extraOffset.x, -EditorState::cameraScale * UI::screenBounds.y + offset.y + extraOffset.y - gridStep);
+		Draw::vertex(x + extraOffset.x,  EditorState::cameraScale * UI::screenBounds.y + offset.y + extraOffset.y + gridStep);
 	}
 	for (float y = -gridScale.y + offset.y; y < gridScale.y + offset.y; y += gridStep) {
-		Draw::vertex(-EditorState::cameraScale * EditorState::screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
-		Draw::vertex( EditorState::cameraScale * EditorState::screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
+		Draw::vertex(-EditorState::cameraScale * UI::screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
+		Draw::vertex( EditorState::cameraScale * UI::screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
 	}
 	Draw::end();
 
@@ -929,7 +929,7 @@ void FloodForgeWindow::Draw() {
 		}
 
 		room->draw(worldMouse, EditorState::roomPositionType);
-		if (EditorState::window->modifierPressed(GLFW_MOD_ALT)) {
+		if (UI::window->modifierPressed(GLFW_MOD_ALT)) {
 			room->draw(worldMouse, (EditorState::roomPositionType == CANON_POSITION) ? DEV_POSITION : CANON_POSITION);
 		}
 		if (EditorState::selectedRooms.find(room) != EditorState::selectedRooms.end()) {
@@ -1009,15 +1009,15 @@ void FloodForgeWindow::Draw() {
 	}
 
 	/// Draw UI
-	applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, EditorState::screenBounds);
+	applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, UI::screenBounds);
 
 	if (connectionError != "") {
 		Draw::color(1.0, 0.0, 0.0);
-		Fonts::rainworld->writeCentered(connectionError, EditorState::mouse->X() / 512.0f - EditorState::screenBounds.x, -EditorState::mouse->Y() / 512.0f + EditorState::screenBounds.y, 0.05, CENTER_X);
+		Fonts::rainworld->writeCentered(connectionError, UI::mouse.x / 512.0f - UI::screenBounds.x, -UI::mouse.y / 512.0f + UI::screenBounds.y, 0.05, CENTER_X);
 	}
 
-	DebugData::draw(EditorState::window, Vector2(
+	DebugData::draw(UI::window, Vector2(
 		UI::mouse.x * EditorState::cameraScale + EditorState::cameraOffset.x,
 		UI::mouse.y * EditorState::cameraScale + EditorState::cameraOffset.y
-	), EditorState::screenBounds);
+	), UI::screenBounds);
 }

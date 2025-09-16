@@ -5,9 +5,6 @@ std::string ROOM_TAG_NAMES[ROOM_TAG_COUNT] = { "Shelter", "Ancient Shelter", "Ga
 
 
 namespace EditorState {
-	Mouse *mouse = nullptr;
-	Window *window = nullptr;
-
 	bool dropletOpen;
 
 	// FloodForge
@@ -42,8 +39,6 @@ namespace EditorState {
 	bool denPopupTagsExtended = false;
 
 	Vector2 globalMouse;
-	Vector2 screenBounds;
-	Vector2i windowSize = { 0, 0 };
 	double lineSize = 0.0;
 
 	// Droplet

@@ -29,9 +29,6 @@ extern std::string ROOM_TAG_NAMES[ROOM_TAG_COUNT];
 #include "Region.hpp"
 
 namespace EditorState {
-	extern Mouse *mouse;
-	extern Window *window;
-
 	extern bool dropletOpen;
 
 	// FloodForge
@@ -66,8 +63,6 @@ namespace EditorState {
 	extern bool denPopupTagsExtended;
 
 	extern Vector2 globalMouse;
-	extern Vector2 screenBounds;
-	extern Vector2i windowSize;
 	extern double lineSize;
 
 	// Droplet

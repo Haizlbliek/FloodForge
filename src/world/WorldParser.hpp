@@ -19,7 +19,7 @@ struct ConditionalConnection {
 	int connectionB;
 
 	std::set<std::string> timelines;
-	ConnectionTimelineType timelineType;
+	TimelineType timelineType;
 };
 
 class WorldParser {

@@ -34,7 +34,7 @@ void Button::draw() {
 	UI::TextButtonMods mods = UI::TextButtonMods();
 	if (darken) mods.TextColor(currentTheme[ThemeColour::TextDisabled]);
 
-	if (UI::TextButton(Rect(rect.x0 - EditorState::screenBounds.x, rect.y0 + EditorState::screenBounds.y, rect.x1 - EditorState::screenBounds.x, rect.y1 + EditorState::screenBounds.y), text, mods)) {
+	if (UI::TextButton(Rect(rect.x0 - UI::screenBounds.x, rect.y0 + UI::screenBounds.y, rect.x1 - UI::screenBounds.x, rect.y1 + UI::screenBounds.y), text, mods)) {
 		listener(this);
 	}
 }
@@ -92,7 +92,7 @@ void MenuItems::addLayerButton(std::string buttonName, int worldLayer, int layer
 	Button *btn = MenuItems::addButton(buttonName, layer)
 	.OnPress(
 		[worldLayer](Button *button) {
-			if (EditorState::window->modifierPressed(GLFW_MOD_SHIFT)) {
+			if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
 				bool alreadySolo = true;
 				for (int i = 0; i < LAYER_COUNT; i++) {
 					if (EditorState::visibleLayers[i] != (i == worldLayer)) {
@@ -130,18 +130,18 @@ void MenuItems::init() {
 void MenuItems::initFloodForge() {
 	addButton("New", MENU_LAYER_FLOOD_FORGE).OnPress(
 		[](Button *button) {
-			Popups::addPopup(new AcronymPopup(EditorState::window));
+			Popups::addPopup(new AcronymPopup());
 		}
 	);
 
 	addButton("Add Room", MENU_LAYER_FLOOD_FORGE).OnPress(
 		[](Button *button) {
 			if (EditorState::region.acronym == "") {
-				Popups::addPopup(new InfoPopup(EditorState::window, "You must create or import a region\nbefore adding rooms."));
+				Popups::addPopup(new InfoPopup("You must create or import a region\nbefore adding rooms."));
 				return;
 			}
 
-			Popups::addPopup((new FilesystemPopup(EditorState::window, std::regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"), "xx_a01.txt",
+			Popups::addPopup((new FilesystemPopup(std::regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"), "xx_a01.txt",
 				[&](std::set<std::filesystem::path> paths) {
 					if (paths.empty()) return;
 
@@ -160,7 +160,7 @@ void MenuItems::initFloodForge() {
 								room->devPosition = EditorState::cameraOffset;
 								EditorState::rooms.push_back(room);
 							} else {
-								Popups::addPopup((new ConfirmPopup(EditorState::window, "Change which acronym?"))
+								Popups::addPopup((new ConfirmPopup("Change which acronym?"))
 								->OkayText(toUpper(names[2]))
 								->OnOkay([names, roomFilePath]() {
 									std::string roomPath = "gate_" + EditorState::region.acronym + "_" + names[1] + ".txt";
@@ -183,7 +183,7 @@ void MenuItems::initFloodForge() {
 								room->devPosition = EditorState::cameraOffset;
 								EditorState::rooms.push_back(room);
 							} else {
-								Popups::addPopup((new ConfirmPopup(EditorState::window, "Copy room to " + EditorState::region.acronym + "-rooms?"))
+								Popups::addPopup((new ConfirmPopup("Copy room to " + EditorState::region.acronym + "-rooms?"))
 								->CancelText("Just Add")
 								->OnCancel([roomFilePath]() {
 									std::string roomName = roomFilePath.stem().generic_u8string();
@@ -210,7 +210,7 @@ void MenuItems::initFloodForge() {
 
 	addButton("Import", MENU_LAYER_FLOOD_FORGE).OnPress(
 		[](Button *button) {
-			Popups::addPopup(new FilesystemPopup(EditorState::window, std::regex("world_([^._-]+)\\.txt", std::regex_constants::icase), "world_xx.txt",
+			Popups::addPopup(new FilesystemPopup(std::regex("world_([^._-]+)\\.txt", std::regex_constants::icase), "world_xx.txt",
 				[](std::set<std::filesystem::path> paths) {
 					if (paths.empty()) return;
 
@@ -237,14 +237,14 @@ void MenuItems::initFloodForge() {
 				WorldExporter::exportWorldFile();
 				WorldExporter::exportImageFile(EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + ".png"), EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + "_2.png"));
 				WorldExporter::exportPropertiesFile(EditorState::region.exportDirectory / "properties.txt");
-				Popups::addPopup(new InfoPopup(EditorState::window, "Exported successfully!"));
+				Popups::addPopup(new InfoPopup("Exported successfully!"));
 			} else {
 				if (EditorState::region.acronym == "") {
-					Popups::addPopup(new InfoPopup(EditorState::window, "You must create or import a region\nbefore exporting."));
+					Popups::addPopup(new InfoPopup("You must create or import a region\nbefore exporting."));
 					return;
 				}
 
-				Popups::addPopup(new FilesystemPopup(EditorState::window, TYPE_FOLDER, "YOUR_MOD/world/",
+				Popups::addPopup(new FilesystemPopup(FilesystemPopup::FilesystemType::FOLDER, "YOUR_MOD/world/",
 					[](std::set<std::filesystem::path> pathStrings) {
 						if (pathStrings.empty()) return;
 
@@ -257,7 +257,7 @@ void MenuItems::initFloodForge() {
 						WorldExporter::exportWorldFile();
 						WorldExporter::exportImageFile(EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + ".png"), EditorState::region.exportDirectory / ("map_" + EditorState::region.acronym + "_2.png"));
 						WorldExporter::exportPropertiesFile(EditorState::region.exportDirectory / "properties.txt");
-						Popups::addPopup(new InfoPopup(EditorState::window, "Exported successfully!"));
+						Popups::addPopup(new InfoPopup("Exported successfully!"));
 					}
 				));
 			}
@@ -296,7 +296,7 @@ void MenuItems::initFloodForge() {
 	addButton("Refresh Region", MENU_LAYER_FLOOD_FORGE).OnPress(
 		[](Button *button) {
 			if (EditorState::region.acronym.empty() || EditorState::region.exportDirectory.empty()) {
-				Popups::addPopup(new InfoPopup(EditorState::window, "You must create or import a region\nbefore refreshing"));
+				Popups::addPopup(new InfoPopup("You must create or import a region\nbefore refreshing"));
 				return;
 			}
 
@@ -343,7 +343,7 @@ void MenuItems::initDroplet() {
 
 	addButton("Export Leditor Project", MENU_LAYER_DROPLET).OnPress(
 		[](Button *button) {
-			Popups::addPopup(new FilesystemPopup(EditorState::window, TYPE_FOLDER, "Data/LevelEditorProjects", [](std::set<std::filesystem::path> paths) {
+			Popups::addPopup(new FilesystemPopup(FilesystemPopup::FilesystemType::FOLDER, "Data/LevelEditorProjects", [](std::set<std::filesystem::path> paths) {
 				if (paths.size() != 1) return;
 
 				DropletWindow::exportProject(*paths.begin());
@@ -370,7 +370,7 @@ void MenuItems::setLayer(int layer) {
 void MenuItems::draw() {
 	glLineWidth(1);
 
-	Rect rect = Rect(-EditorState::screenBounds.x, EditorState::screenBounds.y, EditorState::screenBounds.x, EditorState::screenBounds.y - 0.06);
+	Rect rect = Rect(-UI::screenBounds.x, UI::screenBounds.y, UI::screenBounds.x, UI::screenBounds.y - 0.06);
 
 	setThemeColor(ThemeColour::Popup);
 	fillRect(rect);

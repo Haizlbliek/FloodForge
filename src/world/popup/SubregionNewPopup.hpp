@@ -10,33 +10,24 @@
 #include "../../Theme.hpp"
 
 #include "../../popup/Popups.hpp"
+#include "AcronymPopup.hpp"
 
 #include "../Globals.hpp"
 #include "../Room.hpp"
 
-class SubregionNewPopup : public Popup {
+class SubregionNewPopup : public AcronymPopup {
 	public:
-		SubregionNewPopup(Window *window, std::set<Room*> rooms, int editIndex = -1);
+		SubregionNewPopup(std::set<Room*> rooms, int editIndex = -1);
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
+		void submit(std::string acronym) override;
 
-		void mouseClick(double mouseX, double mouseY);
+		std::string banLetters() override { return ":<>"; };
 
-		void accept();
-
-		void reject();
-
-		void close();
-
-		static void keyCallback(void *object, int action, int key);
-		
 		bool canStack(std::string popupName) { return false; }
 		std::string PopupName() { return "SubregionNewPopup"; }
 
 	private:
-		std::string text;
-
 		std::set<Room*> rooms;
-		
+
 		int editIndex;
 };

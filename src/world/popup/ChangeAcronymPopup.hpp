@@ -5,7 +5,7 @@
 
 class ChangeAcronymPopup : public AcronymPopup {
 	public:
-		ChangeAcronymPopup(Window *window);
+		ChangeAcronymPopup();
 
-		void accept();
+		void submit(std::string acronym) override;
 };

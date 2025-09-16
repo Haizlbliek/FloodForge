@@ -10,12 +10,10 @@
 
 class Popup {
 	public:
-		Popup(Window *window);
+		Popup();
 		virtual ~Popup() {}
 
-		virtual void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds);
-
-		virtual void mouseClick(double mouseX, double mouseY);
+		virtual void draw();
 
 		virtual const Rect Bounds();
 
@@ -36,18 +34,14 @@ class Popup {
 	protected:
 		bool hovered;
 		bool minimized = false;
-		
-		Window *window;
+
 		Rect bounds;
 };
 
 class Popups {
 	public:
-		static void init() {
-			textureUI = loadTexture(BASE_PATH / "assets" / "ui.png");
-		}
+		static void init();
 
-		static GLuint textureUI;
 		static std::vector<Popup*> popupTrash;
 		static std::vector<Popup*> popups;
 		static Popup *holdingPopup;

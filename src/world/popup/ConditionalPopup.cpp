@@ -5,42 +5,55 @@
 
 #define TIMELINE_ROWS 8
 
-ConditionalPopup::ConditionalPopup(Window *window) : Popup(window) {
+ConditionalPopup::ConditionalPopup() : Popup() {
 	this->connection = nullptr;
 	this->lineage = nullptr;
 	this->scroll = 0.0;
 	this->bounds = Rect(-0.4, -0.4, 0.4, 0.4);
 }
 
-ConditionalPopup::ConditionalPopup(Window *window, Connection *connection) : ConditionalPopup(window) {
+ConditionalPopup::ConditionalPopup(Connection *connection) : ConditionalPopup() {
 	this->connection = connection;
 }
 
-ConditionalPopup::ConditionalPopup(Window *window, std::set<Room*> rooms) : ConditionalPopup(window) {
+ConditionalPopup::ConditionalPopup(std::set<Room*> rooms) : ConditionalPopup() {
 	this->rooms = rooms;
 }
 
-ConditionalPopup::ConditionalPopup(Window *window, DenLineage *lineage) : ConditionalPopup(window) {
+ConditionalPopup::ConditionalPopup(DenLineage *lineage) : ConditionalPopup() {
 	this->lineage = lineage;
 }
 
-void ConditionalPopup::drawButton(Rect rect, std::string text, bool selected, double mouseX, double mouseY) {
-	setThemeColour(ThemeColour::Button);
-	fillRect(rect);
-
-	setThemeColour(ThemeColour::Text);
-	Fonts::rainworld->writeCentered(text, (rect.x0 + rect.x1) * 0.5, (rect.y0 + rect.y1) * 0.5, 0.03, CENTER_XY);
-
-	if (rect.inside(mouseX, mouseY) || selected) {
-		setThemeColour(ThemeColour::BorderHighlight);
+const TimelineType ConditionalPopup::timelineType() const {
+	if (connection != nullptr) {
+		return connection->timelineType;
+	} else if (lineage != nullptr) {
+		return lineage->timelineType;
 	} else {
-		setThemeColour(ThemeColour::Border);
+		return (*rooms.begin())->timelineType;
 	}
-	strokeRect(rect);
 }
 
-void ConditionalPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
-	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+void ConditionalPopup::timelineType(TimelineType type) {
+	if (connection != nullptr) {
+		connection->timelineType = type;
+	} else if (lineage != nullptr) {
+		lineage->timelineType = type;
+	} else {
+		for (Room *room : rooms) {
+			room->timelineType = type;
+		}
+	}
+}
+
+void ConditionalPopup::drawButton(Rect rect, std::string text, TimelineType type) {
+	if (UI::TextButton(rect, text, UI::TextButtonMods().Selected(timelineType() == type))) {
+		timelineType(type);
+	}
+}
+
+void ConditionalPopup::draw() {
+	Popup::draw();
 
 	if (minimized) return;
 
@@ -51,22 +64,18 @@ void ConditionalPopup::draw(double mouseX, double mouseY, bool mouseInside, Vect
 	std::string hoverText = "";
 	Room *firstRoom = nullptr;
 
-	if (connection != nullptr) {
-		drawButton(Rect::fromSize(bounds.x0 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, 0.2, 0.05), "ALL", connection->timelineType == ConnectionTimelineType::ALL, mouseX, mouseY);
-		drawButton(Rect::fromSize(centerX - 0.1, buttonY - 0.025, 0.2, 0.05), "ONLY", connection->timelineType == ConnectionTimelineType::ONLY, mouseX, mouseY);
-		drawButton(Rect::fromSize(bounds.x1 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, 0.2, 0.05), "EXCEPT", connection->timelineType == ConnectionTimelineType::EXCEPT, mouseX, mouseY);
-	} else if (lineage != nullptr) {
-		drawButton(Rect::fromSize(bounds.x0 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, 0.2, 0.05), "ALL", lineage->timelineType == ConnectionTimelineType::ALL, mouseX, mouseY);
-		drawButton(Rect::fromSize(centerX - 0.1, buttonY - 0.025, 0.2, 0.05), "ONLY", lineage->timelineType == ConnectionTimelineType::ONLY, mouseX, mouseY);
-		drawButton(Rect::fromSize(bounds.x1 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, 0.2, 0.05), "EXCEPT", lineage->timelineType == ConnectionTimelineType::EXCEPT, mouseX, mouseY);
+	if (connection != nullptr || lineage != nullptr) {
+		drawButton(Rect::fromSize(bounds.x0 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, 0.2, 0.05), "ALL", TimelineType::ALL);
+		drawButton(Rect::fromSize(centerX - 0.1, buttonY - 0.025, 0.2, 0.05), "ONLY", TimelineType::ONLY);
+		drawButton(Rect::fromSize(bounds.x1 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, 0.2, 0.05), "EXCEPT", TimelineType::EXCEPT);
 	} else {
 		firstRoom = *rooms.begin();
-		drawButton(Rect::fromSize(bounds.x0 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, 0.2, 0.05), "DEFAULT", firstRoom->timelineType == RoomTimelineType::DEFAULT, mouseX, mouseY);
-		drawButton(Rect::fromSize(centerX - 0.1, buttonY - 0.025, 0.2, 0.05), "EXCLUSIVE", firstRoom->timelineType == RoomTimelineType::EXCLUSIVE_ROOM, mouseX, mouseY);
-		drawButton(Rect::fromSize(bounds.x1 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, 0.2, 0.05), "HIDE", firstRoom->timelineType == RoomTimelineType::HIDE_ROOM, mouseX, mouseY);
+		drawButton(Rect::fromSize(bounds.x0 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, 0.2, 0.05), "DEFAULT", TimelineType::ALL);
+		drawButton(Rect::fromSize(centerX - 0.1, buttonY - 0.025, 0.2, 0.05), "EXCLUSIVE", TimelineType::ONLY);
+		drawButton(Rect::fromSize(bounds.x1 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, 0.2, 0.05), "HIDE", TimelineType::EXCEPT);
 	}
 
-	if ((connection != nullptr) ? (connection->timelineType != ConnectionTimelineType::ALL) : ((lineage == nullptr) ? (firstRoom->timelineType != RoomTimelineType::DEFAULT) : (lineage->timelineType != ConnectionTimelineType::ALL))) {
+	if (timelineType() != TimelineType::ALL) {
 		std::string timeline;
 		std::vector<std::string> unknowns;
 		if (connection != nullptr) {
@@ -169,57 +178,14 @@ void ConditionalPopup::draw(double mouseX, double mouseY, bool mouseInside, Vect
 		}
 	}
 
-	if (!hoverText.empty() && mouseInside) {
+	if (!hoverText.empty() && hovered) {
 		double width = Fonts::rainworld->getTextWidth(hoverText, 0.04) + 0.02;
+		Rect rect = Rect::fromSize(UI::mouse.x, UI::mouse.y, width, 0.06);
 		setThemeColour(ThemeColour::Popup);
-		fillRect(mouseX, mouseY, mouseX + width, mouseY + 0.06);
+		fillRect(rect);
 		setThemeColour(ThemeColour::Border);
-		strokeRect(mouseX, mouseY, mouseX + width, mouseY + 0.06);
+		strokeRect(rect);
 		setThemeColour(ThemeColour::Text);
-		Fonts::rainworld->writeCentered(hoverText, mouseX + 0.01, mouseY + 0.03, 0.04, CENTER_Y);
-	}
-}
-
-void ConditionalPopup::mouseClick(double mouseX, double mouseY) {
-	Popup::mouseClick(mouseX, mouseY);
-
-	double centerX = (bounds.x0 + bounds.x1) * 0.5;
-	double buttonSize = 0.5 / 7.0;
-	double buttonPadding = 0.02;
-
-	double buttonY = bounds.y1 - 0.1;
-
-	if (Rect(bounds.x0 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, bounds.x0 * 0.6 + centerX * 0.4 + 0.1, buttonY + 0.025).inside(mouseX, mouseY)) {
-		if (connection != nullptr) {
-			connection->timelineType = ConnectionTimelineType::ALL;
-		} else if (lineage != nullptr) {
-			lineage->timelineType = ConnectionTimelineType::ALL;
-		} else {
-			for (Room *room : rooms) {
-				room->timelineType = RoomTimelineType::DEFAULT;
-			}
-		}
-	}
-	if (Rect(centerX - 0.1, buttonY - 0.025, centerX + 0.1, buttonY + 0.025).inside(mouseX, mouseY)) {
-		if (connection != nullptr) {
-			connection->timelineType = ConnectionTimelineType::ONLY;
-		} else if (lineage != nullptr) {
-			lineage->timelineType = ConnectionTimelineType::ONLY;
-		} else {
-			for (Room *room : rooms) {
-				room->timelineType = RoomTimelineType::EXCLUSIVE_ROOM;
-			}
-		}
-	}
-	if (Rect(bounds.x1 * 0.6 + centerX * 0.4 - 0.1, buttonY - 0.025, bounds.x1 * 0.6 + centerX * 0.4 + 0.1, buttonY + 0.025).inside(mouseX, mouseY)) {
-		if (connection != nullptr) {
-			connection->timelineType = ConnectionTimelineType::EXCEPT;
-		} else if (lineage != nullptr) {
-			lineage->timelineType = ConnectionTimelineType::EXCEPT;
-		} else {
-			for (Room *room : rooms) {
-				room->timelineType = RoomTimelineType::HIDE_ROOM;
-			}
-		}
+		Fonts::rainworld->writeCentered(hoverText, UI::mouse.x + 0.01, UI::mouse.y + 0.03, 0.04, CENTER_Y);
 	}
 }

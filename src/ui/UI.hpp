@@ -10,6 +10,11 @@
 #include "UIMouse.hpp"
 
 namespace UI {
+	extern Vector2 screenBounds;
+	extern Window *window;
+	extern UIMouse mouse;
+	extern Texture *uiTexture;
+
 	struct ButtonResponse {
 		operator bool() const;
 
@@ -23,8 +28,7 @@ namespace UI {
 		bool submitted;
 	};
 
-	struct CheckBoxResponse {
-		bool clicked;
+	struct CheckBoxResponse : ButtonResponse {
 		bool checked;
 	};
 
@@ -34,7 +38,7 @@ namespace UI {
 		~Editable();
 	};
 
-	enum TextInputEditableType {
+	enum class TextInputEditableType {
 		Text,
 		UnsignedFloat,
 		SignedFloat,
@@ -49,6 +53,12 @@ namespace UI {
 			this->floatDecimalCount = floatDecimalCount;
 		}
 
+		TextInputEditable &BanLetters(std::string letters) {
+			bannedLetters += letters;
+			return *this;
+		}
+
+		std::string bannedLetters;
 		TextInputEditableType type = TextInputEditableType::Text;
 		int floatDecimalCount = 1;
 
@@ -73,6 +83,10 @@ namespace UI {
 
 	class TextureButtonMods : public ButtonMods {
 		public:
+			TextureButtonMods() {
+				textureId = UI::uiTexture->ID();
+			}
+
 			unsigned int textureId;
 			Vector2 textureScale = Vector2(1.0, 1.0);
 			Color textureColor = Color(1.0, 1.0, 1.0);
@@ -89,6 +103,16 @@ namespace UI {
 
 			TextureButtonMods &TextureId(unsigned int v) {
 				textureId = v;
+				return *this;
+			}
+
+			TextureButtonMods &TextureId(Texture &v) {
+				textureId = v.ID();
+				return *this;
+			}
+
+			TextureButtonMods &TextureId(Texture *v) {
+				textureId = v->ID();
 				return *this;
 			}
 
@@ -164,12 +188,10 @@ namespace UI {
 
 	void Delete(const Editable &editable);
 	static void _keyCallback(void *object, int action, int key);
-	extern Window *window;
-	extern UIMouse mouse;
+
+	extern Editable *currentEditable;
 	extern bool clipped;
 	extern Rect clipRect;
-	extern Editable *currentEditable;
 	extern int selectTime;
 	extern int selectIndex;
-	extern Texture *uiTexture;
 }

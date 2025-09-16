@@ -3,6 +3,8 @@
 #include "popup/DenPopup.hpp"
 #include "ConditionalTimelineTextures.hpp"
 
+#include "../ui/UI.hpp"
+
 Colour RoomHelpers::RoomAir;
 Colour RoomHelpers::RoomSolid;
 Colour RoomHelpers::RoomPole;
@@ -69,7 +71,7 @@ void RoomHelpers::drawTexture(GLuint texture, double rectX, double rectY, double
 Room::Room(std::filesystem::path path, std::string name) {
 	this->path = path;
 	this->roomName = toLower(name);
-	this->timelineType = RoomTimelineType::DEFAULT;
+	this->timelineType = TimelineType::ALL;
 
 	canonPosition = new Vector2(
 		0.0f,
@@ -175,7 +177,7 @@ void Room::draw(Vector2 mousePosition, int positionType) {
 	GLuint modelLoc = glGetUniformLocation(Shaders::roomShader, "model");
 	GLuint tintLoc = glGetUniformLocation(Shaders::roomShader, "tintColour");
 
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(EditorState::cameraOffset, EditorState::cameraScale * EditorState::screenBounds).m);
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(EditorState::cameraOffset, EditorState::cameraScale * UI::screenBounds).m);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position.x, position.y).m);
 	float alpha = tint.a;
 	if (data.hidden) {
@@ -215,7 +217,7 @@ void Room::draw(Vector2 mousePosition, int positionType) {
 		}
 	}
 
-	if (this->timelineType != RoomTimelineType::DEFAULT) {
+	if (this->timelineType != TimelineType::ALL) {
 		int i = 0;
 		for (std::string timeline : this->timelines) {
 			double rectX = position.x + i * 4.0 + 1.5;
@@ -225,7 +227,7 @@ void Room::draw(Vector2 mousePosition, int positionType) {
 			RoomHelpers::drawTexture(ConditionalTimelineTextures::getTexture(timeline), rectX, rectY, scale);
 			i++;
 		}
-		if (this->timelines.size() > 0 && this->timelineType == RoomTimelineType::HIDE_ROOM) {
+		if (this->timelines.size() > 0 && this->timelineType == TimelineType::EXCEPT) {
 			Draw::color(1.0, 0.0, 0.0);
 			drawLine(position.x + 2.0 - EditorState::selectorScale * 0.5, position.y - 2.0, position.x + 2.0 + EditorState::selectorScale * 0.5 + (this->timelines.size() - 1) * 4.0, position.y - 2.0, EditorState::selectorScale * 4.0);
 		}

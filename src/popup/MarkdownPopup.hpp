@@ -28,13 +28,11 @@ enum class MDType {
 
 class MarkdownPopup : public Popup {
 	public:
-		MarkdownPopup(Window *window, std::filesystem::path path);
+		MarkdownPopup(std::filesystem::path path);
 
-		void draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) override;
+		void draw() override;
 
 		void close() override;
-
-		void mouseClick(double mouseX, double mouseY) override;
 
 		std::string PopupName() { return "MarkdownPopup"; }
 

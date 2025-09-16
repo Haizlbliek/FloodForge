@@ -5,11 +5,11 @@
 #include "../../popup/InfoPopup.hpp"
 #include "../droplet/LevelUtils.hpp"
 
-CreateRoomPopup::CreateRoomPopup(Window *window) : Popup(window) {
+CreateRoomPopup::CreateRoomPopup() : Popup() {
 }
 
-void CreateRoomPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
-	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+void CreateRoomPopup::draw() {
+	Popup::draw();
 
 	if (this->minimized) return;
 
@@ -39,11 +39,11 @@ void CreateRoomPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 
 	y -= 0.06;
 	UI::TextInputResponse widthResponse = UI::TextInput(Rect::fromSize(bounds.x0 + 0.01, y, 0.25, 0.05), width);
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(Popups::textureUI).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
 		width.value = std::to_string(std::stoi(width.value) - 1);
 		widthResponse.submitted = true;
 	}
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(Popups::textureUI).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
 		width.value = std::to_string(std::stoi(width.value) + 1);
 		widthResponse.submitted = true;
 	}
@@ -52,11 +52,11 @@ void CreateRoomPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 
 	y -= 0.06;
 	UI::TextInputResponse heightResponse = UI::TextInput(Rect::fromSize(bounds.x0 + 0.01, y, 0.25, 0.05), height);
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(Popups::textureUI).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
 		height.value = std::to_string(std::stoi(height.value) - 1);
 		heightResponse.submitted = true;
 	}
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(Popups::textureUI).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
 		height.value = std::to_string(std::stoi(height.value) + 1);
 		heightResponse.submitted = true;
 	}
@@ -65,11 +65,11 @@ void CreateRoomPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 
 	y -= 0.06;
 	UI::TextInputResponse screenWidthResponse = UI::TextInput(Rect::fromSize(bounds.x0 + 0.01, y, 0.25, 0.05), screenWidth);
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(Popups::textureUI).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
 		screenWidth.value = toFixed(std::stod(screenWidth.value) - 0.5, screenWidth.floatDecimalCount);
 		screenWidthResponse.submitted = true;
 	}
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(Popups::textureUI).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
 		screenWidth.value = toFixed(std::stod(screenWidth.value) + 0.5, screenWidth.floatDecimalCount);
 		screenWidthResponse.submitted = true;
 	}
@@ -78,11 +78,11 @@ void CreateRoomPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 
 	y -= 0.06;
 	UI::TextInputResponse screenHeightResponse = UI::TextInput(Rect::fromSize(bounds.x0 + 0.01, y, 0.25, 0.05), screenHeight);
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(Popups::textureUI).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
 		screenHeight.value = toFixed(std::stod(screenHeight.value) - 0.5, screenHeight.floatDecimalCount);
 		screenHeightResponse.submitted = true;
 	}
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(Popups::textureUI).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
 		screenHeight.value = toFixed(std::stod(screenHeight.value) + 0.5, screenHeight.floatDecimalCount);
 		screenHeightResponse.submitted = true;
 	}
@@ -104,7 +104,7 @@ void CreateRoomPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 	y -= 0.06;
 	setThemeColor(ThemeColour::Text);
 	Fonts::rainworld->writeCentered("Auto-place Cameras", bounds.x0 + 0.07, y + 0.025, 0.03, CENTER_Y);
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.01, y, 0.05, 0.05).uv(placeCameras ? 0.75 : 0.5, 0.25, placeCameras ? 1.0 : 0.75, 0.5), UI::TextureButtonMods().TextureId(Popups::textureUI))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.01, y, 0.05, 0.05).uv(placeCameras ? 0.75 : 0.5, 0.25, placeCameras ? 1.0 : 0.75, 0.5), UI::TextureButtonMods().TextureId(UI::uiTexture))) {
 		placeCameras = !placeCameras;
 	}
 
@@ -125,7 +125,7 @@ void CreateRoomPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 		EditorState::placingRoomSize.y = std::stoi(height.value);
 	}
 
-	if (UI::TextureButton(UVRect::fromSize(bounds.x1 - 0.05, bounds.y1 - 0.11, 0.04, 0.04).uv(0.5, 0.0, 0.75, 0.25), UI::TextureButtonMods().TextureId(Popups::textureUI))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x1 - 0.05, bounds.y1 - 0.11, 0.04, 0.04).uv(0.5, 0.0, 0.75, 0.25), UI::TextureButtonMods().TextureId(UI::uiTexture))) {
 		roomName.value.clear();
 		width.value = "48";
 		height.value = "35";
@@ -149,7 +149,7 @@ void CreateRoomPopup::draw(double mouseX, double mouseY, bool mouseInside, Vecto
 		std::string name = toUpper(EditorState::region.acronym) + "_" + roomName.value;
 		std::filesystem::path filePath = findFileCaseInsensitive(EditorState::region.roomsDirectory, name + ".txt");
 		if (!filePath.empty()) {
-			Popups::addPopup(new InfoPopup(EditorState::window, "Room with that name already exists in files!"));
+			Popups::addPopup(new InfoPopup("Room with that name already exists in files!"));
 			return;
 		}
 		LevelUtils::createLevelFiles(EditorState::region.roomsDirectory, name, std::stoi(width.value), std::stoi(height.value), fillLayer1, fillLayer2);

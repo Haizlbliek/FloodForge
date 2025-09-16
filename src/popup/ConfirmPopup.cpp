@@ -2,7 +2,7 @@
 
 #include "../ui/UI.hpp"
 
-ConfirmPopup::ConfirmPopup(Window *window, std::string question) : Popup(window) {
+ConfirmPopup::ConfirmPopup(std::string question) : Popup() {
 	std::istringstream stream(question);
 	std::string line;
 
@@ -24,8 +24,8 @@ ConfirmPopup *ConfirmPopup::OkayText(std::string text) {
 	return this;
 }
 
-void ConfirmPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 screenBounds) {
-	Popup::draw(mouseX, mouseY, mouseInside, screenBounds);
+void ConfirmPopup::draw() {
+	Popup::draw();
 
 	if (minimized) return;
 
@@ -33,7 +33,7 @@ void ConfirmPopup::draw(double mouseX, double mouseY, bool mouseInside, Vector2 
 	int lineId = 0;
 	for (std::string line : question) {
 		double y = bounds.y1 - 0.08 - 0.05 * lineId;
-		Fonts::rainworld->writeCentered(line, 0.0, y, 0.04, CENTER_XY);
+		Fonts::rainworld->writeCentered(line, bounds.CenterX(), y, 0.04, CENTER_XY);
 
 		lineId++;
 	}

@@ -4,6 +4,7 @@
 #include "../Theme.hpp"
 #include "../Utils.hpp"
 
+Vector2 UI::screenBounds;
 Window *UI::window = nullptr;
 UIMouse UI::mouse = UIMouse(0, 0);
 bool UI::clipped = false;
@@ -72,6 +73,9 @@ static void UI::_keyCallback(void *object, int action, int key) {
 	if (editable->type == UI::TextInputEditableType::Text) {
 		if (key >= 33 && key <= 126) {
 			write = parseCharacter(key, UI::window->modifierPressed(GLFW_MOD_SHIFT));
+		}
+		if (editable->bannedLetters.find(write) != std::string::npos) {
+			write = 0;
 		}
 
 		if (key == GLFW_KEY_BACKSPACE) {
@@ -244,12 +248,13 @@ UI::TextInputResponse UI::TextInput(Rect rect, UI::TextInputEditable &edit, Text
 }
 
 UI::CheckBoxResponse UI::CheckBox(Rect rect, bool &value) {
-	if (UI::TextureButton(UVRect(rect.x0, rect.y0, rect.x1, rect.y1).uv(value ? 0.75 : 0.5, 0.25, value ? 1.0 : 0.75, 0.5), UI::TextureButtonMods().TextureId(UI::uiTexture->ID()))) {
+	UI::ButtonResponse response = UI::TextureButton(UVRect(rect.x0, rect.y0, rect.x1, rect.y1).uv(value ? 0.75 : 0.5, 0.25, value ? 1.0 : 0.75, 0.5), UI::TextureButtonMods().TextureId(UI::uiTexture->ID()));
+	if (response.clicked) {
 		value = !value;
-		return { true, value };
+		return { true, response.hovered, value };
 	}
 
-	return { false, value };
+	return { false, response.hovered, value };
 }
 
 bool UI::canClick() {
