@@ -22,7 +22,7 @@ endif
 
 # determine libs to link with based off platform
 ifeq ($(OS),Windows_NT)
-	LIBS += build/resource.o lib/GLFW/libglfw3.a -lgdi32 -lopengl32 -luser32 -lcomdlg32 -lole32 -lutf8proc
+	LIBS += build/resource.o lib/GLFW/libglfw3.a lib/libutf8proc.a -lgdi32 -lopengl32 -luser32 -lcomdlg32 -lole32
 else
 	# items to plug into pkg-config to find libs and includes
 	REQPKGS += glfw3

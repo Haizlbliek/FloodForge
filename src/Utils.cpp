@@ -4,6 +4,7 @@
 
 #include "stb_image.h"
 #include "stb_image_write.h"
+#define UTF8PROC_STATIC
 #include "utf8proc.h"
 
 #include <iostream>
