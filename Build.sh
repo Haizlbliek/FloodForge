@@ -22,8 +22,6 @@ do
 			;;
 		world) app=world
 			;;
-		level) app=level
-			;;
 		leviathan) app=leviathan
 			;;
 		clean) app=clean
@@ -52,8 +50,6 @@ fi
 
 if [[ "$app" == "world" ]]; then
 	make -f build/world.mk $makeargs
-elif [[ "$app" == "level" ]]; then
-	make -f build/level.mk $makeargs
 elif [[ "$app" == "leviathan" ]]; then
 	make -f build/leviathan.mk $makeargs
 else

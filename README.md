@@ -37,12 +37,12 @@ Requirements:
 #### One time build
 
 If you want to have a permanent executable that you can run whenever, use this option.
-`./Build.bat`
+`sh build.sh`
 
 #### Building for debugging
 
 Use this if you are editing the code and need to quickly test
-`./Build.bat --debug`
+`sh build.sh --debug`
 
 ### Shell script
 
@@ -65,18 +65,19 @@ sudo apt-get install make
 sudo apt-get install libglfw3-dev
 sudo apt-get install pkg-config
 sudo apt-get install g++
+sudo apt-get install libutf8proc
 ```
 
 Build:
 
 ```bash
-./Build.sh
+sh build.sh
 
 # build in debug mode
-./Build.sh --debug
+sh build.sh --debug
 
 # build in release mode
-./Build.sh --release
+sh build.sh --release
 ```
 
 ## I found a bug!
