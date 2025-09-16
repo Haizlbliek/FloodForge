@@ -5,6 +5,8 @@
 #include "../../math/Rect.hpp"
 #include "../../Texture.hpp"
 
+#include "Node.hpp"
+
 namespace DropletWindow {
 	enum class EditorTab {
 		DETAILS,
@@ -87,4 +89,6 @@ namespace DropletWindow {
 
 	extern int *backupGeometry;
 	extern int backupWater;
+
+	extern std::vector<Object *> objects;
 }

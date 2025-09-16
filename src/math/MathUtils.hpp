@@ -8,7 +8,11 @@ class MathUtils {
 		static double lerp(double a, double b, double t) {
 			return (b - a) * t + a;
 		}
-		
+
+		static double inverseLerp(double value, double a, double b) {
+			return (value - a) / (b - a);
+		}
+
 		static Vector2 directionToVector(Direction direction) {
 			switch (direction) {
 				case Direction::RIGHT: return Vector2( 1,  0);

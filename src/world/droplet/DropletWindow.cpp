@@ -44,6 +44,13 @@ bool DropletWindow::waterInFront = false;
 int *DropletWindow::backupGeometry = nullptr;
 int DropletWindow::backupWater;
 
+std::vector<Object *> DropletWindow::objects;
+
+bool terrainNeedsRefresh = false;
+bool hasTerrain = false;
+std::vector<Vector2> terrain;
+int trashCanState = 0;
+
 void DropletWindow::init() {
 	toolsTexture = new Texture(BASE_PATH / "assets" / "tools.png");
 	shortcutsTexture = new Texture(BASE_PATH / "assets" / "shortcuts.png");
@@ -115,6 +122,146 @@ void UpdateCamera() {
 
 	DropletWindow::cameraOffset.x += (DropletWindow::cameraPanTo.x - DropletWindow::cameraOffset.x) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
 	DropletWindow::cameraOffset.y += (DropletWindow::cameraPanTo.y - DropletWindow::cameraOffset.y) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
+}
+
+double sampleHandle(double a, double b, double c, double d, double t) {
+	double it = 1.0 - t;
+	return it * it * it * a + 3.0 * it * it * t * b + 3.0 * it * t * t * c + t * t * t *d;
+}
+
+double sampleTerrain(TerrainHandleObject *left, TerrainHandleObject *right, double x) {
+	if (x < left->Middle().x) {
+		return MathUtils::lerp(left->Middle().y, left->Left().y, MathUtils::inverseLerp(x, left->Middle().x, left->Left().x));
+	}
+	if (x > right->Middle().x) {
+		return MathUtils::lerp(right->Middle().y, right->Right().y, MathUtils::inverseLerp(x, right->Middle().x, right->Right().x));
+	}
+	double leftPos = 0.0;
+	double rightPos = 1.0;
+	for (int i = 0; i < 16; i++) {
+		double middlePos = (leftPos + rightPos) * 0.5;
+		if (sampleHandle(left->Middle().x, left->Right().x, right->Left().x, right->Middle().x, middlePos) < x) {
+			leftPos = middlePos;
+		} else {
+			rightPos = middlePos;
+		}
+	}
+	return sampleHandle(left->Middle().y, left->Right().y, right->Left().y, right->Middle().y, (leftPos + rightPos) * 0.5);
+}
+
+void UpdateDetailsTab() {
+	if (hasTerrain && terrain.size() >= 2) {
+		Draw::color(0.0, 1.0, 0.0);
+		Draw::begin(Draw::LINE_STRIP);
+		for (Vector2 &point : terrain) {
+			Draw::vertex(DropletWindow::roomRect.x0 + point.x / 20.0, DropletWindow::roomRect.y0 + point.y / 20.0);
+		}
+		Draw::end();
+	}
+
+	static Node *movingNode = nullptr;
+	Node *hoveredNode = nullptr;
+
+	Vector2 nodeMouse = Vector2(DropletWindow::transformedMouse.x, DropletWindow::transformedMouse.y + (DropletWindow::roomRect.y1 - DropletWindow::roomRect.y0)) * 20.0;
+	double mouseDistance = 0.3 * DropletWindow::cameraScale;
+
+	for (Object *object : DropletWindow::objects) {
+		object->draw(Vector2(DropletWindow::roomRect.x0, DropletWindow::roomRect.y0));
+
+		for (Node *node : object->nodes) {
+			Vector2 nodePos = node->position();
+
+			if (nodePos.distanceTo(nodeMouse) < mouseDistance) {
+				Draw::color(1.0);
+				hoveredNode = node;
+			} else {
+				Draw::color(0.6);
+			}
+			Vector2 nodeRenderPos = { DropletWindow::roomRect.x0 + nodePos.x / 20.0, DropletWindow::roomRect.y0 + nodePos.y / 20.0 };
+			fillCircle(nodeRenderPos.x, nodeRenderPos.y, 0.01 * DropletWindow::cameraScale, 8);
+			Draw::color(0.0);
+			strokeCircle(nodeRenderPos.x, nodeRenderPos.y, 0.01 * DropletWindow::cameraScale, 8);
+		}
+	}
+
+	if (UI::mouse.justClicked() && hoveredNode != nullptr) {
+		movingNode = hoveredNode;
+	}
+
+	if (movingNode != nullptr) {
+		bool needsDeleted = false;
+
+		if (movingNode->parent == nullptr) {
+			trashCanState = 1;
+			movingNode->pos.x = nodeMouse.x;
+			movingNode->pos.y = nodeMouse.y;
+
+			if (Rect::fromSize(-EditorState::screenBounds.x + 0.01, -EditorState::screenBounds.y + 0.01, 0.1, 0.1).inside(UI::mouse)) {
+				trashCanState = 2;
+
+				if (!UI::mouse.leftMouse) {
+					needsDeleted = true;
+				}
+			}
+		} else {
+			trashCanState = 0;
+			Vector2 newPos = nodeMouse - movingNode->parent->position();
+			movingNode->pos.x = newPos.x;
+			movingNode->pos.y = newPos.y;
+		}
+
+		TerrainHandleObject *terrainHandle = static_cast<TerrainHandleObject *>(movingNode->object);
+		if (terrainHandle != nullptr) {
+			terrainNeedsRefresh = true;
+		}
+
+		if (!UI::mouse.leftMouse) {
+			if (needsDeleted) {
+				DropletWindow::objects.erase(std::remove(DropletWindow::objects.begin(), DropletWindow::objects.end(), movingNode->object), DropletWindow::objects.end());
+				delete movingNode->object;
+			}
+
+			hoveredNode = nullptr;
+			movingNode = nullptr;
+		}
+	}
+	else {
+		trashCanState = 0;
+
+		if (!DropletWindow::blockMouse && UI::mouse.leftMouse && EditorState::dropletRoom->water != -1) {
+			EditorState::dropletRoom->water = EditorState::dropletRoom->height - DropletWindow::mouseTile.y - 1;
+			if (EditorState::dropletRoom->water < 0) EditorState::dropletRoom->water = 0;
+		}
+	}
+
+	if (terrainNeedsRefresh) {
+		terrain.clear();
+		std::vector<TerrainHandleObject *> handles;
+
+		for (Object *object : DropletWindow::objects) {
+			TerrainHandleObject *terrainHandle = static_cast<TerrainHandleObject *>(object);
+			if (terrainHandle != nullptr) {
+				handles.push_back(terrainHandle);
+			}
+		}
+
+		if (handles.size() >= 2) {
+			std::sort(handles.begin(), handles.end(), [](TerrainHandleObject *a, TerrainHandleObject *b) {
+				return b->Middle().x > a->Middle().x;
+			});
+			int handleIndex = 0;
+			int segments = EditorState::dropletRoom->width + 1;
+			for (float x = 0; x < segments * 20.0; x += 20.0) {
+				while (handleIndex < handles.size() - 2 && handles[handleIndex + 1]->Middle().x < x) {
+					handleIndex++;
+				}
+				terrain.push_back(Vector2(x, sampleTerrain(handles[handleIndex], handles[handleIndex + 1], x)));
+			}
+			hasTerrain = true;
+		} else {
+			hasTerrain = false;
+		}
+	}
 }
 
 void verifyShortcut(int x, int y) {
@@ -357,13 +504,6 @@ void applyTool(int x, int y, bool right) {
 	}
 }
 
-void UpdateDetailsTab() {
-	if (!DropletWindow::blockMouse && UI::mouse.leftMouse && EditorState::dropletRoom->water != -1) {
-		EditorState::dropletRoom->water = EditorState::dropletRoom->height - DropletWindow::mouseTile.y - 1;
-		if (EditorState::dropletRoom->water < 0) EditorState::dropletRoom->water = 0;
-	}
-}
-
 void UpdateGeometryTab() {
 	if (!(UI::mouse.leftMouse || UI::mouse.rightMouse)) {
 		int tool = (int) DropletWindow::selectedTool;
@@ -585,9 +725,11 @@ void UpdateCameraTab() {
 }
 
 void DropletWindow::Draw() {
-	if (EditorState::window->justPressed(GLFW_KEY_1)) currentTab = DropletWindow::EditorTab::DETAILS;
-	if (EditorState::window->justPressed(GLFW_KEY_2)) currentTab = DropletWindow::EditorTab::GEOMETRY;
-	if (EditorState::window->justPressed(GLFW_KEY_3)) currentTab = DropletWindow::EditorTab::CAMERA;
+	if (!UI::mouse.leftMouse && !UI::mouse.rightMouse) {
+		if (EditorState::window->justPressed(GLFW_KEY_1)) currentTab = DropletWindow::EditorTab::DETAILS;
+		if (EditorState::window->justPressed(GLFW_KEY_2)) currentTab = DropletWindow::EditorTab::GEOMETRY;
+		if (EditorState::window->justPressed(GLFW_KEY_3)) currentTab = DropletWindow::EditorTab::CAMERA;
+	}
 
 	UpdateCamera();
 
@@ -642,12 +784,6 @@ void DropletWindow::Draw() {
 				Draw::vertex(x0, y1);
 			}
 			else if (geo % 16 == 3) {
-				setThemeColor(ThemeColour::RoomSolid);
-				Draw::vertex(x0, y1);
-				Draw::vertex(x1, y1);
-				Draw::vertex(x1, y1 + 0.5);
-				Draw::vertex(x0, y1 + 0.5);
-
 				setThemeColor(ThemeColour::RoomPlatform);
 				Draw::vertex(x0, y0);
 				Draw::vertex(x1, y0);
@@ -853,6 +989,23 @@ void DropletWindow::Draw() {
 		Fonts::rainworld->writeCentered("Enclosed Room", sidebar.x0 + 0.07, sidebar.y1 - 0.035, 0.03, CENTER_Y);
 		Fonts::rainworld->writeCentered("Water", sidebar.x0 + 0.07, sidebar.y1 - 0.095, 0.03, CENTER_Y);
 		Fonts::rainworld->writeCentered("Water in Front", sidebar.x0 + 0.07, sidebar.y1 - 0.155, 0.03, CENTER_Y);
+
+		setThemeColor(ThemeColour::Border);
+		drawLine(sidebar.x0, sidebar.y1 - 0.2, sidebar.x1, sidebar.y1 - 0.2);
+		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.26, 0.39, 0.05), "Add TerrainHandle")) {
+			DropletWindow::objects.push_back(new TerrainHandleObject());
+		}
+
+		if (trashCanState > 0) {
+			if (trashCanState == 2) {
+				Draw::color(1.0, 0.0, 0.0);
+			} else {
+				Draw::color(1.0, 1.0, 1.0);
+			}
+
+			strokeRect(Rect::fromSize(-EditorState::screenBounds.x + 0.01, -EditorState::screenBounds.y + 0.01, 0.1, 0.1));
+			Fonts::rainworld->writeCentered("Trash", -EditorState::screenBounds.x + 0.06, -EditorState::screenBounds.y + 0.13, 0.03, CENTER_XY);
+		}
 	}
 
 	//-- Tabs
@@ -978,7 +1131,52 @@ void DropletWindow::loadRoom() {
 
 	geometryFile.close();
 
+	for (Object *object : objects) {
+		delete object;
+	}
+	objects.clear();
+
+	std::filesystem::path settingsFilePath = findFileCaseInsensitive(EditorState::dropletRoom->path.parent_path(), EditorState::dropletRoom->roomName + "_settings.txt");
+	std::ifstream settingsFile(settingsFilePath);
+	while (std::getline(settingsFile, tempLine)) {
+		if (!startsWith(tempLine, "PlacedObjects: ")) continue;
+		std::string data = tempLine.substr(tempLine.find(' ') + 1);
+		std::vector<std::string> poData = split(data, ", ");
+		for (std::string po : poData) {
+			size_t start = po.find('<');
+			size_t next = po.find('>', start);
+			size_t end = po.find('>', next + 1);
+			std::string xStr = po.substr(start + 1, next - start - 1);
+			std::string yStr = po.substr(next + 2, end - next - 2);
+			std::string last = po.substr(end + 2);
+			Vector2 pos;
+			try {
+				pos.x = std::stod(xStr);
+				pos.y = std::stod(yStr);
+			} catch (std::invalid_argument) {
+				Logger::warn("Failed to parse Placed Object: ", po);
+			}
+
+			if (startsWith(po, "TerrainHandle>")) {
+				TerrainHandleObject *obj = new TerrainHandleObject();
+				obj->nodes[0]->pos = pos;
+				std::vector<std::string> splits = split(last, '~');
+				if (splits.size() >= 4) {
+					try {
+						obj->nodes[1]->pos.x = std::stod(splits[0]);
+						obj->nodes[1]->pos.y = std::stod(splits[1]);
+						obj->nodes[2]->pos.x = std::stod(splits[2]);
+						obj->nodes[2]->pos.y = std::stod(splits[3]);
+					} catch (std::invalid_argument) {}
+				}
+				objects.push_back(obj);
+			}
+		}
+	}
+	settingsFile.close();
+
 	backup();
+	terrainNeedsRefresh = true;
 }
 
 void DropletWindow::resetChanges() {
@@ -992,7 +1190,9 @@ void DropletWindow::resetChanges() {
 }
 
 void DropletWindow::exportGeometry() {
-	std::ofstream geo(EditorState::region.roomsDirectory / (EditorState::dropletRoom->roomName + ".txt"));
+	std::filesystem::path geoPath = EditorState::region.roomsDirectory / (EditorState::dropletRoom->roomName + ".txt");
+	Backup::backup(geoPath);
+	std::ofstream geo(geoPath);
 	geo << EditorState::dropletRoom->roomName << "\n";
 	geo << EditorState::dropletRoom->width << "*" << EditorState::dropletRoom->height;
 	geo << (EditorState::dropletRoom->water == -1 ? "" : ("|" + std::to_string(EditorState::dropletRoom->water) + "|" + (DropletWindow::waterInFront ? "1" : "0"))) << "\n";
@@ -1087,6 +1287,90 @@ void DropletWindow::exportGeometry() {
 	geo.close();
 
 	backup();
+	terrainNeedsRefresh = true;
+
+	std::filesystem::path settingsPath = EditorState::region.roomsDirectory / (EditorState::dropletRoom->roomName + "_settings.txt");
+	Backup::backup(settingsPath);
+	std::string before;
+	std::string placedObjects;
+	std::string after;
+	if (std::filesystem::exists(settingsPath)) {
+		std::ifstream settings(settingsPath);
+		std::string tempLine;
+		bool isBefore = true;
+		while (std::getline(settings, tempLine)) {
+			if (startsWith(tempLine, "PlacedObjects: ")) {
+				placedObjects = tempLine;
+				isBefore = false;
+			} else {
+				if (isBefore) {
+					before += tempLine + "\n";
+				} else {
+					after += tempLine + "\n";
+				}
+			}
+		}
+		settings.close();
+	}
+
+	{
+		std::string outputPlacedObjects;
+		std::string data = placedObjects.substr(placedObjects.find(' ') + 1);
+		std::vector<std::string> poData = split(data, ", ");
+		std::vector<Object *>::iterator currentTerrainHandleObject = objects.begin();
+		while (currentTerrainHandleObject != objects.end() && static_cast<TerrainHandleObject *>(*currentTerrainHandleObject) == nullptr) {
+			currentTerrainHandleObject = std::next(currentTerrainHandleObject);
+		}
+		for (std::string po : poData) {
+			size_t start = po.find('<');
+			size_t next = po.find('>', start);
+			size_t end = po.find('>', next + 1);
+			std::string xStr = po.substr(start + 1, next - start - 1);
+			std::string yStr = po.substr(next + 2, end - next - 2);
+			std::string last = po.substr(end + 2);
+		
+			if (startsWith(po, "TerrainHandle>")) {
+				if (currentTerrainHandleObject == objects.end()) continue;
+
+				std::vector<std::string> splits = split(last, '~');
+				std::string height = "20";
+				if (splits.size() >= 5) {
+					height = splits[4];
+				}
+				TerrainHandleObject *handle = static_cast<TerrainHandleObject *>(*currentTerrainHandleObject);
+				outputPlacedObjects += "TerrainHandle><" + std::to_string(handle->nodes[0]->pos.x) + "><" + std::to_string(handle->nodes[0]->pos.y) + "><";
+				outputPlacedObjects += std::to_string(handle->nodes[1]->pos.x) + "~" + std::to_string(handle->nodes[1]->pos.y) + "~";
+				outputPlacedObjects += std::to_string(handle->nodes[2]->pos.x) + "~" + std::to_string(handle->nodes[2]->pos.y) + "~";
+				outputPlacedObjects += height;
+
+				do {
+					currentTerrainHandleObject = std::next(currentTerrainHandleObject);
+				} while (currentTerrainHandleObject != objects.end() && static_cast<TerrainHandleObject *>(*currentTerrainHandleObject) == nullptr);
+			} else {
+				outputPlacedObjects += po;
+			}
+
+			outputPlacedObjects += ", ";
+		}
+
+		while (currentTerrainHandleObject != objects.end()) {
+			TerrainHandleObject *handle = static_cast<TerrainHandleObject *>(*currentTerrainHandleObject);
+			outputPlacedObjects += "TerrainHandle><" + std::to_string(handle->nodes[0]->pos.x) + "><" + std::to_string(handle->nodes[0]->pos.y) + "><";
+			outputPlacedObjects += std::to_string(handle->nodes[1]->pos.x) + "~" + std::to_string(handle->nodes[1]->pos.y) + "~";
+			outputPlacedObjects += std::to_string(handle->nodes[2]->pos.x) + "~" + std::to_string(handle->nodes[2]->pos.y) + "~";
+			outputPlacedObjects += "20";
+
+			do {
+				currentTerrainHandleObject = std::next(currentTerrainHandleObject);
+			} while (currentTerrainHandleObject != objects.end() && static_cast<TerrainHandleObject *>(*currentTerrainHandleObject) == nullptr);
+		}
+
+		placedObjects = outputPlacedObjects;
+	}
+
+	std::ofstream settings(settingsPath);
+	settings << before << "PlacedObjects: " << placedObjects << "\n" << after;
+	settings.close();
 }
 
 #define CAMERA_TEXTURE_WIDTH 1400
