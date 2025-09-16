@@ -45,6 +45,8 @@ int *DropletWindow::backupGeometry = nullptr;
 int DropletWindow::backupWater;
 
 std::vector<Object *> DropletWindow::objects;
+std::vector<TerrainHandleObject *> terrainHandleObjects;
+std::vector<MudPitObject *> mudPitObjects;
 
 bool terrainNeedsRefresh = false;
 bool hasTerrain = false;
@@ -218,6 +220,8 @@ void UpdateDetailsTab() {
 		if (!UI::mouse.leftMouse) {
 			if (needsDeleted) {
 				DropletWindow::objects.erase(std::remove(DropletWindow::objects.begin(), DropletWindow::objects.end(), movingNode->object), DropletWindow::objects.end());
+				terrainHandleObjects.erase(std::remove(terrainHandleObjects.begin(), terrainHandleObjects.end(), movingNode->object), terrainHandleObjects.end());
+				mudPitObjects.erase(std::remove(mudPitObjects.begin(), mudPitObjects.end(), movingNode->object), mudPitObjects.end());
 				delete movingNode->object;
 			}
 
@@ -238,11 +242,8 @@ void UpdateDetailsTab() {
 		terrain.clear();
 		std::vector<TerrainHandleObject *> handles;
 
-		for (Object *object : DropletWindow::objects) {
-			TerrainHandleObject *terrainHandle = static_cast<TerrainHandleObject *>(object);
-			if (terrainHandle != nullptr) {
-				handles.push_back(terrainHandle);
-			}
+		for (TerrainHandleObject *handle : terrainHandleObjects) {
+			handles.push_back(handle);
 		}
 
 		if (handles.size() >= 2) {
@@ -993,7 +994,14 @@ void DropletWindow::Draw() {
 		setThemeColor(ThemeColour::Border);
 		drawLine(sidebar.x0, sidebar.y1 - 0.2, sidebar.x1, sidebar.y1 - 0.2);
 		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.26, 0.39, 0.05), "Add TerrainHandle")) {
-			DropletWindow::objects.push_back(new TerrainHandleObject());
+			TerrainHandleObject *object = new TerrainHandleObject();
+			DropletWindow::objects.push_back(object);
+			terrainHandleObjects.push_back(object);
+		}
+		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.32, 0.39, 0.05), "Add MudPit")) {
+			MudPitObject *object = new MudPitObject();
+			DropletWindow::objects.push_back(object);
+			mudPitObjects.push_back(object);
 		}
 
 		if (trashCanState > 0) {
@@ -1170,6 +1178,19 @@ void DropletWindow::loadRoom() {
 					} catch (std::invalid_argument) {}
 				}
 				objects.push_back(obj);
+				terrainHandleObjects.push_back(obj);
+			} else if (startsWith(po, "MudPit>")) {
+				MudPitObject *obj = new MudPitObject();
+				obj->nodes[0]->pos = pos;
+				std::vector<std::string> splits = split(last, '~');
+				if (splits.size() >= 2) {
+					try {
+						obj->nodes[1]->pos.x = std::stod(splits[0]);
+						obj->nodes[1]->pos.y = std::stod(splits[1]);
+					} catch (std::invalid_argument) {}
+				}
+				objects.push_back(obj);
+				mudPitObjects.push_back(obj);
 			}
 		}
 	}
@@ -1317,10 +1338,8 @@ void DropletWindow::exportGeometry() {
 		std::string outputPlacedObjects;
 		std::string data = placedObjects.substr(placedObjects.find(' ') + 1);
 		std::vector<std::string> poData = split(data, ", ");
-		std::vector<Object *>::iterator currentTerrainHandleObject = objects.begin();
-		while (currentTerrainHandleObject != objects.end() && static_cast<TerrainHandleObject *>(*currentTerrainHandleObject) == nullptr) {
-			currentTerrainHandleObject = std::next(currentTerrainHandleObject);
-		}
+		std::vector<TerrainHandleObject *>::iterator currentTerrainHandleObject = terrainHandleObjects.begin();
+		std::vector<MudPitObject *>::iterator currentMudPitObject = mudPitObjects.begin();
 		for (std::string po : poData) {
 			size_t start = po.find('<');
 			size_t next = po.find('>', start);
@@ -1330,22 +1349,34 @@ void DropletWindow::exportGeometry() {
 			std::string last = po.substr(end + 2);
 		
 			if (startsWith(po, "TerrainHandle>")) {
-				if (currentTerrainHandleObject == objects.end()) continue;
+				if (currentTerrainHandleObject == terrainHandleObjects.end()) continue;
 
 				std::vector<std::string> splits = split(last, '~');
 				std::string height = "20";
 				if (splits.size() >= 5) {
 					height = splits[4];
 				}
-				TerrainHandleObject *handle = static_cast<TerrainHandleObject *>(*currentTerrainHandleObject);
+				TerrainHandleObject *handle = *currentTerrainHandleObject;
 				outputPlacedObjects += "TerrainHandle><" + std::to_string(handle->nodes[0]->pos.x) + "><" + std::to_string(handle->nodes[0]->pos.y) + "><";
 				outputPlacedObjects += std::to_string(handle->nodes[1]->pos.x) + "~" + std::to_string(handle->nodes[1]->pos.y) + "~";
 				outputPlacedObjects += std::to_string(handle->nodes[2]->pos.x) + "~" + std::to_string(handle->nodes[2]->pos.y) + "~";
 				outputPlacedObjects += height;
 
-				do {
-					currentTerrainHandleObject = std::next(currentTerrainHandleObject);
-				} while (currentTerrainHandleObject != objects.end() && static_cast<TerrainHandleObject *>(*currentTerrainHandleObject) == nullptr);
+				currentTerrainHandleObject = std::next(currentTerrainHandleObject);
+			} else if (startsWith(po, "MudPit>")) {
+				if (currentMudPitObject == mudPitObjects.end()) continue;
+
+				std::vector<std::string> splits = split(last, '~');
+				std::string decalSize = "15.0";
+				if (splits.size() >= 3) {
+					decalSize = splits[2];
+				}
+				MudPitObject *mud = *currentMudPitObject;
+				outputPlacedObjects += "MudPit><" + std::to_string(mud->nodes[0]->pos.x) + "><" + std::to_string(mud->nodes[0]->pos.y) + "><";
+				outputPlacedObjects += std::to_string(mud->nodes[1]->pos.x) + "~" + std::to_string(mud->nodes[1]->pos.y) + "~";
+				outputPlacedObjects += decalSize;
+
+				currentMudPitObject = std::next(currentMudPitObject);
 			} else {
 				outputPlacedObjects += po;
 			}
@@ -1353,16 +1384,25 @@ void DropletWindow::exportGeometry() {
 			outputPlacedObjects += ", ";
 		}
 
-		while (currentTerrainHandleObject != objects.end()) {
-			TerrainHandleObject *handle = static_cast<TerrainHandleObject *>(*currentTerrainHandleObject);
+		while (currentTerrainHandleObject != terrainHandleObjects.end()) {
+			TerrainHandleObject *handle = *currentTerrainHandleObject;
 			outputPlacedObjects += "TerrainHandle><" + std::to_string(handle->nodes[0]->pos.x) + "><" + std::to_string(handle->nodes[0]->pos.y) + "><";
 			outputPlacedObjects += std::to_string(handle->nodes[1]->pos.x) + "~" + std::to_string(handle->nodes[1]->pos.y) + "~";
 			outputPlacedObjects += std::to_string(handle->nodes[2]->pos.x) + "~" + std::to_string(handle->nodes[2]->pos.y) + "~";
 			outputPlacedObjects += "20";
+			outputPlacedObjects += ", ";
 
-			do {
-				currentTerrainHandleObject = std::next(currentTerrainHandleObject);
-			} while (currentTerrainHandleObject != objects.end() && static_cast<TerrainHandleObject *>(*currentTerrainHandleObject) == nullptr);
+			currentTerrainHandleObject = std::next(currentTerrainHandleObject);
+		}
+
+		while (currentMudPitObject != mudPitObjects.end()) {
+			MudPitObject *mud = *currentMudPitObject;
+			outputPlacedObjects += "MudPit><" + std::to_string(mud->nodes[0]->pos.x) + "><" + std::to_string(mud->nodes[0]->pos.y) + "><";
+			outputPlacedObjects += std::to_string(mud->nodes[1]->pos.x) + "~" + std::to_string(mud->nodes[1]->pos.y) + "~";
+			outputPlacedObjects += "15";
+			outputPlacedObjects += ", ";
+
+			currentMudPitObject = std::next(currentMudPitObject);
 		}
 
 		placedObjects = outputPlacedObjects;

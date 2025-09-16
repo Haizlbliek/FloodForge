@@ -10,7 +10,7 @@ Node::Node(Vector2 pos, Node *parent, Object *object) {
 	this->object = object;
 }
 
-Vector2 Node::position() {
+Vector2 Node::position() const {
 	if (parent == nullptr) return pos;
 
 	return pos + parent->position();
@@ -31,7 +31,7 @@ Object::~Object() {
 	nodes.clear();
 }
 
-void Object::draw(Vector2 offset) {
+void Object::draw(Vector2 offset) const {
 }
 
 TerrainHandleObject::TerrainHandleObject() : Object() {
@@ -39,7 +39,7 @@ TerrainHandleObject::TerrainHandleObject() : Object() {
 	addNode(Vector2(40.0, 0.0), nodes[0]);
 }
 
-void TerrainHandleObject::draw(Vector2 offset) {
+void TerrainHandleObject::draw(Vector2 offset) const {
 	Draw::color(0.5);
 	drawLine(
 		offset.x + nodes[0]->pos.x / 20.0,
@@ -65,4 +65,20 @@ const Vector2 TerrainHandleObject::Middle() const {
 
 const Vector2 TerrainHandleObject::Right() const {
 	return nodes[0]->pos + nodes[2]->pos;
+}
+
+
+
+MudPitObject::MudPitObject() : Object() {
+	addNode(Vector2(200.0, 30.0), nodes[0]);
+}
+
+void MudPitObject::draw(Vector2 offset) const {
+	Draw::color(0.478, 0.282, 0.196);
+	strokeRect(Rect::fromSize(
+		offset.x + nodes[0]->pos.x / 20.0,
+		offset.y + nodes[0]->pos.y / 20.0,
+		nodes[1]->pos.x / 20.0,
+		nodes[1]->pos.y / 20.0
+	));
 }

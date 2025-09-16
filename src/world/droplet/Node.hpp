@@ -14,7 +14,7 @@ class Node {
 		Node *parent;
 		Object *object;
 	
-		Vector2 position();
+		Vector2 position() const;
 };
 
 class Object {
@@ -26,16 +26,23 @@ class Object {
 
 		std::vector<Node *> nodes;
 	
-		virtual void draw(Vector2 offset);
+		virtual void draw(Vector2 offset) const;
 };
 
 class TerrainHandleObject : public Object {
 	public:
 		TerrainHandleObject();
 	
-		void draw(Vector2 offset) override;
+		void draw(Vector2 offset) const override;
 
 		const Vector2 Left() const;
 		const Vector2 Middle() const;
 		const Vector2 Right() const;
+};
+
+class MudPitObject : public Object {
+	public:
+		MudPitObject();
+
+		void draw(Vector2 offset) const override;
 };
