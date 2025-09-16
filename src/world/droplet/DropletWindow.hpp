@@ -84,9 +84,6 @@ namespace DropletWindow {
 	extern std::vector<Camera> cameras;
 	extern Camera *selectedCamera;
 
-	extern bool enclosedRoom;
-	extern bool waterInFront;
-
 	extern int *backupGeometry;
 	extern int backupWater;
 

@@ -38,8 +38,8 @@ DropletWindow::GeometryTool DropletWindow::selectedTool = DropletWindow::Geometr
 std::vector<DropletWindow::Camera> DropletWindow::cameras;
 DropletWindow::Camera *DropletWindow::selectedCamera = nullptr;
 
-bool DropletWindow::enclosedRoom = false;
-bool DropletWindow::waterInFront = false;
+bool enclosedRoom = false;
+bool waterInFront = false;
 
 int *DropletWindow::backupGeometry = nullptr;
 int DropletWindow::backupWater;
@@ -1045,9 +1045,9 @@ void DropletWindow::Draw() {
 	} else if (currentTab == DropletWindow::EditorTab::DETAILS) {
 		bool hasWater = EditorState::dropletRoom->water != -1;
 
-		UI::CheckBox(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.06, 0.05, 0.05), DropletWindow::enclosedRoom);
+		UI::CheckBox(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.06, 0.05, 0.05), enclosedRoom);
 		UI::CheckBox(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.12, 0.05, 0.05), hasWater);
-		UI::CheckBox(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.18, 0.05, 0.05), DropletWindow::waterInFront);
+		UI::CheckBox(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.18, 0.05, 0.05), waterInFront);
 
 		if (!hasWater) {
 			EditorState::dropletRoom->water = -1;
@@ -1062,19 +1062,20 @@ void DropletWindow::Draw() {
 		Fonts::rainworld->writeCentered("Water", sidebar.x0 + 0.07, sidebar.y1 - 0.095, 0.03, CENTER_Y);
 		Fonts::rainworld->writeCentered("Water in Front", sidebar.x0 + 0.07, sidebar.y1 - 0.155, 0.03, CENTER_Y);
 
+		double barY = sidebar.y1 - 0.2;
 		setThemeColor(ThemeColour::Border);
-		drawLine(sidebar.x0, sidebar.y1 - 0.2, sidebar.x1, sidebar.y1 - 0.2);
-		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.26, 0.39, 0.05), "Add TerrainHandle")) {
+		drawLine(sidebar.x0, barY, sidebar.x1, sidebar.y1 - 0.2);
+		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, barY - 0.06, 0.39, 0.05), "Add TerrainHandle")) {
 			TerrainHandleObject *object = new TerrainHandleObject();
 			DropletWindow::objects.push_back(object);
 			terrainHandleObjects.push_back(object);
 		}
-		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.32, 0.39, 0.05), "Add MudPit")) {
+		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, barY - 0.12, 0.39, 0.05), "Add MudPit")) {
 			MudPitObject *object = new MudPitObject();
 			DropletWindow::objects.push_back(object);
 			mudPitObjects.push_back(object);
 		}
-		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.38, 0.39, 0.05), "Add AirPocket")) {
+		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, barY - 0.18, 0.39, 0.05), "Add AirPocket")) {
 			AirPocketObject *object = new AirPocketObject();
 			DropletWindow::objects.push_back(object);
 			airPocketObjects.push_back(object);
@@ -1192,7 +1193,7 @@ void DropletWindow::loadRoom() {
 	}
 
 	std::getline(geometryFile, tempLine);
-	DropletWindow::enclosedRoom = tempLine.substr(tempLine.find(' ') + 1) == "Solid";
+	enclosedRoom = tempLine.substr(tempLine.find(' ') + 1) == "Solid";
 
 	for (int i = 0; i < 8; i++) std::getline(geometryFile, tempLine);
 	if (!tempLine.empty() && startsWith(tempLine, "camera angles:")) {
@@ -1226,63 +1227,64 @@ void DropletWindow::loadRoom() {
 	std::filesystem::path settingsFilePath = findFileCaseInsensitive(EditorState::dropletRoom->path.parent_path(), EditorState::dropletRoom->roomName + "_settings.txt");
 	std::ifstream settingsFile(settingsFilePath);
 	while (std::getline(settingsFile, tempLine)) {
-		if (!startsWith(tempLine, "PlacedObjects: ")) continue;
-		std::string data = tempLine.substr(tempLine.find(' ') + 1);
-		std::vector<std::string> poData = split(data, ", ");
-		for (std::string po : poData) {
-			size_t start = po.find('<');
-			size_t next = po.find('>', start);
-			size_t end = po.find('>', next + 1);
-			std::string xStr = po.substr(start + 1, next - start - 1);
-			std::string yStr = po.substr(next + 2, end - next - 2);
-			std::string last = po.substr(end + 2);
-			Vector2 pos;
-			try {
-				pos.x = std::stod(xStr);
-				pos.y = std::stod(yStr);
-			} catch (std::invalid_argument) {
-				Logger::warn("Failed to parse Placed Object: ", po);
-			}
-
-			if (startsWith(po, "TerrainHandle>")) {
-				TerrainHandleObject *obj = new TerrainHandleObject();
-				obj->nodes[0]->pos = pos;
-				std::vector<std::string> splits = split(last, '~');
-				if (splits.size() >= 4) {
-					try {
-						obj->nodes[1]->pos.x = std::stod(splits[0]);
-						obj->nodes[1]->pos.y = std::stod(splits[1]);
-						obj->nodes[2]->pos.x = std::stod(splits[2]);
-						obj->nodes[2]->pos.y = std::stod(splits[3]);
-					} catch (std::invalid_argument) {}
+		if (startsWith(tempLine, "PlacedObjects: ")) {
+			std::string data = tempLine.substr(tempLine.find(' ') + 1);
+			std::vector<std::string> poData = split(data, ", ");
+			for (std::string po : poData) {
+				size_t start = po.find('<');
+				size_t next = po.find('>', start);
+				size_t end = po.find('>', next + 1);
+				std::string xStr = po.substr(start + 1, next - start - 1);
+				std::string yStr = po.substr(next + 2, end - next - 2);
+				std::string last = po.substr(end + 2);
+				Vector2 pos;
+				try {
+					pos.x = std::stod(xStr);
+					pos.y = std::stod(yStr);
+				} catch (std::invalid_argument) {
+					Logger::warn("Failed to parse Placed Object: ", po);
 				}
-				objects.push_back(obj);
-				terrainHandleObjects.push_back(obj);
-			} else if (startsWith(po, "MudPit>")) {
-				MudPitObject *obj = new MudPitObject();
-				obj->nodes[0]->pos = pos;
-				std::vector<std::string> splits = split(last, '~');
-				if (splits.size() >= 2) {
-					try {
-						obj->nodes[1]->pos.x = std::stod(splits[0]);
-						obj->nodes[1]->pos.y = std::stod(splits[1]);
-					} catch (std::invalid_argument) {}
+	
+				if (startsWith(po, "TerrainHandle>")) {
+					TerrainHandleObject *obj = new TerrainHandleObject();
+					obj->nodes[0]->pos = pos;
+					std::vector<std::string> splits = split(last, '~');
+					if (splits.size() >= 4) {
+						try {
+							obj->nodes[1]->pos.x = std::stod(splits[0]);
+							obj->nodes[1]->pos.y = std::stod(splits[1]);
+							obj->nodes[2]->pos.x = std::stod(splits[2]);
+							obj->nodes[2]->pos.y = std::stod(splits[3]);
+						} catch (std::invalid_argument) {}
+					}
+					objects.push_back(obj);
+					terrainHandleObjects.push_back(obj);
+				} else if (startsWith(po, "MudPit>")) {
+					MudPitObject *obj = new MudPitObject();
+					obj->nodes[0]->pos = pos;
+					std::vector<std::string> splits = split(last, '~');
+					if (splits.size() >= 2) {
+						try {
+							obj->nodes[1]->pos.x = std::stod(splits[0]);
+							obj->nodes[1]->pos.y = std::stod(splits[1]);
+						} catch (std::invalid_argument) {}
+					}
+					objects.push_back(obj);
+					mudPitObjects.push_back(obj);
+				} else if (startsWith(po, "AirPocket>")) {
+					AirPocketObject *obj = new AirPocketObject();
+					obj->nodes[0]->pos = pos;
+					std::vector<std::string> splits = split(last, '~');
+					if (splits.size() >= 6) {
+						try {
+							obj->nodes[1]->pos.x = std::stod(splits[0]);
+							obj->nodes[1]->pos.y = std::stod(splits[1]);
+							obj->nodes[2]->pos.y = std::stod(splits[5]);
+						} catch (std::invalid_argument) {}
+					}
+					objects.push_back(obj);
+					airPocketObjects.push_back(obj);
 				}
-				objects.push_back(obj);
-				mudPitObjects.push_back(obj);
-			} else if (startsWith(po, "AirPocket>")) {
-				AirPocketObject *obj = new AirPocketObject();
-				obj->nodes[0]->pos = pos;
-				std::vector<std::string> splits = split(last, '~');
-				if (splits.size() >= 6) {
-					try {
-						obj->nodes[1]->pos.x = std::stod(splits[0]);
-						obj->nodes[1]->pos.y = std::stod(splits[1]);
-						obj->nodes[2]->pos.y = std::stod(splits[5]);
-					} catch (std::invalid_argument) {}
-				}
-				objects.push_back(obj);
-				airPocketObjects.push_back(obj);
 			}
 		}
 	}
@@ -1309,7 +1311,7 @@ void DropletWindow::exportGeometry() {
 	std::ofstream geo(geoPath);
 	geo << EditorState::dropletRoom->roomName << "\n";
 	geo << EditorState::dropletRoom->width << "*" << EditorState::dropletRoom->height;
-	geo << (EditorState::dropletRoom->water == -1 ? "" : ("|" + std::to_string(EditorState::dropletRoom->water) + "|" + (DropletWindow::waterInFront ? "1" : "0"))) << "\n";
+	geo << (EditorState::dropletRoom->water == -1 ? "" : ("|" + std::to_string(EditorState::dropletRoom->water) + "|" + (waterInFront ? "1" : "0"))) << "\n";
 	geo << "0.0000*1.0000|0|0\n";
 	{
 		bool first = true;
@@ -1321,7 +1323,7 @@ void DropletWindow::exportGeometry() {
 		}
 		geo << "\n";
 	}
-	geo << "Border: " << (DropletWindow::enclosedRoom ? "Solid" : "Passable") << "\n";
+	geo << "Border: " << (enclosedRoom ? "Solid" : "Passable") << "\n";
 	for (int x = 0; x < EditorState::dropletRoom->width; x++) {
 		for (int y = 0; y < EditorState::dropletRoom->height; y++) {
 			int tile = EditorState::dropletRoom->getTile(x, y);
@@ -1677,7 +1679,7 @@ void DropletWindow::exportProject(std::filesystem::path path) {
 	project << "[#lastKeys: [], #Keys: [], #workLayer: 1, #lstMsPs: point(0, 0), #tlMatrix: [], #defaultMaterial: \"Standard\", #toolType: \"material\", #toolData: \"Big Metal\", #tmPos: point(1, 1), #tmSavPosL: [], #specialEdit: 0]\n";
 	project << "[#lastKeys: [], #Keys: [], #lstMsPs: point(0, 0), #effects: [], #emPos: point(1, 1), #editEffect: 0, #selectEditEffect: 0, #mode: \"createNew\", #brushSize: 5]\n";
 	project << "[#pos: point(0, 0), #rot: 0, #sz: point(" << std::to_string(EditorState::dropletRoom->width) << ", " << std::to_string(EditorState::dropletRoom->height) << "), #col: 1, #Keys: [#m1: 0, #m2: 0, #w: 0, #a: 0, #s: 0, #d: 0, #r: 0, #f: 0, #z: 0, #m: 0], #lastKeys: [#m1: 0, #m2: 0, #w: 0, #a: 0, #s: 0, #d: 0, #r: 0, #f: 0, #z: 0, #m: 0], #lastTm: 0, #lightAngle: 180, #flatness: 1, #lightRect: rect(1000, 1000, -1000, -1000), #paintShape: \"pxl\"]\n";
-	project << "[#timeLimit: 4800, #defaultTerrain: " << (DropletWindow::enclosedRoom ? "1" : "0") << ", #maxFlies: 10, #flySpawnRate: 50, #lizards: [], #ambientSounds: [], #music: \"NONE\", #tags: [], #lightType: \"Static\", #waterDrips: 1, #lightRect: rect(0, 0, 1040, 800), #Matrix: []]\n";
+	project << "[#timeLimit: 4800, #defaultTerrain: " << (enclosedRoom ? "1" : "0") << ", #maxFlies: 10, #flySpawnRate: 50, #lizards: [], #ambientSounds: [], #music: \"NONE\", #tags: [], #lightType: \"Static\", #waterDrips: 1, #lightRect: rect(0, 0, 1040, 800), #Matrix: []]\n";
 	project << "[#mouse: 1, #lastMouse: 0, #mouseClick: 0, #pal: 1, #pals: [[#detCol: color( 255, 0, 0 )]], #eCol1: 1, #eCol2: 2, #totEcols: 5, #tileSeed: 225, #colGlows: [0, 0], #size: point(" << std::to_string(EditorState::dropletRoom->width + 24) << ", " << std::to_string(EditorState::dropletRoom->height + 8) << "), #extraTiles: [12, 3, 12, 5], #light: 1]\n";
 	project << "[#cameras: [";
 	{
@@ -1701,7 +1703,7 @@ void DropletWindow::exportProject(std::filesystem::path path) {
 		}
 	}
 	project << "], #Keys: [#n: 0, #d: 0, #e: 0, #p: 0], #lastKeys: [#n: 0, #d: 0, #e: 0, #p: 0]]\n";
-	project << "[#waterLevel: " << EditorState::dropletRoom->water << ", #waterInFront: " << (DropletWindow::waterInFront ? "1" : "0") << ", #waveLength: 60, #waveAmplitude: 5, #waveSpeed: 10]\n";
+	project << "[#waterLevel: " << EditorState::dropletRoom->water << ", #waterInFront: " << (waterInFront ? "1" : "0") << ", #waveLength: 60, #waveAmplitude: 5, #waveSpeed: 10]\n";
 	project << "[#props: [], #lastKeys: [#w: 0, #a: 0, #s: 0, #d: 0, #L: 0, #n: 0, #m1: 0, #m2: 0, #c: 0, #z: 0], #Keys: [#w: 0, #a: 0, #s: 0, #d: 0, #L: 0, #n: 0, #m1: 0, #m2: 0, #c: 0, #z: 0], #workLayer: 1, #lstMsPs: point(0, 0), #pmPos: point(1, 1), #pmSavPosL: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], #propRotation: 0, #propStretchX: 1, #propStretchY: 1, #propFlipX: 1, #propFlipY: 1, #depth: 0, #color: 0]\n";
 	project.close();
 }
