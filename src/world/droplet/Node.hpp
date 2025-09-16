@@ -46,3 +46,10 @@ class MudPitObject : public Object {
 
 		void draw(Vector2 offset) const override;
 };
+
+class AirPocketObject : public Object {
+	public:
+		AirPocketObject();
+
+		void draw(Vector2 offset) const override;
+};

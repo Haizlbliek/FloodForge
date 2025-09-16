@@ -47,11 +47,23 @@ int DropletWindow::backupWater;
 std::vector<Object *> DropletWindow::objects;
 std::vector<TerrainHandleObject *> terrainHandleObjects;
 std::vector<MudPitObject *> mudPitObjects;
+std::vector<AirPocketObject *> airPocketObjects;
 
 bool terrainNeedsRefresh = false;
 bool hasTerrain = false;
 std::vector<Vector2> terrain;
 int trashCanState = 0;
+
+struct WaterSpot {
+	Vector2 pos;
+	Vector2 size;
+
+	bool intersects(WaterSpot &other) {
+		return pos.x <= other.pos.x + other.size.x && pos.y <= other.pos.y + other.size.y && pos.x + size.x >= other.pos.x && pos.y + size.y >= other.pos.y;
+	}
+};
+bool waterNeedsRefresh = false;
+std::vector<WaterSpot> water;
 
 void DropletWindow::init() {
 	toolsTexture = new Texture(BASE_PATH / "assets" / "tools.png");
@@ -151,6 +163,22 @@ double sampleTerrain(TerrainHandleObject *left, TerrainHandleObject *right, doub
 	return sampleHandle(left->Middle().y, left->Right().y, right->Left().y, right->Middle().y, (leftPos + rightPos) * 0.5);
 }
 
+std::vector<WaterSpot> splitWater(WaterSpot water, WaterSpot by) {
+	WaterSpot left = { water.pos, Vector2(by.pos.x - water.pos.x, water.size.y) };
+	WaterSpot right = { Vector2(by.pos.x + by.size.x, water.pos.y), water.size - Vector2((by.pos.x + by.size.x) - water.pos.x, 0.0) };
+	double middlePosX = std::max(by.pos.x, water.pos.x);
+	double middleSizeX = std::min(by.pos.x + by.size.x, water.pos.x + water.size.x) - middlePosX;
+	WaterSpot bottom = { Vector2(middlePosX, water.pos.y), Vector2(middleSizeX, by.pos.y - water.pos.y) };
+	WaterSpot top = { Vector2(middlePosX, by.pos.y + by.size.y), Vector2(middleSizeX, water.size.y - ((by.pos.y + by.size.y) - water.pos.y)) };
+	std::vector<WaterSpot> values;
+	if (left.size.x > 0.0 && left.size.y > 0.0) values.push_back(left);
+	if (right.size.x > 0.0 && right.size.y > 0.0) values.push_back(right);
+	if (bottom.size.x > 0.0 && bottom.size.y > 0.0) values.push_back(bottom);
+	if (top.size.x > 0.0 && top.size.y > 0.0) values.push_back(top);
+
+	return values;
+}
+
 void UpdateDetailsTab() {
 	if (hasTerrain && terrain.size() >= 2) {
 		Draw::color(0.0, 1.0, 0.0);
@@ -212,9 +240,11 @@ void UpdateDetailsTab() {
 			movingNode->pos.y = newPos.y;
 		}
 
-		TerrainHandleObject *terrainHandle = static_cast<TerrainHandleObject *>(movingNode->object);
-		if (terrainHandle != nullptr) {
+		if (static_cast<TerrainHandleObject *>(movingNode->object) != nullptr) {
 			terrainNeedsRefresh = true;
+		}
+		else if (static_cast<AirPocketObject *>(movingNode->object) != nullptr) {
+			waterNeedsRefresh = true;
 		}
 
 		if (!UI::mouse.leftMouse) {
@@ -222,6 +252,7 @@ void UpdateDetailsTab() {
 				DropletWindow::objects.erase(std::remove(DropletWindow::objects.begin(), DropletWindow::objects.end(), movingNode->object), DropletWindow::objects.end());
 				terrainHandleObjects.erase(std::remove(terrainHandleObjects.begin(), terrainHandleObjects.end(), movingNode->object), terrainHandleObjects.end());
 				mudPitObjects.erase(std::remove(mudPitObjects.begin(), mudPitObjects.end(), movingNode->object), mudPitObjects.end());
+				airPocketObjects.erase(std::remove(airPocketObjects.begin(), airPocketObjects.end(), movingNode->object), airPocketObjects.end());
 				delete movingNode->object;
 			}
 
@@ -232,9 +263,10 @@ void UpdateDetailsTab() {
 	else {
 		trashCanState = 0;
 
-		if (!DropletWindow::blockMouse && UI::mouse.leftMouse && EditorState::dropletRoom->water != -1) {
+		if (!DropletWindow::blockMouse && EditorState::window->keyPressed(GLFW_KEY_W) && EditorState::dropletRoom->water != -1) {
 			EditorState::dropletRoom->water = EditorState::dropletRoom->height - DropletWindow::mouseTile.y - 1;
 			if (EditorState::dropletRoom->water < 0) EditorState::dropletRoom->water = 0;
+			waterNeedsRefresh = true;
 		}
 	}
 
@@ -261,6 +293,34 @@ void UpdateDetailsTab() {
 			hasTerrain = true;
 		} else {
 			hasTerrain = false;
+		}
+	}
+
+	if (waterNeedsRefresh) {
+		water.clear();
+		water.push_back({ Vector2(0, 0), Vector2(EditorState::dropletRoom->width * 20.0, EditorState::dropletRoom->water * 20.0 + 10.0) });
+		for (AirPocketObject *pocket : airPocketObjects) {
+			WaterSpot spot = { pocket->nodes[0]->pos, pocket->nodes[1]->pos };
+			if (spot.size.x <= 0.0) continue;
+			if (spot.size.y <= 0.0) continue;
+			for (int i = water.size() - 1; i >= 0; i--) {
+				if (water[i].intersects(spot)) {
+					WaterSpot before = water[i];
+					std::vector<WaterSpot> splits = splitWater(before, spot);
+					if (splits.size() == 0) {
+						if (i != water.size() - 1) water[i] = water.back();
+						water.pop_back();
+					} else {
+						water[i] = splits[0];
+						for (int j = 1; j < splits.size(); j++) {
+							water.push_back(splits[j]);
+						}
+					}
+				}
+			}
+			spot.size.y = std::min(pocket->nodes[2]->pos.y, spot.size.y);
+			if (spot.size.y <= 0.0) continue;
+			water.push_back(spot);
 		}
 	}
 }
@@ -725,6 +785,23 @@ void UpdateCameraTab() {
 	}
 }
 
+void drawWater(bool border) {
+	if (border) {
+		Rect water = Rect(DropletWindow::roomRect.x0, DropletWindow::roomRect.y0, DropletWindow::roomRect.x1, DropletWindow::roomRect.y0 + (EditorState::dropletRoom->water + 0.5));
+		Draw::color(0.0, 0.0, 0.5, 1.0);
+		drawLine(water.x0, water.y1, water.x1, water.y1);
+		return;
+	}
+
+	glEnable(GL_BLEND);
+	Draw::color(0.0, 0.0, 0.5, 0.5);
+	for (WaterSpot &spot : water) {
+		Rect waterRect = Rect::fromSize(DropletWindow::roomRect.x0 + spot.pos.x / 20.0, DropletWindow::roomRect.y0 + spot.pos.y / 20.0, spot.size.x / 20.0, spot.size.y / 20.0);
+		fillRect(waterRect);
+	}
+	glDisable(GL_BLEND);
+}
+
 void DropletWindow::Draw() {
 	if (!UI::mouse.leftMouse && !UI::mouse.rightMouse) {
 		if (EditorState::window->justPressed(GLFW_KEY_1)) currentTab = DropletWindow::EditorTab::DETAILS;
@@ -760,12 +837,8 @@ void DropletWindow::Draw() {
 	}
 	Draw::end();
 
-	Rect water = Rect(roomRect.x0, roomRect.y0, roomRect.x1, roomRect.y0 + (EditorState::dropletRoom->water + 0.5));
 	if (!waterInFront && EditorState::dropletRoom->water != -1) {
-		glEnable(GL_BLEND);
-		Draw::color(0.0, 0.0, 0.5, 0.5);
-		fillRect(water);
-		glDisable(GL_BLEND);
+		drawWater(false);
 	}
 
 	Draw::begin(Draw::QUADS);
@@ -917,12 +990,10 @@ void DropletWindow::Draw() {
 
 	if (EditorState::dropletRoom->water != -1) {
 		if (waterInFront) {
-			Draw::color(0.0, 0.0, 0.5, 0.5);
-			Rect water = Rect(roomRect.x0, roomRect.y0, roomRect.x1, roomRect.y0 + (EditorState::dropletRoom->water + 0.5));
-			fillRect(water);
+			drawWater(false);
 		}
-		Draw::color(0.0, 0.0, 0.5, 1.0);
-		drawLine(water.x0, water.y1, water.x1, water.y1);
+
+		drawWater(true);
 	}
 
 	glDisable(GL_BLEND);
@@ -1002,6 +1073,11 @@ void DropletWindow::Draw() {
 			MudPitObject *object = new MudPitObject();
 			DropletWindow::objects.push_back(object);
 			mudPitObjects.push_back(object);
+		}
+		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.38, 0.39, 0.05), "Add AirPocket")) {
+			AirPocketObject *object = new AirPocketObject();
+			DropletWindow::objects.push_back(object);
+			airPocketObjects.push_back(object);
 		}
 
 		if (trashCanState > 0) {
@@ -1143,6 +1219,9 @@ void DropletWindow::loadRoom() {
 		delete object;
 	}
 	objects.clear();
+	terrainHandleObjects.clear();
+	mudPitObjects.clear();
+	airPocketObjects.clear();
 
 	std::filesystem::path settingsFilePath = findFileCaseInsensitive(EditorState::dropletRoom->path.parent_path(), EditorState::dropletRoom->roomName + "_settings.txt");
 	std::ifstream settingsFile(settingsFilePath);
@@ -1191,6 +1270,19 @@ void DropletWindow::loadRoom() {
 				}
 				objects.push_back(obj);
 				mudPitObjects.push_back(obj);
+			} else if (startsWith(po, "AirPocket>")) {
+				AirPocketObject *obj = new AirPocketObject();
+				obj->nodes[0]->pos = pos;
+				std::vector<std::string> splits = split(last, '~');
+				if (splits.size() >= 6) {
+					try {
+						obj->nodes[1]->pos.x = std::stod(splits[0]);
+						obj->nodes[1]->pos.y = std::stod(splits[1]);
+						obj->nodes[2]->pos.y = std::stod(splits[5]);
+					} catch (std::invalid_argument) {}
+				}
+				objects.push_back(obj);
+				airPocketObjects.push_back(obj);
 			}
 		}
 	}
@@ -1198,6 +1290,7 @@ void DropletWindow::loadRoom() {
 
 	backup();
 	terrainNeedsRefresh = true;
+	waterNeedsRefresh = true;
 }
 
 void DropletWindow::resetChanges() {
@@ -1309,6 +1402,7 @@ void DropletWindow::exportGeometry() {
 
 	backup();
 	terrainNeedsRefresh = true;
+	waterNeedsRefresh = true;
 
 	std::filesystem::path settingsPath = EditorState::region.roomsDirectory / (EditorState::dropletRoom->roomName + "_settings.txt");
 	Backup::backup(settingsPath);
@@ -1340,6 +1434,8 @@ void DropletWindow::exportGeometry() {
 		std::vector<std::string> poData = split(data, ", ");
 		std::vector<TerrainHandleObject *>::iterator currentTerrainHandleObject = terrainHandleObjects.begin();
 		std::vector<MudPitObject *>::iterator currentMudPitObject = mudPitObjects.begin();
+		std::vector<AirPocketObject *>::iterator currentAirPocketObject = airPocketObjects.begin();
+
 		for (std::string po : poData) {
 			size_t start = po.find('<');
 			size_t next = po.find('>', start);
@@ -1377,6 +1473,24 @@ void DropletWindow::exportGeometry() {
 				outputPlacedObjects += decalSize;
 
 				currentMudPitObject = std::next(currentMudPitObject);
+			} else if (startsWith(po, "AirPocket>")) {
+				if (currentAirPocketObject == airPocketObjects.end()) continue;
+
+				std::vector<std::string> splits = split(last, '~');
+				std::string panelPosX = "30.0";
+				std::string panelPosY = "30.0";
+				std::string flood = "Y";
+				if (splits.size() >= 6) {
+					panelPosX = splits[2];
+					panelPosY = splits[3];
+					flood = splits[4];
+				}
+				AirPocketObject *pocket = *currentAirPocketObject;
+				outputPlacedObjects += "AirPocket><" + std::to_string(pocket->nodes[0]->pos.x) + "><" + std::to_string(pocket->nodes[0]->pos.y) + "><";
+				outputPlacedObjects += std::to_string(pocket->nodes[1]->pos.x) + "~" + std::to_string(pocket->nodes[1]->pos.y) + "~";
+				outputPlacedObjects += panelPosX + "~" + panelPosY + "~" + flood + "~" + std::to_string(pocket->nodes[2]->pos.y);
+
+				currentAirPocketObject = std::next(currentAirPocketObject);
 			} else {
 				outputPlacedObjects += po;
 			}
@@ -1403,6 +1517,15 @@ void DropletWindow::exportGeometry() {
 			outputPlacedObjects += ", ";
 
 			currentMudPitObject = std::next(currentMudPitObject);
+		}
+
+		while (currentAirPocketObject != airPocketObjects.end()) {
+			AirPocketObject *pocket = *currentAirPocketObject;
+			outputPlacedObjects += "AirPocket><" + std::to_string(pocket->nodes[0]->pos.x) + "><" + std::to_string(pocket->nodes[0]->pos.y) + "><";
+			outputPlacedObjects += std::to_string(pocket->nodes[1]->pos.x) + "~" + std::to_string(pocket->nodes[1]->pos.y) + "~";
+			outputPlacedObjects += "30.0~30.0~Y~" + std::to_string(pocket->nodes[2]->pos.y);
+
+			currentAirPocketObject = std::next(currentAirPocketObject);
 		}
 
 		placedObjects = outputPlacedObjects;

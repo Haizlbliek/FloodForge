@@ -82,3 +82,28 @@ void MudPitObject::draw(Vector2 offset) const {
 		nodes[1]->pos.y / 20.0
 	));
 }
+
+
+
+AirPocketObject::AirPocketObject() : Object() {
+	addNode(Vector2(100.0, 200.0), nodes[0]);
+	addNode(Vector2(0.0, 80.0), nodes[0]);
+}
+
+void AirPocketObject::draw(Vector2 offset) const {
+	Draw::color(0.0, 0.0, 1.0);
+	strokeRect(Rect::fromSize(
+		offset.x + nodes[0]->pos.x / 20.0,
+		offset.y + nodes[0]->pos.y / 20.0,
+		nodes[1]->pos.x / 20.0,
+		nodes[1]->pos.y / 20.0
+	));
+	Draw::color(0.0, 1.0, 1.0);
+	drawLine(
+		offset.x + nodes[0]->pos.x / 20.0,
+		offset.y + nodes[0]->pos.y / 20.0 + nodes[2]->pos.y / 20.0,
+		offset.x + nodes[0]->pos.x / 20.0 + nodes[1]->pos.x / 20.0,
+		offset.y + nodes[0]->pos.y / 20.0 + nodes[2]->pos.y / 20.0
+	);
+	nodes[2]->pos.x = 0.0;
+}
