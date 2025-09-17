@@ -4,28 +4,6 @@ FloodForge is a C++ remake of a few Rain World modding tools.
 
 It aims for intuitive controls, clean ui, and as few dependencies as possible.
 
-## Controls
-
-| Action                     | Key       | Description                                                       |
-|----------------------------|-----------|-------------------------------------------------------------------|
-| Move Room / Popup          | `LMB`     | Move rooms around, hold ALT to move without snapping.             |
-| Move Camera                | `MMB`     | Pan camera.                                                       |
-| Connect Rooms              | `RMB`     | Add connections between room exits.                               |
-| Delete                     | `X`       | Removes hovered room or connection.                               |
-| Creature Den               | `C`       | Opens the hovered den.                                            |
-| Room Merge                 | `G`       | Toggle room visual merging.                                       |
-| Change Room Layer          | `L`       | Switches between layers within the hovered room.                  |
-| Change Room Tag            | `T`       | Change room tags (shelter, karma gate, scavenger outpost, etc.).  |
-| Change Subregion           | `S`       | Openes a popup for adding, removing, and changing subregions.     |
-| Change Room Attractiveness | `A`       | Change the attractiveness of a room for specific creatures.       |
-| Hide / Show                | `H`       | Toggle visibility of hovered room.                                |
-| Show other rooms           | `I`       | Places hovered room behind all other rooms.                       |
-| Edit conditionals          | `D`       | Opens a popup to edit connection conditionals.                    |
-| Cancel/Exit                | `ESC`     | Closes menus or cancels actions.                                  |
-| Accept                     | `ENTER`   | Confirms selections or actions.                                   |
-| Open Tutorial              | `ALT+T`   | Opens the tutorial popup.                                         |
-| Open Droplet Editor        | `R`       | Opens the droplet level editor.                                   |
-
 ## Building
 
 ### Windows
@@ -83,24 +61,6 @@ sh build.sh --release
 ## I found a bug!
 
 Report it on the new [FloodForge Discord server](https://discord.gg/RBq8PDbCmB)!
-
-## Settings
-
-Settings are stored in `assets/settings.txt`
-
-| Setting           | Default Value | Allowed Values | Description |
-|-------------------|---------------|----------------|-------------|
-| Theme             | N/A           | any folder in assets/themes/ | |
-| CameraPanSpeed    | 0.4           | float          | |
-| CameraZoomSpeed   | 0.4           | float          | |
-| PopupScrollSpeed  | 0.4           | float          | |
-| OriginalControls  | false         | true, false    | |
-| ConnectionType    | bezier        | bezier, linear | |
-| SelectorScale     | true          | true, false    | If true, creature icons stay the same size when zooming |
-| DefaultFilePath   |               | string         | |
-| WarnMissingImages | false         | true, false    | |
-| HideTutorial      | false         | true, false    | Prevents the tutorial from appearing when starting FloodForge |
-| UpdateWorldFiles  | true          | true, false    | Decide whether to modify imported world files when exporting, or to create new files in `worlds` |
 
 ## License
 
