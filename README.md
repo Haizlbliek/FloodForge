@@ -43,7 +43,7 @@ sudo apt-get install make
 sudo apt-get install libglfw3-dev
 sudo apt-get install pkg-config
 sudo apt-get install g++
-sudo apt-get install libutf8proc
+sudo apt-get install libutf8proc-dev
 ```
 
 Build:

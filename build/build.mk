@@ -26,7 +26,7 @@ ifeq ($(OS),Windows_NT)
 else
 	# items to plug into pkg-config to find libs and includes
 	REQPKGS += glfw3
-	LIBS += -lGL
+	LIBS += -lGL -lutf8proc
 endif
 
 # find libs and includes from REQPKGS list. works if empty.
