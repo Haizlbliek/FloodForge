@@ -80,6 +80,7 @@ void loadTheme(std::string theme) {
 	while (std::getline(themeFile, line)) {
 		if (line.empty()) continue;
 		if (line.back() == '\r') line.pop_back();
+		if (startsWith(line, "//")) continue;
 
 		std::string colourString = line.substr(line.find_first_of(':') + 2);
 		colourString.erase(std::remove(colourString.begin(), colourString.end(), '\r'), colourString.end());

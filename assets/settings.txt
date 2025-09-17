@@ -1,14 +1,53 @@
+// The currently selected theme
+// Value must be a valid filename in `assets/themes` (e.g. `blue` for `blue.txt`)
 Theme: blue
+
+// The interpolation speed for camera panning
+// Lower is slower (0.0 - No movement, 1.0 - Instant)
 CameraPanSpeed: 0.4
+
+// The interpolation speed for camera zooming
+// Lower is slower (0.0 - No movement, 1.0 - Instant)
 CameraZoomSpeed: 0.4
+
+// The interpolation speed for scrolling
+// Lower is slower (0.0 - No movement, 1.0 - Instant)
 PopupScrollSpeed: 0.4
+
+// Renders connections as bezier curves or linear lines
+// Valid values: `bezier`, `linear`
 ConnectionType: bezier
+
+// Switches camera movement to the original world editor's control scheme
+// FloodForge: Middle click to pan, left click to select
+// World Editor: Left click on empty space to pan, Shift+left click to select
 OriginalControls: false
+
+// If true, icons in the World Editor keep a constistant size when zooming
 SelectorScale: true
+
+// The default path to start file popups at
+// If specified, the first time opening a file popup it will attempt to load this path.
+// If the path does not exist, falls back to normal
 DefaultFilePath: 
-WarnMissingImages: false
-HideTutorial: false
+
+// If true, file popups retain their path upon closing
+// E.g. If you import a region from `mods/moreslugcats/world/cl/`, the next time you open a file popup, it will start at that path
 KeepFilesystemPath: true
+
+// If true, FloodForge gives a warning about missing `XX_A01_1.png` images
+// Note: Makes world loading slower
+WarnMissingImages: false
+
+// If false, the tutorial popup appears after closing the splash
+HideTutorial: false
+
+// If true, exporting will modify the existing `world_xx.txt` file
+// If false, exported worlds are stored in `FloodForge/worlds` and need to be manually copied into their respective directories
 UpdateWorldFiles: true
 
+
+
+// DEBUG ONLY!
+// If true, exported `map_xx.png` files will have a cyan 10px border instead of lime
 DebugVisibleOutputPadding: false

@@ -21,7 +21,6 @@ void CreateRoomPopup::draw() {
 	static UI::TextInputEditable screenHeight(UI::TextInputEditableType::UnsignedFloat, "1.000", 3);
 	static bool fillLayer1 = true;
 	static bool fillLayer2 = true;
-	static bool placeCameras = true;
 
 	y -= 0.06;
 	setThemeColor(ThemeColour::Text);
@@ -101,13 +100,6 @@ void CreateRoomPopup::draw() {
 	setThemeColor(ThemeColour::Text);
 	Fonts::rainworld->writeCentered("---- Options ----", bounds.x0 + 0.01, y + 0.025, 0.03, CENTER_Y);
 
-	y -= 0.06;
-	setThemeColor(ThemeColour::Text);
-	Fonts::rainworld->writeCentered("Auto-place Cameras", bounds.x0 + 0.07, y + 0.025, 0.03, CENTER_Y);
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.01, y, 0.05, 0.05).uv(placeCameras ? 0.75 : 0.5, 0.25, placeCameras ? 1.0 : 0.75, 0.5), UI::TextureButtonMods().TextureId(UI::uiTexture))) {
-		placeCameras = !placeCameras;
-	}
-
 	if (widthResponse.submitted) {
 		screenWidth.value = toFixed((std::stoi(width.value) + 4) / 52.0, screenWidth.floatDecimalCount);
 		EditorState::placingRoomSize.x = std::stoi(width.value);
@@ -133,7 +125,6 @@ void CreateRoomPopup::draw() {
 		screenHeight.value = "1.000";
 		fillLayer1 = true;
 		fillLayer2 = true;
-		placeCameras = true;
 		EditorState::placingRoomSize.x = 48;
 		EditorState::placingRoomSize.y = 35;
 	}

@@ -29,6 +29,7 @@ void Settings::init() {
 	while (std::getline(settingsFile, line)) {
 		if (line.empty()) continue;
 		if (line.back() == '\r') line.pop_back();
+		if (startsWith(line, "//")) continue;
 
 		std::string key = line.substr(0, line.find_first_of(':'));
 		std::string value = line.substr(line.find_first_of(':') + 2);
