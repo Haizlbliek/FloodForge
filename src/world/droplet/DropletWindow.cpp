@@ -1296,6 +1296,8 @@ void DropletWindow::loadRoom() {
 }
 
 void DropletWindow::resetChanges() {
+	if (DropletWindow::backupGeometry == nullptr) return;
+
 	for (int i = 0; i < EditorState::dropletRoom->width * EditorState::dropletRoom->height; i++) {
 		EditorState::dropletRoom->geometry[i] = DropletWindow::backupGeometry[i];
 	}
@@ -1632,6 +1634,7 @@ void DropletWindow::render() {
 
 void DropletWindow::exportProject(std::filesystem::path path) {
 	std::ofstream project(path / (EditorState::dropletRoom->roomName + ".txt"));
+	project << std::setprecision(0);
 	project << "[";
 	for (int x = -12; x < EditorState::dropletRoom->width + 12; x++) {
 		if (x != -12) project << ", ";

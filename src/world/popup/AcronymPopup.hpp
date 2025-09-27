@@ -21,7 +21,7 @@ class AcronymPopup : public Popup {
 
 		void close();
 
-		virtual std::string banLetters() { return "_/\\"; };
+		virtual std::string banLetters() { return "_/\\ "; };
 
 		virtual void submit(std::string acronym);
 

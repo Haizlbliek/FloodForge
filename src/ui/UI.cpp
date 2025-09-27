@@ -74,6 +74,9 @@ static void UI::_keyCallback(void *object, int action, int key) {
 		if (key >= 33 && key <= 126) {
 			write = parseCharacter(key, UI::window->modifierPressed(GLFW_MOD_SHIFT));
 		}
+		if (key == GLFW_KEY_SPACE) {
+			write = ' ';
+		}
 		if (editable->bannedLetters.find(write) != std::string::npos) {
 			write = 0;
 		}

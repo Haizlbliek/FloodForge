@@ -2,12 +2,29 @@
 
 #include <fstream>
 
-void LevelUtils::createLevelFiles(std::filesystem::path directory, std::string roomName, int width, int height, bool fillLayer1, bool fillLayer2) {
+void LevelUtils::createLevelFiles(std::filesystem::path directory, std::string roomName, int width, int height, bool fillLayer1, bool fillLayer2, bool createCameras) {
 	std::ofstream geo(directory / (roomName + ".txt"));
 	geo << roomName << "\n";
 	geo << width << "*" << height << "|-1|0\n";
 	geo << "0.0000*1.0000|0|0\n";
-	geo << "-220,-50\n";
+	if (createCameras) {
+		int screenWidth = (int) std::round((width + 4.0) / 52.0);
+		int screenHeight = (int) std::round((height + 5.0) / 40.0);
+		for (int y = 0; y < screenHeight; y++) {
+			for (int x = 0; x < screenWidth; x++) {
+				if (x != 0 || y != 0) geo << "|";
+				geo << std::to_string(-212 + x * 1024) << "," << std::to_string(-34 + 768 * y);
+			}
+		}
+
+		if (screenHeight <= 0 && screenWidth <= 0) {
+			geo << "-212,-34\n";
+		} else {
+			geo << "\n";
+		}
+	} else {
+		geo << "-220,-50\n";
+	}
 	geo << "Border: Passable\n";
 	geo << "\n";
 	geo << "\n";
