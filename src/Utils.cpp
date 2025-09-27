@@ -573,34 +573,38 @@ void replaceLastInstance(std::string& str, const std::string& old_sub, const std
 	}
 }
 
-char parseCharacter(char character, bool shiftPressed) {
-	if (!shiftPressed) return std::tolower(character);
-	
-	switch (character) {
-		case '1': return '!';
-		case '2': return '@';
-		case '3': return '#';
-		case '4': return '$';
-		case '5': return '%';
-		case '6': return '^';
-		case '7': return '&';
-		case '8': return '*';
-		case '9': return '(';
-		case '0': return ')';
-		case '`': return '~';
-		case '-': return '_';
-		case '=': return '+';
-		case '[': return '{';
-		case ']': return '}';
-		case ';': return ':';
-		case '\'': return '"';
-		case '\\': return '|';
-		case ',': return '<';
-		case '.': return '>';
-		case '/': return '?';
+char parseCharacter(char character, bool shiftPressed, bool capsPressed) {
+	if (shiftPressed) {
+		switch (character) {
+			case '1': return '!';
+			case '2': return '@';
+			case '3': return '#';
+			case '4': return '$';
+			case '5': return '%';
+			case '6': return '^';
+			case '7': return '&';
+			case '8': return '*';
+			case '9': return '(';
+			case '0': return ')';
+			case '`': return '~';
+			case '-': return '_';
+			case '=': return '+';
+			case '[': return '{';
+			case ']': return '}';
+			case ';': return ':';
+			case '\'': return '"';
+			case '\\': return '|';
+			case ',': return '<';
+			case '.': return '>';
+			case '/': return '?';
+		}
 	}
 
-	return std::toupper(character);
+	if (shiftPressed || capsPressed) {
+		return std::toupper(character);
+	}
+
+	return std::tolower(character);
 }
 
 std::string toFixed(double x, int decimals) {

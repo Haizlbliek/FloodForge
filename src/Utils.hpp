@@ -73,6 +73,6 @@ GLuint loadShaders(const char* vertexPath, const char* fragmentPath);
 
 void replaceLastInstance(std::string& str, const std::string& old_sub, const std::string& new_sub);
 
-char parseCharacter(char character, bool shiftPressed);
+char parseCharacter(char character, bool shiftPressed, bool capsPressed);
 
 std::string toFixed(double x, int decimals);

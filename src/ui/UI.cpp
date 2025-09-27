@@ -72,7 +72,7 @@ static void UI::_keyCallback(void *object, int action, int key) {
 	char write = 0;
 	if (editable->type == UI::TextInputEditableType::Text) {
 		if (key >= 33 && key <= 126) {
-			write = parseCharacter(key, UI::window->modifierPressed(GLFW_MOD_SHIFT));
+			write = parseCharacter(key, UI::window->modifierPressed(GLFW_MOD_SHIFT), UI::window->modifierPressed(GLFW_MOD_CAPS_LOCK));
 		}
 		if (key == GLFW_KEY_SPACE) {
 			write = ' ';

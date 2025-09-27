@@ -282,12 +282,6 @@ void FilesystemPopup::scrollCallback(void *object, double deltaX, double deltaY)
 	popup->clampScroll();
 }
 
-char FilesystemPopup::parseCharacter(char character, bool shiftPressed) {
-	if (!shiftPressed) return std::tolower(character);
-
-	return std::toupper(character);
-}
-
 void FilesystemPopup::keyCallback(void *object, int action, int key) {
 	FilesystemPopup *popup = static_cast<FilesystemPopup*>(object);
 
@@ -300,7 +294,7 @@ void FilesystemPopup::keyCallback(void *object, int action, int key) {
 
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
 		if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
-			char character = parseCharacter(key, UI::window->keyPressed(GLFW_KEY_LEFT_SHIFT) || UI::window->keyPressed(GLFW_KEY_RIGHT_SHIFT));
+			char character = parseCharacter(key, UI::window->modifierPressed(GLFW_MOD_SHIFT), UI::window->modifierPressed(GLFW_MOD_CAPS_LOCK));
 
 			popup->newDirectory += character;
 			popup->frame = 0;

@@ -44,8 +44,6 @@ class FilesystemPopup : public Popup {
 
 		static void scrollCallback(void *object, double deltaX, double deltaY);
 
-		static char parseCharacter(char character, bool shiftPressed);
-
 		static void keyCallback(void *object, int action, int key);
 
 		bool canStack(std::string popupName) { return popupName == "InfoPopup" || popupName == "ConfirmPopup"; }
