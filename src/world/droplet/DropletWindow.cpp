@@ -12,6 +12,8 @@
 Texture *DropletWindow::shortcutsTexture = nullptr;
 Texture *DropletWindow::toolsTexture = nullptr;
 
+bool DropletWindow::showObjects = false;
+
 Vector2 DropletWindow::cameraOffset;
 double DropletWindow::cameraScale = 40.0;
 double DropletWindow::cameraScaleTo = 40.0;
@@ -195,6 +197,7 @@ void UpdateDetailsTab() {
 	Vector2 nodeMouse = Vector2(DropletWindow::transformedMouse.x, DropletWindow::transformedMouse.y + (DropletWindow::roomRect.y1 - DropletWindow::roomRect.y0)) * 20.0;
 	double mouseDistance = 0.3 * DropletWindow::cameraScale;
 
+	glEnable(GL_BLEND);
 	for (Object *object : DropletWindow::objects) {
 		object->draw(Vector2(DropletWindow::roomRect.x0, DropletWindow::roomRect.y0));
 
@@ -213,6 +216,7 @@ void UpdateDetailsTab() {
 			strokeCircle(nodeRenderPos.x, nodeRenderPos.y, 0.01 * DropletWindow::cameraScale, 8);
 		}
 	}
+	glDisable(GL_BLEND);
 
 	if (UI::mouse.justClicked() && hoveredNode != nullptr) {
 		movingNode = hoveredNode;
@@ -323,6 +327,25 @@ void UpdateDetailsTab() {
 			water.push_back(spot);
 		}
 	}
+}
+
+void UpdateNOTDetailsTab() {
+	if (!DropletWindow::showObjects) return;
+
+	if (hasTerrain && terrain.size() >= 2) {
+		Draw::color(0.0, 1.0, 0.0);
+		Draw::begin(Draw::LINE_STRIP);
+		for (Vector2 &point : terrain) {
+			Draw::vertex(DropletWindow::roomRect.x0 + point.x / 20.0, DropletWindow::roomRect.y0 + point.y / 20.0);
+		}
+		Draw::end();
+	}
+
+	glEnable(GL_BLEND);
+	for (Object *object : DropletWindow::objects) {
+		object->draw(Vector2(DropletWindow::roomRect.x0, DropletWindow::roomRect.y0));
+	}
+	glDisable(GL_BLEND);
 }
 
 void verifyShortcut(int x, int y) {
@@ -704,6 +727,9 @@ bool drawCameraAngle(double x, double y, Vector2 &angle, bool dragging) {
 	return false;
 }
 
+const Vector2 cameraSizeTiles(70, 40);
+const Vector2 cameraSizeLarge(68.3, 38.4);
+const Vector2 cameraSizeSmall(51.2, 38.4);
 void UpdateCameraTab() {
 	static DropletWindow::Camera *draggingCamera = nullptr;
 	static int draggingCameraAngle = -1;
@@ -714,9 +740,6 @@ void UpdateCameraTab() {
 		draggingCameraAngle = -1;
 	}
 
-	Vector2 cameraSizeTiles(70, 40);
-	Vector2 cameraSizeLarge(68.3, 38.4);
-	Vector2 cameraSizeSmall(51.2, 38.4);
 	glEnable(GL_BLEND);
 	int i = 1;
 	bool newSelectedCamera = false;
@@ -783,6 +806,19 @@ void UpdateCameraTab() {
 			DropletWindow::selectedCamera = nullptr;
 		}
 	}
+}
+
+void UpdateNOTCameraTab() {
+	if (!DropletWindow::showObjects) return;
+
+	glEnable(GL_BLEND);
+	for (DropletWindow::Camera &camera : DropletWindow::cameras) {
+		Vector2 center(camera.position.x + cameraSizeTiles.x * 0.5, camera.position.y + cameraSizeTiles.y * 0.5);
+		Draw::color(Color(0.0, 1.0, 0.0));
+		strokeRect(Rect::fromSize(camera.position.x, -camera.position.y, cameraSizeTiles.x, -cameraSizeTiles.y));
+		strokeRect(Rect::fromSize(center.x - cameraSizeSmall.x * 0.5, -center.y - cameraSizeSmall.y * 0.5, cameraSizeSmall.x, cameraSizeSmall.y));
+	}
+	glDisable(GL_BLEND);
 }
 
 void drawWater(bool border) {
@@ -1013,9 +1049,25 @@ void DropletWindow::Draw() {
 
 	blockMouse = UI::mouse.y >= (UI::screenBounds.y - 0.12) || UI::mouse.x >= (UI::screenBounds.x - 0.41);
 
-	if (currentTab == DropletWindow::EditorTab::DETAILS) UpdateDetailsTab();
-	if (currentTab == DropletWindow::EditorTab::GEOMETRY) UpdateGeometryTab();
-	if (currentTab == DropletWindow::EditorTab::CAMERA) UpdateCameraTab();
+	if (currentTab == DropletWindow::EditorTab::DETAILS) {
+		UpdateDetailsTab();
+	}
+	else {
+		UpdateNOTDetailsTab();
+	}
+
+	if (currentTab == DropletWindow::EditorTab::GEOMETRY) {
+		UpdateGeometryTab();
+	} else {
+		// UpdateNOTGeometryTab();
+	}
+
+	if (currentTab == DropletWindow::EditorTab::CAMERA) {
+		UpdateCameraTab();
+	}
+	else {
+		UpdateNOTCameraTab();
+	}
 
 	// Draw UI
 	applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, UI::screenBounds);

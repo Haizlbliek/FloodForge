@@ -74,13 +74,17 @@ MudPitObject::MudPitObject() : Object() {
 }
 
 void MudPitObject::draw(Vector2 offset) const {
-	Draw::color(0.478, 0.282, 0.196);
-	strokeRect(Rect::fromSize(
+	Rect rect = Rect::fromSize(
 		offset.x + nodes[0]->pos.x / 20.0,
 		offset.y + nodes[0]->pos.y / 20.0,
 		nodes[1]->pos.x / 20.0,
 		nodes[1]->pos.y / 20.0
-	));
+	);
+
+	Draw::color(0.478, 0.282, 0.196);
+	strokeRect(rect);
+	Draw::color(0.478, 0.282, 0.196, 0.25);
+	fillRect(rect);
 }
 
 

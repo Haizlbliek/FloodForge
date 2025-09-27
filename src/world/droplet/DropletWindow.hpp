@@ -57,6 +57,8 @@ namespace DropletWindow {
 	extern Texture *toolsTexture;
 	extern Texture *shortcutsTexture;
 
+	extern bool showObjects;
+
 	extern Vector2 cameraOffset;
 	extern double cameraScale;
 	extern double cameraScaleTo;

@@ -350,6 +350,13 @@ void MenuItems::initDroplet() {
 			}));
 		}
 	);
+
+	addButton("Show objects", MENU_LAYER_DROPLET).OnPress(
+		[](Button *button) {
+			DropletWindow::showObjects = !DropletWindow::showObjects;
+			button->Text(DropletWindow::showObjects ? "Hide objects" : "Show objects");
+		}
+	);
 }
 
 void MenuItems::cleanup() {
