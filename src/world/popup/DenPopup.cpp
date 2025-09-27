@@ -265,32 +265,26 @@ void DenPopup::draw() {
 				setThemeColour(ThemeColour::Text);
 				float number = creature->data;
 				std::ostringstream ss;
+				std::string tag = creature->tag;
 
-				if (creature->tag == "MEAN" || creature->tag == "LENGTH") {
+				if (tag == "MEAN" || tag == "LENGTH") {
 					ss << std::fixed << std::setprecision(2) << std::setw(3) << number;
-				} else if (creature->tag == "SEED" || creature->tag == "RotType") {
+				} else if (tag == "SEED" || tag == "RotType") {
 					ss << std::setw(5) << static_cast<int>(number);
 				}
 
-				std::string output = ss.str();
+				std::string valueStr = ss.str();
+				double xPos = mainX + 0.82;
 
-				if (creature->tag == "MEAN" || creature->tag == "LENGTH") {
-					if (creature->data < 0){
-						Fonts::rainworld->writeCentered(ss.str(), mainX + 0.805, sliderY + 0.028, 0.026, CENTER_Y);
-					} else if (creature->data > 0){
-						Fonts::rainworld->writeCentered(ss.str(), mainX + 0.82, sliderY + 0.028, 0.026, CENTER_Y);
-					} else if (creature->data == 0){
-						Fonts::rainworld->writeCentered(ss.str(), mainX + 0.82, sliderY + 0.028, 0.026, CENTER_Y);
+				if (tag == "MEAN" || tag == "LENGTH") {
+					if (number < 0) {
+						xPos = mainX + 0.805;
 					}
+				} else if (tag == "SEED" || tag == "RotType") {
+					xPos = (number < 4) ? mainX + 0.81 : mainX + 0.809;
 				}
 
-				if (creature->tag == "SEED" || creature->tag == "RotType") {
-					if (creature->data < 4){
-						Fonts::rainworld->writeCentered(ss.str(), mainX + 0.81, sliderY + 0.028, 0.026, CENTER_Y);
-					} else if (creature->data > 3){
-						Fonts::rainworld->writeCentered(ss.str(), mainX + 0.809, sliderY + 0.028, 0.026, CENTER_Y);
-					}
-				}
+				Fonts::rainworld->writeCentered(valueStr, xPos, sliderY + 0.028, 0.026, CENTER_Y);
 			}
 		}
 	}
