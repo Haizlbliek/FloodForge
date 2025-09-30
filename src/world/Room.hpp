@@ -22,6 +22,7 @@ class Room;
 #include "../font/Fonts.hpp"
 #include "../Logger.hpp"
 
+#include "PositionType.hpp"
 #include "TimelineType.hpp"
 #include "Connection.hpp"
 #include "ExtraRoomData.hpp"
@@ -87,8 +88,8 @@ class Room {
 
 		virtual ~Room();
 
-		virtual void drawBlack(Vector2 mousePosition, int positionType);
-		virtual void draw(Vector2 mousePosition, int positionType);
+		virtual void drawBlack(Vector2 mousePosition, PositionType positionType);
+		virtual void draw(Vector2 mousePosition, PositionType positionType);
 
 		void drawDen(Den &den, double x, double y, bool hovered);
 

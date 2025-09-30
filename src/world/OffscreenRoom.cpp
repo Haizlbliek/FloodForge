@@ -48,8 +48,8 @@ Den &OffscreenRoom::getDen() {
 	return dens[0];
 }
 
-void OffscreenRoom::draw(Vector2 mousePosition, int positionType) {
-	Vector2 &position = positionType == CANON_POSITION ? canonPosition : devPosition;
+void OffscreenRoom::draw(Vector2 mousePosition, PositionType positionType) {
+	Vector2 &position = positionType == PositionType::CANON ? canonPosition : devPosition;
 
 	Draw::color(RoomHelpers::RoomAir);
 	fillRect(position.x, position.y, position.x + width, position.y - height);

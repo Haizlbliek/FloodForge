@@ -306,11 +306,16 @@ void MenuItems::initFloodForge() {
 
 	addButton("Canon", MENU_LAYER_FLOOD_FORGE).OnPress(
 		[](Button *button) {
-			if (EditorState::roomPositionType == CANON_POSITION) {
-				EditorState::roomPositionType = DEV_POSITION;
+			if (EditorState::positionType == PositionType::CANON) {
+				EditorState::positionType = PositionType::DEV;
 				button->Text("Dev");
-			} else {
-				EditorState::roomPositionType = CANON_POSITION;
+			}
+			else if (EditorState::positionType == PositionType::DEV) {
+				EditorState::positionType = PositionType::BOTH;
+				button->Text("Both");
+			}
+			else {
+				EditorState::positionType = PositionType::CANON;
 				button->Text("Canon");
 			}
 		}

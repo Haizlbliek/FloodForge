@@ -114,19 +114,19 @@ Room::~Room() {
 	EditorState::screenCount -= cameras;
 }
 
-void Room::drawBlack(Vector2 mousePosition, int positionType) {
+void Room::drawBlack(Vector2 mousePosition, PositionType positionType) {
 	if (data.hidden) {
 		Draw::color(RoomHelpers::RoomSolid.r, RoomHelpers::RoomSolid.g, RoomHelpers::RoomSolid.b, 0.5);
 	} else {
 		Draw::color(RoomHelpers::RoomSolid.r, RoomHelpers::RoomSolid.g, RoomHelpers::RoomSolid.b, 1.0);
 	}
 	
-	Vector2 &position = positionType == CANON_POSITION ? canonPosition : devPosition;
+	Vector2 &position = positionType == PositionType::CANON ? canonPosition : devPosition;
 	fillRect(position.x, position.y - height, position.x + width, position.y);
 }
 
-void Room::draw(Vector2 mousePosition, int positionType) {
-	Vector2 &position = positionType == CANON_POSITION ? canonPosition : devPosition;
+void Room::draw(Vector2 mousePosition, PositionType positionType) {
+	Vector2 &position = positionType == PositionType::CANON ? canonPosition : devPosition;
 
 	if (!valid) {
 		Draw::color(1.0, 0.0, 0.0);
@@ -183,7 +183,7 @@ void Room::draw(Vector2 mousePosition, int positionType) {
 	if (data.hidden) {
 		alpha = 0.5f;
 	}
-	if (positionType != EditorState::roomPositionType) {
+	if (positionType != EditorState::positionType) {
 		alpha *= 0.5f;
 	}
 	glUniform4f(tintLoc, tint.r, tint.g, tint.b, alpha);
@@ -200,7 +200,7 @@ void Room::draw(Vector2 mousePosition, int positionType) {
 
 	glDisable(GL_BLEND);
 
-	if (EditorState::visibleDevItems && positionType == EditorState::roomPositionType) {
+	if (EditorState::visibleDevItems && positionType == EditorState::positionType) {
 		for (DevItem item : data.devItems) {
 			if (item.texture == 0) continue;
 	
@@ -211,7 +211,7 @@ void Room::draw(Vector2 mousePosition, int positionType) {
 		}
 	}
 
-	if (positionType == EditorState::roomPositionType) {
+	if (positionType == EditorState::positionType) {
 		for (int i = 0; i < denEntrances.size(); i++) {
 			drawDen(dens[i], position.x + denEntrances[i].x, position.y - denEntrances[i].y, i == hoveredDen);
 		}
@@ -473,7 +473,7 @@ void Room::ToggleTag(const std::string newTag) {
 const std::vector<std::string> Room::Tags() const { return tags; }
 
 void Room::moveBoth() {
-	if (EditorState::roomPositionType == CANON_POSITION) {
+	if (EditorState::positionType == PositionType::CANON) {
 		devPosition = canonPosition;
 	} else {
 		canonPosition = devPosition;
@@ -481,11 +481,11 @@ void Room::moveBoth() {
 }
 
 Vector2 &Room::currentPosition() {
-	return EditorState::roomPositionType == CANON_POSITION ? canonPosition : devPosition;
+	return EditorState::positionType == PositionType::CANON ? canonPosition : devPosition;
 }
 
 const Vector2 Room::staticCurrentPosition() const {
-	return EditorState::roomPositionType == CANON_POSITION ? canonPosition : devPosition;
+	return EditorState::positionType == PositionType::CANON ? canonPosition : devPosition;
 }
 
 std::vector<uint8_t> Room::parseStringToUint8Vector(const std::string& input) {

@@ -23,7 +23,7 @@ namespace EditorState {
 	double selectorScale = 1.0;
 
 	int roomColours = 0;
-	int roomPositionType = CANON_POSITION;
+	PositionType positionType = PositionType::CANON;
 	bool visibleLayers[] = { true, true, true };
 	bool visibleDevItems = false;
 

@@ -16,8 +16,6 @@
 #define ROOM_SNAP_NONE 0
 #define ROOM_SNAP_TILE 1
 
-#define CANON_POSITION 2
-#define DEV_POSITION 3
 
 
 extern std::string ROOM_TAGS[ROOM_TAG_COUNT];
@@ -27,6 +25,7 @@ extern std::string ROOM_TAG_NAMES[ROOM_TAG_COUNT];
 #include "OffscreenRoom.hpp"
 #include "Connection.hpp"
 #include "Region.hpp"
+#include "PositionType.hpp"
 
 namespace EditorState {
 	extern bool dropletOpen;
@@ -47,7 +46,7 @@ namespace EditorState {
 	extern bool placingRoom;
 
 	extern int roomColours;
-	extern int roomPositionType;
+	extern PositionType positionType;
 	extern bool visibleLayers[LAYER_COUNT];
 	extern bool visibleDevItems;
 

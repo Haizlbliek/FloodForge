@@ -167,7 +167,7 @@ void FloodForgeWindow::updateOriginalControls() {
 
 					roomPosition.add(offset);
 
-					if (UI::window->modifierPressed(GLFW_MOD_ALT)) {
+					if (UI::window->modifierPressed(GLFW_MOD_ALT) || EditorState::positionType == PositionType::BOTH) {
 						room2->moveBoth();
 					}
 				}
@@ -919,23 +919,39 @@ void FloodForgeWindow::Draw() {
 		if (!EditorState::visibleLayers[room->layer]) continue;
 		if (!room->data.merge) continue;
 
-		room->drawBlack(worldMouse, EditorState::roomPositionType);
+		if (EditorState::positionType == PositionType::BOTH) {
+			room->drawBlack(worldMouse, PositionType::CANON);
+			room->drawBlack(worldMouse, PositionType::DEV);
+		} else {
+			room->drawBlack(worldMouse, EditorState::positionType);
+		}
 	}
 	for (Room *room : EditorState::rooms) {
 		if (!EditorState::visibleLayers[room->layer]) continue;
 
 		if (!room->data.merge) {
-			room->drawBlack(worldMouse, EditorState::roomPositionType);
+			if (EditorState::positionType == PositionType::BOTH) {
+				room->drawBlack(worldMouse, PositionType::CANON);
+				room->drawBlack(worldMouse, PositionType::DEV);
+			} else {
+				room->drawBlack(worldMouse, EditorState::positionType);
+			}
 		}
 
-		room->draw(worldMouse, EditorState::roomPositionType);
-		if (UI::window->modifierPressed(GLFW_MOD_ALT)) {
-			room->draw(worldMouse, (EditorState::roomPositionType == CANON_POSITION) ? DEV_POSITION : CANON_POSITION);
+		if (EditorState::positionType == PositionType::BOTH) {
+			room->draw(worldMouse, PositionType::CANON);
+			room->draw(worldMouse, PositionType::DEV);
+		} else {
+			room->draw(worldMouse, EditorState::positionType);
+			if (UI::window->modifierPressed(GLFW_MOD_ALT)) {
+				room->draw(worldMouse, (EditorState::positionType == PositionType::CANON) ? PositionType::DEV : PositionType::CANON);
+			}
 		}
+
 		if (EditorState::selectedRooms.find(room) != EditorState::selectedRooms.end()) {
 			setThemeColour(ThemeColour::SelectionBorder);
-			Vector2 &roomPosition = room->currentPosition();
-			strokeRect(Rect::fromSize(roomPosition.x, roomPosition.y, room->Width(), -room->Height()), 16.0f / EditorState::lineSize);
+			strokeRect(Rect::fromSize(room->devPosition.x, room->devPosition.y, room->Width(), -room->Height()), 16.0f / EditorState::lineSize);
+			strokeRect(Rect::fromSize(room->canonPosition.x, room->canonPosition.y, room->Width(), -room->Height()), 16.0f / EditorState::lineSize);
 		}
 	}
 
