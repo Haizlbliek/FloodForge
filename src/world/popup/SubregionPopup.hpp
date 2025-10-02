@@ -21,7 +21,7 @@ class SubregionPopup : public Popup {
 		
 		void close();
 		
-		bool canStack(std::string popupName) { return popupName == "SubregionNewPopup" || popupName == "InfoPopup"; }
+		bool canStack(std::string popupName) { return popupName == "SubregionNewPopup" || popupName == "InfoPopup" || popupName == "ColorEditPopup"; }
 		std::string PopupName() { return "SubregionPopup"; }
 
 	private:

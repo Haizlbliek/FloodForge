@@ -94,6 +94,9 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 					}
 				}
 			}
+		} else if (startsWith(line, "//")) {
+			EditorState::region.extraMap += line + "\n";
+			continue;
 		} else if (startsWith(line, "Connection: ")) {
 			// Skip
 		} else {
@@ -905,16 +908,25 @@ void WorldParser::parseProperties(std::filesystem::path propertiesFilePath) {
 			std::string attractivenesses = line.substr(line.find(':') + 2);
 			std::string room = attractivenesses.substr(0, attractivenesses.find(':'));
 			std::vector<std::string> states = split(attractivenesses.substr(attractivenesses.find(':') + 2), ',');
-			
+
 			std::unordered_map<std::string, RoomAttractiveness> attractiveness;
 			for (std::string state : states) {
 				std::string creature = state.substr(0, state.find_first_of('-'));
 				std::string value = state.substr(state.find_first_of('-') + 1);
-				
+
 				creature = CreatureTextures::parse(creature);
 				attractiveness[creature] = parseRoomAttractiveness(toLower(value));
 			}
 			EditorState::region.roomAttractiveness.push_back({ toLower(room), attractiveness });
+		} else if (startsWith(line, "//FloodForge|")) {
+			std::vector<std::string> splits = split(line, '|');
+			try {
+				if (splits[1] == "SubregionColorOverride") {
+					EditorState::region.overrideSubregionColors[std::stoi(splits[2])] = stringToColour(splits[3]);
+				}
+			} catch (std::exception err) {
+				Logger::info("Error while loading property comment: ", line);
+			}
 		} else {
 			EditorState::region.extraProperties += line + "\n";
 		}

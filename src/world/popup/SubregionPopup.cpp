@@ -1,6 +1,7 @@
 #include "SubregionPopup.hpp"
 
 #include "../../ui/UI.hpp"
+#include "ColorEditPopup.hpp"
 
 SubregionPopup::SubregionPopup(std::set<Room*> newRooms) : Popup() {
 	for (Room *room : newRooms) rooms.insert(room);
@@ -97,7 +98,7 @@ void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion,
 			close();
 		}
 
-		if (UI::TextButton(Rect(0.335 + centerX, y, 0.4 + centerX, y - 0.05), "X")) {
+		if (UI::TextButton(Rect(0.335 + centerX, y, 0.385 + centerX, y - 0.05), "X")) {
 			if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
 				EditorState::subregions.erase(EditorState::subregions.begin() + subregionId);
 
@@ -128,6 +129,30 @@ void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion,
 				} else {
 					Popups::addPopup(new InfoPopup("Cannot remove subregion if assigned to rooms\n(Hold shift to force)"));
 				}
+			}
+		}
+	}
+
+	if (subregionId >= -1) {
+		std::vector<Colour> colors = Settings::getSetting<std::vector<Colour>>(Settings::Setting::SubregionColors);
+		Colour subregionColor = Settings::getSetting<Colour>(Settings::Setting::NoSubregionColor);
+		if (colors.size() != 0 && subregionId != -1) {
+			subregionColor = colors[subregionId % colors.size()];
+		}
+		bool exists = EditorState::region.overrideSubregionColors.count(subregionId) > 0;
+		if (exists) {
+			subregionColor = EditorState::region.overrideSubregionColors[subregionId];
+		}
+		if (UI::TextureButton(UVRect(0.395 + centerX, y, 0.445 + centerX, y - 0.05).uv(exists ? 0.75 : 0.5, 0.25, exists ? 1.0 : 0.75, 0.5), UI::TextureButtonMods().TextureColor(subregionColor))) {
+			if (!exists) {
+				EditorState::region.overrideSubregionColors[subregionId] = subregionColor;
+			}
+	
+			Popups::addPopup(new ColorEditPopup(EditorState::region.overrideSubregionColors[subregionId]));
+		}
+		if (exists) {
+			if (UI::TextureButton(UVRect::fromSize(0.455 + centerX, y - 0.01, 0.03, -0.03).uv(0.5, 0.25, 0.75, 0.0))) {
+				EditorState::region.overrideSubregionColors.erase(subregionId);
 			}
 		}
 	}

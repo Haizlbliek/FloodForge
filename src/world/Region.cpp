@@ -18,10 +18,12 @@ void Region::reset() {
 	EditorState::offscreenDen = nullptr;
 	extraProperties = "";
 	extraWorld = "";
+	extraMap = "";
 	exportDirectory = "";
 	complicatedCreatures = "";
 	acronym = "";
 	EditorState::selectedRooms.clear();
 	EditorState::roomPossibleSelect = nullptr;
 	EditorState::selectingState = 0;
+	overrideSubregionColors.clear();
 }

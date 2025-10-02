@@ -498,7 +498,7 @@ void openURL(std::string url) {
 #endif
 
 
-std::string loadShaderSource(const char* filePath) {
+std::string loadShaderSource(std::filesystem::path filePath) {
 	std::ifstream shaderFile(filePath);
 	if (!shaderFile.is_open()) {
 		Logger::error("Failed to open shader file: ", filePath);
@@ -550,7 +550,7 @@ GLuint linkShaders(GLuint vertexShader, GLuint fragmentShader) {
 	return program;
 }
 
-GLuint loadShaders(const char* vertexPath, const char* fragmentPath) {
+GLuint loadShaders(std::filesystem::path vertexPath, std::filesystem::path fragmentPath) {
 	std::string vertexSource = loadShaderSource(vertexPath);
 	std::string fragmentSource = loadShaderSource(fragmentPath);
 
@@ -561,6 +561,8 @@ GLuint loadShaders(const char* vertexPath, const char* fragmentPath) {
 
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
+
+	Logger::info("Loaded shader ", vertexPath.stem().string(), "-", fragmentPath.stem().string(), " sucessfully!");
 
 	return shaderProgram;
 }
@@ -611,4 +613,40 @@ std::string toFixed(double x, int decimals) {
 	std::stringstream ss;
 	ss << std::fixed << std::setprecision(decimals) << x;
 	return ss.str();
+}
+
+Colour stringToColour(const std::string &hex) {
+	if (hex.size() != 7 || hex[0] != '#') {
+		throw std::invalid_argument("Invalid hex color format. Expected format: #RRGGBB but got " + hex + " instead");
+	}
+
+	int red, green, blue;
+	std::stringstream ss;
+	ss << std::hex;
+
+	ss.str(hex.substr(1, 2));
+	ss.clear();
+	ss >> red;
+
+	ss.str(hex.substr(3, 2));
+	ss.clear();
+	ss >> green;
+
+	ss.str(hex.substr(5, 2));
+	ss.clear();
+	ss >> blue;
+
+	return Colour(red / 255.0, green / 255.0, blue / 255.0);
+}
+
+char individualIntToHex(int x) {
+	return (x < 10) ? ('0' + x) : ('a' + (x - 10));
+}
+
+std::string intToHex(int x) {
+	return std::string(1, individualIntToHex(x / 16)) + individualIntToHex(x % 16);
+}
+
+std::string colourToString(const Colour &colour) {
+	return "#" + intToHex((int) (colour.r * 255)) + intToHex((int) (colour.g * 255)) + intToHex((int) (colour.b * 255)) + ((colour.a >= 1.0f) ? "" : intToHex((int) (colour.a * 255)));
 }

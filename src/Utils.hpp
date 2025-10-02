@@ -69,10 +69,14 @@ std::vector<std::string> split(const std::string &text, char delimiter);
 
 void openURL(std::string url);
 
-GLuint loadShaders(const char* vertexPath, const char* fragmentPath);
+GLuint loadShaders(std::filesystem::path vertexPath, std::filesystem::path fragmentPath);
 
 void replaceLastInstance(std::string& str, const std::string& old_sub, const std::string& new_sub);
 
 char parseCharacter(char character, bool shiftPressed, bool capsPressed);
 
 std::string toFixed(double x, int decimals);
+
+Colour stringToColour(const std::string &hex);
+
+std::string colourToString(const Colour &colour);

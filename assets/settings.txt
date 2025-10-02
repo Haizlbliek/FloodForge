@@ -46,6 +46,18 @@ HideTutorial: false
 // If false, exported worlds are stored in `FloodForge/worlds` and need to be manually copied into their respective directories
 UpdateWorldFiles: true
 
+// The default color for rooms without a subregion when `Subregion Colors` is enabled
+// Format: #RRGGBB
+NoSubregionColor: #ffffff
+
+// List of default colors for rooms when `Subregion Colors` is enabled
+// The color picked is based on subregion index, first color for first subregion, second for second, e.t.c. Wraps when out of colors
+// Format: #R1G1B1, #R2G2B2, ...
+SubregionColors: #ff0000, #00ff00, #0000ff, #ffff00, #00ffff, #ff00ff, #ff7f00, #7f7f7f, #7f00ff, #ff7fff
+
+// How strong of a color tinting is applied to rooms when either `Layer Colors` or `Subregion Colors` is enabled.
+// Recommended range: 0.5 - 1.0
+RoomTintStrength: 0.5
 
 
 // DEBUG ONLY!

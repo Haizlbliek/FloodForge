@@ -34,7 +34,7 @@ void AcronymPopup::draw() {
 		acronym.value.clear();
 	}
 
-	if (UI::TextButton(Rect(centreX + 0.05, bounds.y1 - 0.28, centreX + 0.2, bounds.y1 - 0.22), "Confirm", UI::TextButtonMods().Disabled(acronymResponse.focused || acronym.value.length() < 2))) {
+	if (UI::TextButton(Rect(centreX + 0.05, bounds.y1 - 0.28, centreX + 0.2, bounds.y1 - 0.22), "Confirm", UI::TextButtonMods().Disabled(acronymResponse.focused || acronym.value.length() < minLength()))) {
 		canClose = true;
 		submit(acronym.value);
 		acronym.value.clear();

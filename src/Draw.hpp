@@ -91,6 +91,8 @@ namespace Draw {
 	inline void scale(float x, float y, float z) { scale({x, y, z}); };
 	inline void rotate(float angle, float x, float y, float z) { rotate(angle, {x, y, z}); }
 
+	void useProgram(GLuint program);
+
 	/**
 	 * @brief Flush batched geometry to the GPU.
 	 * Draw commands geometry into a buffer stored in RAM. This command

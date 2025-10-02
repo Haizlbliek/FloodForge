@@ -21,6 +21,7 @@ class SubregionNewPopup : public AcronymPopup {
 
 		void submit(std::string acronym) override;
 
+		int minLength() override { return 1; };
 		std::string banLetters() override { return ":<>"; };
 
 		bool canStack(std::string popupName) { return false; }

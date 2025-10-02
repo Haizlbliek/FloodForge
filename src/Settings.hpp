@@ -10,6 +10,8 @@
 #include "Utils.hpp"
 #include "Theme.hpp"
 
+using SettingType = std::variant<double, int, bool, Colour, std::string, std::vector<Colour>>;
+
 namespace Settings {
 	enum class Setting {
 		CameraPanSpeed,
@@ -23,10 +25,13 @@ namespace Settings {
 		HideTutorial,
 		KeepFilesystemPath,
 		UpdateWorldFiles,
-		DebugVisibleOutputPadding
+		DebugVisibleOutputPadding,
+		NoSubregionColor,
+		SubregionColors,
+		RoomTintStrength,
 	};
 
-	extern std::unordered_map<Setting, std::variant<double, int, bool, Colour, std::string>> settings;
+	extern std::unordered_map<Setting, SettingType> settings;
 
 	void loadDefaults();
 

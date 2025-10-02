@@ -43,7 +43,7 @@ const char *SHADER_FRAG_SRC = "#version 330 core\n"
 "fragColor = texture(uTexture, texCoord) * color;\n"
 "}\n";
 
-struct {    
+struct {
 	VertexData batchVertices[MAX_VERTICES];
 	uint32_t batchIndices[MAX_INDICES];
 
@@ -57,6 +57,7 @@ struct {
 	GLuint gpuProgram;
 	GLuint mvpUniform;
 	GLuint texUniform;
+	GLuint activeProgram;
 
 	GLuint placeholderTexture;
 	GLuint activeTexture;
@@ -163,6 +164,7 @@ void Draw::init() {
 
 		drawState.mvpUniform = glGetUniformLocation(program, "uMvp");
 		drawState.texUniform = glGetUniformLocation(program, "uTexture");
+		drawState.activeProgram = program;
 	}
 
 	glDeleteShader(vtxShader);
@@ -216,7 +218,7 @@ void Draw::flush() {
 	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, drawState.indexCount * sizeof(uint32_t), drawState.batchIndices);
 
 	// update shader and bind texture
-	glUseProgram(drawState.gpuProgram);
+	glUseProgram(drawState.activeProgram);
 
 	if (Draw::flushOnEnd) {
 		mat4 &modelView = drawState.mats[Draw::MODELVIEW].cur;
@@ -243,6 +245,16 @@ void Draw::useTexture(GLuint textureId) {
 		drawState.activeTexture = drawState.placeholderTexture;
 	} else {
 		drawState.activeTexture = textureId;
+	}
+}
+
+void Draw::useProgram(GLuint programId) {
+	if (programId == 0) {
+		drawState.activeProgram = drawState.gpuProgram;
+		glUseProgram(0);
+	} else {
+		drawState.activeProgram = programId;
+		glUseProgram(programId);
 	}
 }
 

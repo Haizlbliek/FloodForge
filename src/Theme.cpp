@@ -43,30 +43,6 @@ std::unordered_map<ThemeColour, Colour> currentTheme;
 
 std::string currentThemeName = "";
 
-Colour parseHexColor(const std::string &hex) {
-	if (hex.size() != 7 || hex[0] != '#') {
-		throw std::invalid_argument("Invalid hex color format. Expected format: #RRGGBB but got " + hex + " instead");
-	}
-
-	int red, green, blue;
-	std::stringstream ss;
-	ss << std::hex;
-
-	ss.str(hex.substr(1, 2));
-	ss.clear();
-	ss >> red;
-
-	ss.str(hex.substr(3, 2));
-	ss.clear();
-	ss >> green;
-
-	ss.str(hex.substr(5, 2));
-	ss.clear();
-	ss >> blue;
-
-	return Colour(red / 255.0, green / 255.0, blue / 255.0);
-}
-
 void loadTheme(std::string theme) {
 	std::filesystem::path themePath = BASE_PATH / "assets" / "themes" / (theme + ".txt");
 	if (!std::filesystem::exists(themePath)) return;
@@ -84,7 +60,7 @@ void loadTheme(std::string theme) {
 
 		std::string colourString = line.substr(line.find_first_of(':') + 2);
 		colourString.erase(std::remove(colourString.begin(), colourString.end(), '\r'), colourString.end());
-		Colour colour = parseHexColor(colourString);
+		Colour colour = stringToColour(colourString);
 
 		if      (startsWith(line, "Background:"           )) currentTheme[ThemeColour::Background           ] = colour;
 		else if (startsWith(line, "Grid:"                 )) currentTheme[ThemeColour::Grid                 ] = colour;

@@ -151,21 +151,27 @@ void Room::draw(Vector2 mousePosition, PositionType positionType) {
 		if (layer == 1) tint = Colour(1.0, 1.0, 1.0);
 		if (layer == 2) tint = Colour(0.0, 1.0, 0.0);
 	}
-	
+
 	if (EditorState::roomColours == 2) {
-		if (subregion == -1) tint = Colour(1.0, 1.0, 1.0);
-		if (subregion ==  0) tint = Colour(1.0, 0.0, 0.0);
-		if (subregion ==  1) tint = Colour(0.0, 1.0, 0.0);
-		if (subregion ==  2) tint = Colour(0.0, 0.0, 1.0);
-		if (subregion ==  3) tint = Colour(1.0, 1.0, 0.0);
-		if (subregion ==  4) tint = Colour(0.0, 1.0, 1.0);
-		if (subregion ==  5) tint = Colour(1.0, 0.0, 1.0);
-		if (subregion ==  6) tint = Colour(1.0, 0.5, 0.0);
-		if (subregion ==  7) tint = Colour(1.0, 1.0, 0.5);
-		if (subregion ==  8) tint = Colour(0.5, 1.0, 0.0);
-		if (subregion ==  9) tint = Colour(1.0, 1.0, 0.5);
-		if (subregion == 10) tint = Colour(0.5, 0.0, 1.0);
-		if (subregion == 11) tint = Colour(1.0, 0.5, 1.0);
+		if (subregion <= -1) {
+			if (EditorState::region.overrideSubregionColors.count(-1) > 0) {
+				tint = EditorState::region.overrideSubregionColors[-1];
+			} else {
+				tint = Settings::getSetting<Colour>(Settings::Setting::NoSubregionColor);
+			}
+		}
+		else {
+			std::vector<Colour> subregionColors = Settings::getSetting<std::vector<Colour>>(Settings::Setting::SubregionColors);
+			if (subregionColors.size() == 0) {
+				tint = Settings::getSetting<Colour>(Settings::Setting::NoSubregionColor);
+			} else {
+				tint = subregionColors[subregion % subregionColors.size()];
+			}
+
+			if (EditorState::region.overrideSubregionColors.count(subregion) > 0) {
+				tint = EditorState::region.overrideSubregionColors[subregion];
+			}
+		}
 	}
 
 	glEnable(GL_BLEND);
@@ -176,6 +182,7 @@ void Room::draw(Vector2 mousePosition, PositionType positionType) {
 	GLuint projLoc = glGetUniformLocation(Shaders::roomShader, "projection");
 	GLuint modelLoc = glGetUniformLocation(Shaders::roomShader, "model");
 	GLuint tintLoc = glGetUniformLocation(Shaders::roomShader, "tintColour");
+	GLuint tintStrengthLoc = glGetUniformLocation(Shaders::roomShader, "tintStrength");
 
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(EditorState::cameraOffset, EditorState::cameraScale * UI::screenBounds).m);
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelMatrix(position.x, position.y).m);
@@ -187,6 +194,7 @@ void Room::draw(Vector2 mousePosition, PositionType positionType) {
 		alpha *= 0.5f;
 	}
 	glUniform4f(tintLoc, tint.r, tint.g, tint.b, alpha);
+	glUniform1f(tintStrengthLoc, Settings::getSetting<double>(Settings::Setting::RoomTintStrength));
 
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
 

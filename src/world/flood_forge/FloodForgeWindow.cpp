@@ -272,7 +272,7 @@ void FloodForgeWindow::updateFloodForgeControls() {
 					}
 
 					roomPosition.add(offset);
-					if (UI::window->modifierPressed(GLFW_MOD_ALT)) {
+					if (UI::window->modifierPressed(GLFW_MOD_ALT) || EditorState::positionType == PositionType::BOTH) {
 						room2->moveBoth();
 					}
 				}
@@ -950,8 +950,12 @@ void FloodForgeWindow::Draw() {
 
 		if (EditorState::selectedRooms.find(room) != EditorState::selectedRooms.end()) {
 			setThemeColour(ThemeColour::SelectionBorder);
-			strokeRect(Rect::fromSize(room->devPosition.x, room->devPosition.y, room->Width(), -room->Height()), 16.0f / EditorState::lineSize);
-			strokeRect(Rect::fromSize(room->canonPosition.x, room->canonPosition.y, room->Width(), -room->Height()), 16.0f / EditorState::lineSize);
+			if (EditorState::positionType == PositionType::DEV || EditorState::positionType == PositionType::BOTH) {
+				strokeRect(Rect::fromSize(room->devPosition.x, room->devPosition.y, room->Width(), -room->Height()), 16.0f / EditorState::lineSize);
+			}
+			if (EditorState::positionType == PositionType::CANON || EditorState::positionType == PositionType::BOTH) {
+				strokeRect(Rect::fromSize(room->canonPosition.x, room->canonPosition.y, room->Width(), -room->Height()), 16.0f / EditorState::lineSize);
+			}
 		}
 	}
 
