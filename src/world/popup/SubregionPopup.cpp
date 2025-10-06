@@ -26,7 +26,7 @@ void SubregionPopup::draw() {
 	if (rooms.size() > 0) {
 		setThemeColour(ThemeColour::Text);
 		if (rooms.size() == 1) {
-			Fonts::rainworld->writeCentered(toUpper((*rooms.begin())->roomName), centreX, bounds.y1 - 0.09, 0.04, CENTER_XY);
+			Fonts::rainworld->writeCentered((*rooms.begin())->roomName, centreX, bounds.y1 - 0.09, 0.04, CENTER_XY);
 		} else {
 			Fonts::rainworld->writeCentered("Selected Rooms", centreX, bounds.y1 - 0.07, 0.04, CENTER_XY);
 		}

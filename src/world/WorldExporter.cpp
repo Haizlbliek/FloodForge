@@ -27,7 +27,7 @@ void WorldExporter::exportMapFile() {
 		);
 
 		file << std::setprecision(12);
-		file << toUpper(room->roomName) << ": ";
+		file << room->roomName << ": ";
 		file << canonPosition.x << "><" << canonPosition.y << "><";
 		file << devPosition.x << "><" << devPosition.y << "><";
 		file << room->layer << "><";
@@ -63,8 +63,8 @@ void WorldExporter::exportMapFile() {
 		);
 
 		file << "Connection: ";
-		file << toUpper(connection->roomA->roomName) << ",";
-		file << toUpper(connection->roomB->roomName) << ",";
+		file << connection->roomA->roomName << ",";
+		file << connection->roomB->roomName << ",";
 		file << connectionA.x << "," << connectionA.y << ",";
 		file << connectionB.x << "," << connectionB.y << ",";
 		file << (int) connection->roomA->getRoomEntranceDirection(connection->connectionA) << ",";
@@ -96,7 +96,7 @@ void parseConditionalLinkConnection(std::fstream &file, Room *room, Connection *
 		}
 
 		if (connection->timelineType == TimelineType::ONLY) {
-			file << timeline << " : " << toUpper(room->roomName) << " : ";
+			file << timeline << " : " << room->roomName << " : ";
 
 			if (state[timeline][connectionId].first == "DISCONNECTED") {
 				int disconnectedBefore = 0;
@@ -109,10 +109,10 @@ void parseConditionalLinkConnection(std::fstream &file, Room *room, Connection *
 			} else {
 				file << state[timeline][connectionId].first;
 			}
-			file << " : " << toUpper(otherRoom->roomName) << "\n";
+			file << " : " << otherRoom->roomName << "\n";
 
-			if (toUpper(otherRoom->roomName) != state[timeline][connectionId].first) {
-				state[timeline][connectionId] = { toUpper(otherRoom->roomName), true };
+			if (otherRoom->roomName != state[timeline][connectionId].first) {
+				state[timeline][connectionId] = { otherRoom->roomName, true };
 			}
 		}
 		else if (connection->timelineType == TimelineType::EXCEPT) {
@@ -120,7 +120,7 @@ void parseConditionalLinkConnection(std::fstream &file, Room *room, Connection *
 				if (otherTimeline == timeline) continue;
 				if (!state[otherTimeline][connectionId].second) continue;
 
-				file << otherTimeline << " : " << toUpper(room->roomName) << " : ";
+				file << otherTimeline << " : " << room->roomName << " : ";
 				if (state[otherTimeline][connectionId].first == "DISCONNECTED") {
 					int disconnectedBefore = 0;
 					for (int i = 0; i < connectionId; i++) {
@@ -132,10 +132,10 @@ void parseConditionalLinkConnection(std::fstream &file, Room *room, Connection *
 				} else {
 					file << state[otherTimeline][connectionId].first;
 				}
-				file << " : " << toUpper(otherRoom->roomName) << "\n";
+				file << " : " << otherRoom->roomName << "\n";
 			}
 
-			file << timeline << " : " << toUpper(room->roomName) << " : ";
+			file << timeline << " : " << room->roomName << " : ";
 			if (state[timeline][connectionId].second) {
 				if (state[timeline][connectionId].first == "DISCONNECTED") {
 					int disconnectedBefore = 0;
@@ -149,12 +149,12 @@ void parseConditionalLinkConnection(std::fstream &file, Room *room, Connection *
 					file << state[timeline][connectionId].first;
 				}
 			} else {
-				file << toUpper(otherRoom->roomName);
+				file << otherRoom->roomName;
 			}
 			file << " : " << defaultState[connectionId].first << "\n";
 
-			if (toUpper(otherRoom->roomName) != defaultState[connectionId].first) {
-				defaultState[connectionId] = { toUpper(otherRoom->roomName), false };
+			if (otherRoom->roomName != defaultState[connectionId].first) {
+				defaultState[connectionId] = { otherRoom->roomName, false };
 			}
 		}
 	}
@@ -186,9 +186,9 @@ void WorldExporter::exportWorldFile() {
 			if (connection->timelineType != TimelineType::ALL) continue;
 
 			if (connection->roomA == room) {
-				defaultState[connection->connectionA] = { toUpper(connection->roomB->roomName), false };
+				defaultState[connection->connectionA] = { connection->roomB->roomName, false };
 			} else {
-				defaultState[connection->connectionB] = { toUpper(connection->roomA->roomName), false };
+				defaultState[connection->connectionB] = { connection->roomA->roomName, false };
 			}
 		}
 
@@ -218,7 +218,7 @@ void WorldExporter::exportWorldFile() {
 		}
 
 		file << " : " << ((room->timelineType == TimelineType::ONLY) ? "EXCLUSIVEROOM" : "HIDEROOM");
-		file << " : " << toUpper(room->roomName) << "\n";
+		file << " : " << room->roomName << "\n";
 	}
 	file << "END CONDITIONAL LINKS\n\n";
 
@@ -227,7 +227,7 @@ void WorldExporter::exportWorldFile() {
 	for (Room *room : EditorState::rooms) {
 		if (room->isOffscreen()) continue;
 
-		file << toUpper(room->roomName) << " : ";
+		file << room->roomName << " : ";
 
 		std::vector<std::pair<std::string, bool>> connections = roomDefaultStates[room->roomName];
 
@@ -298,7 +298,7 @@ void WorldExporter::exportWorldFile() {
 				if (room == EditorState::offscreenDen) {
 					file << "OFFSCREEN : ";
 				} else {
-					file << toUpper(room->roomName) << " : ";
+					file << room->roomName << " : ";
 				}
 
 				bool first = true;
@@ -364,7 +364,7 @@ void WorldExporter::exportWorldFile() {
 				if (room == EditorState::offscreenDen) {
 					file << "OFFSCREEN : ";
 				} else {
-					file << toUpper(room->roomName) << " : ";
+					file << room->roomName << " : ";
 				}
 
 				if (room == EditorState::offscreenDen) {
@@ -488,7 +488,7 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 		int layerYOffset = (2 - room->layer) * layerHeight + 10;
 
 		if (hasMapFile) {
-			mapFile << toUpper(room->roomName) << ": " << (roomPosition.x + layerXOffset) << "," << (roomPosition.y + layerYOffset) << "," << room->Width() << "," << room->Height() << "\n";
+			mapFile << room->roomName << ": " << (roomPosition.x + layerXOffset) << "," << (roomPosition.y + layerYOffset) << "," << room->Width() << "," << room->Height() << "\n";
 		}
 		
 		for (int ox = 0; ox < room->Width(); ox++) {
@@ -566,7 +566,7 @@ void WorldExporter::exportPropertiesFile(std::filesystem::path outputPath) {
 		if (room->data.attractiveness.empty()) continue;
 		
 		
-		propertiesFile << "Room_Attr: " << toUpper(room->roomName) << ": ";
+		propertiesFile << "Room_Attr: " << room->roomName << ": ";
 		for (std::pair<std::string, RoomAttractiveness> attractivenss : room->data.attractiveness)  {
 			propertiesFile << attractivenss.first << "-";
 			if (attractivenss.second == RoomAttractiveness::NEUTRAL) propertiesFile << "Neutral";

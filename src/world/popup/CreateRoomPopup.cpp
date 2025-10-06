@@ -32,8 +32,8 @@ void CreateRoomPopup::draw() {
 
 	y -= 0.06;
 	setThemeColor(ThemeColour::Text);
-	Fonts::rainworld->writeCentered(toUpper(EditorState::region.acronym) + "_", bounds.x0 + 0.01, y + 0.025, 0.03, CENTER_Y);
-	double roomNameX = Fonts::rainworld->getTextWidth(toUpper(EditorState::region.acronym) + "_", 0.03);
+	Fonts::rainworld->writeCentered(EditorState::region.acronym + "_", bounds.x0 + 0.01, y + 0.025, 0.03, CENTER_Y);
+	double roomNameX = Fonts::rainworld->getTextWidth(EditorState::region.acronym + "_", 0.03);
 	UI::TextInputResponse roomNameResponse = UI::TextInput(Rect::fromSize(bounds.x0 + 0.01 + roomNameX, y, 0.35, 0.05), roomName);
 
 	y -= 0.06;
@@ -155,7 +155,7 @@ void CreateRoomPopup::draw() {
 			errorText = "";
 			canCreate = false;
 		} else {
-			std::string name = toUpper(EditorState::region.acronym) + "_" + roomName.value;
+			std::string name = EditorState::region.acronym + "_" + roomName.value;
 			std::filesystem::path filePath = findFileCaseInsensitive(EditorState::region.roomsDirectory, name + ".txt");
 			if (!filePath.empty()) {
 				canCreate = false;
@@ -172,7 +172,7 @@ void CreateRoomPopup::draw() {
 	}
 
 	if (UI::TextButton(Rect(bounds.x0 + 0.01, bounds.y0 + 0.06, bounds.x0 + 0.26, bounds.y0 + 0.01), "Create", UI::TextButtonMods().Disabled(!canCreate))) {
-		std::string name = toUpper(EditorState::region.acronym) + "_" + roomName.value;
+		std::string name = EditorState::region.acronym + "_" + roomName.value;
 		std::filesystem::path filePath = findFileCaseInsensitive(EditorState::region.roomsDirectory, name + ".txt");
 		if (!filePath.empty()) {
 			Popups::addPopup(new InfoPopup("Room with that name already exists in files!"));

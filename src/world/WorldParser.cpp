@@ -10,7 +10,7 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 	EditorState::region.reset();
 
 	EditorState::region.exportDirectory = path.parent_path();
-	EditorState::region.acronym = toLower(path.filename().generic_u8string());
+	EditorState::region.acronym = path.filename().generic_u8string();
 	EditorState::region.acronym = EditorState::region.acronym.substr(EditorState::region.acronym.find_last_of('_') + 1, EditorState::region.acronym.find_last_of('.') - EditorState::region.acronym.find_last_of('_') - 1);
 	
 	Logger::info("Opening world ", EditorState::region.acronym);
@@ -100,11 +100,11 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 		} else if (startsWith(line, "Connection: ")) {
 			// Skip
 		} else {
-			std::string roomName = toLower(line.substr(0, line.find(':')));
+			std::string roomName = line.substr(0, line.find(':'));
 
 			std::filesystem::path roomPath = EditorState::region.roomsDirectory;
 
-			if (startsWith(roomName, "gate")) {
+			if (startsWith(toLower(roomName), "gate")) {
 				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path(), "gates");
 				Logger::info("Found gate ", roomName);
 			}
@@ -116,7 +116,7 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 
 			Room *room = nullptr;
 
-			if (startsWith(roomName, "offscreenden")) {
+			if (startsWith(toLower(roomName), "offscreenden")) {
 				if (EditorState::offscreenDen == nullptr) {
 					size_t colonPos = line.find(':');
 					std::string offscreenName = (colonPos != std::string::npos) ? line.substr(0, colonPos) : line;
@@ -127,7 +127,7 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 					room = EditorState::offscreenDen;
 				}
 			} else {
-				room = new Room(filePath, roomName);
+				room = new Room(filePath, filePath.stem().string());
 				EditorState::rooms.push_back(room);
 			}
 
@@ -191,11 +191,9 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 	}
 	mapFile.close();
 	
-	for (const auto &[oRoomName, extraRoomData] : extraRoomData) {
-		std::string roomName = toLower(oRoomName);
-
+	for (const auto &[roomName, extraRoomData] : extraRoomData) {
 		for (Room *room : EditorState::rooms) {
-			if (room->roomName == roomName) {
+			if (compareInsensitive(room->roomName, roomName)) {
 				room->data = extraRoomData;
 				break;
 			}
@@ -230,11 +228,11 @@ std::tuple<std::string, std::vector<std::string>, std::vector<std::string>> Worl
 void WorldParser::parseWorldRoom(std::string line, std::filesystem::path directory, std::vector<Quadruple<Room*, int, std::string, int>> &connectionsToAdd) {
 	std::tuple<std::string, std::vector<std::string>, std::vector<std::string>> parts = parseRoomString(line);
 
-	std::string roomName = toLower(std::get<0>(parts));
+	std::string roomName = std::get<0>(parts);
 
 	Room *room = nullptr;
 	for (Room *otherRoom : EditorState::rooms) {
-		if (toLower(otherRoom->roomName) == roomName) {
+		if (compareInsensitive(otherRoom->roomName, roomName)) {
 			room = otherRoom;
 			break;
 		}
@@ -246,7 +244,7 @@ void WorldParser::parseWorldRoom(std::string line, std::filesystem::path directo
 		} else {
 			std::filesystem::path roomPath = EditorState::region.roomsDirectory;
 
-			if (startsWith(roomName, "gate")) {
+			if (startsWith(toLower(roomName), "gate")) {
 				roomPath = findDirectoryCaseInsensitive(roomPath.parent_path(), "gates");
 			}
 
@@ -263,15 +261,14 @@ void WorldParser::parseWorldRoom(std::string line, std::filesystem::path directo
 
 	int connectionId = 0;
 	for (std::string connection : std::get<1>(parts)) {
-		connection = toLower(connection);
-		if (connection == "disconnected") {
+		if (toLower(connection) == "disconnected") {
 			connectionId++;
 			continue;
 		}
 
 		bool alreadyExists = false;
 		for (Quadruple<Room*, int, std::string, int> &connectionData : connectionsToAdd) {
-			if (toLower(connectionData.first->roomName) == connection && connectionData.third == toLower(roomName)) {
+			if (compareInsensitive(connectionData.first->roomName,  connection) && compareInsensitive(connectionData.third, roomName)) {
 				connectionData.fourth = connectionId;
 				alreadyExists = true;
 				break;
@@ -318,20 +315,20 @@ void WorldParser::parseWorldCreature(std::string line) {
 		}
 	}
 
-	std::string roomName = toLower(splits[0]);
+	std::string roomName = splits[0];
 	if (splits[0] == "LINEAGE") {
-		roomName = toLower(splits[1]);
+		roomName = splits[1];
 	}
 	Room *room = nullptr;
 
 	for (Room *otherRoom : EditorState::rooms) {
-		if (toLower(otherRoom->roomName) == roomName) {
+		if (compareInsensitive(otherRoom->roomName, roomName)) {
 			room = otherRoom;
 			break;
 		}
 	}
 
-	if (roomName == "offscreen") {
+	if (toLower(roomName) == "offscreen") {
 		room = EditorState::offscreenDen;
 	}
 
@@ -514,10 +511,10 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 	std::vector<std::string> timelines = split(parts[0], ',');
 
 	if (parts.size() == 3) {
-		std::string roomName = toLower(parts[2]);
+		std::string roomName = parts[2];
 		Room *room = nullptr;
 		for (Room *otherRoom : EditorState::rooms) {
-			if (toLower(otherRoom->roomName) == roomName) {
+			if (compareInsensitive(otherRoom->roomName, roomName)) {
 				room = otherRoom;
 				break;
 			}
@@ -558,10 +555,10 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 		return;
 	}
 
-	std::string roomName = toLower(parts[1]);
+	std::string roomName = parts[1];
 	Room *room = nullptr;
 	for (Room *otherRoom : EditorState::rooms) {
-		if (toLower(otherRoom->roomName) == roomName) {
+		if (compareInsensitive(otherRoom->roomName, roomName)) {
 			room = otherRoom;
 			break;
 		}
@@ -573,7 +570,7 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 		return;
 	}
 
-	std::string currentConnection = toLower(parts[2]);
+	std::string currentConnection = parts[2];
 
 	bool isCurrentDisconnected = false;
 	int disconnectedId = -1;
@@ -584,9 +581,9 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 		isCurrentDisconnected = false;
 	}
 
-	std::string toConnection = toLower(parts[3]);
+	std::string toConnection = parts[3];
 
-	if (currentConnection == toConnection) {
+	if (compareInsensitive(currentConnection, toConnection)) {
 		Logger::warn("Skipping line due to no change");
 		Logger::warn("> ", link);
 		return;
@@ -597,7 +594,7 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 		for (Connection *otherConnection : room->connections) {
 			Room *otherRoom = (otherConnection->roomA == room) ? otherConnection->roomB : otherConnection->roomA;
 
-			if (toLower(otherRoom->roomName) == currentConnection) {
+			if (compareInsensitive(otherRoom->roomName, currentConnection)) {
 				connection = otherConnection;
 				break;
 			}
@@ -645,7 +642,7 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 			for (Connection *otherConnection : room->connections) {
 				Room *otherRoom = (otherConnection->roomA == room) ? otherConnection->roomB : otherConnection->roomA;
 	
-				if (toLower(otherRoom->roomName) == currentConnection) {
+				if (compareInsensitive(otherRoom->roomName,  currentConnection)) {
 					connection = otherConnection;
 					break;
 				}
@@ -675,7 +672,7 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 		for (Connection *otherConnection : room->connections) {
 			Room *otherRoom = (otherConnection->roomA == room) ? otherConnection->roomB : otherConnection->roomA;
 
-			if (toLower(otherRoom->roomName) == toConnection) {
+			if (compareInsensitive(otherRoom->roomName, toConnection)) {
 				connection = otherConnection;
 				break;
 			}
@@ -701,7 +698,7 @@ void WorldParser::parseWorldConditionalLink(std::string link, std::vector<Condit
 			}
 
 			for (ConditionalConnection &connectionData : connectionsToAdd) {
-				if (connectionData.roomB == nullptr && toLower(connectionData.roomA->roomName) == toConnection && connectionData.roomBName == toLower(room->roomName)) {
+				if (connectionData.roomB == nullptr && compareInsensitive(connectionData.roomA->roomName, toConnection) && compareInsensitive(connectionData.roomBName, room->roomName)) {
 					connectionData.roomB = room;
 					connectionData.connectionB = connectionId;
 					return;
@@ -753,7 +750,7 @@ void WorldParser::parseWorld(std::filesystem::path worldFilePath, std::filesyste
 			parseState = ParseState::None;
 	
 			if (EditorState::offscreenDen == nullptr) {
-				EditorState::offscreenDen = new OffscreenRoom("offscreenden" + EditorState::region.acronym, "OffscreenDen" + toUpper(EditorState::region.acronym));
+				EditorState::offscreenDen = new OffscreenRoom("offscreenden" + EditorState::region.acronym, "OffscreenDen" + EditorState::region.acronym);
 				EditorState::rooms.push_back(EditorState::offscreenDen);
 			}
 
@@ -816,7 +813,7 @@ void WorldParser::parseWorld(std::filesystem::path worldFilePath, std::filesyste
 		Room *roomB = nullptr;
 
 		for (Room *room : EditorState::rooms) {
-			if (toLower(room->roomName) == connectionData.third) {
+			if (compareInsensitive(room->roomName, connectionData.third)) {
 				roomB = room;
 				break;
 			}
@@ -917,7 +914,7 @@ void WorldParser::parseProperties(std::filesystem::path propertiesFilePath) {
 				creature = CreatureTextures::parse(creature);
 				attractiveness[creature] = parseRoomAttractiveness(toLower(value));
 			}
-			EditorState::region.roomAttractiveness.push_back({ toLower(room), attractiveness });
+			EditorState::region.roomAttractiveness.push_back({ room, attractiveness });
 		} else if (startsWith(line, "//FloodForge|")) {
 			std::vector<std::string> splits = split(line, '|');
 			try {

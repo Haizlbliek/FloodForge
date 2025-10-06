@@ -357,6 +357,10 @@ std::string toUpper(const std::string &str) {
 	return output;
 }
 
+bool compareInsensitive(const std::string &a, const std::string &b) {
+	return toLower(a) == toLower(b);
+}
+
 std::filesystem::path findDirectoryCaseInsensitive(const std::filesystem::path &directory, const std::string &fileName) {
 	for (const auto &entry : std::filesystem::directory_iterator(directory)) {
 		if (entry.is_directory()) {

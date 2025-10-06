@@ -70,7 +70,7 @@ void RoomHelpers::drawTexture(GLuint texture, double rectX, double rectY, double
 
 Room::Room(std::filesystem::path path, std::string name) {
 	this->path = path;
-	this->roomName = toLower(name);
+	this->roomName = name;
 	this->timelineType = TimelineType::ALL;
 
 	canonPosition = new Vector2(

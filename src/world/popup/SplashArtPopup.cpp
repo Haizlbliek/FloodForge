@@ -56,7 +56,7 @@ void SplashArtPopup::draw() {
 
 		std::string recent = RecentFiles::recentsNames[i];
 		if (recent.empty()) {
-			recent = toLower(RecentFiles::recents[i].stem().generic_u8string());
+			recent = RecentFiles::recents[i].stem().generic_u8string();
 		}
 
 		double y = -0.33 - i * 0.04;

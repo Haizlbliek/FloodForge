@@ -43,8 +43,8 @@ void AcronymPopup::draw() {
 
 void AcronymPopup::submit(std::string acronym) {
 	EditorState::region.reset();
-	EditorState::offscreenDen = new OffscreenRoom("offscreenden" + toLower(acronym), "OffscreenDen" + toUpper(acronym));
+	EditorState::offscreenDen = new OffscreenRoom("offscreenden" + acronym, "OffscreenDen" + acronym);
 	EditorState::rooms.push_back(EditorState::offscreenDen);
-	EditorState::region.acronym = toLower(acronym);
+	EditorState::region.acronym = acronym;
 	close();
 }

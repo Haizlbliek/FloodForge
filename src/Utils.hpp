@@ -51,6 +51,8 @@ std::string toLower(const std::string &str);
 
 std::string toUpper(const std::string &str);
 
+bool compareInsensitive(const std::string &a, const std::string &b);
+
 std::filesystem::path findDirectoryCaseInsensitive(const std::filesystem::path &directory, const std::string &fileName);
 
 std::filesystem::path findFileCaseInsensitive(const std::filesystem::path &directory, const std::string &fileName);

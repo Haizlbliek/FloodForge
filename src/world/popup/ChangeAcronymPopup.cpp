@@ -9,7 +9,7 @@ void ChangeAcronymPopup::submit(std::string acronym) {
 	close();
 	if (EditorState::offscreenDen != nullptr) {
 		EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), EditorState::offscreenDen), EditorState::rooms.end());
-		OffscreenRoom *newOffscreenDen = new OffscreenRoom("offscreenden" + toLower(acronym), "OffscreenDen" + toUpper(acronym));
+		OffscreenRoom *newOffscreenDen = new OffscreenRoom("offscreenden" + acronym, "OffscreenDen" + acronym);
 		newOffscreenDen->canonPosition = EditorState::offscreenDen->canonPosition;
 		newOffscreenDen->devPosition = EditorState::offscreenDen->devPosition;
 		newOffscreenDen->layer = EditorState::offscreenDen->layer;
@@ -37,8 +37,8 @@ void ChangeAcronymPopup::submit(std::string acronym) {
 	for (Room *room : EditorState::rooms) {
 		if (room == EditorState::offscreenDen) continue;
 
-		room->roomName = toLower(acronym) + room->roomName.substr(room->roomName.find('_'));
+		room->roomName = acronym + room->roomName.substr(room->roomName.find('_'));
 	}
 
-	EditorState::region.acronym = toLower(acronym);
+	EditorState::region.acronym = acronym;
 }
