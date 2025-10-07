@@ -15,11 +15,11 @@ class SubregionPopup : public Popup {
 
 		~SubregionPopup();
 
-		void draw();
+		void draw() override;
 
 		void setSubregion(int subregion);
 		
-		void close();
+		void close() override;
 		
 		bool canStack(std::string popupName) { return popupName == "SubregionNewPopup" || popupName == "InfoPopup" || popupName == "ColorEditPopup"; }
 		std::string PopupName() { return "SubregionPopup"; }

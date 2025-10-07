@@ -177,7 +177,7 @@ class Room {
 		Vector2 &currentPosition();
 
 		std::filesystem::path path;
-		void regeneateGeometry();
+		void regenerateGeometry();
 
 	protected:
 		Room() {}

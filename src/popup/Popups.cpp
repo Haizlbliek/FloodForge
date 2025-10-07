@@ -80,6 +80,7 @@ const Rect Popup::Bounds() {
 
 void Popup::close() {
 	Popups::removePopup(this);
+	this->slatedForDeletion = true;
 }
 
 bool Popup::drag(double mouseX, double mouseY) {

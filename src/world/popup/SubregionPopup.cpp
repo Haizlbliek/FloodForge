@@ -60,7 +60,7 @@ void SubregionPopup::setSubregion(int subregion) {
 }
 
 void SubregionPopup::close() {
-	Popups::removePopup(this);
+	Popup::close();
 
 	UI::window->removeScrollCallback(this, scrollCallback);
 }

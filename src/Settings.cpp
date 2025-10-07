@@ -76,7 +76,7 @@ void Settings::init() {
 				}
 				settings[Setting::SubregionColors] = subregionColors;
 			};
-		} catch (std::exception err) {
+		} catch (...) {
 			Logger::error("Error while loading setting: ", key, " - ", value);
 		}
 	}

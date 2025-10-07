@@ -34,6 +34,7 @@ class Popup {
 	protected:
 		bool hovered;
 		bool minimized = false;
+		bool slatedForDeletion = false;
 
 		Rect bounds;
 };

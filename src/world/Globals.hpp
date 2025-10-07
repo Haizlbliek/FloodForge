@@ -63,7 +63,4 @@ namespace EditorState {
 
 	extern Vector2 globalMouse;
 	extern double lineSize;
-
-	// Droplet
-	extern Room* dropletRoom;
 }

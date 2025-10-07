@@ -58,6 +58,8 @@ namespace UI {
 			return *this;
 		}
 
+		void submit();
+
 		std::string bannedLetters;
 		TextInputEditableType type = TextInputEditableType::Text;
 		int floatDecimalCount = 1;

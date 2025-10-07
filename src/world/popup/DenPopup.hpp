@@ -21,11 +21,11 @@ class DenPopup : public Popup {
 	public:
 		DenPopup(Den &den);
 
-		void draw();
+		void draw() override;
 
-		void accept();
+		void accept() override;
 
-		void close();
+		void close() override;
 
 		static void scrollCallback(void *object, double deltaX, double deltaY);
 

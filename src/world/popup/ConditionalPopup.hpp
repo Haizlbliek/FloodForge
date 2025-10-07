@@ -11,7 +11,7 @@ class ConditionalPopup : public Popup {
 
 		ConditionalPopup(DenLineage *lineage);
 
-		void draw();
+		void draw() override;
 
 		std::string PopupName() { return "ConditionalPopup"; }
 

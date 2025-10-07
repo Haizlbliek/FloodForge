@@ -553,7 +553,7 @@ void DenPopup::draw() {
 void DenPopup::accept() {}
 
 void DenPopup::close() {
-	Popups::removePopup(this);
+	Popup::close();
 
 	UI::window->removeScrollCallback(this, scrollCallback);
 	UI::window->removeKeyCallback(this, keyCallback);

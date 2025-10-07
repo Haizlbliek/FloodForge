@@ -32,13 +32,13 @@ class FilesystemPopup : public Popup {
 
 		FilesystemPopup *AllowMultiple();
 
-		void accept();
+		void accept() override;
 
-		void reject();
+		void reject() override;
 
-		void close();
+		void close() override;
 
-		void draw();
+		void draw() override;
 
 		void drawBounds(Rect rect, double mouseX, double mouseY);
 

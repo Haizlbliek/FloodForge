@@ -156,7 +156,7 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 			int layer = 0;
 			try {
 				layer = temp.empty() ? 0 : std::stoi(temp);
-			} catch (const std::invalid_argument &e) {
+			} catch (...) {
 				Logger::error("Failed to load map line '", line, "' due to stoi on '", temp, "' (int layer)");
 			}
 			
@@ -343,7 +343,7 @@ void WorldParser::parseWorldCreature(std::string line) {
 		int denId = -1;
 		try {
 			denId = std::stoi(splits[2]);
-		} catch (const std::invalid_argument &e) {
+		} catch (...) {
 			Logger::error("Failed to load creature line '", line, "' due to stoi for '", splits[2], "' (int denId LINEAGE)");
 			return;
 		}
@@ -380,7 +380,7 @@ void WorldParser::parseWorldCreature(std::string line) {
 			creature->count = 1;
 			try {
 				creature->lineageChance = std::stod(sections[sections.size() - 1]);
-			} catch (const std::invalid_argument) {
+			} catch (...) {
 				Logger::error("Failed to load creature line '", line, "' due to stod for '", sections[sections.size() - 1], "' (creature->lineageChance)");
 			}
 
@@ -411,7 +411,7 @@ void WorldParser::parseWorldCreature(std::string line) {
 			int denId;
 			try {
 				denId = std::stoi(sections[0]);
-			} catch (const std::invalid_argument &e) {
+			} catch (...) {
 				Logger::error("Failed to load creature line '", line, "' due to stoi for '", sections[0], "' (int denId)");
 				return;
 			}
@@ -458,7 +458,7 @@ void WorldParser::parseWorldCreature(std::string line) {
 				} else {
 					try {
 						denCreature.count = std::stoi(sections[2]);
-					} catch (const std::invalid_argument &e) {
+					} catch (...) {
 						Logger::error("Failed to load creature line '", line, "' due to stoi for '", sections[2], "' (den.count)");
 					}
 				}
@@ -488,7 +488,7 @@ void WorldParser::parseWorldCreature(std::string line) {
 				}
 				try {
 					denCreature.count = std::stoi(countString);
-				} catch (const std::invalid_argument &e) {
+				} catch (...) {
 					Logger::error("Failed to load creature line '", line, "' due to stoi on '", countString, "' (den.count)");
 				}
 			} else {

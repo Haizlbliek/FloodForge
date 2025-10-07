@@ -19,11 +19,11 @@ class ConfirmPopup : public Popup {
 
 		ConfirmPopup *OkayText(std::string text);
 
-		void draw();
+		void draw() override;
 
-		void accept();
+		void accept() override;
 
-		void reject();
+		void reject() override;
 
 		ConfirmPopup *OnOkay(std::function<void()> listener);
 

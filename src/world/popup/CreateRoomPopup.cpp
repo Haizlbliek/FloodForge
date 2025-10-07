@@ -55,11 +55,11 @@ void CreateRoomPopup::draw() {
 
 	y -= 0.06;
 	UI::TextInputResponse heightResponse = UI::TextInput(Rect::fromSize(bounds.x0 + 0.01, y, 0.25, 0.05), height);
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(heightResponse.focused))) {
 		height.value = std::to_string(std::stoi(height.value) - 1);
 		heightResponse.submitted = true;
 	}
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(heightResponse.focused))) {
 		height.value = std::to_string(std::stoi(height.value) + 1);
 		heightResponse.submitted = true;
 	}
@@ -68,11 +68,11 @@ void CreateRoomPopup::draw() {
 
 	y -= 0.06;
 	UI::TextInputResponse screenWidthResponse = UI::TextInput(Rect::fromSize(bounds.x0 + 0.01, y, 0.25, 0.05), screenWidth);
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(screenWidthResponse.focused))) {
 		screenWidth.value = toFixed(std::stod(screenWidth.value) - 0.5, screenWidth.floatDecimalCount);
 		screenWidthResponse.submitted = true;
 	}
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(screenWidthResponse.focused))) {
 		screenWidth.value = toFixed(std::stod(screenWidth.value) + 0.5, screenWidth.floatDecimalCount);
 		screenWidthResponse.submitted = true;
 	}
@@ -81,11 +81,11 @@ void CreateRoomPopup::draw() {
 
 	y -= 0.06;
 	UI::TextInputResponse screenHeightResponse = UI::TextInput(Rect::fromSize(bounds.x0 + 0.01, y, 0.25, 0.05), screenHeight);
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.27, y, 0.05, 0.05).uv(0.0, 0.5, 0.25, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(screenHeightResponse.focused))) {
 		screenHeight.value = toFixed(std::stod(screenHeight.value) - 0.5, screenHeight.floatDecimalCount);
 		screenHeightResponse.submitted = true;
 	}
-	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(widthResponse.focused))) {
+	if (UI::TextureButton(UVRect::fromSize(bounds.x0 + 0.32, y, 0.05, 0.05).uv(0.25, 0.5, 0.5, 0.75), UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(screenHeightResponse.focused))) {
 		screenHeight.value = toFixed(std::stod(screenHeight.value) + 0.5, screenHeight.floatDecimalCount);
 		screenHeightResponse.submitted = true;
 	}
@@ -186,7 +186,7 @@ void CreateRoomPopup::draw() {
 		room->devPosition = EditorState::placingRoomPosition - Vector2{ EditorState::placingRoomSize.x * 0.5, EditorState::placingRoomSize.y * -0.5 };
 		EditorState::rooms.push_back(room);
 		EditorState::dropletOpen = true;
-		EditorState::dropletRoom = room;
+		DropletWindow::room = room;
 		DropletWindow::loadRoom();
 	}
 }

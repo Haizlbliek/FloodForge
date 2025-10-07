@@ -24,7 +24,7 @@ class SplashArtPopup : public Popup {
 		
 		const Rect Bounds() override;
 
-		void draw();
+		void draw() override;
 		
 		bool canStack(std::string popupName) override { return popupName == "MarkdownPopup" || popupName == "InfoPopup"; }
 		std::string PopupName() override { return "SplashArtPopup"; }

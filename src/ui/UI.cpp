@@ -22,6 +22,14 @@ UI::ButtonResponse::operator bool() const {
 	return clicked;
 }
 
+void UI::TextInputEditable::submit() {
+	if (UI::currentEditable != this) return;
+
+	UI::updateTextInput(*this);
+	UI::Delete(*this);
+	this->submitted = true;
+}
+
 void UI::init(Window *window) {
 	UI::window = window;
 	UI::window->addKeyCallback(0, UI::_keyCallback);
@@ -125,7 +133,7 @@ void UI::updateTextInput(TextInputEditable &edit) {
 	if (edit.type == UI::TextInputEditableType::SignedFloat || edit.type == UI::TextInputEditableType::UnsignedFloat) {
 		try {
 			edit.value = toFixed(std::stod(edit.value), edit.floatDecimalCount);
-		} catch (std::invalid_argument) {
+		} catch (...) { // std::invalid_argument, std::out_of_range
 			edit.value = "0.";
 			for (int i = 0; i < edit.floatDecimalCount; i++) {
 				edit.value += "0";
@@ -135,7 +143,7 @@ void UI::updateTextInput(TextInputEditable &edit) {
 	else if (edit.type == UI::TextInputEditableType::SignedInteger || edit.type == UI::TextInputEditableType::UnsignedInteger) {
 		try {
 			edit.value = std::to_string(std::stoi(edit.value));
-		} catch (std::invalid_argument) {
+		} catch (...) { // std::invalid_argument, std::out_of_range
 			edit.value = "0";
 		}
 	}

@@ -12,49 +12,43 @@
 Texture *DropletWindow::shortcutsTexture = nullptr;
 Texture *DropletWindow::toolsTexture = nullptr;
 
-bool DropletWindow::showObjects = false;
 
-Vector2 DropletWindow::cameraOffset;
-double DropletWindow::cameraScale = 40.0;
-double DropletWindow::cameraScaleTo = 40.0;
-bool DropletWindow::cameraPanning = false;
-bool DropletWindow::cameraPanningBlocked = false;
-Vector2 DropletWindow::cameraPanStartMouse = Vector2(0.0f, 0.0f);
-Vector2 DropletWindow::cameraPanStart = Vector2(0.0f, 0.0f);
-Vector2 DropletWindow::cameraPanTo = Vector2(0.0f, 0.0f);
 
-Vector2 DropletWindow::transformedMouse;
-Rect DropletWindow::roomRect;
-Vector2i DropletWindow::mouseTile;
-Vector2i DropletWindow::lastMouseTile;
-bool DropletWindow::lastMouseDrawing;
-bool DropletWindow::blockMouse = false;
+enum class EditorTab {
+	DETAILS,
+	GEOMETRY,
+	CAMERA
+};
+std::string TAB_NAMES[3] = { "Environment", "Geometry", "Cameras" };
 
-DropletWindow::EditorTab DropletWindow::currentTab;
+enum class GeometryTool {
+	WALL,
+	SLOPE,
+	PLATFORM,
+	BACKGROUND_WALL,
+	HORIZONTAL_POLE,
+	VERTICAL_POLE,
+	SPEAR,
+	ROCK,
+	SHORTCUT,
+	ROOM_EXIT,
+	CREATURE_DEN,
+	WACK_A_MOLE,
+	SCAVENGER_DEN,
+	GARBAGE_WORM_DEN,
+	WORMGRASS,
+	BATFLY_HIVE
+};
+std::string GEOMETRY_TOOL_NAMES[16] = { "Wall", "Slope", "Platform", "Background Wall", "Horizontal Pole", "Vertical Pole", "Spear", "Rock", "Shortcut", "Room Exit", "Creature Den", "Wack a Mole Hole", "Scavenger Den", "Garbage Worm Den", "Wormgrass", "Batfly Hive" };
 
-std::string DropletWindow::TAB_NAMES[3] = { "Environment", "Geometry", "Cameras" };
-std::string DropletWindow::GEOMETRY_TOOL_NAMES[16] = { "Wall", "Slope", "Platform", "Background Wall", "Horizontal Pole", "Vertical Pole", "Spear", "Rock", "Shortcut", "Room Exit", "Creature Den", "Wack a Mole Hole", "Scavenger Den", "Garbage Worm Den", "Wormgrass", "Batfly Hive" };
-
-DropletWindow::GeometryTool DropletWindow::selectedTool = DropletWindow::GeometryTool::WALL;
-
-std::vector<DropletWindow::Camera> DropletWindow::cameras;
-DropletWindow::Camera *DropletWindow::selectedCamera = nullptr;
-
-bool enclosedRoom = false;
-bool waterInFront = false;
-
-int *DropletWindow::backupGeometry = nullptr;
-int DropletWindow::backupWater;
-
-std::vector<Object *> DropletWindow::objects;
-std::vector<TerrainHandleObject *> terrainHandleObjects;
-std::vector<MudPitObject *> mudPitObjects;
-std::vector<AirPocketObject *> airPocketObjects;
-
-bool terrainNeedsRefresh = false;
-bool hasTerrain = false;
-std::vector<Vector2> terrain;
-int trashCanState = 0;
+class Camera {
+	public:
+		Vector2 position;
+		Vector2 angle0;
+		Vector2 angle1;
+		Vector2 angle2;
+		Vector2 angle3;
+};
 
 struct WaterSpot {
 	Vector2 pos;
@@ -64,8 +58,52 @@ struct WaterSpot {
 		return pos.x <= other.pos.x + other.size.x && pos.y <= other.pos.y + other.size.y && pos.x + size.x >= other.pos.x && pos.y + size.y >= other.pos.y;
 	}
 };
+
+bool DropletWindow::showObjects = false;
+
+Room *DropletWindow::room = nullptr;
+
+Vector2 transformedMouse;
+Rect roomRect;
+Vector2i mouseTile;
+Vector2i lastMouseTile;
+bool lastMouseDrawing;
+bool blockMouse = false;
+
+EditorTab currentTab;
+GeometryTool selectedTool = GeometryTool::WALL;
+
+std::vector<Camera> cameras;
+Camera *selectedCamera = nullptr;
+
+bool enclosedRoom = false;
+bool waterInFront = false;
+
+int *backupGeometry = nullptr;
+int backupWater;
+
+std::vector<Object *> objects;
+std::vector<TerrainHandleObject *> terrainHandleObjects;
+std::vector<MudPitObject *> mudPitObjects;
+std::vector<AirPocketObject *> airPocketObjects;
+
+bool terrainNeedsRefresh = false;
+bool hasTerrain = false;
+std::vector<Vector2> terrain;
+int trashCanState = 0;
+
 bool waterNeedsRefresh = false;
 std::vector<WaterSpot> water;
+
+Vector2 cameraOffset;
+double cameraScale = 40.0;
+double cameraScaleTo = 40.0;
+bool cameraPanning = false;
+bool cameraPanningBlocked = false;
+Vector2 cameraPanStartMouse = Vector2(0.0f, 0.0f);
+Vector2 cameraPanStart = Vector2(0.0f, 0.0f);
+Vector2 cameraPanTo = Vector2(0.0f, 0.0f);
+
 
 void DropletWindow::init() {
 	toolsTexture = new Texture(BASE_PATH / "assets" / "tools.png");
@@ -92,52 +130,52 @@ void UpdateCamera() {
 	double zoom = std::pow(1.25, scrollY);
 
 	Vector2 previousWorldMouse = Vector2(
-		UI::mouse.x * DropletWindow::cameraScale + DropletWindow::cameraOffset.x,
-		UI::mouse.y * DropletWindow::cameraScale + DropletWindow::cameraOffset.y
+		UI::mouse.x * cameraScale + cameraOffset.x,
+		UI::mouse.y * cameraScale + cameraOffset.y
 	);
 
-	DropletWindow::cameraScaleTo *= zoom;
-	DropletWindow::cameraScaleTo = std::clamp(DropletWindow::cameraScaleTo, 2.5, 1.0 * std::max(EditorState::dropletRoom->width, EditorState::dropletRoom->height));
-	DropletWindow::cameraScale += (DropletWindow::cameraScaleTo - DropletWindow::cameraScale) * Settings::getSetting<double>(Settings::Setting::CameraZoomSpeed);
+	cameraScaleTo *= zoom;
+	cameraScaleTo = std::clamp(cameraScaleTo, 2.5, 1.0 * std::max(DropletWindow::room->width, DropletWindow::room->height));
+	cameraScale += (cameraScaleTo - cameraScale) * Settings::getSetting<double>(Settings::Setting::CameraZoomSpeed);
 
 	Vector2 worldMouse = Vector2(
-		UI::mouse.x * DropletWindow::cameraScale + DropletWindow::cameraOffset.x,
-		UI::mouse.y * DropletWindow::cameraScale + DropletWindow::cameraOffset.y
+		UI::mouse.x * cameraScale + cameraOffset.x,
+		UI::mouse.y * cameraScale + cameraOffset.y
 	);
 
-	DropletWindow::cameraOffset.x += previousWorldMouse.x - worldMouse.x;
-	DropletWindow::cameraOffset.y += previousWorldMouse.y - worldMouse.y;
-	DropletWindow::cameraPanTo.x += previousWorldMouse.x - worldMouse.x;
-	DropletWindow::cameraPanTo.y += previousWorldMouse.y - worldMouse.y;
+	cameraOffset.x += previousWorldMouse.x - worldMouse.x;
+	cameraOffset.y += previousWorldMouse.y - worldMouse.y;
+	cameraPanTo.x += previousWorldMouse.x - worldMouse.x;
+	cameraPanTo.y += previousWorldMouse.y - worldMouse.y;
 
 	// Panning
 	if (UI::mouse.middleMouse) {
-		if (!DropletWindow::cameraPanningBlocked && !DropletWindow::cameraPanning) {
-			if (isHoveringPopup) DropletWindow::cameraPanningBlocked = true;
+		if (!cameraPanningBlocked && !cameraPanning) {
+			if (isHoveringPopup) cameraPanningBlocked = true;
 
-			if (!DropletWindow::cameraPanningBlocked) {
-				DropletWindow::cameraPanStart.x = DropletWindow::cameraOffset.x;
-				DropletWindow::cameraPanStart.y = DropletWindow::cameraOffset.y;
-				DropletWindow::cameraPanStartMouse.x = EditorState::globalMouse.x;
-				DropletWindow::cameraPanStartMouse.y = EditorState::globalMouse.y;
-				DropletWindow::cameraPanning = true;
+			if (!cameraPanningBlocked) {
+				cameraPanStart.x = cameraOffset.x;
+				cameraPanStart.y = cameraOffset.y;
+				cameraPanStartMouse.x = EditorState::globalMouse.x;
+				cameraPanStartMouse.y = EditorState::globalMouse.y;
+				cameraPanning = true;
 			}
 		}
 
-		if (DropletWindow::cameraPanning && !DropletWindow::cameraPanningBlocked) {
-			DropletWindow::cameraPanTo.x = DropletWindow::cameraPanStart.x + DropletWindow::cameraScale * (DropletWindow::cameraPanStartMouse.x - EditorState::globalMouse.x) / 512.0;
-			DropletWindow::cameraPanTo.y = DropletWindow::cameraPanStart.y + DropletWindow::cameraScale * (DropletWindow::cameraPanStartMouse.y - EditorState::globalMouse.y) / -512.0;
+		if (cameraPanning && !cameraPanningBlocked) {
+			cameraPanTo.x = cameraPanStart.x + cameraScale * (cameraPanStartMouse.x - EditorState::globalMouse.x) / 512.0;
+			cameraPanTo.y = cameraPanStart.y + cameraScale * (cameraPanStartMouse.y - EditorState::globalMouse.y) / -512.0;
 		}
 	} else {
-		DropletWindow::cameraPanning = false;
-		DropletWindow::cameraPanningBlocked = false;
+		cameraPanning = false;
+		cameraPanningBlocked = false;
 	}
 
-	DropletWindow::cameraPanTo.x = std::clamp(DropletWindow::cameraPanTo.x, -(UI::screenBounds.x - 0.41) * DropletWindow::cameraScale, UI::screenBounds.x * DropletWindow::cameraScale + EditorState::dropletRoom->width);
-	DropletWindow::cameraPanTo.y = std::clamp(DropletWindow::cameraPanTo.y, -(UI::screenBounds.y - 0.12) * DropletWindow::cameraScale - EditorState::dropletRoom->height, UI::screenBounds.y * DropletWindow::cameraScale);
+	cameraPanTo.x = std::clamp(cameraPanTo.x, -(UI::screenBounds.x - 0.41) * cameraScale, UI::screenBounds.x * cameraScale + DropletWindow::room->width);
+	cameraPanTo.y = std::clamp(cameraPanTo.y, -(UI::screenBounds.y - 0.12) * cameraScale - DropletWindow::room->height, UI::screenBounds.y * cameraScale);
 
-	DropletWindow::cameraOffset.x += (DropletWindow::cameraPanTo.x - DropletWindow::cameraOffset.x) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
-	DropletWindow::cameraOffset.y += (DropletWindow::cameraPanTo.y - DropletWindow::cameraOffset.y) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
+	cameraOffset.x += (cameraPanTo.x - cameraOffset.x) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
+	cameraOffset.y += (cameraPanTo.y - cameraOffset.y) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
 }
 
 double sampleHandle(double a, double b, double c, double d, double t) {
@@ -186,7 +224,7 @@ void UpdateDetailsTab() {
 		Draw::color(0.0, 1.0, 0.0);
 		Draw::begin(Draw::LINE_STRIP);
 		for (Vector2 &point : terrain) {
-			Draw::vertex(DropletWindow::roomRect.x0 + point.x / 20.0, DropletWindow::roomRect.y0 + point.y / 20.0);
+			Draw::vertex(roomRect.x0 + point.x / 20.0, roomRect.y0 + point.y / 20.0);
 		}
 		Draw::end();
 	}
@@ -194,12 +232,12 @@ void UpdateDetailsTab() {
 	static Node *movingNode = nullptr;
 	Node *hoveredNode = nullptr;
 
-	Vector2 nodeMouse = Vector2(DropletWindow::transformedMouse.x, DropletWindow::transformedMouse.y + (DropletWindow::roomRect.y1 - DropletWindow::roomRect.y0)) * 20.0;
-	double mouseDistance = 0.3 * DropletWindow::cameraScale;
+	Vector2 nodeMouse = Vector2(transformedMouse.x, transformedMouse.y + (roomRect.y1 - roomRect.y0)) * 20.0;
+	double mouseDistance = 0.3 * cameraScale;
 
 	glEnable(GL_BLEND);
-	for (Object *object : DropletWindow::objects) {
-		object->draw(Vector2(DropletWindow::roomRect.x0, DropletWindow::roomRect.y0));
+	for (Object *object : objects) {
+		object->draw(Vector2(roomRect.x0, roomRect.y0));
 
 		for (Node *node : object->nodes) {
 			Vector2 nodePos = node->position();
@@ -210,10 +248,10 @@ void UpdateDetailsTab() {
 			} else {
 				Draw::color(0.6);
 			}
-			Vector2 nodeRenderPos = { DropletWindow::roomRect.x0 + nodePos.x / 20.0, DropletWindow::roomRect.y0 + nodePos.y / 20.0 };
-			fillCircle(nodeRenderPos.x, nodeRenderPos.y, 0.01 * DropletWindow::cameraScale, 8);
+			Vector2 nodeRenderPos = { roomRect.x0 + nodePos.x / 20.0, roomRect.y0 + nodePos.y / 20.0 };
+			fillCircle(nodeRenderPos.x, nodeRenderPos.y, 0.01 * cameraScale, 8);
 			Draw::color(0.0);
-			strokeCircle(nodeRenderPos.x, nodeRenderPos.y, 0.01 * DropletWindow::cameraScale, 8);
+			strokeCircle(nodeRenderPos.x, nodeRenderPos.y, 0.01 * cameraScale, 8);
 		}
 	}
 	glDisable(GL_BLEND);
@@ -253,7 +291,7 @@ void UpdateDetailsTab() {
 
 		if (!UI::mouse.leftMouse) {
 			if (needsDeleted) {
-				DropletWindow::objects.erase(std::remove(DropletWindow::objects.begin(), DropletWindow::objects.end(), movingNode->object), DropletWindow::objects.end());
+				objects.erase(std::remove(objects.begin(), objects.end(), movingNode->object), objects.end());
 				terrainHandleObjects.erase(std::remove(terrainHandleObjects.begin(), terrainHandleObjects.end(), movingNode->object), terrainHandleObjects.end());
 				mudPitObjects.erase(std::remove(mudPitObjects.begin(), mudPitObjects.end(), movingNode->object), mudPitObjects.end());
 				airPocketObjects.erase(std::remove(airPocketObjects.begin(), airPocketObjects.end(), movingNode->object), airPocketObjects.end());
@@ -267,9 +305,9 @@ void UpdateDetailsTab() {
 	else {
 		trashCanState = 0;
 
-		if (!DropletWindow::blockMouse && UI::window->keyPressed(GLFW_KEY_W) && EditorState::dropletRoom->water != -1) {
-			EditorState::dropletRoom->water = EditorState::dropletRoom->height - DropletWindow::mouseTile.y - 1;
-			if (EditorState::dropletRoom->water < 0) EditorState::dropletRoom->water = 0;
+		if (!blockMouse && UI::window->keyPressed(GLFW_KEY_W) && DropletWindow::room->water != -1) {
+			DropletWindow::room->water = DropletWindow::room->height - mouseTile.y - 1;
+			if (DropletWindow::room->water < 0) DropletWindow::room->water = 0;
 			waterNeedsRefresh = true;
 		}
 	}
@@ -287,7 +325,7 @@ void UpdateDetailsTab() {
 				return b->Middle().x > a->Middle().x;
 			});
 			int handleIndex = 0;
-			int segments = EditorState::dropletRoom->width + 1;
+			int segments = DropletWindow::room->width + 1;
 			for (float x = 0; x < segments * 20.0; x += 20.0) {
 				while (handleIndex < handles.size() - 2 && handles[handleIndex + 1]->Middle().x < x) {
 					handleIndex++;
@@ -302,7 +340,7 @@ void UpdateDetailsTab() {
 
 	if (waterNeedsRefresh) {
 		water.clear();
-		water.push_back({ Vector2(0, 0), Vector2(EditorState::dropletRoom->width * 20.0, EditorState::dropletRoom->water * 20.0 + 10.0) });
+		water.push_back({ Vector2(0, 0), Vector2(DropletWindow::room->width * 20.0, DropletWindow::room->water * 20.0 + 10.0) });
 		for (AirPocketObject *pocket : airPocketObjects) {
 			WaterSpot spot = { pocket->nodes[0]->pos, pocket->nodes[1]->pos };
 			if (spot.size.x <= 0.0) continue;
@@ -336,38 +374,38 @@ void UpdateNOTDetailsTab() {
 		Draw::color(0.0, 1.0, 0.0);
 		Draw::begin(Draw::LINE_STRIP);
 		for (Vector2 &point : terrain) {
-			Draw::vertex(DropletWindow::roomRect.x0 + point.x / 20.0, DropletWindow::roomRect.y0 + point.y / 20.0);
+			Draw::vertex(roomRect.x0 + point.x / 20.0, roomRect.y0 + point.y / 20.0);
 		}
 		Draw::end();
 	}
 
 	glEnable(GL_BLEND);
-	for (Object *object : DropletWindow::objects) {
-		object->draw(Vector2(DropletWindow::roomRect.x0, DropletWindow::roomRect.y0));
+	for (Object *object : objects) {
+		object->draw(Vector2(roomRect.x0, roomRect.y0));
 	}
 	glDisable(GL_BLEND);
 }
 
 void verifyShortcut(int x, int y) {
-	if ((EditorState::dropletRoom->getTile(x, y) & 128) == 0) {
+	if ((DropletWindow::room->getTile(x, y) & 128) == 0) {
 		return;
 	}
 
 	bool shorcutEntrance = false;
 
 	if (
-		(EditorState::dropletRoom->getTile(x - 1, y - 1) % 16 == 1) && (EditorState::dropletRoom->getTile(x + 1, y - 1) % 16 == 1) &&
-		(EditorState::dropletRoom->getTile(x - 1, y + 1) % 16 == 1) && (EditorState::dropletRoom->getTile(x + 1, y + 1) % 16 == 1)
+		(DropletWindow::room->getTile(x - 1, y - 1) % 16 == 1) && (DropletWindow::room->getTile(x + 1, y - 1) % 16 == 1) &&
+		(DropletWindow::room->getTile(x - 1, y + 1) % 16 == 1) && (DropletWindow::room->getTile(x + 1, y + 1) % 16 == 1)
 	) {
 		int dir = 0;
-		dir += (EditorState::dropletRoom->getTile(x - 1, y) % 16 == 0 || EditorState::dropletRoom->getTile(x - 1, y) % 16 == 2) ? 1 : 0;
-		dir += (EditorState::dropletRoom->getTile(x + 1, y) % 16 == 0 || EditorState::dropletRoom->getTile(x + 1, y) % 16 == 2) ? 2 : 0;
-		dir += (EditorState::dropletRoom->getTile(x, y - 1) % 16 == 0 || EditorState::dropletRoom->getTile(x, y - 1) % 16 == 2) ? 4 : 0;
-		dir += (EditorState::dropletRoom->getTile(x, y + 1) % 16 == 0 || EditorState::dropletRoom->getTile(x, y + 1) % 16 == 2) ? 8 : 0;
-		dir += (EditorState::dropletRoom->getTile(x - 1, y) & 128) > 0 ? 16 : 0;
-		dir += (EditorState::dropletRoom->getTile(x + 1, y) & 128) > 0 ? 32 : 0;
-		dir += (EditorState::dropletRoom->getTile(x, y - 1) & 128) > 0 ? 64 : 0;
-		dir += (EditorState::dropletRoom->getTile(x, y + 1) & 128) > 0 ? 128 : 0;
+		dir += (DropletWindow::room->getTile(x - 1, y) % 16 == 0 || DropletWindow::room->getTile(x - 1, y) % 16 == 2) ? 1 : 0;
+		dir += (DropletWindow::room->getTile(x + 1, y) % 16 == 0 || DropletWindow::room->getTile(x + 1, y) % 16 == 2) ? 2 : 0;
+		dir += (DropletWindow::room->getTile(x, y - 1) % 16 == 0 || DropletWindow::room->getTile(x, y - 1) % 16 == 2) ? 4 : 0;
+		dir += (DropletWindow::room->getTile(x, y + 1) % 16 == 0 || DropletWindow::room->getTile(x, y + 1) % 16 == 2) ? 8 : 0;
+		dir += (DropletWindow::room->getTile(x - 1, y) & 128) > 0 ? 16 : 0;
+		dir += (DropletWindow::room->getTile(x + 1, y) & 128) > 0 ? 32 : 0;
+		dir += (DropletWindow::room->getTile(x, y - 1) & 128) > 0 ? 64 : 0;
+		dir += (DropletWindow::room->getTile(x, y + 1) & 128) > 0 ? 128 : 0;
 
 		if (dir == 1 + 32 || dir == 2 + 16 || dir == 4 + 128 || dir == 8 + 64) {
 			shorcutEntrance = true;
@@ -375,29 +413,29 @@ void verifyShortcut(int x, int y) {
 	}
 
 	if (shorcutEntrance) {
-		EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & ~15) | 4;
+		DropletWindow::room->geometry[x * DropletWindow::room->height + y] = (DropletWindow::room->geometry[x * DropletWindow::room->height + y] & ~15) | 4;
 	} else {
-		if (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] % 16 == 4) {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & ~15) | 1;
+		if (DropletWindow::room->geometry[x * DropletWindow::room->height + y] % 16 == 4) {
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] = (DropletWindow::room->geometry[x * DropletWindow::room->height + y] & ~15) | 1;
 		}
 	}
 }
 
 void applyTool(int x, int y, bool right) {
-	if (DropletWindow::selectedTool == DropletWindow::GeometryTool::WALL) {
-		EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = right ? 0 : 1;
+	if (selectedTool == GeometryTool::WALL) {
+		DropletWindow::room->geometry[x * DropletWindow::room->height + y] = right ? 0 : 1;
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::SLOPE) {
+	else if (selectedTool == GeometryTool::SLOPE) {
 		if (right) {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = 0;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] = 0;
 		} else {
 			int bits = 0;
-			bits += ((EditorState::dropletRoom->getTile(x - 1, y) & 15) == 1) ? 1 : 0;
-			bits += ((EditorState::dropletRoom->getTile(x + 1, y) & 15) == 1) ? 2 : 0;
-			bits += ((EditorState::dropletRoom->getTile(x, y - 1) & 15) == 1) ? 4 : 0;
-			bits += ((EditorState::dropletRoom->getTile(x, y + 1) & 15) == 1) ? 8 : 0;
+			bits += ((DropletWindow::room->getTile(x - 1, y) & 15) == 1) ? 1 : 0;
+			bits += ((DropletWindow::room->getTile(x + 1, y) & 15) == 1) ? 2 : 0;
+			bits += ((DropletWindow::room->getTile(x, y - 1) & 15) == 1) ? 4 : 0;
+			bits += ((DropletWindow::room->getTile(x, y + 1) & 15) == 1) ? 8 : 0;
 			int type = -1;
-			if ((EditorState::dropletRoom->getTile(x - 1, y) & 15) == 2 || (EditorState::dropletRoom->getTile(x + 1, y) & 15) == 2 || (EditorState::dropletRoom->getTile(x, y - 1) & 15) == 2 || (EditorState::dropletRoom->getTile(x, y + 1) & 15) == 2) {
+			if ((DropletWindow::room->getTile(x - 1, y) & 15) == 2 || (DropletWindow::room->getTile(x + 1, y) & 15) == 2 || (DropletWindow::room->getTile(x, y - 1) & 15) == 2 || (DropletWindow::room->getTile(x, y + 1) & 15) == 2) {
 				bits = -1;
 			}
 
@@ -412,39 +450,39 @@ void applyTool(int x, int y, bool right) {
 			}
 
 			if (type != -1) {
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = 2 + 1024 * type;
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] = 2 + 1024 * type;
 			}
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::PLATFORM) {
-		EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = right ? 0 : 3;
+	else if (selectedTool == GeometryTool::PLATFORM) {
+		DropletWindow::room->geometry[x * DropletWindow::room->height + y] = right ? 0 : 3;
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::VERTICAL_POLE) {
+	else if (selectedTool == GeometryTool::VERTICAL_POLE) {
 		if (right) {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~16;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~16;
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 16;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 16;
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::HORIZONTAL_POLE) {
+	else if (selectedTool == GeometryTool::HORIZONTAL_POLE) {
 		if (right) {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~32;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~32;
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 32;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 32;
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::BACKGROUND_WALL) {
+	else if (selectedTool == GeometryTool::BACKGROUND_WALL) {
 		if (right) {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~512;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~512;
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 512;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 512;
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::ROOM_EXIT) {
+	else if (selectedTool == GeometryTool::ROOM_EXIT) {
 		if (right) {
-			if (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & 64) {
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~64;
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~128;
+			if (DropletWindow::room->geometry[x * DropletWindow::room->height + y] & 64) {
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~64;
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~128;
 
 				verifyShortcut(x - 1, y);
 				verifyShortcut(x + 1, y);
@@ -452,7 +490,7 @@ void applyTool(int x, int y, bool right) {
 				verifyShortcut(x, y + 1);
 			}
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 64 | 128;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 64 | 128;
 
 			verifyShortcut(x, y);
 			verifyShortcut(x - 1, y);
@@ -461,11 +499,11 @@ void applyTool(int x, int y, bool right) {
 			verifyShortcut(x, y + 1);
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::CREATURE_DEN) {
+	else if (selectedTool == GeometryTool::CREATURE_DEN) {
 		if (right) {
-			if (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & 256) {
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~256;
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~128;
+			if (DropletWindow::room->geometry[x * DropletWindow::room->height + y] & 256) {
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~256;
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~128;
 
 				verifyShortcut(x - 1, y);
 				verifyShortcut(x + 1, y);
@@ -473,7 +511,7 @@ void applyTool(int x, int y, bool right) {
 				verifyShortcut(x, y + 1);
 			}
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 256 | 128;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 256 | 128;
 
 			verifyShortcut(x, y);
 			verifyShortcut(x - 1, y);
@@ -482,11 +520,11 @@ void applyTool(int x, int y, bool right) {
 			verifyShortcut(x, y + 1);
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::SCAVENGER_DEN) {
+	else if (selectedTool == GeometryTool::SCAVENGER_DEN) {
 		if (right) {
-			if (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & 4096) {
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~4096;
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~128;
+			if (DropletWindow::room->geometry[x * DropletWindow::room->height + y] & 4096) {
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~4096;
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~128;
 
 				verifyShortcut(x - 1, y);
 				verifyShortcut(x + 1, y);
@@ -494,7 +532,7 @@ void applyTool(int x, int y, bool right) {
 				verifyShortcut(x, y + 1);
 			}
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 4096 | 128;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 4096 | 128;
 
 			verifyShortcut(x, y);
 			verifyShortcut(x - 1, y);
@@ -503,11 +541,11 @@ void applyTool(int x, int y, bool right) {
 			verifyShortcut(x, y + 1);
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::WACK_A_MOLE) {
+	else if (selectedTool == GeometryTool::WACK_A_MOLE) {
 		if (right) {
-			if (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & 8192) {
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~8192;
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~128;
+			if (DropletWindow::room->geometry[x * DropletWindow::room->height + y] & 8192) {
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~8192;
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~128;
 
 				verifyShortcut(x - 1, y);
 				verifyShortcut(x + 1, y);
@@ -515,7 +553,7 @@ void applyTool(int x, int y, bool right) {
 				verifyShortcut(x, y + 1);
 			}
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 8192 | 128;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 8192 | 128;
 
 			verifyShortcut(x, y);
 			verifyShortcut(x - 1, y);
@@ -524,37 +562,37 @@ void applyTool(int x, int y, bool right) {
 			verifyShortcut(x, y + 1);
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::GARBAGE_WORM_DEN) {
+	else if (selectedTool == GeometryTool::GARBAGE_WORM_DEN) {
 		if (right) {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~16384;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~16384;
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 16384;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 16384;
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::WORMGRASS) {
+	else if (selectedTool == GeometryTool::WORMGRASS) {
 		if (right) {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~32768;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~32768;
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 32768;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 32768;
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::BATFLY_HIVE) {
+	else if (selectedTool == GeometryTool::BATFLY_HIVE) {
 		if (right) {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~65536;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~65536;
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 65536;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 65536;
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::SHORTCUT) {
+	else if (selectedTool == GeometryTool::SHORTCUT) {
 		if (right) {
-			if (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & 128) {
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~128;
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~64;
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~256;
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~4096;
-				EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~8192;
-				if (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] % 16 == 4) {
-					EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] = (EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] & ~15) | 1;
+			if (DropletWindow::room->geometry[x * DropletWindow::room->height + y] & 128) {
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~128;
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~64;
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~256;
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~4096;
+				DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~8192;
+				if (DropletWindow::room->geometry[x * DropletWindow::room->height + y] % 16 == 4) {
+					DropletWindow::room->geometry[x * DropletWindow::room->height + y] = (DropletWindow::room->geometry[x * DropletWindow::room->height + y] & ~15) | 1;
 				}
 
 				verifyShortcut(x - 1, y);
@@ -563,7 +601,7 @@ void applyTool(int x, int y, bool right) {
 				verifyShortcut(x, y + 1);
 			}
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 128;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 128;
 
 			verifyShortcut(x, y);
 			verifyShortcut(x - 1, y);
@@ -572,25 +610,25 @@ void applyTool(int x, int y, bool right) {
 			verifyShortcut(x, y + 1);
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::ROCK) {
+	else if (selectedTool == GeometryTool::ROCK) {
 		if (right) {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~262144;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~262144;
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 262144;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 262144;
 		}
 	}
-	else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::SPEAR) {
+	else if (selectedTool == GeometryTool::SPEAR) {
 		if (right) {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] &= ~524288;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] &= ~524288;
 		} else {
-			EditorState::dropletRoom->geometry[x * EditorState::dropletRoom->height + y] |= 524288;
+			DropletWindow::room->geometry[x * DropletWindow::room->height + y] |= 524288;
 		}
 	}
 }
 
 void UpdateGeometryTab() {
 	if (!(UI::mouse.leftMouse || UI::mouse.rightMouse)) {
-		int tool = (int) DropletWindow::selectedTool;
+		int tool = (int) selectedTool;
 
 		if (UI::window->justPressed(GLFW_KEY_A)) {
 			tool = ((tool + 3) % 4) + (tool & 0b1100);
@@ -608,17 +646,17 @@ void UpdateGeometryTab() {
 			tool = ((tool + 4) % 16);
 		}
 
-		DropletWindow::selectedTool = (DropletWindow::GeometryTool) tool;
+		selectedTool = (GeometryTool) tool;
 	}
 
 	static int rectDrawing = -1;
 	static Vector2i rectStart;
 
-	if (!DropletWindow::blockMouse) {
+	if (!blockMouse) {
 		if (rectDrawing != -1) {
 			if ((rectDrawing == 0 && !UI::mouse.leftMouse) || (rectDrawing == 1 && !UI::mouse.rightMouse)) {
-				for (int x = std::min(rectStart.x, DropletWindow::mouseTile.x); x <= std::max(rectStart.x, DropletWindow::mouseTile.x); x++) {
-					for (int y = std::min(rectStart.y, DropletWindow::mouseTile.y); y <= std::max(rectStart.y, DropletWindow::mouseTile.y); y++) {
+				for (int x = std::min(rectStart.x, mouseTile.x); x <= std::max(rectStart.x, mouseTile.x); x++) {
+					for (int y = std::min(rectStart.y, mouseTile.y); y <= std::max(rectStart.y, mouseTile.y); y++) {
 						applyTool(x, y, rectDrawing == 1);
 					}
 				}
@@ -627,28 +665,28 @@ void UpdateGeometryTab() {
 		}
 		else if (UI::window->modifierPressed(GLFW_MOD_SHIFT) && (UI::mouse.leftMouse || UI::mouse.rightMouse)) {
 			rectDrawing = UI::mouse.leftMouse ? 0 : 1;
-			rectStart = DropletWindow::mouseTile;
+			rectStart = mouseTile;
 		}
-		else if (DropletWindow::selectedTool == DropletWindow::GeometryTool::WALL && UI::window->keyPressed(GLFW_KEY_Q) && (UI::mouse.leftMouse || UI::mouse.rightMouse) && EditorState::dropletRoom->InBounds(DropletWindow::mouseTile.x, DropletWindow::mouseTile.y)) {
+		else if (selectedTool == GeometryTool::WALL && UI::window->keyPressed(GLFW_KEY_Q) && (UI::mouse.leftMouse || UI::mouse.rightMouse) && DropletWindow::room->InBounds(mouseTile.x, mouseTile.y)) {
 			std::vector<Vector2i> items;
 			std::vector<Vector2i> visited;
 			int setTo = UI::mouse.leftMouse ? 1 : 0;
-			int geoType = EditorState::dropletRoom->getTile(DropletWindow::mouseTile.x, DropletWindow::mouseTile.y) % 16;
+			int geoType = DropletWindow::room->getTile(mouseTile.x, mouseTile.y) % 16;
 			if (geoType == 1 || geoType == 0) {
 				bool solid = geoType == 1;
-				items.push_back({ DropletWindow::mouseTile.x, DropletWindow::mouseTile.y });
+				items.push_back({ mouseTile.x, mouseTile.y });
 
 				while (items.size() > 0) {
 					const Vector2i tile = items.back();
 					items.pop_back();
 					visited.push_back(tile);
 
-					if (!EditorState::dropletRoom->InBounds(tile.x, tile.y)) continue;
-					int geo = EditorState::dropletRoom->getTile(tile.x, tile.y);
+					if (!DropletWindow::room->InBounds(tile.x, tile.y)) continue;
+					int geo = DropletWindow::room->getTile(tile.x, tile.y);
 					if ((geo % 16) != 1 && (geo % 16) != 0) continue;
 					if ((geo % 16 == 1) != solid) continue;
 
-					EditorState::dropletRoom->geometry[tile.x * EditorState::dropletRoom->height + tile.y] = (geo & ~15) | setTo;
+					DropletWindow::room->geometry[tile.x * DropletWindow::room->height + tile.y] = (geo & ~15) | setTo;
 					Vector2i v;
 					v = { tile.x - 1, tile.y };
 					if (std::find(visited.begin(), visited.end(), v) == visited.end()) items.push_back(v);
@@ -662,50 +700,50 @@ void UpdateGeometryTab() {
 			}
 		}
 		else {
-			if ((UI::mouse.leftMouse || UI::mouse.rightMouse) && (DropletWindow::lastMouseTile.x != DropletWindow::mouseTile.x || DropletWindow::lastMouseTile.y != DropletWindow::mouseTile.y)) {
+			if ((UI::mouse.leftMouse || UI::mouse.rightMouse) && (lastMouseTile.x != mouseTile.x || lastMouseTile.y != mouseTile.y)) {
 				std::vector<Vector2i> drawLine;
-				drawLine = LevelUtils::line(DropletWindow::lastMouseTile.x, DropletWindow::lastMouseTile.y, DropletWindow::mouseTile.x, DropletWindow::mouseTile.y);
+				drawLine = LevelUtils::line(lastMouseTile.x, lastMouseTile.y, mouseTile.x, mouseTile.y);
 
 				for (Vector2i point : drawLine) {
-					if (EditorState::dropletRoom->InBounds(point.x, point.y)) {
+					if (DropletWindow::room->InBounds(point.x, point.y)) {
 						applyTool(point.x, point.y, UI::mouse.rightMouse);
 					}
 				}
 			} else if ((UI::mouse.leftMouse && !UI::mouse.lastLeftMouse) || (UI::mouse.rightMouse && !UI::mouse.lastRightMouse)) {
-				if (EditorState::dropletRoom->InBounds(DropletWindow::mouseTile.x, DropletWindow::mouseTile.y)) {
-					applyTool(DropletWindow::mouseTile.x, DropletWindow::mouseTile.y, UI::mouse.rightMouse);
+				if (DropletWindow::room->InBounds(mouseTile.x, mouseTile.y)) {
+					applyTool(mouseTile.x, mouseTile.y, UI::mouse.rightMouse);
 				}
 			}
 		}
 
 		setThemeColor(ThemeColour::RoomBorderHighlight);
 		if (rectDrawing != -1) {
-			int sx = std::min(rectStart.x, DropletWindow::mouseTile.x);
-			int sy = std::min(rectStart.y, DropletWindow::mouseTile.y);
-			int ex = std::max(rectStart.x, DropletWindow::mouseTile.x);
-			int ey = std::max(rectStart.y, DropletWindow::mouseTile.y);
+			int sx = std::min(rectStart.x, mouseTile.x);
+			int sy = std::min(rectStart.y, mouseTile.y);
+			int ex = std::max(rectStart.x, mouseTile.x);
+			int ey = std::max(rectStart.y, mouseTile.y);
 
-			strokeRect(Rect(DropletWindow::roomRect.x0 + sx, DropletWindow::roomRect.y1 - sy, DropletWindow::roomRect.x0 + ex + 1, DropletWindow::roomRect.y1 - ey - 1));
+			strokeRect(Rect(roomRect.x0 + sx, roomRect.y1 - sy, roomRect.x0 + ex + 1, roomRect.y1 - ey - 1));
 		}
 		else {
-			strokeRect(Rect::fromSize(DropletWindow::roomRect.x0 + DropletWindow::mouseTile.x, DropletWindow::roomRect.y1 - DropletWindow::mouseTile.y - 1, 1.0, 1.0));
+			strokeRect(Rect::fromSize(roomRect.x0 + mouseTile.x, roomRect.y1 - mouseTile.y - 1, 1.0, 1.0));
 		}
 	}
 
-	DropletWindow::lastMouseDrawing = UI::mouse.leftMouse || UI::mouse.rightMouse;
+	lastMouseDrawing = UI::mouse.leftMouse || UI::mouse.rightMouse;
 }
 
 bool drawCameraAngle(double x, double y, Vector2 &angle, bool dragging) {
-	bool hovered = !DropletWindow::blockMouse && (DropletWindow::transformedMouse.distanceTo(Vector2(x, y)) < 4.0 || DropletWindow::transformedMouse.distanceTo(Vector2(x + 4.0 * angle.x, y + 4.0 * angle.y)) < 0.05 * DropletWindow::cameraScale);
+	bool hovered = !blockMouse && (transformedMouse.distanceTo(Vector2(x, y)) < 4.0 || transformedMouse.distanceTo(Vector2(x + 4.0 * angle.x, y + 4.0 * angle.y)) < 0.05 * cameraScale);
 	Draw::color(Color(0.0, 1.0, 0.0, hovered ? 1.0 : 0.5));
 	strokeCircle(x, y, 4.0, 20);
 	drawLine(x, y, x + angle.x * 4.0, y + angle.y * 4.0);
 	strokeCircle(x, y, angle.length() * 4.0, 20);
-	fillCircle(x + angle.x * 4.0, y + angle.y * 4.0, 0.01 * DropletWindow::cameraScale, 8);
+	fillCircle(x + angle.x * 4.0, y + angle.y * 4.0, 0.01 * cameraScale, 8);
 
 	if (dragging) {
-		angle.x = (DropletWindow::transformedMouse.x - x) / 4.0;
-		angle.y = (DropletWindow::transformedMouse.y - y) / 4.0;
+		angle.x = (transformedMouse.x - x) / 4.0;
+		angle.y = (transformedMouse.y - y) / 4.0;
 		if (!UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
 			double len = angle.length();
 			if (len > 1.0) {
@@ -715,8 +753,8 @@ bool drawCameraAngle(double x, double y, Vector2 &angle, bool dragging) {
 		return true;
 	}
 	if (hovered && UI::mouse.justClicked()) {
-		angle.x = (DropletWindow::transformedMouse.x - x) / 4.0;
-		angle.y = (DropletWindow::transformedMouse.y - y) / 4.0;
+		angle.x = (transformedMouse.x - x) / 4.0;
+		angle.y = (transformedMouse.y - y) / 4.0;
 		return true;
 	}
 	if (hovered && UI::mouse.rightMouse && !UI::mouse.lastRightMouse) {
@@ -731,7 +769,7 @@ const Vector2 cameraSizeTiles(70, 40);
 const Vector2 cameraSizeLarge(68.3, 38.4);
 const Vector2 cameraSizeSmall(51.2, 38.4);
 void UpdateCameraTab() {
-	static DropletWindow::Camera *draggingCamera = nullptr;
+	static Camera *draggingCamera = nullptr;
 	static int draggingCameraAngle = -1;
 	static Vector2 dragStart;
 
@@ -743,8 +781,8 @@ void UpdateCameraTab() {
 	glEnable(GL_BLEND);
 	int i = 1;
 	bool newSelectedCamera = false;
-	for (DropletWindow::Camera &camera : DropletWindow::cameras) {
-		bool selected = DropletWindow::selectedCamera == &camera;
+	for (Camera &camera : cameras) {
+		bool selected = selectedCamera == &camera;
 		Vector2 center(camera.position.x + cameraSizeTiles.x * 0.5, camera.position.y + cameraSizeTiles.y * 0.5);
 		Draw::color(Color(0.0, 1.0, 0.0, selected ? 0.25 : 0.15));
 		Draw::begin(Draw::QUADS);
@@ -760,7 +798,7 @@ void UpdateCameraTab() {
 		Draw::color(Color(0.0, 1.0, 0.0));
 		strokeRect(Rect::fromSize(center.x - cameraSizeSmall.x * 0.5, -center.y - cameraSizeSmall.y * 0.5, cameraSizeSmall.x, cameraSizeSmall.y));
 		Draw::color(Color(1.0));
-		Fonts::rainworld->writeCentered(std::to_string(i), center.x, -center.y, 0.0625 * DropletWindow::cameraScale, CENTER_XY);
+		Fonts::rainworld->writeCentered(std::to_string(i), center.x, -center.y, 0.0625 * cameraScale, CENTER_XY);
 		i++;
 
 		if (selected) {
@@ -771,39 +809,39 @@ void UpdateCameraTab() {
 		}
 
 		if (draggingCamera == &camera && draggingCameraAngle == -1) {
-			camera.position += (DropletWindow::transformedMouse - dragStart) * Vector2(1, -1);
-			dragStart = DropletWindow::transformedMouse;
+			camera.position += (transformedMouse - dragStart) * Vector2(1, -1);
+			dragStart = transformedMouse;
 		}
 
-		if (!newSelectedCamera && !DropletWindow::blockMouse && UI::mouse.justClicked() && Rect(camera.position.x, -camera.position.y, camera.position.x + cameraSizeTiles.x, -camera.position.y - cameraSizeTiles.y).inside(DropletWindow::transformedMouse.x, DropletWindow::transformedMouse.y)) {
+		if (!newSelectedCamera && !blockMouse && UI::mouse.justClicked() && Rect(camera.position.x, -camera.position.y, camera.position.x + cameraSizeTiles.x, -camera.position.y - cameraSizeTiles.y).inside(transformedMouse.x, transformedMouse.y)) {
 			newSelectedCamera = true;
-			DropletWindow::selectedCamera = &camera;
+			selectedCamera = &camera;
 			draggingCamera = &camera;
 			draggingCameraAngle = -1;
-			dragStart = DropletWindow::transformedMouse;
+			dragStart = transformedMouse;
 		}
 	}
 	glDisable(GL_BLEND);
 
 	if (UI::mouse.justClicked() && !newSelectedCamera) {
-		DropletWindow::selectedCamera = nullptr;
+		selectedCamera = nullptr;
 	}
 
 	if (UI::window->justPressed(GLFW_KEY_C)) {
-		DropletWindow::Camera camera;
-		camera.position = DropletWindow::transformedMouse * Vector2(1, -1) - cameraSizeTiles * 0.5;
-		DropletWindow::cameras.push_back(camera);
-		DropletWindow::selectedCamera = &DropletWindow::cameras[DropletWindow::cameras.size() - 1];
+		Camera camera;
+		camera.position = transformedMouse * Vector2(1, -1) - cameraSizeTiles * 0.5;
+		cameras.push_back(camera);
+		selectedCamera = &cameras[cameras.size() - 1];
 	}
 
-	if (UI::window->justPressed(GLFW_KEY_X) && DropletWindow::selectedCamera != nullptr) {
-		if (DropletWindow::cameras.size() == 1) {
+	if (UI::window->justPressed(GLFW_KEY_X) && selectedCamera != nullptr) {
+		if (cameras.size() == 1) {
 			Popups::addPopup(new InfoPopup("Cannot delete last camera"));
 		} else {
-			DropletWindow::cameras.erase(std::remove_if(DropletWindow::cameras.begin(), DropletWindow::cameras.end(), [](const DropletWindow::Camera &other) {
-				return &other == DropletWindow::selectedCamera;
-			}), DropletWindow::cameras.end());
-			DropletWindow::selectedCamera = nullptr;
+			cameras.erase(std::remove_if(cameras.begin(), cameras.end(), [](const Camera &other) {
+				return &other == selectedCamera;
+			}), cameras.end());
+			selectedCamera = nullptr;
 		}
 	}
 }
@@ -812,7 +850,7 @@ void UpdateNOTCameraTab() {
 	if (!DropletWindow::showObjects) return;
 
 	glEnable(GL_BLEND);
-	for (DropletWindow::Camera &camera : DropletWindow::cameras) {
+	for (Camera &camera : cameras) {
 		Vector2 center(camera.position.x + cameraSizeTiles.x * 0.5, camera.position.y + cameraSizeTiles.y * 0.5);
 		Draw::color(Color(0.0, 1.0, 0.0));
 		strokeRect(Rect::fromSize(camera.position.x, -camera.position.y, cameraSizeTiles.x, -cameraSizeTiles.y));
@@ -823,7 +861,7 @@ void UpdateNOTCameraTab() {
 
 void drawWater(bool border) {
 	if (border) {
-		Rect water = Rect(DropletWindow::roomRect.x0, DropletWindow::roomRect.y0, DropletWindow::roomRect.x1, DropletWindow::roomRect.y0 + (EditorState::dropletRoom->water + 0.5));
+		Rect water = Rect(roomRect.x0, roomRect.y0, roomRect.x1, roomRect.y0 + (DropletWindow::room->water + 0.5));
 		Draw::color(0.0, 0.0, 0.5, 1.0);
 		drawLine(water.x0, water.y1, water.x1, water.y1);
 		return;
@@ -832,7 +870,7 @@ void drawWater(bool border) {
 	glEnable(GL_BLEND);
 	Draw::color(0.0, 0.0, 0.5, 0.5);
 	for (WaterSpot &spot : water) {
-		Rect waterRect = Rect::fromSize(DropletWindow::roomRect.x0 + spot.pos.x / 20.0, DropletWindow::roomRect.y0 + spot.pos.y / 20.0, spot.size.x / 20.0, spot.size.y / 20.0);
+		Rect waterRect = Rect::fromSize(roomRect.x0 + spot.pos.x / 20.0, roomRect.y0 + spot.pos.y / 20.0, spot.size.x / 20.0, spot.size.y / 20.0);
 		fillRect(waterRect);
 	}
 	glDisable(GL_BLEND);
@@ -840,30 +878,30 @@ void drawWater(bool border) {
 
 void DropletWindow::Draw() {
 	if (!UI::mouse.leftMouse && !UI::mouse.rightMouse) {
-		if (UI::window->justPressed(GLFW_KEY_1)) currentTab = DropletWindow::EditorTab::DETAILS;
-		if (UI::window->justPressed(GLFW_KEY_2)) currentTab = DropletWindow::EditorTab::GEOMETRY;
-		if (UI::window->justPressed(GLFW_KEY_3)) currentTab = DropletWindow::EditorTab::CAMERA;
+		if (UI::window->justPressed(GLFW_KEY_1)) currentTab = EditorTab::DETAILS;
+		if (UI::window->justPressed(GLFW_KEY_2)) currentTab = EditorTab::GEOMETRY;
+		if (UI::window->justPressed(GLFW_KEY_3)) currentTab = EditorTab::CAMERA;
 	}
 
 	UpdateCamera();
 
 	applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale * UI::screenBounds);
 
-	roomRect = Rect::fromSize(0.0, 0.0, EditorState::dropletRoom->width, -EditorState::dropletRoom->height);
+	roomRect = Rect::fromSize(0.0, 0.0, DropletWindow::room->width, -DropletWindow::room->height);
 
 	setThemeColor(ThemeColour::RoomAir);
 	fillRect(roomRect);
 
 	Draw::color(currentTheme[ThemeColour::RoomAir].mix(currentTheme[ThemeColour::RoomSolid], 0.25));
 	Draw::begin(Draw::QUADS);
-	for (int x = 0; x < EditorState::dropletRoom->width; x++) {
-		for (int y = 0; y < EditorState::dropletRoom->height; y++) {
+	for (int x = 0; x < DropletWindow::room->width; x++) {
+		for (int y = 0; y < DropletWindow::room->height; y++) {
 			float x0 = roomRect.x0 + x;
 			float y0 = roomRect.y1 - y;
 			float x1 = x0 + 1;
 			float y1 = y0 - 1;
 
-			if ((EditorState::dropletRoom->getTile(x, y) & 512) > 0) {
+			if ((DropletWindow::room->getTile(x, y) & 512) > 0) {
 				Draw::vertex(x0, y0);
 				Draw::vertex(x1, y0);
 				Draw::vertex(x1, y1);
@@ -873,18 +911,18 @@ void DropletWindow::Draw() {
 	}
 	Draw::end();
 
-	if (!waterInFront && EditorState::dropletRoom->water != -1) {
+	if (!waterInFront && DropletWindow::room->water != -1) {
 		drawWater(false);
 	}
 
 	Draw::begin(Draw::QUADS);
-	for (int x = 0; x < EditorState::dropletRoom->width; x++) {
-		for (int y = 0; y < EditorState::dropletRoom->height; y++) {
+	for (int x = 0; x < DropletWindow::room->width; x++) {
+		for (int y = 0; y < DropletWindow::room->height; y++) {
 			float x0 = roomRect.x0 + x;
 			float y0 = roomRect.y1 - y;
 			float x1 = x0 + 1;
 			float y1 = y0 - 1;
-			int geo = EditorState::dropletRoom->getTile(x, y);
+			int geo = DropletWindow::room->getTile(x, y);
 
 			if (geo % 16 == 1) {
 				setThemeColor(ThemeColour::RoomSolid);
@@ -901,7 +939,7 @@ void DropletWindow::Draw() {
 				Draw::vertex(x0, y0 - 0.5);
 			}
 			else if (geo % 16 == 2) {
-				int type = (EditorState::dropletRoom->getTile(x, y) & (1024 + 2048)) / 1024;
+				int type = (DropletWindow::room->getTile(x, y) & (1024 + 2048)) / 1024;
 
 				setThemeColor(ThemeColour::RoomSolid);
 				if (type == 0) {
@@ -953,26 +991,26 @@ void DropletWindow::Draw() {
 
 	glEnable(GL_BLEND);
 	Draw::useTexture(shortcutsTexture->ID());
-	for (int x = 0; x < EditorState::dropletRoom->width; x++) {
-		for (int y = 0; y < EditorState::dropletRoom->height; y++) {
+	for (int x = 0; x < DropletWindow::room->width; x++) {
+		for (int y = 0; y < DropletWindow::room->height; y++) {
 			float x0 = roomRect.x0 + x;
 			float y0 = roomRect.y1 - y;
 			float x1 = x0 + 1;
 			float y1 = y0 - 1;
-			int geo = EditorState::dropletRoom->getTile(x, y);
+			int geo = DropletWindow::room->getTile(x, y);
 
 			if ((geo & 15) == 4) {
 				setThemeColor(ThemeColour::RoomShortcutRoom);
-				if (EditorState::dropletRoom->getTile(x, y + 1) & 128) {
+				if (DropletWindow::room->getTile(x, y + 1) & 128) {
 					fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.0, 0.25, 0.25));
 				}
-				else if (EditorState::dropletRoom->getTile(x - 1, y) & 128) {
+				else if (DropletWindow::room->getTile(x - 1, y) & 128) {
 					fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.0, 0.5, 0.25));
 				}
-				else if (EditorState::dropletRoom->getTile(x + 1, y) & 128) {
+				else if (DropletWindow::room->getTile(x + 1, y) & 128) {
 					fillRect(UVRect(x0, y0, x1, y1).uv(0.5, 0.0, 0.75, 0.25));
 				}
-				else if (EditorState::dropletRoom->getTile(x, y - 1) & 128) {
+				else if (DropletWindow::room->getTile(x, y - 1) & 128) {
 					fillRect(UVRect(x0, y0, x1, y1).uv(0.75, 0.0, 1.0, 0.25));
 				}
 				else {
@@ -1024,7 +1062,7 @@ void DropletWindow::Draw() {
 	}
 	Draw::useTexture(0);
 
-	if (EditorState::dropletRoom->water != -1) {
+	if (DropletWindow::room->water != -1) {
 		if (waterInFront) {
 			drawWater(false);
 		}
@@ -1049,20 +1087,20 @@ void DropletWindow::Draw() {
 
 	blockMouse = UI::mouse.y >= (UI::screenBounds.y - 0.12) || UI::mouse.x >= (UI::screenBounds.x - 0.41);
 
-	if (currentTab == DropletWindow::EditorTab::DETAILS) {
+	if (currentTab == EditorTab::DETAILS) {
 		UpdateDetailsTab();
 	}
 	else {
 		UpdateNOTDetailsTab();
 	}
 
-	if (currentTab == DropletWindow::EditorTab::GEOMETRY) {
+	if (currentTab == EditorTab::GEOMETRY) {
 		UpdateGeometryTab();
 	} else {
 		// UpdateNOTGeometryTab();
 	}
 
-	if (currentTab == DropletWindow::EditorTab::CAMERA) {
+	if (currentTab == EditorTab::CAMERA) {
 		UpdateCameraTab();
 	}
 	else {
@@ -1080,32 +1118,32 @@ void DropletWindow::Draw() {
 	setThemeColor(ThemeColour::Border);
 	drawLine(sidebar.x0, sidebar.y0, sidebar.x0, sidebar.y1);
 
-	if (currentTab == DropletWindow::EditorTab::GEOMETRY) {
+	if (currentTab == EditorTab::GEOMETRY) {
 		for (int y = 0; y < 4; y++) {
 			for (int x = 0; x < 4; x++) {
 				int i = x + y * 4;
 				UVRect toolRect = UVRect::fromSize(sidebar.x0 + 0.01 + x * 0.1, sidebar.y1 - (y + 1) * 0.1, 0.09, 0.09);
 				toolRect.uv(x * 0.25, y * 0.2 + 0.2, x * 0.25 + 0.25, y * 0.2);
 
-				bool selected = DropletWindow::selectedTool == (DropletWindow::GeometryTool) i;
+				bool selected = selectedTool == (GeometryTool) i;
 				UI::ButtonResponse response =  UI::TextureButton(toolRect, UI::TextureButtonMods().TextureId(DropletWindow::toolsTexture->ID()).TextureScale(0.75).Selected(selected).TextureColor(selected ? Color(1.0) : Color(0.5)));
 				if (response.clicked) {
-					DropletWindow::selectedTool = (DropletWindow::GeometryTool) i;
+					selectedTool = (GeometryTool) i;
 				}
 			}
 		}
-	} else if (currentTab == DropletWindow::EditorTab::DETAILS) {
-		bool hasWater = EditorState::dropletRoom->water != -1;
+	} else if (currentTab == EditorTab::DETAILS) {
+		bool hasWater = DropletWindow::room->water != -1;
 
 		UI::CheckBox(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.06, 0.05, 0.05), enclosedRoom);
 		UI::CheckBox(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.12, 0.05, 0.05), hasWater);
 		UI::CheckBox(Rect::fromSize(sidebar.x0 + 0.01, sidebar.y1 - 0.18, 0.05, 0.05), waterInFront);
 
 		if (!hasWater) {
-			EditorState::dropletRoom->water = -1;
+			DropletWindow::room->water = -1;
 		} else {
-			if (EditorState::dropletRoom->water == -1) {
-				EditorState::dropletRoom->water = EditorState::dropletRoom->height / 2;
+			if (DropletWindow::room->water == -1) {
+				DropletWindow::room->water = DropletWindow::room->height / 2;
 			}
 		}
 
@@ -1119,17 +1157,17 @@ void DropletWindow::Draw() {
 		drawLine(sidebar.x0, barY, sidebar.x1, sidebar.y1 - 0.2);
 		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, barY - 0.06, 0.39, 0.05), "Add TerrainHandle")) {
 			TerrainHandleObject *object = new TerrainHandleObject();
-			DropletWindow::objects.push_back(object);
+			objects.push_back(object);
 			terrainHandleObjects.push_back(object);
 		}
 		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, barY - 0.12, 0.39, 0.05), "Add MudPit")) {
 			MudPitObject *object = new MudPitObject();
-			DropletWindow::objects.push_back(object);
+			objects.push_back(object);
 			mudPitObjects.push_back(object);
 		}
 		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, barY - 0.18, 0.39, 0.05), "Add AirPocket")) {
 			AirPocketObject *object = new AirPocketObject();
-			DropletWindow::objects.push_back(object);
+			objects.push_back(object);
 			airPocketObjects.push_back(object);
 		}
 
@@ -1157,9 +1195,10 @@ void DropletWindow::Draw() {
 	for (int i = 0; i < 3; i++) {
 		double tabWidth = std::max(0.15, Fonts::rainworld->getTextWidth(TAB_NAMES[i], 0.03) + 0.04);
 		Rect tab = Rect::fromSize(tabPosition, Vector2(tabWidth, tabHeight));
-		bool selected = i == (int) DropletWindow::currentTab;
+		bool hovered = tab.inside(UI::mouse);
+		bool selected = i == (int) currentTab;
 
-		if (selected) {
+		if (selected || hovered) {
 			setThemeColor(ThemeColour::PopupHeader);
 			fillRect(tab);
 		}
@@ -1167,7 +1206,7 @@ void DropletWindow::Draw() {
 		setThemeColor(selected ? ThemeColour::BorderHighlight : ThemeColour::Border);
 		strokeRect(tab);
 
-		if (selected) {
+		if (selected || hovered) {
 			setThemeColor(ThemeColour::PopupHeader);
 			drawLine(tab.x0, tab.y0, tab.x1, tab.y0);
 		}
@@ -1175,8 +1214,8 @@ void DropletWindow::Draw() {
 		setThemeColor(selected ? ThemeColour::TextHighlight : ThemeColour::Text);
 		Fonts::rainworld->write(TAB_NAMES[i], tabPosition.x + 0.02, tabPosition.y + 0.04, 0.03);
 
-		if (tab.inside(UI::mouse) && UI::mouse.justClicked()) {
-			currentTab = (DropletWindow::EditorTab) i;
+		if (hovered && UI::mouse.justClicked()) {
+			currentTab = (EditorTab) i;
 		}
 
 		tabPosition.x += tabWidth + 0.01;
@@ -1190,27 +1229,27 @@ void setCameraAngle(std::string from, Vector2 &angle) {
 
 		angle.x = sin(theta) * radius;
 		angle.y = cos(theta) * radius;
-	} catch (std::invalid_argument) {
+	} catch (...) { // std::invalid_argument, std::out_of_range
 		Logger::warn("Failed parsing camera angle: ", from);
 	}
 }
 
 void backup() {
-	if (DropletWindow::backupGeometry != nullptr) delete[] DropletWindow::backupGeometry;
+	if (backupGeometry != nullptr) delete[] backupGeometry;
 
-	DropletWindow::backupGeometry = new int[EditorState::dropletRoom->width * EditorState::dropletRoom->height];
-	for (int i = 0; i < EditorState::dropletRoom->width * EditorState::dropletRoom->height; i++) {
-		DropletWindow::backupGeometry[i] = EditorState::dropletRoom->geometry[i];
+	backupGeometry = new int[DropletWindow::room->width * DropletWindow::room->height];
+	for (int i = 0; i < DropletWindow::room->width * DropletWindow::room->height; i++) {
+		backupGeometry[i] = DropletWindow::room->geometry[i];
 	}
-	DropletWindow::backupWater = EditorState::dropletRoom->water;
+	backupWater = DropletWindow::room->water;
 }
 
 void DropletWindow::loadRoom() {
 	cameras.clear();
 
-	std::fstream geometryFile(EditorState::dropletRoom->path);
-	if (!geometryFile.is_open() || !std::filesystem::exists(EditorState::dropletRoom->path)) {
-		Logger::error("Failed to open droplet room file: ", EditorState::dropletRoom->path);
+	std::fstream geometryFile(DropletWindow::room->path);
+	if (!geometryFile.is_open() || !std::filesystem::exists(DropletWindow::room->path)) {
+		Logger::error("Failed to open droplet room file: ", DropletWindow::room->path);
 		return;
 	}
 
@@ -1235,7 +1274,7 @@ void DropletWindow::loadRoom() {
 		try {
 			x = std::stoi(xStr);
 			y = std::stoi(yStr);
-		} catch (std::invalid_argument) {
+		} catch (...) { // std::invalid_argument, std::out_of_range
 			Logger::warn("Can't open droplet room due to invalid camera positions (", xStr, ", ", yStr, ")");
 		}
 
@@ -1276,7 +1315,7 @@ void DropletWindow::loadRoom() {
 	mudPitObjects.clear();
 	airPocketObjects.clear();
 
-	std::filesystem::path settingsFilePath = findFileCaseInsensitive(EditorState::dropletRoom->path.parent_path(), EditorState::dropletRoom->roomName + "_settings.txt");
+	std::filesystem::path settingsFilePath = findFileCaseInsensitive(DropletWindow::room->path.parent_path(), DropletWindow::room->roomName + "_settings.txt");
 	std::ifstream settingsFile(settingsFilePath);
 	while (std::getline(settingsFile, tempLine)) {
 		if (startsWith(tempLine, "PlacedObjects: ")) {
@@ -1293,7 +1332,7 @@ void DropletWindow::loadRoom() {
 				try {
 					pos.x = std::stod(xStr);
 					pos.y = std::stod(yStr);
-				} catch (std::invalid_argument) {
+				} catch (...) { // std::invalid_argument, std::out_of_range
 					Logger::warn("Failed to parse Placed Object: ", po);
 				}
 	
@@ -1307,7 +1346,7 @@ void DropletWindow::loadRoom() {
 							obj->nodes[1]->pos.y = std::stod(splits[1]);
 							obj->nodes[2]->pos.x = std::stod(splits[2]);
 							obj->nodes[2]->pos.y = std::stod(splits[3]);
-						} catch (std::invalid_argument) {}
+						} catch (...) {} // std::invalid_argument, std::out_of_range
 					}
 					objects.push_back(obj);
 					terrainHandleObjects.push_back(obj);
@@ -1319,7 +1358,7 @@ void DropletWindow::loadRoom() {
 						try {
 							obj->nodes[1]->pos.x = std::stod(splits[0]);
 							obj->nodes[1]->pos.y = std::stod(splits[1]);
-						} catch (std::invalid_argument) {}
+						} catch (...) {} // std::invalid_argument, std::out_of_range
 					}
 					objects.push_back(obj);
 					mudPitObjects.push_back(obj);
@@ -1332,7 +1371,7 @@ void DropletWindow::loadRoom() {
 							obj->nodes[1]->pos.x = std::stod(splits[0]);
 							obj->nodes[1]->pos.y = std::stod(splits[1]);
 							obj->nodes[2]->pos.y = std::stod(splits[5]);
-						} catch (std::invalid_argument) {}
+						} catch (...) {} // std::invalid_argument, std::out_of_range
 					}
 					objects.push_back(obj);
 					airPocketObjects.push_back(obj);
@@ -1348,28 +1387,30 @@ void DropletWindow::loadRoom() {
 }
 
 void DropletWindow::resetChanges() {
-	if (DropletWindow::backupGeometry == nullptr) return;
+	if (backupGeometry == nullptr) return;
 
-	for (int i = 0; i < EditorState::dropletRoom->width * EditorState::dropletRoom->height; i++) {
-		EditorState::dropletRoom->geometry[i] = DropletWindow::backupGeometry[i];
+	for (int i = 0; i < DropletWindow::room->width * DropletWindow::room->height; i++) {
+		DropletWindow::room->geometry[i] = backupGeometry[i];
 	}
-	EditorState::dropletRoom->water = DropletWindow::backupWater;
+	DropletWindow::room->water = backupWater;
 
-	delete[] DropletWindow::backupGeometry;
-	DropletWindow::backupGeometry = nullptr;
+	delete[] backupGeometry;
+	backupGeometry = nullptr;
+
+	DropletWindow::room->regenerateGeometry();
 }
 
 void DropletWindow::exportGeometry() {
-	std::filesystem::path geoPath = EditorState::region.roomsDirectory / (EditorState::dropletRoom->roomName + ".txt");
+	std::filesystem::path geoPath = EditorState::region.roomsDirectory / (DropletWindow::room->roomName + ".txt");
 	Backup::backup(geoPath);
 	std::ofstream geo(geoPath);
-	geo << EditorState::dropletRoom->roomName << "\n";
-	geo << EditorState::dropletRoom->width << "*" << EditorState::dropletRoom->height;
-	geo << (EditorState::dropletRoom->water == -1 ? "" : ("|" + std::to_string(EditorState::dropletRoom->water) + "|" + (waterInFront ? "1" : "0"))) << "\n";
+	geo << DropletWindow::room->roomName << "\n";
+	geo << DropletWindow::room->width << "*" << DropletWindow::room->height;
+	geo << (DropletWindow::room->water == -1 ? "" : ("|" + std::to_string(DropletWindow::room->water) + "|" + (waterInFront ? "1" : "0"))) << "\n";
 	geo << "0.0000*1.0000|0|0\n";
 	{
 		bool first = true;
-		for (Camera camera : DropletWindow::cameras) {
+		for (Camera camera : cameras) {
 			if (!first) geo << "|";
 			first = false;
 	
@@ -1378,9 +1419,9 @@ void DropletWindow::exportGeometry() {
 		geo << "\n";
 	}
 	geo << "Border: " << (enclosedRoom ? "Solid" : "Passable") << "\n";
-	for (int x = 0; x < EditorState::dropletRoom->width; x++) {
-		for (int y = 0; y < EditorState::dropletRoom->height; y++) {
-			int tile = EditorState::dropletRoom->getTile(x, y);
+	for (int x = 0; x < DropletWindow::room->width; x++) {
+		for (int y = 0; y < DropletWindow::room->height; y++) {
+			int tile = DropletWindow::room->getTile(x, y);
 			if ((tile & 262144) > 0) {
 				geo << "0," << (x + 1) << "," << (y + 1) << "|";
 			}
@@ -1395,9 +1436,9 @@ void DropletWindow::exportGeometry() {
 	geo << "\n";
 	geo << "0\n";
 	geo << "\n";
-	for (int x = 0; x < EditorState::dropletRoom->width; x++) {
-		for (int y = 0; y < EditorState::dropletRoom->height; y++) {
-			int tile = EditorState::dropletRoom->getTile(x, y);
+	for (int x = 0; x < DropletWindow::room->width; x++) {
+		for (int y = 0; y < DropletWindow::room->height; y++) {
+			int tile = DropletWindow::room->getTile(x, y);
 
 			geo << std::to_string(tile % 16);
 			if ((tile & 16) > 0) { // Vertical Pole
@@ -1443,7 +1484,7 @@ void DropletWindow::exportGeometry() {
 	{
 		geo << "camera angles:";
 		bool first = true;
-		for (Camera camera : DropletWindow::cameras) {
+		for (Camera camera : cameras) {
 			if (!first) geo << "|";
 			first = false;
 	
@@ -1460,7 +1501,7 @@ void DropletWindow::exportGeometry() {
 	terrainNeedsRefresh = true;
 	waterNeedsRefresh = true;
 
-	std::filesystem::path settingsPath = EditorState::region.roomsDirectory / (EditorState::dropletRoom->roomName + "_settings.txt");
+	std::filesystem::path settingsPath = EditorState::region.roomsDirectory / (DropletWindow::room->roomName + "_settings.txt");
 	Backup::backup(settingsPath);
 	std::string before;
 	std::string placedObjects;
@@ -1610,7 +1651,7 @@ bool validSlopePos(int geo, Vector2 tp) {
 	return false;
 }
 
-void renderCamera(DropletWindow::Camera &camera, std::filesystem::path outputPath) {
+void renderCamera(Camera &camera, std::filesystem::path outputPath) {
 	std::vector<unsigned char> image(CAMERA_TEXTURE_WIDTH * CAMERA_TEXTURE_HEIGHT * 3);
 
 	// (121, 0, 0) -> L1 solid
@@ -1629,7 +1670,7 @@ void renderCamera(DropletWindow::Camera &camera, std::filesystem::path outputPat
 				camera.position.y + y * 1.0 / 20.0
 			);
 			Vector2i tile = Vector2i(std::round(tp.x), std::round(tp.y));
-			int geo = EditorState::dropletRoom->getTile(tile.x, tile.y);
+			int geo = DropletWindow::room->getTile(tile.x, tile.y);
 			if ((geo & 128) > 0 && (std::abs(std::fmod(tp.y + 0.5, 1.0) - 0.5) + std::abs(std::fmod(tp.x + 0.5, 1.0) - 0.5)) < 0.25) {
 				image[id + 0] = 31;
 				image[id + 1] = 8;
@@ -1680,21 +1721,21 @@ void DropletWindow::render() {
 	exportGeometry();
 
 	for (int i = 0; i < cameras.size(); i++) {
-		renderCamera(cameras[i], EditorState::region.roomsDirectory / (EditorState::dropletRoom->roomName + "_" + std::to_string(i + 1) + ".png"));
+		renderCamera(cameras[i], EditorState::region.roomsDirectory / (DropletWindow::room->roomName + "_" + std::to_string(i + 1) + ".png"));
 	}
 }
 
 void DropletWindow::exportProject(std::filesystem::path path) {
-	std::ofstream project(path / (EditorState::dropletRoom->roomName + ".txt"));
+	std::ofstream project(path / (DropletWindow::room->roomName + ".txt"));
 	project << std::setprecision(0);
 	project << "[";
-	for (int x = -12; x < EditorState::dropletRoom->width + 12; x++) {
+	for (int x = -12; x < DropletWindow::room->width + 12; x++) {
 		if (x != -12) project << ", ";
 
 		project << "[";
-		for (int y = -3; y < EditorState::dropletRoom->height + 5; y++) {
+		for (int y = -3; y < DropletWindow::room->height + 5; y++) {
 			if (y != -3) project << ", ";
-			int geo = EditorState::dropletRoom->getTile(x, y);
+			int geo = DropletWindow::room->getTile(x, y);
 			int solidA = 0;
 			std::vector<std::string> flags;
 			if (geo % 16 == 1) solidA = 1;
@@ -1733,9 +1774,9 @@ void DropletWindow::exportProject(std::filesystem::path path) {
 	project << "]\n";
 	project << "[#lastKeys: [], #Keys: [], #workLayer: 1, #lstMsPs: point(0, 0), #tlMatrix: [], #defaultMaterial: \"Standard\", #toolType: \"material\", #toolData: \"Big Metal\", #tmPos: point(1, 1), #tmSavPosL: [], #specialEdit: 0]\n";
 	project << "[#lastKeys: [], #Keys: [], #lstMsPs: point(0, 0), #effects: [], #emPos: point(1, 1), #editEffect: 0, #selectEditEffect: 0, #mode: \"createNew\", #brushSize: 5]\n";
-	project << "[#pos: point(0, 0), #rot: 0, #sz: point(" << std::to_string(EditorState::dropletRoom->width) << ", " << std::to_string(EditorState::dropletRoom->height) << "), #col: 1, #Keys: [#m1: 0, #m2: 0, #w: 0, #a: 0, #s: 0, #d: 0, #r: 0, #f: 0, #z: 0, #m: 0], #lastKeys: [#m1: 0, #m2: 0, #w: 0, #a: 0, #s: 0, #d: 0, #r: 0, #f: 0, #z: 0, #m: 0], #lastTm: 0, #lightAngle: 180, #flatness: 1, #lightRect: rect(1000, 1000, -1000, -1000), #paintShape: \"pxl\"]\n";
+	project << "[#pos: point(0, 0), #rot: 0, #sz: point(" << std::to_string(DropletWindow::room->width) << ", " << std::to_string(DropletWindow::room->height) << "), #col: 1, #Keys: [#m1: 0, #m2: 0, #w: 0, #a: 0, #s: 0, #d: 0, #r: 0, #f: 0, #z: 0, #m: 0], #lastKeys: [#m1: 0, #m2: 0, #w: 0, #a: 0, #s: 0, #d: 0, #r: 0, #f: 0, #z: 0, #m: 0], #lastTm: 0, #lightAngle: 180, #flatness: 1, #lightRect: rect(1000, 1000, -1000, -1000), #paintShape: \"pxl\"]\n";
 	project << "[#timeLimit: 4800, #defaultTerrain: " << (enclosedRoom ? "1" : "0") << ", #maxFlies: 10, #flySpawnRate: 50, #lizards: [], #ambientSounds: [], #music: \"NONE\", #tags: [], #lightType: \"Static\", #waterDrips: 1, #lightRect: rect(0, 0, 1040, 800), #Matrix: []]\n";
-	project << "[#mouse: 1, #lastMouse: 0, #mouseClick: 0, #pal: 1, #pals: [[#detCol: color( 255, 0, 0 )]], #eCol1: 1, #eCol2: 2, #totEcols: 5, #tileSeed: 225, #colGlows: [0, 0], #size: point(" << std::to_string(EditorState::dropletRoom->width + 24) << ", " << std::to_string(EditorState::dropletRoom->height + 8) << "), #extraTiles: [12, 3, 12, 5], #light: 1]\n";
+	project << "[#mouse: 1, #lastMouse: 0, #mouseClick: 0, #pal: 1, #pals: [[#detCol: color( 255, 0, 0 )]], #eCol1: 1, #eCol2: 2, #totEcols: 5, #tileSeed: 225, #colGlows: [0, 0], #size: point(" << std::to_string(DropletWindow::room->width + 24) << ", " << std::to_string(DropletWindow::room->height + 8) << "), #extraTiles: [12, 3, 12, 5], #light: 1]\n";
 	project << "[#cameras: [";
 	{
 		bool first = true;
@@ -1758,7 +1799,7 @@ void DropletWindow::exportProject(std::filesystem::path path) {
 		}
 	}
 	project << "], #Keys: [#n: 0, #d: 0, #e: 0, #p: 0], #lastKeys: [#n: 0, #d: 0, #e: 0, #p: 0]]\n";
-	project << "[#waterLevel: " << EditorState::dropletRoom->water << ", #waterInFront: " << (waterInFront ? "1" : "0") << ", #waveLength: 60, #waveAmplitude: 5, #waveSpeed: 10]\n";
+	project << "[#waterLevel: " << DropletWindow::room->water << ", #waterInFront: " << (waterInFront ? "1" : "0") << ", #waveLength: 60, #waveAmplitude: 5, #waveSpeed: 10]\n";
 	project << "[#props: [], #lastKeys: [#w: 0, #a: 0, #s: 0, #d: 0, #L: 0, #n: 0, #m1: 0, #m2: 0, #c: 0, #z: 0], #Keys: [#w: 0, #a: 0, #s: 0, #d: 0, #L: 0, #n: 0, #m1: 0, #m2: 0, #c: 0, #z: 0], #workLayer: 1, #lstMsPs: point(0, 0), #pmPos: point(1, 1), #pmSavPosL: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], #propRotation: 0, #propStretchX: 1, #propStretchY: 1, #propFlipX: 1, #propFlipY: 1, #depth: 0, #color: 0]\n";
 	project.close();
 }

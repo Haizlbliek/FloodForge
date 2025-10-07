@@ -10,9 +10,9 @@ class RoomAttractivenessPopup : public Popup {
 
 		~RoomAttractivenessPopup();
 
-		void close();
+		void close() override;
 
-		void draw();
+		void draw() override;
 
 		static void scrollCallback(void *object, double deltaX, double deltaY);
 

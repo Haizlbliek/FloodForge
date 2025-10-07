@@ -730,7 +730,7 @@ void Room::loadGeometry() {
 		try {
 			x = std::stoi(item[1]) - 1;
 			y = std::stoi(item[2]) - 1;
-		} catch (std::invalid_argument) {
+		} catch (...) { // std::invalid_argument, std::out_of_range
 			Logger::warn("Failed to parse object: ", object);
 			continue;
 		}
@@ -960,7 +960,7 @@ void Room::addQuad(const Vertex &a, const Vertex &b, const Vertex &c, const Vert
 	cur_index += 4;
 }
 
-void Room::regeneateGeometry() {
+void Room::regenerateGeometry() {
 	glDeleteBuffers(2, vbo);
 	glDeleteVertexArrays(1, &vao);
 

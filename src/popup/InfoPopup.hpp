@@ -19,7 +19,7 @@ class InfoPopup : public Popup {
 
 		InfoPopup(std::string warningText);
 
-		void draw();
+		void draw() override;
 
 		std::string PopupName() { return "InfoPopup"; }
 

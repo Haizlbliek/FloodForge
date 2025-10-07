@@ -14,8 +14,13 @@
 #include "../Draw.hpp"
 #include "../Logger.hpp"
 
-#define CENTER_X  1
-#define CENTER_Y  2
+#define LEFT_X   0
+#define TOP_Y    0
+#define CENTER_X 1
+#define CENTER_Y 2
+#define RIGHT_X  4
+#define BOTTOM_Y 8
+
 #define CENTER_XY 3
 
 #define FONT_SMOOTH 0
@@ -145,6 +150,8 @@ class Font {
 
 			if (centreFlags & CENTER_X) startX -= textWidth * 0.5;
 			if (centreFlags & CENTER_Y) startY += textHeight * 0.5;
+			if (centreFlags & RIGHT_X) startX -= textWidth;
+			if (centreFlags & BOTTOM_Y) startY += textHeight;
 
 			write(text, startX, startY, fontSize);
 		}

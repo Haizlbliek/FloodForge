@@ -11,7 +11,7 @@ class RoomTagPopup : public Popup {
 	public:
 		RoomTagPopup(std::set<Room*> newRooms);
 
-		void draw();
+		void draw() override;
 
 		void setTag(std::string tag);
 

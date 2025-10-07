@@ -834,7 +834,7 @@ void FloodForgeWindow::updateMain() {
 				EditorState::placingRoomPosition = worldMouse;
 			} else {
 				EditorState::dropletOpen = true;
-				EditorState::dropletRoom = hoveringRoom;
+				DropletWindow::room = hoveringRoom;
 				DropletWindow::loadRoom();
 			}
 		}
@@ -879,7 +879,7 @@ void FloodForgeWindow::updateMain() {
 void FloodForgeWindow::Draw() {
 	try {
 		updateMain();
-	} catch (const std::exception &e) {
+	} catch (std::exception e) {
 		Logger::error("An exception was thrown during updateMain: ", e.what());
 		exit(1);
 	} catch (...) {

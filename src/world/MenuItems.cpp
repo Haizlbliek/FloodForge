@@ -14,6 +14,7 @@
 #include "WorldExporter.hpp"
 
 #include "droplet/DropletWindow.hpp"
+#include "droplet/ResizeLevelPopup.hpp"
 
 std::vector<Button*> MenuItems::buttons;
 std::vector<Button*> MenuItems::layerButtons;
@@ -360,6 +361,12 @@ void MenuItems::initDroplet() {
 		[](Button *button) {
 			DropletWindow::showObjects = !DropletWindow::showObjects;
 			button->Text(DropletWindow::showObjects ? "Hide objects" : "Show objects");
+		}
+	);
+
+	addButton("Resize", MENU_LAYER_DROPLET).OnPress(
+		[](Button *button) {
+			Popups::addPopup(new ResizeLevelPopup());
 		}
 	);
 }

@@ -12,9 +12,9 @@ class CreateRoomPopup : public Popup {
 	public:
 		CreateRoomPopup();
 
-		void draw();
+		void draw() override;
 
-		void close();
+		void close() override;
 
 		std::string PopupName() { return "CreateRoomPopup"; }
 

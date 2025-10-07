@@ -54,7 +54,6 @@ void updateGlobalInputs() {
 				Popups::addPopup((new ConfirmPopup("Exit Droplet?\nUnsaved changes will be lost"))->OnOkay([&]() {
 					EditorState::dropletOpen = false;
 					DropletWindow::resetChanges();
-					EditorState::dropletRoom->regeneateGeometry();
 				}));
 			} else {
 				Popups::addPopup((new ConfirmPopup("Exit FloodForge?"))->OnOkay([&]() {
@@ -70,8 +69,13 @@ void updateGlobalInputs() {
 		}
 	}
 
-	if (UI::window->modifierPressed(GLFW_MOD_ALT) && UI::window->justPressed(GLFW_KEY_T)) {
-		Popups::addPopup(new MarkdownPopup(BASE_PATH / "docs" / "controls.md"));
+	if (UI::window->modifierPressed(GLFW_MOD_ALT)) {
+		if (UI::window->justPressed(GLFW_KEY_T)) {
+			Popups::addPopup(new MarkdownPopup(BASE_PATH / "docs" / "controls.md"));
+		}
+		if (UI::window->justPressed(GLFW_KEY_S)) {
+			Popups::addPopup(new SplashArtPopup());
+		}
 	}
 }
 

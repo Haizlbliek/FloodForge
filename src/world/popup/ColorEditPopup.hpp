@@ -8,7 +8,7 @@ class ColorEditPopup : public Popup {
 	public:
 		ColorEditPopup(Colour &colour);
 
-		void draw();
+		void draw() override;
 
 		std::string PopupName() { return "ColorEditPopup"; }
 

@@ -89,7 +89,7 @@ void FilesystemPopup::reject() {
 }
 
 void FilesystemPopup::close() {
-	Popups::removePopup(this);
+	Popup::close();
 
 	UI::window->removeKeyCallback(this, keyCallback);
 	UI::window->removeScrollCallback(this, scrollCallback);
