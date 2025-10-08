@@ -68,6 +68,10 @@ void operator+=(Vector2i &lhs, const Vector2i &rhs) {
 	lhs.y += rhs.y;
 }
 
+Vector2i operator*(const Vector2i &lhs, const Vector2i &rhs) {
+	return Vector2i(lhs.x * rhs.x, lhs.y * rhs.y);
+}
+
 std::string to_string(const Vector2i &vector) {
 	return "(" + std::to_string(vector.x) + ", " + std::to_string(vector.y) + ")";
 }

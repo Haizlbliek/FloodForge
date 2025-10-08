@@ -22,6 +22,21 @@ void CreateRoomPopup::draw() {
 	static bool fillLayer1 = true;
 	static bool fillLayer2 = true;
 	static bool placeCameras = true;
+	if (init) {
+		roomName.submit(); roomName.value = "";
+		width.submit(); width.value = "48";
+		height.submit(); height.value = "35";
+		screenWidth.submit(); screenWidth.value = "1.000";
+		screenHeight.submit(); screenHeight.value = "1.000";
+		fillLayer1 = true;
+		fillLayer2 = true;
+		placeCameras = true;
+
+		init = false;
+	}
+	if (this->slatedForDeletion) {
+		init = true;
+	}
 
 	double y = bounds.y1 - 0.05;
 	static std::string errorText = "";

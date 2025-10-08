@@ -19,4 +19,7 @@ class CreateRoomPopup : public Popup {
 		std::string PopupName() { return "CreateRoomPopup"; }
 
 		bool canStack(std::string popupName) { return popupName == "InfoPopup"; }
+
+	private:
+		bool init = true;
 };

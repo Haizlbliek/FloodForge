@@ -12,6 +12,10 @@
 Texture *DropletWindow::shortcutsTexture = nullptr;
 Texture *DropletWindow::toolsTexture = nullptr;
 
+bool DropletWindow::showResize = false;
+Vector2i DropletWindow::resizeSize;
+Vector2i DropletWindow::resizeOffset;
+
 
 
 enum class EditorTab {
@@ -81,6 +85,8 @@ bool waterInFront = false;
 
 int *backupGeometry = nullptr;
 int backupWater;
+int backupWidth;
+int backupHeight;
 
 std::vector<Object *> objects;
 std::vector<TerrainHandleObject *> terrainHandleObjects;
@@ -422,6 +428,8 @@ void verifyShortcut(int x, int y) {
 }
 
 void applyTool(int x, int y, bool right) {
+	if (x < 0 || y < 0 || x >= DropletWindow::room->width || y >= DropletWindow::room->height) return;
+
 	if (selectedTool == GeometryTool::WALL) {
 		DropletWindow::room->geometry[x * DropletWindow::room->height + y] = right ? 0 : 1;
 	}
@@ -1074,6 +1082,9 @@ void DropletWindow::Draw() {
 
 	setThemeColor(ThemeColour::RoomBorder);
 	strokeRect(roomRect);
+	if (showResize) {
+		strokeRect(Rect::fromSize(resizeOffset.x, -resizeOffset.y, resizeSize.x, -resizeSize.y));
+	}
 
 	transformedMouse = Vector2(
 		UI::mouse.x * cameraScale + cameraOffset.x,
@@ -1242,6 +1253,8 @@ void backup() {
 		backupGeometry[i] = DropletWindow::room->geometry[i];
 	}
 	backupWater = DropletWindow::room->water;
+	backupWidth = DropletWindow::room->width;
+	backupHeight = DropletWindow::room->height;
 }
 
 void DropletWindow::loadRoom() {
@@ -1389,10 +1402,17 @@ void DropletWindow::loadRoom() {
 void DropletWindow::resetChanges() {
 	if (backupGeometry == nullptr) return;
 
-	for (int i = 0; i < DropletWindow::room->width * DropletWindow::room->height; i++) {
+	if (DropletWindow::room->width != backupWidth || DropletWindow::room->height != backupHeight) {
+		delete[] DropletWindow::room->geometry;
+		DropletWindow::room->geometry = new int[backupWidth * backupHeight];
+	}
+
+	for (int i = 0; i < backupWidth * backupHeight; i++) {
 		DropletWindow::room->geometry[i] = backupGeometry[i];
 	}
 	DropletWindow::room->water = backupWater;
+	DropletWindow::room->width = backupWidth;
+	DropletWindow::room->height = backupHeight;
 
 	delete[] backupGeometry;
 	backupGeometry = nullptr;
@@ -1802,4 +1822,42 @@ void DropletWindow::exportProject(std::filesystem::path path) {
 	project << "[#waterLevel: " << DropletWindow::room->water << ", #waterInFront: " << (waterInFront ? "1" : "0") << ", #waveLength: 60, #waveAmplitude: 5, #waveSpeed: 10]\n";
 	project << "[#props: [], #lastKeys: [#w: 0, #a: 0, #s: 0, #d: 0, #L: 0, #n: 0, #m1: 0, #m2: 0, #c: 0, #z: 0], #Keys: [#w: 0, #a: 0, #s: 0, #d: 0, #L: 0, #n: 0, #m1: 0, #m2: 0, #c: 0, #z: 0], #workLayer: 1, #lstMsPs: point(0, 0), #pmPos: point(1, 1), #pmSavPosL: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], #propRotation: 0, #propStretchX: 1, #propStretchY: 1, #propFlipX: 1, #propFlipY: 1, #depth: 0, #color: 0]\n";
 	project.close();
+}
+
+void DropletWindow::resizeRoom(int width, int height, bool stretch) {
+	backup();
+
+	room->width = width;
+	room->height = height;
+
+	delete[] room->geometry;
+	room->geometry = new int[width * height];
+
+	if (stretch) {
+		for (int x = 0; x < width; x++) {
+			int bx = (int) (((double) x / (width - 1)) * (backupWidth - 1));
+			for (int y = 0; y < height; y++) {
+				int by = (int) (((double) y / (height - 1)) * (backupHeight - 1));
+				int i = x * height + y;
+	
+				room->geometry[i] = backupGeometry[bx * backupHeight + by];
+			}
+		}
+	} else {
+		for (int x = 0; x < width; x++) {
+			int bx = x + resizeOffset.x;
+			for (int y = 0; y < height; y++) {
+				int by = y + resizeOffset.y;
+				int i = x * height + y;
+	
+				if (bx < 0 || by < 0 || bx >= backupWidth || by >= backupHeight) {
+					room->geometry[i] = 0;
+				} else {
+					room->geometry[i] = backupGeometry[bx * backupHeight + by];
+				}
+			}
+		}
+	}
+
+	backup();
 }

@@ -10,8 +10,8 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 	EditorState::region.reset();
 
 	EditorState::region.exportDirectory = path.parent_path();
-	EditorState::region.acronym = path.filename().generic_u8string();
-	EditorState::region.acronym = EditorState::region.acronym.substr(EditorState::region.acronym.find_last_of('_') + 1, EditorState::region.acronym.find_last_of('.') - EditorState::region.acronym.find_last_of('_') - 1);
+	EditorState::region.acronym = path.stem().generic_u8string();
+	EditorState::region.acronym = EditorState::region.acronym.substr(EditorState::region.acronym.find_last_of('_') + 1);
 	
 	Logger::info("Opening world ", EditorState::region.acronym);
 	
