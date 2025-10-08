@@ -1406,13 +1406,14 @@ void DropletWindow::resetChanges() {
 		delete[] DropletWindow::room->geometry;
 		DropletWindow::room->geometry = new int[backupWidth * backupHeight];
 	}
+	DropletWindow::room->width = backupWidth;
+	DropletWindow::room->height = backupHeight;
+	DropletWindow::room->water = backupWater;
+	DropletWindow::room->valid = true;
 
 	for (int i = 0; i < backupWidth * backupHeight; i++) {
 		DropletWindow::room->geometry[i] = backupGeometry[i];
 	}
-	DropletWindow::room->water = backupWater;
-	DropletWindow::room->width = backupWidth;
-	DropletWindow::room->height = backupHeight;
 
 	delete[] backupGeometry;
 	backupGeometry = nullptr;

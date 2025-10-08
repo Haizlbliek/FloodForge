@@ -509,75 +509,80 @@ std::vector<uint8_t> Room::parseStringToUint8Vector(const std::string& input) {
 }
 
 void Room::ensureConnections() {
-	std::vector<std::pair<Vector2i, ShortcutType>> verifiedConnections;
-
-	for (int i = shortcutEntrances.size() - 1; i >= 0; i--) {
-		Vector2i connection = shortcutEntrances[i].first;
-
-		Vector2i forwardDirection = Vector2i(0, 0);
-		bool hasDirection = true;
-
-		if (tileIsShortcut(connection.x - 1, connection.y)) {
-			forwardDirection.x = -1;
-		} else if (tileIsShortcut(connection.x, connection.y + 1)) {
-			forwardDirection.y = 1;
-		} else if (tileIsShortcut(connection.x + 1, connection.y)) {
-			forwardDirection.x = 1;
-		} else if (tileIsShortcut(connection.x, connection.y - 1)) {
-			forwardDirection.y = -1;
-		}
-
-		if (forwardDirection.x == 0 && forwardDirection.y == 0) continue;
-
-		int runs = 0;
-		while (runs++ < 10000) {
-			connection += forwardDirection;
-
-			if (!tileIsShortcut(connection.x + forwardDirection.x, connection.y + forwardDirection.y)) {
-				Vector2i lastDirection = Vector2i(forwardDirection);
-
-				forwardDirection.x = 0;
-				forwardDirection.y = 0;
-				hasDirection = false;
-				if (     lastDirection.x !=  1 && tileIsShortcut(connection.x - 1, connection.y    )) { forwardDirection.x = -1; hasDirection = true; }
-				else if (lastDirection.y != -1 && tileIsShortcut(connection.x,     connection.y + 1)) { forwardDirection.y =  1; hasDirection = true; }
-				else if (lastDirection.x != -1 && tileIsShortcut(connection.x + 1, connection.y    )) { forwardDirection.x =  1; hasDirection = true; }
-				else if (lastDirection.y !=  1 && tileIsShortcut(connection.x,     connection.y - 1)) { forwardDirection.y = -1; hasDirection = true; }
-			}
-
-			if (getTile(connection.x, connection.y) % 16 == 4) {
-				hasDirection = true;
-				break;
-			}
-			
-			if (!hasDirection) break;
-		}
-
-		if (hasDirection) verifiedConnections.push_back(std::make_pair(connection, shortcutEntrances[i].second));
-	}
-
-	std::reverse(verifiedConnections.begin(), verifiedConnections.end());
-
-	for (size_t i = 0; i < shortcutEntrances.size(); ++i) {
-		for (size_t j = 0; j < shortcutEntrances.size() - i - 1; ++j) {
-			const Vector2i &a = shortcutEntrances[j].first;
-			const Vector2i &b = shortcutEntrances[j + 1].first;
-
-			if (a.y > b.y || (a.y == b.y && a.x > b.x)) {
-				std::swap(shortcutEntrances[j], shortcutEntrances[j + 1]);
-				std::swap(verifiedConnections[j], verifiedConnections[j + 1]);
-			}
-		}
-	}
+	try {
+		std::vector<std::pair<Vector2i, ShortcutType>> verifiedConnections;
 	
-	for (std::pair<Vector2i, ShortcutType> verifiedConnection : verifiedConnections) {
-		ShortcutType type = verifiedConnection.second;
-
-		if (type == ShortcutType::ROOM) {
-			roomEntrances.push_back(verifiedConnection.first);
-		} else if (type == ShortcutType::DEN) {
-			denEntrances.push_back(verifiedConnection.first);
+		for (int i = shortcutEntrances.size() - 1; i >= 0; i--) {
+			Vector2i connection = shortcutEntrances[i].first;
+	
+			Vector2i forwardDirection = Vector2i(0, 0);
+			bool hasDirection = true;
+	
+			if (tileIsShortcut(connection.x - 1, connection.y)) {
+				forwardDirection.x = -1;
+			} else if (tileIsShortcut(connection.x, connection.y + 1)) {
+				forwardDirection.y = 1;
+			} else if (tileIsShortcut(connection.x + 1, connection.y)) {
+				forwardDirection.x = 1;
+			} else if (tileIsShortcut(connection.x, connection.y - 1)) {
+				forwardDirection.y = -1;
+			}
+	
+			if (forwardDirection.x == 0 && forwardDirection.y == 0) continue;
+	
+			int runs = 0;
+			while (runs++ < 10000) {
+				connection += forwardDirection;
+	
+				if (!tileIsShortcut(connection.x + forwardDirection.x, connection.y + forwardDirection.y)) {
+					Vector2i lastDirection = Vector2i(forwardDirection);
+	
+					forwardDirection.x = 0;
+					forwardDirection.y = 0;
+					hasDirection = false;
+					if (     lastDirection.x !=  1 && tileIsShortcut(connection.x - 1, connection.y    )) { forwardDirection.x = -1; hasDirection = true; }
+					else if (lastDirection.y != -1 && tileIsShortcut(connection.x,     connection.y + 1)) { forwardDirection.y =  1; hasDirection = true; }
+					else if (lastDirection.x != -1 && tileIsShortcut(connection.x + 1, connection.y    )) { forwardDirection.x =  1; hasDirection = true; }
+					else if (lastDirection.y !=  1 && tileIsShortcut(connection.x,     connection.y - 1)) { forwardDirection.y = -1; hasDirection = true; }
+				}
+	
+				if (getTile(connection.x, connection.y) % 16 == 4) {
+					hasDirection = true;
+					break;
+				}
+				
+				if (!hasDirection) break;
+			}
+	
+			if (hasDirection) verifiedConnections.push_back(std::make_pair(connection, shortcutEntrances[i].second));
 		}
+	
+		std::reverse(verifiedConnections.begin(), verifiedConnections.end());
+	
+		for (size_t i = 0; i < shortcutEntrances.size(); ++i) {
+			for (size_t j = 0; j < shortcutEntrances.size() - i - 1; ++j) {
+				const Vector2i &a = shortcutEntrances[j].first;
+				const Vector2i &b = shortcutEntrances[j + 1].first;
+	
+				if (a.y > b.y || (a.y == b.y && a.x > b.x)) {
+					std::swap(shortcutEntrances[j], shortcutEntrances[j + 1]);
+					std::swap(verifiedConnections[j], verifiedConnections[j + 1]);
+				}
+			}
+		}
+		
+		for (std::pair<Vector2i, ShortcutType> verifiedConnection : verifiedConnections) {
+			ShortcutType type = verifiedConnection.second;
+	
+			if (type == ShortcutType::ROOM) {
+				roomEntrances.push_back(verifiedConnection.first);
+			} else if (type == ShortcutType::DEN) {
+				denEntrances.push_back(verifiedConnection.first);
+			}
+		}
+	} catch (...) {
+		Logger::info("Connections failed to load");
+		valid = false;
 	}
 }
 
