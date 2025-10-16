@@ -147,6 +147,13 @@ void MenuItems::initFloodForge() {
 					if (paths.empty()) return;
 
 					for (std::filesystem::path roomFilePath : paths) {
+						if (roomFilePath.extension().generic_u8string() != ".txt") {
+							Popups::addPopup(new InfoPopup("File must start with .txt"));
+							return;
+						}
+					}
+
+					for (std::filesystem::path roomFilePath : paths) {
 						std::string acronym = roomFilePath.parent_path().filename().generic_u8string();
 						acronym = acronym.substr(0, acronym.find_last_of('-'));
 
