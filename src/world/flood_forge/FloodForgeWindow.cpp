@@ -2,10 +2,12 @@
 
 #include <exception>
 #include "../../gl.h"
+
+#include "../droplet/DropletWindow.hpp"
 #include "../../Logger.hpp"
 #include "../Globals.hpp"
 #include "../../ui/UI.hpp"
-#include "../DebugData.hpp"
+#include "DebugData.hpp"
 
 #include "../../popup/MarkdownPopup.hpp"
 #include "../../popup/ConfirmPopup.hpp"
@@ -16,8 +18,6 @@
 #include "../popup/RoomAttractivenessPopup.hpp"
 #include "../popup/ConditionalPopup.hpp"
 #include "../popup/CreateRoomPopup.hpp"
-
-#include "../droplet/DropletWindow.hpp"
 
 Vector2 FloodForgeWindow::worldMouse;
 
