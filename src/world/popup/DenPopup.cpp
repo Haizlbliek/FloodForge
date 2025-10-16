@@ -104,7 +104,7 @@ void DenPopup::draw() {
 
 					std::string creatureType = CreatureTextures::creatureOrder[id];
 
-					bool isSelected = creature->type == creatureType || (unknown && creatureType == "UNKNOWN");
+					bool isSelected = creature->type == creatureType || (unknown && creatureType == "unknown");
 
 					UVRect rect = UVRect::fromSize(
 						centreX + (x - 0.5 * CREATURE_ROWS) * (buttonSize + buttonPadding) + buttonPadding * 0.5,
@@ -143,11 +143,11 @@ void DenPopup::draw() {
 
 
 					if (response.clicked) {
-						if (creatureType == "CLEAR") {
+						if (creatureType == "clear") {
 							creature->type = "";
 							creature->count = 0;
 						} else {
-							if (creature->type == creatureType || creatureType == "UNKNOWN") {
+							if (creature->type == creatureType || creatureType == "unknown") {
 								if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
 									creature->count -= 1;
 									if (creature->count <= 0) {

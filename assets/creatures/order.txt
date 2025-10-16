@@ -33,7 +33,7 @@ BrotherLongLegs
 DaddyLongLegs
 Deer
 Eggbug
-Dropwig
+DropBug
 BigNeedleWorm
 SmallNeedleWorm
 JetFish

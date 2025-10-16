@@ -31,7 +31,7 @@ void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, bool 
 		if (line.empty()) continue;
 		if (startsWith(line, "//")) continue;
 
-		creatureOrder.push_back(line);
+		creatureOrder.push_back(toLower(line));
 	}
 
 	orderFile.close();
@@ -42,7 +42,7 @@ void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, std::
 
 	for (const auto& entry : std::filesystem::directory_iterator(path)) {
 		if (std::filesystem::is_regular_file(entry.path()) && validExtension(entry.path().extension().generic_u8string())) {
-			std::string creature = prefix + entry.path().stem().generic_u8string();
+			std::string creature = toLower(prefix + entry.path().stem().generic_u8string());
 			if (include) creatures.push_back(creature);
 			creatureTextures[creature] = loadTexture(entry.path().generic_u8string());
 		}
@@ -67,7 +67,7 @@ void CreatureTextures::init() {
 	
 	modsFile.close();
 
-	creatureOrder.push_back("CLEAR");
+	creatureOrder.push_back("clear");
 	loadCreaturesFromFolder(creaturesDirectory, true);
 	for (std::string mod : mods) {
 		loadCreaturesFromFolder(creaturesDirectory / mod, true);
@@ -82,13 +82,13 @@ void CreatureTextures::init() {
 		}
 	}
 
-	auto CLEAR_it = std::find(creatures.begin(), creatures.end(), "CLEAR");
+	auto CLEAR_it = std::find(creatures.begin(), creatures.end(), "clear");
 	if (CLEAR_it != creatures.end()) {
 		std::swap(*CLEAR_it, *(creatures.begin()));
 	}
 
-	auto UNKNOWN_it = std::find(creatures.begin(), creatures.end(), "UNKNOWN");
-	UNKNOWN = creatureTextures["UNKNOWN"];
+	auto UNKNOWN_it = std::find(creatures.begin(), creatures.end(), "unknown");
+	UNKNOWN = creatureTextures["unknown"];
 	if (UNKNOWN_it != creatures.end()) {
 		std::swap(*UNKNOWN_it, *(creatures.end() - 1));
 	}
@@ -97,8 +97,8 @@ void CreatureTextures::init() {
 	if (!parseFile.is_open()) return;
 
 	while (std::getline(parseFile, line)) {
-		std::string from = line.substr(0, line.find_first_of(">"));
-		std::string to = line.substr(line.find_first_of(">") + 1);
+		std::string from = toLower(line.substr(0, line.find_first_of(">")));
+		std::string to = toLower(line.substr(line.find_first_of(">") + 1));
 
 		parseMap[from] = to;
 	}
@@ -106,25 +106,27 @@ void CreatureTextures::init() {
 	parseFile.close();
 
 	for (std::string creature : creatures) {
-		if (creature == "CLEAR" || creature == "UNKNOWN") continue;
+		if (creature == "clear" || creature == "unknown") continue;
 
 		if (std::find(creatureOrder.begin(), creatureOrder.end(), creature) == creatureOrder.end()) {
 			creatureOrder.push_back(creature);
 		}
 	}
 
-	creatureOrder.push_back("UNKNOWN");
+	creatureOrder.push_back("unknown");
 }
 
 GLuint CreatureTextures::getTexture(std::string type) {
 	if (type == "") return 0;
+
+	type = toLower(type);
 
 	if (creatureTagTextures.find(type) != creatureTagTextures.end()) {
 		return creatureTagTextures[type];
 	}
 
 	if (creatureTextures.find(type) == creatureTextures.end()) {
-		return creatureTextures["UNKNOWN"];
+		return creatureTextures["unknown"];
 	}
 
 	return creatureTextures[type];
@@ -132,6 +134,8 @@ GLuint CreatureTextures::getTexture(std::string type) {
 
 std::string CreatureTextures::parse(std::string originalName) {
 	if (originalName == "NONE") return "";
+
+	originalName = toLower(originalName);
 
 	if (parseMap.find(originalName) == parseMap.end()) {
 		return originalName;
