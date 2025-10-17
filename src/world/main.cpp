@@ -178,8 +178,8 @@ int main() {
 		/// Draw UI
 		applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, UI::screenBounds);
 
-		MenuItems::draw();
-
+		MenuItems::checkWindowResize();
+		MenuItems::draw();		
 		Popups::draw(UI::screenBounds);
 
 		UI::window->render();

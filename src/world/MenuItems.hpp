@@ -18,6 +18,8 @@
 #include "../Window.hpp"
 #include "../Theme.hpp"
 
+#include "../popup/MarkdownPopup.hpp"
+
 #include "Globals.hpp"
 #include "Room.hpp"
 #include "OffscreenRoom.hpp"
@@ -28,11 +30,17 @@
 #define MENU_LAYER_FLOOD_FORGE 0
 #define MENU_LAYER_DROPLET 1
 
+enum class ButtonAlignment {
+	LEFT, 
+	RIGHT   
+};
+
 class Button {
 	public:
-		Button(std::string text, Rect rect, int layer);
+		Button(std::string text, Rect rect, int layer, ButtonAlignment alignment = ButtonAlignment::LEFT);
 
 		Button *OnPress(std::function<void(Button*)> listener);
+		Button *SetAlignment(ButtonAlignment align);
 
 		void draw();
 
@@ -43,6 +51,7 @@ class Button {
 		Rect rect;
 		bool darken = false;
 		int layer;
+		ButtonAlignment alignment;
 
 	private:
 		std::function<void(Button*)> listener;
@@ -52,9 +61,9 @@ class Button {
 
 class MenuItems {
 	public:
-		static Button &addButton(std::string text, int layer);
+		static Button &addButton(std::string text, int layer, ButtonAlignment alignment = ButtonAlignment::LEFT	);
 
-		static void addLayerButton(std::string buttonName, int worldLayer, int layer);
+		static void addLayerButton(std::string buttonName, int worldLayer, int layer, ButtonAlignment alignment = ButtonAlignment::LEFT);
 
 		static void init();
 		static void initFloodForge();
@@ -66,6 +75,8 @@ class MenuItems {
 
 		static void setLayer(int layer);
 
+		static void checkWindowResize();
+
 	private:
 		static void repositionButtons();
 
@@ -73,5 +84,9 @@ class MenuItems {
 		static std::vector<Button*> layerButtons;
 
 		static double currentButtonX;
+		static double currentButtonXRight;
 		static int currentLayer;
+
+		static double lastWindowWidth;
+		static double lastWindowHeight;
 };

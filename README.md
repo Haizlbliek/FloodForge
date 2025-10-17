@@ -49,13 +49,13 @@ sudo apt-get install libutf8proc-dev
 Build:
 
 ```bash
-sh build.sh
+sh Build.sh
 
 # build in debug mode
-sh build.sh --debug
+sh Build.sh --debug
 
 # build in release mode
-sh build.sh --release
+sh Build.sh --release
 ```
 
 ## I found a bug!
