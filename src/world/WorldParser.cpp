@@ -111,7 +111,7 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 			
 			std::filesystem::path filePath = findFileCaseInsensitive(roomPath, roomName + ".txt");
 			if (filePath.empty()) {
-				Logger::error("File `", roomPath / roomName, ".txt` could not be found.");
+				Logger::error("File '", (roomPath / roomName).generic_u8string(), ".txt' could not be found.");
 			}
 
 			Room *room = nullptr;
@@ -250,7 +250,7 @@ void WorldParser::parseWorldRoom(std::string line, std::filesystem::path directo
 
 			std::filesystem::path filePath = findFileCaseInsensitive(roomPath, roomName + ".txt");
 			if (filePath.empty()) {
-				Logger::error("File `", roomPath, "/", roomName, ".txt` could not be found.");
+				Logger::error("File '", (roomPath / roomName).generic_u8string(), ".txt' could not be found.");
 			}
 
 			room = new Room(filePath, roomName);

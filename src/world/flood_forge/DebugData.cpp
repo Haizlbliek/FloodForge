@@ -46,7 +46,7 @@ namespace DebugData {
 			for (std::string tag : hoveringRoom->Tags()) tags += " " + tag;
 			debugText.push_back("    Room:");
 			if (!hoveringRoom->valid) {
-				debugText.push_back("INVALID - Check `xx-rooms` folder");
+				debugText.push_back("INVALID - Check 'xx-rooms' folder");
 				debugText.push_back("Name: " + hoveringRoom->roomName);
 			} else {
 				debugText.push_back("Name: " + hoveringRoom->roomName);
