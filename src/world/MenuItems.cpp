@@ -158,12 +158,9 @@ void MenuItems::initFloodForge() {
 						acronym = acronym.substr(0, acronym.find_last_of('-'));
 
 						if (toLower(acronym) == "gates") {
-							std::vector<std::string> names = split(roomFilePath.filename().generic_u8string(), '_');
-							names[2] = names[2].substr(0, names[2].find('.'));
+							std::vector<std::string> names = split(roomFilePath.stem().generic_u8string(), '_');
 							if (toLower(names[1]) == toLower(EditorState::region.acronym) || toLower(names[2]) == toLower(EditorState::region.acronym)) {
-								std::string roomName = names[0].substr(0, names[0].find_last_of('.')); // Remove .txt
-
-								Room *room = new Room(roomFilePath, roomName);
+								Room *room = new Room(roomFilePath, roomFilePath.stem().generic_u8string());
 								room->canonPosition = EditorState::cameraOffset;
 								room->devPosition = EditorState::cameraOffset;
 								EditorState::rooms.push_back(room);
@@ -171,13 +168,13 @@ void MenuItems::initFloodForge() {
 								Popups::addPopup((new ConfirmPopup("Change which acronym?"))
 								->OkayText(names[2])
 								->OnOkay([names, roomFilePath]() {
-									std::string roomPath = "gate_" + EditorState::region.acronym + "_" + names[1] + ".txt";
+									std::string roomPath = "gate_" + names[1] + "_" + EditorState::region.acronym + ".txt";
 
 									copyRoom(roomFilePath, roomFilePath.parent_path() / roomPath)->SetTag("GATE");
 								})
 								->CancelText(names[1])
 								->OnCancel([names, roomFilePath]() {
-									std::string roomPath = "gate_" + names[2] + "_" + EditorState::region.acronym + ".txt";
+									std::string roomPath = "gate_" + EditorState::region.acronym + "_" + names[2] + ".txt";
 
 									copyRoom(roomFilePath, roomFilePath.parent_path() / roomPath)->SetTag("GATE");
 								}));
