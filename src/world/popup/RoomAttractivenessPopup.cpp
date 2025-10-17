@@ -45,7 +45,7 @@ void RoomAttractivenessPopup::draw() {
 	double centreX = bounds.x0 + 0.305;
 
 	double buttonSize = 0.5 / 7.0;
-	double buttonPadding = 0.02;
+	double buttonPadding = 0.01;
 
 	setThemeColour(ThemeColour::Text);
 	glLineWidth(1);
@@ -125,7 +125,7 @@ void RoomAttractivenessPopup::draw() {
 	for (int i = 0; i < 6; i++) {
 		double y = bounds.y1 - 0.165 - i * 0.09;
 
-		Rect rect(bounds.x0 + 0.605, y - 0.02, bounds.x1 - 0.01, y + 0.02);
+		Rect rect(bounds.x0 + 0.61, y - 0.02, bounds.x1 - 0.01, y + 0.02);
 		if (UI::TextButton(rect, attractivenessNames[i], UI::TextButtonMods().Selected(selectAttractiveness == attractivenessIds[i]))) {
 			selectAttractiveness = attractivenessIds[i];
 		}
@@ -160,7 +160,7 @@ void RoomAttractivenessPopup::clampScroll() {
 	double height = 0.5;
 
 	double buttonSize = std::min(width / 7.0, height / 7.0);
-	double buttonPadding = 0.02;
+	double buttonPadding = 0.01;
 
 	int items = CreatureTextures::creatures.size() / CREATURE_ROWS - 1;
 	double size = items * (buttonSize + buttonPadding);
