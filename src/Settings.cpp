@@ -19,6 +19,7 @@ void Settings::loadDefaults() {
 	settings[Setting::DebugVisibleOutputPadding] = false;
 	settings[Setting::NoSubregionColor] = Colour(1.0, 1.0, 1.0);
 	settings[Setting::RoomTintStrength] = 0.5;
+	settings[Setting::ForceExportCasing] = "upper";
 
 	std::vector<Colour> subregionColors;
 	subregionColors.push_back(Colour(1.0, 0.0, 0.0)); // #ff0000
@@ -37,7 +38,7 @@ void Settings::loadDefaults() {
 void Settings::init() {
 	loadDefaults();
 
-	std::filesystem::path settingsPath = BASE_PATH / "assets" / "settings.txt";
+	std::filesystem::path settingsPath = BASE_PATH / "assets" / "settings.cfg";
 	if (!std::filesystem::exists(settingsPath)) return;
 
 	std::fstream settingsFile(settingsPath);
@@ -46,19 +47,20 @@ void Settings::init() {
 	while (std::getline(settingsFile, line)) {
 		if (line.empty()) continue;
 		if (line.back() == '\r') line.pop_back();
-		if (startsWith(line, "//")) continue;
+		if (startsWith(line, "#")) continue;
 
-		std::string key = line.substr(0, line.find_first_of(':'));
-		std::string value = line.substr(line.find_first_of(':') + 2);
+		std::string key = line.substr(0, line.find_first_of('='));
+		std::string value = line.substr(line.find_first_of('=') + 1);
+		std::string lowerValue = toLower(value);
 
 		try {
-			bool boolValue = (toLower(value) == "true" || toLower(value) == "yes" || toLower(value) == "1");
+			bool boolValue = (lowerValue == "true" || lowerValue == "yes" || lowerValue == "1");
 			
 			if (key == "Theme") loadTheme(value);
 			else if (key == "CameraPanSpeed") settings[Setting::CameraPanSpeed] = std::stod(value);
 			else if (key == "CameraZoomSpeed") settings[Setting::CameraZoomSpeed] = std::stod(value);
 			else if (key == "PopupScrollSpeed") settings[Setting::PopupScrollSpeed] = std::stod(value);
-			else if (key == "ConnectionType") settings[Setting::ConnectionType] = int(toLower(value) == "bezier");
+			else if (key == "ConnectionType") settings[Setting::ConnectionType] = int(lowerValue == "bezier");
 			else if (key == "OriginalControls") settings[Setting::OrignalControls] = boolValue;
 			else if (key == "SelectorScale") settings[Setting::SelectorScale] = boolValue;
 			else if (key == "DefaultFilePath") settings[Setting::DefaultFilePath] = value;
@@ -69,6 +71,7 @@ void Settings::init() {
 			else if (key == "DebugVisibleOutputPadding") settings[Setting::DebugVisibleOutputPadding] = boolValue;
 			else if (key == "NoSubregionColor") settings[Setting::NoSubregionColor] = stringToColour(value);
 			else if (key == "RoomTintStrength") settings[Setting::RoomTintStrength] = std::stod(value);
+			else if (key == "ForceExportCasing") settings[Setting::ForceExportCasing] = (lowerValue == "lower" || lowerValue == "upper") ? lowerValue : "";
 			else if (key == "SubregionColors") {
 				std::vector<Colour> subregionColors;
 				for (std::string item : split(value, ", ")) {

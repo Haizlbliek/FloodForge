@@ -29,6 +29,7 @@ namespace Settings {
 		NoSubregionColor,
 		SubregionColors,
 		RoomTintStrength,
+		ForceExportCasing
 	};
 
 	extern std::unordered_map<Setting, SettingType> settings;
