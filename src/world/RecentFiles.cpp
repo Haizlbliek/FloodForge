@@ -43,7 +43,9 @@ void RecentFiles::init() {
 }
 
 void RecentFiles::addPath(std::filesystem::path path) {
-	auto it = std::find(recents.begin(), recents.end(), path);
+	auto it = std::find_if(recents.begin(), recents.end(), [&](const std::filesystem::path &s) {
+		return toLower(s.generic_u8string()) == toLower(path.generic_u8string());
+	});
 	if (it != recents.end()) {
 		recents.erase(it);
 	}
