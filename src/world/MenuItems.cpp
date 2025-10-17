@@ -161,6 +161,7 @@ void MenuItems::initFloodForge() {
 							std::vector<std::string> names = split(roomFilePath.stem().generic_u8string(), '_');
 							if (toLower(names[1]) == toLower(EditorState::region.acronym) || toLower(names[2]) == toLower(EditorState::region.acronym)) {
 								Room *room = new Room(roomFilePath, roomFilePath.stem().generic_u8string());
+								room->SetTag("GATE");
 								room->canonPosition = EditorState::cameraOffset;
 								room->devPosition = EditorState::cameraOffset;
 								EditorState::rooms.push_back(room);
