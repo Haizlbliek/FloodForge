@@ -157,7 +157,7 @@ void MenuItems::initFloodForge() {
 						std::string acronym = roomFilePath.parent_path().filename().generic_u8string();
 						acronym = acronym.substr(0, acronym.find_last_of('-'));
 
-						if (acronym == "gates") {
+						if (toLower(acronym) == "gates") {
 							std::vector<std::string> names = split(roomFilePath.filename().generic_u8string(), '_');
 							names[2] = names[2].substr(0, names[2].find('.'));
 							if (toLower(names[1]) == toLower(EditorState::region.acronym) || toLower(names[2]) == toLower(EditorState::region.acronym)) {
@@ -183,7 +183,7 @@ void MenuItems::initFloodForge() {
 								}));
 							}
 						} else {
-							if (acronym == EditorState::region.acronym || EditorState::region.exportDirectory.empty()) {
+							if (compareInsensitive(acronym, EditorState::region.acronym) || EditorState::region.exportDirectory.empty()) {
 								std::string roomName = roomFilePath.stem().generic_u8string();
 
 								Room *room = new Room(roomFilePath, roomName);
