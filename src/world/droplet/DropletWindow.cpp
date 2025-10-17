@@ -392,6 +392,11 @@ void UpdateNOTDetailsTab() {
 	glDisable(GL_BLEND);
 }
 
+bool shortcutAir(int v) {
+	int w = v % 16;
+	return w == 0 || w == 2 || w == 3;
+}
+
 void verifyShortcut(int x, int y) {
 	if ((DropletWindow::room->getTile(x, y) & 128) == 0) {
 		return;
@@ -404,10 +409,10 @@ void verifyShortcut(int x, int y) {
 		(DropletWindow::room->getTile(x - 1, y + 1) % 16 == 1) && (DropletWindow::room->getTile(x + 1, y + 1) % 16 == 1)
 	) {
 		int dir = 0;
-		dir += (DropletWindow::room->getTile(x - 1, y) % 16 == 0 || DropletWindow::room->getTile(x - 1, y) % 16 == 2) ? 1 : 0;
-		dir += (DropletWindow::room->getTile(x + 1, y) % 16 == 0 || DropletWindow::room->getTile(x + 1, y) % 16 == 2) ? 2 : 0;
-		dir += (DropletWindow::room->getTile(x, y - 1) % 16 == 0 || DropletWindow::room->getTile(x, y - 1) % 16 == 2) ? 4 : 0;
-		dir += (DropletWindow::room->getTile(x, y + 1) % 16 == 0 || DropletWindow::room->getTile(x, y + 1) % 16 == 2) ? 8 : 0;
+		dir += shortcutAir(DropletWindow::room->getTile(x - 1, y)) ? 1 : 0;
+		dir += shortcutAir(DropletWindow::room->getTile(x + 1, y)) ? 2 : 0;
+		dir += shortcutAir(DropletWindow::room->getTile(x, y - 1)) ? 4 : 0;
+		dir += shortcutAir(DropletWindow::room->getTile(x, y + 1)) ? 8 : 0;
 		dir += (DropletWindow::room->getTile(x - 1, y) & 128) > 0 ? 16 : 0;
 		dir += (DropletWindow::room->getTile(x + 1, y) & 128) > 0 ? 32 : 0;
 		dir += (DropletWindow::room->getTile(x, y - 1) & 128) > 0 ? 64 : 0;
