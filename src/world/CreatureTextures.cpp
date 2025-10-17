@@ -47,6 +47,19 @@ void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, std::
 			creatureTextures[creature] = loadTexture(entry.path().generic_u8string());
 		}
 	}
+
+	std::string line;
+	std::fstream parseFile(path / "parse.txt");
+	if (!parseFile.is_open()) return;
+
+	while (std::getline(parseFile, line)) {
+		std::string from = toLower(line.substr(0, line.find_first_of(">")));
+		std::string to = toLower(line.substr(line.find_first_of(">") + 1));
+
+		parseMap[from] = to;
+	}
+	
+	parseFile.close();
 }
 
 void CreatureTextures::init() {
@@ -92,18 +105,6 @@ void CreatureTextures::init() {
 	if (UNKNOWN_it != creatures.end()) {
 		std::swap(*UNKNOWN_it, *(creatures.end() - 1));
 	}
-
-	std::fstream parseFile(creaturesDirectory / "parse.txt");
-	if (!parseFile.is_open()) return;
-
-	while (std::getline(parseFile, line)) {
-		std::string from = toLower(line.substr(0, line.find_first_of(">")));
-		std::string to = toLower(line.substr(line.find_first_of(">") + 1));
-
-		parseMap[from] = to;
-	}
-	
-	parseFile.close();
 
 	for (std::string creature : creatures) {
 		if (creature == "clear" || creature == "unknown") continue;
