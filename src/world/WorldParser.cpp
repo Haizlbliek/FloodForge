@@ -19,7 +19,7 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 	if (EditorState::region.roomsDirectory.empty()) {
 		EditorState::fails.push_back("Cannot find rooms directory!");
 	}
-	Logger::info("Rooms directory: ", EditorState::region.roomsDirectory);
+	Logger::info("Rooms directory: ", EditorState::region.roomsDirectory.generic_u8string());
 	
 	std::filesystem::path mapFilePath = findFileCaseInsensitive(EditorState::region.exportDirectory, "map_" + EditorState::region.acronym + ".txt");
 	

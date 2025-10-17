@@ -2,7 +2,9 @@ output
 saves
 worlds
 backups
+log.old.txt
 log.txt
+running.txt
 
 assets/recents.txt
 

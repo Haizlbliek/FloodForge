@@ -29,10 +29,9 @@
 class Font {
 	public:
 		Font(std::string name, int fontType) : name(name) {
-			Logger::info("Loading ", name);
+			Logger::info("---- ", name);
 			loadData(FONT_PATH / (name + ".txt"));
 			loadTexture(FONT_PATH / (name + ".png"), fontType);
-			Logger::info();
 		}
 
 		~Font() {

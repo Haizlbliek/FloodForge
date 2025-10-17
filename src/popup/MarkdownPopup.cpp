@@ -141,7 +141,7 @@ void MarkdownPopup::writeLine(std::vector<MDStyledText> line, double x, double &
 void MarkdownPopup::loadFile(std::filesystem::path filePath) {
 	file = std::ifstream(filePath);
 	if (!file.is_open() || !std::filesystem::exists(filePath)) {
-		Logger::info("No file found '", filePath, "'");
+		Logger::info("No file found '", filePath.generic_u8string(), "'");
 		close();
 		return;
 	}

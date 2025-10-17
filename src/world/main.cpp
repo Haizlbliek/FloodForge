@@ -80,6 +80,7 @@ void updateGlobalInputs() {
 }
 
 int main() {
+	Logger::init();
 #ifdef NDEBUG
 	std::signal(SIGSEGV, signalHandler); // Segmentation fault
 	std::signal(SIGABRT, signalHandler); // Abort signal
@@ -88,9 +89,14 @@ int main() {
 	std::signal(SIGINT, signalHandler);  // Ctrl+C
 	std::signal(SIGTERM, signalHandler); // Termination request
 #endif
+	std::ifstream versionFile(BASE_PATH / "assets" / "version.txt");
+	std::string version;
+	std::getline(versionFile, version);
+	versionFile.close();
+	Logger::info("FloodForge ", version);
+	Logger::info();
 
 	UI::window = new Window(1024, 1024);
-	Logger::info("Main icon path: ", BASE_PATH / "assets" / "mainIcon.png");
 	UI::window->setIcon(BASE_PATH / "assets" / "mainIcon.png");
 	UI::window->setTitle("FloodForge World Editor");
 
@@ -113,6 +119,13 @@ int main() {
 	RoomHelpers::loadColours();
 
 	Popups::addPopup(new SplashArtPopup());
+	if (std::filesystem::exists(BASE_PATH / "running.txt")) {
+		Popups::addPopup(new MarkdownPopup(BASE_PATH / "docs" / "crash.md"));
+	}
+
+	std::ofstream running(BASE_PATH / "running.txt");
+	running << "Temporary file to detect crashes!";
+	running.close();
 
 	while (UI::window->isOpen()) {
 		UI::window->GetMouse()->updateLastPressed();
@@ -191,6 +204,8 @@ int main() {
 	Draw::cleanup();
 	Settings::cleanup();
 	UI::cleanup();
+
+	std::filesystem::remove(BASE_PATH / "running.txt");
 
 	return 0;
 }

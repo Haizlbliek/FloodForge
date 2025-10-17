@@ -566,7 +566,7 @@ GLuint loadShaders(std::filesystem::path vertexPath, std::filesystem::path fragm
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-	Logger::info("Loaded shader ", vertexPath.stem().string(), "-", fragmentPath.stem().string(), " sucessfully!");
+	Logger::info("Loaded shader ", vertexPath.stem().generic_u8string(), "-", fragmentPath.stem().generic_u8string(), " sucessfully");
 
 	return shaderProgram;
 }

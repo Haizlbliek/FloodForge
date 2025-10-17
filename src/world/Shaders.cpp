@@ -11,11 +11,12 @@ GLuint Shaders::hueSliderShader = 0;
 GLuint Shaders::colorSquareShader = 0;
 
 void Shaders::init() {
+	Logger::info("Loaded shaders");
 	Shaders::roomShader = loadShaders(BASE_PATH / "assets" / "shaders" / "room.vert", BASE_PATH / "assets" / "shaders" / "room.frag");
 	Shaders::hueSliderShader = loadShaders(BASE_PATH / "assets" / "shaders" / "default.vert", BASE_PATH / "assets" / "shaders" / "hue_slider.frag");
 	Shaders::colorSquareShader = loadShaders(BASE_PATH / "assets" / "shaders" / "default.vert", BASE_PATH / "assets" / "shaders" / "color_square.frag");
-
-	Logger::info("Shaders initialized");
+	Logger::info("Shaders loaded");
+	Logger::info();
 }
 
 void Shaders::cleanup() {

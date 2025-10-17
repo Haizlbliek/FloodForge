@@ -316,7 +316,7 @@ void WorldExporter::exportWorldFile() {
 						if (creature->tag == "MEAN") {
 							file << "-{Mean:" << creature->data << "}";
 						} else if (creature->tag == "LENGTH") {
-							if (creature->type == "PoleMimic") {
+							if (creature->type == "polemimic") {
 								file << "-{" << int(creature->data) << "}";
 							} else {
 								file << "-{" << creature->data << "}";
@@ -380,7 +380,7 @@ void WorldExporter::exportWorldFile() {
 						if (creature->tag == "MEAN") {
 							file << "-{Mean:" << creature->data << "}";
 						} else if (creature->tag == "LENGTH") {
-							if (creature->type == "PoleMimic") {
+							if (creature->type == "polemimic") {
 								file << "-{" << int(creature->data) << "}";
 							} else {
 								file << "-{" << creature->data << "}";

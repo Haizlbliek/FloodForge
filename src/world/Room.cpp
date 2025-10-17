@@ -590,7 +590,7 @@ void Room::loadGeometry() {
 	std::fstream geometryFile(path);
 	if (!geometryFile.is_open() || !std::filesystem::exists(path)) {
 		EditorState::fails.push_back("Failed to load '" + path.generic_u8string() + "' / '" + roomName + "' - Doesn't exist.");
-		Logger::info("Failed to load '", path, "' / '", roomName, "' - Doesn't exist.");
+		Logger::info("Failed to load '", path.generic_u8string(), "' / '", roomName, "' - Doesn't exist.");
 		width = 72;
 		height = 43;
 		water = -1;

@@ -13,7 +13,7 @@ GLuint ConditionalTimelineTextures::UNKNOWN = 0;
 void ConditionalTimelineTextures::init() {
 	std::filesystem::path timelinesDirectory = BASE_PATH / "assets" / "timelines";
 
-	Logger::info("Loading timelines from: '", timelinesDirectory, "'");
+	Logger::info("Loading timelines from: '", timelinesDirectory.generic_u8string(), "'");
 
 	for (const auto& entry : std::filesystem::directory_iterator(timelinesDirectory)) {
 		if (std::filesystem::is_regular_file(entry.path()) && entry.path().extension().generic_u8string() == ".png") {

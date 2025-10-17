@@ -10,6 +10,8 @@ namespace Logger {
 	extern std::ofstream logFile;
 	extern std::mutex logMutex;
 
+	void init();
+
 	inline void writeStream(std::ostream&) {}
 
 	template<typename T>
