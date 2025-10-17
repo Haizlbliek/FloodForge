@@ -417,7 +417,7 @@ void WorldExporter::exportWorldFile() {
 	
 	file << EditorState::region.complicatedCreatures;
 
-	file << "END CREATURES\n";
+	file << "END CREATURES";
 
 	file << EditorState::region.extraWorld;
 

@@ -66,6 +66,8 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 		Popups::addPopup(new InfoPopup(fails));
 		EditorState::fails.clear();
 	}
+	
+	EditorState::region.extraWorld = EditorState::region.extraWorld.substr(0, EditorState::region.extraWorld.find_last_of('\n'));
 }
 
 void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::path directory) {
