@@ -222,7 +222,7 @@ void DenPopup::draw() {
 					UVRect rect = UVRect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
 					UI::ButtonResponse response = UI::TextureButton(rect,
 						UI::TextureButtonMods()
-						.TextureId(CreatureTextures::getTexture(CreatureTextures::creatureTags[id]))
+						.TextureId(CreatureTextures::getTexture(CreatureTextures::creatureTags[id], false))
 						.Selected(isSelected)
 						.TextureColor(isSelected ? Color(1.0, 1.0, 1.0) : Color(0.5, 0.5, 0.5))
 					);
@@ -265,22 +265,21 @@ void DenPopup::draw() {
 				setThemeColour(ThemeColour::Text);
 				float number = creature->data;
 				std::ostringstream ss;
-				std::string tag = creature->tag;
 
-				if (tag == "MEAN" || tag == "LENGTH") {
+				if (creature->tag == "MEAN" ||creature->tag == "LENGTH") {
 					ss << std::fixed << std::setprecision(2) << std::setw(3) << number;
-				} else if (tag == "SEED" || tag == "RotType") {
+				} else if (creature->tag == "SEED" || creature->tag == "RotType") {
 					ss << std::setw(5) << static_cast<int>(number);
 				}
 
 				std::string valueStr = ss.str();
 				double xPos = mainX + 0.82;
 
-				if (tag == "MEAN" || tag == "LENGTH") {
+				if (creature->tag == "MEAN" || creature->tag == "LENGTH") {
 					if (number < 0) {
 						xPos = mainX + 0.805;
 					}
-				} else if (tag == "SEED" || tag == "RotType") {
+				} else if (creature->tag == "SEED" || creature->tag == "RotType") {
 					xPos = (number < 4) ? mainX + 0.81 : mainX + 0.809;
 				}
 
@@ -630,28 +629,30 @@ void DenPopup::clampScroll() {
 }
 
 void DenPopup::ensureFlag(DenCreature &creature) {
-	if (creature.type.empty()) {
+	std::string creatureType = toLower(creature.type);
+
+	if (creatureType.empty()) {
 		creature.tag = "";
 		creature.data = 0.0;
 	}
 
 	bool isNotLizard =
-		creature.type != "BlackLizard" &&
-		creature.type != "BlueLizard" &&
-		creature.type != "CyanLizard" &&
-		creature.type != "GreenLizard" &&
-		creature.type != "PinkLizard" &&
-		creature.type != "RedLizard" &&
-		creature.type != "WhiteLizard" &&
-		creature.type != "YellowLizard" &&
-		creature.type != "Salamander" &&
-		creature.type != "EelLizard" &&
-		creature.type != "SpitLizard" &&
-		creature.type != "TrainLizard" &&
-		creature.type != "ZoopLizard" &&
-		creature.type != "BasiliskLizard" &&
-		creature.type != "BlizzardLizard" &&
-		creature.type != "IndigoLizard";
+		creatureType != "blacklizard" &&
+		creatureType != "bluelizard" &&
+		creatureType != "cyanlizard" &&
+		creatureType != "greenlizard" &&
+		creatureType != "pinklizard" &&
+		creatureType != "redlizard" &&
+		creatureType != "whitelizard" &&
+		creatureType != "yellowlizard" &&
+		creatureType != "salamander" &&
+		creatureType != "eellizard" &&
+		creatureType != "spitlizard" &&
+		creatureType != "trainlizard" &&
+		creatureType != "zooplizard" &&
+		creatureType != "basilisklizard" &&
+		creatureType != "blizzardlizard" &&
+		creatureType != "indigolizard";
 
 	if (creature.tag == "MEAN") {
 		if (isNotLizard) {
@@ -660,19 +661,19 @@ void DenPopup::ensureFlag(DenCreature &creature) {
 	}
 
 	if (creature.tag == "LENGTH") {
-		if (creature.type != "PoleMimic" && creature.type != "Centipede") {
+		if (creatureType != "polemimic" && creatureType != "centipede") {
 			creature.tag = "";
 		}
 	}
 
 	if (creature.tag == "Winter") {
-		if (creature.type != "BigSpider" && creature.type != "SpitterSpider" && creature.type != "Yeek" && isNotLizard) {
+		if (creatureType != "bigspider" && creatureType != "spitterspider" && creatureType != "yeek" && isNotLizard) {
 			creature.tag = "";
 		}
 	}
 
 	if (creature.tag == "Voidsea") {
-		if (creature.type != "RedLizard" && creature.type != "RedCentipede" && creature.type != "BigSpider" && creature.type != "DaddyLongLegs" && creature.type != "BrotherLongLegs" && creature.type != "TerrorLongLegs" && creature.type != "BigEel" && creature.type != "CyanLizard") {
+		if (creatureType != "redlizard" && creatureType != "redcentipede" && creatureType != "bigspider" && creatureType != "daddylonglegs" && creatureType != "brotherlonglegs" && creatureType != "terrorlonglegs" && creatureType != "bigeel" && creatureType != "cyanlizard") {
 			creature.tag = "";
 		}
 	}
@@ -684,7 +685,7 @@ void DenPopup::ensureFlag(DenCreature &creature) {
 		sliderMin = -1.0;
 		sliderMax = 1.0;
 	} else if (creature.tag == "LENGTH") {
-		if (creature.type == "Centipede") {
+		if (creatureType == "centipede") {
 			sliderMin = 0.1;
 			sliderMax = 1.0;
 		} else {

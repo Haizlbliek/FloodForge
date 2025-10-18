@@ -23,7 +23,7 @@ namespace CreatureTextures {
 	void loadCreaturesFromFolder(std::filesystem::path path, bool include);
 	void loadCreaturesFromFolder(std::filesystem::path path, std::string prefix, bool include);
 
-	GLuint getTexture(std::string type);
+	GLuint getTexture(std::string type, bool lowercase = true);
 
 	void init();
 

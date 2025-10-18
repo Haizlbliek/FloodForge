@@ -117,10 +117,10 @@ void CreatureTextures::init() {
 	creatureOrder.push_back("unknown");
 }
 
-GLuint CreatureTextures::getTexture(std::string type) {
+GLuint CreatureTextures::getTexture(std::string type, bool lowercase) {
 	if (type == "") return 0;
 
-	type = toLower(type);
+	if (lowercase) type = toLower(type);
 
 	if (creatureTagTextures.find(type) != creatureTagTextures.end()) {
 		return creatureTagTextures[type];

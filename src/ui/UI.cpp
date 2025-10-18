@@ -270,9 +270,9 @@ UI::CheckBoxResponse UI::CheckBox(Rect rect, bool &value) {
 
 bool UI::canClick() {
 	if (UI::mouse.disabled) return false;
-	if (!clipped) return true;
+	if (clipped) return clipRect.inside(UI::mouse);
 
-	return clipRect.inside(UI::mouse);
+	return true;
 }
 
 void UI::clip() {
