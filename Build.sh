@@ -62,12 +62,12 @@ if [ $? -eq 0 ]; then
 		# windows: 7zip
 		if [[ -f "/c/Program Files/7-Zip/7z.exe" ]]; then
 			echo \[INF\] Using 7-Zip to create distribution...
-			"/c/Program Files/7-Zip/7z.exe" a FloodForge-Linux.zip FloodForge.exe README.md LICENSE assets/* docs/* -r
+			"/c/Program Files/7-Zip/7z.exe" a FloodForge-Windows.zip .\FloodForge.exe README.md LICENSE assets/* docs/* -r -x!assets/recents.txt
 		
 		# linux: zip command
 		elif command -v zip 2>&1 >/dev/null; then
 			echo \[INF\] Using zip to create distribution...
-			zip -r FloodForge-Linux.zip FloodForge README.md LICENSE assets/* docs/*
+			zip -r FloodForge-Linux.zip ./FloodForge README.md LICENSE assets/* docs/* -x "assets/recents.txt"
 		fi
 	fi
 
