@@ -293,6 +293,15 @@ void FilesystemPopup::keyCallback(void *object, int action, int key) {
 	if (popup->mode == FilesystemMode::NORMAL) return;
 
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+		if (key == GLFW_KEY_V && UI::window->modifierPressed(GLFW_MOD_CONTROL)) {
+			for (char x : UI::window->getClipboard()) {
+				if (x == 0 || x == '\\' || x == '/' || x == '.') continue;
+
+				popup->newDirectory += x;
+			}
+			return;
+		}
+
 		if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
 			char character = parseCharacter(key, UI::window->modifierPressed(GLFW_MOD_SHIFT), UI::window->modifierPressed(GLFW_MOD_CAPS_LOCK));
 
