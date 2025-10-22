@@ -9,6 +9,7 @@ void Settings::loadDefaults() {
 	settings[Setting::CameraZoomSpeed] = 0.4;
 	settings[Setting::PopupScrollSpeed] = 0.4;
 	settings[Setting::ConnectionType] = 0;
+	settings[Setting::ConnectionPoint] = 0;
 	settings[Setting::OrignalControls] = false;
 	settings[Setting::SelectorScale] = true;
 	settings[Setting::DefaultFilePath] = "NON_EXISTANT_PATH_YOU_CAN'T_HAVE_THIS_PATH_PLSPLSPLS///";
@@ -61,6 +62,7 @@ void Settings::init() {
 			else if (key == "CameraZoomSpeed") settings[Setting::CameraZoomSpeed] = std::stod(value);
 			else if (key == "PopupScrollSpeed") settings[Setting::PopupScrollSpeed] = std::stod(value);
 			else if (key == "ConnectionType") settings[Setting::ConnectionType] = int(lowerValue == "bezier");
+			else if (key == "ConnectionPoint") settings[Setting::ConnectionPoint] = int(lowerValue == "exit");
 			else if (key == "OriginalControls") settings[Setting::OrignalControls] = boolValue;
 			else if (key == "SelectorScale") settings[Setting::SelectorScale] = boolValue;
 			else if (key == "DefaultFilePath") settings[Setting::DefaultFilePath] = value;
@@ -71,7 +73,7 @@ void Settings::init() {
 			else if (key == "DebugVisibleOutputPadding") settings[Setting::DebugVisibleOutputPadding] = boolValue;
 			else if (key == "NoSubregionColor") settings[Setting::NoSubregionColor] = stringToColour(value);
 			else if (key == "RoomTintStrength") settings[Setting::RoomTintStrength] = std::stod(value);
-			else if (key == "ForceExportCasing") settings[Setting::ForceExportCasing] = (lowerValue == "lower" || lowerValue == "upper") ? lowerValue : "";
+			else if (key == "ForceExportCasing") settings[Setting::ForceExportCasing] = lowerValue == "lower" ? 1 : lowerValue == "upper" ? 2 : 0;
 			else if (key == "SubregionColors") {
 				std::vector<Colour> subregionColors;
 				for (std::string item : split(value, ", ")) {

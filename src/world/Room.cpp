@@ -220,8 +220,8 @@ void Room::draw(Vector2 mousePosition, PositionType positionType) {
 	}
 
 	if (positionType == EditorState::positionType) {
-		for (int i = 0; i < denEntrances.size(); i++) {
-			drawDen(dens[i], position.x + denEntrances[i].x, position.y - denEntrances[i].y, i == hoveredDen);
+		for (int i = 0; i < denShortcutEntrances.size(); i++) {
+			drawDen(dens[i], position.x + denShortcutEntrances[i].x, position.y - denShortcutEntrances[i].y, i == hoveredDen);
 		}
 	}
 
@@ -322,26 +322,11 @@ bool Room::tileIsShortcut(int x, int y) const {
 	return (tile & (256 | 128 | 64)) > 0;
 }
 
-const std::vector<Vector2> Room::ShortcutEntranceOffsetPositions() const {
-	Vector2 position = staticCurrentPosition();
-
-	std::vector<Vector2> transformedEntrances;
-
-	for (const std::pair<Vector2i, ShortcutType> &connection : shortcutEntrances) {
-		transformedEntrances.push_back(Vector2(
-			position.x + connection.first.x + 0.5,
-			position.y - connection.first.y - 0.5
-		));
-	}
-
-	return transformedEntrances;
-}
-
 int Room::getShortcutEntranceId(const Vector2i &searchPosition) const {
 	unsigned int connectionId = 0;
 
-	for (const std::pair<Vector2i, ShortcutType> &connection : shortcutEntrances) {
-		if (connection.first == searchPosition) {
+	for (const std::pair<ShortcutType, Vector2i> &connection : shortcutExits) {
+		if (connection.second == searchPosition) {
 			return connectionId;
 		}
 
@@ -354,7 +339,7 @@ int Room::getShortcutEntranceId(const Vector2i &searchPosition) const {
 const Vector2 Room::getRoomEntranceOffsetPosition(unsigned int connectionId) const {
 	Vector2 position = staticCurrentPosition();
 
-	Vector2i connection = getRoomEntrancePosition(connectionId);
+	Vector2i connection = Settings::getSetting<int>(Settings::Setting::ConnectionPoint) == 0 ? roomShortcutEntrances[connectionId] : roomExits[connectionId];
 
 	return Vector2(
 		position.x + connection.x + 0.5,
@@ -364,7 +349,7 @@ const Vector2 Room::getRoomEntranceOffsetPosition(unsigned int connectionId) con
 
 int Room::getRoomEntranceId(const Vector2i &searchPosition) const {
 	int index = 0;
-	for (const Vector2i enterance : roomEntrances) {
+	for (const Vector2i enterance : (Settings::getSetting<int>(Settings::Setting::ConnectionPoint) == 0 ? roomShortcutEntrances : roomExits)) {
 		if (enterance == searchPosition) {
 			return index;
 		}
@@ -376,9 +361,9 @@ int Room::getRoomEntranceId(const Vector2i &searchPosition) const {
 }
 
 const Vector2i Room::getRoomEntrancePosition(unsigned int connectionId) const {
-	if (connectionId >= roomEntrances.size()) return Vector2i(-1, -1);
+	if (connectionId >= roomShortcutEntrances.size()) return Vector2i(-1, -1);
 
-	return roomEntrances[connectionId];
+	return roomShortcutEntrances[connectionId];
 }
 
 Vector2 Room::getRoomEntranceDirectionVector(unsigned int connectionId) const {
@@ -386,7 +371,7 @@ Vector2 Room::getRoomEntranceDirectionVector(unsigned int connectionId) const {
 }
 
 Direction Room::getRoomEntranceDirection(unsigned int connectionId) const {
-	Vector2i connection = roomEntrances[connectionId];
+	Vector2i connection = roomShortcutEntrances[connectionId];
 
 	if (tileIsShortcut(connection.x - 1, connection.y)) {
 		return Direction::LEFT;
@@ -402,7 +387,7 @@ Direction Room::getRoomEntranceDirection(unsigned int connectionId) const {
 }
 
 bool Room::canConnect(unsigned int connectionId) {
-	if (shortcutEntrances.size() <= connectionId) return false;
+	if (shortcutExits.size() <= connectionId) return false;
 	
 	return true;
 }
@@ -415,27 +400,19 @@ void Room::disconnect(Connection *connection) {
 }
 
 int Room::RoomEntranceCount() const {
-	return roomEntrances.size();
-}
-
-const std::vector<std::pair<Vector2i, ShortcutType>> Room::ShortcutConnections() const {
-	return shortcutEntrances;
-}
-
-const std::vector<Vector2i> Room::RoomEntrances() const {
-	return roomEntrances;
+	return roomShortcutEntrances.size();
 }
 
 const int Room::DenId(Vector2i coord) const {
-	auto it = find(denEntrances.begin(), denEntrances.end(), coord);
+	auto it = find(denShortcutEntrances.begin(), denShortcutEntrances.end(), coord);
 
-	if (it == denEntrances.end()) return -1;
+	if (it == denShortcutEntrances.end()) return -1;
 
-	return (it - denEntrances.begin()) + roomEntrances.size();
+	return (it - denShortcutEntrances.begin()) + roomShortcutEntrances.size();
 }
 
 bool Room::CreatureDenExists(int id) {
-	return CreatureDen01Exists(id - roomEntrances.size());
+	return CreatureDen01Exists(id - roomShortcutEntrances.size());
 }
 
 bool Room::CreatureDen01Exists(int id) {
@@ -443,7 +420,7 @@ bool Room::CreatureDen01Exists(int id) {
 }
 
 Den &Room::CreatureDen(int id) {
-	return CreatureDen01(id - roomEntrances.size());
+	return CreatureDen01(id - roomShortcutEntrances.size());
 }
 
 Den &Room::CreatureDen01(int id) {
@@ -456,11 +433,11 @@ Den &Room::CreatureDen01(int id) {
 }
 
 const int Room::DenCount() const {
-	return denEntrances.size();
+	return denShortcutEntrances.size();
 }
 
 const std::vector<Vector2i> Room::DenEntrances() const {
-	return denEntrances;
+	return denShortcutEntrances;
 }
 
 bool Room::InBounds(int x, int y) const {
@@ -509,22 +486,29 @@ std::vector<uint8_t> Room::parseStringToUint8Vector(const std::string& input) {
 }
 
 void Room::ensureConnections() {
+	struct VerifiedConnection {
+		ShortcutType type;
+
+		Vector2i shortcutEntrancePosition;
+		Vector2i shortcutExitPosition;
+	};
+
 	try {
-		std::vector<std::pair<Vector2i, ShortcutType>> verifiedConnections;
+		std::vector<VerifiedConnection> verifiedConnections;
 	
-		for (int i = shortcutEntrances.size() - 1; i >= 0; i--) {
-			Vector2i connection = shortcutEntrances[i].first;
+		for (int i = shortcutExits.size() - 1; i >= 0; i--) {
+			Vector2i exitPosition = shortcutExits[i].second;
 	
 			Vector2i forwardDirection = Vector2i(0, 0);
 			bool hasDirection = true;
 	
-			if (tileIsShortcut(connection.x - 1, connection.y)) {
+			if (tileIsShortcut(exitPosition.x - 1, exitPosition.y)) {
 				forwardDirection.x = -1;
-			} else if (tileIsShortcut(connection.x, connection.y + 1)) {
+			} else if (tileIsShortcut(exitPosition.x, exitPosition.y + 1)) {
 				forwardDirection.y = 1;
-			} else if (tileIsShortcut(connection.x + 1, connection.y)) {
+			} else if (tileIsShortcut(exitPosition.x + 1, exitPosition.y)) {
 				forwardDirection.x = 1;
-			} else if (tileIsShortcut(connection.x, connection.y - 1)) {
+			} else if (tileIsShortcut(exitPosition.x, exitPosition.y - 1)) {
 				forwardDirection.y = -1;
 			}
 	
@@ -532,21 +516,21 @@ void Room::ensureConnections() {
 	
 			int runs = 0;
 			while (runs++ < 10000) {
-				connection += forwardDirection;
+				exitPosition += forwardDirection;
 	
-				if (!tileIsShortcut(connection.x + forwardDirection.x, connection.y + forwardDirection.y)) {
+				if (!tileIsShortcut(exitPosition.x + forwardDirection.x, exitPosition.y + forwardDirection.y)) {
 					Vector2i lastDirection = Vector2i(forwardDirection);
 	
 					forwardDirection.x = 0;
 					forwardDirection.y = 0;
 					hasDirection = false;
-					if (     lastDirection.x !=  1 && tileIsShortcut(connection.x - 1, connection.y    )) { forwardDirection.x = -1; hasDirection = true; }
-					else if (lastDirection.y != -1 && tileIsShortcut(connection.x,     connection.y + 1)) { forwardDirection.y =  1; hasDirection = true; }
-					else if (lastDirection.x != -1 && tileIsShortcut(connection.x + 1, connection.y    )) { forwardDirection.x =  1; hasDirection = true; }
-					else if (lastDirection.y !=  1 && tileIsShortcut(connection.x,     connection.y - 1)) { forwardDirection.y = -1; hasDirection = true; }
+					if (     lastDirection.x !=  1 && tileIsShortcut(exitPosition.x - 1, exitPosition.y    )) { forwardDirection.x = -1; hasDirection = true; }
+					else if (lastDirection.y != -1 && tileIsShortcut(exitPosition.x,     exitPosition.y + 1)) { forwardDirection.y =  1; hasDirection = true; }
+					else if (lastDirection.x != -1 && tileIsShortcut(exitPosition.x + 1, exitPosition.y    )) { forwardDirection.x =  1; hasDirection = true; }
+					else if (lastDirection.y !=  1 && tileIsShortcut(exitPosition.x,     exitPosition.y - 1)) { forwardDirection.y = -1; hasDirection = true; }
 				}
 	
-				if (getTile(connection.x, connection.y) % 16 == 4) {
+				if (getTile(exitPosition.x, exitPosition.y) % 16 == 4) {
 					hasDirection = true;
 					break;
 				}
@@ -554,30 +538,33 @@ void Room::ensureConnections() {
 				if (!hasDirection) break;
 			}
 	
-			if (hasDirection) verifiedConnections.push_back(std::make_pair(connection, shortcutEntrances[i].second));
+			if (hasDirection) verifiedConnections.push_back({
+				shortcutExits[i].first,
+				exitPosition,
+				shortcutExits[i].second
+			});
 		}
 	
 		std::reverse(verifiedConnections.begin(), verifiedConnections.end());
 	
-		for (size_t i = 0; i < shortcutEntrances.size(); ++i) {
-			for (size_t j = 0; j < shortcutEntrances.size() - i - 1; ++j) {
-				const Vector2i &a = shortcutEntrances[j].first;
-				const Vector2i &b = shortcutEntrances[j + 1].first;
+		for (size_t i = 0; i < shortcutExits.size(); ++i) {
+			for (size_t j = 0; j < shortcutExits.size() - i - 1; ++j) {
+				const Vector2i &a = shortcutExits[j].second;
+				const Vector2i &b = shortcutExits[j + 1].second;
 	
 				if (a.y > b.y || (a.y == b.y && a.x > b.x)) {
-					std::swap(shortcutEntrances[j], shortcutEntrances[j + 1]);
+					std::swap(shortcutExits[j], shortcutExits[j + 1]);
 					std::swap(verifiedConnections[j], verifiedConnections[j + 1]);
 				}
 			}
 		}
 		
-		for (std::pair<Vector2i, ShortcutType> verifiedConnection : verifiedConnections) {
-			ShortcutType type = verifiedConnection.second;
-	
-			if (type == ShortcutType::ROOM) {
-				roomEntrances.push_back(verifiedConnection.first);
-			} else if (type == ShortcutType::DEN) {
-				denEntrances.push_back(verifiedConnection.first);
+		for (VerifiedConnection verifiedConnection : verifiedConnections) {
+			if (verifiedConnection.type == ShortcutType::ROOM) {
+				roomShortcutEntrances.push_back(verifiedConnection.shortcutEntrancePosition);
+				roomExits.push_back(verifiedConnection.shortcutExitPosition);
+			} else if (verifiedConnection.type == ShortcutType::DEN) {
+				denShortcutEntrances.push_back(verifiedConnection.shortcutEntrancePosition);
 			}
 		}
 	} catch (...) {
@@ -657,11 +644,11 @@ void Room::loadGeometry() {
 					break;
 				case 4: // Exit
 					geometry[tileId] += 64;
-					shortcutEntrances.push_back(std::make_pair( Vector2i(tileId / height, tileId % height), ShortcutType::ROOM ));
+					shortcutExits.push_back({ ShortcutType::ROOM, Vector2i(tileId / height, tileId % height) });
 					break;
 				case 5: // Den
 					geometry[tileId] += 256;
-					shortcutEntrances.push_back(std::make_pair( Vector2i(tileId / height, tileId % height), ShortcutType::DEN ));
+					shortcutExits.push_back({ ShortcutType::DEN, Vector2i(tileId / height, tileId % height) });
 					break;
 				case 6: // Background Solid
 					geometry[tileId] += 512;
@@ -745,7 +732,7 @@ void Room::loadGeometry() {
 
 	ensureConnections();
 
-	for (Vector2i denLocation : denEntrances) {
+	for (Vector2i denLocation : denShortcutEntrances) {
 		dens.push_back(Den());
 	}
 }
@@ -906,7 +893,7 @@ void Room::generateVBO() {
 		}
 	}
 
-	for (Vector2i &shortcutEntrance : roomEntrances) {
+	for (Vector2i &shortcutEntrance : Settings::getSetting<int>(Settings::Setting::ConnectionPoint) == 0 ? roomShortcutEntrances : roomExits) {
 		float x0 = position.x + shortcutEntrance.x;
 		float y0 = position.y - shortcutEntrance.y;
 		float x1 = position.x + shortcutEntrance.x + 1;
@@ -920,7 +907,7 @@ void Room::generateVBO() {
 		);
 	}
 
-	for (Vector2i &shortcutEntrance : denEntrances) {
+	for (Vector2i &shortcutEntrance : denShortcutEntrances) {
 		float x0 = position.x + shortcutEntrance.x;
 		float y0 = position.y - shortcutEntrance.y;
 		float x1 = position.x + shortcutEntrance.x + 1;
@@ -969,18 +956,19 @@ void Room::regenerateGeometry() {
 	glDeleteBuffers(2, vbo);
 	glDeleteVertexArrays(1, &vao);
 
-	shortcutEntrances.clear();
-	denEntrances.clear();
-	roomEntrances.clear();
+	shortcutExits.clear();
+	denShortcutEntrances.clear();
+	roomShortcutEntrances.clear();
+	roomExits.clear();
 
 	int tileId = 0;
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
 			if ((geometry[tileId] & 64) > 0) { // Exit
-				shortcutEntrances.push_back(std::make_pair( Vector2i(tileId / height, tileId % height), ShortcutType::ROOM ));
+				shortcutExits.push_back({ ShortcutType::ROOM, Vector2i(tileId / height, tileId % height) });
 			}
 			if ((geometry[tileId] & 256) > 0) { // Den
-				shortcutEntrances.push_back(std::make_pair( Vector2i(tileId / height, tileId % height), ShortcutType::DEN ));
+				shortcutExits.push_back({ ShortcutType::DEN, Vector2i(tileId / height, tileId % height) });
 			}
 
 			tileId++;
@@ -990,10 +978,10 @@ void Room::regenerateGeometry() {
 	ensureConnections();
 
 	// TODO: Parse dens
-	while (dens.size() < denEntrances.size()) {
+	while (dens.size() < denShortcutEntrances.size()) {
 		dens.push_back(Den());
 	}
-	while (dens.size() > denEntrances.size()) {
+	while (dens.size() > denShortcutEntrances.size()) {
 		dens.pop_back();
 	}
 

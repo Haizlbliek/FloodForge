@@ -42,7 +42,7 @@ OffscreenRoom::OffscreenRoom(std::string path, std::string name) {
 Den &OffscreenRoom::getDen() {
 	if (dens.size() == 0) {
 		dens.push_back(Den());
-		denEntrances.push_back({ 0, 0 });
+		denShortcutEntrances.push_back({ 0, 0 });
 	}
 
 	return dens[0];

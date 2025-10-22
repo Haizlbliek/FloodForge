@@ -18,6 +18,7 @@ namespace Settings {
 		CameraZoomSpeed,
 		PopupScrollSpeed,
 		ConnectionType,
+		ConnectionPoint,
 		OrignalControls,
 		SelectorScale,
 		DefaultFilePath,

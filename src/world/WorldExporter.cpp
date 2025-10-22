@@ -4,10 +4,10 @@
 #include "../math/Rect.hpp"
 
 std::string roomNameCasing(std::string name) {
-	std::string casing = Settings::getSetting<std::string>(Settings::Setting::ForceExportCasing);
+	int casing = Settings::getSetting<int>(Settings::Setting::ForceExportCasing);
 
-	if (casing == "lower") return toLower(name);
-	if (casing == "upper") return toUpper(name);
+	if (casing == 1) return toLower(name);
+	if (casing == 2) return toUpper(name);
 
 	return name;
 }

@@ -101,8 +101,6 @@ class Room {
 
 		bool tileIsShortcut(int x, int y) const;
 
-		const std::vector<Vector2> ShortcutEntranceOffsetPositions() const;
-
 		int getShortcutEntranceId(const Vector2i &searchPosition) const;
 
 		const Vector2 getRoomEntranceOffsetPosition(unsigned int connectionId) const;
@@ -122,10 +120,6 @@ class Room {
 		void disconnect(Connection *connection);
 
 		int RoomEntranceCount() const;
-
-		const std::vector<std::pair<Vector2i, ShortcutType>> ShortcutConnections() const;
-
-		const std::vector<Vector2i> RoomEntrances() const;
 
 		const int DenId(Vector2i coord) const;
 
@@ -203,7 +197,8 @@ class Room {
 
 		std::vector<std::string> tags;
 
-		std::vector<Vector2i> roomEntrances;
-		std::vector<Vector2i> denEntrances;
-		std::vector<std::pair<Vector2i, ShortcutType>> shortcutEntrances;
+		std::vector<Vector2i> roomShortcutEntrances;
+		std::vector<Vector2i> roomExits;
+		std::vector<Vector2i> denShortcutEntrances;
+		std::vector<std::pair<ShortcutType, Vector2i>> shortcutExits;
 };
