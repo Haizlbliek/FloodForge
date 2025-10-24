@@ -21,13 +21,22 @@ std::vector<Button*> MenuItems::layerButtons;
 int MenuItems::currentLayer = MENU_LAYER_FLOOD_FORGE;
 
 double MenuItems::currentButtonX = 0.01;
+double MenuItems::currentButtonXRight = 2 * 1 - 0.01; // Screen bound don't define when this is initialized, so just assume 1 for now.
 
-Button::Button(std::string text, Rect rect, int layer) : rect(rect), text(text), layer(layer) {
+double MenuItems::lastWindowWidth = 0.0;
+double MenuItems::lastWindowHeight = 0.0;
+
+Button::Button(std::string text, Rect rect, int layer, ButtonAlignment alignment) : rect(rect), text(text), layer(layer), alignment(alignment) {
 	Text(text);
 }
 
 Button *Button::OnPress(std::function<void(Button*)> listener) {
 	this->listener = listener;
+	return this;
+}
+
+Button *Button::SetAlignment(ButtonAlignment align) {
+	this->alignment = align;
 	return this;
 }
 
@@ -38,6 +47,8 @@ void Button::draw() {
 	if (UI::TextButton(Rect(rect.x0 - UI::screenBounds.x, rect.y0 + UI::screenBounds.y, rect.x1 - UI::screenBounds.x, rect.y1 + UI::screenBounds.y), text, mods)) {
 		listener(this);
 	}
+
+	
 }
 
 void Button::Text(const std::string text) {
@@ -82,15 +93,28 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 }
 
 
-Button &MenuItems::addButton(std::string text, int layer) {
-	Button *button = new Button(text, Rect::fromSize(currentButtonX, -0.05, 0.0, 0.04), layer);
-	currentButtonX = button->rect.x1 + 0.01;
-	buttons.push_back(button);
-	return *button;
+Button &MenuItems::addButton(std::string text, int layer, ButtonAlignment alignment) {
+    Button *button = nullptr;
+
+    if(alignment == ButtonAlignment::LEFT) {
+        button = new Button(text, Rect::fromSize(currentButtonX, -0.05, 0.0, 0.04), layer, alignment);
+        currentButtonX = button->rect.x1 + 0.01;	
+        buttons.push_back(button);
+    } else 
+	
+	if(alignment == ButtonAlignment::RIGHT) {
+		button = new Button(text, Rect::fromSize(currentButtonXRight, -0.05, 0.0, 0.04), layer, alignment);
+		button->rect.x0 = currentButtonXRight - (button->rect.x1 - button->rect.x0);
+		button->rect.x1 = currentButtonXRight;
+        currentButtonXRight = button->rect.x0 - 0.01;	
+        buttons.push_back(button);
+    }
+
+    return *button;
 }
 
-void MenuItems::addLayerButton(std::string buttonName, int worldLayer, int layer) {
-	Button *btn = MenuItems::addButton(buttonName, layer)
+void MenuItems::addLayerButton(std::string buttonName, int worldLayer, int layer, ButtonAlignment alignment) {
+	Button *btn = MenuItems::addButton(buttonName, layer, alignment)
 	.OnPress(
 		[worldLayer](Button *button) {
 			if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
@@ -337,6 +361,13 @@ void MenuItems::initFloodForge() {
 	// 		Popups::addPopup(new ChangeAcronymPopup(window));
 	// 	}
 	// );
+
+	// Tutorial button
+	addButton("?", MENU_LAYER_FLOOD_FORGE, ButtonAlignment::RIGHT)
+		.OnPress([](Button *button) {
+			Popups::addPopup(new MarkdownPopup(BASE_PATH / "docs" / "controls.md"));
+		});
+
 }
 
 void MenuItems::initDroplet() {
@@ -391,6 +422,18 @@ void MenuItems::setLayer(int layer) {
 	repositionButtons();
 }
 
+void MenuItems::checkWindowResize() {
+	double currentWidth = 2 * UI::screenBounds.x;
+	double currentHeight = 2 * UI::screenBounds.y;
+
+	if (lastWindowWidth != currentWidth || lastWindowHeight != currentHeight) {
+		lastWindowWidth = currentWidth;
+		lastWindowHeight = currentHeight;
+
+		repositionButtons();
+	}
+}
+
 void MenuItems::draw() {
 	glLineWidth(1);
 
@@ -414,13 +457,23 @@ void MenuItems::draw() {
 
 void MenuItems::repositionButtons() {
 	currentButtonX = 0.01;
+	currentButtonXRight = 2 * UI::screenBounds.x - 0.01;
 
 	for (Button *button : buttons) {
 		if (button->layer != currentLayer) continue;
+		
+		if (button->alignment == ButtonAlignment::LEFT) {
+			
+			button->rect.x1 = button->rect.x1 - button->rect.x0 + currentButtonX;
+			button->rect.x0 = currentButtonX;
+			currentButtonX = button->rect.x1 + 0.01;
+		} else 
+		
+		if (button->alignment == ButtonAlignment::RIGHT) {
 
-		button->rect.x1 = button->rect.x1 - button->rect.x0 + currentButtonX;
-		button->rect.x0 = currentButtonX;
-
-		currentButtonX = button->rect.x1 + 0.01;
+			button->rect.x0 = currentButtonXRight - (button->rect.x1 - button->rect.x0);
+			button->rect.x1 = currentButtonXRight;
+			currentButtonXRight = button->rect.x0 - 0.01;
+		}
 	}
 }
