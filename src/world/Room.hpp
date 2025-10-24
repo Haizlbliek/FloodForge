@@ -37,7 +37,8 @@ class Room;
 
 enum class ShortcutType {
 	ROOM,
-	DEN
+	DEN,
+	SCAVENGER
 };
 
 struct Vertex {
@@ -131,6 +132,8 @@ class Room {
 
 		Den &CreatureDen01(int id);
 
+		int GarbageWormDenIndex();
+
 		const int DenCount() const;
 
 		const std::vector<Vector2i> DenEntrances() const;
@@ -165,6 +168,7 @@ class Room {
 		TimelineType timelineType;
 
 		std::vector<Den> dens;
+		std::vector<GarbageWormDen> garbageWormDens;
 
 		void moveBoth();
 
@@ -201,4 +205,6 @@ class Room {
 		std::vector<Vector2i> roomExits;
 		std::vector<Vector2i> denShortcutEntrances;
 		std::vector<std::pair<ShortcutType, Vector2i>> shortcutExits;
+
+		int specialExitCount;
 };

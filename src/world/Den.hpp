@@ -35,3 +35,15 @@ class Den {
 
 		std::vector<DenLineage> creatures;
 };
+
+class GarbageWormDen {
+	public:
+		GarbageWormDen();
+
+		std::string creatureType;
+		int count;
+		bool timelinesMatch(const GarbageWormDen *other) const;
+
+		std::set<std::string> timelines;
+		TimelineType timelineType;
+};

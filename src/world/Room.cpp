@@ -412,7 +412,7 @@ const int Room::DenId(Vector2i coord) const {
 }
 
 bool Room::CreatureDenExists(int id) {
-	return CreatureDen01Exists(id - roomShortcutEntrances.size());
+	return CreatureDen01Exists(id - roomShortcutEntrances.size()) || id == GarbageWormDenIndex();
 }
 
 bool Room::CreatureDen01Exists(int id) {
@@ -430,6 +430,10 @@ Den &Room::CreatureDen01(int id) {
 	}
 
 	return dens[id];
+}
+
+int Room::GarbageWormDenIndex() {
+	return this->specialExitCount + roomShortcutEntrances.size() + denShortcutEntrances.size();
 }
 
 const int Room::DenCount() const {
@@ -486,6 +490,8 @@ std::vector<uint8_t> Room::parseStringToUint8Vector(const std::string& input) {
 }
 
 void Room::ensureConnections() {
+	specialExitCount = 0;
+
 	struct VerifiedConnection {
 		ShortcutType type;
 
@@ -565,8 +571,49 @@ void Room::ensureConnections() {
 				roomExits.push_back(verifiedConnection.shortcutExitPosition);
 			} else if (verifiedConnection.type == ShortcutType::DEN) {
 				denShortcutEntrances.push_back(verifiedConnection.shortcutEntrancePosition);
+			} else if (verifiedConnection.type == ShortcutType::SCAVENGER) {
+				// Region Transports
+				specialExitCount++;
 			}
 		}
+		Logger::info("transports: ", specialExitCount);
+
+		// Side Exits
+		bool wasL = false, wasR = false;
+		for (int y = 0; y < height; y++) {
+			bool airL = getTile(0, y) % 16 != 1;
+			bool airR = getTile(width - 1, y) % 16 != 1;
+			if (airL && !wasL) specialExitCount++;
+			if (airR && !wasR) specialExitCount++;
+			wasL = airL;
+			wasR = airR;
+		}
+		Logger::info("side: ", specialExitCount);
+
+		// Sky & Sea Exits
+		wasL = false; wasR = false;
+		for (int x = 0; x < width; x++) {
+			bool airL = getTile(x, 0) % 16 != 1;
+			bool airR = getTile(x, height - 1) % 16 != 1;
+			if (airL && !wasL) specialExitCount++;
+			if (airR && !wasR && water >= 0) specialExitCount++;
+			wasL = airL;
+			wasR = airR;
+		}
+		Logger::info("sky & sea: ", specialExitCount);
+
+		// Batfly Hives
+		for (int y = 0; y < height; y++) {
+			wasL = false;
+			for (int x = 0; x < width; x++) {
+				bool hive = (getTile(x, y) & 65536) > 0;
+				if (!wasL && hive) {
+					specialExitCount++;
+				}
+				wasL = hive;
+			}
+		}
+		Logger::info("hives: ", specialExitCount);
 	} catch (...) {
 		Logger::info("Connections failed to load");
 		valid = false;
@@ -969,6 +1016,9 @@ void Room::regenerateGeometry() {
 			}
 			if ((geometry[tileId] & 256) > 0) { // Den
 				shortcutExits.push_back({ ShortcutType::DEN, Vector2i(tileId / height, tileId % height) });
+			}
+			if ((geometry[tileId] & 4096) > 0) { // Scavenger
+				shortcutExits.push_back({ ShortcutType::SCAVENGER, Vector2i(tileId / height, tileId % height) });
 			}
 
 			tileId++;

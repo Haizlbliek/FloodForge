@@ -415,21 +415,43 @@ void WorldParser::parseWorldCreature(std::string line) {
 				denId = std::stoi(sections[0]);
 			} catch (...) {
 				Logger::error("Failed to load creature line '", line, "' due to stoi for '", sections[0], "' (int denId)");
-				return;
+				continue;;
 			}
 			std::string creature = sections[1];
-	
+
 			if (room == EditorState::offscreenDen) {
 				denId = 0;
 				EditorState::offscreenDen->getDen();
 			}
-	
-			if (!room->CreatureDenExists(denId)) {
+
+			if (!room->CreatureDenExists(denId) && denId != room->GarbageWormDenIndex()) {
 				Logger::info(roomName, " failed den ", denId);
 				EditorState::fails.push_back(roomName + " failed den " + std::to_string(denId));
 				continue;
 			}
-	
+
+			if (denId == room->GarbageWormDenIndex() && sections.size() <= 3) {
+				GarbageWormDen worm;
+				worm.creatureType = CreatureTextures::parse(creature);
+				worm.timelineType = timelineType;
+				for (std::string timeline : timelines) {
+					worm.timelines.insert(timeline);
+				}
+				if (sections.size() == 2) {
+					worm.count = 1;
+				}
+				else if (sections.size() == 3) {
+					try {
+						worm.count = std::stoi(sections[2]);
+					} catch (...) {
+						Logger::error("Failed to load creature line '", line, "' due to stoi for '", sections[2], "' (worm.count)");
+					}
+				}
+				room->garbageWormDens.push_back(worm);
+
+				continue;
+			}
+
 			Den &den = room->CreatureDen(denId);
 			DenLineage denCreature = DenLineage("", 0, "", 0.0);
 			denCreature.timelineType = timelineType;

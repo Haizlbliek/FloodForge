@@ -413,6 +413,29 @@ void WorldExporter::exportWorldFile() {
 				}
 			}
 		}
+
+		if (room == EditorState::offscreenDen) continue;
+
+		for (GarbageWormDen &worm : room->garbageWormDens) {
+			if (worm.timelineType != TimelineType::ALL) {
+				file << "(";
+				if (worm.timelineType == TimelineType::EXCEPT) {
+					file << "X-";
+				}
+				bool first = true;
+				for (std::string timeline : worm.timelines) {
+					if (!first) file << ",";
+					first = false;
+
+					file << timeline;
+				}
+				file << ")";
+			}
+
+			file << roomNameCasing(room->roomName) << " : " << room->GarbageWormDenIndex() << "-" << worm.creatureType;
+			if (worm.count > 1) file << "-" << worm.count;
+			file << "\n";
+		}
 	}
 	
 	file << EditorState::region.complicatedCreatures;

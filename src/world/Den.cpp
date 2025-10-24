@@ -27,3 +27,20 @@ bool DenLineage::timelinesMatch(const DenLineage *other) const {
 }
 
 Den::Den() {}
+
+GarbageWormDen::GarbageWormDen() {
+	timelineType = TimelineType::ALL;
+}
+
+bool GarbageWormDen::timelinesMatch(const GarbageWormDen *other) const {
+	if (timelineType != other->timelineType) return false;
+	if (timelineType == TimelineType::ALL) return true;
+
+	if (timelines.size() != other->timelines.size()) return false;
+
+	for (std::string timeline : timelines) {
+		if (other->timelines.count(timeline) != 1) return false;
+	}
+
+	return true;
+}

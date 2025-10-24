@@ -46,3 +46,5 @@ Daddy>DaddyLongLegs
 Daddy Long Legs>DaddyLongLegs
 Hunter>HunterDaddy
 Hunter Daddy>HunterDaddy
+Worm>GarbageWorm
+Garbage Worm>GarbageWorm
