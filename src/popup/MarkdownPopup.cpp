@@ -34,6 +34,7 @@ void MarkdownPopup::draw() {
 
 	double x = bounds.x0;
 	double y = 0.75 + bounds.y0 + 0.8f + currentScroll;
+	int currentImage = 0;
 
 	for (std::pair<MDType, std::vector<MDStyledText>> line : lines) {
 		if (line.first == MDType::TEXT) {
@@ -72,6 +73,15 @@ void MarkdownPopup::draw() {
 			Draw::vertex(bounds.x1 - 0.01, y);
 			Draw::end();
 			y -= 0.03;
+		} else if (line.first == MDType::IMAGE) {
+			Texture *image = images[currentImage++];
+			double height = 1.58 / image->Width() * image->Height();
+			y -= 0.03;
+			Draw::color(1.0, 1.0, 1.0);
+			Draw::useTexture(image->ID());
+			fillRect(UVRect::fromSize(x + 0.02, y - height, 1.58, height).uv(0.0, 0.0, 1.0, 1.0));
+			Draw::useTexture(0);
+			y -= 0.03;
 		}
 	}
 
@@ -82,6 +92,10 @@ void MarkdownPopup::draw() {
 
 void MarkdownPopup::close() {
 	Popup::close();
+
+	for (Texture *image : images) {
+		delete image;
+	}
 
 	UI::window->removeScrollCallback(this, scrollCallback);
 }
@@ -194,6 +208,11 @@ void MarkdownPopup::loadFile(std::filesystem::path filePath) {
 			lines.push_back({ MDType::HORIZONTAL_RULE, {} });
 			addNewline = 0;
 			continue;
+		} else if (startsWith(line, "$")) {
+			lines.push_back({ MDType::IMAGE, {} });
+			images.push_back(new Texture(BASE_PATH / "assets" / line.substr(1)));
+			addNewline = 1;
+			continue;
 		} else {
 			if (addNewline == 2) {
 				lines.push_back({ MDType::TEXT, {} });
@@ -294,11 +313,11 @@ std::vector<MDStyledText> MarkdownPopup::parseStyledText(const std::string &line
 }
 
 void MarkdownPopup::clampScroll() {
-	if (targetScroll < 0) {
-		targetScroll = 0;
-	}
 	if (targetScroll >= maxScroll) {
 		targetScroll = maxScroll;
+	}
+	if (targetScroll < 0) {
+		targetScroll = 0;
 	}
 }
 

@@ -7,6 +7,7 @@ SplashArtPopup::SplashArtPopup() : Popup() {
 	bounds = Rect(-1.0, -1.0, 1.0, 1.0);
 
 	splashart = new Texture(BASE_PATH / "assets" / "splash.png");
+	uiIcons = new Texture(BASE_PATH / "assets" / "uiIcons.png");
 
 	std::ifstream versionFile(BASE_PATH / "assets" / "version.txt");
 	std::getline(versionFile, version);
@@ -15,6 +16,7 @@ SplashArtPopup::SplashArtPopup() : Popup() {
 
 SplashArtPopup::~SplashArtPopup() {
 	delete splashart;
+	delete uiIcons;
 }
 
 const Rect SplashArtPopup::Bounds() {
@@ -80,6 +82,35 @@ void SplashArtPopup::draw() {
 	Draw::vertex(-0.9, -0.25);
 	Draw::vertex(0.9, -0.25);
 	Draw::end();
+
+	{
+		for (int i = 0; i < (EditorState::showAnniversary ? 2 : 1); i++) {
+			Rect hoverRect = Rect::fromSize(0.31, -0.31 - i * 0.06, 0.59, 0.05);
+			Rect rect = Rect::fromSize(0.305, -0.315 - i * 0.06, 0.5905, 0.06);
+			if (hoverRect.inside(UI::mouse)) {
+				Draw::color(0.25f, 0.25f, 0.25f);
+				fillRect(rect);
+	
+				if (UI::mouse.justClicked()) {
+					close();
+					if (i == 0) {
+						openURL("https://discord.gg/k5BExadp4x");
+					} else if (i == 1) {
+						Popups::addPopup(new MarkdownPopup(BASE_PATH / "docs" / "anniversary.md"));
+					}
+					return;
+				}
+			}
+		}
+	
+		Draw::useTexture(uiIcons->ID());
+		Draw::color(1.0, 1.0, 1.0);
+		fillRect(UVRect::fromSize(0.31, -0.31, 0.05, 0.05).uv(0.0, 0.0, 0.25, 0.25));
+		if (EditorState::showAnniversary) fillRect(UVRect::fromSize(0.31, -0.37, 0.05, 0.05).uv(0.25, 0.0, 0.5, 0.25));
+		Draw::useTexture(0);
+		Fonts::rainworld->writeCentered("Discord Server", 0.37, -0.285, 0.03, CENTER_Y);
+		if (EditorState::showAnniversary) Fonts::rainworld->writeCentered("Anniversary Event", 0.37, -0.345, 0.03, CENTER_Y);
+	}
 
 	if (UI::mouse.justClicked()) {
 		close();

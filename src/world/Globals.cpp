@@ -40,4 +40,7 @@ namespace EditorState {
 
 	Vector2 globalMouse;
 	double lineSize = 0.0;
+
+
+	bool showAnniversary = false;
 }

@@ -6,6 +6,7 @@
 #include "Popups.hpp"
 #include "../font/Fonts.hpp"
 #include "../Settings.hpp"
+#include "../Texture.hpp"
 
 struct MDStyledText {
 	std::string text;
@@ -23,7 +24,8 @@ enum class MDType {
 	H2,
 	H3,
 	QUOTE,
-	HORIZONTAL_RULE
+	HORIZONTAL_RULE,
+	IMAGE
 };
 
 class MarkdownPopup : public Popup {
@@ -52,6 +54,8 @@ class MarkdownPopup : public Popup {
 		std::vector<std::pair<MDType, std::vector<MDStyledText>>> lines;
 
 		std::vector<Quadruple<double, double, std::string, Vector2>> links;
+
+		std::vector<Texture*> images;
 
 		double currentScroll = 0.0;
 		double targetScroll = 0.0;

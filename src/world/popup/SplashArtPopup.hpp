@@ -31,6 +31,7 @@ class SplashArtPopup : public Popup {
 
 	private:
 		Texture *splashart;
+		Texture *uiIcons;
 
 		std::string version;
 };

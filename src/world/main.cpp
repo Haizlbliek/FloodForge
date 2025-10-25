@@ -89,15 +89,24 @@ int main() {
 	std::signal(SIGINT, signalHandler);  // Ctrl+C
 	std::signal(SIGTERM, signalHandler); // Termination request
 #endif
+
+	{
+		std::time_t tp = std::time(NULL);
+		std::tm *ts = std::gmtime(&tp);
+		Logger::info("Current Date: ", ts->tm_year, " - ", ts->tm_mon, " - ", ts->tm_mday);
+		EditorState::showAnniversary = (ts->tm_year == 125 && ts->tm_mon == 10 && ts->tm_mday < 22);
+	}
+
 	std::ifstream versionFile(BASE_PATH / "assets" / "version.txt");
 	std::string version;
 	std::getline(versionFile, version);
 	versionFile.close();
 	Logger::info("FloodForge ", version);
+	if (EditorState::showAnniversary) Logger::info("- Anniversary!");
 	Logger::info();
 
 	UI::window = new Window(1024, 1024);
-	UI::window->setIcon(BASE_PATH / "assets" / "mainIcon.png");
+	UI::window->setIcon(BASE_PATH / "assets" / (EditorState::showAnniversary ? "iconAnniversary.png" : "icon.png"));
 	UI::window->setTitle("FloodForge World Editor");
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
