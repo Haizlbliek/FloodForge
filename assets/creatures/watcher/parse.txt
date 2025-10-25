@@ -23,3 +23,7 @@ Rot Behemoth>RotLoach
 RBehemoth>RotLoach
 RoBehemoth>RotLoach
 BigRot>RotLoach
+Peach>PeachLizard
+Peach Lizard>PeachLizard
+Angler Fish>Angler
+AnglerFish>Angler

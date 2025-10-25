@@ -1,12 +1,15 @@
 IndigoLizard
 BasiliskLizard
 BlizzardLizard
+PeachLizard
 Loach
 Barnacle
+Angler
 ScavengerTemplar
 ScavengerDisciple
 BigMoth
 SmallMoth
+MothGrub
 SkyWhale
 BoxWorm
 FireSprite
