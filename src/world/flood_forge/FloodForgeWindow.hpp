@@ -13,6 +13,9 @@ namespace FloodForgeWindow {
 		Connection
 	};
 
+	void initUndoRedo();
+	void cleanupUndoRedo();
+	
 	void updateCamera();
 
 	void updateOriginalControls();

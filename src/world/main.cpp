@@ -117,6 +117,7 @@ int main() {
 	ConditionalTimelineTextures::init();
 	RecentFiles::init();
 	RoomHelpers::loadColours();
+	FloodForgeWindow::initUndoRedo();
 
 	Popups::addPopup(new SplashArtPopup());
 	if (std::filesystem::exists(BASE_PATH / "running.txt")) {
@@ -204,6 +205,7 @@ int main() {
 	Draw::cleanup();
 	Settings::cleanup();
 	UI::cleanup();
+	FloodForgeWindow::cleanupUndoRedo();
 
 	std::filesystem::remove(BASE_PATH / "running.txt");
 

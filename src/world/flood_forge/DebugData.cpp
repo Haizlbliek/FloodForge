@@ -1,4 +1,5 @@
 #include "DebugData.hpp"
+#include "../undo_redo/UndoRedoManager.hpp"
 
 namespace DebugData {
 	void draw(Window *window, Vector2 mouse, Vector2 screenBounds) {
@@ -28,6 +29,13 @@ namespace DebugData {
 		}
 
 		std::vector<std::string> debugText;
+
+		// Información del sistema Undo/Redo
+		debugText.push_back("    Undo/Redo:");
+		debugText.push_back("Undo Stack: " + std::to_string(UndoRedo::getUndoStackSize()));
+		debugText.push_back("Redo Stack: " + std::to_string(UndoRedo::getRedoStackSize()));
+		debugText.push_back("Last Action: " + UndoRedo::getLastAction());
+		debugText.push_back("");
 
 		debugText.push_back("    Count:");
 		debugText.push_back("Rooms: " + std::to_string(EditorState::rooms.size()));

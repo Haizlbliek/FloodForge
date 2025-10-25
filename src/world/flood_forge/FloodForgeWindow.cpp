@@ -8,6 +8,8 @@
 #include "../Globals.hpp"
 #include "../../ui/UI.hpp"
 #include "DebugData.hpp"
+#include "../undo_redo/UndoRedoManager.hpp"
+#include "../undo_redo/RoomPositionAction.hpp"
 
 #include "../../popup/MarkdownPopup.hpp"
 #include "../../popup/ConfirmPopup.hpp"
@@ -43,6 +45,16 @@ bool FloodForgeWindow::currentConnectionValid = false;
 std::string FloodForgeWindow::connectionError = "";
 FloodForgeWindow::ConnectionState FloodForgeWindow::connectionState = FloodForgeWindow::ConnectionState::None;
 
+static bool roomSnapshotSaved = false; // Only take snapshot once per drag
+static std::map<Room*, UndoRedo::RoomPositionData> roomBeforePositions;
+
+void FloodForgeWindow::initUndoRedo() {
+	UndoRedo::init();
+}
+
+void FloodForgeWindow::cleanupUndoRedo() {
+	UndoRedo::cleanup();
+}
 
 
 void FloodForgeWindow::updateCamera() {
@@ -143,6 +155,25 @@ void FloodForgeWindow::updateOriginalControls() {
 		} else {
 			if (EditorState::selectingState == 3 && UI::mouse.moved() || EditorState::selectingState == 4) {
 				if (EditorState::selectingState == 3) {
+					// Save snapshot BEFORE starting to move rooms
+					if (!roomSnapshotSaved) {
+						for (Room* room : EditorState::selectedRooms) {
+							roomBeforePositions[room] = UndoRedo::RoomPositionData(
+								room->canonPosition, 
+								room->devPosition
+							);
+						}
+						// If the room we're grabbing is not in the selection, add it
+						if (EditorState::selectedRooms.find(EditorState::roomPossibleSelect) == EditorState::selectedRooms.end()) {
+							roomBeforePositions[EditorState::roomPossibleSelect] = UndoRedo::RoomPositionData(
+								EditorState::roomPossibleSelect->canonPosition, 
+								EditorState::roomPossibleSelect->devPosition
+							);
+						}
+						// Save only one time per drag
+						roomSnapshotSaved = true;
+					}
+					
 					if (UI::window->modifierPressed(GLFW_MOD_SHIFT) || UI::window->modifierPressed(GLFW_MOD_CONTROL)) {
 						EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 					} else {
@@ -208,8 +239,23 @@ void FloodForgeWindow::updateOriginalControls() {
 				}
 			}
 		}
+		
+		// Push undo action when releasing mouse
+		if (roomSnapshotSaved && !roomBeforePositions.empty()) {
+			std::map<Room*, UndoRedo::RoomPositionData> afterPositions;
+			for (auto& pair : roomBeforePositions) {
+				Room* room = pair.first;
+				afterPositions[room] = UndoRedo::RoomPositionData(
+					room->canonPosition,
+					room->devPosition
+				);
+			}
+					UndoRedo::pushRoomPositionSnapshot(roomBeforePositions, afterPositions, UndoRedo::RoomPositionActionType::MoveRooms);
+			roomBeforePositions.clear();
+		}
 
 		holdingRoom = nullptr;
+		roomSnapshotSaved = false;  // Reset flag when releasing mouse
 
 		if (EditorState::selectingState == 1) {
 			for (Room *room : EditorState::rooms) {
@@ -249,6 +295,25 @@ void FloodForgeWindow::updateFloodForgeControls() {
 		} else {
 			if (EditorState::selectingState == 3 && UI::mouse.moved() || EditorState::selectingState == 4) {
 				if (EditorState::selectingState == 3) {
+					// Save snapshot BEFORE starting to move rooms
+					if (!roomSnapshotSaved) {
+						roomBeforePositions.clear();
+						for (Room* room : EditorState::selectedRooms) {
+							roomBeforePositions[room] = UndoRedo::RoomPositionData(
+								room->canonPosition, 
+								room->devPosition
+							);
+						}
+						// If the room we're grabbing is not in the selection, add it
+						if (EditorState::selectedRooms.find(EditorState::roomPossibleSelect) == EditorState::selectedRooms.end()) {
+							roomBeforePositions[EditorState::roomPossibleSelect] = UndoRedo::RoomPositionData(
+								EditorState::roomPossibleSelect->canonPosition, 
+								EditorState::roomPossibleSelect->devPosition
+							);
+						}
+						roomSnapshotSaved = true;
+					}
+					
 					if (UI::window->modifierPressed(GLFW_MOD_SHIFT) || UI::window->modifierPressed(GLFW_MOD_CONTROL)) {
 						EditorState::selectedRooms.insert(EditorState::roomPossibleSelect);
 					} else {
@@ -305,8 +370,23 @@ void FloodForgeWindow::updateFloodForgeControls() {
 				}
 			}
 		}
+		
+		// Push undo action when releasing mouse
+		if (roomSnapshotSaved && !roomBeforePositions.empty()) {
+			std::map<Room*, UndoRedo::RoomPositionData> afterPositions;
+			for (auto& pair : roomBeforePositions) {
+				Room* room = pair.first;
+				afterPositions[room] = UndoRedo::RoomPositionData(
+					room->canonPosition,
+					room->devPosition
+				);
+			}
+					UndoRedo::pushRoomPositionSnapshot(roomBeforePositions, afterPositions, UndoRedo::RoomPositionActionType::MoveRooms);
+			roomBeforePositions.clear();
+		}
 
 		holdingRoom = nullptr;
+		roomSnapshotSaved = false;  // Reset flag when releasing mouse
 
 		if (EditorState::selectingState == 1) {
 			for (Room *room : EditorState::rooms) {
@@ -353,6 +433,18 @@ void FloodForgeWindow::updateMain() {
 
 	if (UI::window->modifierPressed(GLFW_MOD_ALT) && UI::window->justPressed(GLFW_KEY_T)) {
 		Popups::addPopup(new MarkdownPopup(BASE_PATH / "docs" / "controls.md"));
+	}
+
+	// Undo/Redo para la posición de las rooms
+	// TODO: Reval if i should move this into a more general funtion, later, i'm tired as saint pass ascencion
+	if (UI::window->modifierPressed(GLFW_MOD_CONTROL)) {
+		if (UI::window->modifierPressed(GLFW_MOD_SHIFT) && UI::window->justPressed(GLFW_KEY_Z)) {
+			// Ctrl+Shift+Z: Redo
+			UndoRedo::redo();
+		} else if (UI::window->justPressed(GLFW_KEY_Z)) {
+			// Ctrl+Z: Undo
+			UndoRedo::undo();
+		}
 	}
 
 	//// Connections
