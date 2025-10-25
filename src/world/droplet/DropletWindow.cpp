@@ -1653,6 +1653,9 @@ void DropletWindow::exportGeometry() {
 
 		placedObjects = outputPlacedObjects;
 	}
+	if (!endsWith(placedObjects, ", ")) {
+		placedObjects += ", ";
+	}
 
 	std::ofstream settings(settingsPath);
 	settings << before << "PlacedObjects: " << placedObjects << "\n" << after;

@@ -82,3 +82,5 @@ std::string toFixed(double x, int decimals);
 Colour stringToColour(const std::string &hex);
 
 std::string colourToString(const Colour &colour);
+
+double safeStod(const std::string &str, const std::string message);

@@ -63,7 +63,7 @@ namespace Logger {
 		writeStream(oss, "WARN: ", args...);
 		std::string line = oss.str();
 	
-		std::cout << "WARN: " << line << std::endl;
+		std::cout << line << std::endl;
 		if (logFile.is_open()) {
 			logFile << line << std::endl;
 			logFile.flush();

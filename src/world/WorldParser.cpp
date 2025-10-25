@@ -78,6 +78,7 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 	std::string line;
 	while (std::getline(mapFile, line)) {
 		if (!line.empty() && line.back() == '\r') line.pop_back();
+		if (line.empty()) continue;
 
 		if (startsWith(line, "//FloodForge;")) {
 			line = line.substr(line.find(';') + 1);
@@ -100,6 +101,8 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 			EditorState::region.extraMap += line + "\n";
 			continue;
 		} else if (startsWith(line, "Connection: ")) {
+			// Skip
+		} else if (startsWith(line, "SpawnMigrationStream: ") || startsWith(line, "SpawnMigrationStreamMidpoint: ")) {
 			// Skip
 		} else {
 			std::string roomName = line.substr(0, line.find(':'));
@@ -139,19 +142,19 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 			double scale = 1.0 / 3.0;
 
 			std::getline(data, temp, '>'); // Canon X
-			double x = std::stod(temp) * scale;
+			double x = safeStod(temp, "Canon X") * scale;
 
 			std::getline(data, temp, '<');
 			std::getline(data, temp, '>'); // Canon Y
-			double y = std::stod(temp) * scale;
+			double y = safeStod(temp, "Canon Y") * scale;
 
 			std::getline(data, temp, '<');
 			std::getline(data, temp, '>'); // Dev X
-			double devX = std::stod(temp) * scale;
+			double devX = safeStod(temp, "Dev X") * scale;
 
 			std::getline(data, temp, '<');
 			std::getline(data, temp, '>'); // Dev Y
-			double devY = std::stod(temp) * scale;
+			double devY = safeStod(temp, "Dev Y") * scale;
 
 			std::getline(data, temp, '<');
 			std::getline(data, temp, '>'); // Layer
@@ -380,27 +383,23 @@ void WorldParser::parseWorldCreature(std::string line) {
 			std::vector<std::string> sections = split(creatureInDen, '-');
 			creature->type = CreatureTextures::parse(sections[0]);
 			creature->count = 1;
-			try {
-				creature->lineageChance = std::stod(sections[sections.size() - 1]);
-			} catch (...) {
-				Logger::error("Failed to load creature line '", line, "' due to stod for '", sections[sections.size() - 1], "' (creature->lineageChance)");
-			}
+			creature->lineageChance = safeStod(sections[sections.size() - 1], "creature->lineageChance");
 
 			if (sections.size() == 3) {
 				if (sections[1][0] == '{') {
 					std::string tag = sections[1].substr(1, sections[1].size() - 2);
 					if (startsWith(tag, "Mean")) {
 						creature->tag = "MEAN";
-						creature->data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+						creature->data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Mean value");
 					} else if (startsWith(tag, "Seed")) {
 						creature->tag = "SEED";
-						creature->data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+						creature->data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Seed value");
 					} else if (startsWith(tag, "RotType")) {
 						creature->tag = "RotType";
-						creature->data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+						creature->data = safeStod(tag.substr(tag.find_first_of(':') + 1), "RotType value");
 					} else if (tag.find(':') != -1) {
 						creature->tag = "LENGTH";
-						creature->data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+						creature->data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Length value");
 					} else {
 						creature->tag = tag;
 					}
@@ -465,16 +464,16 @@ void WorldParser::parseWorldCreature(std::string line) {
 					std::string tag = sections[2].substr(1, sections[2].size() - 2);
 					if (startsWith(tag, "Mean")) {
 						denCreature.tag = "MEAN";
-						denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+						denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Mean value");
 					} else if (startsWith(tag, "Seed")) {
 						denCreature.tag = "SEED";
-						denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+						denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Seed value");
 					} else if (startsWith(tag, "RotType")) {
 						denCreature.tag = "RotType";
-						denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+						denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "RotType value");
 					} else if (tag.find(':') != -1) {
 						denCreature.tag = "LENGTH";
-						denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+						denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Length value");
 					} else {
 						denCreature.tag = tag;
 					}
@@ -500,13 +499,13 @@ void WorldParser::parseWorldCreature(std::string line) {
 				std::string tag = tagString.substr(1, tagString.size() - 2);
 				if (startsWith(tag, "Mean")) {
 					denCreature.tag = "MEAN";
-					denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Mean value");
 				} else if (startsWith(tag, "Seed")) {
 					denCreature.tag = "SEED";
-					denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Seed value");
 				} else if (tag.find(':') != -1) {
 					denCreature.tag = "LENGTH";
-					denCreature.data = std::stod(tag.substr(tag.find_first_of(':') + 1));
+					denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Length value");
 				} else {
 					denCreature.tag = tag;
 				}
@@ -982,7 +981,7 @@ void WorldParser::loadExtraRoomData(std::filesystem::path roomPath, ExtraRoomDat
 
 			DevItem devItem = DevItem();
 			devItem.name = key;
-			devItem.position = Vector2(std::stod(splits2[1].substr(1)) / 20.0, std::stod(splits2[2].substr(1)) / 20.0);
+			devItem.position = Vector2(safeStod(splits2[1].substr(1), "PlacedObject X") / 20.0, safeStod(splits2[2].substr(1), "PlacedObject Y") / 20.0);
 			devItem.texture = texture;
 			data.devItems.push_back(devItem);
 		}

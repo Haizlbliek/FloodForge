@@ -576,7 +576,6 @@ void Room::ensureConnections() {
 				specialExitCount++;
 			}
 		}
-		Logger::info("transports: ", specialExitCount);
 
 		// Side Exits
 		bool wasL = false, wasR = false;
@@ -588,7 +587,6 @@ void Room::ensureConnections() {
 			wasL = airL;
 			wasR = airR;
 		}
-		Logger::info("side: ", specialExitCount);
 
 		// Sky & Sea Exits
 		wasL = false; wasR = false;
@@ -600,7 +598,6 @@ void Room::ensureConnections() {
 			wasL = airL;
 			wasR = airR;
 		}
-		Logger::info("sky & sea: ", specialExitCount);
 
 		// Batfly Hives
 		for (int y = 0; y < height; y++) {
@@ -613,7 +610,6 @@ void Room::ensureConnections() {
 				wasL = hive;
 			}
 		}
-		Logger::info("hives: ", specialExitCount);
 	} catch (...) {
 		Logger::info("Connections failed to load");
 		valid = false;

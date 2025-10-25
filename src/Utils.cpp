@@ -654,3 +654,12 @@ std::string intToHex(int x) {
 std::string colourToString(const Colour &colour) {
 	return "#" + intToHex((int) (colour.r * 255)) + intToHex((int) (colour.g * 255)) + intToHex((int) (colour.b * 255)) + ((colour.a >= 1.0f) ? "" : intToHex((int) (colour.a * 255)));
 }
+
+double safeStod(const std::string &str, const std::string message) {
+	try {
+		return std::stod(str);
+	} catch (...) {
+		Logger::info("Safe stod failed with value (", str, "): ", message);
+		return 0.0;
+	}
+}
