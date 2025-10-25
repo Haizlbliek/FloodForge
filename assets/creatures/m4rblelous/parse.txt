@@ -1,0 +1,73 @@
+Chip Chop>ChipChop
+Tinted Beetle>TintedBeetle
+Blob>WaterBlob
+Water Blob>WaterBlob
+Xy>Xylo
+Thorn Bug>ThornBug
+SurfaceWalker>SurfaceSwimmer
+Surface Walker>SurfaceSwimmer
+Surface Swimmer>SurfaceSwimmer
+Silver Lizard>SilverLizard
+Scut>Scutigera
+Scuti>Scutigera
+ScavSentinal>ScavengerSentinal
+Scav Sentinal>ScavengerSentinal
+Scavenger Sentinal>ScavengerSentinal
+RedHorrorCenti>RedHorror
+RedHorrorCenti>RedHorror
+RedHorrorCentipede>RedHorror
+Red Horror Centi>RedHorror
+Red Horror>RedHorror
+Red Horror Centipede>RedHorror
+Red HorrorCenti>RedHorror
+Red HorrorCentipede>RedHorror
+RedHorror Centi>RedHorror
+RedHorror Centipede>RedHorror
+Noodle Eater>NoodleEater
+Mole Salamander>MoleSalamander
+MiniScut>MiniScutigera
+MiniScuti>MiniScutigera
+Mini Scut>MiniScutigera
+Mini Scuti>MiniScutigera
+Mini Scutigera>MiniScutigera
+Mini Leviathan>MiniLeviathan
+MiniBlackLeech>MiniLeech
+Mini Black Leech>MiniLeech
+Mini BlackLeech>MiniLeech
+MiniBlack Leech>MiniLeech
+MiniFlyingLeviathan>MiniFlyingBigEel
+MiniFlyingLev>MiniFlyingBigEel
+Mini Flying Leviathan>MiniFlyingBigEel
+Mini Flying Lev>MiniFlyingBigEel
+Mini Flying Big Eel>MiniFlyingBigEel
+MiniFlying Leviathan>MiniFlyingBigEel
+MiniFlying Lev>MiniFlyingBigEel
+MiniFlying Big Eel>MiniFlyingBigEel
+Mini FlyingLeviathan>MiniFlyingBigEel
+Mini FlyingLev>MiniFlyingBigEel
+Mini FlyingBig Eel>MiniFlyingBigEel
+MiniFlyingBig Eel>MiniFlyingBigEel
+Mini FlyingBigEel>MiniFlyingBigEel
+Mini Flying BigEel>MiniFlyingBigEel
+MiniFlying BigEel>MiniFlyingBigEel
+Spark Eye>SparkEye
+Killer Pillar>KillerPillar
+Seeker>HunterSeeker
+Hunter Seeker>HunterSeeker
+Hazer Mom>HazerMom
+Glow Pillar>GlowPillar
+FlyingLeviathan>FlyingBigEel
+FlyingLev>FlyingBigEel
+Flying Leviathan>FlyingBigEel
+Flying Lev>FlyingBigEel
+Flying Big Eel>FlyingBigEel
+Flying BigEel>FlyingBigEel
+FlyingBig Eel>FlyingBigEel
+Fat Fire Fly>FatFireFly
+Fat FireFly>FatFireFly
+FatFire Fly>FatFireFly
+Diving Beetle>DivingBeetle
+Common Eel>CommonEel
+Bouncing Ball>BouncingBall
+Bob>Bouncing Ball
+Alpha Orange>AlphaOrange
