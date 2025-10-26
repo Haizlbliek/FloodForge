@@ -1537,7 +1537,7 @@ void DropletWindow::exportGeometry() {
 		std::string tempLine;
 		bool isBefore = true;
 		while (std::getline(settings, tempLine)) {
-			if (startsWith(tempLine, "PlacedObjects: ")) {
+			if (startsWith(tempLine, "PlacedObjects:")) {
 				placedObjects = tempLine;
 				isBefore = false;
 			} else {
@@ -1661,13 +1661,20 @@ void DropletWindow::exportGeometry() {
 
 		placedObjects = outputPlacedObjects;
 	}
-	if (!endsWith(placedObjects, ", ")) {
-		placedObjects += ", ";
-	}
 
-	std::ofstream settings(settingsPath);
-	settings << before << "PlacedObjects: " << placedObjects << "\n" << after;
-	settings.close();
+	if (!placedObjects.empty()) {
+		if (!endsWith(placedObjects, ", ")) {
+			placedObjects += ", ";
+		}
+	
+		std::ofstream settings(settingsPath);
+		settings << before << "PlacedObjects: " << placedObjects << "\n" << after;
+		settings.close();
+	} else {
+		std::ofstream settings(settingsPath);
+		settings << before << "\n" << after;
+		settings.close();
+	}
 }
 
 #define CAMERA_TEXTURE_WIDTH 1400
