@@ -1553,13 +1553,17 @@ void DropletWindow::exportGeometry() {
 
 	{
 		std::string outputPlacedObjects;
-		std::string data = placedObjects.substr(placedObjects.find(' ') + 1);
+		std::string data = placedObjects.substr((placedObjects.find(' ') == std::string::npos) ? 0 : placedObjects.find(' ') + 1);
 		std::vector<std::string> poData = split(data, ", ");
 		std::vector<TerrainHandleObject *>::iterator currentTerrainHandleObject = terrainHandleObjects.begin();
 		std::vector<MudPitObject *>::iterator currentMudPitObject = mudPitObjects.begin();
 		std::vector<AirPocketObject *>::iterator currentAirPocketObject = airPocketObjects.begin();
 
 		for (std::string po : poData) {
+			if (po.empty()) continue;
+
+			std::string saveOutput = outputPlacedObjects;
+			try {
 			size_t start = po.find('<');
 			size_t next = po.find('>', start);
 			size_t end = po.find('>', next + 1);
@@ -1619,6 +1623,10 @@ void DropletWindow::exportGeometry() {
 			}
 
 			outputPlacedObjects += ", ";
+			} catch (...) {
+				outputPlacedObjects = saveOutput + po + ", ";
+				Logger::info("Failed when outputting po '", po, "'");
+			}
 		}
 
 		while (currentTerrainHandleObject != terrainHandleObjects.end()) {

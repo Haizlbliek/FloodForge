@@ -501,6 +501,7 @@ void Room::ensureConnections() {
 
 	try {
 		std::vector<VerifiedConnection> verifiedConnections;
+		std::vector<decltype(shortcutExits)::value_type> verifiedShortcuts;
 	
 		for (int i = shortcutExits.size() - 1; i >= 0; i--) {
 			Vector2i exitPosition = shortcutExits[i].second;
@@ -544,22 +545,27 @@ void Room::ensureConnections() {
 				if (!hasDirection) break;
 			}
 	
-			if (hasDirection) verifiedConnections.push_back({
-				shortcutExits[i].first,
-				exitPosition,
-				shortcutExits[i].second
-			});
+			if (hasDirection) {
+				verifiedConnections.push_back({
+					shortcutExits[i].first,
+					exitPosition,
+					shortcutExits[i].second
+				});
+				verifiedShortcuts.push_back(shortcutExits[i]);
+			}
 		}
 	
 		std::reverse(verifiedConnections.begin(), verifiedConnections.end());
-	
-		for (size_t i = 0; i < shortcutExits.size(); ++i) {
-			for (size_t j = 0; j < shortcutExits.size() - i - 1; ++j) {
-				const Vector2i &a = shortcutExits[j].second;
-				const Vector2i &b = shortcutExits[j + 1].second;
-	
+		std::reverse(verifiedShortcuts.begin(), verifiedShortcuts.end());
+
+		size_t n = verifiedShortcuts.size();
+		for (size_t i = 0; i < n; ++i) {
+			for (size_t j = 0; j + 1 < n - i; ++j) {
+				const Vector2i &a = verifiedShortcuts[j].second;
+				const Vector2i &b = verifiedShortcuts[j + 1].second;
+
 				if (a.y > b.y || (a.y == b.y && a.x > b.x)) {
-					std::swap(shortcutExits[j], shortcutExits[j + 1]);
+					std::swap(verifiedShortcuts[j], verifiedShortcuts[j + 1]);
 					std::swap(verifiedConnections[j], verifiedConnections[j + 1]);
 				}
 			}
@@ -617,6 +623,7 @@ void Room::ensureConnections() {
 }
 
 void Room::loadGeometry() {
+	try {
 	std::fstream geometryFile(path);
 	if (!geometryFile.is_open() || !std::filesystem::exists(path)) {
 		EditorState::fails.push_back("Failed to load '" + path.generic_u8string() + "' / '" + roomName + "' - Doesn't exist.");
@@ -777,6 +784,21 @@ void Room::loadGeometry() {
 
 	for (Vector2i denLocation : denShortcutEntrances) {
 		dens.push_back(Den());
+	}
+
+	} catch (...) {
+		EditorState::fails.push_back("Failed to load '" + path.generic_u8string() + "' / '" + roomName + "' - Some error happened.");
+		Logger::info("Failed to load '", path.generic_u8string(), "' / '", roomName, "' - Some error happened.");
+		width = 72;
+		height = 43;
+		water = -1;
+		
+		geometry = new int[width * height];
+		for (int i = 0; i < width * height; i++) {
+			geometry[i] = 0;
+		}
+		valid = false;
+		return;
 	}
 }
 

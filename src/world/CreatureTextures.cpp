@@ -19,6 +19,8 @@ bool validExtension(std::string extension) {
 }
 
 void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, bool include) {
+	if (!std::filesystem::exists(path)) return;
+
 	loadCreaturesFromFolder(path, "", include);
 
 	if (!include) return;
