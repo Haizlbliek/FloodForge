@@ -14,13 +14,13 @@ Hoverfly
 HunterSeeker
 Jelly
 KillerPillar
-MiniBigEeel
+MiniBigEel
 MiniFlyingBigEel
 MoleSalamander
 NoodleEater
 Polliwog
 RedHorror
-ScavengerSentinal
+ScavengerSentinel
 Scutigera
 SilverLizard
 SparkEye
