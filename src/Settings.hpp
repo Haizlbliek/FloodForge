@@ -20,7 +20,7 @@ namespace Settings {
 		ConnectionType,
 		ConnectionPoint,
 		OrignalControls,
-		SelectorScale,
+		WorldIconScale,
 		DefaultFilePath,
 		WarnMissingImages,
 		HideTutorial,

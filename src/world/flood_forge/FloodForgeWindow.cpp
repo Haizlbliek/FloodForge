@@ -321,7 +321,8 @@ void FloodForgeWindow::updateMain() {
 	updateCamera();
 	UI::update();
 
-	EditorState::selectorScale = Settings::getSetting<bool>(Settings::Setting::SelectorScale) ? EditorState::cameraScale / 16.0 : 1.0;
+	double scale = Settings::getSetting<double>(Settings::Setting::WorldIconScale);
+	EditorState::selectorScale = (scale < 0.0) ? EditorState::cameraScale / 16.0 : scale;
 
 	/// Update Inputs
 

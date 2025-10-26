@@ -11,7 +11,7 @@ void Settings::loadDefaults() {
 	settings[Setting::ConnectionType] = 0;
 	settings[Setting::ConnectionPoint] = 0;
 	settings[Setting::OrignalControls] = false;
-	settings[Setting::SelectorScale] = true;
+	settings[Setting::WorldIconScale] = 1.0;
 	settings[Setting::DefaultFilePath] = "NON_EXISTANT_PATH_YOU_CAN'T_HAVE_THIS_PATH_PLSPLSPLS///";
 	settings[Setting::WarnMissingImages] = false;
 	settings[Setting::HideTutorial] = false;
@@ -64,7 +64,7 @@ void Settings::init() {
 			else if (key == "ConnectionType") settings[Setting::ConnectionType] = int(lowerValue == "bezier");
 			else if (key == "ConnectionPoint") settings[Setting::ConnectionPoint] = int(lowerValue == "exit");
 			else if (key == "OriginalControls") settings[Setting::OrignalControls] = boolValue;
-			else if (key == "SelectorScale") settings[Setting::SelectorScale] = boolValue;
+			else if (key == "WorldIconScale") settings[Setting::WorldIconScale] = lowerValue == "camera" ? -1 : std::max(std::stod(value), 0.0);
 			else if (key == "DefaultFilePath") settings[Setting::DefaultFilePath] = value;
 			else if (key == "WarnMissingImages") settings[Setting::WarnMissingImages] = boolValue;
 			else if (key == "HideTutorial") settings[Setting::HideTutorial] = boolValue;
