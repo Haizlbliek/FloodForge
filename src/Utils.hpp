@@ -10,6 +10,11 @@
 #include "math/Vector.hpp"
 #include "math/Rect.hpp"
 
+#define LINE_NONE 0
+#define LINE_START 1
+#define LINE_END 2
+#define LINE_BOTH 4
+
 void fillRect(Rect rect);
 void fillRect(UVRect rect);
 void fillRect(float x0, float y0, float x1, float y1);
@@ -20,7 +25,7 @@ void strokeRect(float x0, float y0, float x1, float y1);
 void strokeRect(float x0, float y0, float x1, float y1, double thickness);
 
 void drawLine(float x0, float y0, float x1, float y1);
-void drawLine(float x0, float y0, float x1, float y1, double thickness);
+void drawLine(float x0, float y0, float x1, float y1, double thickness, int fancyEnds = LINE_BOTH);
 
 void fillCircle(float x, float y, float radius, int resolution);
 void strokeCircle(float x, float y, float radius, int resolution);

@@ -333,6 +333,10 @@ void Draw::color(const col4 &col) {
 	drawState.a = col.a;
 }
 
+void Draw::alpha(const float alpha) {
+	drawState.a = alpha;
+}
+
 template <bool flushOnEnd>
 static void processVertex(const vec3 &pos) {
 	if (!drawState.drawActive) {
