@@ -22,6 +22,7 @@ void Settings::loadDefaults() {
 	settings[Setting::RoomTintStrength] = 0.5;
 	settings[Setting::ForceExportCasing] = "upper";
 	settings[Setting::DropletGridVisibility] = DropletGridVisibility::AIR;
+	settings[Setting::ConnectionOpacity] = 1.0f;
 
 	std::vector<Color> subregionColors;
 	subregionColors.push_back(Color(1.0, 0.0, 0.0)); // #ff0000
@@ -76,6 +77,7 @@ void Settings::init() {
 			else if (key == "RoomTintStrength") settings[Setting::RoomTintStrength] = std::stod(value);
 			else if (key == "ForceExportCasing") settings[Setting::ForceExportCasing] = lowerValue == "lower" ? 1 : lowerValue == "upper" ? 2 : 0;
 			else if (key == "DropletGridVisibility") settings[Setting::DropletGridVisibility] = lowerValue == "none" ? DropletGridVisibility::NONE : (lowerValue == "all" ? DropletGridVisibility::ALL : DropletGridVisibility::AIR);
+			else if (key == "ConnectionOpacity") settings[Setting::ConnectionOpacity] = std::stod(value);
 			else if (key == "SubregionColors") {
 				std::vector<Color> subregionColors;
 				for (std::string item : split(value, ", ")) {

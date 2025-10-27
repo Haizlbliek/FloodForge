@@ -35,6 +35,7 @@ namespace Settings {
 		RoomTintStrength,
 		ForceExportCasing,
 		DropletGridVisibility,
+		ConnectionOpacity,
 	};
 
 	extern std::unordered_map<Setting, SettingType> settings;

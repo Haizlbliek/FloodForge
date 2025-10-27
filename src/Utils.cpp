@@ -162,7 +162,7 @@ void drawLine(float x0, float y0, float x1, float y1) {
 	Draw::end();
 }
 
-void drawLine(float x0, float y0, float x1, float y1, double thickness) {
+void drawLine(float x0, float y0, float x1, float y1, double thickness, int fancyEnds) {
 	thickness /= 64.0;
 
 	double angle = atan2(y1 - y0, x1 - x0);
@@ -191,13 +191,17 @@ void drawLine(float x0, float y0, float x1, float y1, double thickness) {
 	Draw::vertex(b1x, b1y);
 	Draw::vertex(b0x, b0y);
 
-	Draw::vertex(a0x, a0y);
-	Draw::vertex(b0x, b0y);
-	Draw::vertex(c0x, c0y);
+	if ((fancyEnds & LINE_START) > 0) {
+		Draw::vertex(a0x, a0y);
+		Draw::vertex(b0x, b0y);
+		Draw::vertex(c0x, c0y);
+	}
 
-	Draw::vertex(a1x, a1y);
-	Draw::vertex(b1x, b1y);
-	Draw::vertex(c1x, c1y);
+	if ((fancyEnds & LINE_END) > 0) {
+		Draw::vertex(a1x, a1y);
+		Draw::vertex(b1x, b1y);
+		Draw::vertex(c1x, c1y);
+	}
 
 	Draw::end();
 }

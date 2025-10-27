@@ -49,6 +49,10 @@ void Connection::draw(Vector2 mousePosition, double lineSize) {
 	} else {
 		Draw::color(RoomHelpers::RoomConnection);
 	}
+	if (Settings::getSetting<double>(Settings::Setting::ConnectionOpacity) < 0.999f) {
+		Draw::alpha(Settings::getSetting<double>(Settings::Setting::ConnectionOpacity));
+		glEnable(GL_BLEND);
+	}
 
 	Vector2 pointA = roomA->getRoomEntranceOffsetPosition(connectionA);
 	Vector2 pointB = roomB->getRoomEntranceOffsetPosition(connectionB);
@@ -79,14 +83,16 @@ void Connection::draw(Vector2 mousePosition, double lineSize) {
 		for (double t = 1.0 / segments; t <= 1.01; t += 1.0 / segments) {
 			Vector2 point = bezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
 
-			drawLine(lastPoint.x, lastPoint.y, point.x, point.y, 16.0 / lineSize);
+			drawLine(lastPoint.x, lastPoint.y, point.x, point.y, 16.0 / lineSize, LINE_NONE);
 
 			lastPoint = point;
 		}
 
 		center = bezierCubic(0.5, pointA, pointA + directionA, pointB + directionB, pointB);
 	}
-	
+
+	glDisable(GL_BLEND);
+
 	if (timelines.size() == 0 || timelineType == TimelineType::ALL) return;
 
 	if (timelineType == TimelineType::EXCEPT) {

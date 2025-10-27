@@ -61,6 +61,7 @@ namespace Draw {
 	void vertex(const vec3 &pt);
 	void texCoord(const vec2 &texCoord);
 	void color(const col4 &color);
+	void alpha(const float alpha);
 
 	inline void vertex(float x, float y, float z) { vertex({ x, y, z }); };
 	inline void vertex(float x, float y) { vertex({ x, y, 0.0f }); };
