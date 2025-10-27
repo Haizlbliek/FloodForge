@@ -105,6 +105,7 @@ Vector2 cameraPanStartMouse = Vector2(0.0f, 0.0f);
 Vector2 cameraPanStart = Vector2(0.0f, 0.0f);
 Vector2 cameraPanTo = Vector2(0.0f, 0.0f);
 
+std::string hoverText = "";
 
 void DropletWindow::init() {
 }
@@ -920,6 +921,8 @@ void setToolUv(UVRect &rect, int tool) {
 }
 
 void DropletWindow::Draw() {
+	hoverText = "";
+
 	if (!UI::mouse.leftMouse && !UI::mouse.rightMouse) {
 		if (UI::window->justPressed(GLFW_KEY_1)) currentTab = EditorTab::DETAILS;
 		if (UI::window->justPressed(GLFW_KEY_2)) currentTab = EditorTab::GEOMETRY;
@@ -1232,6 +1235,9 @@ void DropletWindow::Draw() {
 				if (response.clicked) {
 					selectedTool = (GeometryTool) i;
 				}
+				if (response.hovered) {
+					hoverText = GEOMETRY_TOOL_NAMES[i];
+				}
 			}
 		}
 	} else if (currentTab == EditorTab::DETAILS) {
@@ -1321,6 +1327,24 @@ void DropletWindow::Draw() {
 		}
 
 		tabPosition.x += tabWidth + 0.01;
+	}
+
+	if (!hoverText.empty()) {
+		double width = Fonts::rainworld->getTextWidth(hoverText, 0.03);
+		Rect hoverRect = Rect::fromSize(UI::mouse.x, UI::mouse.y, width + 0.02, 0.05);
+		if (hoverRect.x1 > UI::screenBounds.x) {
+			hoverRect.offset(Vector2(UI::screenBounds.x - hoverRect.x1, 0.0));
+		}
+		if (hoverRect.y1 > UI::screenBounds.y) {
+			hoverRect.offset(Vector2(0.0, UI::screenBounds.y - hoverRect.y1));
+		}
+
+		setThemeColor(ThemeColour::Background);
+		fillRect(hoverRect);
+		setThemeColor(ThemeColour::Text);
+		Fonts::rainworld->writeCentered(hoverText, hoverRect.x0 + 0.01, (hoverRect.y0 + hoverRect.y1) * 0.5, 0.03, CENTER_Y);
+		setThemeColor(ThemeColour::Border);
+		strokeRect(hoverRect);
 	}
 }
 
