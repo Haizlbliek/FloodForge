@@ -894,7 +894,7 @@ void FloodForgeWindow::Draw() {
 
 	/// Draw Grid
 	glLineWidth(1);
-	setThemeColor(ThemeColour::Grid);
+	setThemeColor(ThemeColor::Grid);
 	double gridStep = std::max(EditorState::cameraScale / 16.0, 1.0);
 	gridStep = std::pow(2, std::ceil(std::log2(gridStep - 0.01)));
 	Draw::begin(Draw::LINES);
@@ -950,7 +950,7 @@ void FloodForgeWindow::Draw() {
 		}
 
 		if (EditorState::selectedRooms.find(room) != EditorState::selectedRooms.end()) {
-			setThemeColour(ThemeColour::SelectionBorder);
+			setThemeColor(ThemeColor::SelectionBorder);
 			if (EditorState::positionType == PositionType::DEV || EditorState::positionType == PositionType::BOTH) {
 				strokeRect(Rect::fromSize(room->devPosition.x, room->devPosition.y, room->Width(), -room->Height()), 16.0f / EditorState::lineSize);
 			}
@@ -1025,7 +1025,7 @@ void FloodForgeWindow::Draw() {
 		Draw::color(0.1f, 0.1f, 0.1f, 0.125f);
 		fillRect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y);
 		glDisable(GL_BLEND);
-		setThemeColour(ThemeColour::SelectionBorder);
+		setThemeColor(ThemeColor::SelectionBorder);
 		strokeRect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y, 16.0 / EditorState::lineSize);
 	}
 

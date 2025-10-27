@@ -21,7 +21,7 @@ void InfoPopup::draw() {
 	
 	if (minimized) return;
 
-	setThemeColour(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 
 	int lineId = 0;
 	for (std::string line : warning) {

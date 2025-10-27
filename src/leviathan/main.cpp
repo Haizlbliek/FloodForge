@@ -157,7 +157,7 @@ int main() {
 		window->clear();
 		glDisable(GL_DEPTH_TEST);
 
-		setThemeColour(ThemeColour::Background);
+		setThemeColour(ThemeColor::Background);
 		Vector2 screenBounds = Vector2(width, height) / size;
 		fillRect(-screenBounds.x, -screenBounds.y, screenBounds.x, screenBounds.y);
 		

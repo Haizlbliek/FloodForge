@@ -20,7 +20,7 @@ class RoomAttractivenessPopup : public Popup {
 
 	private:
 		const static RoomAttractiveness attractivenessIds[6];
-		const static Colour attractivenessColors[6];
+		const static Color attractivenessColors[6];
 		const static std::string attractivenessNames[6];
 
 		RoomAttractiveness selectAttractiveness = RoomAttractiveness::NEUTRAL;

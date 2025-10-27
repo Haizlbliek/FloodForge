@@ -127,7 +127,7 @@ int main() {
 	CreatureTextures::init();
 	ConditionalTimelineTextures::init();
 	RecentFiles::init();
-	RoomHelpers::loadColours();
+	RoomHelpers::loadColors();
 
 	Popups::addPopup(new SplashArtPopup());
 	if (std::filesystem::exists(BASE_PATH / "running.txt")) {
@@ -173,7 +173,7 @@ int main() {
 		UI::window->clear();
 		glDisable(GL_DEPTH_TEST);
 	
-		setThemeColour(ThemeColour::Background);
+		setThemeColor(ThemeColor::Background);
 		fillRect(-UI::screenBounds.x, -UI::screenBounds.y, UI::screenBounds.x, UI::screenBounds.y);
 
 		updateGlobalInputs();

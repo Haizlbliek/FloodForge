@@ -2,14 +2,14 @@
 
 #include <glad/glad.h>
 #include "math/Matrix4.hpp"
-#include "math/Colour.hpp"
+#include "math/Color.hpp"
 #include "math/Vector.hpp"
 
 namespace Draw {
 	using vec2 = Vector2f;
 	using vec3 = Vector3f;
 	using mat4 = Matrix4;
-	using col4 = Colour;
+	using col4 = Color;
 
 	enum PrimitiveType {
 		POINTS,

@@ -18,22 +18,22 @@ void Settings::loadDefaults() {
 	settings[Setting::KeepFilesystemPath] = true;
 	settings[Setting::UpdateWorldFiles] = true;
 	settings[Setting::DebugVisibleOutputPadding] = false;
-	settings[Setting::NoSubregionColor] = Colour(1.0, 1.0, 1.0);
+	settings[Setting::NoSubregionColor] = Color(1.0, 1.0, 1.0);
 	settings[Setting::RoomTintStrength] = 0.5;
 	settings[Setting::ForceExportCasing] = "upper";
 	settings[Setting::DropletGridVisibility] = DropletGridVisibility::AIR;
 
-	std::vector<Colour> subregionColors;
-	subregionColors.push_back(Colour(1.0, 0.0, 0.0)); // #ff0000
-	subregionColors.push_back(Colour(0.0, 1.0, 0.0)); // #00ff00
-	subregionColors.push_back(Colour(0.0, 0.0, 1.0)); // #0000ff
-	subregionColors.push_back(Colour(1.0, 1.0, 0.0)); // #ffff00
-	subregionColors.push_back(Colour(0.0, 1.0, 1.0)); // #00ffff
-	subregionColors.push_back(Colour(1.0, 0.0, 1.0)); // #ff00ff
-	subregionColors.push_back(Colour(1.0, 0.5, 0.0)); // #ff7f00
-	subregionColors.push_back(Colour(0.5, 0.5, 0.5)); // #7f7f7f
-	subregionColors.push_back(Colour(0.5, 0.0, 1.0)); // #7f00ff
-	subregionColors.push_back(Colour(1.0, 0.5, 1.0)); // #ff7fff
+	std::vector<Color> subregionColors;
+	subregionColors.push_back(Color(1.0, 0.0, 0.0)); // #ff0000
+	subregionColors.push_back(Color(0.0, 1.0, 0.0)); // #00ff00
+	subregionColors.push_back(Color(0.0, 0.0, 1.0)); // #0000ff
+	subregionColors.push_back(Color(1.0, 1.0, 0.0)); // #ffff00
+	subregionColors.push_back(Color(0.0, 1.0, 1.0)); // #00ffff
+	subregionColors.push_back(Color(1.0, 0.0, 1.0)); // #ff00ff
+	subregionColors.push_back(Color(1.0, 0.5, 0.0)); // #ff7f00
+	subregionColors.push_back(Color(0.5, 0.5, 0.5)); // #7f7f7f
+	subregionColors.push_back(Color(0.5, 0.0, 1.0)); // #7f00ff
+	subregionColors.push_back(Color(1.0, 0.5, 1.0)); // #ff7fff
 	settings[Setting::SubregionColors] = subregionColors;
 }
 
@@ -72,14 +72,14 @@ void Settings::init() {
 			else if (key == "KeepFilesystemPath") settings[Setting::KeepFilesystemPath] = boolValue;
 			else if (key == "UpdateWorldFiles") settings[Setting::UpdateWorldFiles] = boolValue;
 			else if (key == "DebugVisibleOutputPadding") settings[Setting::DebugVisibleOutputPadding] = boolValue;
-			else if (key == "NoSubregionColor") settings[Setting::NoSubregionColor] = stringToColour(value);
+			else if (key == "NoSubregionColor") settings[Setting::NoSubregionColor] = stringToColor(value);
 			else if (key == "RoomTintStrength") settings[Setting::RoomTintStrength] = std::stod(value);
 			else if (key == "ForceExportCasing") settings[Setting::ForceExportCasing] = lowerValue == "lower" ? 1 : lowerValue == "upper" ? 2 : 0;
 			else if (key == "DropletGridVisibility") settings[Setting::DropletGridVisibility] = lowerValue == "none" ? DropletGridVisibility::NONE : (lowerValue == "all" ? DropletGridVisibility::ALL : DropletGridVisibility::AIR);
 			else if (key == "SubregionColors") {
-				std::vector<Colour> subregionColors;
+				std::vector<Color> subregionColors;
 				for (std::string item : split(value, ", ")) {
-					subregionColors.push_back(stringToColour(item));
+					subregionColors.push_back(stringToColor(item));
 				}
 				settings[Setting::SubregionColors] = subregionColors;
 			};

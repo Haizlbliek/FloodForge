@@ -33,7 +33,7 @@ Button *Button::OnPress(std::function<void(Button*)> listener) {
 
 void Button::draw() {
 	UI::TextButtonMods mods = UI::TextButtonMods();
-	if (darken) mods.TextColor(currentTheme[ThemeColour::TextDisabled]);
+	if (darken) mods.TextColor(currentTheme[ThemeColor::TextDisabled]);
 
 	if (UI::TextButton(Rect(rect.x0 - UI::screenBounds.x, rect.y0 + UI::screenBounds.y, rect.x1 - UI::screenBounds.x, rect.y1 + UI::screenBounds.y), text, mods)) {
 		listener(this);
@@ -272,16 +272,16 @@ void MenuItems::initFloodForge() {
 		}
 	);
 
-	addButton("No Colours", MENU_LAYER_FLOOD_FORGE).OnPress(
+	addButton("No Colors", MENU_LAYER_FLOOD_FORGE).OnPress(
 		[](Button *button) {
-			EditorState::roomColours = (EditorState::roomColours + 1) % 3;
+			EditorState::roomColors = (EditorState::roomColors + 1) % 3;
 
-			if (EditorState::roomColours == 0) {
-				button->Text("No Colours");
-			} else if (EditorState::roomColours == 1) {
-				button->Text("Layer Colours");
+			if (EditorState::roomColors == 0) {
+				button->Text("No Colors");
+			} else if (EditorState::roomColors == 1) {
+				button->Text("Layer Colors");
 			} else {
-				button->Text("Subregion Colours");
+				button->Text("Subregion Colors");
 			}
 
 			repositionButtons();
@@ -396,10 +396,10 @@ void MenuItems::draw() {
 
 	Rect rect = Rect(-UI::screenBounds.x, UI::screenBounds.y, UI::screenBounds.x, UI::screenBounds.y - 0.06);
 
-	setThemeColor(ThemeColour::Popup);
+	setThemeColor(ThemeColor::Popup);
 	fillRect(rect);
 
-	setThemeColor(ThemeColour::Border);
+	setThemeColor(ThemeColor::Border);
 	Draw::begin(Draw::LINES);
 	Draw::vertex(rect.x0, rect.y0);
 	Draw::vertex(rect.x1, rect.y0);

@@ -56,7 +56,7 @@ void ResizeLevelPopup::draw() {
 
 	double y = bounds.y1 - 0.05;
 	y -= 0.05;
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("---- Room Size ----", bounds.x0 + 0.01, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
@@ -75,7 +75,7 @@ void ResizeLevelPopup::draw() {
 		DropletWindow::resizeSize = Vector2i(widthV, std::stoi(height.value));
 		setResizeOffset(resizeAnchor, stretchRoom);
 	}
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("Width (Tiles)", bounds.x0 + 0.40, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
@@ -94,7 +94,7 @@ void ResizeLevelPopup::draw() {
 		DropletWindow::resizeSize = Vector2i(std::stoi(width.value), heightV);
 		setResizeOffset(resizeAnchor, stretchRoom);
 	}
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("Height (Tiles)", bounds.x0 + 0.40, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
@@ -107,7 +107,7 @@ void ResizeLevelPopup::draw() {
 		screenWidth.value = toFixed(std::stod(screenWidth.value) + 0.5, screenWidth.floatDecimalCount);
 		screenWidthResponse.submitted = true;
 	}
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("Width (Screens)", bounds.x0 + 0.40, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
@@ -120,7 +120,7 @@ void ResizeLevelPopup::draw() {
 		screenHeight.value = toFixed(std::stod(screenHeight.value) + 0.5, screenHeight.floatDecimalCount);
 		screenHeightResponse.submitted = true;
 	}
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("Height (Screens)", bounds.x0 + 0.40, y + 0.025, 0.03, CENTER_Y);
 
 	if (widthResponse.submitted) {
@@ -177,7 +177,7 @@ void ResizeLevelPopup::draw() {
 		}
 	}
 
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("Stretch room", bounds.x1 - 0.07, bounds.y1 - 0.4, 0.03, RIGHT_X | BOTTOM_Y);
 	if (UI::CheckBox(Rect::fromSize(bounds.x1 - 0.06, bounds.y1 - 0.41, 0.05, 0.05), stretchRoom)) {
 		DropletWindow::resizeSize = Vector2i(std::stoi(width.value), std::stoi(height.value));
@@ -189,13 +189,13 @@ void ResizeLevelPopup::draw() {
 		DropletWindow::resizeRoom(std::stoi(width.value), std::stoi(height.value), stretchRoom);
 		close();
 	}
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("(No undo!)", bounds.x0 + 0.32, bounds.y1 - 0.4, 0.03, LEFT_X | BOTTOM_Y);
 
 	} catch (...) {
-		setThemeColour(ThemeColour::Popup);
+		setThemeColor(ThemeColor::Popup);
 		fillRect(bounds);
-		setThemeColor(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		Fonts::rainworld->writeCentered("Error happened, sorry", bounds.CenterX(), bounds.CenterY(), 0.08, CENTER_XY);
 		Logger::info("An error happened when drawing resize level popup.");
 	}

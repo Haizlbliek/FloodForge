@@ -3,7 +3,7 @@
 in vec4 fragColour;
 out vec4 color;
 
-uniform vec4 tintColour;
+uniform vec4 tintColor;
 uniform float tintStrength;
 
 vec3 lerp(vec3 a, vec3 b, float t) {
@@ -11,6 +11,6 @@ vec3 lerp(vec3 a, vec3 b, float t) {
 }
 
 void main() {
-	color.rgb = lerp(fragColour.rgb, fragColour.rgb * tintColour.rgb, tintStrength);
-	color.a = tintColour.a;
+	color.rgb = lerp(fragColour.rgb, fragColour.rgb * tintColor.rgb, tintStrength);
+	color.a = tintColor.a;
 }

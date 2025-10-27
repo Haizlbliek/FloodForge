@@ -47,7 +47,7 @@ namespace EditorState {
 	extern Vector2i placingRoomSize;
 	extern bool placingRoom;
 
-	extern int roomColours;
+	extern int roomColors;
 	extern PositionType positionType;
 	extern bool visibleLayers[LAYER_COUNT];
 	extern bool visibleDevItems;

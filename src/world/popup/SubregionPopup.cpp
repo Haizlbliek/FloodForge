@@ -24,7 +24,7 @@ void SubregionPopup::draw() {
 	double centreX = (bounds.x0 + bounds.x1) * 0.5;
 
 	if (rooms.size() > 0) {
-		setThemeColour(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		if (rooms.size() == 1) {
 			Fonts::rainworld->writeCentered((*rooms.begin())->roomName, centreX, bounds.y1 - 0.09, 0.04, CENTER_XY);
 		} else {
@@ -134,8 +134,8 @@ void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion,
 	}
 
 	if (subregionId >= -1) {
-		std::vector<Colour> colors = Settings::getSetting<std::vector<Colour>>(Settings::Setting::SubregionColors);
-		Colour subregionColor = Settings::getSetting<Colour>(Settings::Setting::NoSubregionColor);
+		std::vector<Color> colors = Settings::getSetting<std::vector<Color>>(Settings::Setting::SubregionColors);
+		Color subregionColor = Settings::getSetting<Color>(Settings::Setting::NoSubregionColor);
 		if (colors.size() != 0 && subregionId != -1) {
 			subregionColor = colors[subregionId % colors.size()];
 		}

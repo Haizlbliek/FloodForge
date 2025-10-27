@@ -181,11 +181,11 @@ void ConditionalPopup::draw() {
 	if (!hoverText.empty() && hovered) {
 		double width = Fonts::rainworld->getTextWidth(hoverText, 0.04) + 0.02;
 		Rect rect = Rect::fromSize(UI::mouse.x, UI::mouse.y, width, 0.06);
-		setThemeColour(ThemeColour::Popup);
+		setThemeColor(ThemeColor::Popup);
 		fillRect(rect);
-		setThemeColour(ThemeColour::Border);
+		setThemeColor(ThemeColor::Border);
 		strokeRect(rect);
-		setThemeColour(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		Fonts::rainworld->writeCentered(hoverText, UI::mouse.x + 0.01, UI::mouse.y + 0.03, 0.04, CENTER_Y);
 	}
 }

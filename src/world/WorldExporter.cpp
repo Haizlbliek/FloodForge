@@ -611,8 +611,8 @@ void WorldExporter::exportPropertiesFile(std::filesystem::path outputPath) {
 		propertiesFile << "\n";
 	}
 
-	for (std::pair<const int, Colour> item : EditorState::region.overrideSubregionColors) {
-		propertiesFile << "//FloodForge|SubregionColorOverride|" << item.first << "|" << colourToString(item.second) << "\n";
+	for (std::pair<const int, Color> item : EditorState::region.overrideSubregionColors) {
+		propertiesFile << "//FloodForge|SubregionColorOverride|" << item.first << "|" << colorToString(item.second) << "\n";
 	}
 
 	propertiesFile.close();

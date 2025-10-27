@@ -153,10 +153,10 @@ UI::ButtonResponse UI::Button(Rect rect, ButtonMods mods) {
 	bool can = UI::canClick();
 	bool highlight = can && rect.inside(UI::mouse);
 
-	setThemeColour(ThemeColour::Button);
+	setThemeColor(ThemeColor::Button);
 	fillRect(rect);
 
-	setThemeColor((highlight || mods.selected) ? ThemeColour::BorderHighlight : ThemeColour::Border);
+	setThemeColor((highlight || mods.selected) ? ThemeColor::BorderHighlight : ThemeColor::Border);
 	strokeRect(rect);
 
 	return {
@@ -169,17 +169,17 @@ UI::ButtonResponse UI::TextButton(Rect rect, std::string text, TextButtonMods mo
 	bool can = UI::canClick();
 	bool highlight = can && rect.inside(UI::mouse);
 
-	setThemeColour(mods.disabled ? ThemeColour::ButtonDisabled : ThemeColour::Button);
+	setThemeColor(mods.disabled ? ThemeColor::ButtonDisabled : ThemeColor::Button);
 	fillRect(rect);
 
 	if (mods.overrideTextColor) {
 		Draw::color(mods.textColor);
 	} else {
-		setThemeColor(mods.disabled ? ThemeColour::TextDisabled : (mods.selected ? ThemeColour::TextHighlight : ThemeColour::Text));
+		setThemeColor(mods.disabled ? ThemeColor::TextDisabled : (mods.selected ? ThemeColor::TextHighlight : ThemeColor::Text));
 	}
 	Fonts::rainworld->writeCentered(text, rect.CenterX(), rect.CenterY(), 0.03, CENTER_XY);
 
-	setThemeColor(mods.disabled ? ThemeColour::Border : ((highlight || mods.selected) ? ThemeColour::BorderHighlight : ThemeColour::Border));
+	setThemeColor(mods.disabled ? ThemeColor::Border : ((highlight || mods.selected) ? ThemeColor::BorderHighlight : ThemeColor::Border));
 	strokeRect(rect);
 
 	return {
@@ -192,7 +192,7 @@ UI::ButtonResponse UI::TextureButton(UVRect rect, TextureButtonMods mods) {
 	bool can = canClick();
 	bool highlight = can && rect.inside(UI::mouse);
 
-	setThemeColour(mods.disabled ? ThemeColour::ButtonDisabled : ThemeColour::Button);
+	setThemeColor(mods.disabled ? ThemeColor::ButtonDisabled : ThemeColor::Button);
 	fillRect(rect);
 
 	glEnable(GL_BLEND);
@@ -207,7 +207,7 @@ UI::ButtonResponse UI::TextureButton(UVRect rect, TextureButtonMods mods) {
 	Draw::useTexture(0);
 	glDisable(GL_BLEND);
 
-	setThemeColor(mods.disabled ? ThemeColour::Border : ((highlight || mods.selected) ? ThemeColour::BorderHighlight : ThemeColour::Border));
+	setThemeColor(mods.disabled ? ThemeColor::Border : ((highlight || mods.selected) ? ThemeColor::BorderHighlight : ThemeColor::Border));
 	strokeRect(rect);
 
 	return {
@@ -223,10 +223,10 @@ UI::TextInputResponse UI::TextInput(Rect rect, UI::TextInputEditable &edit, Text
 	bool submitted = edit.submitted;
 	edit.submitted = false;
 
-	setThemeColour(mods.disabled ? ThemeColour::ButtonDisabled : ThemeColour::Button);
+	setThemeColor(mods.disabled ? ThemeColor::ButtonDisabled : ThemeColor::Button);
 	fillRect(rect);
 
-	setThemeColor(mods.disabled ? ThemeColour::TextDisabled : (selected ? ThemeColour::TextHighlight : ThemeColour::Text));
+	setThemeColor(mods.disabled ? ThemeColor::TextDisabled : (selected ? ThemeColor::TextHighlight : ThemeColor::Text));
 	Fonts::rainworld->writeCentered(edit.value, rect.x0 + 0.01, rect.CenterY(), 0.03, CENTER_Y);
 	if (selected && UI::selectTime < 30) {
 		double width = Fonts::rainworld->getTextWidth(edit.value.substr(0, UI::selectIndex), 0.03);
@@ -236,7 +236,7 @@ UI::TextInputResponse UI::TextInput(Rect rect, UI::TextInputEditable &edit, Text
 		Draw::end();
 	}
 
-	setThemeColor(mods.disabled ? ThemeColour::Border : ((highlight || selected) ? ThemeColour::BorderHighlight : ThemeColour::Border));
+	setThemeColor(mods.disabled ? ThemeColor::Border : ((highlight || selected) ? ThemeColor::BorderHighlight : ThemeColor::Border));
 	strokeRect(rect);
 
 	if (highlight && UI::mouse.justClicked() && !mods.disabled) {

@@ -84,7 +84,7 @@ Window::Window(int width, int height) : width(width), height(height) {
 	glfwSetInputMode(glfwWindow, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 	glfwSetScrollCallback(glfwWindow, Window::scrollCallback);
 
-	backgroundColour = Colour(0.0, 0.0, 0.0, 1.0);
+	backgroundColor = Color(0.0, 0.0, 0.0, 1.0);
 
 	scrollXAccumulator = 0.0;
 	scrollYAccumulator = 0.0;
@@ -115,9 +115,9 @@ bool Window::isOpen() const {
 
 void Window::clear() const {
 	glClearColor(
-		backgroundColour.r,
-		backgroundColour.g,
-		backgroundColour.b,
+		backgroundColor.r,
+		backgroundColor.g,
+		backgroundColor.b,
 		1.0
 	);
 
@@ -142,14 +142,14 @@ Mouse *Window::GetMouse() const {
 	return mouse;
 }
 
-void Window::setBackgroundColour(const Colour backgroundColour) {
-	this->backgroundColour.copy(backgroundColour);
+void Window::setBackgroundColor(const Color backgroundColor) {
+	this->backgroundColor.copy(backgroundColor);
 }
 
-void Window::setBackgroundColour(const float r, const float g, const float b) {
-	backgroundColour.r = r;
-	backgroundColour.g = g;
-	backgroundColour.b = b;
+void Window::setBackgroundColor(const float r, const float g, const float b) {
+	backgroundColor.r = r;
+	backgroundColor.g = g;
+	backgroundColor.b = b;
 }
 
 bool Window::keyPressed(uint16_t key) {

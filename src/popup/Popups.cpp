@@ -34,20 +34,20 @@ void Popup::draw() {
 	hovered = Bounds().inside(UI::mouse);
 
 	if (minimized) {
-		setThemeColour(ThemeColour::Popup);
+		setThemeColor(ThemeColor::Popup);
 		fillRect(bounds.x0, bounds.y1 - 0.05, bounds.x1, bounds.y1);
 	} else {
-		setThemeColour(ThemeColour::Popup);
+		setThemeColor(ThemeColor::Popup);
 		fillRect(bounds.x0, bounds.y0, bounds.x1, bounds.y1);
 	}
 
-	setThemeColour(ThemeColour::PopupHeader);
+	setThemeColor(ThemeColor::PopupHeader);
 	fillRect(bounds.x0, bounds.y1 - 0.05, bounds.x1, bounds.y1);
 
 	if (hovered) {
-		setThemeColour(ThemeColour::BorderHighlight);
+		setThemeColor(ThemeColor::BorderHighlight);
 	} else {
-		setThemeColour(ThemeColour::Border);
+		setThemeColor(ThemeColor::Border);
 	}
 	if (minimized) {
 		strokeRect(bounds.x0, bounds.y1 - 0.05, bounds.x1, bounds.y1);

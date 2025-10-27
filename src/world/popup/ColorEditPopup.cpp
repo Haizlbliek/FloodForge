@@ -8,9 +8,9 @@
 
 #define selectorSize 0.33
 
-ColorEditPopup::ColorEditPopup(Colour &colour) : Popup(), colour(colour) {
+ColorEditPopup::ColorEditPopup(Color &color) : Popup(), color(color) {
 	bounds = Rect(-0.2, -0.2, 0.2, 0.2);
-	Vector3f hsv = colour.HSV();
+	Vector3f hsv = color.HSV();
 	hue = hsv.x;
 }
 
@@ -19,7 +19,7 @@ void ColorEditPopup::draw() {
 
 	if (minimized) return;
 
-	Vector3f hsv = colour.HSV();
+	Vector3f hsv = color.HSV();
 
 	Rect selectorRect = Rect::fromSize(bounds.x0 + 0.01, bounds.y1 - 0.06, selectorSize, -selectorSize);
 	Draw::useProgram(Shaders::colorSquareShader);
@@ -55,12 +55,12 @@ void ColorEditPopup::draw() {
 		hsv.x = hue;
 		hsv.y = s;
 		hsv.z = v;
-		colour.HSV(hsv);
+		color.HSV(hsv);
 	}
 
 	Vector2 colorPos = Vector2(hsv.y * selectorSize + 0.01 + bounds.x0, hsv.z * selectorSize + bounds.y1 - 0.06 - selectorSize);
 	Rect colorRect = Rect::fromSize(colorPos.x - 0.01, colorPos.y - 0.01, 0.02, 0.02);
-	Draw::color(colour);
+	Draw::color(color);
 	fillRect(colorRect);
 	Draw::color(hsv.z > 0.5 ? 0.0 : 1.0);
 	strokeRect(colorRect);
@@ -99,6 +99,6 @@ void ColorEditPopup::draw() {
 		double h = std::clamp((UI::mouse.y - (bounds.y1 - 0.06 - selectorSize)) / selectorSize, 0.0, 1.0) * 360.0;
 		hsv.x = h;
 		hue = h;
-		colour.HSV(hsv);
+		color.HSV(hsv);
 	}
 }

@@ -6,13 +6,13 @@
 
 class ColorEditPopup : public Popup {
 	public:
-		ColorEditPopup(Colour &colour);
+		ColorEditPopup(Color &color);
 
 		void draw() override;
 
 		std::string PopupName() { return "ColorEditPopup"; }
 
 	private:
-		Colour &colour;
+		Color &color;
 		float hue;
 };
