@@ -40,9 +40,12 @@ std::unordered_map<ThemeColor, Color> themeBasic {
 };
 
 std::unordered_map<ThemeColor, Color> currentTheme = { themeBasic };
+std::vector<std::string> activeThemes;
+
+const std::filesystem::path THEMES_PATH = ASSETS_PATH / "themes";
 
 void loadTheme(std::string theme) {
-	std::filesystem::path themePath = BASE_PATH / "assets" / "themes" / (theme + ".txt");
+	std::filesystem::path themePath = THEMES_PATH / theme / "theme.txt";
 	if (!std::filesystem::exists(themePath)) return;
 
 	std::fstream themeFile(themePath);
@@ -87,9 +90,29 @@ void loadTheme(std::string theme) {
 	themeFile.close();
 }
 
+void loadThemes(std::string value) {
+	activeThemes = split(value, ',');
+
+	for (std::string theme : activeThemes) {
+		loadTheme(theme);
+	}
+}
+
 void setThemeColor(ThemeColor color) {
 	if (currentTheme.find(color) == currentTheme.end()) return;
 
 	const Color& col = currentTheme[color];
 	Draw::color(col.r, col.g, col.b);
+}
+
+std::filesystem::path getPath(std::string fileName) {
+	for (int i = activeThemes.size() - 1; i >= 0; i--) {
+		std::filesystem::path path = THEMES_PATH / activeThemes[i] / fileName;
+
+		if (std::filesystem::exists(path)) {
+			return path;
+		}
+	}
+
+	return ASSETS_PATH / fileName;
 }

@@ -6,10 +6,10 @@
 SplashArtPopup::SplashArtPopup() : Popup() {
 	bounds = Rect(-1.0, -1.0, 1.0, 1.0);
 
-	splashart = new Texture(BASE_PATH / "assets" / "splash.png");
-	uiIcons = new Texture(BASE_PATH / "assets" / "uiIcons.png");
+	splashart = new Texture(getPath("splash.png"));
+	uiIcons = new Texture(getPath("uiIcons.png"));
 
-	std::ifstream versionFile(BASE_PATH / "assets" / "version.txt");
+	std::ifstream versionFile(ASSETS_PATH / "version.txt");
 	std::getline(versionFile, version);
 	versionFile.close();
 }

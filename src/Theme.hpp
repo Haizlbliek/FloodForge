@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <filesystem>
 
 #include "math/Color.hpp"
 
@@ -35,6 +36,8 @@ enum class ThemeColor {
 
 extern std::unordered_map<ThemeColor, Color> currentTheme;
 
-void loadTheme(std::string theme);
+void loadThemes(std::string value);
 
 void setThemeColor(ThemeColor color);
+
+std::filesystem::path getPath(std::string fileName);

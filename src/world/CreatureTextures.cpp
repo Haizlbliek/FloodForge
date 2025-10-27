@@ -65,7 +65,7 @@ void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, std::
 }
 
 void CreatureTextures::init() {
-	std::filesystem::path creaturesDirectory = BASE_PATH / "assets" / "creatures";
+	std::filesystem::path creaturesDirectory = ASSETS_PATH / "creatures";
 	std::fstream modsFile(creaturesDirectory / "mods.txt");
 	if (!modsFile.is_open()) return;
 	

@@ -34,7 +34,7 @@ void UI::init(Window *window) {
 	UI::window = window;
 	UI::window->addKeyCallback(0, UI::_keyCallback);
 
-	uiTexture = new Texture(BASE_PATH / "assets" / "ui.png");
+	uiTexture = new Texture(getPath("ui.png"));
 }
 
 void UI::update() {
