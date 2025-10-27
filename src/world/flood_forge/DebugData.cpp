@@ -132,7 +132,7 @@ namespace DebugData {
 		
 		i = 1;
 
-		setThemeColour(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		for (auto it = debugText.rbegin(); it != debugText.rend(); it++) {
 			std::string line = *it;
 

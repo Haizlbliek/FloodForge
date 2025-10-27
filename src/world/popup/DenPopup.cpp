@@ -87,7 +87,7 @@ void DenPopup::draw() {
 	// Draw creatures
 	{
 		glDisable(GL_SCISSOR_TEST);
-		setThemeColour(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		glLineWidth(1);
 		Fonts::rainworld->writeCentered("Creature type:", centreX, bounds.y1 - 0.07, 0.035, CENTER_X);
 		glEnable(GL_SCISSOR_TEST);
@@ -178,7 +178,7 @@ void DenPopup::draw() {
 			}
 
 			if (creature->type != "" && den.creatures[selectedCreature].lineageTo == nullptr) {
-				setThemeColour(ThemeColour::Text);
+				setThemeColor(ThemeColor::Text);
 				Fonts::rainworld->writeCentered(std::to_string(creature->count), countX, countY, 0.04, CENTER_XY);
 			}
 		}
@@ -187,15 +187,15 @@ void DenPopup::draw() {
 	// Draw tags
 	if (EditorState::denPopupTagsExtended) {
 		glDisable(GL_SCISSOR_TEST);
-		setThemeColour(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		glLineWidth(1);
 		Fonts::rainworld->writeCentered("Tag:", mainX + 0.7, bounds.y1 - 0.07, 0.035, CENTER_X);
 		glEnable(GL_SCISSOR_TEST);
 
 		if (hovered) {
-			setThemeColour(ThemeColour::BorderHighlight);
+			setThemeColor(ThemeColor::BorderHighlight);
 		} else {
-			setThemeColour(ThemeColour::Border);
+			setThemeColor(ThemeColor::Border);
 		}
 		Draw::begin(Draw::LINES);
 		Draw::vertex(mainX + 0.6, bounds.y0);
@@ -252,7 +252,7 @@ void DenPopup::draw() {
 
 				glDisable(GL_SCISSOR_TEST);
 
-				setThemeColour(ThemeColour::Border);
+				setThemeColor(ThemeColor::Border);
 				Draw::begin(Draw::LINES);
 				Draw::vertex(mainX + 0.85, bounds.y0 + 0.05);
 				Draw::vertex(mainX + 0.85, bounds.y1 - 0.1);
@@ -262,7 +262,7 @@ void DenPopup::draw() {
 				double sliderY = ((bounds.y1 - bounds.y0 - 0.2) * progress) + bounds.y0 + 0.075;
 				fillRect(mainX + 0.825, sliderY - 0.005, mainX + 0.875, sliderY + 0.005);
 
-				setThemeColour(ThemeColour::Text);
+				setThemeColor(ThemeColor::Text);
 				float number = creature->data;
 				std::ostringstream ss;
 
@@ -292,12 +292,12 @@ void DenPopup::draw() {
 	scrollLMax = 0;
 	if (EditorState::denPopupLineageExtended) {
 		glDisable(GL_SCISSOR_TEST);
-		setThemeColour(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		glLineWidth(1);
 		Fonts::rainworld->writeCentered("Lineages", bounds.x0 + 0.11, bounds.y1 - 0.07, 0.035, CENTER_X);
 		glEnable(GL_SCISSOR_TEST);
 
-		setThemeColour(hovered ? ThemeColour::BorderHighlight : ThemeColour::Border);
+		setThemeColor(hovered ? ThemeColor::BorderHighlight : ThemeColor::Border);
 		Draw::begin(Draw::LINES);
 		Draw::vertex(bounds.x0 + lineageSidebarWidth, bounds.y0);
 		Draw::vertex(bounds.x0 + lineageSidebarWidth, bounds.y1);
@@ -307,7 +307,7 @@ void DenPopup::draw() {
 		double dotsCenterY = bounds.y1 - 0.13;
 		for (int i = 0; i < den.creatures.size(); i++) {
 			double x = dotsCenterX + i * 0.03;
-			setThemeColor(i == selectedCreature ? ThemeColour::BorderHighlight : ThemeColour::Border);
+			setThemeColor(i == selectedCreature ? ThemeColor::BorderHighlight : ThemeColor::Border);
 			if (i == selectedCreature) {
 				fillRect(x - 0.01, dotsCenterY - 0.01, x + 0.01, dotsCenterY + 0.01);
 			} else {
@@ -540,11 +540,11 @@ void DenPopup::draw() {
 	if (!hoverText.empty() && hovered) {
 		double width = Fonts::rainworld->getTextWidth(hoverText, 0.04) + 0.02;
 		Rect rect = Rect::fromSize(UI::mouse.x, UI::mouse.y, width, 0.06);
-		setThemeColour(ThemeColour::Popup);
+		setThemeColor(ThemeColor::Popup);
 		fillRect(rect);
-		setThemeColour(ThemeColour::Border);
+		setThemeColor(ThemeColor::Border);
 		strokeRect(rect);
-		setThemeColour(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		Fonts::rainworld->writeCentered(hoverText, UI::mouse.x + 0.01, UI::mouse.y + 0.03, 0.04, CENTER_Y);
 	}
 }

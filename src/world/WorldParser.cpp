@@ -942,7 +942,7 @@ void WorldParser::parseProperties(std::filesystem::path propertiesFilePath) {
 			std::vector<std::string> splits = split(line, '|');
 			try {
 				if (splits[1] == "SubregionColorOverride") {
-					EditorState::region.overrideSubregionColors[std::stoi(splits[2])] = stringToColour(splits[3]);
+					EditorState::region.overrideSubregionColors[std::stoi(splits[2])] = stringToColor(splits[3]);
 				}
 			} catch (std::exception err) {
 				Logger::info("Error while loading property comment: ", line);

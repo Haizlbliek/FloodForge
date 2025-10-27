@@ -13,7 +13,7 @@
 namespace Settings {
 	enum class DropletGridVisibility { NONE, AIR, ALL };
 
-	using SettingType = std::variant<double, int, bool, Colour, std::string, std::vector<Colour>, Settings::DropletGridVisibility>;
+	using SettingType = std::variant<double, int, bool, Color, std::string, std::vector<Color>, Settings::DropletGridVisibility>;
 
 
 	enum class Setting {

@@ -619,7 +619,7 @@ std::string toFixed(double x, int decimals) {
 	return ss.str();
 }
 
-Colour stringToColour(const std::string &hex) {
+Color stringToColor(const std::string &hex) {
 	if (hex.size() != 7 || hex[0] != '#') {
 		throw std::invalid_argument("Invalid hex color format. Expected format: #RRGGBB but got " + hex + " instead");
 	}
@@ -640,7 +640,7 @@ Colour stringToColour(const std::string &hex) {
 	ss.clear();
 	ss >> blue;
 
-	return Colour(red / 255.0, green / 255.0, blue / 255.0);
+	return Color(red / 255.0, green / 255.0, blue / 255.0);
 }
 
 char individualIntToHex(int x) {
@@ -651,8 +651,8 @@ std::string intToHex(int x) {
 	return std::string(1, individualIntToHex(x / 16)) + individualIntToHex(x % 16);
 }
 
-std::string colourToString(const Colour &colour) {
-	return "#" + intToHex((int) (colour.r * 255)) + intToHex((int) (colour.g * 255)) + intToHex((int) (colour.b * 255)) + ((colour.a >= 1.0f) ? "" : intToHex((int) (colour.a * 255)));
+std::string colorToString(const Color &color) {
+	return "#" + intToHex((int) (color.r * 255)) + intToHex((int) (color.g * 255)) + intToHex((int) (color.b * 255)) + ((color.a >= 1.0f) ? "" : intToHex((int) (color.a * 255)));
 }
 
 double safeStod(const std::string &str, const std::string message) {

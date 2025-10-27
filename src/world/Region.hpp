@@ -7,7 +7,7 @@
 #include <utility>
 #include <map>
 
-#include "../math/Colour.hpp"
+#include "../math/Color.hpp"
 #include "RoomAttractiveness.hpp"
 
 class Region {
@@ -24,7 +24,7 @@ class Region {
 		std::filesystem::path roomsDirectory;
 		std::filesystem::path exportDirectory;
 
-		std::map<int, Colour> overrideSubregionColors;
+		std::map<int, Color> overrideSubregionColors;
 
 		void reset();
 };

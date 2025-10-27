@@ -29,7 +29,7 @@ void ConfirmPopup::draw() {
 
 	if (minimized) return;
 
-	setThemeColour(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	int lineId = 0;
 	for (std::string line : question) {
 		double y = bounds.y1 - 0.08 - 0.05 * lineId;

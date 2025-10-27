@@ -42,17 +42,17 @@ void CreateRoomPopup::draw() {
 	static std::string errorText = "";
 
 	y -= 0.06;
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("---- Room Name ----", bounds.x0 + 0.01, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered(EditorState::region.acronym + "_", bounds.x0 + 0.01, y + 0.025, 0.03, CENTER_Y);
 	double roomNameX = Fonts::rainworld->getTextWidth(EditorState::region.acronym + "_", 0.03);
 	UI::TextInputResponse roomNameResponse = UI::TextInput(Rect::fromSize(bounds.x0 + 0.01 + roomNameX, y, 0.35, 0.05), roomName);
 
 	y -= 0.06;
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("---- Room Size ----", bounds.x0 + 0.01, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
@@ -65,7 +65,7 @@ void CreateRoomPopup::draw() {
 		width.value = std::to_string(std::stoi(width.value) + 1);
 		widthResponse.submitted = true;
 	}
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("Width (Tiles)", bounds.x0 + 0.38, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
@@ -78,7 +78,7 @@ void CreateRoomPopup::draw() {
 		height.value = std::to_string(std::stoi(height.value) + 1);
 		heightResponse.submitted = true;
 	}
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("Height (Tiles)", bounds.x0 + 0.38, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
@@ -91,7 +91,7 @@ void CreateRoomPopup::draw() {
 		screenWidth.value = toFixed(std::stod(screenWidth.value) + 0.5, screenWidth.floatDecimalCount);
 		screenWidthResponse.submitted = true;
 	}
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("Width (Screens)", bounds.x0 + 0.38, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
@@ -104,11 +104,11 @@ void CreateRoomPopup::draw() {
 		screenHeight.value = toFixed(std::stod(screenHeight.value) + 0.5, screenHeight.floatDecimalCount);
 		screenHeightResponse.submitted = true;
 	}
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("Height (Screens)", bounds.x0 + 0.38, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("---- Fill Layers ----", bounds.x0 + 0.01, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
@@ -116,11 +116,11 @@ void CreateRoomPopup::draw() {
 	if (UI::TextButton(Rect::fromSize(bounds.x0 + 0.07, y, 0.05, 0.05), "2", UI::TextButtonMods().Selected(fillLayer2))) { fillLayer2 = !fillLayer2; }
 
 	y -= 0.06;
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("---- Options ----", bounds.x0 + 0.01, y + 0.025, 0.03, CENTER_Y);
 
 	y -= 0.06;
-	setThemeColor(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	Fonts::rainworld->writeCentered("Auto-place Cameras", bounds.x0 + 0.07, y + 0.025, 0.03, CENTER_Y);
 	UI::CheckBox(Rect::fromSize(bounds.x0 + 0.01, y, 0.05, 0.05), placeCameras);
 
@@ -182,7 +182,7 @@ void CreateRoomPopup::draw() {
 
 	if (!errorText.empty()) {
 		canCreate = false;
-		setThemeColor(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		Fonts::rainworld->writeCentered(errorText, bounds.x0 + 0.27, bounds.y0 + 0.035, 0.03, CENTER_Y);
 	}
 

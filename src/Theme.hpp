@@ -3,9 +3,9 @@
 #include <string>
 #include <unordered_map>
 
-#include "math/Colour.hpp"
+#include "math/Color.hpp"
 
-enum class ThemeColour {
+enum class ThemeColor {
 	Background,
 	Grid,
 	Header,
@@ -33,12 +33,8 @@ enum class ThemeColour {
 	RoomConnectionHover
 };
 
-extern std::unordered_map<ThemeColour, Colour> currentTheme;
-
-extern std::string currentThemeName;
+extern std::unordered_map<ThemeColor, Color> currentTheme;
 
 void loadTheme(std::string theme);
 
-void setThemeColour(ThemeColour colour);
-
-void setThemeColor(ThemeColour color);
+void setThemeColor(ThemeColor color);

@@ -3,7 +3,7 @@
 #include <string>
 #include "../math/Rect.hpp"
 #include "../math/UVRect.hpp"
-#include "../math/Colour.hpp"
+#include "../math/Color.hpp"
 #include "../Window.hpp"
 #include "../Texture.hpp"
 

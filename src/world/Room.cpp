@@ -5,28 +5,28 @@
 
 #include "../ui/UI.hpp"
 
-Colour RoomHelpers::RoomAir;
-Colour RoomHelpers::RoomSolid;
-Colour RoomHelpers::RoomPole;
-Colour RoomHelpers::RoomPlatform;
-Colour RoomHelpers::RoomShortcutEnterance;
-Colour RoomHelpers::RoomShortcutDot;
-Colour RoomHelpers::RoomShortcutRoom;
-Colour RoomHelpers::RoomShortcutDen;
-Colour RoomHelpers::RoomConnection;
-Colour RoomHelpers::RoomConnectionHover;
+Color RoomHelpers::RoomAir;
+Color RoomHelpers::RoomSolid;
+Color RoomHelpers::RoomPole;
+Color RoomHelpers::RoomPlatform;
+Color RoomHelpers::RoomShortcutEnterance;
+Color RoomHelpers::RoomShortcutDot;
+Color RoomHelpers::RoomShortcutRoom;
+Color RoomHelpers::RoomShortcutDen;
+Color RoomHelpers::RoomConnection;
+Color RoomHelpers::RoomConnectionHover;
 
-void RoomHelpers::loadColours() {
-	RoomAir               = currentTheme[ThemeColour::RoomAir];
-	RoomSolid             = currentTheme[ThemeColour::RoomSolid];
-	RoomPole              = currentTheme[ThemeColour::RoomPole];
-	RoomPlatform          = currentTheme[ThemeColour::RoomPlatform];
-	RoomShortcutEnterance = currentTheme[ThemeColour::RoomShortcutEnterance];
-	RoomShortcutDot       = currentTheme[ThemeColour::RoomShortcutDot];
-	RoomShortcutRoom      = currentTheme[ThemeColour::RoomShortcutRoom];
-	RoomShortcutDen       = currentTheme[ThemeColour::RoomShortcutDen];
-	RoomConnection        = currentTheme[ThemeColour::RoomConnection];
-	RoomConnectionHover   = currentTheme[ThemeColour::RoomConnectionHover];
+void RoomHelpers::loadColors() {
+	RoomAir               = currentTheme[ThemeColor::RoomAir];
+	RoomSolid             = currentTheme[ThemeColor::RoomSolid];
+	RoomPole              = currentTheme[ThemeColor::RoomPole];
+	RoomPlatform          = currentTheme[ThemeColor::RoomPlatform];
+	RoomShortcutEnterance = currentTheme[ThemeColor::RoomShortcutEnterance];
+	RoomShortcutDot       = currentTheme[ThemeColor::RoomShortcutDot];
+	RoomShortcutRoom      = currentTheme[ThemeColor::RoomShortcutRoom];
+	RoomShortcutDen       = currentTheme[ThemeColor::RoomShortcutDen];
+	RoomConnection        = currentTheme[ThemeColor::RoomConnection];
+	RoomConnectionHover   = currentTheme[ThemeColor::RoomConnectionHover];
 }
 
 void RoomHelpers::drawTexture(GLuint texture, double rectX, double rectY, double scale) {
@@ -144,26 +144,26 @@ void Room::draw(Vector2 mousePosition, PositionType positionType) {
 		return;
 	}
 	
-	Colour tint = Colour(1.0, 1.0, 1.0);
+	Color tint = Color(1.0, 1.0, 1.0);
 
-	if (EditorState::roomColours == 1) {
-		if (layer == 0) tint = Colour(1.0, 0.0, 0.0);
-		if (layer == 1) tint = Colour(1.0, 1.0, 1.0);
-		if (layer == 2) tint = Colour(0.0, 1.0, 0.0);
+	if (EditorState::roomColors == 1) {
+		if (layer == 0) tint = Color(1.0, 0.0, 0.0);
+		if (layer == 1) tint = Color(1.0, 1.0, 1.0);
+		if (layer == 2) tint = Color(0.0, 1.0, 0.0);
 	}
 
-	if (EditorState::roomColours == 2) {
+	if (EditorState::roomColors == 2) {
 		if (subregion <= -1) {
 			if (EditorState::region.overrideSubregionColors.count(-1) > 0) {
 				tint = EditorState::region.overrideSubregionColors[-1];
 			} else {
-				tint = Settings::getSetting<Colour>(Settings::Setting::NoSubregionColor);
+				tint = Settings::getSetting<Color>(Settings::Setting::NoSubregionColor);
 			}
 		}
 		else {
-			std::vector<Colour> subregionColors = Settings::getSetting<std::vector<Colour>>(Settings::Setting::SubregionColors);
+			std::vector<Color> subregionColors = Settings::getSetting<std::vector<Color>>(Settings::Setting::SubregionColors);
 			if (subregionColors.size() == 0) {
-				tint = Settings::getSetting<Colour>(Settings::Setting::NoSubregionColor);
+				tint = Settings::getSetting<Color>(Settings::Setting::NoSubregionColor);
 			} else {
 				tint = subregionColors[subregion % subregionColors.size()];
 			}
@@ -181,7 +181,7 @@ void Room::draw(Vector2 mousePosition, PositionType positionType) {
 
 	GLuint projLoc = glGetUniformLocation(Shaders::roomShader, "projection");
 	GLuint modelLoc = glGetUniformLocation(Shaders::roomShader, "model");
-	GLuint tintLoc = glGetUniformLocation(Shaders::roomShader, "tintColour");
+	GLuint tintLoc = glGetUniformLocation(Shaders::roomShader, "tintColor");
 	GLuint tintStrengthLoc = glGetUniformLocation(Shaders::roomShader, "tintStrength");
 
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, projectionMatrix(EditorState::cameraOffset, EditorState::cameraScale * UI::screenBounds).m);
@@ -242,9 +242,9 @@ void Room::draw(Vector2 mousePosition, PositionType positionType) {
 	}
 
 	if (inside(mousePosition)) {
-		setThemeColour(ThemeColour::RoomBorderHighlight);
+		setThemeColor(ThemeColor::RoomBorderHighlight);
 	} else {
-		setThemeColour(ThemeColour::RoomBorder);
+		setThemeColor(ThemeColor::RoomBorder);
 	}
 	strokeRect(position.x, position.y, position.x + width, position.y - height);
 }

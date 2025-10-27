@@ -721,7 +721,7 @@ void UpdateGeometryTab() {
 			}
 		}
 
-		setThemeColor(ThemeColour::RoomBorderHighlight);
+		setThemeColor(ThemeColor::RoomBorderHighlight);
 		if (rectDrawing != -1) {
 			int sx = std::min(rectStart.x, mouseTile.x);
 			int sy = std::min(rectStart.y, mouseTile.y);
@@ -935,7 +935,7 @@ void DropletWindow::Draw() {
 
 	{
 		glLineWidth(1);
-		setThemeColor(ThemeColour::Grid);
+		setThemeColor(ThemeColor::Grid);
 		double gridStep = std::max(cameraScale / 16.0, 1.0);
 		gridStep = std::pow(2, std::ceil(std::log2(gridStep - 0.01)));
 		Draw::begin(Draw::LINES);
@@ -955,10 +955,10 @@ void DropletWindow::Draw() {
 
 	roomRect = Rect::fromSize(0.0, 0.0, DropletWindow::room->width, -DropletWindow::room->height);
 
-	setThemeColor(ThemeColour::RoomAir);
+	setThemeColor(ThemeColor::RoomAir);
 	fillRect(roomRect);
 
-	Draw::color(currentTheme[ThemeColour::RoomAir].mix(currentTheme[ThemeColour::RoomSolid], 0.25));
+	Draw::color(currentTheme[ThemeColor::RoomAir].mix(currentTheme[ThemeColor::RoomSolid], 0.25));
 
 	if (Settings::getSetting<Settings::DropletGridVisibility>(Settings::Setting::DropletGridVisibility) == Settings::DropletGridVisibility::AIR) {
 		glLineWidth(1);
@@ -1009,14 +1009,14 @@ void DropletWindow::Draw() {
 			int geo = DropletWindow::room->getTile(x, y);
 
 			if (geo % 16 == 1) {
-				setThemeColor(ThemeColour::RoomSolid);
+				setThemeColor(ThemeColor::RoomSolid);
 				Draw::vertex(x0, y0);
 				Draw::vertex(x1, y0);
 				Draw::vertex(x1, y1);
 				Draw::vertex(x0, y1);
 			}
 			else if (geo % 16 == 3) {
-				setThemeColor(ThemeColour::RoomPlatform);
+				setThemeColor(ThemeColor::RoomPlatform);
 				Draw::vertex(x0, y0);
 				Draw::vertex(x1, y0);
 				Draw::vertex(x1, y0 - 0.5);
@@ -1025,7 +1025,7 @@ void DropletWindow::Draw() {
 			else if (geo % 16 == 2) {
 				int type = (DropletWindow::room->getTile(x, y) & (1024 + 2048)) / 1024;
 
-				setThemeColor(ThemeColour::RoomSolid);
+				setThemeColor(ThemeColor::RoomSolid);
 				if (type == 0) {
 					Draw::vertex(x0, y1);
 					Draw::vertex(x1, y0);
@@ -1049,21 +1049,21 @@ void DropletWindow::Draw() {
 				}
 			}
 			else if (geo % 16 == 4) {
-				setThemeColor(ThemeColour::RoomShortcutEnterance);
+				setThemeColor(ThemeColor::RoomShortcutEnterance);
 				Draw::vertex(x0, y0);
 				Draw::vertex(x1, y0);
 				Draw::vertex(x1, y1);
 				Draw::vertex(x0, y1);
 			}
 			if ((geo & 16) > 0) {
-				setThemeColor(ThemeColour::RoomPole);
+				setThemeColor(ThemeColor::RoomPole);
 				Draw::vertex(x0 + 0.4, y0);
 				Draw::vertex(x1 - 0.4, y0);
 				Draw::vertex(x1 - 0.4, y1);
 				Draw::vertex(x0 + 0.4, y1);
 			}
 			if ((geo & 32) > 0) {
-				setThemeColor(ThemeColour::RoomPole);
+				setThemeColor(ThemeColor::RoomPole);
 				Draw::vertex(x0, y0 - 0.4);
 				Draw::vertex(x1, y0 - 0.4);
 				Draw::vertex(x1, y1 + 0.4);
@@ -1084,7 +1084,7 @@ void DropletWindow::Draw() {
 			int geo = DropletWindow::room->getTile(x, y);
 
 			if ((geo & 15) == 4) {
-				setThemeColor(ThemeColour::RoomShortcutRoom);
+				setThemeColor(ThemeColor::RoomShortcutRoom);
 				if (DropletWindow::room->getTile(x, y + 1) & 128) {
 					fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.0, 0.125, 0.125));
 				}
@@ -1102,44 +1102,44 @@ void DropletWindow::Draw() {
 				}
 			}
 			else if ((geo & 64) > 0) {
-				setThemeColor(ThemeColour::RoomShortcutRoom);
+				setThemeColor(ThemeColor::RoomShortcutRoom);
 				fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.375, 0.125, 0.5));
 			}
 			else if ((geo & 128) > 0) {
-				setThemeColor(ThemeColour::RoomShortcutDot);
+				setThemeColor(ThemeColor::RoomShortcutDot);
 				fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.125, 0.125, 0.25));
 			}
 
 			if ((geo & 256) > 0) {
-				setThemeColor(ThemeColour::RoomShortcutDen);
+				setThemeColor(ThemeColor::RoomShortcutDen);
 				fillRect(UVRect(x0, y0, x1, y1).uv(0.125, 0.375, 0.25, 0.5));
 			}
 			if ((geo & 4096) > 0) {
-				setThemeColor(ThemeColour::RoomShortcutDen);
+				setThemeColor(ThemeColor::RoomShortcutDen);
 				fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.375, 0.375, 0.5));
 			}
 			if ((geo & 8192) > 0) {
-				setThemeColor(ThemeColour::RoomShortcutDen);
+				setThemeColor(ThemeColor::RoomShortcutDen);
 				fillRect(UVRect(x0, y0, x1, y1).uv(0.375, 0.375, 0.5, 0.5));
 			}
 			if ((geo & 16384) > 0) {
-				setThemeColor(ThemeColour::RoomShortcutDot);
+				setThemeColor(ThemeColor::RoomShortcutDot);
 				fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.125, 0.375, 0.25));
 			}
 			if ((geo & 32768) > 0) {
-				setThemeColor(ThemeColour::RoomShortcutDot);
+				setThemeColor(ThemeColor::RoomShortcutDot);
 				fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.25, 0.375, 0.375));
 			}
 			if ((geo & 65536) > 0) {
-				setThemeColor(ThemeColour::RoomShortcutDot);
+				setThemeColor(ThemeColor::RoomShortcutDot);
 				fillRect(UVRect(x0, y0, x1, y1).uv(0.375, 0.25, 0.5, 0.375));
 			}
 			if ((geo & 262144) > 0) {
-				setThemeColor(ThemeColour::RoomShortcutDot);
+				setThemeColor(ThemeColor::RoomShortcutDot);
 				fillRect(UVRect(x0, y0, x1, y1).uv(0.125, 0.25, 0.25, 0.375));
 			}
 			if ((geo & 524288) > 0) {
-				setThemeColor(ThemeColour::RoomShortcutDot);
+				setThemeColor(ThemeColor::RoomShortcutDot);
 				fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.25, 0.125, 0.375));
 			}
 		}
@@ -1157,7 +1157,7 @@ void DropletWindow::Draw() {
 	glDisable(GL_BLEND);
 
 	if (Settings::getSetting<Settings::DropletGridVisibility>(Settings::Setting::DropletGridVisibility) == Settings::DropletGridVisibility::ALL) {
-		Draw::color(currentTheme[ThemeColour::RoomAir].mix(currentTheme[ThemeColour::RoomSolid], 0.75));
+		Draw::color(currentTheme[ThemeColor::RoomAir].mix(currentTheme[ThemeColor::RoomSolid], 0.75));
 		glLineWidth(1);
 		double gridStep = std::max(cameraScale / 32.0, 1.0);
 		gridStep = std::pow(2, std::ceil(std::log2(gridStep - 0.01)));
@@ -1174,7 +1174,7 @@ void DropletWindow::Draw() {
 		Draw::end();
 	}
 
-	setThemeColor(ThemeColour::RoomBorder);
+	setThemeColor(ThemeColor::RoomBorder);
 	strokeRect(roomRect);
 	if (showResize) {
 		strokeRect(Rect::fromSize(resizeOffset.x, -resizeOffset.y, resizeSize.x, -resizeSize.y));
@@ -1218,9 +1218,9 @@ void DropletWindow::Draw() {
 
 	//-- Sidebar
 	Rect sidebar(UI::screenBounds.x - 0.41, UI::screenBounds.y - 0.12, UI::screenBounds.x, -UI::screenBounds.y);
-	setThemeColor(ThemeColour::Popup);
+	setThemeColor(ThemeColor::Popup);
 	fillRect(sidebar);
-	setThemeColor(ThemeColour::Border);
+	setThemeColor(ThemeColor::Border);
 	drawLine(sidebar.x0, sidebar.y0, sidebar.x0, sidebar.y1);
 
 	if (currentTab == EditorTab::GEOMETRY) {
@@ -1261,7 +1261,7 @@ void DropletWindow::Draw() {
 		Fonts::rainworld->writeCentered("Water in Front", sidebar.x0 + 0.07, sidebar.y1 - 0.155, 0.03, CENTER_Y);
 
 		double barY = sidebar.y1 - 0.2;
-		setThemeColor(ThemeColour::Border);
+		setThemeColor(ThemeColor::Border);
 		drawLine(sidebar.x0, barY, sidebar.x1, sidebar.y1 - 0.2);
 		if (UI::TextButton(Rect::fromSize(sidebar.x0 + 0.01, barY - 0.06, 0.39, 0.05), "Add TerrainHandle")) {
 			TerrainHandleObject *object = new TerrainHandleObject();
@@ -1293,9 +1293,9 @@ void DropletWindow::Draw() {
 
 	//-- Tabs
 	Rect tabPositions(-UI::screenBounds.x, UI::screenBounds.y - 0.06, UI::screenBounds.x, UI::screenBounds.y - 0.12);
-	setThemeColor(ThemeColour::Popup);
+	setThemeColor(ThemeColor::Popup);
 	fillRect(tabPositions);
-	setThemeColor(ThemeColour::Border);
+	setThemeColor(ThemeColor::Border);
 	drawLine(tabPositions.x0, tabPositions.y0, tabPositions.x1, tabPositions.y0);
 
 	Vector2 tabPosition = Vector2(-UI::screenBounds.x + 0.01, UI::screenBounds.y - 0.12);
@@ -1307,19 +1307,19 @@ void DropletWindow::Draw() {
 		bool selected = i == (int) currentTab;
 
 		if (selected || hovered) {
-			setThemeColor(ThemeColour::PopupHeader);
+			setThemeColor(ThemeColor::PopupHeader);
 			fillRect(tab);
 		}
 
-		setThemeColor(selected ? ThemeColour::BorderHighlight : ThemeColour::Border);
+		setThemeColor(selected ? ThemeColor::BorderHighlight : ThemeColor::Border);
 		strokeRect(tab);
 
 		if (selected || hovered) {
-			setThemeColor(ThemeColour::PopupHeader);
+			setThemeColor(ThemeColor::PopupHeader);
 			drawLine(tab.x0, tab.y0, tab.x1, tab.y0);
 		}
 
-		setThemeColor(selected ? ThemeColour::TextHighlight : ThemeColour::Text);
+		setThemeColor(selected ? ThemeColor::TextHighlight : ThemeColor::Text);
 		Fonts::rainworld->write(TAB_NAMES[i], tabPosition.x + 0.02, tabPosition.y + 0.04, 0.03);
 
 		if (hovered && UI::mouse.justClicked()) {
@@ -1339,11 +1339,11 @@ void DropletWindow::Draw() {
 			hoverRect.offset(Vector2(0.0, UI::screenBounds.y - hoverRect.y1));
 		}
 
-		setThemeColor(ThemeColour::Background);
+		setThemeColor(ThemeColor::Background);
 		fillRect(hoverRect);
-		setThemeColor(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		Fonts::rainworld->writeCentered(hoverText, hoverRect.x0 + 0.01, (hoverRect.y0 + hoverRect.y1) * 0.5, 0.03, CENTER_Y);
-		setThemeColor(ThemeColour::Border);
+		setThemeColor(ThemeColor::Border);
 		strokeRect(hoverRect);
 	}
 }

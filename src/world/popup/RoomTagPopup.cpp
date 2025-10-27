@@ -15,7 +15,7 @@ void RoomTagPopup::draw() {
 	if (minimized) return;
 
 	if (rooms.size() > 0) {
-		setThemeColour(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		if (rooms.size() == 1) {
 			Fonts::rainworld->writeCentered((*rooms.begin())->roomName, 0.0, 0.4, 0.04, CENTER_XY);
 		} else {

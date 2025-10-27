@@ -13,7 +13,7 @@
 #include <set>
 
 #include "Logger.hpp"
-#include "math/Colour.hpp"
+#include "math/Color.hpp"
 // #include "Utils.hpp"
 
 #define CURSOR_DEFAULT 0
@@ -88,9 +88,9 @@ class Window {
 
 		Mouse *GetMouse() const;
 
-		void setBackgroundColour(const Colour backgroundColour);
+		void setBackgroundColor(const Color backgroundColor);
 
-		void setBackgroundColour(const float r, const float g, const float b);
+		void setBackgroundColor(const float r, const float g, const float b);
 
 		bool keyPressed(uint16_t key);
 
@@ -146,7 +146,7 @@ class Window {
 
 		Mouse *mouse;
 
-		Colour backgroundColour;
+		Color backgroundColor;
 
 		double scrollXAccumulator;
 		double scrollYAccumulator;

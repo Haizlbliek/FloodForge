@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <vector>
 
-#include "math/Colour.hpp"
+#include "math/Color.hpp"
 #include "math/Vector.hpp"
 #include "math/Rect.hpp"
 
@@ -79,8 +79,8 @@ char parseCharacter(char character, bool shiftPressed, bool capsPressed);
 
 std::string toFixed(double x, int decimals);
 
-Colour stringToColour(const std::string &hex);
+Color stringToColor(const std::string &hex);
 
-std::string colourToString(const Colour &colour);
+std::string colorToString(const Color &color);
 
 double safeStod(const std::string &str, const std::string message);

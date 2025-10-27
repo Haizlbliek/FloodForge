@@ -3,7 +3,7 @@
 #include "../../ui/UI.hpp"
 
 const RoomAttractiveness RoomAttractivenessPopup::attractivenessIds   [6] = { RoomAttractiveness::DEFAULT, RoomAttractiveness::NEUTRAL, RoomAttractiveness::FORBIDDEN, RoomAttractiveness::AVOID, RoomAttractiveness::LIKE, RoomAttractiveness::STAY };
-const Colour             RoomAttractivenessPopup::attractivenessColors[6] = { Colour(0.5, 0.5, 0.5),       Colour(1.0, 1.0, 1.0),       Colour(1.0, 0.0, 0.0),         Colour(1.0, 1.0, 0.0),     Colour(0.0, 1.0, 0.0),    Colour(0.0, 1., 1.0)     };
+const Color             RoomAttractivenessPopup::attractivenessColors[6] = { Color(0.5, 0.5, 0.5),       Color(1.0, 1.0, 1.0),       Color(1.0, 0.0, 0.0),         Color(1.0, 1.0, 0.0),     Color(0.0, 1.0, 0.0),    Color(0.0, 1., 1.0)     };
 const std::string        RoomAttractivenessPopup::attractivenessNames [6] = { "DEFAULT",                   "NEUTRAL",                   "FORBIDDEN",                   "AVOID",                   "LIKE",                   "STAY"                   };
 
 RoomAttractivenessPopup::RoomAttractivenessPopup(std::set<Room *> rooms) : rooms(rooms), Popup() {
@@ -31,9 +31,9 @@ void RoomAttractivenessPopup::draw() {
 	if (minimized) return;
 
 	if (hovered) {
-		setThemeColour(ThemeColour::BorderHighlight);
+		setThemeColor(ThemeColor::BorderHighlight);
 	} else {
-		setThemeColour(ThemeColour::Border);
+		setThemeColor(ThemeColor::Border);
 	}
 	Draw::begin(Draw::LINES);
 	Draw::vertex(bounds.x0 + 0.6, bounds.y0);
@@ -47,7 +47,7 @@ void RoomAttractivenessPopup::draw() {
 	double buttonSize = 0.5 / 7.0;
 	double buttonPadding = 0.01;
 
-	setThemeColour(ThemeColour::Text);
+	setThemeColor(ThemeColor::Text);
 	glLineWidth(1);
 	Fonts::rainworld->writeCentered("Creature type:", centreX, bounds.y1 - 0.07, 0.035, CENTER_X);
 	Fonts::rainworld->writeCentered("Attract:", bounds.x0 + 0.72, bounds.y1 - 0.07, 0.035, CENTER_X);
@@ -136,11 +136,11 @@ void RoomAttractivenessPopup::draw() {
 	if (!hoverText.empty() && hovered) {
 		double width = Fonts::rainworld->getTextWidth(hoverText, 0.04) + 0.02;
 		Rect rect = Rect::fromSize(UI::mouse.x, UI::mouse.y, width, 0.06);
-		setThemeColour(ThemeColour::Popup);
+		setThemeColor(ThemeColor::Popup);
 		fillRect(rect);
-		setThemeColour(ThemeColour::Border);
+		setThemeColor(ThemeColor::Border);
 		strokeRect(rect);
-		setThemeColour(ThemeColour::Text);
+		setThemeColor(ThemeColor::Text);
 		Fonts::rainworld->writeCentered(hoverText, UI::mouse.x + 0.01, UI::mouse.y + 0.03, 0.04, CENTER_Y);
 	}
 }

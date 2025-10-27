@@ -24,7 +24,7 @@ namespace EditorState {
 	double cameraScale = 32.0;
 	double selectorScale = 1.0;
 
-	int roomColours = 0;
+	int roomColors = 0;
 	PositionType positionType = PositionType::CANON;
 	bool visibleLayers[] = { true, true, true };
 	bool visibleDevItems = false;
