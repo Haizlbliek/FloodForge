@@ -5,6 +5,8 @@ std::string ROOM_TAG_NAMES[ROOM_TAG_COUNT] = { "Shelter", "Ancient Shelter", "Ga
 
 
 namespace EditorState {
+	Texture *geometry = nullptr;
+
 	bool dropletOpen;
 
 	// FloodForge

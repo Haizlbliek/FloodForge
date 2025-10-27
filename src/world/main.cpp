@@ -114,6 +114,8 @@ int main() {
 		return -1;
 	}
 
+	EditorState::geometry = new Texture(BASE_PATH / "assets" / "geometry.png");
+
 	DropletWindow::init();
 	UI::init(UI::window);
 	Settings::init();
@@ -213,6 +215,8 @@ int main() {
 	Draw::cleanup();
 	Settings::cleanup();
 	UI::cleanup();
+
+	delete EditorState::geometry; EditorState::geometry = nullptr;
 
 	std::filesystem::remove(BASE_PATH / "running.txt");
 

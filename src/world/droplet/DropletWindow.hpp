@@ -22,9 +22,6 @@ namespace DropletWindow {
 	void render();
 	void resizeRoom(int width, int height, bool stretch);
 
-	extern Texture *toolsTexture;
-	extern Texture *shortcutsTexture;
-
 	extern Room *room;
 	extern bool showObjects;
 

@@ -9,14 +9,9 @@
 #include "LevelUtils.hpp"
 #include "../Backup.hpp"
 
-Texture *DropletWindow::shortcutsTexture = nullptr;
-Texture *DropletWindow::toolsTexture = nullptr;
-
 bool DropletWindow::showResize = false;
 Vector2i DropletWindow::resizeSize;
 Vector2i DropletWindow::resizeOffset;
-
-
 
 enum class EditorTab {
 	DETAILS,
@@ -112,13 +107,9 @@ Vector2 cameraPanTo = Vector2(0.0f, 0.0f);
 
 
 void DropletWindow::init() {
-	toolsTexture = new Texture(BASE_PATH / "assets" / "tools.png");
-	shortcutsTexture = new Texture(BASE_PATH / "assets" / "shortcuts.png");
 }
 
 void DropletWindow::cleanup() {
-	delete toolsTexture;
-	delete shortcutsTexture;
 }
 
 void UpdateCamera() {
@@ -889,6 +880,45 @@ void drawWater(bool border) {
 	glDisable(GL_BLEND);
 }
 
+void setToolUv(UVRect &rect, int tool) {
+	if (tool == 0) {
+		rect.uv(0.5, 0.125, 0.625, 0.0);
+	} else if (tool == 1) {
+		rect.uv(0.625, 0.125, 0.75, 0.0);
+	} else if (tool == 2) {
+		rect.uv(0.75, 0.125, 0.875, 0.0);
+	} else if (tool == 3) {
+		rect.uv(0.875, 0.125, 1.0, 0.0);
+
+	} else if (tool == 4) {
+		rect.uv(0.5, 0.25, 0.625, 0.125);
+	} else if (tool == 5) {
+		rect.uv(0.625, 0.25, 0.75, 0.125);
+	} else if (tool == 6) {
+		rect.uv(0.0, 0.375, 0.125, 0.25);
+	} else if (tool == 7) {
+		rect.uv(0.125, 0.375, 0.25, 0.25);
+
+	} else if (tool == 8) {
+		rect.uv(0.75, 0.25, 0.875, 0.125);
+	} else if (tool == 9) {
+		rect.uv(0.0, 0.5, 0.125, 0.375);
+	} else if (tool == 10) {
+		rect.uv(0.125, 0.5, 0.25, 0.375);
+	} else if (tool == 11) {
+		rect.uv(0.375, 0.5, 0.5, 0.375);
+
+	} else if (tool == 12) {
+		rect.uv(0.25, 0.5, 0.375, 0.375);
+	} else if (tool == 13) {
+		rect.uv(0.25, 0.25, 0.375, 0.125);
+	} else if (tool == 14) {
+		rect.uv(0.25, 0.375, 0.375, 0.25);
+	} else if (tool == 15) {
+		rect.uv(0.375, 0.375, 0.5, 0.25);
+	}
+}
+
 void DropletWindow::Draw() {
 	if (!UI::mouse.leftMouse && !UI::mouse.rightMouse) {
 		if (UI::window->justPressed(GLFW_KEY_1)) currentTab = EditorTab::DETAILS;
@@ -1041,7 +1071,7 @@ void DropletWindow::Draw() {
 	Draw::end();
 
 	glEnable(GL_BLEND);
-	Draw::useTexture(shortcutsTexture->ID());
+	Draw::useTexture(EditorState::geometry->ID());
 	for (int x = 0; x < DropletWindow::room->width; x++) {
 		for (int y = 0; y < DropletWindow::room->height; y++) {
 			float x0 = roomRect.x0 + x;
@@ -1053,61 +1083,61 @@ void DropletWindow::Draw() {
 			if ((geo & 15) == 4) {
 				setThemeColor(ThemeColour::RoomShortcutRoom);
 				if (DropletWindow::room->getTile(x, y + 1) & 128) {
-					fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.0, 0.25, 0.25));
+					fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.0, 0.125, 0.125));
 				}
 				else if (DropletWindow::room->getTile(x - 1, y) & 128) {
-					fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.0, 0.5, 0.25));
+					fillRect(UVRect(x0, y0, x1, y1).uv(0.125, 0.0, 0.25, 0.125));
 				}
 				else if (DropletWindow::room->getTile(x + 1, y) & 128) {
-					fillRect(UVRect(x0, y0, x1, y1).uv(0.5, 0.0, 0.75, 0.25));
+					fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.0, 0.375, 0.125));
 				}
 				else if (DropletWindow::room->getTile(x, y - 1) & 128) {
-					fillRect(UVRect(x0, y0, x1, y1).uv(0.75, 0.0, 1.0, 0.25));
+					fillRect(UVRect(x0, y0, x1, y1).uv(0.375, 0.0, 0.5, 0.125));
 				}
 				else {
-					fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.25, 0.5, 0.5));
+					fillRect(UVRect(x0, y0, x1, y1).uv(0.125, 0.125, 0.25, 0.25));
 				}
 			}
 			else if ((geo & 64) > 0) {
 				setThemeColor(ThemeColour::RoomShortcutRoom);
-				fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.75, 0.25, 1.0));
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.375, 0.125, 0.5));
 			}
 			else if ((geo & 128) > 0) {
 				setThemeColor(ThemeColour::RoomShortcutDot);
-				fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.25, 0.25, 0.5));
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.125, 0.125, 0.25));
 			}
 
 			if ((geo & 256) > 0) {
 				setThemeColor(ThemeColour::RoomShortcutDen);
-				fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.75, 0.5, 1.0));
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.125, 0.375, 0.25, 0.5));
 			}
 			if ((geo & 4096) > 0) {
 				setThemeColor(ThemeColour::RoomShortcutDen);
-				fillRect(UVRect(x0, y0, x1, y1).uv(0.5, 0.75, 0.75, 1.0));
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.375, 0.375, 0.5));
 			}
 			if ((geo & 8192) > 0) {
 				setThemeColor(ThemeColour::RoomShortcutDen);
-				fillRect(UVRect(x0, y0, x1, y1).uv(0.75, 0.75, 1.0, 1.0));
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.375, 0.375, 0.5, 0.5));
 			}
 			if ((geo & 16384) > 0) {
 				setThemeColor(ThemeColour::RoomShortcutDot);
-				fillRect(UVRect(x0, y0, x1, y1).uv(0.5, 0.25, 0.75, 0.5));
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.125, 0.375, 0.25));
 			}
 			if ((geo & 32768) > 0) {
 				setThemeColor(ThemeColour::RoomShortcutDot);
-				fillRect(UVRect(x0, y0, x1, y1).uv(0.5, 0.5, 0.75, 0.75));
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.25, 0.375, 0.375));
 			}
 			if ((geo & 65536) > 0) {
 				setThemeColor(ThemeColour::RoomShortcutDot);
-				fillRect(UVRect(x0, y0, x1, y1).uv(0.75, 0.5, 1.0, 0.75));
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.375, 0.25, 0.5, 0.375));
 			}
 			if ((geo & 262144) > 0) {
 				setThemeColor(ThemeColour::RoomShortcutDot);
-				fillRect(UVRect(x0, y0, x1, y1).uv(0.25, 0.5, 0.5, 0.75));
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.125, 0.25, 0.25, 0.375));
 			}
 			if ((geo & 524288) > 0) {
 				setThemeColor(ThemeColour::RoomShortcutDot);
-				fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.5, 0.25, 0.75));
+				fillRect(UVRect(x0, y0, x1, y1).uv(0.0, 0.25, 0.125, 0.375));
 			}
 		}
 	}
@@ -1195,10 +1225,10 @@ void DropletWindow::Draw() {
 			for (int x = 0; x < 4; x++) {
 				int i = x + y * 4;
 				UVRect toolRect = UVRect::fromSize(sidebar.x0 + 0.01 + x * 0.1, sidebar.y1 - (y + 1) * 0.1, 0.09, 0.09);
-				toolRect.uv(x * 0.25, y * 0.2 + 0.2, x * 0.25 + 0.25, y * 0.2);
+				setToolUv(toolRect, i);
 
 				bool selected = selectedTool == (GeometryTool) i;
-				UI::ButtonResponse response =  UI::TextureButton(toolRect, UI::TextureButtonMods().TextureId(DropletWindow::toolsTexture->ID()).TextureScale(0.75).Selected(selected).TextureColor(selected ? Color(1.0) : Color(0.5)));
+				UI::ButtonResponse response = UI::TextureButton(toolRect, UI::TextureButtonMods().TextureId(EditorState::geometry->ID()).TextureScale(0.75).Selected(selected).TextureColor(selected ? Color(1.0) : Color(0.5)));
 				if (response.clicked) {
 					selectedTool = (GeometryTool) i;
 				}

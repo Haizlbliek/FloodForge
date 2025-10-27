@@ -28,6 +28,8 @@ extern std::string ROOM_TAG_NAMES[ROOM_TAG_COUNT];
 #include "PositionType.hpp"
 
 namespace EditorState {
+	extern Texture *geometry;
+
 	extern bool dropletOpen;
 
 	// FloodForge
