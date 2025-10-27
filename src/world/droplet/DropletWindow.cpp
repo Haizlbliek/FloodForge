@@ -900,12 +900,50 @@ void DropletWindow::Draw() {
 
 	applyFrustumToOrthographic(cameraOffset, 0.0f, cameraScale * UI::screenBounds);
 
+	{
+		glLineWidth(1);
+		setThemeColor(ThemeColour::Grid);
+		double gridStep = std::max(cameraScale / 16.0, 1.0);
+		gridStep = std::pow(2, std::ceil(std::log2(gridStep - 0.01)));
+		Draw::begin(Draw::LINES);
+		Vector2 offset = (cameraOffset / gridStep).rounded() * gridStep;
+		Vector2 extraOffset = Vector2(fmod((UI::screenBounds.x - 1.0) * gridStep * 16.0, gridStep), 0);
+		Vector2 gridScale = gridStep * 16.0 * UI::screenBounds;
+		for (float x = -gridScale.x + offset.x; x < gridScale.x + offset.x; x += gridStep) {
+			Draw::vertex(x + extraOffset.x, -cameraScale * UI::screenBounds.y + offset.y + extraOffset.y - gridStep);
+			Draw::vertex(x + extraOffset.x,  cameraScale * UI::screenBounds.y + offset.y + extraOffset.y + gridStep);
+		}
+		for (float y = -gridScale.y + offset.y; y < gridScale.y + offset.y; y += gridStep) {
+			Draw::vertex(-cameraScale * UI::screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
+			Draw::vertex( cameraScale * UI::screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
+		}
+		Draw::end();
+	}
+
 	roomRect = Rect::fromSize(0.0, 0.0, DropletWindow::room->width, -DropletWindow::room->height);
 
 	setThemeColor(ThemeColour::RoomAir);
 	fillRect(roomRect);
 
 	Draw::color(currentTheme[ThemeColour::RoomAir].mix(currentTheme[ThemeColour::RoomSolid], 0.25));
+
+	if (Settings::getSetting<Settings::DropletGridVisibility>(Settings::Setting::DropletGridVisibility) == Settings::DropletGridVisibility::AIR) {
+		glLineWidth(1);
+		double gridStep = std::max(cameraScale / 32.0, 1.0);
+		gridStep = std::pow(2, std::ceil(std::log2(gridStep - 0.01)));
+		Draw::begin(Draw::LINES);
+		
+		for (float x = roomRect.x0; x < roomRect.x1; x += gridStep) {
+			Draw::vertex(x, roomRect.y0);
+			Draw::vertex(x, roomRect.y1);
+		}
+		for (float y = roomRect.y0; y < roomRect.y1; y += gridStep) {
+			Draw::vertex(roomRect.x0, y);
+			Draw::vertex(roomRect.x1, y);
+		}
+		Draw::end();
+	}
+
 	Draw::begin(Draw::QUADS);
 	for (int x = 0; x < DropletWindow::room->width; x++) {
 		for (int y = 0; y < DropletWindow::room->height; y++) {
@@ -1084,6 +1122,24 @@ void DropletWindow::Draw() {
 	}
 
 	glDisable(GL_BLEND);
+
+	if (Settings::getSetting<Settings::DropletGridVisibility>(Settings::Setting::DropletGridVisibility) == Settings::DropletGridVisibility::ALL) {
+		Draw::color(currentTheme[ThemeColour::RoomAir].mix(currentTheme[ThemeColour::RoomSolid], 0.75));
+		glLineWidth(1);
+		double gridStep = std::max(cameraScale / 32.0, 1.0);
+		gridStep = std::pow(2, std::ceil(std::log2(gridStep - 0.01)));
+		Draw::begin(Draw::LINES);
+		
+		for (float x = roomRect.x0; x < roomRect.x1; x += gridStep) {
+			Draw::vertex(x, roomRect.y0);
+			Draw::vertex(x, roomRect.y1);
+		}
+		for (float y = roomRect.y0; y < roomRect.y1; y += gridStep) {
+			Draw::vertex(roomRect.x0, y);
+			Draw::vertex(roomRect.x1, y);
+		}
+		Draw::end();
+	}
 
 	setThemeColor(ThemeColour::RoomBorder);
 	strokeRect(roomRect);
@@ -1672,7 +1728,7 @@ void DropletWindow::exportGeometry() {
 		settings.close();
 	} else {
 		std::ofstream settings(settingsPath);
-		settings << before << "\n" << after;
+		settings << before << after;
 		settings.close();
 	}
 }

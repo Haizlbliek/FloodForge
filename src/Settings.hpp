@@ -10,9 +10,12 @@
 #include "Utils.hpp"
 #include "Theme.hpp"
 
-using SettingType = std::variant<double, int, bool, Colour, std::string, std::vector<Colour>>;
-
 namespace Settings {
+	enum class DropletGridVisibility { NONE, AIR, ALL };
+
+	using SettingType = std::variant<double, int, bool, Colour, std::string, std::vector<Colour>, Settings::DropletGridVisibility>;
+
+
 	enum class Setting {
 		CameraPanSpeed,
 		CameraZoomSpeed,
@@ -30,7 +33,8 @@ namespace Settings {
 		NoSubregionColor,
 		SubregionColors,
 		RoomTintStrength,
-		ForceExportCasing
+		ForceExportCasing,
+		DropletGridVisibility,
 	};
 
 	extern std::unordered_map<Setting, SettingType> settings;

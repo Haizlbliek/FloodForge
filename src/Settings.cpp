@@ -2,7 +2,7 @@
 
 #include "Logger.hpp"
 
-std::unordered_map<Settings::Setting, SettingType> Settings::settings;
+std::unordered_map<Settings::Setting, Settings::SettingType> Settings::settings;
 
 void Settings::loadDefaults() {
 	settings[Setting::CameraPanSpeed] = 0.4;
@@ -21,6 +21,7 @@ void Settings::loadDefaults() {
 	settings[Setting::NoSubregionColor] = Colour(1.0, 1.0, 1.0);
 	settings[Setting::RoomTintStrength] = 0.5;
 	settings[Setting::ForceExportCasing] = "upper";
+	settings[Setting::DropletGridVisibility] = DropletGridVisibility::AIR;
 
 	std::vector<Colour> subregionColors;
 	subregionColors.push_back(Colour(1.0, 0.0, 0.0)); // #ff0000
@@ -74,6 +75,7 @@ void Settings::init() {
 			else if (key == "NoSubregionColor") settings[Setting::NoSubregionColor] = stringToColour(value);
 			else if (key == "RoomTintStrength") settings[Setting::RoomTintStrength] = std::stod(value);
 			else if (key == "ForceExportCasing") settings[Setting::ForceExportCasing] = lowerValue == "lower" ? 1 : lowerValue == "upper" ? 2 : 0;
+			else if (key == "DropletGridVisibility") settings[Setting::DropletGridVisibility] = lowerValue == "none" ? DropletGridVisibility::NONE : (lowerValue == "all" ? DropletGridVisibility::ALL : DropletGridVisibility::AIR);
 			else if (key == "SubregionColors") {
 				std::vector<Colour> subregionColors;
 				for (std::string item : split(value, ", ")) {
