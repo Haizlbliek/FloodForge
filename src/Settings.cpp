@@ -40,7 +40,7 @@ void Settings::loadDefaults() {
 void Settings::init() {
 	loadDefaults();
 
-	std::filesystem::path settingsPath = BASE_PATH / "assets" / "settings.cfg";
+	std::filesystem::path settingsPath = ASSETS_PATH / "settings.cfg";
 	if (!std::filesystem::exists(settingsPath)) return;
 
 	std::fstream settingsFile(settingsPath);
@@ -58,7 +58,7 @@ void Settings::init() {
 		try {
 			bool boolValue = (lowerValue == "true" || lowerValue == "yes" || lowerValue == "1");
 			
-			if (key == "Theme") loadTheme(value);
+			if (key == "Theme") loadThemes(value);
 			else if (key == "CameraPanSpeed") settings[Setting::CameraPanSpeed] = std::stod(value);
 			else if (key == "CameraZoomSpeed") settings[Setting::CameraZoomSpeed] = std::stod(value);
 			else if (key == "PopupScrollSpeed") settings[Setting::PopupScrollSpeed] = std::stod(value);

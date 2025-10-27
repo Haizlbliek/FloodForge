@@ -6,7 +6,7 @@ std::vector<std::filesystem::path> RecentFiles::recents;
 std::vector<std::string> RecentFiles::recentsNames;
 
 void RecentFiles::init() {
-	std::filesystem::path recentsPath = BASE_PATH / "assets" / "recents.txt";
+	std::filesystem::path recentsPath = ASSETS_PATH / "recents.txt";
 	if (!std::filesystem::exists(recentsPath)) return;
 	
 	std::ifstream recentsFile(recentsPath);
@@ -55,7 +55,7 @@ void RecentFiles::addPath(std::filesystem::path path) {
 }
 
 void RecentFiles::save() {
-	std::ofstream recentsFile(BASE_PATH / "assets" / "recents.txt");
+	std::ofstream recentsFile(ASSETS_PATH / "recents.txt");
 	
 	for (std::filesystem::path path : recents) {
 		recentsFile << path.generic_string() << "\n";

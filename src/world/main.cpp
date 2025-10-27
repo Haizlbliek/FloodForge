@@ -97,7 +97,7 @@ int main() {
 		EditorState::showAnniversary = (ts->tm_year == 125 && ts->tm_mon == 10 && ts->tm_mday < 22);
 	}
 
-	std::ifstream versionFile(BASE_PATH / "assets" / "version.txt");
+	std::ifstream versionFile(ASSETS_PATH / "version.txt");
 	std::string version;
 	std::getline(versionFile, version);
 	versionFile.close();
@@ -106,7 +106,7 @@ int main() {
 	Logger::info();
 
 	UI::window = new Window(1024, 1024);
-	UI::window->setIcon(BASE_PATH / "assets" / (EditorState::showAnniversary ? "iconAnniversary.png" : "icon.png"));
+	UI::window->setIcon(ASSETS_PATH / (EditorState::showAnniversary ? "iconAnniversary.png" : "icon.png"));
 	UI::window->setTitle("FloodForge World Editor");
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -114,11 +114,12 @@ int main() {
 		return -1;
 	}
 
-	EditorState::geometry = new Texture(BASE_PATH / "assets" / "geometry.png");
+	Settings::init();
+
+	EditorState::geometry = new Texture(getPath("geometry.png"));
 
 	DropletWindow::init();
 	UI::init(UI::window);
-	Settings::init();
 	Fonts::init();
 	MenuItems::init();
 	Popups::init();

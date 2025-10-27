@@ -11,7 +11,7 @@ std::vector<std::string> ConditionalTimelineTextures::timelines;
 GLuint ConditionalTimelineTextures::UNKNOWN = 0;
 
 void ConditionalTimelineTextures::init() {
-	std::filesystem::path timelinesDirectory = BASE_PATH / "assets" / "timelines";
+	std::filesystem::path timelinesDirectory = ASSETS_PATH / "timelines";
 
 	Logger::info("Loading timelines from: '", timelinesDirectory.generic_u8string(), "'");
 

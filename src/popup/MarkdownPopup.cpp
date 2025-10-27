@@ -210,7 +210,7 @@ void MarkdownPopup::loadFile(std::filesystem::path filePath) {
 			continue;
 		} else if (startsWith(line, "$")) {
 			lines.push_back({ MDType::IMAGE, {} });
-			images.push_back(new Texture(BASE_PATH / "assets" / line.substr(1)));
+			images.push_back(new Texture(ASSETS_PATH / line.substr(1)));
 			addNewline = 1;
 			continue;
 		} else {
