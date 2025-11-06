@@ -12,6 +12,13 @@ Requirements:
 
 - [MSYS2 MINGW](https://www.msys2.org)
 
+Open MSYS2 MINGW64 and run:
+```
+pcaman -Syu
+pacman -S mingw-w64-x86_64-toolchain
+pacman -S mingw-w64-x86_64-libutf8proc
+```
+
 #### One time build
 
 If you want to have a permanent executable that you can run whenever, use this option.
