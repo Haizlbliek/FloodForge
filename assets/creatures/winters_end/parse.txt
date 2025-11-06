@@ -1,0 +1,10 @@
+FrostLiz>FrostLizard
+GlaceLiz>GlaceLizard
+Glace>GlaceLizard
+ILiz>IceLizard
+MiroLiz>MirosLizard
+GlaceLiz>StormLizard
+Glace>StormLizard
+CrypticC>CrypticCenti
+FrostiCentipede>FrostiCenti
+Frosti>FrostiCenti

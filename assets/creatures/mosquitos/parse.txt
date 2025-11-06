@@ -1,0 +1,10 @@
+Angry Mosquito>AngryMosquito
+Mos A>AngryMosquito
+A Mos>AngryMosquito
+MosA>AngryMosquito
+AMos>AngryMosquito
+Exploding Mosquito>ExplodingMosquito
+Mos E>ExplodingMosquito
+E Mos>ExplodingMosquito
+MosE>ExplodingMosquito
+EMos>ExplodingMosquito
