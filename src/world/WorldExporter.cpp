@@ -2,6 +2,7 @@
 #include "Backup.hpp"
 
 #include "../math/Rect.hpp"
+#include "CreatureTextures.hpp"
 
 std::string roomNameCasing(std::string name) {
 	int casing = Settings::getSetting<int>(Settings::Setting::ForceExportCasing);
@@ -317,9 +318,9 @@ void WorldExporter::exportWorldFile() {
 					first = false;
 
 					if (room == EditorState::offscreenDen) {
-						file << "0-" << creature->type;
+						file << "0-" << CreatureTextures::exportCreatureNames[creature->type];
 					} else {
-						file << (i + room->RoomEntranceCount()) << "-" << creature->type;
+						file << (i + room->RoomEntranceCount()) << "-" << CreatureTextures::exportCreatureNames[creature->type];
 					}
 					if (!creature->tag.empty()) {
 						if (creature->tag == "MEAN") {
@@ -383,7 +384,7 @@ void WorldExporter::exportWorldFile() {
 				}
 
 				while (creature != nullptr) {
-					file << ((creature->type.empty() || creature->count == 0) ? "NONE" : creature->type);
+					file << ((creature->type.empty() || creature->count == 0) ? "NONE" : CreatureTextures::exportCreatureNames[creature->type]);
 
 					if (!creature->tag.empty()) {
 						if (creature->tag == "MEAN") {
@@ -432,7 +433,7 @@ void WorldExporter::exportWorldFile() {
 				file << ")";
 			}
 
-			file << roomNameCasing(room->roomName) << " : " << room->GarbageWormDenIndex() << "-" << worm.creatureType;
+			file << roomNameCasing(room->roomName) << " : " << room->GarbageWormDenIndex() << "-" << CreatureTextures::exportCreatureNames[worm.creatureType];
 			if (worm.count > 1) file << "-" << worm.count;
 			file << "\n";
 		}
