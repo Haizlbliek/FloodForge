@@ -12,6 +12,7 @@ std::vector<std::string> CreatureTextures::creatures;
 std::vector<std::string> CreatureTextures::creatureTags;
 std::unordered_map<std::string, std::string> CreatureTextures::parseMap;
 std::vector<std::string> CreatureTextures::creatureOrder;
+std::unordered_map<std::string, std::string> CreatureTextures::exportCreatureNames;
 GLuint CreatureTextures::UNKNOWN = 0;
 
 bool validExtension(std::string extension) {
@@ -47,6 +48,7 @@ void CreatureTextures::loadCreaturesFromFolder(std::filesystem::path path, std::
 			std::string creature = toLower(prefix + entry.path().stem().generic_u8string());
 			if (include) creatures.push_back(creature);
 			creatureTextures[creature] = loadTexture(entry.path().generic_u8string());
+			exportCreatureNames[creature] = prefix + entry.path().stem().generic_u8string();
 		}
 	}
 
