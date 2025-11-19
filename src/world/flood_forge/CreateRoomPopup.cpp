@@ -6,6 +6,31 @@
 #include "../droplet/LevelUtils.hpp"
 #include "../droplet/DropletWindow.hpp"
 
+std::string roomName(std::string start, int v) {
+	if (v < 10) {
+		return start + "0" + std::to_string(v);
+	} else {
+		return start + std::to_string(v);
+	}
+}
+
+std::string generateRoomName(int screens) {
+	screens--;
+
+	std::string c = "";
+	while (screens >= 26) {
+		c = std::string(1, (char) ('A' + (screens % 26))) + c;
+		screens = int(screens / 26) - 1;
+	}
+	c = std::string(1, (char) ('A' + (screens % 26))) + c;
+
+	int i = 1;
+	while (!findFileCaseInsensitive(EditorState::region.roomsDirectory, EditorState::region.acronym + "_" + roomName(c, i) + ".txt").empty()) {
+		i++;
+	}
+	return roomName(c, i);
+}
+
 CreateRoomPopup::CreateRoomPopup() : Popup() {
 }
 
@@ -31,6 +56,8 @@ void CreateRoomPopup::draw() {
 		fillLayer1 = true;
 		fillLayer2 = true;
 		placeCameras = true;
+		EditorState::placingRoomSize.x = 1;
+		EditorState::placingRoomSize.y = 1;
 
 		init = false;
 	}
@@ -50,6 +77,15 @@ void CreateRoomPopup::draw() {
 	Fonts::rainworld->writeCentered(EditorState::region.acronym + "_", bounds.x0 + 0.01, y + 0.025, 0.03, CENTER_Y);
 	double roomNameX = Fonts::rainworld->getTextWidth(EditorState::region.acronym + "_", 0.03);
 	UI::TextInputResponse roomNameResponse = UI::TextInput(Rect::fromSize(bounds.x0 + 0.01 + roomNameX, y, 0.35, 0.05), roomName);
+	if (UI::TextButton(Rect::fromSize(bounds.x0 + 0.01 + roomNameX + 0.36, y, 0.2, 0.05), "Generate", UI::TextButtonMods().Disabled(screenWidth.focused() || screenHeight.focused() || roomName.focused()))) {
+		try {
+			int screens = std::max(std::stod(screenWidth.value), 1.0) * std::max(std::stod(screenHeight.value), 1.0);
+			roomName.value = generateRoomName(screens);
+			roomName.submitted = true;
+		} catch (std::exception) {
+			Logger::info("Failed to generate room name");
+		}
+	}
 
 	y -= 0.06;
 	setThemeColor(ThemeColor::Text);

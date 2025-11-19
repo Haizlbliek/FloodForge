@@ -36,6 +36,8 @@ namespace UI {
 		bool submitted;
 
 		~Editable();
+
+		bool focused();
 	};
 
 	enum class TextInputEditableType {

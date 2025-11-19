@@ -18,6 +18,10 @@ UI::Editable::~Editable() {
 	UI::Delete(*this);
 }
 
+bool UI::Editable::focused() {
+	return UI::currentEditable == this;
+}
+
 UI::ButtonResponse::operator bool() const {
 	return clicked;
 }
