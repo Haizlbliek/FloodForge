@@ -4,6 +4,28 @@
 #include "../popup/InfoPopup.hpp"
 #include "CreatureTextures.hpp"
 
+std::string findAcronym(std::filesystem::path regionsPath, std::string acronym) {
+	std::ifstream regions(regionsPath);
+
+	std::string line;
+	while (std::getline(regions, line)) {
+		if (startsWith(line, "[ADD]")) {
+			line = line.substr(line.find_last_of(']') + 1);
+		}
+
+		line.erase(0, line.find_first_not_of(" \t\n"));
+		line.erase(line.find_last_not_of(" \t\n") + 1);
+
+		if (compareInsensitive(line, acronym)) {
+			return line;
+		}
+	}
+
+	regions.close();
+
+	return acronym;
+}
+
 void WorldParser::importWorldFile(std::filesystem::path path) {
 	RecentFiles::addPath(path);
 	
@@ -12,6 +34,22 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 	EditorState::region.exportDirectory = path.parent_path();
 	EditorState::region.acronym = path.stem().generic_u8string();
 	EditorState::region.acronym = EditorState::region.acronym.substr(EditorState::region.acronym.find_last_of('_') + 1);
+	std::filesystem::path regionsPath;
+	if (compareInsensitive(EditorState::region.exportDirectory.parent_path().stem().string(), "world")) {
+		regionsPath = findFileCaseInsensitive(EditorState::region.exportDirectory.parent_path(), "regions.txt");
+	}
+	if (regionsPath.empty()) {
+		std::filesystem::path path = findDirectoryCaseInsensitive(EditorState::region.exportDirectory.parent_path().parent_path(), "modify");
+		if (!path.empty()) path = findDirectoryCaseInsensitive(path, "world");
+		if (!path.empty()) {
+			path = findFileCaseInsensitive(EditorState::region.exportDirectory.parent_path(), "regions.txt");
+		}
+	}
+
+	if (!regionsPath.empty()) {
+		Logger::info("Found regions.txt, looking for acronym");
+		EditorState::region.acronym = findAcronym(regionsPath, EditorState::region.acronym);
+	}
 	
 	Logger::info("Opening world ", EditorState::region.acronym);
 	
@@ -115,9 +153,6 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 			}
 			
 			std::filesystem::path filePath = findFileCaseInsensitive(roomPath, roomName + ".txt");
-			if (filePath.empty()) {
-				Logger::error("File '", (roomPath / roomName).generic_u8string(), ".txt' could not be found.");
-			}
 
 			Room *room = nullptr;
 
@@ -132,6 +167,10 @@ void WorldParser::parseMap(std::filesystem::path mapFilePath, std::filesystem::p
 					room = EditorState::offscreenDen;
 				}
 			} else {
+				if (filePath.empty()) {
+					Logger::error("File '", (roomPath / roomName).generic_u8string(), ".txt' could not be found.");
+				}
+
 				room = new Room(filePath, filePath.stem().string());
 				EditorState::rooms.push_back(room);
 			}
@@ -301,6 +340,8 @@ void WorldParser::parseWorldRoom(std::string line, std::filesystem::path directo
 }
 
 void WorldParser::parseWorldCreature(std::string line) {
+	try {
+
 	std::vector<std::string> splits = split(line, " : ");
 	TimelineType timelineType = TimelineType::ALL;
 	std::set<std::string> timelines;
@@ -520,6 +561,10 @@ void WorldParser::parseWorldCreature(std::string line) {
 
 			den.creatures.push_back(denCreature);
 		}
+	}
+
+	} catch (std::exception) {
+		Logger::error("Failed to load creature line '", line, "'");
 	}
 }
 
