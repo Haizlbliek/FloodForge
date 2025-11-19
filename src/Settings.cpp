@@ -20,7 +20,7 @@ void Settings::loadDefaults() {
 	settings[Setting::DebugVisibleOutputPadding] = false;
 	settings[Setting::NoSubregionColor] = Color(1.0, 1.0, 1.0);
 	settings[Setting::RoomTintStrength] = 0.5;
-	settings[Setting::ForceExportCasing] = "upper";
+	settings[Setting::ForceExportCasing] = 3;
 	settings[Setting::DropletGridVisibility] = DropletGridVisibility::AIR;
 	settings[Setting::ConnectionOpacity] = 1.0f;
 
@@ -75,7 +75,7 @@ void Settings::init() {
 			else if (key == "DebugVisibleOutputPadding") settings[Setting::DebugVisibleOutputPadding] = boolValue;
 			else if (key == "NoSubregionColor") settings[Setting::NoSubregionColor] = stringToColor(value);
 			else if (key == "RoomTintStrength") settings[Setting::RoomTintStrength] = std::stod(value);
-			else if (key == "ForceExportCasing") settings[Setting::ForceExportCasing] = lowerValue == "lower" ? 1 : lowerValue == "upper" ? 2 : 0;
+			else if (key == "ForceExportCasing") settings[Setting::ForceExportCasing] = lowerValue == "lower" ? 1 : lowerValue == "upper" ? 2 : lowerValue == "match acronym" ? 3 : 0;
 			else if (key == "DropletGridVisibility") settings[Setting::DropletGridVisibility] = lowerValue == "none" ? DropletGridVisibility::NONE : (lowerValue == "all" ? DropletGridVisibility::ALL : DropletGridVisibility::AIR);
 			else if (key == "ConnectionOpacity") settings[Setting::ConnectionOpacity] = std::stod(value);
 			else if (key == "SubregionColors") {

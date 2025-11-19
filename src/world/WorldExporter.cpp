@@ -9,8 +9,21 @@ std::string roomNameCasing(std::string name) {
 
 	if (casing == 1) return toLower(name);
 	if (casing == 2) return toUpper(name);
+	if (casing == 3) {
+		if (startsWith(toLower(name), toLower(EditorState::region.acronym))) {
+			return EditorState::region.acronym + name.substr(EditorState::region.acronym.size());
+		}
+	}
 
 	return name;
+}
+
+std::string exportCreatureName(std::string creatureId) {
+	if (CreatureTextures::exportCreatureNames.count(creatureId) == 0) {
+		return creatureId;
+	}
+
+	return CreatureTextures::exportCreatureNames[creatureId];
 }
 
 void WorldExporter::exportMapFile() {
@@ -318,9 +331,9 @@ void WorldExporter::exportWorldFile() {
 					first = false;
 
 					if (room == EditorState::offscreenDen) {
-						file << "0-" << CreatureTextures::exportCreatureNames[creature->type];
+						file << "0-" << exportCreatureName(creature->type);
 					} else {
-						file << (i + room->RoomEntranceCount()) << "-" << CreatureTextures::exportCreatureNames[creature->type];
+						file << (i + room->RoomEntranceCount()) << "-" << exportCreatureName(creature->type);
 					}
 					if (!creature->tag.empty()) {
 						if (creature->tag == "MEAN") {
@@ -384,7 +397,7 @@ void WorldExporter::exportWorldFile() {
 				}
 
 				while (creature != nullptr) {
-					file << ((creature->type.empty() || creature->count == 0) ? "NONE" : CreatureTextures::exportCreatureNames[creature->type]);
+					file << ((creature->type.empty() || creature->count == 0) ? "NONE" : exportCreatureName(creature->type));
 
 					if (!creature->tag.empty()) {
 						if (creature->tag == "MEAN") {
@@ -433,7 +446,7 @@ void WorldExporter::exportWorldFile() {
 				file << ")";
 			}
 
-			file << roomNameCasing(room->roomName) << " : " << room->GarbageWormDenIndex() << "-" << CreatureTextures::exportCreatureNames[worm.creatureType];
+			file << roomNameCasing(room->roomName) << " : " << room->GarbageWormDenIndex() << "-" << exportCreatureName(worm.creatureType);
 			if (worm.count > 1) file << "-" << worm.count;
 			file << "\n";
 		}
