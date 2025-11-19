@@ -1,7 +1,7 @@
 #include "SubregionPopup.hpp"
 
 #include "../../ui/UI.hpp"
-#include "ColorEditPopup.hpp"
+#include "../popup/ColorEditPopup.hpp"
 
 SubregionPopup::SubregionPopup(std::set<Room*> newRooms) : Popup() {
 	for (Room *room : newRooms) rooms.insert(room);

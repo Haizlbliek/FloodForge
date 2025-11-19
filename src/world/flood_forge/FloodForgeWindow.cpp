@@ -12,12 +12,12 @@
 #include "../../popup/MarkdownPopup.hpp"
 #include "../../popup/ConfirmPopup.hpp"
 #include "../popup/SplashArtPopup.hpp"
-#include "../popup/SubregionPopup.hpp"
 #include "../popup/RoomTagPopup.hpp"
 #include "../popup/DenPopup.hpp"
 #include "../popup/RoomAttractivenessPopup.hpp"
 #include "../popup/ConditionalPopup.hpp"
-#include "../popup/CreateRoomPopup.hpp"
+#include "SubregionPopup.hpp"
+#include "CreateRoomPopup.hpp"
 
 Vector2 FloodForgeWindow::worldMouse;
 

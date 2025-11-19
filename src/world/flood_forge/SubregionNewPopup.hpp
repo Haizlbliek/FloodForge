@@ -10,7 +10,7 @@
 #include "../../Theme.hpp"
 
 #include "../../popup/Popups.hpp"
-#include "AcronymPopup.hpp"
+#include "../popup/AcronymPopup.hpp"
 
 #include "../Globals.hpp"
 #include "../Room.hpp"
