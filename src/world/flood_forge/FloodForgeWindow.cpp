@@ -21,29 +21,36 @@
 
 Vector2 FloodForgeWindow::worldMouse;
 
-bool FloodForgeWindow::cameraPanning = false;
-bool FloodForgeWindow::cameraPanningBlocked = false;
-Vector2 FloodForgeWindow::cameraPanStartMouse = Vector2(0.0f, 0.0f);
-Vector2 FloodForgeWindow::cameraPanStart = Vector2(0.0f, 0.0f);
-Vector2 FloodForgeWindow::cameraPanTo = Vector2(0.0f, 0.0f);
-double FloodForgeWindow::cameraScaleTo = EditorState::cameraScale;
+namespace {
 
-Room *FloodForgeWindow::holdingRoom = nullptr;
-Vector2 FloodForgeWindow::holdingStart = Vector2(0.0f, 0.0f);
-int FloodForgeWindow::holdingType = 0;
+	bool cameraPanning = false;
+	bool cameraPanningBlocked = false;
+	Vector2 cameraPanStartMouse = Vector2(0.0f, 0.0f);
+	Vector2 cameraPanStart = Vector2(0.0f, 0.0f);
+	Vector2 cameraPanTo = Vector2(0.0f, 0.0f);
+	double cameraScaleTo = EditorState::cameraScale;
+	
+	int roomSnap = ROOM_SNAP_TILE;
+	Vector2 selectionStart;
+	Vector2 selectionEnd;
+	
+	Room *holdingRoom = nullptr;
+	Vector2 holdingStart = Vector2(0.0f, 0.0f);
+	int holdingType = 0;
+	
+	enum class ConnectionState {
+		None,
+		NoConnection,
+		Connection
+	};
+	
+	Vector2 *connectionStart = nullptr;
+	Vector2 *connectionEnd = nullptr;
+	Connection *currentConnection = nullptr;
+	bool currentConnectionValid = false;
+	ConnectionState connectionState = ConnectionState::None;
 
-Vector2 FloodForgeWindow::selectionStart;
-Vector2 FloodForgeWindow::selectionEnd;
-int FloodForgeWindow::roomSnap = ROOM_SNAP_TILE;
-
-Vector2 *FloodForgeWindow::connectionStart = nullptr;
-Vector2 *FloodForgeWindow::connectionEnd = nullptr;
-Connection *FloodForgeWindow::currentConnection = nullptr;
-bool FloodForgeWindow::currentConnectionValid = false;
-std::string FloodForgeWindow::connectionError = "";
-FloodForgeWindow::ConnectionState FloodForgeWindow::connectionState = FloodForgeWindow::ConnectionState::None;
-
-
+}
 
 void FloodForgeWindow::updateCamera() {
 	bool isHoveringPopup = false;
@@ -110,7 +117,92 @@ void FloodForgeWindow::updateCamera() {
 	EditorState::cameraOffset.y += (cameraPanTo.y - EditorState::cameraOffset.y) * Settings::getSetting<double>(Settings::Setting::CameraPanSpeed);
 }
 
-void FloodForgeWindow::updateOriginalControls() {
+void updateConnectionControls() {
+	Room *hoveringRoom = nullptr;
+	int hoveringConnection = 0;
+	double maxDist = EditorState::selectorScale;
+	for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
+		Room *room = *it;
+		if (!EditorState::visibleLayers[room->layer]) continue;
+		room->hoveredRoomExit = -1;
+
+		for (int i = 0; i < room->RoomEntranceCount(); i++) {
+			Vector2 spot = room->getRoomEntranceOffsetPosition(i);
+			double dist = FloodForgeWindow::worldMouse.distanceTo(spot);
+			if (dist < maxDist) {
+				maxDist = dist;
+				hoveringRoom = room;
+				hoveringConnection = i;
+			}
+		}
+	}
+	if (hoveringRoom != nullptr) {
+		hoveringRoom->hoveredRoomExit = hoveringConnection;
+	}
+
+	if (UI::mouse.rightMouse) {
+		if (connectionState == ConnectionState::None) {
+			if (hoveringRoom == nullptr) {
+				connectionState = ConnectionState::NoConnection;
+				return;
+			}
+	
+			connectionStart = new Vector2(hoveringRoom->getRoomEntranceOffsetPosition(hoveringConnection));
+			connectionEnd = new Vector2(connectionStart);
+			currentConnection = new Connection(hoveringRoom, hoveringConnection, nullptr, 0);
+			currentConnectionValid = false;
+			connectionState = ConnectionState::Connection;
+		} else if (connectionState == ConnectionState::Connection) {
+			if (hoveringRoom != nullptr) {
+				Vector2 &roomPosition = hoveringRoom->currentPosition();
+				connectionEnd->x = hoveringRoom->getRoomEntranceOffsetPosition(hoveringConnection).x;
+				connectionEnd->y = hoveringRoom->getRoomEntranceOffsetPosition(hoveringConnection).y;
+				currentConnection->roomB = hoveringRoom;
+				currentConnection->connectionB = hoveringConnection;
+				currentConnectionValid = true;
+	
+				if (currentConnection->roomA == currentConnection->roomB) {
+					currentConnectionValid = false;
+				} else {
+					for (Connection *other : currentConnection->roomB->connections) {
+						if (
+							(other->roomA == currentConnection->roomB && other->connectionA == currentConnection->connectionB) &&
+							(other->roomB == currentConnection->roomA && other->connectionB == currentConnection->connectionA)
+						) {
+							currentConnectionValid = false;
+							break;
+						}
+					}
+				}
+			} else {
+				connectionEnd->x = FloodForgeWindow::worldMouse.x;
+				connectionEnd->y = FloodForgeWindow::worldMouse.y;
+				currentConnection->roomB = nullptr;
+				currentConnection->connectionB = 0;
+				currentConnectionValid = false;
+			}
+		}
+	} else {
+		if (currentConnection != nullptr) {
+			if (currentConnectionValid) {
+				EditorState::connections.push_back(currentConnection);
+				currentConnection->roomA->connect(currentConnection);
+				currentConnection->roomB->connect(currentConnection);
+			} else {
+				delete currentConnection;
+			}
+
+			currentConnection = nullptr;
+		}
+
+		if (connectionStart != nullptr) { delete connectionStart; connectionStart = nullptr; }
+		if (connectionEnd != nullptr) { delete connectionEnd; connectionEnd = nullptr; }
+
+		connectionState = ConnectionState::None;
+	}
+}
+
+void updateOriginalControls() {
 	if (UI::mouse.leftMouse) {
 		if (!UI::mouse.lastLeftMouse) {
 			if (EditorState::selectingState == 0) {
@@ -118,9 +210,9 @@ void FloodForgeWindow::updateOriginalControls() {
 					Room *room = *it;
 					if (!EditorState::visibleLayers[room->layer]) continue;
 
-					if (room->inside(worldMouse)) {
+					if (room->inside(FloodForgeWindow::worldMouse)) {
 						holdingRoom = room;
-						holdingStart = worldMouse;
+						holdingStart = FloodForgeWindow::worldMouse;
 						EditorState::roomPossibleSelect = room;
 						EditorState::selectingState = 3;
 						break;
@@ -131,8 +223,8 @@ void FloodForgeWindow::updateOriginalControls() {
 			if (EditorState::selectingState == 0) {
 				if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
 					EditorState::selectingState = 1;
-					selectionStart = worldMouse;
-					selectionEnd = worldMouse;
+					selectionStart = FloodForgeWindow::worldMouse;
+					selectionEnd = FloodForgeWindow::worldMouse;
 					if (!UI::window->modifierPressed(GLFW_MOD_CONTROL)) EditorState::selectedRooms.clear();
 				} else {
 					EditorState::selectingState = 5;
@@ -156,7 +248,7 @@ void FloodForgeWindow::updateOriginalControls() {
 					EditorState::selectingState = 4;
 				}
 
-				Vector2 offset = (worldMouse - holdingStart);
+				Vector2 offset = (FloodForgeWindow::worldMouse - holdingStart);
 				if (roomSnap == ROOM_SNAP_TILE) offset.round();
 
 				for (Room *room2 : EditorState::selectedRooms) {
@@ -175,7 +267,7 @@ void FloodForgeWindow::updateOriginalControls() {
 			}
 
 			if (EditorState::selectingState == 1) {
-				selectionEnd = worldMouse;
+				selectionEnd = FloodForgeWindow::worldMouse;
 			}
 
 			if (EditorState::selectingState == 5) {
@@ -220,7 +312,7 @@ void FloodForgeWindow::updateOriginalControls() {
 	}
 }
 
-void FloodForgeWindow::updateFloodForgeControls() {
+void updateFloodForgeControls() {
 	if (UI::mouse.leftMouse) {
 		if (!UI::mouse.lastLeftMouse) {
 			if (EditorState::selectingState == 0) {
@@ -228,9 +320,9 @@ void FloodForgeWindow::updateFloodForgeControls() {
 					Room *room = *it;
 					if (!EditorState::visibleLayers[room->layer]) continue;
 
-					if (room->inside(worldMouse)) {
+					if (room->inside(FloodForgeWindow::worldMouse)) {
 						holdingRoom = room;
-						holdingStart = worldMouse;
+						holdingStart = FloodForgeWindow::worldMouse;
 						EditorState::roomPossibleSelect = room;
 						EditorState::selectingState = 3;
 						break;
@@ -240,8 +332,8 @@ void FloodForgeWindow::updateFloodForgeControls() {
 
 			if (EditorState::selectingState == 0) {
 				EditorState::selectingState = 1;
-				selectionStart = worldMouse;
-				selectionEnd = worldMouse;
+				selectionStart = FloodForgeWindow::worldMouse;
+				selectionEnd = FloodForgeWindow::worldMouse;
 				if (!UI::window->modifierPressed(GLFW_MOD_SHIFT) && !UI::window->modifierPressed(GLFW_MOD_CONTROL)) {
 					EditorState::selectedRooms.clear();
 				}
@@ -262,7 +354,7 @@ void FloodForgeWindow::updateFloodForgeControls() {
 					EditorState::selectingState = 4;
 				}
 
-				Vector2 offset = (worldMouse - holdingStart);
+				Vector2 offset = (FloodForgeWindow::worldMouse - holdingStart);
 				if (roomSnap == ROOM_SNAP_TILE) offset.round();
 
 				for (Room *room2 : EditorState::selectedRooms) {
@@ -280,7 +372,7 @@ void FloodForgeWindow::updateFloodForgeControls() {
 			}
 
 			if (EditorState::selectingState == 1) {
-				selectionEnd = worldMouse;
+				selectionEnd = FloodForgeWindow::worldMouse;
 				// selectedRooms.clear();
 			}
 		}
@@ -356,108 +448,10 @@ void FloodForgeWindow::updateMain() {
 		Popups::addPopup(new MarkdownPopup(BASE_PATH / "docs" / "controls.md"));
 	}
 
-	//// Connections
-	connectionError = "";
-	if (UI::mouse.rightMouse) {
-		Room *hoveringRoom = nullptr;
-		for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
-			Room *room = (*it);
-			if (!EditorState::visibleLayers[room->layer]) continue;
+	// Connections
+	updateConnectionControls();
 
-			if (room->inside(worldMouse)) {
-				hoveringRoom = room;
-				break;
-			}
-		}
-
-		Vector2i tilePosition;
-
-		if (hoveringRoom != nullptr) {
-			Vector2 &roomPosition = hoveringRoom->currentPosition();
-			tilePosition = Vector2i(
-				floor(worldMouse.x - roomPosition.x),
-				-1 - floor(worldMouse.y - roomPosition.y)
-			);
-		} else {
-			tilePosition = Vector2i(-1, -1);
-		}
-
-		if (connectionState == ConnectionState::None) {
-			if (connectionStart != nullptr) { delete connectionStart; connectionStart = nullptr; }
-			if (connectionEnd != nullptr) { delete connectionEnd; connectionEnd = nullptr; }
-
-			if (hoveringRoom != nullptr) {
-				Vector2 &roomPosition = hoveringRoom->currentPosition();
-				int connectionId = hoveringRoom->getRoomEntranceId(tilePosition);
-
-				if (connectionId != -1) {
-					connectionStart = new Vector2(floor(worldMouse.x - roomPosition.x) + 0.5 + roomPosition.x, floor(worldMouse.y - roomPosition.y) + 0.5 + roomPosition.y);
-					connectionEnd = new Vector2(connectionStart);
-					currentConnection = new Connection(hoveringRoom, connectionId, nullptr, 0);
-					currentConnectionValid = false;
-				}
-			}
-
-			connectionState = (connectionStart == nullptr) ? ConnectionState::NoConnection : ConnectionState::Connection;
-		} else if (connectionState == ConnectionState::Connection) {
-			int connectionId = -1;
-
-			if (hoveringRoom != nullptr) {
-				connectionId = hoveringRoom->getRoomEntranceId(tilePosition);
-			}
-
-			if (connectionId != -1) {
-				Vector2 &roomPosition = hoveringRoom->currentPosition();
-				connectionEnd->x = floor(worldMouse.x - roomPosition.x) + 0.5 + roomPosition.x;
-				connectionEnd->y = floor(worldMouse.y - roomPosition.y) + 0.5 + roomPosition.y;
-				currentConnection->roomB = hoveringRoom;
-				currentConnection->connectionB = connectionId;
-				currentConnectionValid = true;
-
-				if (currentConnection->roomA == currentConnection->roomB) {
-					connectionError = "Can't connect to same room";
-					currentConnectionValid = false;
-				} else {
-					for (Connection *other : currentConnection->roomB->connections) {
-						if (
-							(other->roomA == currentConnection->roomB && other->connectionA == currentConnection->connectionB) &&
-							(other->roomB == currentConnection->roomA && other->connectionB == currentConnection->connectionA)
-						) {
-							connectionError = "Can't perform same connection twice";
-							currentConnectionValid = false;
-							break;
-						}
-					}
-				}
-			} else {
-				connectionEnd->x = worldMouse.x;
-				connectionEnd->y = worldMouse.y;
-				currentConnection->roomB = nullptr;
-				currentConnection->connectionB = 0;
-				currentConnectionValid = false;
-				connectionError = "Needs to connect";
-			}
-		}
-	} else {
-		if (currentConnection != nullptr) {
-			if (currentConnectionValid) {
-				EditorState::connections.push_back(currentConnection);
-				currentConnection->roomA->connect(currentConnection);
-				currentConnection->roomB->connect(currentConnection);
-			} else {
-				delete currentConnection;
-			}
-
-			currentConnection = nullptr;
-		}
-
-		if (connectionStart != nullptr) { delete connectionStart; connectionStart = nullptr; }
-		if (connectionEnd != nullptr) { delete connectionEnd; connectionEnd = nullptr; }
-
-		connectionState = ConnectionState::None;
-	}
-
-	//// Holding
+	// Holding
 	if (Settings::getSetting<bool>(Settings::Setting::OrignalControls)) {
 		updateOriginalControls();
 	} else {
@@ -848,27 +842,28 @@ void FloodForgeWindow::updateMain() {
 
 		Vector2 roomMouse = worldMouse - room->currentPosition();
 		Vector2 shortcutPosition;
+		double closestDistance = EditorState::selectorScale;
 
 		if (room->isOffscreen()) {
 			for (int i = 0; i < room->DenCount(); i++) {
 				shortcutPosition = Vector2(room->Width() * 0.5 - room->DenCount() * 2.0 + i * 4.0 + 2.5, -room->Height() * 0.25 - 0.5);
 
-				if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
+				if (roomMouse.distanceTo(shortcutPosition) < closestDistance) {
 					room->hoveredDen = i;
+					closestDistance = roomMouse.distanceTo(shortcutPosition);
 
 					found = true;
-					break;
 				}
 			}
 		} else {
 			for (Vector2i shortcut : room->DenEntrances()) {
 				shortcutPosition = Vector2(shortcut.x + 0.5, -1 - shortcut.y + 0.5);
 
-				if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
+				if (roomMouse.distanceTo(shortcutPosition) < closestDistance) {
 					room->hoveredDen = room->DenId(shortcut) - room->RoomEntranceCount();
+					closestDistance = roomMouse.distanceTo(shortcutPosition);
 
 					found = true;
-					break;
 				}
 			}
 		}
@@ -1031,11 +1026,6 @@ void FloodForgeWindow::Draw() {
 
 	/// Draw UI
 	applyFrustumToOrthographic(Vector2(0.0f, 0.0f), 0.0f, UI::screenBounds);
-
-	if (connectionError != "") {
-		Draw::color(1.0, 0.0, 0.0);
-		Fonts::rainworld->writeCentered(connectionError, UI::mouse.x / 512.0f - UI::screenBounds.x, -UI::mouse.y / 512.0f + UI::screenBounds.y, 0.05, CENTER_X);
-	}
 
 	DebugData::draw(UI::window, Vector2(
 		UI::mouse.x * EditorState::cameraScale + EditorState::cameraOffset.x,
