@@ -15,9 +15,9 @@ class Connection {
 	public:
 		Connection(Room *roomA, unsigned int connectionA, Room *roomB, unsigned int connectionB);
 
-		void draw(Vector2 mousePosition, double lineSize);
+		void draw(Vector2 mousePosition);
 
-		bool hovered(Vector2 mouse, double lineSize);
+		bool hovered(Vector2 mouse);
 
 		bool collides(Vector2 vector);
 

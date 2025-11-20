@@ -10,6 +10,13 @@
 #include "math/Vector.hpp"
 #include "math/Rect.hpp"
 
+#ifndef M_PI
+#define M_PI   3.141592653589
+#endif
+#ifndef M_PI_2
+#define M_PI_2 1.570796326795
+#endif
+
 #define LINE_NONE 0
 #define LINE_START 1
 #define LINE_END 2

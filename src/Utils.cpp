@@ -16,13 +16,6 @@
 #include <filesystem>
 #include <cstring>
 
-#ifndef M_PI
-#define M_PI   3.141592653589
-#endif
-#ifndef M_PI_2
-#define M_PI_2 1.570796326795
-#endif
-
 void fillRect(Rect rect) {
 	fillRect(rect.x0, rect.y0, rect.x1, rect.y1);
 }
