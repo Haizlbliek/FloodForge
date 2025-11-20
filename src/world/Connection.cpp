@@ -1,5 +1,6 @@
 #include "Connection.hpp"
 #include "ConditionalTimelineTextures.hpp"
+#include "Globals.hpp"
 
 Connection::Connection(Room *roomA, unsigned int connectionA, Room *roomB, unsigned int connectionB) : roomA(roomA), roomB(roomB), connectionA(connectionA), connectionB(connectionB) {
 	segments = 10;
@@ -43,14 +44,46 @@ void drawTexturedRect(GLuint texture, Rect rect) {
 	glDisable(GL_BLEND);
 }
 
-void Connection::draw(Vector2 mousePosition, double lineSize) {
-	if (hovered(mousePosition, lineSize)) {
+void customLine(float x0, float y0, float x1, float y1, float alpha0 = 1.0f, float alpha1 = 1.0f) {
+	double thickness = 0.25 / EditorState::lineSize;
+
+	double angle = atan2(y1 - y0, x1 - x0);
+
+	float a0x = x0 + cos(angle - M_PI_2) * thickness;
+	float a0y = y0 + sin(angle - M_PI_2) * thickness;
+	float b0x = x0 + cos(angle + M_PI_2) * thickness;
+	float b0y = y0 + sin(angle + M_PI_2) * thickness;
+	float a1x = x1 + cos(angle - M_PI_2) * thickness;
+	float a1y = y1 + sin(angle - M_PI_2) * thickness;
+	float b1x = x1 + cos(angle + M_PI_2) * thickness;
+	float b1y = y1 + sin(angle + M_PI_2) * thickness;
+
+	Draw::begin(Draw::QUADS);
+
+	Draw::alpha(alpha0);
+	Draw::vertex(a0x, a0y);
+	Draw::vertex(b0x, b0y);
+	Draw::alpha(alpha1);
+	Draw::vertex(b1x, b1y);
+	Draw::vertex(a1x, a1y);
+
+	Draw::end();
+}
+
+void Connection::draw(Vector2 mousePosition) {
+	bool aVisible = EditorState::visibleLayers[roomA->layer];
+	bool bVisible = EditorState::visibleLayers[roomB->layer];
+	float connectionOpacity = Settings::getSetting<double>(Settings::Setting::ConnectionOpacity);
+	if (!aVisible && !bVisible || connectionOpacity < 0.01f) return;
+
+	if (hovered(mousePosition) && aVisible && bVisible) {
 		Draw::color(RoomHelpers::RoomConnectionHover);
 	} else {
 		Draw::color(RoomHelpers::RoomConnection);
 	}
-	if (Settings::getSetting<double>(Settings::Setting::ConnectionOpacity) < 0.999f) {
-		Draw::alpha(Settings::getSetting<double>(Settings::Setting::ConnectionOpacity));
+	float alphaA = connectionOpacity * aVisible;
+	float alphaB = connectionOpacity * bVisible;
+	if (connectionOpacity <= 0.999f || aVisible != bVisible) {
 		glEnable(GL_BLEND);
 	}
 
@@ -64,7 +97,7 @@ void Connection::draw(Vector2 mousePosition, double lineSize) {
 	Vector2 center;
 
 	if (Settings::getSetting<int>(Settings::Setting::ConnectionType) == 0) {
-		drawLine(pointA.x, pointA.y, pointB.x, pointB.y, 16.0 / lineSize);
+		customLine(pointA.x, pointA.y, pointB.x, pointB.y, alphaA, alphaB);
 		center = Vector2((pointA.x + pointB.x) * 0.5, (pointA.y + pointB.y) * 0.5);
 	} else {
 		Vector2 directionA = roomA->getRoomEntranceDirectionVector(connectionA);
@@ -80,10 +113,11 @@ void Connection::draw(Vector2 mousePosition, double lineSize) {
 		directionB *= directionStrength;
 
 		Vector2 lastPoint = bezierCubic(0.0, pointA, pointA + directionA, pointB + directionB, pointB);
-		for (double t = 1.0 / segments; t <= 1.01; t += 1.0 / segments) {
+		double overSegments = 1.0 / segments;
+		for (double t = overSegments; t <= 1.01; t += overSegments) {
 			Vector2 point = bezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
 
-			drawLine(lastPoint.x, lastPoint.y, point.x, point.y, 16.0 / lineSize, LINE_NONE);
+			customLine(lastPoint.x, lastPoint.y, point.x, point.y, MathUtils::lerp(alphaA, alphaB, t - overSegments), MathUtils::lerp(alphaA, alphaB, t));
 
 			lastPoint = point;
 		}
@@ -93,16 +127,17 @@ void Connection::draw(Vector2 mousePosition, double lineSize) {
 
 	glDisable(GL_BLEND);
 
+	if (!aVisible || !bVisible) return;
 	if (timelines.size() == 0 || timelineType == TimelineType::ALL) return;
 
 	if (timelineType == TimelineType::EXCEPT) {
 		Draw::color(1.0, 0.0, 0.0);
-		double xSize = 2.25 / lineSize;
-		drawLine(center.x - xSize, center.y - xSize, center.x + xSize, center.y + xSize, 16.0 / lineSize);
-		drawLine(center.x + xSize, center.y - xSize, center.x - xSize, center.y + xSize, 16.0 / lineSize);
+		double xSize = 2.25 / EditorState::lineSize;
+		drawLine(center.x - xSize, center.y - xSize, center.x + xSize, center.y + xSize, 16.0 / EditorState::lineSize);
+		drawLine(center.x + xSize, center.y - xSize, center.x - xSize, center.y + xSize, 16.0 / EditorState::lineSize);
 	}
 
-	double size = 2.0 / lineSize;
+	double size = 2.0 / EditorState::lineSize;
 	int count = this->timelines.size();
 	int width = std::max((int) std::round(std::log2(count)), 1);
 	int height = std::max((int) std::ceil(((double) count) / width), 1);
@@ -124,12 +159,12 @@ void Connection::draw(Vector2 mousePosition, double lineSize) {
 	}
 }
 
-bool Connection::hovered(Vector2 mouse, double lineSize) {
+bool Connection::hovered(Vector2 mouse) {
 	Vector2 pointA = roomA->getRoomEntranceOffsetPosition(connectionA);
 	Vector2 pointB = roomB->getRoomEntranceOffsetPosition(connectionB);
 
 	if (Settings::getSetting<int>(Settings::Setting::ConnectionType) == 0) {
-		return lineDistance(mouse, pointA, pointB) < 1.0 / lineSize;
+		return lineDistance(mouse, pointA, pointB) < 1.0 / EditorState::lineSize;
 	} else {
 		Vector2 directionA = roomA->getRoomEntranceDirectionVector(connectionA) * directionStrength;
 		Vector2 directionB = roomB->getRoomEntranceDirectionVector(connectionB) * directionStrength;
@@ -138,7 +173,7 @@ bool Connection::hovered(Vector2 mouse, double lineSize) {
 		for (double t = 1.0 / segments; t <= 1.01; t += 1.0 / segments) {
 			Vector2 point = bezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
 
-			if (lineDistance(mouse, lastPoint, point) < 1.0 / lineSize) return true;
+			if (lineDistance(mouse, lastPoint, point) < 1.0 / EditorState::lineSize) return true;
 
 			lastPoint = point;
 		}

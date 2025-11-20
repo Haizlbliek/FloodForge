@@ -481,7 +481,7 @@ void FloodForgeWindow::updateMain() {
 			if (!EditorState::visibleLayers[connection->roomA->layer]) continue;
 			if (!EditorState::visibleLayers[connection->roomB->layer]) continue;
 
-			if (connection->hovered(worldMouse, EditorState::lineSize)) {
+			if (connection->hovered(worldMouse)) {
 				EditorState::connections.erase(std::remove(EditorState::connections.begin(), EditorState::connections.end(), connection), EditorState::connections.end());
 
 				connection->roomA->disconnect(connection);
@@ -771,7 +771,7 @@ void FloodForgeWindow::updateMain() {
 			if (!EditorState::visibleLayers[connection->roomA->layer]) continue;
 			if (!EditorState::visibleLayers[connection->roomB->layer]) continue;
 
-			if (connection->hovered(worldMouse, EditorState::lineSize)) {
+			if (connection->hovered(worldMouse)) {
 				openForConnection = connection;
 
 				break;
@@ -966,10 +966,7 @@ void FloodForgeWindow::Draw() {
 
 	/// Draw Connections
 	for (Connection *connection : EditorState::connections) {
-		if (!EditorState::visibleLayers[connection->roomA->layer]) continue;
-		if (!EditorState::visibleLayers[connection->roomB->layer]) continue;
-
-		connection->draw(worldMouse, EditorState::lineSize);
+		connection->draw(worldMouse);
 	}
 
 	if (connectionStart != nullptr && connectionEnd != nullptr) {

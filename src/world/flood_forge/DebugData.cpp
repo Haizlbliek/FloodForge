@@ -10,7 +10,7 @@ namespace DebugData {
 			if (!EditorState::visibleLayers[connection->roomA->layer]) continue;
 			if (!EditorState::visibleLayers[connection->roomB->layer]) continue;
 
-			if (connection->hovered(mouse, EditorState::lineSize)) {
+			if (connection->hovered(mouse)) {
 				hoveringConnection = connection;
 
 				break;
