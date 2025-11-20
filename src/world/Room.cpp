@@ -223,6 +223,13 @@ void Room::draw(Vector2 mousePosition, PositionType positionType) {
 		for (int i = 0; i < denShortcutEntrances.size(); i++) {
 			drawDen(dens[i], position.x + denShortcutEntrances[i].x, position.y - denShortcutEntrances[i].y, i == hoveredDen);
 		}
+
+		for (int i = 0; i < roomShortcutEntrances.size(); i++) {
+			Vector2 enterancePos = getRoomEntranceOffsetPosition(i);
+			bool connected = anyConnectionConnectedTo(i);
+			setThemeColor(connected ? ThemeColor::RoomConnection : ThemeColor::RoomShortcutRoom);
+			fillCircle(enterancePos.x, enterancePos.y, EditorState::selectorScale * (i == hoveredRoomExit ? 1.5 : 1.0) * (connected ? 0.5 : 1.0) * 0.25, 8);
+		}
 	}
 
 	if (this->timelineType != TimelineType::ALL) {
@@ -250,6 +257,8 @@ void Room::draw(Vector2 mousePosition, PositionType positionType) {
 }
 
 void Room::drawDen(Den &den, double x, double y, bool hovered) {
+	bool denEmpty = true;
+
 	for (int j = 0; j < den.creatures.size(); j++) {
 		DenCreature *creature = &den.creatures[j];
 		if (creature->type.empty() && creature->lineageTo == nullptr) continue;
@@ -257,10 +266,11 @@ void Room::drawDen(Den &den, double x, double y, bool hovered) {
 		double scale = EditorState::selectorScale;
 		double rectX = x + j * scale * 1.0 - (den.creatures.size() - 1) * 0.5 * scale;
 		double rectY = y;
-		
+
 		if (hovered) scale *= 1.5;
 
 		if (!creature->type.empty()) {
+			denEmpty = false;
 			RoomHelpers::drawTexture(CreatureTextures::getTexture(creature->type), rectX, rectY, scale);
 		}
 
@@ -279,6 +289,11 @@ void Room::drawDen(Den &den, double x, double y, bool hovered) {
 				Fonts::rainworld->writeCentered(std::to_string(int(chance * 100)) + "%", rectX + 0.5 + scale * 0.25, rectY + EditorState::selectorScale - 0.4 - scale * 0.5, 0.3 * scale, CENTER_XY);
 			}
 		}
+	}
+
+	if (denEmpty) {
+		setThemeColor(ThemeColor::RoomShortcutDen);
+		fillCircle(x + 0.5, y - 0.5, EditorState::selectorScale * (hovered ? 1.5 : 1.0) * 0.25, 8);
 	}
 }
 
@@ -391,6 +406,18 @@ bool Room::canConnect(unsigned int connectionId) {
 	
 	return true;
 }
+
+bool Room::anyConnectionConnectedTo(unsigned int connectionId) {
+	if (shortcutExits.size() <= connectionId) return false;
+
+	for (Connection *connection : connections) {
+		if (connection->roomA == this && connection->connectionA == connectionId) return true;
+		if (connection->roomB == this && connection->connectionB == connectionId) return true;
+	}
+
+	return false;
+}
+
 void Room::connect(Connection *connection) {
 	connections.push_back(connection);
 }

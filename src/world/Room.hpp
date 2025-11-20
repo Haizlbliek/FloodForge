@@ -113,8 +113,10 @@ class Room {
 		Vector2 getRoomEntranceDirectionVector(unsigned int connectionId) const;
 
 		Direction getRoomEntranceDirection(unsigned int connectionId) const;
-		
+
 		bool canConnect(unsigned int connectionId);
+
+		bool anyConnectionConnectedTo(unsigned int connectionId);
 
 		void connect(Connection *connection);
 
@@ -163,6 +165,7 @@ class Room {
 		ExtraRoomData data;
 
 		int hoveredDen = -1;
+		int hoveredRoomExit = -1;
 
 		std::set<std::string> timelines;
 		TimelineType timelineType;

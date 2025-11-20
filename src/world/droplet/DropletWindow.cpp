@@ -13,99 +13,103 @@ bool DropletWindow::showResize = false;
 Vector2i DropletWindow::resizeSize;
 Vector2i DropletWindow::resizeOffset;
 
-enum class EditorTab {
-	DETAILS,
-	GEOMETRY,
-	CAMERA
-};
-std::string TAB_NAMES[3] = { "Environment", "Geometry", "Cameras" };
-
-enum class GeometryTool {
-	WALL,
-	SLOPE,
-	PLATFORM,
-	BACKGROUND_WALL,
-	HORIZONTAL_POLE,
-	VERTICAL_POLE,
-	SPEAR,
-	ROCK,
-	SHORTCUT,
-	ROOM_EXIT,
-	CREATURE_DEN,
-	WACK_A_MOLE,
-	SCAVENGER_DEN,
-	GARBAGE_WORM_DEN,
-	WORMGRASS,
-	BATFLY_HIVE
-};
-std::string GEOMETRY_TOOL_NAMES[16] = { "Wall", "Slope", "Platform", "Background Wall", "Horizontal Pole", "Vertical Pole", "Spear", "Rock", "Shortcut", "Room Exit", "Creature Den", "Wack a Mole Hole", "Scavenger Den", "Garbage Worm Den", "Wormgrass", "Batfly Hive" };
-
-class Camera {
-	public:
-		Vector2 position;
-		Vector2 angle0;
-		Vector2 angle1;
-		Vector2 angle2;
-		Vector2 angle3;
-};
-
-struct WaterSpot {
-	Vector2 pos;
-	Vector2 size;
-
-	bool intersects(WaterSpot &other) {
-		return pos.x <= other.pos.x + other.size.x && pos.y <= other.pos.y + other.size.y && pos.x + size.x >= other.pos.x && pos.y + size.y >= other.pos.y;
-	}
-};
-
 bool DropletWindow::showObjects = false;
 
 Room *DropletWindow::room = nullptr;
 
-Vector2 transformedMouse;
-Rect roomRect;
-Vector2i mouseTile;
-Vector2i lastMouseTile;
-bool lastMouseDrawing;
-bool blockMouse = false;
+namespace {
 
-EditorTab currentTab;
-GeometryTool selectedTool = GeometryTool::WALL;
+	enum class EditorTab {
+		DETAILS,
+		GEOMETRY,
+		CAMERA
+	};
+	std::string TAB_NAMES[3] = { "Environment", "Geometry", "Cameras" };
+	
+	enum class GeometryTool {
+		WALL,
+		SLOPE,
+		PLATFORM,
+		BACKGROUND_WALL,
+		HORIZONTAL_POLE,
+		VERTICAL_POLE,
+		SPEAR,
+		ROCK,
+		SHORTCUT,
+		ROOM_EXIT,
+		CREATURE_DEN,
+		WACK_A_MOLE,
+		SCAVENGER_DEN,
+		GARBAGE_WORM_DEN,
+		WORMGRASS,
+		BATFLY_HIVE
+	};
+	std::string GEOMETRY_TOOL_NAMES[16] = { "Wall", "Slope", "Platform", "Background Wall", "Horizontal Pole", "Vertical Pole", "Spear", "Rock", "Shortcut", "Room Exit", "Creature Den", "Wack a Mole Hole", "Scavenger Den", "Garbage Worm Den", "Wormgrass", "Batfly Hive" };
+	
+	class Camera {
+		public:
+			Vector2 position;
+			Vector2 angle0;
+			Vector2 angle1;
+			Vector2 angle2;
+			Vector2 angle3;
+	};
+	
+	struct WaterSpot {
+		Vector2 pos;
+		Vector2 size;
+	
+		bool intersects(WaterSpot &other) {
+			return pos.x <= other.pos.x + other.size.x && pos.y <= other.pos.y + other.size.y && pos.x + size.x >= other.pos.x && pos.y + size.y >= other.pos.y;
+		}
+	};
+	
+	Vector2 transformedMouse;
+	Rect roomRect;
+	Vector2i mouseTile;
+	Vector2i lastMouseTile;
+	bool lastMouseDrawing;
+	bool blockMouse = false;
+	
+	EditorTab currentTab;
+	GeometryTool selectedTool = GeometryTool::WALL;
+	
+	std::vector<Camera> cameras;
+	Camera *selectedCamera = nullptr;
+	
+	bool enclosedRoom = false;
+	bool waterInFront = false;
+	
+	int *backupGeometry = nullptr;
+	int backupWater;
+	int backupWidth;
+	int backupHeight;
+	
+	std::vector<Object *> objects;
+	std::vector<TerrainHandleObject *> terrainHandleObjects;
+	std::vector<MudPitObject *> mudPitObjects;
+	std::vector<AirPocketObject *> airPocketObjects;
+	
+	bool terrainNeedsRefresh = false;
+	bool hasTerrain = false;
+	std::vector<Vector2> terrain;
+	int trashCanState = 0;
+	
+	bool waterNeedsRefresh = false;
+	std::vector<WaterSpot> water;
+	
+	Vector2 cameraOffset;
+	double cameraScale = 40.0;
+	double cameraScaleTo = 40.0;
+	bool cameraPanning = false;
+	bool cameraPanningBlocked = false;
+	Vector2 cameraPanStartMouse = Vector2(0.0f, 0.0f);
+	Vector2 cameraPanStart = Vector2(0.0f, 0.0f);
+	Vector2 cameraPanTo = Vector2(0.0f, 0.0f);
+	
+	std::string hoverText = "";
 
-std::vector<Camera> cameras;
-Camera *selectedCamera = nullptr;
-
-bool enclosedRoom = false;
-bool waterInFront = false;
-
-int *backupGeometry = nullptr;
-int backupWater;
-int backupWidth;
-int backupHeight;
-
-std::vector<Object *> objects;
-std::vector<TerrainHandleObject *> terrainHandleObjects;
-std::vector<MudPitObject *> mudPitObjects;
-std::vector<AirPocketObject *> airPocketObjects;
-
-bool terrainNeedsRefresh = false;
-bool hasTerrain = false;
-std::vector<Vector2> terrain;
-int trashCanState = 0;
-
-bool waterNeedsRefresh = false;
-std::vector<WaterSpot> water;
-
-Vector2 cameraOffset;
-double cameraScale = 40.0;
-double cameraScaleTo = 40.0;
-bool cameraPanning = false;
-bool cameraPanningBlocked = false;
-Vector2 cameraPanStartMouse = Vector2(0.0f, 0.0f);
-Vector2 cameraPanStart = Vector2(0.0f, 0.0f);
-Vector2 cameraPanTo = Vector2(0.0f, 0.0f);
-
-std::string hoverText = "";
+}
 
 void DropletWindow::init() {
 }
