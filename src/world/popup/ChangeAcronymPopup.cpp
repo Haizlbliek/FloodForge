@@ -19,9 +19,9 @@ void ChangeAcronymPopup::submit(std::string acronym) {
 			Den &oldDen = EditorState::offscreenDen->getDen();
 	
 			Den &newDen = newOffscreenDen->getDen();
-			newDen.creatures.push_back(DenLineage(oldDen.creatures[0].type, oldDen.creatures[0].count, oldDen.creatures[0].tag, oldDen.creatures[0].data));
-			DenCreature *creature = &newDen.creatures[0];
-			const DenCreature *oldCreature = &oldDen.creatures[0];
+			newDen.creatures.push_back(new DenLineage(oldDen.creatures[0]->type, oldDen.creatures[0]->count, oldDen.creatures[0]->tag, oldDen.creatures[0]->data));
+			DenCreature *creature = newDen.creatures[0];
+			const DenCreature *oldCreature = oldDen.creatures[0];
 			while (oldCreature->lineageTo != nullptr) {
 				creature->lineageTo = new DenCreature(oldCreature->lineageTo->type, oldCreature->lineageTo->count, oldCreature->lineageTo->tag, oldCreature->lineageTo->data);
 				creature = creature->lineageTo;

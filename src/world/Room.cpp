@@ -258,7 +258,7 @@ void Room::drawDen(Den &den, double x, double y, bool hovered) {
 	bool denEmpty = true;
 
 	for (int j = 0; j < den.creatures.size(); j++) {
-		DenCreature *creature = &den.creatures[j];
+		DenCreature *creature = den.creatures[j];
 		if (creature->type.empty() && creature->lineageTo == nullptr) continue;
 
 		double scale = EditorState::selectorScale;

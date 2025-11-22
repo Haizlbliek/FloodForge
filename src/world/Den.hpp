@@ -33,7 +33,7 @@ class Den {
 	public:
 		Den();
 
-		std::vector<DenLineage> creatures;
+		std::vector<DenLineage *> creatures;
 };
 
 class GarbageWormDen {

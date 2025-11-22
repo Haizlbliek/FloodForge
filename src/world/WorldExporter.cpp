@@ -277,13 +277,13 @@ void WorldExporter::exportWorldFile() {
 
 			const Den &den = room->CreatureDen01(i);
 			for (int j = 0; j < den.creatures.size(); j++) {
-				const DenLineage &creature = den.creatures[j];
+				const DenLineage *creature = den.creatures[j];
 
-				if (creature.lineageTo != nullptr) continue;
+				if (creature->lineageTo != nullptr) continue;
 
-				if (creature.type.empty() || creature.count == 0) continue;
+				if (creature->type.empty() || creature->count == 0) continue;
 
-				nonLineageCreatures.push_back(&creature);
+				nonLineageCreatures.push_back(creature);
 			}
 
 			for (int j = 0; j < nonLineageCreatures.size(); j++) {
@@ -362,18 +362,18 @@ void WorldExporter::exportWorldFile() {
 		for (int i = 0; i < room->DenCount(); i++) {
 			const Den &den = room->CreatureDen01(i);
 			for (int j = 0; j < den.creatures.size(); j++) {
-				const DenLineage &lineage = den.creatures[j];
-				const DenCreature *creature = &den.creatures[j];
+				const DenLineage *lineage = den.creatures[j];
+				const DenCreature *creature = den.creatures[j];
 
 				if (creature->lineageTo == nullptr) continue;
 
-				if (lineage.timelineType != TimelineType::ALL && lineage.timelines.size() > 0) {
+				if (lineage->timelineType != TimelineType::ALL && lineage->timelines.size() > 0) {
 					file << "(";
-					if (lineage.timelineType == TimelineType::EXCEPT) {
+					if (lineage->timelineType == TimelineType::EXCEPT) {
 						file << "X-";
 					}
 					bool first = true;
-					for (std::string timeline : lineage.timelines) {
+					for (std::string timeline : lineage->timelines) {
 						if (!first) file << ",";
 						first = false;
 
