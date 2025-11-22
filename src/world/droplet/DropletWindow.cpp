@@ -118,15 +118,7 @@ void DropletWindow::cleanup() {
 }
 
 void UpdateCamera() {
-	bool isHoveringPopup = false;
-	for (Popup *popup : Popups::popups) {
-		Rect bounds = popup->Bounds();
-
-		if (bounds.inside(UI::mouse)) {
-			isHoveringPopup = true;
-			break;
-		}
-	}
+	bool isHoveringPopup = UI::mouse.disabled;
 
 	double scrollY = -UI::window->getMouseScrollY();
 	double zoom = std::pow(1.25, scrollY);
@@ -1194,7 +1186,7 @@ void DropletWindow::Draw() {
 		-int(std::ceil(UI::mouse.y * cameraScale + cameraOffset.y))
 	};
 
-	blockMouse = UI::mouse.y >= (UI::screenBounds.y - 0.12) || UI::mouse.x >= (UI::screenBounds.x - 0.41);
+	blockMouse = UI::mouse.y >= (UI::screenBounds.y - 0.12) || UI::mouse.x >= (UI::screenBounds.x - 0.41) || UI::mouse.disabled;
 
 	if (currentTab == EditorTab::DETAILS) {
 		UpdateDetailsTab();

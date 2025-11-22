@@ -8,9 +8,16 @@
 
 #include "FilesystemPopup.hpp"
 
+namespace {
+
+	Popup *interactingPopup = nullptr;
+	Popup *mousePopup = nullptr;
+
+}
+
 std::vector<Popup*> Popups::popupTrash;
 std::vector<Popup*> Popups::popups;
-Popup* Popups::holdingPopup;
+Popup *Popups::holdingPopup;
 Vector2 Popups::holdingStart;
 
 void Popups::init() {
@@ -114,10 +121,30 @@ void Popups::removePopup(Popup *popup) {
 	Popups::popupTrash.push_back(popup);
 }
 
-void Popups::draw(Vector2 screenBounds) {
-	Popup *mousePopup = nullptr;
+void Popups::block() {
+	if (!UI::mouse.leftMouse && !UI::mouse.rightMouse && !UI::mouse.middleMouse) {
+		interactingPopup = nullptr;
+	}
+
 	for (int i = Popups::popups.size() - 1; i >= 0; i--) {
-		Popup *popup = Popups::popups[i];
+		Popup *popup = popups[i];
+
+		if (popup->Bounds().inside(UI::mouse)) {
+			if ((UI::mouse.leftMouse && !UI::mouse.lastLeftMouse) || (UI::mouse.rightMouse && !UI::mouse.lastRightMouse) || (UI::mouse.middleMouse && !UI::mouse.lastMiddleMouse)) {
+				interactingPopup = popup;
+			}
+			break;
+		}
+	}
+
+	UI::mouse.disabled = interactingPopup != nullptr;
+}
+
+void Popups::draw() {
+	UI::mouse.disabled = false;
+
+	for (int i = Popups::popups.size() - 1; i >= 0; i--) {
+		Popup *popup = popups[i];
 
 		if (popup->Bounds().inside(UI::mouse)) {
 			if (UI::mouse.justClicked() && popup->drag(UI::mouse.x, UI::mouse.y)) {
@@ -146,7 +173,7 @@ void Popups::draw(Vector2 screenBounds) {
 		UI::mouse.disabled = popup != mousePopup;
 		popup->draw();
 	}
-	UI::mouse.disabled = false;
+	UI::mouse.disabled = interactingPopup != nullptr;
 }
 
 bool Popups::hasPopup(std::string popupName) {

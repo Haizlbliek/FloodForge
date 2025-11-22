@@ -39,22 +39,22 @@ class Popup {
 		Rect bounds;
 };
 
-class Popups {
-	public:
-		static void init();
+namespace Popups {
+	void init();
 
-		static std::vector<Popup*> popupTrash;
-		static std::vector<Popup*> popups;
-		static Popup *holdingPopup;
-		static Vector2 holdingStart;
+	void cleanup();
 
-		static void cleanup();
+	void block();
+	void draw();
 
-		static void draw(Vector2 screenBounds);
-		
-		static void addPopup(Popup *popup);
+	void addPopup(Popup *popup);
 
-		static void removePopup(Popup *popup);
+	void removePopup(Popup *popup);
 
-		static bool hasPopup(std::string popupName);
+	bool hasPopup(std::string popupName);
+
+	extern std::vector<Popup*> popupTrash;
+	extern std::vector<Popup*> popups;
+	extern Popup *holdingPopup;
+	extern Vector2 holdingStart;
 };
