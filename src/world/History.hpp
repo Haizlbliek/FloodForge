@@ -20,7 +20,7 @@ class RoomAndConnectionChange : public Change {
 		}
 
 		virtual void destroy() override {
-			if (this->adding) return;
+			if (!this->adding) return;
 
 			for (Room *room : rooms) {
 				delete room;
@@ -267,7 +267,7 @@ class LineageChange : public Change {
 			Delete,
 		};
 
-		LineageChange(Den *den) : lineage("", 0, "", 0.0) {
+		LineageChange(Den *den) : lineage(new DenLineage("", 0, "", 0.0)) {
 			this->den = den;
 			this->index = -1;
 			this->type = Type::Create;
@@ -299,7 +299,7 @@ class LineageChange : public Change {
 
 	protected:
 		Den *den;
-		DenLineage lineage;
+		DenLineage *lineage;
 		int index;
 		Type type;
 };

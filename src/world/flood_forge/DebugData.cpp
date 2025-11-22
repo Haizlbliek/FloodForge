@@ -82,8 +82,8 @@ namespace DebugData {
 					debugText.push_back("   Shortcut - Offscreen:");
 					debugText.push_back("Den:");
 					EditorState::offscreenDen->getDen();
-					for (DenLineage &lineage : room->CreatureDen01(0).creatures) {
-						DenCreature *creature = &lineage;
+					for (DenLineage *lineage : room->CreatureDen01(0).creatures) {
+						DenCreature *creature = lineage;
 						std::string line = "";
 						line += creature->type + " x " + std::to_string(creature->count);
 						while (creature->lineageTo != nullptr) {
@@ -101,8 +101,8 @@ namespace DebugData {
 					if (roomMouse.distanceTo(shortcutPosition) < EditorState::selectorScale) {
 						debugText.push_back("   Shortcut:");
 						debugText.push_back("Den: " + std::to_string(shortcut.x) + ", " + std::to_string(shortcut.y));
-						for (DenLineage &lineage : room->CreatureDen(room->DenId(shortcut)).creatures) {
-							DenCreature *creature = &lineage;
+						for (DenLineage *lineage : room->CreatureDen(room->DenId(shortcut)).creatures) {
+							DenCreature *creature = lineage;
 							std::string line = "";
 							line += creature->type + " x " + std::to_string(creature->count);
 							while (creature->lineageTo != nullptr) {

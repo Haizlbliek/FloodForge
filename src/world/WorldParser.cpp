@@ -411,13 +411,13 @@ void WorldParser::parseWorldCreature(std::string line) {
 		}
 
 		Den &den = room->CreatureDen(denId);
-		den.creatures.push_back(DenLineage("", 0, "", 0.0));
-		DenLineage &lineage = den.creatures[den.creatures.size() - 1];
-		lineage.timelineType = timelineType;
+		den.creatures.push_back(new DenLineage("", 0, "", 0.0));
+		DenLineage *lineage = den.creatures[den.creatures.size() - 1];
+		lineage->timelineType = timelineType;
 		for (std::string timeline : timelines) {
-			lineage.timelines.insert(timeline);
+			lineage->timelines.insert(timeline);
 		}
-		DenCreature *creature = &lineage;
+		DenCreature *creature = lineage;
 		bool first = true;
 		for (std::string creatureInDen : split(splits[3], ',')) {
 			if (!first) {
@@ -498,35 +498,35 @@ void WorldParser::parseWorldCreature(std::string line) {
 			}
 
 			Den &den = room->CreatureDen(denId);
-			DenLineage denCreature = DenLineage("", 0, "", 0.0);
-			denCreature.timelineType = timelineType;
+			DenLineage *denCreature = new DenLineage("", 0, "", 0.0);
+			denCreature->timelineType = timelineType;
 			for (std::string timeline : timelines) {
-				denCreature.timelines.insert(timeline);
+				denCreature->timelines.insert(timeline);
 			}
-			denCreature.type = CreatureTextures::parse(creature);
+			denCreature->type = CreatureTextures::parse(creature);
 	
 			if (sections.size() == 3) {
 				if (sections[2][0] == '{') {
 					std::string tag = sections[2].substr(1, sections[2].size() - 2);
 					if (startsWith(tag, "Mean")) {
-						denCreature.tag = "MEAN";
-						denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Mean value");
+						denCreature->tag = "MEAN";
+						denCreature->data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Mean value");
 					} else if (startsWith(tag, "Seed")) {
-						denCreature.tag = "SEED";
-						denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Seed value");
+						denCreature->tag = "SEED";
+						denCreature->data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Seed value");
 					} else if (startsWith(tag, "RotType")) {
-						denCreature.tag = "RotType";
-						denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "RotType value");
+						denCreature->tag = "RotType";
+						denCreature->data = safeStod(tag.substr(tag.find_first_of(':') + 1), "RotType value");
 					} else if (tag.find(':') != -1) {
-						denCreature.tag = "LENGTH";
-						denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Length value");
+						denCreature->tag = "LENGTH";
+						denCreature->data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Length value");
 					} else {
-						denCreature.tag = tag;
+						denCreature->tag = tag;
 					}
-					denCreature.count = 1;
+					denCreature->count = 1;
 				} else {
 					try {
-						denCreature.count = std::stoi(sections[2]);
+						denCreature->count = std::stoi(sections[2]);
 					} catch (...) {
 						Logger::error("Failed to load creature line '", line, "' due to stoi for '", sections[2], "' (den.count)");
 					}
@@ -544,24 +544,24 @@ void WorldParser::parseWorldCreature(std::string line) {
 	
 				std::string tag = tagString.substr(1, tagString.size() - 2);
 				if (startsWith(tag, "Mean")) {
-					denCreature.tag = "MEAN";
-					denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Mean value");
+					denCreature->tag = "MEAN";
+					denCreature->data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Mean value");
 				} else if (startsWith(tag, "Seed")) {
-					denCreature.tag = "SEED";
-					denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Seed value");
+					denCreature->tag = "SEED";
+					denCreature->data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Seed value");
 				} else if (tag.find(':') != -1) {
-					denCreature.tag = "LENGTH";
-					denCreature.data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Length value");
+					denCreature->tag = "LENGTH";
+					denCreature->data = safeStod(tag.substr(tag.find_first_of(':') + 1), "Length value");
 				} else {
-					denCreature.tag = tag;
+					denCreature->tag = tag;
 				}
 				try {
-					denCreature.count = std::stoi(countString);
+					denCreature->count = std::stoi(countString);
 				} catch (...) {
 					Logger::error("Failed to load creature line '", line, "' due to stoi on '", countString, "' (den.count)");
 				}
 			} else {
-				denCreature.count = 1;
+				denCreature->count = 1;
 			}
 
 			den.creatures.push_back(denCreature);
