@@ -315,7 +315,7 @@ void updateOriginalControls() {
 }
 
 void updateFloodForgeControls() {
-	if (UI::mouse.leftMouse) {
+	if (UI::mouse.leftMouse && !UI::mouse.disabled) {
 		if (!UI::mouse.lastLeftMouse) {
 			if (EditorState::selectingState == 0) {
 				for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
@@ -469,22 +469,6 @@ void FloodForgeWindow::updateMain() {
 
 	if (UI::window->justPressed(GLFW_KEY_F11)) {
 		UI::window->toggleFullscreen();
-	}
-
-	if (UI::window->justPressed(GLFW_KEY_ESCAPE)) {
-		if (Popups::popups.size() > 0) {
-			Popups::popups[Popups::popups.size() - 1]->reject();
-		} else {
-			Popups::addPopup((new ConfirmPopup("Exit FloodForge?"))->OnOkay([&]() {
-				UI::window->close();
-			}));
-		}
-	}
-
-	if (UI::window->justPressed(GLFW_KEY_ENTER)) {
-		if (Popups::popups.size() > 0) {
-			Popups::popups[0]->accept();
-		}
 	}
 
 	// Connections

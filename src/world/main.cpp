@@ -177,6 +177,7 @@ int main() {
 		setThemeColor(ThemeColor::Background);
 		fillRect(-UI::screenBounds.x, -UI::screenBounds.y, UI::screenBounds.x, UI::screenBounds.y);
 
+		Popups::block();
 		updateGlobalInputs();
 
 		if (EditorState::dropletOpen) {
@@ -192,7 +193,7 @@ int main() {
 
 		MenuItems::draw();
 
-		Popups::draw(UI::screenBounds);
+		Popups::draw();
 
 		UI::window->render();
 
