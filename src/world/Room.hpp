@@ -147,7 +147,6 @@ class Room {
 
 		void SetTag(const std::string newTag);
 		void ToggleTag(const std::string newTag);
-		const std::vector<std::string> Tags() const;
 
 		int cameras;
 		std::string roomName = "";
@@ -156,6 +155,7 @@ class Room {
 		int width;
 		int height;
 		int *geometry;
+		
 
 		Vector2 canonPosition;
 		Vector2 devPosition;
@@ -163,6 +163,8 @@ class Room {
 		int subregion = 0;
 		std::vector<Connection*> connections;
 		ExtraRoomData data;
+
+		std::vector<std::string> tags;
 
 		int hoveredDen = -1;
 		int hoveredRoomExit = -1;
@@ -201,8 +203,6 @@ class Room {
 		size_t cur_index;
 		GLuint vbo[2]; // first: vertices, second: indices
 		GLuint vao;
-
-		std::vector<std::string> tags;
 
 		std::vector<Vector2i> roomShortcutEntrances;
 		std::vector<Vector2i> roomExits;

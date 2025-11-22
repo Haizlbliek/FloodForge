@@ -1,6 +1,6 @@
 #include "Room.hpp"
 
-#include "popup/DenPopup.hpp"
+#include "flood_forge/DenPopup.hpp"
 #include "ConditionalTimelineTextures.hpp"
 
 #include "../ui/UI.hpp"
@@ -99,8 +99,6 @@ Room::Room(std::filesystem::path path, std::string name) {
 	loadGeometry();
 	generateVBO();
 	checkImages();
-
-	EditorState::screenCount += cameras;
 }
 
 Room::~Room() {
@@ -486,7 +484,6 @@ void Room::ToggleTag(const std::string newTag) {
 		tags.push_back(newTag);
 	}
 }
-const std::vector<std::string> Room::Tags() const { return tags; }
 
 void Room::moveBoth() {
 	if (EditorState::positionType == PositionType::CANON) {

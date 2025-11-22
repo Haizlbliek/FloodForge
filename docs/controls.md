@@ -91,6 +91,8 @@ Scroll to zoom
 ### 
 ### World Editor
 
+Ctrl+Z - Undo
+Ctrl+Y - Redo
 X - Delete
 C - Open creature den
 G - Toggle visual merge
@@ -103,6 +105,7 @@ I - Move to back
 D - Change conditionals
 R - Open room in Droplet
 Alt+T - Open Tutorial
+Alt+S - Open Splash
 
 ### 
 ### Droplet

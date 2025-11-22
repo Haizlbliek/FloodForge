@@ -1,5 +1,6 @@
 #include "SubregionNewPopup.hpp"
 
+#include "FloodForgeWindow.hpp"
 #include "../MenuItems.hpp"
 
 SubregionNewPopup::SubregionNewPopup(std::set<Room*> rooms, int editIndex) : AcronymPopup(), rooms(rooms), editIndex(editIndex) {
@@ -17,15 +18,18 @@ void SubregionNewPopup::submit(std::string acronym) {
 			return;
 		}
 
-		EditorState::subregions.push_back(acronym);
+		int subregionIndex = std::distance(EditorState::subregions.begin(), std::find(EditorState::subregions.begin(), EditorState::subregions.end(), acronym));
+		SubregionChange *change = new SubregionChange(acronym);
 		for (Room *room : rooms) {
-			room->subregion = std::distance(EditorState::subregions.begin(), std::find(EditorState::subregions.begin(), EditorState::subregions.end(), acronym));
+			change->addRoom(room, subregionIndex);
 		}
+		FloodForgeWindow::history.change(change);
 	} else {
 		if (std::find(EditorState::subregions.begin(), EditorState::subregions.end(), acronym) != EditorState::subregions.end()) {
 			return;
 		}
 
-		EditorState::subregions[editIndex] = acronym;
+		SubregionChange *change = new SubregionChange(editIndex, acronym);
+		FloodForgeWindow::history.change(change);
 	}
 }

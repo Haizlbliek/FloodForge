@@ -12,14 +12,15 @@
 #include "../../popup/MarkdownPopup.hpp"
 #include "../../popup/ConfirmPopup.hpp"
 #include "../popup/SplashArtPopup.hpp"
-#include "../popup/RoomTagPopup.hpp"
-#include "../popup/DenPopup.hpp"
-#include "../popup/RoomAttractivenessPopup.hpp"
-#include "../popup/ConditionalPopup.hpp"
+#include "RoomAttractivenessPopup.hpp"
+#include "DenPopup.hpp"
+#include "ConditionalPopup.hpp"
+#include "RoomTagPopup.hpp"
 #include "SubregionPopup.hpp"
 #include "CreateRoomPopup.hpp"
 
 Vector2 FloodForgeWindow::worldMouse;
+History FloodForgeWindow::history;
 
 namespace {
 
@@ -49,6 +50,7 @@ namespace {
 	Connection *currentConnection = nullptr;
 	bool currentConnectionValid = false;
 	ConnectionState connectionState = ConnectionState::None;
+	bool continueDrag = false;
 
 }
 
@@ -185,9 +187,9 @@ void updateConnectionControls() {
 	} else {
 		if (currentConnection != nullptr) {
 			if (currentConnectionValid) {
-				EditorState::connections.push_back(currentConnection);
-				currentConnection->roomA->connect(currentConnection);
-				currentConnection->roomB->connect(currentConnection);
+				RoomAndConnectionChange *change = new RoomAndConnectionChange(true);
+				change->addConnection(currentConnection);
+				FloodForgeWindow::history.change(change);
 			} else {
 				delete currentConnection;
 			}
@@ -354,26 +356,55 @@ void updateFloodForgeControls() {
 					EditorState::selectingState = 4;
 				}
 
+				MoveChange *change = new MoveChange();
+
 				Vector2 offset = (FloodForgeWindow::worldMouse - holdingStart);
 				if (roomSnap == ROOM_SNAP_TILE) offset.round();
 
 				for (Room *room2 : EditorState::selectedRooms) {
-					Vector2 &roomPosition = room2->currentPosition();
+					Vector2 newRoomPosition = room2->currentPosition();
 					if (roomSnap == ROOM_SNAP_TILE) {
-						roomPosition.round();
+						newRoomPosition.round();
 					}
 
-					roomPosition.add(offset);
+					newRoomPosition.add(offset);
+					Vector2 offset = newRoomPosition - room2->currentPosition();
+					Vector2 devOffset = Vector2();
+					Vector2 canonOffset = Vector2();
 					if (UI::window->modifierPressed(GLFW_MOD_ALT) || EditorState::positionType == PositionType::BOTH) {
-						room2->moveBoth();
+						if (EditorState::positionType == PositionType::CANON) {
+							canonOffset = offset;
+							devOffset = canonOffset - room2->devPosition + room2->canonPosition;
+						} else {
+							devOffset = offset;
+							canonOffset = canonOffset - room2->canonPosition + room2->devPosition;
+						}
+					} else {
+						if (EditorState::positionType == PositionType::CANON) {
+							canonOffset = offset;
+						} else {
+							devOffset = offset;
+						}
 					}
+					change->addRoom(room2, devOffset, canonOffset);
 				}
 				holdingStart = holdingStart + offset;
+
+				if (!continueDrag) {
+					FloodForgeWindow::history.change(change);
+					continueDrag = true;
+				} else {
+					if (MoveChange *lastChange = dynamic_cast<MoveChange*>(FloodForgeWindow::history.lastChange())) {
+						change->redo();
+						lastChange->merge(change);
+					} else {
+						FloodForgeWindow::history.change(change);
+					}
+				}
 			}
 
 			if (EditorState::selectingState == 1) {
 				selectionEnd = FloodForgeWindow::worldMouse;
-				// selectedRooms.clear();
 			}
 		}
 	} else {
@@ -399,6 +430,7 @@ void updateFloodForgeControls() {
 		}
 
 		holdingRoom = nullptr;
+		continueDrag = false;
 
 		if (EditorState::selectingState == 1) {
 			for (Room *room : EditorState::rooms) {
@@ -417,6 +449,17 @@ void FloodForgeWindow::updateMain() {
 	EditorState::selectorScale = (scale < 0.0) ? EditorState::cameraScale / 16.0 : scale;
 
 	/// Update Inputs
+
+	if (UI::window->modifierPressed(GLFW_MOD_CONTROL) && UI::window->justPressed(GLFW_KEY_Z)) {
+		if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
+			history.redo();
+		} else {
+			history.undo();
+		}
+	}
+	if (UI::window->modifierPressed(GLFW_MOD_CONTROL) && UI::window->justPressed(GLFW_KEY_Y)) {
+		history.redo();
+	}
 
 	if (UI::window->modifierPressed(GLFW_MOD_ALT)) {
 		roomSnap = ROOM_SNAP_NONE;
@@ -444,10 +487,6 @@ void FloodForgeWindow::updateMain() {
 		}
 	}
 
-	if (UI::window->modifierPressed(GLFW_MOD_ALT) && UI::window->justPressed(GLFW_KEY_T)) {
-		Popups::addPopup(new MarkdownPopup(BASE_PATH / "docs" / "controls.md"));
-	}
-
 	// Connections
 	updateConnectionControls();
 
@@ -466,8 +505,8 @@ void FloodForgeWindow::updateMain() {
 			if (!EditorState::visibleLayers[room->layer]) continue;
 
 			if (room->inside(worldMouse)) {
-				EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), room), EditorState::rooms.end());
-				EditorState::rooms.insert(EditorState::rooms.begin(), room);
+				MoveToBackChange *change = new MoveToBackChange(room);
+				history.change(change);
 				break;
 			}
 		}
@@ -482,12 +521,9 @@ void FloodForgeWindow::updateMain() {
 			if (!EditorState::visibleLayers[connection->roomB->layer]) continue;
 
 			if (connection->hovered(worldMouse)) {
-				EditorState::connections.erase(std::remove(EditorState::connections.begin(), EditorState::connections.end(), connection), EditorState::connections.end());
-
-				connection->roomA->disconnect(connection);
-				connection->roomB->disconnect(connection);
-
-				delete connection;
+				RoomAndConnectionChange *change = new RoomAndConnectionChange(false);
+				change->addConnection(connection);
+				FloodForgeWindow::history.change(change);
 
 				deleted = true;
 
@@ -509,28 +545,19 @@ void FloodForgeWindow::updateMain() {
 
 			if (hoveredRoom != nullptr) {
 				if (EditorState::selectedRooms.find(hoveredRoom) != EditorState::selectedRooms.end()) {
+					RoomAndConnectionChange *change = new RoomAndConnectionChange(false);
 					for (Room *room : EditorState::selectedRooms) {
 						if (room == EditorState::offscreenDen) continue;
 
-						EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), room), EditorState::rooms.end());
-
-						EditorState::connections.erase(std::remove_if(EditorState::connections.begin(), EditorState::connections.end(),
-							[room](Connection *connection) {
-								if (connection->roomA == room || connection->roomB == room) {
-									connection->roomA->disconnect(connection);
-									connection->roomB->disconnect(connection);
-
-									delete connection;
-									return true;
-								}
-
-								return false;
+						change->addRoom(room);
+						for (Connection *connection : EditorState::connections) {
+							if (connection->roomA == room || connection->roomB == room) {
+								change->addConnection(connection);
 							}
-						), EditorState::connections.end());
-
-						delete room;
+						}
 					}
 
+					FloodForgeWindow::history.change(change);
 					EditorState::selectedRooms.clear();
 				} else {
 					for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
@@ -538,23 +565,14 @@ void FloodForgeWindow::updateMain() {
 						if (!EditorState::visibleLayers[room->layer]) continue;
 
 						if (room->inside(worldMouse)) {
-							EditorState::rooms.erase(std::remove(EditorState::rooms.begin(), EditorState::rooms.end(), room), EditorState::rooms.end());
-
-							EditorState::connections.erase(std::remove_if(EditorState::connections.begin(), EditorState::connections.end(),
-								[room](Connection *connection) {
-									if (connection->roomA == room || connection->roomB == room) {
-										connection->roomA->disconnect(connection);
-										connection->roomB->disconnect(connection);
-
-										delete connection;
-										return true;
-									}
-
-									return false;
+							RoomAndConnectionChange *change = new RoomAndConnectionChange(false);
+							change->addRoom(room);
+							for (Connection *connection : EditorState::connections) {
+								if (connection->roomA == room || connection->roomB == room) {
+									change->addConnection(connection);
 								}
-							), EditorState::connections.end());
-
-							delete room;
+							}
+							FloodForgeWindow::history.change(change);
 
 							break;
 						}
@@ -613,8 +631,11 @@ void FloodForgeWindow::updateMain() {
 
 			minimumLayer = (minimumLayer + 1) % LAYER_COUNT;
 
-			for (Room *room : EditorState::selectedRooms)
-				room->layer = minimumLayer;
+			GeneralRoomChange<int> *change = new GeneralRoomChange<int>(GeneralRoomChange<int>::Type::Layer);
+			for (Room *room : EditorState::selectedRooms) {
+				change->addRoom(room, minimumLayer);
+			}
+			history.change(change);
 
 		} else {
 			Room *hoveringRoom = nullptr;
@@ -629,7 +650,9 @@ void FloodForgeWindow::updateMain() {
 			}
 
 			if (hoveringRoom != nullptr) {
-				hoveringRoom->layer = (hoveringRoom->layer + 1) % LAYER_COUNT;
+				GeneralRoomChange<int> *change = new GeneralRoomChange<int>(GeneralRoomChange<int>::Type::Layer);
+				change->addRoom(hoveringRoom, (hoveringRoom->layer + 1) % LAYER_COUNT);
+				history.change(change);
 			}
 		}
 	}
@@ -641,8 +664,11 @@ void FloodForgeWindow::updateMain() {
 			for (Room *room : EditorState::selectedRooms)
 				if (room->data.merge) { setMerge = false; break; }
 
-			for (Room *room : EditorState::selectedRooms)
-				room->data.merge = setMerge;
+			GeneralRoomChange<bool> *change = new GeneralRoomChange<bool>(GeneralRoomChange<bool>::Type::Merge);
+			for (Room *room : EditorState::selectedRooms) {
+				change->addRoom(room, setMerge);
+			}
+			history.change(change);
 		} else {
 			Room *hoveringRoom = nullptr;
 			for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
@@ -657,7 +683,9 @@ void FloodForgeWindow::updateMain() {
 			}
 
 			if (hoveringRoom != nullptr) {
-				hoveringRoom->data.merge = !hoveringRoom->data.merge;
+				GeneralRoomChange<bool> *change = new GeneralRoomChange<bool>(GeneralRoomChange<bool>::Type::Merge);
+				change->addRoom(hoveringRoom, !hoveringRoom->data.merge);
+				history.change(change);
 			}
 		}
 	}
@@ -669,8 +697,11 @@ void FloodForgeWindow::updateMain() {
 			for (Room *room : EditorState::selectedRooms)
 				if (room->data.hidden) { setHidden = false; break; }
 
-			for (Room *room : EditorState::selectedRooms)
-				room->data.hidden = setHidden;
+			GeneralRoomChange<bool> *change = new GeneralRoomChange<bool>(GeneralRoomChange<bool>::Type::Hidden);
+			for (Room *room : EditorState::selectedRooms) {
+				change->addRoom(room, setHidden);
+			}
+			history.change(change);
 
 		} else {
 			Room *hoveringRoom = nullptr;
@@ -686,7 +717,9 @@ void FloodForgeWindow::updateMain() {
 			}
 
 			if (hoveringRoom != nullptr) {
-				hoveringRoom->data.hidden = !hoveringRoom->data.hidden;
+				GeneralRoomChange<bool> *change = new GeneralRoomChange<bool>(GeneralRoomChange<bool>::Type::Hidden);
+				change->addRoom(hoveringRoom, !hoveringRoom->data.hidden);
+				history.change(change);
 			}
 		}
 	}
@@ -756,9 +789,9 @@ void FloodForgeWindow::updateMain() {
 				}
 			}
 
-			if (hoveringRoom != nullptr && !hoveringRoom->isOffscreen()) {
+			if (hoveringRoom == nullptr || !hoveringRoom->isOffscreen()) {
 				std::set<Room *> set;
-				set.insert(hoveringRoom);
+				if (hoveringRoom != nullptr) set.insert(hoveringRoom);
 				Popups::addPopup(new RoomAttractivenessPopup(set));
 			}
 		}
@@ -835,10 +868,14 @@ void FloodForgeWindow::updateMain() {
 		}
 	}
 
+	EditorState::screenCount = 0;
 	bool found = false;
 	for (auto it = EditorState::rooms.rbegin(); it != EditorState::rooms.rend(); it++) {
 		Room *room = *it;
+		EditorState::screenCount += room->cameras;
 		room->hoveredDen = -1;
+
+		if (found) continue;
 
 		Vector2 roomMouse = worldMouse - room->currentPosition();
 		Vector2 shortcutPosition;
@@ -867,8 +904,6 @@ void FloodForgeWindow::updateMain() {
 				}
 			}
 		}
-
-		if (found) break;
 	}
 }
 

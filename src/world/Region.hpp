@@ -14,8 +14,6 @@ class Region {
 	public:
 		std::string acronym;
 
-		std::vector<std::pair<std::string, std::unordered_map<std::string, RoomAttractiveness>>> roomAttractiveness;
-
 		std::string extraProperties;
 		std::string extraWorld;
 		std::string extraMap;
@@ -24,6 +22,7 @@ class Region {
 		std::filesystem::path roomsDirectory;
 		std::filesystem::path exportDirectory;
 
+		std::unordered_map<std::string, RoomAttractiveness> defaultAttractiveness;
 		std::map<int, Color> overrideSubregionColors;
 
 		void reset();

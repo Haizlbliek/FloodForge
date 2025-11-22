@@ -34,13 +34,13 @@ class DenPopup : public Popup {
 		bool canStack(std::string popupName) { return popupName == "ConditionalPopup"; }
 
 	private:
-		double scrollA;
-		double scrollATo;
-		double scrollB;
-		double scrollBTo;
-		double scrollL;
-		double scrollLTo;
-		int scrollLMax;
+		double scrollCreatures = 0.0;
+		double scrollCreaturesTo = 0.0;
+		double scrollTags = 0.0;
+		double scrollTagsTo = 0.0;
+		double scrollLineages = 0.0;
+		double scrollLinagesTo = 0.0;
+		int scrollLineagesMax = 0;
 
 		double sliderMin = 0.0;
 		double sliderMax = 1.0;
@@ -50,15 +50,17 @@ class DenPopup : public Popup {
 
 		bool hasSlider;
 		int mouseSection;
+		bool lastMouseClickSlider;
 		bool mouseClickSlider;
 		int selectedCreature;
 		DenCreature *selectedLineage;
+		double editingLineageChance;
 		DenCreature *selectedLineageChance;
 		double lineageSidebarWidth;
 
 		void clampScroll();
 
-		void ensureFlag(DenCreature &creature);
+		void fixSlider();
 
 		void submitChance();
 

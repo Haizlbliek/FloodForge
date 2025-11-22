@@ -16,14 +16,15 @@ void Region::reset() {
 	EditorState::subregions.clear();
 	if (EditorState::offscreenDen != nullptr) delete EditorState::offscreenDen;
 	EditorState::offscreenDen = nullptr;
+	EditorState::selectedRooms.clear();
+	EditorState::roomPossibleSelect = nullptr;
+	EditorState::selectingState = 0;
+	EditorState::region.defaultAttractiveness.clear();
 	extraProperties = "";
 	extraWorld = "";
 	extraMap = "";
 	exportDirectory = "";
 	complicatedCreatures = "";
 	acronym = "";
-	EditorState::selectedRooms.clear();
-	EditorState::roomPossibleSelect = nullptr;
-	EditorState::selectingState = 0;
 	overrideSubregionColors.clear();
 }

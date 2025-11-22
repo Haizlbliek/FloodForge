@@ -13,6 +13,8 @@
 #include "WorldParser.hpp"
 #include "WorldExporter.hpp"
 
+#include "flood_forge/FloodForgeWindow.hpp"
+
 #include "droplet/DropletWindow.hpp"
 #include "droplet/ResizeLevelPopup.hpp"
 
@@ -58,13 +60,15 @@ Room *copyRoom(std::filesystem::path fromFile, std::filesystem::path toFile) {
 	} else {
 		std::filesystem::copy_file(fromFile, toFile);
 
+		RoomAndConnectionChange *change = new RoomAndConnectionChange(true);
 		bool initial = Settings::getSetting<bool>(Settings::Setting::WarnMissingImages);
 		Settings::settings[Settings::Setting::WarnMissingImages] = false;
 		Room *room = new Room(fromFile, toRoom);
 		room->canonPosition = EditorState::cameraOffset;
 		room->devPosition = EditorState::cameraOffset;
-		EditorState::rooms.push_back(room);
 		Settings::settings[Settings::Setting::WarnMissingImages] = initial;
+		change->addRoom(room);
+		FloodForgeWindow::history.change(change);
 
 		for (int i = 0; i < room->cameras; i++) {
 			std::string imagePath = fromRoom + "_" + std::to_string(i + 1) + ".png";
@@ -160,11 +164,13 @@ void MenuItems::initFloodForge() {
 						if (toLower(acronym) == "gates") {
 							std::vector<std::string> names = split(roomFilePath.stem().generic_u8string(), '_');
 							if (toLower(names[1]) == toLower(EditorState::region.acronym) || toLower(names[2]) == toLower(EditorState::region.acronym)) {
+								RoomAndConnectionChange *change = new RoomAndConnectionChange(true);
 								Room *room = new Room(roomFilePath, roomFilePath.stem().generic_u8string());
 								room->SetTag("GATE");
 								room->canonPosition = EditorState::cameraOffset;
 								room->devPosition = EditorState::cameraOffset;
-								EditorState::rooms.push_back(room);
+								change->addRoom(room);
+								FloodForgeWindow::history.change(change);
 							} else {
 								Popups::addPopup((new ConfirmPopup("Change which acronym?"))
 								->OkayText(names[2])
@@ -184,20 +190,26 @@ void MenuItems::initFloodForge() {
 							if (compareInsensitive(acronym, EditorState::region.acronym) || EditorState::region.exportDirectory.empty()) {
 								std::string roomName = roomFilePath.stem().generic_u8string();
 
+								RoomAndConnectionChange *change = new RoomAndConnectionChange(true);
 								Room *room = new Room(roomFilePath, roomName);
 								room->canonPosition = EditorState::cameraOffset;
 								room->devPosition = EditorState::cameraOffset;
 								EditorState::rooms.push_back(room);
+								change->addRoom(room);
+								FloodForgeWindow::history.change(change);
 							} else {
 								Popups::addPopup((new ConfirmPopup("Copy room to " + EditorState::region.acronym + "-rooms?"))
 								->CancelText("Just Add")
 								->OnCancel([roomFilePath]() {
 									std::string roomName = roomFilePath.stem().generic_u8string();
 
+									RoomAndConnectionChange *change = new RoomAndConnectionChange(true);
 									Room *room = new Room(roomFilePath, roomName);
 									room->canonPosition = EditorState::cameraOffset;
 									room->devPosition = EditorState::cameraOffset;
 									EditorState::rooms.push_back(room);
+									change->addRoom(room);
+									FloodForgeWindow::history.change(change);
 								})
 								->OkayText("Yes")
 								->OnOkay([roomFilePath]() {

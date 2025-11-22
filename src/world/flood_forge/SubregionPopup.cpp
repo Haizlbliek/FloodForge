@@ -2,6 +2,7 @@
 
 #include "../../ui/UI.hpp"
 #include "../popup/ColorEditPopup.hpp"
+#include "FloodForgeWindow.hpp"
 
 SubregionPopup::SubregionPopup(std::set<Room*> newRooms) : Popup() {
 	for (Room *room : newRooms) rooms.insert(room);
@@ -56,7 +57,13 @@ void SubregionPopup::draw() {
 }
 
 void SubregionPopup::setSubregion(int subregion) {
-	for (Room *room : rooms) room->subregion = subregion;
+	GeneralRoomChange<int> *change = new GeneralRoomChange<int>(GeneralRoomChange<int>::Type::Subregion);
+
+	for (Room *room : rooms) {
+		change->addRoom(room, subregion);
+	}
+
+	FloodForgeWindow::history.change(change);
 }
 
 void SubregionPopup::close() {
@@ -71,6 +78,17 @@ int SubregionPopup::getButtonIndex(double mouseX, double mouseY) {
 	if (std::fmod(-mouseY + 0.35, 0.075) > 0.05) return -1;
 
 	return floor((-mouseY + 0.35) / 0.075);
+}
+
+void colorEditSubmit(Color oldColor, Color &color) {
+	std::map<int, Color>::iterator it = EditorState::region.overrideSubregionColors.begin();
+	for (; it != EditorState::region.overrideSubregionColors.end(); it = std::next(it)) {
+		if (&(*it).second == &color) {
+			OverrideSubregionColorChange *change = new OverrideSubregionColorChange((*it).first, oldColor, color);
+			FloodForgeWindow::history.change(change);
+			return;
+		}
+	}
 }
 
 void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion, double centerX, double y) {
@@ -100,15 +118,17 @@ void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion,
 
 		if (UI::TextButton(Rect(0.335 + centerX, y, 0.385 + centerX, y - 0.05), "X")) {
 			if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
-				EditorState::subregions.erase(EditorState::subregions.begin() + subregionId);
+				SubregionChange *change = new SubregionChange(subregionId);
 
 				for (Room *otherRoom : EditorState::rooms) {
 					if (otherRoom->subregion == subregionId) {
-						otherRoom->subregion = -1;
+						change->addRoom(otherRoom, -1);
 					} else if (otherRoom->subregion > subregionId) {
-						otherRoom->subregion--;
+						change->addRoom(otherRoom, otherRoom->subregion - 1);
 					}
 				}
+
+				FloodForgeWindow::history.change(change);
 			} else {
 				bool canRemove = true;
 				for (Room *otherRoom : EditorState::rooms) {
@@ -119,13 +139,15 @@ void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion,
 				}
 
 				if (canRemove) {
-					EditorState::subregions.erase(EditorState::subregions.begin() + subregionId);
+					SubregionChange *change = new SubregionChange(subregionId);
 
 					for (Room *otherRoom : EditorState::rooms) {
 						if (otherRoom->subregion >= subregionId) {
-							otherRoom->subregion--;
+							change->addRoom(otherRoom, otherRoom->subregion - 1);
 						}
 					}
+
+					FloodForgeWindow::history.change(change);
 				} else {
 					Popups::addPopup(new InfoPopup("Cannot remove subregion if assigned to rooms\n(Hold shift to force)"));
 				}
@@ -145,14 +167,16 @@ void SubregionPopup::drawSubregionButton(int subregionId, std::string subregion,
 		}
 		if (UI::TextureButton(UVRect(0.395 + centerX, y, 0.445 + centerX, y - 0.05).uv(exists ? 0.75 : 0.5, 0.25, exists ? 1.0 : 0.75, 0.5), UI::TextureButtonMods().TextureColor(subregionColor))) {
 			if (!exists) {
-				EditorState::region.overrideSubregionColors[subregionId] = subregionColor;
+				OverrideSubregionColorChange *change = new OverrideSubregionColorChange(subregionId, subregionColor);
+				FloodForgeWindow::history.change(change);
+			} else {
+				Popups::addPopup(new ColorEditPopup(EditorState::region.overrideSubregionColors[subregionId], colorEditSubmit));
 			}
-	
-			Popups::addPopup(new ColorEditPopup(EditorState::region.overrideSubregionColors[subregionId]));
 		}
 		if (exists) {
 			if (UI::TextureButton(UVRect::fromSize(0.455 + centerX, y - 0.01, 0.03, -0.03).uv(0.5, 0.25, 0.75, 0.0))) {
-				EditorState::region.overrideSubregionColors.erase(subregionId);
+				OverrideSubregionColorChange *change = new OverrideSubregionColorChange(subregionId);
+				FloodForgeWindow::history.change(change);
 			}
 		}
 	}
