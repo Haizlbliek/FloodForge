@@ -2,6 +2,7 @@
 
 #include "../../ui/UI.hpp"
 #include "../ConditionalTimelineTextures.hpp"
+#include "FloodForgeWindow.hpp"
 
 #define TIMELINE_ROWS 8
 
@@ -35,15 +36,19 @@ const TimelineType ConditionalPopup::timelineType() const {
 }
 
 void ConditionalPopup::timelineType(TimelineType type) {
+	TimelineTypeChange *change = new TimelineTypeChange();
+
 	if (connection != nullptr) {
-		connection->timelineType = type;
+		change->addConnection(connection, type);
 	} else if (lineage != nullptr) {
-		lineage->timelineType = type;
+		change->addLineage(lineage, type);
 	} else {
 		for (Room *room : rooms) {
-			room->timelineType = type;
+			change->addRoom(room, type);
 		}
 	}
+
+	FloodForgeWindow::history.change(change);
 }
 
 void ConditionalPopup::drawButton(Rect rect, std::string text, TimelineType type) {
@@ -148,27 +153,17 @@ void ConditionalPopup::draw() {
 				UI::ButtonResponse response = UI::TextureButton(rect, UI::TextureButtonMods().Selected(isSelected).TextureId(texture).TextureColor(isSelected ? Color(1.0, 1.0, 1.0) : Color(0.5, 0.5, 0.5)));
 
 				if (response.clicked) {
+					TimelineChange *change = new TimelineChange(!isSelected, timeline);
 					if (connection != nullptr) {
-						if (connection->timelines.count(timeline)) {
-							connection->timelines.erase(timeline);
-						} else {
-							connection->timelines.insert(timeline);
-						}
+						change->addConnection(connection);
 					} else if (lineage != nullptr) {
-						if (lineage->timelines.count(timeline)) {
-							lineage->timelines.erase(timeline);
-						} else {
-							lineage->timelines.insert(timeline);
-						}
+						change->addLineage(lineage);
 					} else {
 						for (Room *room : rooms) {
-							if (room->timelines.count(timeline)) {
-								room->timelines.erase(timeline);
-							} else {
-								room->timelines.insert(timeline);
-							}
+							change->addRoom(room);
 						}
 					}
+					FloodForgeWindow::history.change(change);
 				}
 
 				if (response.hovered) {

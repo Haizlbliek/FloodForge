@@ -43,7 +43,7 @@ namespace DebugData {
 
 		if (hoveringRoom != nullptr) {
 			std::string tags = "";
-			for (std::string tag : hoveringRoom->Tags()) tags += " " + tag;
+			for (std::string tag : hoveringRoom->tags) tags += " " + tag;
 			debugText.push_back("    Room:");
 			if (!hoveringRoom->valid) {
 				debugText.push_back("INVALID - Check 'xx-rooms' folder");

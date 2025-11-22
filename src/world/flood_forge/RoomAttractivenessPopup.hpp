@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../../popup/Popups.hpp"
-
-#include "DenPopup.hpp"
+#include "../RoomAttractiveness.hpp"
+#include "../Room.hpp"
 
 class RoomAttractivenessPopup : public Popup {
 	public:

@@ -3,6 +3,10 @@
 #include "RecentFiles.hpp"
 #include "../popup/InfoPopup.hpp"
 #include "CreatureTextures.hpp"
+#include "flood_forge/FloodForgeWindow.hpp"
+
+std::vector<std::pair<std::string, std::unordered_map<std::string, RoomAttractiveness>>> roomAttractiveness;
+
 
 std::string findAcronym(std::filesystem::path regionsPath, std::string acronym) {
 	std::ifstream regions(regionsPath);
@@ -27,10 +31,11 @@ std::string findAcronym(std::filesystem::path regionsPath, std::string acronym) 
 }
 
 void WorldParser::importWorldFile(std::filesystem::path path) {
+	FloodForgeWindow::history.clear();
 	RecentFiles::addPath(path);
-	
-	EditorState::region.reset();
 
+	roomAttractiveness.clear();
+	EditorState::region.reset();
 	EditorState::region.exportDirectory = path.parent_path();
 	EditorState::region.acronym = path.stem().generic_u8string();
 	EditorState::region.acronym = EditorState::region.acronym.substr(EditorState::region.acronym.find_last_of('_') + 1);
@@ -85,7 +90,7 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 	for (Room *room : EditorState::rooms) {
 		if (room->isOffscreen()) continue;
 	
-		for (auto x : EditorState::region.roomAttractiveness) {
+		for (auto x : roomAttractiveness) {
 			if (x.first != room->roomName) continue;
 			
 			room->data.attractiveness = x.second;
@@ -982,7 +987,11 @@ void WorldParser::parseProperties(std::filesystem::path propertiesFilePath) {
 				creature = CreatureTextures::parse(creature);
 				attractiveness[creature] = parseRoomAttractiveness(toLower(value));
 			}
-			EditorState::region.roomAttractiveness.push_back({ room, attractiveness });
+			if (compareInsensitive(room, "default")) {
+				EditorState::region.defaultAttractiveness = attractiveness;
+			} else {
+				roomAttractiveness.push_back({ room, attractiveness });
+			}
 		} else if (startsWith(line, "//FloodForge|")) {
 			std::vector<std::string> splits = split(line, '|');
 			try {

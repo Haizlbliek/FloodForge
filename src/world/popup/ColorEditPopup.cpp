@@ -9,9 +9,15 @@
 #define selectorSize 0.33
 
 ColorEditPopup::ColorEditPopup(Color &color) : Popup(), color(color) {
+	oldColor = color;
 	bounds = Rect(-0.2, -0.2, 0.2, 0.2);
 	Vector3f hsv = color.HSV();
 	hue = hsv.x;
+	this->callback = nullptr;
+}
+
+ColorEditPopup::ColorEditPopup(Color &color, std::function<void(Color oldColor, Color &color)> callback) : ColorEditPopup(color) {
+	this->callback = callback;
 }
 
 void ColorEditPopup::draw() {
@@ -100,5 +106,13 @@ void ColorEditPopup::draw() {
 		hsv.x = h;
 		hue = h;
 		color.HSV(hsv);
+	}
+}
+
+void ColorEditPopup::close() {
+	Popup::close();
+
+	if (this->callback != nullptr) {
+		this->callback(oldColor, color);
 	}
 }

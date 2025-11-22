@@ -260,7 +260,7 @@ void WorldExporter::exportWorldFile() {
 			file << connections[i].first;
 		}
 
-		for (std::string tag : room->Tags()) {
+		for (std::string tag : room->tags) {
 			file << " : " << tag;
 		}
 
@@ -594,6 +594,20 @@ void WorldExporter::exportImageFile(std::filesystem::path outputPath, std::files
 	if (hasMapFile) mapFile.close();
 }
 
+void exportRoomAttr(std::fstream &propertiesFile, std::string name, std::unordered_map<std::string, RoomAttractiveness> attrs) {
+	propertiesFile << "Room_Attr: " << name << ": ";
+	for (std::pair<std::string, RoomAttractiveness> attractivenss : attrs)  {
+		propertiesFile << exportCreatureName(attractivenss.first) << "-";
+		if (attractivenss.second == RoomAttractiveness::NEUTRAL) propertiesFile << "Neutral";
+		if (attractivenss.second == RoomAttractiveness::FORBIDDEN) propertiesFile << "Forbidden";
+		if (attractivenss.second == RoomAttractiveness::AVOID) propertiesFile << "Avoid";
+		if (attractivenss.second == RoomAttractiveness::LIKE) propertiesFile << "Like";
+		if (attractivenss.second == RoomAttractiveness::STAY) propertiesFile << "Stay";
+		propertiesFile << ",";
+	}
+	propertiesFile << "\n";
+}
+
 void WorldExporter::exportPropertiesFile(std::filesystem::path outputPath) {
 	Logger::info("Exporting properties file");
 
@@ -606,23 +620,16 @@ void WorldExporter::exportPropertiesFile(std::filesystem::path outputPath) {
 		propertiesFile << "Subregion: " << subregion << "\n";
 	}
 
+	if (!EditorState::region.defaultAttractiveness.empty()) {
+		exportRoomAttr(propertiesFile, "Default", EditorState::region.defaultAttractiveness);
+	}
+
 	for (Room *room : EditorState::rooms) {
 		if (room->isOffscreen()) continue;
-		
+
 		if (room->data.attractiveness.empty()) continue;
-		
-		
-		propertiesFile << "Room_Attr: " << roomNameCasing(room->roomName) << ": ";
-		for (std::pair<std::string, RoomAttractiveness> attractivenss : room->data.attractiveness)  {
-			propertiesFile << attractivenss.first << "-";
-			if (attractivenss.second == RoomAttractiveness::NEUTRAL) propertiesFile << "Neutral";
-			if (attractivenss.second == RoomAttractiveness::FORBIDDEN) propertiesFile << "Forbidden";
-			if (attractivenss.second == RoomAttractiveness::AVOID) propertiesFile << "Avoid";
-			if (attractivenss.second == RoomAttractiveness::LIKE) propertiesFile << "Like";
-			if (attractivenss.second == RoomAttractiveness::STAY) propertiesFile << "Stay";
-			propertiesFile << ",";
-		}
-		propertiesFile << "\n";
+
+		exportRoomAttr(propertiesFile, roomNameCasing(room->roomName), room->data.attractiveness);
 	}
 
 	for (std::pair<const int, Color> item : EditorState::region.overrideSubregionColors) {

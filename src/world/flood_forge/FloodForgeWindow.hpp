@@ -6,6 +6,8 @@
 #include "../Connection.hpp"
 #include "../Room.hpp"
 
+#include "../History.hpp"
+
 namespace FloodForgeWindow {
 	void updateCamera();
 
@@ -14,4 +16,5 @@ namespace FloodForgeWindow {
 	void Draw();
 
 	extern Vector2 worldMouse;
+	extern History history;
 }

@@ -3,6 +3,8 @@
 #include "../Globals.hpp"
 #include "../../ui/UI.hpp"
 
+#include "FloodForgeWindow.hpp"
+
 RoomTagPopup::RoomTagPopup(std::set<Room*> newRooms) : Popup() {
 	for (Room *room : newRooms) {
 		rooms.insert(room);
@@ -35,26 +37,55 @@ void RoomTagPopup::draw() {
 }
 
 void RoomTagPopup::setTag(std::string tag) {
+	TagChange *change = new TagChange();
+	std::vector<std::string> to;
+	if (!tag.empty()) to.push_back(tag);
+
 	for (Room *room : rooms) {
 		if (room->isOffscreen()) continue;
 
-		room->SetTag(tag);
+		change->addRoom(room, to);
+		std::vector<std::string> n;
+		room->tags = n;
 	}
+
+	FloodForgeWindow::history.change(change);
 }
 
 void RoomTagPopup::toggleTag(std::string tag) {
+	TagChange *change = new TagChange();
+
 	for (Room *room : rooms) {
 		if (room->isOffscreen()) continue;
 
-		room->ToggleTag(tag);
+		std::vector<std::string> to;
+		bool add = true;
+		for (std::string &otherTag : room->tags) {
+			if (otherTag == tag) {
+				add = false;
+				continue;
+			}
+
+			to.push_back(otherTag);
+		}
+		if (add) {
+			to.push_back(tag);
+		}
+
+		change->addRoom(room, to);
+
+		std::vector<std::string> n;
+		room->tags = n;
 	}
+
+	FloodForgeWindow::history.change(change);
 }
 
 void RoomTagPopup::drawTagButton(std::string tag, std::string tagId, double y) {
 	Rect rect(-0.4, y, 0.4, y - 0.05);
 	bool selected = false;
 	if (rooms.size() == 1) {
-		const std::vector<std::string> tags = (*rooms.begin())->Tags();
+		const std::vector<std::string> &tags = (*rooms.begin())->tags;
 		selected = (tagId == "" && tags.size() == 0) || (std::find(tags.begin(), tags.end(), tagId) != tags.end());
 	}
 

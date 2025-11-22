@@ -1,9 +1,11 @@
 #include "RoomAttractivenessPopup.hpp"
 
+#include "../CreatureTextures.hpp"
 #include "../../ui/UI.hpp"
+#include "FloodForgeWindow.hpp"
 
 const RoomAttractiveness RoomAttractivenessPopup::attractivenessIds   [6] = { RoomAttractiveness::DEFAULT, RoomAttractiveness::NEUTRAL, RoomAttractiveness::FORBIDDEN, RoomAttractiveness::AVOID, RoomAttractiveness::LIKE, RoomAttractiveness::STAY };
-const Color             RoomAttractivenessPopup::attractivenessColors[6] = { Color(0.5, 0.5, 0.5),       Color(1.0, 1.0, 1.0),       Color(1.0, 0.0, 0.0),         Color(1.0, 1.0, 0.0),     Color(0.0, 1.0, 0.0),    Color(0.0, 1., 1.0)     };
+const Color              RoomAttractivenessPopup::attractivenessColors[6] = { Color(0.5, 0.5, 0.5),        Color(1.0, 1.0, 1.0),        Color(1.0, 0.0, 0.0),          Color(1.0, 1.0, 0.0),      Color(0.0, 1.0, 0.0),     Color(0.0, 1., 1.0)      };
 const std::string        RoomAttractivenessPopup::attractivenessNames [6] = { "DEFAULT",                   "NEUTRAL",                   "FORBIDDEN",                   "AVOID",                   "LIKE",                   "STAY"                   };
 
 RoomAttractivenessPopup::RoomAttractivenessPopup(std::set<Room *> rooms) : rooms(rooms), Popup() {
@@ -63,7 +65,7 @@ void RoomAttractivenessPopup::draw() {
 	int countA = CreatureTextures::creatures.size();
 	countA -= 2;
 	
-	Room *room = *rooms.begin();
+	Room *room = rooms.size() > 0 ? *rooms.begin() : nullptr;
 
 	for (int y = 0; y <= (countA / CREATURE_ROWS); y++) {
 		for (int x = 0; x < CREATURE_ROWS; x++) {
@@ -110,11 +112,22 @@ void RoomAttractivenessPopup::draw() {
 				setAllTo(selectAttractiveness, creatureType);
 			}
 
-			std::unordered_map<std::string, RoomAttractiveness>::iterator index = room->data.attractiveness.find(creatureType);
-			if (index == room->data.attractiveness.end()) {
-				Draw::color(attractivenessColors[0]);
+			Color color = attractivenessColors[0];
+			bool inherit = false;
+			std::unordered_map<std::string, RoomAttractiveness>::iterator index;
+			if (room != nullptr) index = room->data.attractiveness.find(creatureType);
+
+			if (room == nullptr || index == room->data.attractiveness.end()) {
+				index = EditorState::region.defaultAttractiveness.find(creatureType);
+				inherit = (index != EditorState::region.defaultAttractiveness.end());
+				color = attractivenessColors[inherit ? (int) index->second : 0];
 			} else {
-				Draw::color(attractivenessColors[(int) index->second]);
+				color = attractivenessColors[(int) index->second];
+			}
+			Draw::color(color);
+			if (inherit && room != nullptr) {
+				fillRect(rectX - 0.01, rectY - 0.01, rectX + 0.02, rectY + 0.02);
+				Draw::color(attractivenessColors[0]);
 			}
 			fillRect(rectX - 0.005, rectY - 0.005, rectX + 0.015, rectY + 0.015);
 		}
@@ -181,13 +194,9 @@ void RoomAttractivenessPopup::clampScroll() {
 }
 
 void RoomAttractivenessPopup::setAllTo(RoomAttractiveness attr, std::string creature) {
+	AttractivenessChange *change = new AttractivenessChange(attr, creature);
 	for (Room *room : rooms) {
-		if (room->isOffscreen()) continue;
-
-		if (attr == RoomAttractiveness::DEFAULT) {
-			room->data.attractiveness.erase(creature);
-		} else {
-			room->data.attractiveness[creature] = attr;
-		}
+		change->addRoom(room);
 	}
+	FloodForgeWindow::history.change(change);
 }

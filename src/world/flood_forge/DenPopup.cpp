@@ -8,15 +8,114 @@
 #include "../../ui/UI.hpp"
 
 #include "ConditionalPopup.hpp"
+#include "FloodForgeWindow.hpp"
+
+
+bool isNotLizard(std::string type) {
+	return
+		type != "blacklizard" &&
+		type != "bluelizard" &&
+		type != "cyanlizard" &&
+		type != "greenlizard" &&
+		type != "pinklizard" &&
+		type != "redlizard" &&
+		type != "whitelizard" &&
+		type != "yellowlizard" &&
+		type != "salamander" &&
+		type != "eellizard" &&
+		type != "spitlizard" &&
+		type != "trainlizard" &&
+		type != "zooplizard" &&
+		type != "basilisklizard" &&
+		type != "blizzardlizard" &&
+		type != "indigolizard";
+}
+
+void checkFlag(DenCreature *creature) {
+	if (creature == nullptr)
+		return;
+
+	if (creature->type.empty()) {
+		creature->tag = "";
+		creature->data = 0.0;
+	}
+
+	bool notLizard = isNotLizard(creature->type);
+
+	if (creature->tag == "MEAN") {
+		if (notLizard) {
+			creature->tag = "";
+		}
+	}
+
+	if (creature->tag == "LENGTH") {
+		if (creature->type != "polemimic" && creature->type != "centipede") {
+			creature->tag = "";
+		}
+	}
+
+	if (creature->tag == "Winter") {
+		if (creature->type != "bigspider" && creature->type != "spitterspider" && creature->type != "yeek" && notLizard) {
+			creature->tag = "";
+		}
+	}
+
+	if (creature->tag == "Voidsea") {
+		if (creature->type != "redlizard" && creature->type != "redcentipede" && creature->type != "bigspider" && creature->type != "daddylonglegs" && creature->type != "brotherlonglegs" && creature->type != "terrorlonglegs" && creature->type != "bigeel" && creature->type != "cyanlizard") {
+			creature->tag = "";
+		}
+	}
+
+	if (creature->tag != "MEAN" && creature->tag != "LENGTH" && creature->tag != "SEED") creature->data = 0.0;
+}
+
+void setCreature(DenCreature *creature, std::string creatureType) {
+	DenCreature newCreature = DenCreature(creature->type, creature->count, creature->tag, creature->data);
+
+	if (creatureType == "clear") {
+		newCreature.type = "";
+		newCreature.count = 0;
+	} else {
+		if (newCreature.type == creatureType || creatureType == "unknown") {
+			if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
+				newCreature.count -= 1;
+				if (newCreature.count <= 0) {
+					newCreature.type = "";
+					newCreature.count = 0;
+				}
+			} else {
+				newCreature.count += 1;
+			}
+		} else {
+			newCreature.type = creatureType;
+			newCreature.count = 1;
+		}
+	}
+
+	checkFlag(&newCreature);
+
+	CreatureDataChange *change = new CreatureDataChange(creature, newCreature.type, newCreature.count, newCreature.tag, newCreature.data);
+	FloodForgeWindow::history.change(change);
+}
+
+void setTag(DenCreature *creature, std::string creatureTag) {
+	DenCreature newCreature = DenCreature(creature->type, creature->count, creature->tag, creature->data);
+
+	if (newCreature.tag == creatureTag) {
+		newCreature.tag = "";
+	} else {
+		newCreature.tag = creatureTag;
+	}
+	checkFlag(&newCreature);
+
+	CreatureDataChange *change = new CreatureDataChange(creature, newCreature.type, newCreature.count, newCreature.tag, newCreature.data);
+	FloodForgeWindow::history.change(change);
+}
+
+
 
 DenPopup::DenPopup(Den &den) : Popup(), den(den) {
 	bounds = Rect(-0.35, -0.35, 0.375 + 0.1, 0.35);
-	scrollA = 0.0;
-	scrollATo = 0.0;
-	scrollB = 0.0;
-	scrollBTo = 0.0;
-	scrollL = 0.0;
-	scrollLTo = 0.0;
 
 	mouseClickSlider = false;
 
@@ -26,11 +125,13 @@ DenPopup::DenPopup(Den &den) : Popup(), den(den) {
 	this->selectedCreature = 0;
 
 	if (this->den.creatures.size() == 0) {
-		this->den.creatures.push_back(DenLineage("", 0, "", 0.0));
+		LineageChange *change = new LineageChange(&this->den);
+		FloodForgeWindow::history.change(change);
 	}
 	this->selectedLineage = &this->den.creatures[0];
 	this->selectedLineageChance = nullptr;
-	ensureFlag(*this->selectedLineage);
+	checkFlag(this->selectedLineage);
+	fixSlider();
 }
 
 void DenPopup::draw() {
@@ -63,9 +164,24 @@ void DenPopup::draw() {
 
 	if (minimized) return;
 
-	scrollL += (scrollLTo - scrollL) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
-	scrollA += (scrollATo - scrollA) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
-	scrollB += (scrollBTo - scrollB) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
+	int lastSelectedCreature = selectedCreature;
+	if (selectedCreature >= den.creatures.size()) {
+		selectedCreature = den.creatures.size() - 1;
+	}
+	if (selectedCreature < 0) {
+		selectedCreature = 0;
+	}
+	if (selectedCreature != lastSelectedCreature) {
+		selectedLineage = den.creatures.size() == 0 ? nullptr : &den.creatures[selectedCreature];
+	} else if (den.creatures.size() == 0) {
+		selectedLineage = nullptr;
+	} else if (selectedLineage == nullptr) {
+		selectedLineage = &den.creatures[selectedCreature];
+	}
+
+	scrollLineages += (scrollLinagesTo - scrollLineages) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
+	scrollCreatures += (scrollCreaturesTo - scrollCreatures) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
+	scrollTags += (scrollTagsTo - scrollTags) * Settings::getSetting<double>(Settings::Setting::PopupScrollSpeed);
 
 	double mainX = bounds.x0;
 	if (EditorState::denPopupLineageExtended) mainX += lineageSidebarWidth;
@@ -85,7 +201,7 @@ void DenPopup::draw() {
 	UI::clip(Rect(-INFINITY, bounds.y0 + 0.01 + buttonPadding, INFINITY, bounds.y1 - 0.1));
 
 	// Draw creatures
-	{
+	if (this->selectedLineage != nullptr) {
 		glDisable(GL_SCISSOR_TEST);
 		setThemeColor(ThemeColor::Text);
 		glLineWidth(1);
@@ -108,7 +224,7 @@ void DenPopup::draw() {
 
 					UVRect rect = UVRect::fromSize(
 						centreX + (x - 0.5 * CREATURE_ROWS) * (buttonSize + buttonPadding) + buttonPadding * 0.5,
-						(bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollA,
+						(bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollCreatures,
 						buttonSize, buttonSize
 					);
 
@@ -141,28 +257,9 @@ void DenPopup::draw() {
 
 					UI::ButtonResponse response = UI::TextureButton(rect, UI::TextureButtonMods().Selected(isSelected).TextureId(texture).TextureColor(isSelected ? Color(1.0, 1.0, 1.0) : Color(0.5, 0.5, 0.5)));
 
-
 					if (response.clicked) {
-						if (creatureType == "clear") {
-							creature->type = "";
-							creature->count = 0;
-						} else {
-							if (creature->type == creatureType || creatureType == "unknown") {
-								if (UI::window->modifierPressed(GLFW_MOD_SHIFT)) {
-									creature->count -= 1;
-									if (creature->count <= 0) {
-										creature->type = "";
-										creature->count = 0;
-									}
-								} else {
-									creature->count += 1;
-								}
-							} else {
-								creature->type = creatureType;
-								creature->count = 1;
-							}
-						}
-						ensureFlag(*creature);
+						setCreature(creature, creatureType);
+						fixSlider();
 						isSelected = true;
 					}
 
@@ -182,6 +279,13 @@ void DenPopup::draw() {
 				Fonts::rainworld->writeCentered(std::to_string(creature->count), countX, countY, 0.04, CENTER_XY);
 			}
 		}
+	}
+	else {
+		glDisable(GL_SCISSOR_TEST);
+		setThemeColor(ThemeColor::Text);
+		glLineWidth(1);
+		Fonts::rainworld->writeCentered("No lineages", centreX, bounds.y1 - 0.07, 0.035, CENTER_X);
+		glEnable(GL_SCISSOR_TEST);
 	}
 
 	// Draw tags
@@ -217,7 +321,7 @@ void DenPopup::draw() {
 					bool isSelected = creature->tag == creatureTag;
 
 					double rectX = tagCentreX + (x - 1.0) * (buttonSize + buttonPadding) + buttonPadding * 0.5;
-					double rectY = (bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollB;
+					double rectY = (bounds.y1 - 0.1 - buttonPadding * 0.5) - (y + 1) * (buttonSize + buttonPadding) - scrollTags;
 
 					UVRect rect = UVRect(rectX, rectY, rectX + buttonSize, rectY + buttonSize);
 					UI::ButtonResponse response = UI::TextureButton(rect,
@@ -230,12 +334,8 @@ void DenPopup::draw() {
 					if (response.clicked) {
 						std::string creatureTag = CreatureTextures::creatureTags[id];
 
-						if (creature->tag == creatureTag) {
-							creature->tag = "";
-						} else {
-							creature->tag = creatureTag;
-						}
-						ensureFlag(*creature);
+						setTag(creature, creatureTag);
+						fixSlider();
 						isSelected = true;
 					}
 
@@ -289,7 +389,7 @@ void DenPopup::draw() {
 	}
 
 	// Draw lineages
-	scrollLMax = 0;
+	scrollLineagesMax = 0;
 	if (EditorState::denPopupLineageExtended) {
 		glDisable(GL_SCISSOR_TEST);
 		setThemeColor(ThemeColor::Text);
@@ -317,35 +417,42 @@ void DenPopup::draw() {
 
 		if (UI::TextureButton(
 			UVRect::fromSize(bounds.x0 + 0.01, bounds.y1 - 0.19, 0.04, 0.04).uv(0.5, 0.5, 0.75, 0.75),
-			UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(selectedCreature == 0).TextureColor((selectedCreature == 0) ? Color(0.5, 0.5, 0.5) : Color(1.0, 1.0, 1.0))
+			UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(selectedCreature == 0).TextureColor((selectedCreature <= 0) ? Color(0.5, 0.5, 0.5) : Color(1.0, 1.0, 1.0))
 		)) {
 			selectedCreature--;
 			if (selectedCreature < 0) {
 				selectedCreature = den.creatures.size() - 1;
 			}
 			selectedLineage = den.creatures.size() == 0 ? nullptr : &den.creatures[selectedCreature];
-			ensureFlag(*this->selectedLineage);
+			checkFlag(this->selectedLineage);
+			fixSlider();
 		}
 
 		if (UI::TextureButton(
 			UVRect::fromSize(bounds.x0 + 0.06, bounds.y1 - 0.19, 0.04, 0.04).uv(0.0, 0.0, 0.25, 0.25),
 			UI::TextureButtonMods().TextureId(UI::uiTexture).Disabled(den.creatures.size() == 0).TextureColor((den.creatures.size() == 0) ? Color(0.5, 0.5, 0.5) : Color(1.0, 1.0, 1.0))
 		)) {
-			den.creatures.erase(std::next(den.creatures.begin(), selectedCreature));
+			LineageChange *change = new LineageChange(&den, selectedCreature);
+			FloodForgeWindow::history.change(change);
+
 			selectedCreature--;
-			if (selectedCreature == -1 && den.creatures.size() != 0) selectedCreature = 0;
+			if (selectedCreature < 0) selectedCreature = 0;
 			selectedLineage = den.creatures.size() == 0 ? nullptr : &den.creatures[selectedCreature];
-			if (selectedLineage != nullptr) ensureFlag(*this->selectedLineage);
+			checkFlag(this->selectedLineage);
+			fixSlider();
 		}
 
 		if (UI::TextureButton(
 			UVRect::fromSize(bounds.x0 + 0.11, bounds.y1 - 0.19, 0.04, 0.04).uv(0.25, 0.5, 0.5, 0.75),
 			UI::TextureButtonMods().TextureId(UI::uiTexture)
 		)) {
-			selectedCreature = den.creatures.size();
-			den.creatures.push_back(DenLineage("", 0, "", 0.0));
+			LineageChange *change = new LineageChange(&den);
+			FloodForgeWindow::history.change(change);
+
+			selectedCreature = den.creatures.size() - 1;
 			selectedLineage = &den.creatures[selectedCreature];
-			ensureFlag(*this->selectedLineage);
+			checkFlag(this->selectedLineage);
+			fixSlider();
 		}
 
 		if (UI::TextureButton(
@@ -357,7 +464,8 @@ void DenPopup::draw() {
 				selectedCreature = 0;
 			}
 			selectedLineage = &den.creatures[selectedCreature];
-			ensureFlag(*this->selectedLineage);
+			checkFlag(this->selectedLineage);
+			fixSlider();
 		}
 
 		double clipBottom = ((bounds.y0 + 0.01 + buttonPadding + UI::screenBounds.y) * 0.5) * UI::window->Height();
@@ -370,8 +478,8 @@ void DenPopup::draw() {
 			DenCreature *creature = &den.creatures[selectedCreature];
 			int j = 0;
 			while (true) {
-				scrollLMax = std::max(scrollLMax, j);
-				UVRect creatureRect = UVRect::fromSize(bounds.x0 + 0.01, bounds.y1 - scrollL - 0.19 - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize);
+				scrollLineagesMax = std::max(scrollLineagesMax, j);
+				UVRect creatureRect = UVRect::fromSize(bounds.x0 + 0.01, bounds.y1 - scrollLineages - 0.19 - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize);
 				bool selected = creature == selectedLineage;
 
 				UI::ButtonResponse response;
@@ -407,18 +515,29 @@ void DenPopup::draw() {
 
 				if (response.clicked) {
 					selectedLineage = creature;
-					ensureFlag(*this->selectedLineage);
+					checkFlag(this->selectedLineage);
+					fixSlider();
 				}
 
 				if (creature->lineageTo != nullptr) {
 					Rect inputRect = Rect::fromSize(creatureRect.x0 + buttonSize + buttonPadding, creatureRect.y0 - (buttonPadding + buttonSize * 0.5) * 0.5, buttonSize, buttonSize * 0.5);;
 					bool selected = creature == selectedLineageChance;
-					std::string text = std::to_string(int(creature->lineageChance * 100)) + (selected ? "" : "%");
+					std::string text;
+					if (selected) {
+						text = std::to_string(int(editingLineageChance * 100));
+					} else {
+						text = std::to_string(int(creature->lineageChance * 100)) + "%";
+					}
 
 					if (UI::TextButton(inputRect, text, UI::TextButtonMods().Selected(selected))) {
 						selected = !selected;
-						if (!selected) submitChance();
-						selectedLineageChance = selected ? creature : nullptr;
+						if (selected) {
+							selectedLineageChance = creature;
+							editingLineageChance = selectedLineageChance->lineageChance;
+						}
+						else {
+							submitChance();
+						}
 					}
 				}
 
@@ -428,29 +547,32 @@ void DenPopup::draw() {
 				if (UI::TextureButton(deleteRect, UI::TextureButtonMods().TextureId(UI::uiTexture))) {
 					if (lastCreature == nullptr) {
 						if (creature->lineageTo == nullptr) {
-							creature->type = "";
-							creature->tag = "";
-							creature->count = 0;
-							creature->data = 0.0;
+							CreatureDataChange *change = new CreatureDataChange(creature, "", 0, "", 0.0);
+							FloodForgeWindow::history.change(change);
 						} else {
-							creature->type = creature->lineageTo->type;
-							creature->tag = creature->lineageTo->tag;
-							creature->count = creature->lineageTo->count;
-							creature->data = creature->lineageTo->data;
-
 							if (selectedLineage == creature->lineageTo) {
 								selectedLineage = creature;
 							}
-							DenCreature *toDelete = creature->lineageTo;
-							creature->lineageTo = creature->lineageTo->lineageTo;
-							delete toDelete;
+							CreatureDeleteChange *change = new CreatureDeleteChange(creature, lastCreature);
+							FloodForgeWindow::history.change(change);
+
+							// creature->type = creature->lineageTo->type;
+							// creature->tag = creature->lineageTo->tag;
+							// creature->count = creature->lineageTo->count;
+							// creature->data = creature->lineageTo->data;
+
+							// DenCreature *toDelete = creature->lineageTo;
+							// creature->lineageTo = creature->lineageTo->lineageTo;
+							// delete toDelete;
 						}
 					} else {
 						if (selectedLineage == creature) {
 							selectedLineage = lastCreature;
 						}
-						lastCreature->lineageTo = creature->lineageTo;
-						delete creature;
+						CreatureDeleteChange *change = new CreatureDeleteChange(creature, lastCreature);
+						FloodForgeWindow::history.change(change);
+						// lastCreature->lineageTo = creature->lineageTo;
+						// delete creature;
 					}
 				}
 
@@ -463,15 +585,17 @@ void DenPopup::draw() {
 				}
 			}
 
-			UVRect addRect = UVRect::fromSize(bounds.x0 + 0.01, bounds.y1 - 0.19 - scrollL - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize);
+			UVRect addRect = UVRect::fromSize(bounds.x0 + 0.01, bounds.y1 - 0.19 - scrollLineages - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize);
 			addRect.uv(0.25, 0.5, 0.5, 0.75);
 
 			if (UI::TextureButton(addRect, UI::TextureButtonMods().TextureId(UI::uiTexture))) {
-				creature->lineageTo = new DenCreature("", 0, "", 0.0);
+				CreatureLineageChange *change = new CreatureLineageChange(creature);
+				FloodForgeWindow::history.change(change);
+
 				selectedLineage = creature->lineageTo;
 			}
 
-			UVRect moreRect = UVRect::fromSize(bounds.x0 + 0.01 + buttonSize + buttonPadding, bounds.y1 - 0.19 - scrollL - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize);
+			UVRect moreRect = UVRect::fromSize(bounds.x0 + 0.01 + buttonSize + buttonPadding, bounds.y1 - 0.19 - scrollLineages - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize);
 			moreRect.uv(0.75, 0.0, 1.0, 0.25);
 			UI::ButtonResponse response = UI::TextureButton(moreRect, UI::TextureButtonMods().TextureId(UI::uiTexture));
 
@@ -530,9 +654,22 @@ void DenPopup::draw() {
 
 		double P = (UI::mouse.y - bounds.y0 - 0.075) / (bounds.y1 - bounds.y0 - 0.2);
 		P = std::clamp(P, 0.0, 1.0);
-		creature->data = P * (sliderMax - sliderMin) + sliderMin;
+		double val = P * (sliderMax - sliderMin) + sliderMin;
 		if (sliderType == SliderType::SLIDER_INT) {
-			creature->data = round(creature->data);
+			val = round(val);
+		}
+
+		if (!lastMouseClickSlider) {
+			CreatureDataChange *change = new CreatureDataChange(creature, creature->type, creature->count, creature->tag, val);
+			FloodForgeWindow::history.change(change);
+		} else {
+			if (CreatureDataChange *lastChange = dynamic_cast<CreatureDataChange*>(FloodForgeWindow::history.lastChange())) {
+				creature->data = val;
+				lastChange->redoData = val;
+			} else {
+				CreatureDataChange *change = new CreatureDataChange(creature, creature->type, creature->count, creature->tag, val);
+				FloodForgeWindow::history.change(change);
+			}
 		}
 	}
 
@@ -547,11 +684,50 @@ void DenPopup::draw() {
 		setThemeColor(ThemeColor::Text);
 		Fonts::rainworld->writeCentered(hoverText, UI::mouse.x + 0.01, UI::mouse.y + 0.03, 0.04, CENTER_Y);
 	}
+
+	lastMouseClickSlider = mouseClickSlider;
+}
+
+void DenPopup::fixSlider() {
+	if (this->selectedLineage == nullptr) return;
+
+	DenCreature &creature = *this->selectedLineage;
+
+	sliderType = SliderType::SLIDER_FLOAT;
+	if (creature.tag == "MEAN") {
+		sliderMin = -1.0;
+		sliderMax = 1.0;
+	} else if (creature.tag == "LENGTH") {
+		if (creature.type == "centipede") {
+			sliderMin = 0.1;
+			sliderMax = 1.0;
+		} else {
+			sliderMin = 1;
+			sliderMax = 32;
+		}
+	} else if (creature.tag == "SEED") {
+		sliderMin = 0;
+		sliderMax = 65536;
+		sliderType = SliderType::SLIDER_INT;
+	} else if (creature.tag == "RotType") {
+		if (isNotLizard(creature.type)) {
+			creature.tag = "";
+		} else {
+			sliderMin = 0;
+			sliderMax = 3;
+		}
+		sliderType = SliderType::SLIDER_INT;
+	}
 }
 
 void DenPopup::accept() {}
 
 void DenPopup::close() {
+	if (selectedLineageChance != nullptr) {
+		selectedLineageChance = nullptr;
+		return;
+	}
+
 	Popup::close();
 
 	UI::window->removeScrollCallback(this, scrollCallback);
@@ -564,11 +740,11 @@ void DenPopup::scrollCallback(void *object, double deltaX, double deltaY) {
 	if (!popup->hovered) return;
 
 	if (popup->mouseSection == 0) {
-		popup->scrollLTo += deltaY * 0.06;
+		popup->scrollLinagesTo += deltaY * 0.06;
 	} else if (popup->mouseSection == 1) {
-		popup->scrollATo += deltaY * 0.06;
+		popup->scrollCreaturesTo += deltaY * 0.06;
 	} else {
-		popup->scrollBTo += deltaY * 0.06;
+		popup->scrollTagsTo += deltaY * 0.06;
 	}
 
 	popup->clampScroll();
@@ -581,141 +757,59 @@ void DenPopup::clampScroll() {
 	int itemsA = CreatureTextures::creatures.size() / CREATURE_ROWS - 1;
 	double sizeA = itemsA * (buttonSize + buttonPadding);
 
-	if (scrollATo < -sizeA) {
-		scrollATo = -sizeA;
-		if (scrollA <= -sizeA + 0.06) {
-			scrollA = -sizeA - 0.03;
+	if (scrollCreaturesTo < -sizeA) {
+		scrollCreaturesTo = -sizeA;
+		if (scrollCreatures <= -sizeA + 0.06) {
+			scrollCreatures = -sizeA - 0.03;
 		}
 	}
 
-	if (scrollATo > 0) {
-		scrollATo = 0;
-		if (scrollA >= -0.06) {
-			scrollA = 0.03;
+	if (scrollCreaturesTo > 0) {
+		scrollCreaturesTo = 0;
+		if (scrollCreatures >= -0.06) {
+			scrollCreatures = 0.03;
 		}
 	}
 
 	int itemsB = CreatureTextures::creatureTags.size() / 2;
 	double sizeB = itemsB * (buttonSize + buttonPadding);
 
-	if (scrollBTo < -sizeB) {
-		scrollBTo = -sizeB;
-		if (scrollB <= -sizeB + 0.06) {
-			scrollB = -sizeB - 0.03;
+	if (scrollTagsTo < -sizeB) {
+		scrollTagsTo = -sizeB;
+		if (scrollTags <= -sizeB + 0.06) {
+			scrollTags = -sizeB - 0.03;
 		}
 	}
 
-	if (scrollBTo > 0) {
-		scrollBTo = 0;
-		if (scrollB >= -0.06) {
-			scrollB = 0.03;
+	if (scrollTagsTo > 0) {
+		scrollTagsTo = 0;
+		if (scrollTags >= -0.06) {
+			scrollTags = 0.03;
 		}
 	}
 
-	double sizeL = (scrollLMax + 1) * (buttonSize + buttonPadding);
-	if (scrollLTo < -sizeL) {
-		scrollLTo = -sizeL;
-		if (scrollL <= -sizeL + 0.06) {
-			scrollL = -sizeL - 0.03;
+	double sizeL = (scrollLineagesMax + 1) * (buttonSize + buttonPadding);
+	if (scrollLinagesTo < -sizeL) {
+		scrollLinagesTo = -sizeL;
+		if (scrollLineages <= -sizeL + 0.06) {
+			scrollLineages = -sizeL - 0.03;
 		}
 	}
 
-	if (scrollLTo > 0) {
-		scrollLTo = 0;
-		if (scrollL >= -0.06) {
-			scrollL = 0.03;
+	if (scrollLinagesTo > 0) {
+		scrollLinagesTo = 0;
+		if (scrollLineages >= -0.06) {
+			scrollLineages = 0.03;
 		}
-	}
-}
-
-void DenPopup::ensureFlag(DenCreature &creature) {
-	std::string creatureType = toLower(creature.type);
-
-	if (creatureType.empty()) {
-		creature.tag = "";
-		creature.data = 0.0;
-	}
-
-	bool isNotLizard =
-		creatureType != "blacklizard" &&
-		creatureType != "bluelizard" &&
-		creatureType != "cyanlizard" &&
-		creatureType != "greenlizard" &&
-		creatureType != "pinklizard" &&
-		creatureType != "redlizard" &&
-		creatureType != "whitelizard" &&
-		creatureType != "yellowlizard" &&
-		creatureType != "salamander" &&
-		creatureType != "eellizard" &&
-		creatureType != "spitlizard" &&
-		creatureType != "trainlizard" &&
-		creatureType != "zooplizard" &&
-		creatureType != "basilisklizard" &&
-		creatureType != "blizzardlizard" &&
-		creatureType != "indigolizard";
-
-	if (creature.tag == "MEAN") {
-		if (isNotLizard) {
-			creature.tag = "";
-		}
-	}
-
-	if (creature.tag == "LENGTH") {
-		if (creatureType != "polemimic" && creatureType != "centipede") {
-			creature.tag = "";
-		}
-	}
-
-	if (creature.tag == "Winter") {
-		if (creatureType != "bigspider" && creatureType != "spitterspider" && creatureType != "yeek" && isNotLizard) {
-			creature.tag = "";
-		}
-	}
-
-	if (creature.tag == "Voidsea") {
-		if (creatureType != "redlizard" && creatureType != "redcentipede" && creatureType != "bigspider" && creatureType != "daddylonglegs" && creatureType != "brotherlonglegs" && creatureType != "terrorlonglegs" && creatureType != "bigeel" && creatureType != "cyanlizard") {
-			creature.tag = "";
-		}
-	}
-
-	if (creature.tag != "MEAN" && creature.tag != "LENGTH" && creature.tag != "SEED") creature.data = 0.0;
-
-	sliderType = SliderType::SLIDER_FLOAT;
-	if (creature.tag == "MEAN") {
-		sliderMin = -1.0;
-		sliderMax = 1.0;
-	} else if (creature.tag == "LENGTH") {
-		if (creatureType == "centipede") {
-			sliderMin = 0.1;
-			sliderMax = 1.0;
-		} else {
-			sliderMin = 1;
-			sliderMax = 32;
-		}
-	} else if (creature.tag == "SEED") {
-		sliderMin = 0;
-		sliderMax = 65536;
-		sliderType = SliderType::SLIDER_INT;
-	} else if (creature.tag == "RotType") {
-		if (isNotLizard) {
-			creature.tag = "";
-		} else {
-			sliderMin = 0;
-			sliderMax = 3;
-		}
-		sliderType = SliderType::SLIDER_INT;
 	}
 }
 
 void DenPopup::submitChance() {
 	if (selectedLineageChance == nullptr) return;
 
-	if (selectedLineageChance->lineageChance > 1) {
-		selectedLineageChance->lineageChance = 1;
-	}
-	if (selectedLineageChance->lineageChance < 0) {
-		selectedLineageChance->lineageChance = 0;
-	}
+	CreatureLineageChange *change = new CreatureLineageChange(selectedLineageChance, std::clamp(editingLineageChance, 0.0, 1.0));
+	FloodForgeWindow::history.change(change);
+
 	selectedLineageChance = nullptr;
 }
 
@@ -725,7 +819,7 @@ void DenPopup::keyCallback(void *object, int action, int key) {
 	if (denWindow->minimized) return;
 	if (denWindow->selectedLineageChance == nullptr) return;
 
-	int chance = int(denWindow->selectedLineageChance->lineageChance * 100.0);
+	int chance = int(denWindow->editingLineageChance * 100.0);
 
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
 		if (key >= 48 && key <= 57) {
@@ -752,5 +846,5 @@ void DenPopup::keyCallback(void *object, int action, int key) {
 		}
 	}
 
-	denWindow->selectedLineageChance->lineageChance = chance / 100.0;
+	denWindow->editingLineageChance = chance / 100.0;
 }
