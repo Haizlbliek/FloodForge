@@ -44,16 +44,25 @@ void WorldParser::importWorldFile(std::filesystem::path path) {
 		regionsPath = findFileCaseInsensitive(EditorState::region.exportDirectory.parent_path(), "regions.txt");
 	}
 	if (regionsPath.empty()) {
-		std::filesystem::path path = findDirectoryCaseInsensitive(EditorState::region.exportDirectory.parent_path().parent_path(), "modify");
-		if (!path.empty()) path = findDirectoryCaseInsensitive(path, "world");
-		if (!path.empty()) {
-			path = findFileCaseInsensitive(EditorState::region.exportDirectory.parent_path(), "regions.txt");
+		Logger::info("../world/regions.txt doesn't exist, checking for modify");
+		regionsPath = findDirectoryCaseInsensitive(EditorState::region.exportDirectory.parent_path().parent_path(), "modify");
+		if (!regionsPath.empty()) {
+			Logger::info("../modify/ found");
+			regionsPath = findDirectoryCaseInsensitive(regionsPath, "world");
+		}
+		if (!regionsPath.empty()) {
+			Logger::info("../modify/world/ found");
+			regionsPath = findFileCaseInsensitive(regionsPath, "regions.txt");
+		} else {
+			Logger::info("../modify/world/regions.txt doesn't exist");
 		}
 	}
 
 	if (!regionsPath.empty()) {
 		Logger::info("Found regions.txt, looking for acronym");
 		EditorState::region.acronym = findAcronym(regionsPath, EditorState::region.acronym);
+	} else {
+		Logger::info("regions.txt not found");
 	}
 	
 	Logger::info("Opening world ", EditorState::region.acronym);

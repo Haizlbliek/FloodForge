@@ -159,7 +159,8 @@ so rooms in different layers can overlap.
 You can switch between modes with the `Canon`/`Dev` button.
 Rooms are positioned according to the selected mode.
 Hold ALT to display the room's other position, shown at half transparency.
-Moving a room affects only the active mode. In order to move both positions, hold ALT while dragging.
+Moving a room affects only the active mode.
+In order to move both positions, hold ALT while dragging.
 
 ### 
 ## Adding custom creatures
