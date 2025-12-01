@@ -9,7 +9,6 @@
 enum class ThemeColor {
 	Background,
 	Grid,
-	Header,
 	Border,
 	BorderHighlight,
 	Popup,
@@ -24,6 +23,7 @@ enum class ThemeColor {
 	RoomBorderHighlight,
 	RoomAir,
 	RoomSolid,
+	RoomLayer2Solid,
 	RoomPole,
 	RoomPlatform,
 	RoomShortcutEnterance,
@@ -31,7 +31,10 @@ enum class ThemeColor {
 	RoomShortcutRoom,
 	RoomShortcutDen,
 	RoomConnection,
-	RoomConnectionHover
+	RoomConnectionHover,
+	Layer0Color,
+	Layer1Color,
+	Layer2Color,
 };
 
 extern std::unordered_map<ThemeColor, Color> currentTheme;

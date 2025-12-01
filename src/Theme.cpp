@@ -13,7 +13,6 @@
 
 std::unordered_map<ThemeColor, Color> themeBasic {
 	{ ThemeColor::Background,            Color(0.3,  0.3,  0.3) },
-	{ ThemeColor::Header,                Color(0.0,  0.0,  0.0) },
 	{ ThemeColor::Border,                Color(0.75, 0.75, 0.75) },
 	{ ThemeColor::BorderHighlight,       Color(0.0,  1.0,  1.0) },
 	{ ThemeColor::Popup,                 Color(0.0,  0.0,  0.0) },
@@ -29,6 +28,7 @@ std::unordered_map<ThemeColor, Color> themeBasic {
 	{ ThemeColor::RoomBorderHighlight,   Color(0.00, 0.75, 0.00) },
 	{ ThemeColor::RoomAir,               Color(1.0,  1.0,  1.0) },
 	{ ThemeColor::RoomSolid,             Color(0.0,  0.0,  0.0) },
+	{ ThemeColor::RoomLayer2Solid,       Color(0.75, 0.75, 0.75) },
 	{ ThemeColor::RoomPole,              Color(0.0,  0.0,  0.0) },
 	{ ThemeColor::RoomPlatform,          Color(0.0,  0.0,  0.0) },
 	{ ThemeColor::RoomShortcutEnterance, Color(0.0,  1.0,  1.0) },
@@ -37,6 +37,9 @@ std::unordered_map<ThemeColor, Color> themeBasic {
 	{ ThemeColor::RoomShortcutDen,       Color(0.0,  1.0,  0.0) },
 	{ ThemeColor::RoomConnection,        Color(1.0,  1.0,  0.0) },
 	{ ThemeColor::RoomConnectionHover,   Color(0.0,  1.0,  1.0) },
+	{ ThemeColor::Layer0Color,           Color(1.0,  0.0,  0.0) },
+	{ ThemeColor::Layer1Color,           Color(1.0,  1.0,  1.0) },
+	{ ThemeColor::Layer2Color,           Color(0.0,  1.0,  0.0) },
 };
 
 std::unordered_map<ThemeColor, Color> currentTheme = { themeBasic };
@@ -62,7 +65,6 @@ void loadTheme(std::string theme) {
 
 		if      (startsWith(line, "Background:"           )) currentTheme[ThemeColor::Background           ] = color;
 		else if (startsWith(line, "Grid:"                 )) currentTheme[ThemeColor::Grid                 ] = color;
-		else if (startsWith(line, "Header:"               )) currentTheme[ThemeColor::Header               ] = color;
 		else if (startsWith(line, "Border:"               )) currentTheme[ThemeColor::Border               ] = color;
 		else if (startsWith(line, "BorderHighlight:"      )) currentTheme[ThemeColor::BorderHighlight      ] = color;
 		else if (startsWith(line, "Popup:"                )) currentTheme[ThemeColor::Popup                ] = color;
@@ -77,6 +79,7 @@ void loadTheme(std::string theme) {
 		else if (startsWith(line, "RoomBorderHighlight:"  )) currentTheme[ThemeColor::RoomBorderHighlight  ] = color;
 		else if (startsWith(line, "RoomAir:"              )) currentTheme[ThemeColor::RoomAir              ] = color;
 		else if (startsWith(line, "RoomSolid:"            )) currentTheme[ThemeColor::RoomSolid            ] = color;
+		else if (startsWith(line, "RoomLayer2Solid:"      )) currentTheme[ThemeColor::RoomLayer2Solid      ] = color;
 		else if (startsWith(line, "RoomPole:"             )) currentTheme[ThemeColor::RoomPole             ] = color;
 		else if (startsWith(line, "RoomPlatform:"         )) currentTheme[ThemeColor::RoomPlatform         ] = color;
 		else if (startsWith(line, "RoomShortcutEnterance:")) currentTheme[ThemeColor::RoomShortcutEnterance] = color;
@@ -85,6 +88,9 @@ void loadTheme(std::string theme) {
 		else if (startsWith(line, "RoomShortcutDen:"      )) currentTheme[ThemeColor::RoomShortcutDen      ] = color;
 		else if (startsWith(line, "RoomConnection:"       )) currentTheme[ThemeColor::RoomConnection       ] = color;
 		else if (startsWith(line, "RoomConnectionHover:"  )) currentTheme[ThemeColor::RoomConnectionHover  ] = color;
+		else if (startsWith(line, "Layer0Color:"          )) currentTheme[ThemeColor::Layer0Color          ] = color;
+		else if (startsWith(line, "Layer1Color:"          )) currentTheme[ThemeColor::Layer1Color          ] = color;
+		else if (startsWith(line, "Layer2Color:"          )) currentTheme[ThemeColor::Layer2Color          ] = color;
 	}
 
 	themeFile.close();
