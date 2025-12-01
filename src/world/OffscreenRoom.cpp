@@ -51,10 +51,10 @@ Den &OffscreenRoom::getDen() {
 void OffscreenRoom::draw(Vector2 mousePosition, PositionType positionType) {
 	Vector2 &position = positionType == PositionType::CANON ? canonPosition : devPosition;
 
-	Draw::color(RoomHelpers::RoomAir);
+	setThemeColor(ThemeColor::RoomAir);
 	fillRect(position.x, position.y, position.x + width, position.y - height);
 
-	Draw::color(RoomHelpers::RoomSolid);
+	setThemeColor(ThemeColor::RoomSolid);
 	Fonts::rainworld->writeCentered(this->roomName, position.x + (width * 0.5), position.y - (height * 0.5), 5, CENTER_XY);
 
 	getDen();

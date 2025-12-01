@@ -1,6 +1,5 @@
 Background: #ffffff
 Grid: #be7dff
-Header: #000000
 Border: #bfbfbf
 BorderHighlight: #8502fe
 Popup: #000000
@@ -13,6 +12,7 @@ TextHighlight: #8502fe
 SelectionBorder: #9e0000
 RoomBorderHighlight: #8502fe
 RoomAir: #ffffff
+RoomLayer2Solid: #ffbfbf
 RoomSolid: #ff0000
 RoomPole: #9e0000
 RoomPlatform: #9e0000

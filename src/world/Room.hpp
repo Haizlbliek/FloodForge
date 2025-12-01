@@ -65,17 +65,6 @@ struct Vertex {
 };
 
 namespace RoomHelpers {
-	extern Color RoomAir;
-	extern Color RoomSolid;
-	extern Color RoomPole;
-	extern Color RoomPlatform;
-	extern Color RoomShortcutEnterance;
-	extern Color RoomShortcutDot;
-	extern Color RoomShortcutRoom;
-	extern Color RoomShortcutDen;
-	extern Color RoomConnection;
-	extern Color RoomConnectionHover;
-	
 	void loadColors();
 
 	void drawTexture(GLuint texture, double rectX, double rectY, double scale);

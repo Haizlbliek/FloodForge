@@ -77,9 +77,9 @@ void Connection::draw(Vector2 mousePosition) {
 	if (!aVisible && !bVisible || connectionOpacity < 0.01f) return;
 
 	if (hovered(mousePosition) && aVisible && bVisible) {
-		Draw::color(RoomHelpers::RoomConnectionHover);
+		setThemeColor(ThemeColor::RoomConnectionHover);
 	} else {
-		Draw::color(RoomHelpers::RoomConnection);
+		setThemeColor(ThemeColor::RoomConnection);
 	}
 	float alphaA = connectionOpacity * aVisible;
 	float alphaB = connectionOpacity * bVisible;

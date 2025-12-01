@@ -1,6 +1,5 @@
 Background: #e4c2ab
 Grid: #deb895
-Header: #4c262a
 Border: #eb862d
 BorderHighlight: #ffac62
 Popup: #4c262a
