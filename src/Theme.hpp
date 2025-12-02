@@ -26,6 +26,7 @@ enum class ThemeColor {
 	RoomLayer2Solid,
 	RoomPole,
 	RoomPlatform,
+	RoomWater,
 	RoomShortcutEnterance,
 	RoomShortcutDot,
 	RoomShortcutRoom,

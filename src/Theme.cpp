@@ -31,6 +31,7 @@ std::unordered_map<ThemeColor, Color> themeBasic {
 	{ ThemeColor::RoomLayer2Solid,       Color(0.75, 0.75, 0.75) },
 	{ ThemeColor::RoomPole,              Color(0.0,  0.0,  0.0) },
 	{ ThemeColor::RoomPlatform,          Color(0.0,  0.0,  0.0) },
+	{ ThemeColor::RoomWater,             Color(0.0,  0.0,  0.5, 0.5) },
 	{ ThemeColor::RoomShortcutEnterance, Color(0.0,  1.0,  1.0) },
 	{ ThemeColor::RoomShortcutDot,       Color(1.0,  1.0,  1.0) },
 	{ ThemeColor::RoomShortcutRoom,      Color(1.0,  0.0,  1.0) },
@@ -82,6 +83,7 @@ void loadTheme(std::string theme) {
 		else if (startsWith(line, "RoomLayer2Solid:"      )) currentTheme[ThemeColor::RoomLayer2Solid      ] = color;
 		else if (startsWith(line, "RoomPole:"             )) currentTheme[ThemeColor::RoomPole             ] = color;
 		else if (startsWith(line, "RoomPlatform:"         )) currentTheme[ThemeColor::RoomPlatform         ] = color;
+		else if (startsWith(line, "RoomWater:"            )) currentTheme[ThemeColor::RoomWater            ] = color;
 		else if (startsWith(line, "RoomShortcutEnterance:")) currentTheme[ThemeColor::RoomShortcutEnterance] = color;
 		else if (startsWith(line, "RoomShortcutDot:"      )) currentTheme[ThemeColor::RoomShortcutDot      ] = color;
 		else if (startsWith(line, "RoomShortcutRoom:"     )) currentTheme[ThemeColor::RoomShortcutRoom     ] = color;
