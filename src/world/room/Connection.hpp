@@ -2,13 +2,13 @@
 
 class Connection;
 
-#include "../gl.h"
+#include "../../gl.h"
 
-#include "../Utils.hpp"
-#include "../math/Vector.hpp"
-#include "../Settings.hpp"
+#include "../../Utils.hpp"
+#include "../../math/Vector.hpp"
+#include "../../Settings.hpp"
 
-#include "TimelineType.hpp"
+#include "../TimelineType.hpp"
 #include "Room.hpp"
 
 class Connection {

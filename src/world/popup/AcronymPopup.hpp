@@ -10,7 +10,7 @@
 #include "../../Theme.hpp"
 
 #include "../Globals.hpp"
-#include "../Room.hpp"
+#include "../room/Room.hpp"
 #include "../../popup/Popups.hpp"
 
 class AcronymPopup : public Popup {
