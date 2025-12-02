@@ -3,8 +3,8 @@
 #include "../../math/Vector.hpp"
 
 #include "../../popup/Popups.hpp"
-#include "../Connection.hpp"
-#include "../Room.hpp"
+#include "../room/Connection.hpp"
+#include "../room/Room.hpp"
 
 #include "../History.hpp"
 

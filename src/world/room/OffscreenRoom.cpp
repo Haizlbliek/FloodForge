@@ -1,9 +1,9 @@
 #include "OffscreenRoom.hpp"
 
-#include "../math/Rect.hpp"
+#include "../../math/Rect.hpp"
 
-#include "Globals.hpp"
-#include "CreatureTextures.hpp"
+#include "../Globals.hpp"
+#include "../CreatureTextures.hpp"
 
 bool OffscreenRoom::isOffscreen() {
 	return true;

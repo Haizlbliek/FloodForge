@@ -13,7 +13,7 @@ enum class SliderType {
 };
 
 #include "../../popup/Popups.hpp"
-#include "../Room.hpp"
+#include "../room/Room.hpp"
 #include "../Globals.hpp"
 #include "../CreatureTextures.hpp"
 

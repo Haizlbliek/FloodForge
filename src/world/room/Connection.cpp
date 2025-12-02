@@ -1,6 +1,6 @@
 #include "Connection.hpp"
-#include "ConditionalTimelineTextures.hpp"
-#include "Globals.hpp"
+#include "../ConditionalTimelineTextures.hpp"
+#include "../Globals.hpp"
 
 Connection::Connection(Room *roomA, unsigned int connectionA, Room *roomB, unsigned int connectionB) : roomA(roomA), roomB(roomB), connectionA(connectionA), connectionB(connectionB) {
 	segments = 10;

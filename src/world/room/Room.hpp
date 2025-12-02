@@ -2,7 +2,7 @@
 
 class Room;
 
-#include "../gl.h"
+#include "../../gl.h"
 
 #include <random>
 #include <string>
@@ -14,20 +14,20 @@ class Room;
 #include <set>
 #include <algorithm>
 
-#include "../Texture.hpp"
-#include "../Theme.hpp"
-#include "../Settings.hpp"
-#include "../math/Vector.hpp"
-#include "../math/Matrix4.hpp"
-#include "../font/Fonts.hpp"
-#include "../Logger.hpp"
+#include "../../Texture.hpp"
+#include "../../Theme.hpp"
+#include "../../Settings.hpp"
+#include "../../math/Vector.hpp"
+#include "../../math/Matrix4.hpp"
+#include "../../font/Fonts.hpp"
+#include "../../Logger.hpp"
 
-#include "PositionType.hpp"
-#include "TimelineType.hpp"
+#include "../PositionType.hpp"
+#include "../TimelineType.hpp"
+#include "../ExtraRoomData.hpp"
+#include "../Shaders.hpp"
+#include "../Den.hpp"
 #include "Connection.hpp"
-#include "ExtraRoomData.hpp"
-#include "Shaders.hpp"
-#include "Den.hpp"
 
 #define CONNECTION_TYPE_NONE 0
 #define CONNECTION_TYPE_EXIT 1

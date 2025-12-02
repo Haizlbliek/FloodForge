@@ -21,9 +21,9 @@
 extern std::string ROOM_TAGS[ROOM_TAG_COUNT];
 extern std::string ROOM_TAG_NAMES[ROOM_TAG_COUNT];
 
-#include "Room.hpp"
-#include "OffscreenRoom.hpp"
-#include "Connection.hpp"
+#include "room/Room.hpp"
+#include "room/OffscreenRoom.hpp"
+#include "room/Connection.hpp"
 #include "Region.hpp"
 #include "PositionType.hpp"
 

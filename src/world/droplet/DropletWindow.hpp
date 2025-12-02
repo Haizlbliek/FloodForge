@@ -4,7 +4,7 @@
 #include "../../math/Vector.hpp"
 #include "../../math/Rect.hpp"
 #include "../../Texture.hpp"
-#include "../Room.hpp"
+#include "../room/Room.hpp"
 
 #include "Node.hpp"
 
