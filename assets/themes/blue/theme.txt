@@ -16,6 +16,7 @@ RoomLayer2Solid: #9eabb8
 RoomSolid: #020514
 RoomPole: #202a5e
 RoomPlatform: #202a5e
+RoomWater: #00008f8f
 RoomShortcutEnterance: #3b48ca
 RoomShortcutDot: #5762d2
 RoomShortcutRoom: #7ea1ff

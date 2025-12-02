@@ -10,6 +10,7 @@ Color RoomSolid;
 Color RoomLayer2Solid;
 Color RoomPole;
 Color RoomPlatform;
+Color RoomWater;
 Color RoomShortcutEnterance;
 Color RoomShortcutDot;
 Color RoomShortcutRoom;
@@ -26,6 +27,7 @@ void RoomHelpers::loadColors() {
 	RoomLayer2Solid       = currentTheme[ThemeColor::RoomLayer2Solid];
 	RoomPole              = currentTheme[ThemeColor::RoomPole];
 	RoomPlatform          = currentTheme[ThemeColor::RoomPlatform];
+	RoomWater             = currentTheme[ThemeColor::RoomWater];
 	RoomShortcutEnterance = currentTheme[ThemeColor::RoomShortcutEnterance];
 	RoomShortcutDot       = currentTheme[ThemeColor::RoomShortcutDot];
 	RoomShortcutRoom      = currentTheme[ThemeColor::RoomShortcutRoom];
@@ -208,7 +210,7 @@ void Room::draw(Vector2 mousePosition, PositionType positionType) {
 	glUseProgram(0);
 
 	if (water != -1) {
-		Draw::color(0.0, 0.0, 0.5, 0.5);
+		Draw::color(RoomWater);
 		fillRect(position.x, position.y - (height - std::min(water + 0.5, (double) height)), position.x + width, position.y - height);
 	}
 

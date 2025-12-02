@@ -617,11 +617,11 @@ std::string toFixed(double x, int decimals) {
 }
 
 Color stringToColor(const std::string &hex) {
-	if (hex.size() != 7 || hex[0] != '#') {
+	if ((hex.size() != 7 && hex.size() != 9) || hex[0] != '#') {
 		throw std::invalid_argument("Invalid hex color format. Expected format: #RRGGBB but got " + hex + " instead");
 	}
 
-	int red, green, blue;
+	int red, green, blue, alpha = 255;
 	std::stringstream ss;
 	ss << std::hex;
 
@@ -637,7 +637,13 @@ Color stringToColor(const std::string &hex) {
 	ss.clear();
 	ss >> blue;
 
-	return Color(red / 255.0, green / 255.0, blue / 255.0);
+	if (hex.size() == 9) {
+		ss.str(hex.substr(7, 2));
+		ss.clear();
+		ss >> alpha;
+	}
+
+	return Color(red / 255.0, green / 255.0, blue / 255.0, alpha / 255.0);
 }
 
 char individualIntToHex(int x) {
