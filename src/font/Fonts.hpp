@@ -4,7 +4,6 @@
 
 namespace Fonts {
 	extern Font *rainworld;
-	extern Font *ancient;
 	extern Font *rodondo;
 
 	void init();
