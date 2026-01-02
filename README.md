@@ -14,7 +14,7 @@ Requirements:
 
 Open MSYS2 MINGW64 and run:
 ```
-pcaman -Syu
+pacman -Syu
 pacman -S mingw-w64-x86_64-toolchain
 pacman -S mingw-w64-x86_64-libutf8proc
 ```
