@@ -8,9 +8,6 @@ jobs:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
 
-    permissions:
-      contents: write
-
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest ]
@@ -38,6 +35,26 @@ jobs:
           chmod +x ./build.sh
           ./build.sh --release
 
+      - name: Upload Artifacts to Workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.os }}
+          path: FloodForge-*.zip
+
+
+  release:
+    name: Create Nightly Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          merge-multiple: true
+
       - name: Upload to Nightly Release
         uses: marvinpinto/action-automatic-releases@latest
         with:
@@ -45,5 +62,4 @@ jobs:
           automatic_release_tag: "nightly"
           prerelease: true
           title: "Nightly Development Build"
-          files: |
-            FloodForge-*.zip
+          files: ./artifacts/FloodForge-*.zip
