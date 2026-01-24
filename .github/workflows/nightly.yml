@@ -29,10 +29,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           vcpkg install utf8proc:x64-mingw-static sdl2:x64-mingw-static glfw3:x64-mingw-static
-          mkdir -p lib
           cp C:/vcpkg/installed/x64-mingw-static/lib/libutf8proc.a lib/
-
-          mkdir -p lib/GLFW
           cp C:/vcpkg/installed/x64-mingw-static/lib/libglfw3.a lib/GLFW/
 
       - name: Run Build Script
