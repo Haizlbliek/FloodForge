@@ -22,6 +22,7 @@ endif
 
 # determine libs to link with based off platform
 ifeq ($(OS),Windows_NT)
+	INCLUDES += -I"C:/vcpkg/installed/x64-mingw-static/include"
 	LIBS += build/resource.o lib/GLFW/libglfw3.a lib/libutf8proc.a -lgdi32 -lopengl32 -luser32 -lcomdlg32 -lole32
 else
 	# items to plug into pkg-config to find libs and includes
