@@ -18,7 +18,13 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential zip libsdl2-dev libglfw3-dev
+          sudo apt-get install -y build-essential zip libsdl2-dev libglfw3-dev libutf8proc-dev
+
+      - name: Install Dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          vcpkg install utf8proc:x64-windows sdl2:x64-windows glfw3:x64-windows
+          vcpkg integrate install
 
       - name: Setup MSVC (Windows)
         if: matrix.os == 'windows-latest'
