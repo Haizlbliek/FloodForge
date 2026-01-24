@@ -5,7 +5,7 @@
 #include "../../ui/UI.hpp"
 
 #include "../Globals.hpp"
-#include "../Room.hpp"
+#include "../room/Room.hpp"
 #include "../../popup/Popups.hpp"
 
 class CreateRoomPopup : public Popup {

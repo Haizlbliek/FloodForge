@@ -19,8 +19,8 @@
 #include "../Theme.hpp"
 
 #include "Globals.hpp"
-#include "Room.hpp"
-#include "OffscreenRoom.hpp"
+#include "room/Room.hpp"
+#include "room/OffscreenRoom.hpp"
 #include "flood_forge/DenPopup.hpp"
 
 #include "ExtraRoomData.hpp"

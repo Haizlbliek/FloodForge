@@ -27,9 +27,9 @@
 
 #include "Shaders.hpp"
 #include "Globals.hpp"
-#include "Room.hpp"
-#include "OffscreenRoom.hpp"
-#include "Connection.hpp"
+#include "room/Room.hpp"
+#include "room/OffscreenRoom.hpp"
+#include "room/Connection.hpp"
 #include "MenuItems.hpp"
 #include "RecentFiles.hpp"
 

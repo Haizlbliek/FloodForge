@@ -2,7 +2,7 @@
 
 #include "../../popup/Popups.hpp"
 #include "../RoomAttractiveness.hpp"
-#include "../Room.hpp"
+#include "../room/Room.hpp"
 
 class RoomAttractivenessPopup : public Popup {
 	public:
