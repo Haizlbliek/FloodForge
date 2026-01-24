@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stack>
-#include "Room.hpp"
-#include "Connection.hpp"
+#include "room/Room.hpp"
+#include "room/Connection.hpp"
 #include "Den.hpp"
 #include "Globals.hpp"
 

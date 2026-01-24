@@ -5,7 +5,7 @@
 
 #include "../../popup/Popups.hpp"
 
-#include "../Room.hpp"
+#include "../room/Room.hpp"
 
 class RoomTagPopup : public Popup {
 	public:

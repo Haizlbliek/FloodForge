@@ -13,7 +13,7 @@
 #include "../popup/AcronymPopup.hpp"
 
 #include "../Globals.hpp"
-#include "../Room.hpp"
+#include "../room/Room.hpp"
 
 class SubregionNewPopup : public AcronymPopup {
 	public:
