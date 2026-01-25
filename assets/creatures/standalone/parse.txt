@@ -2,3 +2,7 @@ Jst>Joust
 RLL>RainbowLongLegs
 Candy Lizard>CandyLizard
 Candy>CandyLizard
+AS>AcidicHoppingSalamander
+Acidic Hopping Salamander>AcidicHoppingSalamander
+Acidic Salamander>AcidicHoppingSalamander
+VanillaL>VanillaLizard
