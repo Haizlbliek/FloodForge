@@ -1,6 +1,9 @@
 CandyLizard
 GregTechLizard
 ReaperLizard
+TomatoLizard
+AcidicHoppingSalamander
+VanillaLizard
 Bombadier
 DrainMite
 Joust
@@ -11,3 +14,4 @@ RainbowLongLegs
 Shelspider
 SpearSnail
 Teuthicada
+SnootShootNoot
