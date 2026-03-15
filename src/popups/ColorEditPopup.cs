@@ -1,0 +1,119 @@
+namespace FloodForge.Popups;
+
+public class ColorEditPopup : Popup {
+	protected Color color;
+	protected Action<Color> callback;
+	protected float hue;
+	protected bool centerFocused = false;
+	protected bool sliderFocused = false;
+
+	protected int _hueLoc, _projLocC, _modelLocC;
+	protected int _projLocH, _modelLocH;
+
+	public ColorEditPopup(Color initialColor, Action<Color> submitCallback) {
+		this.color = initialColor;
+		this.callback = submitCallback;
+		this.bounds = new Rect(-0.2f, -0.2f, 0.2f, 0.2f);
+		Color.ToHSV(this.color, out this.hue, out _, out _);
+	}
+
+	public override void Draw() {
+		base.Draw();
+		if (this.minimized) return;
+
+		Vector3 hsv = this.color.ToHsv();
+
+		float selectorSize = 0.33f;
+		bool colorChanged = false;
+
+		Rect selectorRect = Rect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.06f, selectorSize, -selectorSize);
+		Immediate.UseProgram(Preload.ColorSquareShader.shader);
+		if (this._hueLoc == 0) {
+			this._hueLoc = Program.gl.GetUniformLocation(Preload.ColorSquareShader, "hue");
+			this._projLocC = Program.gl.GetUniformLocation(Preload.ColorSquareShader, "projection");
+			this._modelLocC = Program.gl.GetUniformLocation(Preload.ColorSquareShader, "model");
+		}
+		Program.gl.Uniform1(this._hueLoc, this.hue / 360f);
+		Vector2 matrixScale = FloodForge.Main.screenBounds;
+		Program.gl.UniformMatrix4(this._projLocC, false, [..Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x, matrixScale.x, -matrixScale.y, matrixScale.y, 0f, 1f)]);
+		Program.gl.UniformMatrix4(this._modelLocC, false, [..Matrix4X4.CreateTranslation(0f, 0f, 0f)]);
+
+		Immediate.Color(1f, 1f, 1f);
+		Immediate.Begin(Immediate.PrimitiveType.QUADS);
+		Immediate.TexCoord(0f, 1f); Immediate.Vertex(selectorRect.x0, selectorRect.y1);
+		Immediate.TexCoord(1f, 1f); Immediate.Vertex(selectorRect.x1, selectorRect.y1);
+		Immediate.TexCoord(1f, 0f); Immediate.Vertex(selectorRect.x1, selectorRect.y0);
+		Immediate.TexCoord(0f, 0f); Immediate.Vertex(selectorRect.x0, selectorRect.y0);
+		Immediate.End();
+		Immediate.UseProgram(0);
+
+		if (Mouse.JustLeft && !Mouse.Disabled && selectorRect.Inside(Mouse.Pos)) {
+			this.centerFocused = true;
+		}
+
+		if (this.centerFocused) {
+			if (!Mouse.Left)
+				this.centerFocused = false;
+
+			float s = Mathf.Clamp((Mouse.X - this.bounds.x0 - 0.01f) / selectorSize, 0f, 1f);
+			float v = Mathf.Clamp((Mouse.Y - (this.bounds.y1 - 0.06f - selectorSize)) / selectorSize, 0f, 1f);
+			hsv.x = this.hue;
+			hsv.y = s;
+			hsv.z = v;
+			this.color = Color.FromHSV(hsv.x, hsv.y, hsv.z);
+			colorChanged = true;
+		}
+
+		Vector2 colorPos = new Vector2(hsv.y * selectorSize + 0.01f + this.bounds.x0, hsv.z * selectorSize + this.bounds.y1 - 0.06f - selectorSize);
+		Rect colorRect = Rect.FromSize(colorPos.x - 0.01f, colorPos.y - 0.01f, 0.02f, 0.02f);
+		Immediate.Color(this.color);
+		UI.FillRect(colorRect);
+		float val = hsv.z > 0.5f ? 0f : 1f;
+		Immediate.Color(val, val, val);
+		UI.StrokeRect(colorRect);
+
+		Rect sliderRect = Rect.FromSize(selectorRect.x1 + 0.02f, selectorRect.y0, 0.02f, selectorSize);
+
+		Immediate.UseProgram(Preload.HueSliderShader.shader);
+		if (this._projLocH == 0) {
+			this._projLocH = Program.gl.GetUniformLocation(Preload.HueSliderShader, "projection");
+			this._modelLocH = Program.gl.GetUniformLocation(Preload.HueSliderShader, "model");
+		}
+		Program.gl.UniformMatrix4(this._projLocH, false, [..Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x, matrixScale.x, -matrixScale.y, matrixScale.y, 0f, 1f)]);
+		Program.gl.UniformMatrix4(this._modelLocH, false, [..Matrix4X4.CreateTranslation(0f, 0f, 0f)]);
+		Immediate.Color(1f, 1f, 1f);
+		Immediate.Begin(Immediate.PrimitiveType.QUADS);
+		Immediate.TexCoord(0f, 1f); Immediate.Vertex(sliderRect.x0, sliderRect.y1);
+		Immediate.TexCoord(1f, 1f); Immediate.Vertex(sliderRect.x1, sliderRect.y1);
+		Immediate.TexCoord(1f, 0f); Immediate.Vertex(sliderRect.x1, sliderRect.y0);
+		Immediate.TexCoord(0f, 0f); Immediate.Vertex(sliderRect.x0, sliderRect.y0);
+		Immediate.End();
+		Immediate.UseProgram(0);
+
+		float hueY = Mathf.Lerp(sliderRect.y0, sliderRect.y1, this.hue / 360f);
+		UI.Line(sliderRect.x0 - 0.01f, hueY, sliderRect.x1 + 0.01f, hueY);
+
+		if (Mouse.JustLeft && !Mouse.Disabled && sliderRect.Inside(Mouse.Pos)) {
+			this.sliderFocused = true;
+		}
+		if (this.sliderFocused) {
+			if (!Mouse.Left)
+				this.sliderFocused = false;
+
+			float h = Mathf.Clamp((Mouse.Y - (this.bounds.y1 - 0.06f - selectorSize)) / selectorSize, 0f, 1f) * 360f;
+			hsv.x = h;
+			this.hue = h;
+			this.color = Color.FromHSV(hsv.x, hsv.y, hsv.z);
+			colorChanged = true;
+		}
+
+		if (colorChanged) {
+			this.callback(this.color);
+		}
+	}
+
+	public override void Close() {
+		base.Close();
+		this.callback(this.color);
+	}
+}

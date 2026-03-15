@@ -16,24 +16,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Dependencies (Linux)
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build and Publish
+        run: |
+          dotnet publish -c Release -o ./publish
+
+      - name: Package Artifacts (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential zip libsdl2-dev libglfw3-dev libutf8proc-dev
+          cd publish
+          zip -r ../FloodForge-linux.zip .
 
-      - name: Install Dependencies (Windows)
+      - name: Package Artifacts (Windows)
         if: matrix.os == 'windows-latest'
+        shell: pwsh
         run: |
-          vcpkg install utf8proc:x64-mingw-static sdl2:x64-mingw-static glfw3:x64-mingw-static
-          cp C:/vcpkg/installed/x64-mingw-static/lib/libutf8proc.a lib/
-          cp C:/vcpkg/installed/x64-mingw-static/lib/libglfw3.a lib/GLFW/
-
-      - name: Run Build Script
-        shell: bash
-        run: |
-          chmod +x ./build.sh
-          ./build.sh --release
+          Compress-Archive -Path ./publish/* -DestinationPath ./FloodForge-windows.zip
 
       - name: Upload Artifacts to Workflow
         uses: actions/upload-artifact@v4
