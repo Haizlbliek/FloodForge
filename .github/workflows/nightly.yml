@@ -18,13 +18,12 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x' # Or '9.0.x' depending on your project
+          dotnet-version: '10.0.x'
 
       - name: Restore Dependencies
         run: dotnet restore
 
       - name: Publish (Build & Package)
-        # This replaces your build.sh. It creates a self-contained folder.
         run: |
           dotnet publish -c Release -o ./publish-temp
 
@@ -55,6 +54,11 @@ jobs:
         with:
           path: ./artifacts
           merge-multiple: true
+
+      - name: Delete old release
+        run: gh release delete nightly --yes --cleanup-tag || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to Nightly Release
         uses: softprops/action-gh-release@v2
