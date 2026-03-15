@@ -68,4 +68,5 @@ jobs:
           generate_release_notes: true 
           prerelease: true
           make_latest: false
+          overwrite_files: true
           files: ./artifacts/FloodForge-*.zip
