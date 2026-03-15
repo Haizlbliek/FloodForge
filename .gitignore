@@ -15,13 +15,11 @@ FloodForge.zip
 FloodForge-Windows.zip
 FloodForge-Linux.zip
 
-build/obj
-build/.buildmode
-build/.depend
-
 TODO.md
 CHANGES.md
 
 .vscode/
-/.clangd
 *.tmp
+
+bin
+obj
