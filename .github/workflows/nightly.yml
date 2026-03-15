@@ -61,12 +61,10 @@ jobs:
           merge-multiple: true
 
       - name: Upload to Nightly Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: "nightly"
-          name: "Nightly Development Build"
-          generate_release_notes: true 
-          prerelease: true
-          make_latest: false
-          overwrite_files: true
-          files: ./artifacts/FloodForge-*.zip
+        run: |
+          gh release edit nightly --title "Nightly Development Build" --prerelease --notes "Nightly build from main branch" || \
+          gh release create nightly --title "Nightly Development Build" --prerelease --notes "Nightly build from main branch"
+
+          gh release upload nightly ./artifacts/FloodForge-*.zip --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
