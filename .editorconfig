@@ -1,0 +1,40 @@
+[*.cs]
+
+csharp_style_prefer_primary_constructors = false
+csharp_style_implicit_object_creation_when_type_is_apparent = false
+csharp_new_line_before_open_brace = none
+csharp_new_line_before_open_brace_types = false
+csharp_new_line_before_open_brace_methods = false
+csharp_new_line_before_open_brace_properties = false
+csharp_new_line_before_open_brace_accessors = false
+csharp_new_line_before_open_brace_anonymous_methods = false
+csharp_new_line_before_open_brace_control_blocks = false
+csharp_new_line_before_open_brace_anonymous_types = false
+csharp_new_line_before_open_brace_object_collection_array_initializers = false
+csharp_new_line_before_open_brace_lambdas = false
+csharp_space_after_cast = true
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_between_method_call_parameter_list_parentheses = false
+csharp_space_between_parentheses = none
+csharp_preserve_single_line_statements = false
+csharp_indent_case_contents_when_block = false
+
+dotnet_diagnostic.IDE0002.severity = none
+dotnet_diagnostic.IDE0003.severity = none
+dotnet_style_namespace_match_folder = false
+dotnet_style_qualification_for_field = true:warning
+dotnet_style_qualification_for_property = true:warning
+dotnet_style_qualification_for_method = true:warning
+dotnet_style_qualification_for_event = true:warning
+dotnet_style_qualification_for_instance_members = true:warning
+dotnet_naming_style.prefix_i.required_prefix = I
+dotnet_naming_rule.interface_should_be_prefixed_with_i.severity = suggestion
+dotnet_style_prefer_auto_properties = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true
+
+[*]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+end_of_line = lf
