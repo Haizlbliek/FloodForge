@@ -15,7 +15,10 @@ public static class RecentFiles {
 	}
 
 	public static void Initialize() {
-		foreach (string path in File.ReadAllLines("assets/recents.txt")) {
+		string recentsPath = "assets/recents.txt";
+		if (!File.Exists(recentsPath)) return;
+
+		foreach (string path in File.ReadAllLines(recentsPath)) {
 			if (path.IsNullOrEmpty()) continue;
 			if (!File.Exists(path)) continue;
 
