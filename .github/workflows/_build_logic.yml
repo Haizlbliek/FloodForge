@@ -23,7 +23,7 @@ jobs:
 
       - name: Publish
         run: |
-          dotnet publish -c Release -o ./publish-temp --self-contained true -r ${{ matrix.os == 'ubuntu-latest' && 'linux-x64' || 'win-x64' }}
+          dotnet publish ./FloodForge.csproj -c Release -o ./publish-temp --self-contained true -r ${{ matrix.os == 'ubuntu-latest' && 'linux-x64' || 'win-x64' }}
 
       - name: Prepare & Zip (Linux)
         if: matrix.os == 'ubuntu-latest'
