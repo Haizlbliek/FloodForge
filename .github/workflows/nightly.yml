@@ -4,68 +4,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-    name: Build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Restore Dependencies
-        run: dotnet restore
-
-      - name: Publish (Build & Package)
-        run: |
-          dotnet publish -c Release -o ./publish-temp
-
-      - name: Zip Artifacts (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: zip -r FloodForge-linux.zip ./publish-temp/*
-
-      - name: Zip Artifacts (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: Compress-Archive -Path ./publish-temp/* -DestinationPath FloodForge-windows.zip
-
-      - name: Upload Artifacts to Workflow
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts-${{ matrix.os }}
-          path: FloodForge-*.zip
-
-  release:
-    name: Create Nightly Release
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Download All Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./artifacts
-          merge-multiple: true
-
-      - name: Delete old release
-        run: gh release delete nightly --yes --cleanup-tag || true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload to Nightly Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: "nightly"
-          name: "Nightly Development Build"
-          body: "Automated C# build for ${{ github.sha }}"
-          prerelease: true
-          make_latest: false
-          files: ./artifacts/FloodForge-*.zip
+  call-build:
+    uses: ./.github/workflows/_build_logic.yml
+    with:
+      is_release: false
+      tag_name: "nightly"
