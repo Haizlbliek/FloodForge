@@ -1,90 +1,12 @@
 name: Release Build
-
 on:
   push:
     tags:
       - "v*"
 
 jobs:
-  create-draft:
-    name: Create Draft Release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      clean_version: ${{ steps.version.outputs.CLEAN_VERSION }}
-    steps:
-      - name: Set Clean Version
-        id: version
-        run: |
-          VERSION=${{ github.ref_name }}
-          echo "CLEAN_VERSION=${VERSION#v}" >> $GITHUB_OUTPUT
-          echo "CLEAN_VERSION=${VERSION#v}" >> $GITHUB_ENV
-
-      - name: Create Draft
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: FloodForge ${{ env.CLEAN_VERSION }}
-          draft: true
-          prerelease: false
-
-  build:
-    name: Build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Restore
-        run: dotnet restore
-
-      - name: Publish
-        run: dotnet publish -c Release -o ./publish
-
-      - name: Package Artifacts (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          cd publish
-          zip -r ../FloodForge-linux.zip .
-
-      - name: Package Artifacts (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          Compress-Archive -Path ./publish/* -DestinationPath ./FloodForge-windows.zip
-
-      - name: Upload Artifacts to Workflow
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts-${{ matrix.os }}
-          path: FloodForge-*.zip
-
-  release:
-    name: Create GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Download All Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./artifacts
-          merge-multiple: true
-
-      - name: Upload to Existing Draft
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          files: ./artifacts/FloodForge-*.zip
-          draft: true
+  call-build:
+    uses: ./.github/workflows/_build_logic.yml
+    with:
+      is_release: true
+      tag_name: ${{ github.ref_name }}
