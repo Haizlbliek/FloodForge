@@ -107,6 +107,8 @@ public static class DropletWindow {
 
 	private static int trashCanState = 0;
 
+	private static Rect trashCanRect;
+
 	public static void Initialize() {
 		GeometryTexture = Texture.Load(Themes.GetPath("geometry.png"));
 	}
@@ -241,8 +243,7 @@ public static class DropletWindow {
 				trashCanState = 1;
 				movingNode.position = nodeMouse;
 
-				// LATER - Trash can rect variable
-				if (Rect.FromSize(-Main.screenBounds.x + 0.01f, -Main.screenBounds.y + 0.01f, 0.1f, 0.1f).Inside(Mouse.Pos)) {
+				if (trashCanRect.Inside(Mouse.Pos)) {
 					trashCanState = 2;
 
 					if (!Mouse.Left) {
@@ -795,6 +796,8 @@ public static class DropletWindow {
 		Immediate.LoadIdentity();
 		Immediate.Ortho(cameraOffset.x, cameraOffset.y, cameraScale * Main.screenBounds.x, cameraScale * Main.screenBounds.y);
 
+		trashCanRect = Rect.FromSize(-Main.screenBounds.x + 0.01f, -Main.screenBounds.y + 0.01f, 0.1f, 0.1f);
+
 		{
 			Immediate.Color(Themes.Grid);
 			float gridStep = MathF.Max(cameraScale / 16f, 1f);
@@ -1114,7 +1117,7 @@ public static class DropletWindow {
 
 			if (trashCanState > 0) {
 				Immediate.Color(trashCanState == 2 ? Color.Red : Color.White);
-				UI.StrokeRect(Rect.FromSize(-Main.screenBounds.x + 0.01f, -Main.screenBounds.y + 0.01f, 0.1f, 0.1f));
+				UI.StrokeRect(trashCanRect);
 				UI.font.Write("Trash", -Main.screenBounds.x + 0.06f, -Main.screenBounds.y + 0.13f, 0.03f, Font.Align.MiddleCenter);
 			}
 		}
