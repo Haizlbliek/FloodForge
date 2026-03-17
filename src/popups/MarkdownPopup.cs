@@ -191,7 +191,7 @@ public class MarkdownPopup : Popup {
 	}
 
 	protected void Scroll(float x, float y) {
-		if (!this.hovered) return;
+		if (!this.hovered || this.minimized) return;
 
 		this.targetScroll -= y * 0.1f;
 		this.ClampScroll();
