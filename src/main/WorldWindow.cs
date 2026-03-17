@@ -1226,7 +1226,7 @@ public static class WorldWindow {
 					string lastExportDirectory = WorldWindow.region.exportPath;
 
 					if (!Settings.UpdateWorldFiles) {
-						WorldWindow.region.exportPath = Path.Combine("worlds", WorldWindow.region.acronym);
+						WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory("worlds", WorldWindow.region.acronym);
 						Logger.Info($"Special exporting to directory: {WorldWindow.region.exportPath}");
 
 						if (!Directory.Exists(WorldWindow.region.exportPath)) {
@@ -1238,10 +1238,10 @@ public static class WorldWindow {
 						WorldExporter.ExportMapFile();
 						WorldExporter.ExportWorldFile();
 
-						string imagePath1 = Path.Combine(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}.png");
+						string imagePath1 = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}.png");
 						WorldExporter.ExportImageFile(imagePath1);
 
-						WorldExporter.ExportPropertiesFile(Path.Combine(WorldWindow.region.exportPath, "properties.txt"));
+						WorldExporter.ExportPropertiesFile(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "properties.txt"));
 						PopupManager.Add(new InfoPopup("Exported successfully!"));
 						if (Main.AprilFools) Sfx.Play("assets/objects/yay.wav");
 					}
@@ -1256,8 +1256,8 @@ public static class WorldWindow {
 								if (pathStrings == null || pathStrings.Length == 0) return;
 
 								string selectedPath = pathStrings[0];
-								WorldWindow.region.exportPath = Path.Combine(selectedPath, WorldWindow.region.acronym);
-								WorldWindow.region.roomsPath = Path.Combine(selectedPath, $"{WorldWindow.region.acronym}-rooms");
+								WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory(selectedPath, WorldWindow.region.acronym);
+								WorldWindow.region.roomsPath = PathUtil.FindOrAssumeDirectory(selectedPath, $"{WorldWindow.region.acronym}-rooms");
 
 								Directory.CreateDirectory(WorldWindow.region.exportPath);
 								Directory.CreateDirectory(WorldWindow.region.roomsPath);
@@ -1265,10 +1265,10 @@ public static class WorldWindow {
 								WorldExporter.ExportMapFile();
 								WorldExporter.ExportWorldFile();
 
-								string imagePath1 = Path.Combine(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}.png");
+								string imagePath1 = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}.png");
 								WorldExporter.ExportImageFile(imagePath1);
 
-								WorldExporter.ExportPropertiesFile(Path.Combine(WorldWindow.region.exportPath, "properties.txt"));
+								WorldExporter.ExportPropertiesFile(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "properties.txt"));
 								PopupManager.Add(new InfoPopup("Exported successfully!"));
 								if (Main.AprilFools) Sfx.Play("assets/objects/yay.wav");
 							}, 0)
