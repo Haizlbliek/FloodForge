@@ -9,7 +9,7 @@ public static class Program {
 
 	public static void Main(string[] args) {
 		WindowOptions options = WindowOptions.Default with {
-			Size = new Vector2D<int>(800, 600),
+			Size = new Vector2D<int>(1280, 720),
 			Title = "FloodForge",
 			VideoMode = Monitor.GetMainMonitor(null).VideoMode,
 		};
