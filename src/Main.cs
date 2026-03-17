@@ -22,17 +22,19 @@ public static class Main {
 	public static event Action<Key> KeyPress = (key) => {};
 
 	public static void Initialize() {
-		DateTime now = DateTime.UtcNow;
+		DateTime now = DateTime.Now;
 		Anniversary = now.Year == 2025 && now.Month == 11 && now.Day < 22;
 		AprilFools = now.Month == 4 && now.Day == 1;
 
 		Logger.Info("Initializing...");
 		Preload.Initialize();
 		Settings.Initialize();
+		if (Settings.DisableAprilFoolsUpdates) AprilFools = false;
 		Immediate.Initialize();
 		WorldWindow.Initialize();
 		DropletWindow.Initialize();
 		PopupManager.Initialize();
+		Sfx.Initialize();
 
 		input = Program.window.CreateInput();
 		for (int i = 0; i < input.Keyboards.Count; i++) {
@@ -47,6 +49,7 @@ public static class Main {
 		UI.Initialize();
 
 		PopupManager.Add(new SplashArtPopup());
+		if (Main.AprilFools) Sfx.Play($"assets/objects/open.wav");
 	}
 
 	private static void OnScroll(IMouse mouse, ScrollWheel wheel) {

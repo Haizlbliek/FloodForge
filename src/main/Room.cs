@@ -28,6 +28,8 @@ public class Room {
 	public HashSet<string> Timelines = [];
 	public Vector2 CanonPosition;
 	public Vector2 DevPosition;
+	public Vector2 CanonVel;
+	public Vector2 DevVel;
 	public int width;
 	public int height;
 	public bool valid;
@@ -810,7 +812,7 @@ public class Room {
 		Program.gl.UseProgram(Preload.RoomShader);
 
 		Vector2 matrixPos = WorldWindow.cameraOffset;
-		Vector2 matrixScale = WorldWindow.cameraScale * FloodForge.Main.screenBounds;
+		Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
 		Program.gl.UniformMatrix4(this._projLoc, false, [..Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
 		Program.gl.UniformMatrix4(this._modelLoc, false, [..Matrix4X4.CreateTranslation(position.x, position.y, 0f)]);
 

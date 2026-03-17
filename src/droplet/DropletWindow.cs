@@ -117,7 +117,7 @@ public static class DropletWindow {
 		Vector2 previousWorldMouse = Mouse.Pos * cameraScale + cameraOffset;
 		targetCameraScale *= zoom;
 		targetCameraScale = Mathf.Clamp(targetCameraScale, 2.5f, 1f * MathF.Max(Room.width, Room.height));
-		cameraScale += (targetCameraScale - cameraScale) * Settings.CameraZoomSpeed;
+		cameraScale += (targetCameraScale - cameraScale) * (1f - MathF.Pow(1f - Settings.CameraZoomSpeed, Program.Delta * 60f));
 		Vector2 worldMouse = Mouse.Pos * cameraScale + cameraOffset;
 
 		cameraOffset += previousWorldMouse - worldMouse;
@@ -145,7 +145,7 @@ public static class DropletWindow {
 		targetCameraPan.x = Mathf.Clamp(targetCameraPan.x, -(Main.screenBounds.x - 0.41f) * cameraScale, Main.screenBounds.x * cameraScale + Room.width);
 		targetCameraPan.y = Mathf.Clamp(targetCameraPan.y, -(Main.screenBounds.y - 0.12f) * cameraScale - Room.height, Main.screenBounds.y * cameraScale);
 
-		cameraOffset += (targetCameraPan - cameraOffset) * Settings.CameraPanSpeed;
+		cameraOffset += (targetCameraPan - cameraOffset) * (1f - MathF.Pow(1f - Settings.CameraPanSpeed, Program.Delta * 60f));
 	}
 
 	private static float SampleHandle(float a, float b, float c, float d, float t) {
@@ -791,7 +791,7 @@ public static class DropletWindow {
 		UpdateCamera();
 
 		Immediate.LoadIdentity();
-		Immediate.Ortho(cameraOffset.x, cameraOffset.y, cameraScale * FloodForge.Main.screenBounds.x, cameraScale * FloodForge.Main.screenBounds.y);
+		Immediate.Ortho(cameraOffset.x, cameraOffset.y, cameraScale * Main.screenBounds.x, cameraScale * Main.screenBounds.y);
 
 		{
 			Immediate.Color(Themes.Grid);
@@ -1047,7 +1047,7 @@ public static class DropletWindow {
 		}
 
 		Immediate.LoadIdentity();
-		Immediate.Ortho(-1f * FloodForge.Main.screenBounds.x, 1f * FloodForge.Main.screenBounds.x, -1f * FloodForge.Main.screenBounds.y, 1f * FloodForge.Main.screenBounds.y, 0f, 1f);
+		Immediate.Ortho(-1f * Main.screenBounds.x, 1f * Main.screenBounds.x, -1f * Main.screenBounds.y, 1f * Main.screenBounds.y, 0f, 1f);
 
 		Rect sidebar = new Rect(Main.screenBounds.x - 0.41f, Main.screenBounds.y - 0.12f, Main.screenBounds.x, -Main.screenBounds.y);
 		Immediate.Color(Themes.Popup);
@@ -1409,14 +1409,14 @@ public static class DropletWindow {
 		terrainNeedsRefresh = true;
 		waterNeedsRefresh = true;
 
-		string settingsPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.Name + "_settings.txt")!;
+		string? settingsPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.Name + "_settings.txt");
 		FloodForge.Backup.File(settingsPath);
 
 		string before = "";
 		string placedObjectsLine = "";
 		string after = "";
 
-		if (File.Exists(settingsPath)) {
+		if (settingsPath != null) {
 			bool isBefore = true;
 			foreach (string line in File.ReadLines(settingsPath)) {
 				if (line.StartsWith("PlacedObjects:")) {
@@ -1495,6 +1495,7 @@ public static class DropletWindow {
 			placedObjectsLine = output.ToString();
 		}
 
+		settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.Name + "_settings.txt");
 		using StreamWriter sw = new StreamWriter(settingsPath);
 		sw.Write(before);
 		if (!string.IsNullOrWhiteSpace(placedObjectsLine)) {

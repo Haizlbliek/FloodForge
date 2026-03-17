@@ -24,6 +24,7 @@ public static class Program {
 		window.Run();
 
 		window.Dispose();
+		Sfx.Cleanup();
 	}
 
 	private static void OnLoad() {
@@ -39,18 +40,15 @@ public static class Program {
 		FloodForge.Main.Initialize();
 	}
 
-	private static double time = 0.0;
+	public static float Delta { get; private set; }
 
 	private static void OnRender(double delta) {
-		time += delta;
-		if (time >= 1.0 / 60.0) {
-			try {
-				FloodForge.Main.Render();
-			} catch (Exception ex) {
-				Logger.Error(ex.ToString());
-				throw;
-			}
-			time -= 1.0 / 60.0;
+		Delta = (float) delta;
+		try {
+			FloodForge.Main.Render();
+		} catch (Exception ex) {
+			Logger.Error(ex.ToString());
+			throw;
 		}
 	}
 }

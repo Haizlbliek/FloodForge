@@ -22,8 +22,8 @@ public static class UI {
 
 	public static void Initialize() {
 		Font.Initialize();
-		font = new Font("rainworld");
-		rodondo = new Font("Rodondo");
+		font = new Font(Main.AprilFools ? "ComicSand" : "rainworld");
+		rodondo = new Font(Main.AprilFools ? "ComicSand" : "Rodondo");
 
 		ui = Texture.Load("assets/ui.png");
 	}

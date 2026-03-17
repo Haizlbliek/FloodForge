@@ -5,7 +5,9 @@ namespace FloodForge;
 public static class Backup {
 	private static readonly string BackupDir = "backups";
 
-	public static void File(string filePath) {
+	public static void File(string? filePath) {
+		if (filePath == null)
+			return;
 		if (!System.IO.File.Exists(filePath))
 			return;
 

@@ -1,83 +1,31 @@
 # FloodForge
 
-FloodForge is a C++ remake of a few Rain World modding tools.
+FloodForge is a remake of a few Rain World modding tools.
+It aims for intuitive controls, clean ui, and more features than anyone every thought necessary
 
-It aims for intuitive controls, clean ui, and as few dependencies as possible.
+## Installation
 
-## Building
-
-### Windows
-
-Requirements:
-
-- [MSYS2 MINGW](https://www.msys2.org)
-
-Open MSYS2 MINGW64 and run:
-```
-pacman -Syu
-pacman -S mingw-w64-x86_64-toolchain
-pacman -S mingw-w64-x86_64-libutf8proc
-```
-
-#### One time build
-
-If you want to have a permanent executable that you can run whenever, use this option.
-`sh build.sh`
-
-#### Building for debugging
-
-Use this if you are editing the code and need to quickly test
-`sh build.sh --debug`
-
-### Shell script
-
-The build.sh script also works under Msys2.
-
-First, install Make:
-
-```bash
-pacman -S make
-```
-
-Then refer to the Linux build instructions.
-
-### Linux
-
-Install:
-
-```bash
-sudo apt-get install make
-sudo apt-get install libglfw3-dev
-sudo apt-get install pkg-config
-sudo apt-get install g++
-sudo apt-get install libutf8proc-dev
-```
-
-Build:
-
-```bash
-sh build.sh
-
-# build in debug mode
-sh build.sh --debug
-
-# build in release mode
-sh build.sh --release
-```
+Head to https://github.com/Haizlbliek/FloodForge/releases/latest to get the latest build, download, extract, and run `FloodForge` or `FloodForge.exe` (Depending on if you're using Linux or Windows)
 
 ## I found a bug!
 
-Report it on the new [FloodForge Discord server](https://discord.gg/RBq8PDbCmB)!
+Report it in the [FloodForge Discord server](https://discord.gg/RBq8PDbCmB)!
+
+## Building
+
+Only do this if you're making changes! You don't need to build from source to get FloodForge. See Installation above for how to get without building.
+
+If you do actually want to build from source:
+
+- Get [.NET 10.0.x](https://dotnet.microsoft.com/en-us/download) or later
+- Download the source code (either through `git clone` or just downloading as a zip and extracting)
+- Open a terminal in the same directory as `FloodForge.csproj`
+- Run `dotnet run`
 
 ## License
 
 FloodForge is licensed under the [GPL-3.0 License](LICENSE).
 Please refer to the `LICENSE` file for full details.
-
-### GLFW License
-
-GLFW binaries are included in this repository for ease-of-use.
-The license is at the top of both `.h` files (`include/GLFW/glfw3.h`, `include/GLFW.glfw3native.h`).
 
 ### Asset Licenses
 

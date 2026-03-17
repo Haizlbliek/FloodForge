@@ -34,7 +34,7 @@ public class ColorEditPopup : Popup {
 			this._modelLocC = Program.gl.GetUniformLocation(Preload.ColorSquareShader, "model");
 		}
 		Program.gl.Uniform1(this._hueLoc, this.hue / 360f);
-		Vector2 matrixScale = FloodForge.Main.screenBounds;
+		Vector2 matrixScale = Main.screenBounds;
 		Program.gl.UniformMatrix4(this._projLocC, false, [..Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x, matrixScale.x, -matrixScale.y, matrixScale.y, 0f, 1f)]);
 		Program.gl.UniformMatrix4(this._modelLocC, false, [..Matrix4X4.CreateTranslation(0f, 0f, 0f)]);
 

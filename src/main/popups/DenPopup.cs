@@ -146,8 +146,8 @@ public class DenPopup : Popup {
 	public DenPopup(Den den) {
 		this.den = den;
 		this.bounds = new Rect(-0.35f, -0.35f, 0.475f, 0.35f);
-		FloodForge.Main.Scroll += this.Scroll;
-		FloodForge.Main.KeyPress += this.KeyPress;
+		Main.Scroll += this.Scroll;
+		Main.KeyPress += this.KeyPress;
 		this.selectedCreature = 0;
 		if (this.den.creatures.Count == 0) {
 			History.Apply(new LineageChange(this.den));
@@ -368,8 +368,8 @@ public class DenPopup : Popup {
 			this.FixSlider();
 		}
 
-		float clipBottom = (this.bounds.y0 + 0.01f + buttonPadding + FloodForge.Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
-		float clipTop = (this.bounds.y1 - 0.185f - buttonPadding + FloodForge.Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
+		float clipBottom = (this.bounds.y0 + 0.01f + buttonPadding + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
+		float clipTop = (this.bounds.y1 - 0.185f - buttonPadding + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
 		// LATER Make/use UI.ClipGl
 		Program.gl.Scissor(0, (int) clipBottom, (uint) Program.window.FramebufferSize.X, (uint) (clipTop - clipBottom));
 		UI.Clip(new Rect(float.NegativeInfinity, this.bounds.y0 + 0.01f + buttonPadding, float.PositiveInfinity, this.bounds.y1 - 0.185f));
@@ -503,14 +503,14 @@ public class DenPopup : Popup {
 
 		if (this.minimized) return;
 
-		this.scrollLineages += (this.scrollLineagesTo - this.scrollLineages) * Settings.PopupScrollSpeed;
-		this.scrollCreatures += (this.scrollCreaturesTo - this.scrollCreatures) * Settings.PopupScrollSpeed;
-		this.scrollTags += (this.scrollTagsTo - this.scrollTags) * Settings.PopupScrollSpeed;
+		this.scrollLineages += (this.scrollLineagesTo - this.scrollLineages) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
+		this.scrollCreatures += (this.scrollCreaturesTo - this.scrollCreatures) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
+		this.scrollTags += (this.scrollTagsTo - this.scrollTags) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 
 		float mainX = this.bounds.x0 + this.lineageSidebarWidth;
 		Program.gl.Enable(EnableCap.ScissorTest);
-		float clipBottom = (this.bounds.y0 + 0.01f + buttonPadding + FloodForge.Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
-		float clipTop = (this.bounds.y1 - 0.1f - buttonPadding + FloodForge.Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
+		float clipBottom = (this.bounds.y0 + 0.01f + buttonPadding + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
+		float clipTop = (this.bounds.y1 - 0.1f - buttonPadding + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
 		Program.gl.Scissor(0, (int) clipBottom, (uint) Program.window.FramebufferSize.X, (uint) (clipTop - clipBottom));
 		UI.Clip(new Rect(float.NegativeInfinity, this.bounds.y0 + 0.01f + buttonPadding, float.PositiveInfinity, this.bounds.y1 - 0.1f));
 
@@ -597,8 +597,8 @@ public class DenPopup : Popup {
 		}
 
 		base.Close();
-		FloodForge.Main.Scroll -= this.Scroll;
-		FloodForge.Main.KeyPress -= this.KeyPress;
+		Main.Scroll -= this.Scroll;
+		Main.KeyPress -= this.KeyPress;
 	}
 
 	protected void ClampScroll() {
