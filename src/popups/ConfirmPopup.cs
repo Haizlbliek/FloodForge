@@ -9,11 +9,11 @@ public class ConfirmPopup : Popup {
 	protected event Action OnCancel = () => {};
 
 	public ConfirmPopup(string text) {
-		// LATER: Variable width / autodetect width based on text
-
 		this.question = text.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
 		float height = MathF.Max(0.25f, this.question.Length * 0.05f + 0.07f + 0.06f);
-		this.bounds = new Rect(-0.9f, height * -0.5f, 0.9f, height * 0.5f);
+		float textWidth = this.question.Length > 0 ? this.question.Max(line => UI.font.Measure(line, 0.04f).x) : 0f;
+		float width = MathF.Max(0.4f, textWidth + 0.05f);
+		this.bounds = new Rect(width * -0.5f, height * -0.5f, width * 0.5f, height * 0.5f);
 	}
 
 	public ConfirmPopup SetOkay(string okay) {

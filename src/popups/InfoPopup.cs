@@ -6,7 +6,9 @@ public class InfoPopup : Popup {
 	public InfoPopup(string text) {
 		this.text = text.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
 		float height = MathF.Max(0.2f, this.text.Length * 0.05f + 0.07f);
-		this.bounds = new Rect(-0.9f, height * -0.5f, 0.9f, height * 0.5f);
+		float textWidth = this.text.Length > 0 ? this.text.Max(line => UI.font.Measure(line, 0.04f).x) : 0f;
+		float width = MathF.Max(0.4f, textWidth + 0.05f);
+		this.bounds = new Rect(width * -0.5f, height * -0.5f, width * 0.5f, height * 0.5f);
 	}
 
 	public override void Draw() {
