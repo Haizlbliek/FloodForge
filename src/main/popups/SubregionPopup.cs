@@ -13,7 +13,7 @@ public class SubregionPopup : Popup {
 		if (rooms.IsNullOrEmpty()) throw new NotImplementedException("SubregionPopup must have at least 1 room");
 
 		this.rooms = [..rooms];
-		FloodForge.Main.Scroll += this.ScrollCallback;
+		Main.Scroll += this.ScrollCallback;
 	}
 
 	protected void ScrollCallback(float x, float y) {
@@ -129,7 +129,7 @@ public class SubregionPopup : Popup {
 		base.Draw();
 		if (this.minimized) return;
 
-		this.scroll += (this.targetScroll - this.scroll) * Settings.PopupScrollSpeed;
+		this.scroll += (this.targetScroll - this.scroll) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 
 		float centerX = this.bounds.CenterX;
 		Immediate.Color(Themes.Text);
@@ -137,8 +137,8 @@ public class SubregionPopup : Popup {
 		UI.font.Write(title, centerX, this.bounds.y1 - 0.07f, 0.04f, Font.Center.XY);
 
 		Program.gl.Enable(EnableCap.ScissorTest);
-		float clipBottom = (this.bounds.y0 + 0.01f + FloodForge.Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
-		float clipTop = (this.bounds.y1 - 0.14f + FloodForge.Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
+		float clipBottom = (this.bounds.y0 + 0.01f + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
+		float clipTop = (this.bounds.y1 - 0.14f + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
 		Program.gl.Scissor(0, (int) clipBottom, (uint) Program.window.FramebufferSize.X, (uint) (clipTop - clipBottom));
 
 		float y = this.bounds.y1 - 0.15f - this.scroll;
@@ -160,7 +160,7 @@ public class SubregionPopup : Popup {
 	public override void Close() {
 		base.Close();
 
-		FloodForge.Main.Scroll -= this.ScrollCallback;
+		Main.Scroll -= this.ScrollCallback;
 	}
 
 	protected void SetSubregion(int subregion) {

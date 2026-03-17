@@ -13,10 +13,13 @@ public class SplashArtPopup : Popup {
 
 	public SplashArtPopup() {
 		this.bounds = new Rect(-1f, -1f, 1f, 1f);
-		this.splashArt = Texture.Load("assets/splash.png");
+		this.splashArt = Texture.Load(Main.AprilFools ? "assets/objects/splash-corrupted.png" : "assets/splash.png");
 		this.uiIcons = Texture.Load("assets/uiIcons.png");
 
 		this.version = File.ReadAllText("assets/version.txt");
+		if (Main.AprilFools) {
+			this.version = this.version.Replace("beta", "zeta").Replace("1", "42").Replace("6", "9831").Replace("5", "51");
+		}
 	}
 
 	public override void Close() {
@@ -45,8 +48,8 @@ public class SplashArtPopup : Popup {
 		Program.gl.Disable(EnableCap.Blend);
 
 		Immediate.Color(1f, 1f, 1f);
-		UI.rodondo.Write("FloodForge", 0f, 0.3f, 0.2f, Font.Center.XY);
-		UI.font.Write("World Editor", 0f, 0.1f, 0.1f, Font.Center.XY);
+		UI.rodondo.Write(Main.AprilFools ? "FlodoFroge" : "FloodForge", 0f, 0.3f, 0.2f, Font.Center.XY);
+		UI.font.Write(Main.AprilFools ? "Wordle Editor" : "World Editor", 0f, 0.1f, 0.1f, Font.Center.XY);
 		UI.font.Write(this.version, -0.88f, 0.63f, 0.04f);
 	
 		Immediate.Color(0.8f, 0.8f, 0.8f);
@@ -82,7 +85,7 @@ public class SplashArtPopup : Popup {
 		UI.StrokeRect(-0.9f, -0.65f, 0.9f, 0.65f);
 		UI.Line(-0.9f, -0.25f, 0.9f, -0.25f);
 
-		for (int i = 0; i < (FloodForge.Main.Anniversary ? 2 : 1); i++) {
+		for (int i = 0; i < (Main.Anniversary ? 2 : 1); i++) {
 			Rect hoverRect = Rect.FromSize(0.31f, -0.31f - i * 0.06f, 0.59f, 0.05f);
 			Rect rect = Rect.FromSize(0.305f, -0.315f - i * 0.06f, 0.5905f, 0.06f);
 			if (hoverRect.Inside(Mouse.X, Mouse.Y)) {
@@ -106,13 +109,13 @@ public class SplashArtPopup : Popup {
 		Immediate.Color(1f, 1f, 1f);
 
 		UI.FillRect(UVRect.FromSize(0.31f, -0.31f, 0.05f, 0.05f).UV(0f, 0f, 0.25f, 0.25f));
-		if (FloodForge.Main.Anniversary) UI.FillRect(UVRect.FromSize(0.31f, -0.37f, 0.05f, 0.05f).UV(0.25f, 0f, 0.5f, 0.25f));
+		if (Main.Anniversary) UI.FillRect(UVRect.FromSize(0.31f, -0.37f, 0.05f, 0.05f).UV(0.25f, 0f, 0.5f, 0.25f));
 
 		Immediate.UseTexture(0);
 		Program.gl.Disable(EnableCap.Blend);
 
 		UI.font.Write("Discord Server", 0.37f, -0.285f, 0.03f, Font.Center.Y);
-		if (FloodForge.Main.Anniversary) UI.font.Write("Anniversary Event", 0.37f, -0.345f, 0.03f, Font.Center.Y);
+		if (Main.Anniversary) UI.font.Write("Anniversary Event", 0.37f, -0.345f, 0.03f, Font.Center.Y);
 
 		if (Mouse.JustLeft) {
 			this.Close();

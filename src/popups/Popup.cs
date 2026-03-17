@@ -4,6 +4,7 @@ public abstract class Popup {
 	protected bool hovered = false;
 	protected bool minimized = false;
 	protected bool slatedForDeletion = false;
+	protected Vector2 vel;
 	protected Rect bounds;
 
 	public Popup() {
@@ -11,6 +12,31 @@ public abstract class Popup {
 	}
 
 	public virtual void Draw() {
+		if (Main.AprilFools) {
+			this.bounds += this.vel * 0.2f;
+			this.vel *= 0.95f;
+			float bounce = 0.8f;
+			if (this.bounds.x0 < -Main.screenBounds.x) {
+				this.bounds += new Vector2(-Main.screenBounds.x - this.bounds.x0, 0f);
+				this.vel.x = Math.Abs(this.vel.x) * bounce;
+				Sfx.Play($"assets/objects/bump{Random.Shared.Next(1, 6)}.wav");
+			}
+			if (this.bounds.x1 > Main.screenBounds.x) {
+				this.bounds += new Vector2(Main.screenBounds.x - this.bounds.x1, 0f);
+				this.vel.x = -Math.Abs(this.vel.x) * bounce;
+				Sfx.Play($"assets/objects/bump{Random.Shared.Next(1, 6)}.wav");
+			}
+			if (this.bounds.y1 > Main.screenBounds.y) {
+				this.bounds += new Vector2(0f, Main.screenBounds.y - this.bounds.y1);
+				this.vel.y = -Math.Abs(this.vel.y) * bounce;
+				Sfx.Play($"assets/objects/bump{Random.Shared.Next(1, 6)}.wav");
+			}
+			if (this.bounds.y0 < -Main.screenBounds.y) {
+				this.bounds += new Vector2(0f, -Main.screenBounds.y - this.bounds.y0);
+				this.vel.y = Math.Abs(this.vel.y) * bounce;
+				Sfx.Play($"assets/objects/bump{Random.Shared.Next(1, 6)}.wav");
+			}
+		}
 		this.hovered = this.InteractBounds().Inside(Mouse.X, Mouse.Y);
 
 		if (!this.minimized) {
@@ -34,6 +60,14 @@ public abstract class Popup {
 
 		if (UI.TextureButton(minimizedUv)) {
 			this.minimized = !this.minimized;
+			if (Main.AprilFools) {
+				if (this.minimized) {
+					Sfx.Play($"assets/objects/min.wav");
+				}
+				else {
+					Sfx.Play($"assets/objects/max.wav");
+				}
+			}
 		}
 
 		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
@@ -49,6 +83,7 @@ public abstract class Popup {
 	public virtual void Close() {
 		PopupManager.Remove(this);
 		this.slatedForDeletion = true;
+		if (Main.AprilFools) Sfx.Play($"assets/objects/close.wav");
 	}
 
 	public virtual void Accept() => this.Close();
@@ -59,7 +94,9 @@ public abstract class Popup {
 
 		return mouseY >= this.bounds.y1 - 0.05f;
 	}
+
 	public void Offset(Vector2 offset) {
-		this.bounds += offset;
+		if (Main.AprilFools) this.vel += offset;
+		else this.bounds += offset;
 	}
 }

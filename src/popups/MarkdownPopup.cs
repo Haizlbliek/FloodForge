@@ -223,7 +223,7 @@ public class MarkdownPopup : Popup {
 			(uint) ((this.bounds.y1 - this.bounds.y0 - padding * 2f - 0.05f) / Main.screenBounds.y * 0.5f * height)
 		);
 
-		this.scroll += (this.targetScroll - this.scroll) * Settings.PopupScrollSpeed;
+		this.scroll += (this.targetScroll - this.scroll) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 
 		float x = this.bounds.x0;
 		float y = 0.75f + this.bounds.y0 + 0.8f + this.scroll;

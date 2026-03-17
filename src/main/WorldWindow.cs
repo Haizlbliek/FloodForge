@@ -98,7 +98,12 @@ public static class WorldWindow {
 		region = new Region();
 	}
 
+	private static float r = new Random().NextSingle() * 18000f + 16000f;
 	private static void UpdateCamera() {
+		if (r <= 0f && Main.AprilFools) {
+			r = new Random().NextSingle() * 18000f + 16000f;
+			Sfx.Play("assets/objects/hum.wav");
+		}
 		bool isHoveringPopup = PopupManager.Windows.Any(x => x.InteractBounds().Inside(Mouse.Pos));
 
 		// LATER: Refactor into new UI system with ScrollArea
@@ -111,7 +116,7 @@ public static class WorldWindow {
 
 		Vector2 previousWorldMouse = Mouse.Pos * cameraScale + cameraOffset;
 		cameraScaleTo *= zoom;
-		cameraScale += (cameraScaleTo - cameraScale) * Settings.CameraZoomSpeed;
+		cameraScale += (cameraScaleTo - cameraScale) * (1f - MathF.Pow(1f - Settings.CameraZoomSpeed, Program.Delta * 60f));
 		worldMouse = Mouse.Pos * cameraScale + cameraOffset;
 
 		cameraOffset += previousWorldMouse - worldMouse;
@@ -124,13 +129,13 @@ public static class WorldWindow {
 
 				if (!cameraPanningBlocked) {
 					cameraPanStart = cameraOffset;
-					cameraPanStartMouse = FloodForge.Main.GlobalMouse;
+					cameraPanStartMouse = Main.GlobalMouse;
 					cameraPanning = true;
 				}
 			}
 
 			if (cameraPanning && !cameraPanningBlocked) {
-				cameraPanTo = cameraPanStart + cameraScale * (cameraPanStartMouse - FloodForge.Main.GlobalMouse);
+				cameraPanTo = cameraPanStart + cameraScale * (cameraPanStartMouse - Main.GlobalMouse);
 			}
 		}
 		else {
@@ -138,7 +143,7 @@ public static class WorldWindow {
 			cameraPanningBlocked = false;
 		}
 
-		cameraOffset += (cameraPanTo - cameraOffset) * Settings.CameraPanSpeed;
+		cameraOffset += (cameraPanTo - cameraOffset) * (1f - MathF.Pow(1f - Settings.CameraPanSpeed, Program.Delta * 60f));
 	}
 
 	private static void UpdateConnectionControls() {
@@ -351,6 +356,7 @@ public static class WorldWindow {
 					if (room != null) {
 						holdingRoom = room;
 						holdingStart = worldMouse;
+						if (Main.AprilFools) Sfx.Play($"assets/objects/click{new Random().Next(1, 3)}.wav");
 						roomPossibleSelect = room;
 						selectingState = 3;
 					}
@@ -728,18 +734,18 @@ public static class WorldWindow {
 		float gridStep = MathF.Max(cameraScale / 16f, 1f);
 		gridStep = MathF.Pow(2f, MathF.Ceiling(MathF.Log2(gridStep - 0.01f)));
 		Vector2 offset = (cameraOffset / gridStep).Rounded() * gridStep;
-		Vector2 extraOffset = new Vector2((FloodForge.Main.screenBounds.x - 1f) * gridStep * 16f % gridStep, 0f);
-		Vector2 gridScale = FloodForge.Main.screenBounds * (gridStep * 16f);
+		Vector2 extraOffset = new Vector2((Main.screenBounds.x - 1f) * gridStep * 16f % gridStep, 0f);
+		Vector2 gridScale = Main.screenBounds * (gridStep * 16f);
 
 		Immediate.Color(Themes.Grid);
 		Immediate.Begin(Immediate.PrimitiveType.LINES);
 		for (float x = -gridScale.x + offset.x; x < gridScale.x + offset.x; x += gridStep) {
-			Immediate.Vertex(x + extraOffset.x, -cameraScale * FloodForge.Main.screenBounds.y + offset.y + extraOffset.y - gridStep);
-			Immediate.Vertex(x + extraOffset.x, cameraScale * FloodForge.Main.screenBounds.y + offset.y + extraOffset.y + gridStep);
+			Immediate.Vertex(x + extraOffset.x, -cameraScale * Main.screenBounds.y + offset.y + extraOffset.y - gridStep);
+			Immediate.Vertex(x + extraOffset.x, cameraScale * Main.screenBounds.y + offset.y + extraOffset.y + gridStep);
 		}
 		for (float y = -gridScale.y + offset.y; y < gridScale.y + offset.y; y += gridStep) {
-			Immediate.Vertex(-cameraScale * FloodForge.Main.screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
-			Immediate.Vertex(cameraScale * FloodForge.Main.screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
+			Immediate.Vertex(-cameraScale * Main.screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
+			Immediate.Vertex(cameraScale * Main.screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
 		}
 		Immediate.End();
 	}
@@ -787,12 +793,63 @@ public static class WorldWindow {
 		}
 	}
 
+	private static void ResolveCollision(ref Vector2 pos1, ref Vector2 vel1, float w1, float h1, ref Vector2 pos2, ref Vector2 vel2, float w2, float h2) {
+		float halfW1 = w1 / 2f, halfH1 = h1 / 2f;
+		float halfW2 = w2 / 2f, halfH2 = h2 / 2f;
+
+		Vector2 center1 = new Vector2(pos1.x + halfW1, pos1.y - halfH1);
+		Vector2 center2 = new Vector2(pos2.x + halfW2, pos2.y - halfH2);
+
+		float diffX = center1.x - center2.x;
+		float diffY = center1.y - center2.y;
+
+		float minDistanceX = halfW1 + halfW2;
+		float minDistanceY = halfH1 + halfH2;
+
+		float overlapX = minDistanceX - Math.Abs(diffX);
+		float overlapY = minDistanceY - Math.Abs(diffY);
+
+		if (overlapX > 0 && overlapY > 0) {
+			if (overlapX < overlapY) {
+				float dir = diffX > 0 ? 1 : -1;
+
+				pos1.x += overlapX * 0.5f * dir;
+				pos2.x -= overlapX * 0.5f * dir;
+
+				float relativeVelX = vel1.x - vel2.x;
+				if (relativeVelX * dir < 0) {
+					float v1Next = vel2.x * 0.8f;
+					float v2Next = vel1.x * 0.8f;
+					vel1.x = v1Next;
+					vel2.x = v2Next;
+				}
+			} else {
+				float dir = diffY > 0 ? 1 : -1;
+
+				pos1.y += overlapY * 0.5f * dir;
+				pos2.y -= overlapY * 0.5f * dir;
+
+				float relativeVelY = vel1.y - vel2.y;
+				if (relativeVelY * dir < 0) {
+					float v1Next = vel2.y * 0.8f;
+					float v2Next = vel1.y * 0.8f;
+					vel1.y = v1Next;
+					vel2.y = v2Next;
+				}
+			}
+			
+			if (Math.Abs(vel1.Length + vel2.Length) > 5f) {
+				Sfx.Play($"assets/objects/bump{Random.Shared.Next(1, 6)}.wav");
+			}
+		}
+	}
+
 	private static void DrawEditor() {
 		if (WorldWindow.region == null)
 			return;
 
 		Immediate.LoadIdentity();
-		Immediate.Ortho(cameraOffset.x, cameraOffset.y, cameraScale * FloodForge.Main.screenBounds.x, cameraScale * FloodForge.Main.screenBounds.y);
+		Immediate.Ortho(cameraOffset.x, cameraOffset.y, cameraScale * Main.screenBounds.x, cameraScale * Main.screenBounds.y);
 		DrawGrid();
 
 		Program.gl.Enable(EnableCap.Blend);
@@ -811,6 +868,18 @@ public static class WorldWindow {
 			}
 		}
 		foreach (Room room in WorldWindow.region.rooms) {
+			if (Main.AprilFools) {
+				room.CanonPosition += room.CanonVel * 0.1f;
+				room.DevPosition += room.DevVel * 0.1f;
+				room.CanonVel *= 0.95f;
+				room.DevVel *= 0.95f;
+				foreach (Room room2 in WorldWindow.region.rooms) {
+					if (room == room2) continue;
+					ResolveCollision(ref room.DevPosition, ref room.DevVel, room.width, room.height, ref room2.DevPosition, ref room2.DevVel, room2.width, room2.height);
+					ResolveCollision(ref room.CanonPosition, ref room.CanonVel, room.width, room.height, ref room2.CanonPosition, ref room2.CanonVel, room2.width, room2.height);
+				}
+			}
+
 			if (!VisibleLayers[room.data.layer])
 				continue;
 
@@ -958,17 +1027,17 @@ public static class WorldWindow {
 		int i = 1;
 		Immediate.Color(0f, 0f, 0f);
 		foreach (string line in debugText.AsEnumerable().Reverse()) {
-			float yPos = -FloodForge.Main.screenBounds.y + (i * 0.04f);
-			UI.font.Write(line, -FloodForge.Main.screenBounds.x + 0f, yPos - 0.003f, 0.03f);
-			UI.font.Write(line, -FloodForge.Main.screenBounds.x + 0f, yPos + 0.003f, 0.03f);
-			UI.font.Write(line, -FloodForge.Main.screenBounds.x - 0.003f, yPos + 0f, 0.03f);
-			UI.font.Write(line, -FloodForge.Main.screenBounds.x + 0.003f, yPos + 0f, 0.03f);
+			float yPos = -Main.screenBounds.y + (i * 0.04f);
+			UI.font.Write(line, -Main.screenBounds.x + 0f, yPos - 0.003f, 0.03f);
+			UI.font.Write(line, -Main.screenBounds.x + 0f, yPos + 0.003f, 0.03f);
+			UI.font.Write(line, -Main.screenBounds.x - 0.003f, yPos + 0f, 0.03f);
+			UI.font.Write(line, -Main.screenBounds.x + 0.003f, yPos + 0f, 0.03f);
 			i++;
 		}
 		i = 1;
 		Immediate.Color(Themes.Text);
 		foreach (string line in debugText.AsEnumerable().Reverse()) {
-			UI.font.Write(line, -FloodForge.Main.screenBounds.x, -FloodForge.Main.screenBounds.y + (i * 0.04f), 0.03f);
+			UI.font.Write(line, -Main.screenBounds.x, -Main.screenBounds.y + (i * 0.04f), 0.03f);
 			i++;
 		}
 	}
@@ -989,7 +1058,7 @@ public static class WorldWindow {
 		DrawEditor();
 
 		Immediate.LoadIdentity();
-		Immediate.Ortho(-1f * FloodForge.Main.screenBounds.x, 1f * FloodForge.Main.screenBounds.x, -1f * FloodForge.Main.screenBounds.y, 1f * FloodForge.Main.screenBounds.y, 0f, 1f);
+		Immediate.Ortho(-1f * Main.screenBounds.x, 1f * Main.screenBounds.x, -1f * Main.screenBounds.y, 1f * Main.screenBounds.y, 0f, 1f);
 
 		DrawDebugData();
 
@@ -1174,6 +1243,7 @@ public static class WorldWindow {
 
 						WorldExporter.ExportPropertiesFile(Path.Combine(WorldWindow.region.exportPath, "properties.txt"));
 						PopupManager.Add(new InfoPopup("Exported successfully!"));
+						if (Main.AprilFools) Sfx.Play("assets/objects/yay.wav");
 					}
 					else {
 						if (string.IsNullOrEmpty(WorldWindow.region.acronym)) {
@@ -1200,6 +1270,7 @@ public static class WorldWindow {
 
 								WorldExporter.ExportPropertiesFile(Path.Combine(WorldWindow.region.exportPath, "properties.txt"));
 								PopupManager.Add(new InfoPopup("Exported successfully!"));
+								if (Main.AprilFools) Sfx.Play("assets/objects/yay.wav");
 							}, 0)
 							.Filter(FilesystemPopup.SelectionType.Folder)
 							.Hint("YOUR_MOD/world/")

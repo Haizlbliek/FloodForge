@@ -248,7 +248,7 @@ public class FilesystemPopup : Popup {
 
 		if (this.minimized) return;
 
-		this.scroll += (this.targetScroll - this.scroll) * Settings.PopupScrollSpeed;
+		this.scroll += (this.targetScroll - this.scroll) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 		this.frame++;
 
 

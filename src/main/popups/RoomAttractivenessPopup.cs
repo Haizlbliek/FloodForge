@@ -20,13 +20,13 @@ public class RoomAttractivenessPopup : Popup {
 		this.rooms = [ ..rooms ];
 		this.bounds = new Rect(-0.35f, -0.35f, 0.475f, 0.35f);
 
-		FloodForge.Main.Scroll += this.Scroll;
+		Main.Scroll += this.Scroll;
 	}
 
 	public override void Close() {
 		base.Close();
 
-		FloodForge.Main.Scroll -= this.Scroll;
+		Main.Scroll -= this.Scroll;
 	}
 
 	public override void Draw() {
@@ -37,7 +37,7 @@ public class RoomAttractivenessPopup : Popup {
 		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
 		UI.Line(this.bounds.x0 + 0.6f, this.bounds.y0, this.bounds.x0 + 0.6f, this.bounds.y1);
 
-		this.scroll += (this.targetScroll - this.scroll) * Settings.PopupScrollSpeed;
+		this.scroll += (this.targetScroll - this.scroll) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 
 		float centerX = this.bounds.x0 + 0.305f;
 		Immediate.Color(Themes.Text);
@@ -47,8 +47,8 @@ public class RoomAttractivenessPopup : Popup {
 		string hover = "";
 
 		Program.gl.Enable(EnableCap.ScissorTest);
-		float clipBottom = (this.bounds.y0 + 0.01f + buttonPadding + FloodForge.Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
-		float clipTop = (this.bounds.y1 - 0.1f - buttonPadding + FloodForge.Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
+		float clipBottom = (this.bounds.y0 + 0.01f + buttonPadding + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
+		float clipTop = (this.bounds.y1 - 0.1f - buttonPadding + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
 		Program.gl.Scissor(0, (int) clipBottom, (uint) Program.window.FramebufferSize.X, (uint) (clipTop - clipBottom));
 		UI.Clip(new Rect(float.NegativeInfinity, this.bounds.y0 + 0.01f + buttonPadding, float.PositiveInfinity, this.bounds.y1 - 0.1f));
 		int countA = CreatureTextures.creatures.Count - 2;
