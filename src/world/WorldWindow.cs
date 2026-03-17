@@ -390,11 +390,9 @@ public static class WorldWindow {
 	}
 
 	private static void UpdateKeybinds() {
-		// LATER: Support multiple rooms
 		if (Keys.JustPressed(Key.I)) {
-			Room? room = HoveringRoom;
-			if (room != null) {
-				History.Apply(new MoveToBackChange(room));
+			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
+				History.Apply(new MoveToBackChange(rooms));
 			}
 		}
 
