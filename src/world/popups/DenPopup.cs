@@ -162,7 +162,7 @@ public class DenPopup : Popup {
 
 		Program.gl.Disable(EnableCap.ScissorTest);
 		Immediate.Color(Themes.Text);
-		UI.font.Write(this.selectedLineage == null ? "No lineages" : "Creature type:", centerX, this.bounds.y1 - 0.07f, 0.035f, Font.Center.X);
+		UI.font.Write(this.selectedLineage == null ? "No lineages" : "Creature type:", centerX, this.bounds.y1 - 0.07f, 0.035f, Font.Align.TopCenter);
 		Program.gl.Enable(EnableCap.ScissorTest);
 
 		if (this.selectedLineage == null) return;
@@ -208,14 +208,14 @@ public class DenPopup : Popup {
 
 		if (this.selectedCreature >= 0 && this.selectedCreature <= this.den.creatures.Count && !creature.type.IsNullOrEmpty() && this.den.creatures[this.selectedCreature].lineageTo == null) {
 			Immediate.Color(Themes.Text);
-			UI.font.Write(creature.count.ToString(), countX, countY, 0.04f, Font.Center.XY);
+			UI.font.Write(creature.count.ToString(), countX, countY, 0.04f, Font.Align.MiddleCenter);
 		}
 	}
 
 	protected void DrawTags(float mainX, DenCreature? creature) {
 		Program.gl.Disable(EnableCap.ScissorTest);
 		Immediate.Color(Themes.Text);
-		UI.font.Write("Tag:", mainX + 0.7f, this.bounds.y1 - 0.07f, 0.035f, Font.Center.X);
+		UI.font.Write("Tag:", mainX + 0.7f, this.bounds.y1 - 0.07f, 0.035f, Font.Align.TopCenter);
 		Program.gl.Enable(EnableCap.ScissorTest);
 
 		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
@@ -283,7 +283,7 @@ public class DenPopup : Popup {
 		} else if (creature.tag == "SEED" || creature.tag == "RotType") {
 			xPos = (creature.data < 4) ? mainX + 0.81f : mainX + 0.809f;
 		}
-		UI.font.Write(result, xPos, sliderY + 0.028f, 0.026f, Font.Center.Y);
+		UI.font.Write(result, xPos, sliderY + 0.028f, 0.026f, Font.Align.MiddleLeft);
 
 		Program.gl.Enable(EnableCap.ScissorTest);
 	}
@@ -291,7 +291,7 @@ public class DenPopup : Popup {
 	protected void DrawLineages() {
 		Program.gl.Disable(EnableCap.ScissorTest);
 		Immediate.Color(Themes.Text);
-		UI.font.Write("Lineages:", this.bounds.x0 + 0.11f, this.bounds.y1 - 0.07f, 0.035f, Font.Center.X);
+		UI.font.Write("Lineages:", this.bounds.x0 + 0.11f, this.bounds.y1 - 0.07f, 0.035f, Font.Align.TopCenter);
 		Program.gl.Enable(EnableCap.ScissorTest);
 
 		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
@@ -581,7 +581,7 @@ public class DenPopup : Popup {
 			Immediate.Color(Themes.Border);
 			UI.StrokeRect(rect);
 			Immediate.Color(Themes.Text);
-			UI.font.Write(this.hoverText, Mouse.X + 0.01f, Mouse.Y + 0.03f, 0.04f, Font.Center.Y);
+			UI.font.Write(this.hoverText, Mouse.X + 0.01f, Mouse.Y + 0.03f, 0.04f, Font.Align.MiddleLeft);
 		}
 
 		this.lastMouseClickSlider = this.mouseClickSlider;

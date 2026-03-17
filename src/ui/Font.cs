@@ -75,7 +75,7 @@ public class Font {
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Write(string text, float x, float y, float textSize) {
-		this.Write(text, x, y, textSize, Center.None);
+		this.Write(text, x, y, textSize, Align.None);
 	}
 
 	public Vector2 Measure(string text, float textSize) {
@@ -99,16 +99,15 @@ public class Font {
 		return new Vector2(Math.Max(width, currentLineWidth), height);
 	}
 
-	public void Write(string text, float startX, float startY, float textSize, Center center) {
+	public void Write(string text, float startX, float startY, float textSize, Align center) {
 		float scale = textSize / this.baseSize;
 		Vector2 size = this.Measure(text, textSize);
 
-		if (center.HasFlag(Center.X)) {
-			startX -= size.x / 2f;
-		}
-		if (center.HasFlag(Center.Y)) {
-			startY += size.y / 2f;
-		}
+		if (center.HasFlag(Align.AnyCenter)) startX -= size.x / 2f;
+		else if (center.HasFlag(Align.AnyRight))  startX -= size.x;
+
+		if (center.HasFlag(Align.AnyMiddle)) startY += size.y / 2f;
+		else if (center.HasFlag(Align.AnyBottom)) startY += size.y;
 
 		float cursorX = startX;
 		float cursorY = startY;
@@ -161,20 +160,43 @@ public class Font {
 		public int xAdvance;
 	}
 
-	// LATER: Make this not this ugly struct... This is horrible.
-	public readonly struct Center {
+	public readonly struct Align {
 		private readonly int _value;
-		private Center(int value) => this._value = value;
+		private Align(int value) => this._value = value;
 
-		public static readonly Center None = new Center(0);
-		public static readonly Center X = new Center(1);
-		public static readonly Center Y = new Center(2);
-		public static readonly Center XY = new Center(3);
+		// Base Bitfields (Internal Logic)
+		private const int MaskLeft = 1, MaskCenter = 2, MaskRight = 4;
+		private const int MaskTop = 8, MaskMiddle = 16, MaskBottom = 32;
 
-		public static Center operator |(Center left, Center right) => new Center(left._value | right._value);
-		public static Center operator &(Center left, Center right) => new Center(left._value & right._value);
+		// The 9 Alignment Values
+		public static readonly Align TopLeft      = new Align(MaskTop | MaskLeft);
+		public static readonly Align TopCenter    = new Align(MaskTop | MaskCenter);
+		public static readonly Align TopRight     = new Align(MaskTop | MaskRight);
+		
+		public static readonly Align MiddleLeft   = new Align(MaskMiddle | MaskLeft);
+		public static readonly Align MiddleCenter = new Align(MaskMiddle | MaskCenter);
+		public static readonly Align MiddleRight  = new Align(MaskMiddle | MaskRight);
+		
+		public static readonly Align BottomLeft   = new Align(MaskBottom | MaskLeft);
+		public static readonly Align BottomCenter = new Align(MaskBottom | MaskCenter);
+		public static readonly Align BottomRight  = new Align(MaskBottom | MaskRight);
 
-		public bool HasFlag(Center flag) => (this._value & flag._value) == flag._value;
+		public static readonly Align AnyCenter = new Align(MaskCenter);
+		public static readonly Align AnyRight  = new Align(MaskRight);
+		public static readonly Align AnyMiddle = new Align(MaskMiddle);
+		public static readonly Align AnyBottom = new Align(MaskBottom);
+
+		// Default
+		public static readonly Align None = new Align(0);
+
+		// Operators
+		public static Align operator |(Align left, Align right) => new Align(left._value | right._value);
+		public static Align operator &(Align left, Align right) => new Align(left._value & right._value);
+
+		public bool HasFlag(Align flag) => flag._value != 0 && (this._value & flag._value) == flag._value;
+		
+		public override bool Equals(object? obj) => obj is Align other && this._value == other._value;
+		public override int GetHashCode() => this._value.GetHashCode();
 	}
 
 

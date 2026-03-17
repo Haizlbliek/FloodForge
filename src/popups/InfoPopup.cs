@@ -20,7 +20,7 @@ public class InfoPopup : Popup {
 
 		for (int idx = 0; idx < this.text.Length; idx++) {
 			float y = -((idx - this.text.Length * 0.5f) * 0.05f) - 0.04f + this.bounds.CenterY;
-			UI.font.Write(this.text[idx], this.bounds.CenterX, y, 0.04f, Font.Center.X);
+			UI.font.Write(this.text[idx], this.bounds.CenterX, y, 0.04f, Font.Align.TopCenter);
 		}
 	}
 }

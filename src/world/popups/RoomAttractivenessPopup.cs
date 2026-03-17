@@ -41,8 +41,8 @@ public class RoomAttractivenessPopup : Popup {
 
 		float centerX = this.bounds.x0 + 0.305f;
 		Immediate.Color(Themes.Text);
-		UI.font.Write("Creature type:", centerX, this.bounds.y1 - 0.07f, 0.035f, Font.Center.X);
-		UI.font.Write("Attract:", this.bounds.x0 + 0.72f, this.bounds.y1 - 0.07f, 0.035f, Font.Center.X);
+		UI.font.Write("Creature type:", centerX, this.bounds.y1 - 0.07f, 0.035f, Font.Align.TopCenter);
+		UI.font.Write("Attract:", this.bounds.x0 + 0.72f, this.bounds.y1 - 0.07f, 0.035f, Font.Align.TopCenter);
 
 		string hover = "";
 
@@ -107,7 +107,7 @@ public class RoomAttractivenessPopup : Popup {
 			Immediate.Color(Themes.Border);
 			UI.StrokeRect(rect);
 			Immediate.Color(Themes.Text);
-			UI.font.Write(hover, Mouse.X + 0.01f, Mouse.Y + 0.03f, 0.04f, Font.Center.Y);
+			UI.font.Write(hover, Mouse.X + 0.01f, Mouse.Y + 0.03f, 0.04f, Font.Align.MiddleLeft);
 		}
 	}
 

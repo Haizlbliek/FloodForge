@@ -268,7 +268,7 @@ public static class UI {
 		FillRect(rect);
 
 		Immediate.Color(mods.textColor ?? (mods.disabled ? Themes.TextDisabled : (mods.selected ? Themes.TextHighlight : Themes.Text)));
-		UI.font.Write(text, rect.CenterX, rect.CenterY, 0.03f, Font.Center.XY);
+		UI.font.Write(text, rect.CenterX, rect.CenterY, 0.03f, Font.Align.MiddleCenter);
 
 		Immediate.Color(mods.disabled ? Themes.Border : ((highlight || mods.selected) ? Themes.BorderHighlight : Themes.Border));
 		StrokeRect(rect);
@@ -327,7 +327,7 @@ public static class UI {
 		UI.FillRect(rect);
 
 		Immediate.Color(mods.disabled ? Themes.TextDisabled : (selected ? Themes.TextHighlight : Themes.Text));
-		UI.font.Write(editable.value, rect.x0 + 0.01f, rect.CenterY, 0.03f, Font.Center.Y);
+		UI.font.Write(editable.value, rect.x0 + 0.01f, rect.CenterY, 0.03f, Font.Align.MiddleLeft);
 		if (selected && UI.selectTime < 30) {
 			float width = UI.font.Measure(editable.value[0..UI.selectIndex], 0.03f).x;
 			Immediate.Begin(Immediate.PrimitiveType.LINES);

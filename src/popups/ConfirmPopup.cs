@@ -66,7 +66,7 @@ public class ConfirmPopup : Popup {
 
 		for (int idx = 0; idx < this.question.Length; idx++) {
 			float y = this.bounds.y1 - 0.08f - 0.05f * idx;
-			UI.font.Write(this.question[idx], this.bounds.CenterX, y, 0.04f, Font.Center.X | Font.Center.Y);
+			UI.font.Write(this.question[idx], this.bounds.CenterX, y, 0.04f, Font.Align.TopCenter | Font.Align.MiddleLeft);
 		}
 
 		Rect left = new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.CenterX - 0.005f, this.bounds.y0 + 0.06f);

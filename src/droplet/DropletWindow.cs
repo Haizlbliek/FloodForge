@@ -641,7 +641,7 @@ public static class DropletWindow {
 			Immediate.Color(0.0f, 1.0f, 0.0f);
 			UI.StrokeRect(Rect.FromSize(center.x - cameraSizeSmall.x * 0.5f, -center.y - cameraSizeSmall.y * 0.5f, cameraSizeSmall.x, cameraSizeSmall.y));
 			Immediate.Color(1f, 1f, 1f);
-			UI.font.Write(i.ToString(), center.x, -center.y, 0.0625f * cameraScale, Font.Center.XY);
+			UI.font.Write(i.ToString(), center.x, -center.y, 0.0625f * cameraScale, Font.Align.MiddleCenter);
 			i++;
 
 			if (selected) {
@@ -1094,9 +1094,9 @@ public static class DropletWindow {
 			}
 
 			Immediate.Color(Color.White);
-			UI.font.Write("Enclosed Room", sidebar.x0 + 0.07f, sidebar.y1 - 0.035f, 0.03f, Font.Center.Y);
-			UI.font.Write("Water", sidebar.x0 + 0.07f, sidebar.y1 - 0.095f, 0.03f, Font.Center.Y);
-			UI.font.Write("Water in Front", sidebar.x0 + 0.07f, sidebar.y1 - 0.155f, 0.03f, Font.Center.Y);
+			UI.font.Write("Enclosed Room", sidebar.x0 + 0.07f, sidebar.y1 - 0.035f, 0.03f, Font.Align.MiddleLeft);
+			UI.font.Write("Water", sidebar.x0 + 0.07f, sidebar.y1 - 0.095f, 0.03f, Font.Align.MiddleLeft);
+			UI.font.Write("Water in Front", sidebar.x0 + 0.07f, sidebar.y1 - 0.155f, 0.03f, Font.Align.MiddleLeft);
 
 			float barY = sidebar.y1 - 0.2f;
 			Immediate.Color(Themes.Border);
@@ -1115,7 +1115,7 @@ public static class DropletWindow {
 			if (trashCanState > 0) {
 				Immediate.Color(trashCanState == 2 ? Color.Red : Color.White);
 				UI.StrokeRect(Rect.FromSize(-Main.screenBounds.x + 0.01f, -Main.screenBounds.y + 0.01f, 0.1f, 0.1f));
-				UI.font.Write("Trash", -Main.screenBounds.x + 0.06f, -Main.screenBounds.y + 0.13f, 0.03f, Font.Center.XY);
+				UI.font.Write("Trash", -Main.screenBounds.x + 0.06f, -Main.screenBounds.y + 0.13f, 0.03f, Font.Align.MiddleCenter);
 			}
 		}
 
@@ -1169,7 +1169,7 @@ public static class DropletWindow {
 			Immediate.Color(Themes.Background);
 			UI.FillRect(hoverRect);
 			Immediate.Color(Themes.Text);
-			UI.font.Write(hoverText, hoverRect.x0 + 0.01f, hoverRect.CenterY, 0.03f, Font.Center.Y);
+			UI.font.Write(hoverText, hoverRect.x0 + 0.01f, hoverRect.CenterY, 0.03f, Font.Align.MiddleLeft);
 			Immediate.Color(Themes.Border);
 			UI.StrokeRect(hoverRect);
 		}

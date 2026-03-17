@@ -402,7 +402,7 @@ public static class WorldWindow {
 
 		if (Keys.JustPressed(Key.T)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
-				PopupManager.Add(new RoomTagPopup(rooms));
+				PopupManager.Add(new TagPopup(rooms));
 			}
 		}
 

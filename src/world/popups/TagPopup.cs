@@ -5,11 +5,11 @@ using Stride.Core.Extensions;
 namespace FloodForge.World;
 
 // LATER: Add scrolling
-public class RoomTagPopup : Popup {
+public class TagPopup : Popup {
 	protected readonly HashSet<Room> rooms;
 
-	public RoomTagPopup(IEnumerable<Room> rooms) {
-		if (rooms.IsNullOrEmpty()) throw new NotImplementedException("SubregionPopup must have at least 1 room");
+	public TagPopup(IEnumerable<Room> rooms) {
+		if (rooms.IsNullOrEmpty()) throw new NotImplementedException("TagPopup must have at least 1 room");
 
 		this.rooms = [..rooms];
 	}
@@ -58,7 +58,7 @@ public class RoomTagPopup : Popup {
 
 		Immediate.Color(Themes.Text);
 		string title = this.rooms.Count == 1 ? this.rooms.First().Name : "Selected Rooms";
-		UI.font.Write(title, centerX, this.bounds.y1 - 0.1f, 0.04f, Font.Center.XY);
+		UI.font.Write(title, centerX, this.bounds.y1 - 0.1f, 0.04f, Font.Align.MiddleCenter);
 
 		float y = this.bounds.y1 - 0.15f;
 		this.DrawTagButton("None", "", y);

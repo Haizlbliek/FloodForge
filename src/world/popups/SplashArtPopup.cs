@@ -46,12 +46,12 @@ public class SplashArtPopup : Popup {
 		Program.gl.Disable(EnableCap.Blend);
 
 		Immediate.Color(1f, 1f, 1f);
-		UI.rodondo.Write(Main.AprilFools ? "FlodoFroge" : "FloodForge", 0f, 0.3f, 0.2f, Font.Center.XY);
-		UI.font.Write(Main.AprilFools ? "Wordle Editor" : "World Editor", 0f, 0.1f, 0.1f, Font.Center.XY);
+		UI.rodondo.Write(Main.AprilFools ? "FlodoFroge" : "FloodForge", 0f, 0.3f, 0.2f, Font.Align.MiddleCenter);
+		UI.font.Write(Main.AprilFools ? "Wordle Editor" : "World Editor", 0f, 0.1f, 0.1f, Font.Align.MiddleCenter);
 		UI.font.Write(this.version, -0.88f, 0.63f, 0.04f);
 	
 		Immediate.Color(0.8f, 0.8f, 0.8f);
-		UI.font.Write("Recent worlds:", -0.88f, -0.28f, 0.03f, Font.Center.Y);
+		UI.font.Write("Recent worlds:", -0.88f, -0.28f, 0.03f, Font.Align.MiddleLeft);
 
 		for (int i = 0; i < 8; i++) {
 			int revIndex = Math.Min(RecentFiles.recents.Count, 8) - 1 - i;
@@ -77,7 +77,7 @@ public class SplashArtPopup : Popup {
 			}
 
 			Immediate.Color(1f, 1f, 1f);
-			UI.font.Write(recent, -0.88f, y, 0.03f, Font.Center.Y);
+			UI.font.Write(recent, -0.88f, y, 0.03f, Font.Align.MiddleLeft);
 		}
 
 		UI.StrokeRect(-0.9f, -0.65f, 0.9f, 0.65f);
@@ -112,8 +112,8 @@ public class SplashArtPopup : Popup {
 		Immediate.UseTexture(0);
 		Program.gl.Disable(EnableCap.Blend);
 
-		UI.font.Write("Discord Server", 0.37f, -0.285f, 0.03f, Font.Center.Y);
-		if (Main.Anniversary) UI.font.Write("Anniversary Event", 0.37f, -0.345f, 0.03f, Font.Center.Y);
+		UI.font.Write("Discord Server", 0.37f, -0.285f, 0.03f, Font.Align.MiddleLeft);
+		if (Main.Anniversary) UI.font.Write("Anniversary Event", 0.37f, -0.345f, 0.03f, Font.Align.MiddleLeft);
 
 		if (Mouse.JustLeft) {
 			this.Close();

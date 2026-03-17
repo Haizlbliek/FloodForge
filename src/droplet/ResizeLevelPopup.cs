@@ -50,7 +50,7 @@ public class ResizeLevelPopup : Popup {
 
 			y -= 0.06f;
 			Immediate.Color(Themes.Text);
-			UI.font.Write("---- Room Size ----", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Center.Y);
+			UI.font.Write("---- Room Size ----", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 			y -= 0.06f;
 			UI.TextInputResponse widthResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.Width);
@@ -63,7 +63,7 @@ public class ResizeLevelPopup : Popup {
 				widthResponse = new UI.TextInputResponse(widthResponse.focused, widthResponse.hovered, true);
 			}
 			Immediate.Color(Themes.Text);
-			UI.font.Write("Width (Tiles)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Center.Y);
+			UI.font.Write("Width (Tiles)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 			y -= 0.06f;
 			UI.TextInputResponse heightResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.Height);
@@ -76,7 +76,7 @@ public class ResizeLevelPopup : Popup {
 				heightResponse = new UI.TextInputResponse(heightResponse.focused, heightResponse.hovered, true);
 			}
 			Immediate.Color(Themes.Text);
-			UI.font.Write("Height (Tiles)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Center.Y);
+			UI.font.Write("Height (Tiles)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 			y -= 0.06f;
 			UI.TextInputResponse screenWidthResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.ScreenWidth);
@@ -89,7 +89,7 @@ public class ResizeLevelPopup : Popup {
 				screenWidthResponse = new UI.TextInputResponse(screenWidthResponse.focused, screenWidthResponse.hovered, true);
 			}
 			Immediate.Color(Themes.Text);
-			UI.font.Write("Width (Screens)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Center.Y);
+			UI.font.Write("Width (Screens)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 			y -= 0.06f;
 			UI.TextInputResponse screenHeightResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.ScreenHeight);
@@ -102,7 +102,7 @@ public class ResizeLevelPopup : Popup {
 				screenHeightResponse = new UI.TextInputResponse(screenHeightResponse.focused, screenHeightResponse.hovered, true);
 			}
 			Immediate.Color(Themes.Text);
-			UI.font.Write("Height (Screens)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Center.Y);
+			UI.font.Write("Height (Screens)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 			if (widthResponse.submitted) {
 				DropletWindow.resizeSize.x = int.Parse(this.Width.value);
@@ -176,13 +176,13 @@ public class ResizeLevelPopup : Popup {
 			}
 
 			Immediate.Color(Themes.Text);
-			UI.font.Write("(No undo!)", this.bounds.x0 + 0.32f, this.bounds.y1 - 0.41f + 0.05f / 2f, 0.03f, Font.Center.Y);
+			UI.font.Write("(No undo!)", this.bounds.x0 + 0.32f, this.bounds.y1 - 0.41f + 0.05f / 2f, 0.03f, Font.Align.MiddleLeft);
 		}
 		catch (Exception) {
 			Immediate.Color(Themes.Popup);
 			UI.FillRect(this.bounds);
 			Immediate.Color(Themes.Text);
-			UI.font.Write("Error happened, sorry", this.bounds.CenterX, this.bounds.CenterY, 0.08f, Font.Center.XY);
+			UI.font.Write("Error happened, sorry", this.bounds.CenterX, this.bounds.CenterY, 0.08f, Font.Align.MiddleCenter);
 			Logger.Info("An error happened when drawing resize level popup");
 		}
 	}

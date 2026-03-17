@@ -42,11 +42,11 @@ public class CreateRoomPopup : Popup {
 
 		y -= 0.06f;
 		Immediate.Color(Themes.Text);
-		UI.font.Write("---- Room Name ----", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Center.Y);
+		UI.font.Write("---- Room Name ----", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 		y -= 0.06f;
 		Immediate.Color(Themes.Text);
-		UI.font.Write($"{WorldWindow.region.acronym}_", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Center.Y);
+		UI.font.Write($"{WorldWindow.region.acronym}_", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 		float roomNameX = UI.font.Measure($"{WorldWindow.region.acronym}_", 0.03f).x;
 		UI.TextInputResponse roomNameResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f + roomNameX, y, 0.35f, 0.05f), this.RoomName);
 		if (UI.TextButton("Generate", Rect.FromSize(this.bounds.x0 + 0.01f + roomNameX + 0.36f, y, 0.2f, 0.05f), new UI.TextButtonMods { disabled = this.ScreenWidth.Focused || this.ScreenHeight.Focused || this.RoomName.Focused })) {
@@ -60,7 +60,7 @@ public class CreateRoomPopup : Popup {
 
 		y -= 0.06f;
 		Immediate.Color(Themes.Text);
-		UI.font.Write("---- Room Size ----", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Center.Y);
+		UI.font.Write("---- Room Size ----", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 		y -= 0.06f;
 		UI.TextInputResponse widthResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.Width);
@@ -73,7 +73,7 @@ public class CreateRoomPopup : Popup {
 			widthResponse = new UI.TextInputResponse(widthResponse.focused, widthResponse.hovered, true);
 		}
 		Immediate.Color(Themes.Text);
-		UI.font.Write("Width (Tiles)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Center.Y);
+		UI.font.Write("Width (Tiles)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 		y -= 0.06f;
 		UI.TextInputResponse heightResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.Height);
@@ -86,7 +86,7 @@ public class CreateRoomPopup : Popup {
 			heightResponse = new UI.TextInputResponse(heightResponse.focused, heightResponse.hovered, true);
 		}
 		Immediate.Color(Themes.Text);
-		UI.font.Write("Height (Tiles)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Center.Y);
+		UI.font.Write("Height (Tiles)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 		y -= 0.06f;
 		UI.TextInputResponse screenWidthResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.ScreenWidth);
@@ -99,7 +99,7 @@ public class CreateRoomPopup : Popup {
 			screenWidthResponse = new UI.TextInputResponse(screenWidthResponse.focused, screenWidthResponse.hovered, true);
 		}
 		Immediate.Color(Themes.Text);
-		UI.font.Write("Width (Screens)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Center.Y);
+		UI.font.Write("Width (Screens)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 		y -= 0.06f;
 		UI.TextInputResponse screenHeightResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.ScreenHeight);
@@ -112,12 +112,12 @@ public class CreateRoomPopup : Popup {
 			screenHeightResponse = new UI.TextInputResponse(screenHeightResponse.focused, screenHeightResponse.hovered, true);
 		}
 		Immediate.Color(Themes.Text);
-		UI.font.Write("Height (Screens)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Center.Y);
+		UI.font.Write("Height (Screens)", this.bounds.x0 + 0.38f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 
 		y -= 0.06f;
 		Immediate.Color(Themes.Text);
-		UI.font.Write("---- Fill Layers ----", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Center.Y);
+		UI.font.Write("---- Fill Layers ----", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 		y -= 0.06f;
 		if (UI.TextButton("1", Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.05f, 0.05f), new UI.TextButtonMods { selected = this.fillLayer1 })) {
@@ -130,11 +130,11 @@ public class CreateRoomPopup : Popup {
 
 		y -= 0.06f;
 		Immediate.Color(Themes.Text);
-		UI.font.Write("---- Options ----", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Center.Y);
+		UI.font.Write("---- Options ----", this.bounds.x0 + 0.01f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 
 		y -= 0.06f;
 		Immediate.Color(Themes.Text);
-		UI.font.Write("Auto-place Cameras", this.bounds.x0 + 0.07f, y + 0.025f, 0.03f, Font.Center.Y);
+		UI.font.Write("Auto-place Cameras", this.bounds.x0 + 0.07f, y + 0.025f, 0.03f, Font.Align.MiddleLeft);
 		UI.CheckBox(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.05f, 0.05f), ref this.placeCameras);
 
 
@@ -199,7 +199,7 @@ public class CreateRoomPopup : Popup {
 		if (!this.errorText.IsNullOrEmpty()) {
 			canCreate = false;
 			Immediate.Color(Themes.Text);
-			UI.font.Write(this.errorText, this.bounds.x0 + 0.01f, this.bounds.y0 + 0.035f, 0.03f, Font.Center.Y);
+			UI.font.Write(this.errorText, this.bounds.x0 + 0.01f, this.bounds.y0 + 0.035f, 0.03f, Font.Align.MiddleLeft);
 		}
 
 		if (UI.TextButton("Create", new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x0 + 0.26f, this.bounds.y0 + 0.06f), new UI.TextButtonMods { disabled = !canCreate })) {

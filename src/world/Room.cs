@@ -896,7 +896,7 @@ public class Room {
 
 			if (creature.lineageTo == null) {
 				Immediate.Color(Color.White);
-				UI.font.Write(creature.count.ToString(), rectX + 0.5f + scale * 0.25f, rectY - 0.5f - scale * 0.5f, 0.5f * scale, Font.Center.XY);
+				UI.font.Write(creature.count.ToString(), rectX + 0.5f + scale * 0.25f, rectY - 0.5f - scale * 0.5f, 0.5f * scale, Font.Align.MiddleCenter);
 			} else {
 				while (creature.lineageTo != null) {
 					float chance = creature.lineageChance;
@@ -906,7 +906,7 @@ public class Room {
 						UI.CenteredTexture(CreatureTextures.GetTexture(creature.type), rectX, rectY, scale);
 					}
 					Immediate.Color(Color.White);
-					UI.font.Write((int) (chance * 100f) + "%", rectX + 0.5f + scale * 0.25f, rectY + WorldWindow.SelectorScale - 0.4f - scale * 0.5f, 0.3f * scale, Font.Center.XY);
+					UI.font.Write((int) (chance * 100f) + "%", rectX + 0.5f + scale * 0.25f, rectY + WorldWindow.SelectorScale - 0.4f - scale * 0.5f, 0.3f * scale, Font.Align.MiddleCenter);
 				}
 			}
 		}

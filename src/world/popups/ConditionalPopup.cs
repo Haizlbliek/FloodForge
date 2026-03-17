@@ -117,7 +117,7 @@ public class ConditionalPopup : Popup {
 			Immediate.Color(Themes.Border);
 			UI.StrokeRect(rect);
 			Immediate.Color(Themes.Text);
-			UI.font.Write(hover, Mouse.X + 0.01f, Mouse.Y + 0.03f, 0.04f, Font.Center.Y);
+			UI.font.Write(hover, Mouse.X + 0.01f, Mouse.Y + 0.03f, 0.04f, Font.Align.MiddleLeft);
 		}
 	}
 }
