@@ -36,9 +36,42 @@ public class Connection {
 		};
 	}
 
-	// LATER: Optimize with pre-calculated bounds?
+	// Not perfect, but it works
+	public Rect AABB {
+		get {
+			float padding = WorldWindow.SelectorScale / 4f;
+			Vector2 pointA = this.roomA.GetRoomEntrancePosition(this.connectionA);
+			Vector2 pointB = this.roomB.GetRoomEntrancePosition(this.connectionB);
+
+			Vector2 min, max;
+
+			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
+				min = Vector2.Min(pointA, pointB);
+				max = Vector2.Max(pointA, pointB);
+			} else {
+				Vector2 directionA = this.roomA.GetRoomEntranceDirectionVector(this.connectionA) * this.directionStrength;
+				Vector2 directionB = this.roomB.GetRoomEntranceDirectionVector(this.connectionB) * this.directionStrength;
+
+				Vector2 cp1 = pointA + directionA;
+				Vector2 cp2 = pointB + directionB;
+
+				min = Vector2.Min(Vector2.Min(pointA, pointB), Vector2.Min(cp1, cp2));
+				max = Vector2.Max(Vector2.Max(pointA, pointB), Vector2.Max(cp1, cp2));
+			}
+
+			return new Rect(
+				min.x - padding,
+				min.y - padding,
+				max.x + padding,
+				max.y + padding
+			);
+		}
+	}
+
 	public bool Hovered {
 		get {
+			if (!this.AABB.Inside(WorldWindow.worldMouse)) return false;
+
 			float lineDist = WorldWindow.SelectorScale / 4f;
 
 			Vector2 pointA = this.roomA.GetRoomEntrancePosition(this.connectionA);

@@ -521,7 +521,7 @@ public static class DropletWindow {
 				uint geoType = Room.GetTile(mouseTile.x, mouseTile.y) % 16;
 
 				if (geoType == 1 || geoType == 0) {
-					bool solid = (geoType == 1);
+					bool solid = geoType == 1;
 					items.Push(mouseTile);
 
 					while (items.Count > 0) {
@@ -534,7 +534,7 @@ public static class DropletWindow {
 						uint currentType = geo % 16;
 
 						if (currentType != 1 && currentType != 0) continue;
-						if ((currentType == 1) != solid) continue;
+						if (currentType == 1 != solid) continue;
 
 						Room.geometry[tile.x * Room.height + tile.y] = (byte)((geo & ~15) | setTo);
 
