@@ -137,6 +137,8 @@ public class FilesystemPopup : Popup {
 	}
 
 	protected void Scroll(float x, float y) {
+		if (!this.hovered || this.minimized) return;
+
 		this.targetScroll += y * 0.06f;
 		this.ClampScroll();
 	}

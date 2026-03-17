@@ -658,7 +658,7 @@ public class DenPopup : Popup {
 	}
 
 	protected void Scroll(float deltaX, float deltaY) {
-		if (this.minimized || !this.hovered) return;
+		if (!this.hovered || this.minimized) return;
 
 		if (this.mouseSection == 0) {
 			this.scrollLineagesTo += deltaY * 0.06f;

@@ -13,11 +13,11 @@ public class SubregionPopup : Popup {
 		if (rooms.IsNullOrEmpty()) throw new NotImplementedException("SubregionPopup must have at least 1 room");
 
 		this.rooms = [..rooms];
-		Main.Scroll += this.ScrollCallback;
+		Main.Scroll += this.Scroll;
 	}
 
-	protected void ScrollCallback(float x, float y) {
-		if (!this.hovered) return;
+	protected void Scroll(float x, float y) {
+		if (!this.hovered || this.minimized) return;
 
 		this.targetScroll -= y * 0.1f;
 		this.ClampScroll();
@@ -160,7 +160,7 @@ public class SubregionPopup : Popup {
 	public override void Close() {
 		base.Close();
 
-		Main.Scroll -= this.ScrollCallback;
+		Main.Scroll -= this.Scroll;
 	}
 
 	protected void SetSubregion(int subregion) {
