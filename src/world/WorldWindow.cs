@@ -223,82 +223,50 @@ public static class WorldWindow {
 		}
 	}
 
-	private static void UpdateOriginalControls() {
-		if (Mouse.Disabled)
-			return;
+	private static void UpdateControls() {
+		if (Mouse.Disabled) return;
+
+		bool isOriginal = Settings.OriginalControls;
 
 		if (Mouse.Left) {
 			if (!Mouse.LastLeft) {
 				if (selectingState == 0) {
-					foreach (Room room in region.rooms) {
-						if (!room.Visible)
-							continue;
+					Room? room = HoveringRoom;
 
-						if (room.Inside(worldMouse)) {
-							holdingRoom = room;
-							holdingStart = worldMouse;
-							roomPossibleSelect = room;
-							selectingState = 3;
-							break;
-						}
+					if (room != null) {
+						holdingRoom = room;
+						holdingStart = worldMouse;
+						roomPossibleSelect = room;
+						selectingState = 3;
+						if (!isOriginal && Main.AprilFools) Sfx.Play($"assets/objects/click{new Random().Next(1, 3)}.wav");
 					}
 				}
 
 				if (selectingState == 0) {
-					if (Keys.Modifier(Keymod.Shift)) {
-						selectingState = 1;
-						selectionStart = worldMouse;
-						selectionEnd = worldMouse;
-						if (!Keys.Modifier(Keymod.Ctrl))
-							selectedRooms.Clear();
-					}
-					else {
-						selectingState = 5;
-						selectionStart = Mouse.Pos;
-						selectionEnd = Mouse.Pos;
-					}
+					bool isPanning = isOriginal && !Keys.Modifier(Keymod.Shift);
+					
+					selectingState = isPanning ? 5 : 1;
+					selectionStart = isPanning ? Mouse.Pos : worldMouse;
+					selectionEnd = selectionStart;
+
+					bool isAdditive = (!isOriginal && Keys.Modifier(Keymod.Shift)) || Keys.Modifier(Keymod.Ctrl);
+					if (!isAdditive && !isPanning) selectedRooms.Clear();
 				}
 			}
 			else {
 				if ((selectingState == 3 && Mouse.Moved || selectingState == 4) && roomPossibleSelect != null && holdingStart != null) {
 					if (selectingState == 3) {
-						if (Keys.Modifier(Keymod.Shift) || Keys.Modifier(Keymod.Ctrl)) {
-							selectedRooms.Add(roomPossibleSelect);
-						}
-						else if (holdingRoom != null && !selectedRooms.Contains(roomPossibleSelect)) {
-							selectedRooms.Clear();
-							selectedRooms.Add(roomPossibleSelect);
-						}
-
-						selectedRooms.Remove(roomPossibleSelect);
-						selectedRooms.Add(roomPossibleSelect);
+						HandleSelectionLogic(roomPossibleSelect);
 						selectingState = 4;
 					}
 
-					Vector2 offset = worldMouse - (Vector2) holdingStart;
-					if (roomSnap)
-						offset.Round();
-
-					foreach (Room room in selectedRooms) {
-						Vector2 position = room.Position;
-						if (roomSnap)
-							position.Round();
-						position += offset;
-						room.Position = position;
-						if (Keys.Modifier(Keymod.Alt) || PositionType == RoomPosition.Both) {
-							room.InactivePosition = position;
-						}
-					}
-					holdingStart += offset;
+					ApplyMovement();
 				}
 
-				if (selectingState == 1) {
-					selectionEnd = worldMouse;
-				}
-
+				if (selectingState == 1) selectionEnd = worldMouse;
+				
 				if (selectingState == 5) {
 					selectionEnd = Mouse.Pos;
-
 					cameraPanTo += (selectionStart - selectionEnd) * cameraScale;
 					selectionStart = selectionEnd;
 				}
@@ -306,174 +274,74 @@ public static class WorldWindow {
 		}
 		else {
 			if (selectingState == 3 && roomPossibleSelect != null) {
-				region.rooms.Remove(roomPossibleSelect);
-				region.rooms.Add(roomPossibleSelect);
-				if (Keys.Modifier(Keymod.Shift) || Keys.Modifier(Keymod.Ctrl)) {
-					if (selectedRooms.Contains(roomPossibleSelect)) {
-						selectedRooms.Remove(roomPossibleSelect);
-					}
-					else {
-						selectedRooms.Add(roomPossibleSelect);
-					}
-				}
-				else {
-					selectedRooms.Clear();
-					selectedRooms.Add(roomPossibleSelect);
-				}
-
-				holdingType = 1;
+				HandleSelectionLogic(roomPossibleSelect);
 				if (roomSnap) {
-					foreach (Room room in selectedRooms) {
-						room.Position = room.Position.Rounded();
-					}
+					foreach (Room room in selectedRooms) room.Position = room.Position.Rounded();
 				}
 			}
-
-			holdingRoom = null;
 
 			if (selectingState == 1) {
 				foreach (Room room in region.rooms) {
-					if (room.Intersects(selectionStart, selectionEnd)) {
-						selectedRooms.Add(room);
-					}
-				}
-			}
-
-			selectingState = 0;
-		}
-	}
-
-	private static void UpdateFloodForgeControls() {
-		if (Mouse.Disabled)
-			return;
-
-		if (Mouse.Left) {
-			if (!Mouse.LastLeft) {
-				if (selectingState == 0) {
-					Room? room = HoveringRoom;
-					if (room != null) {
-						holdingRoom = room;
-						holdingStart = worldMouse;
-						if (Main.AprilFools) Sfx.Play($"assets/objects/click{new Random().Next(1, 3)}.wav");
-						roomPossibleSelect = room;
-						selectingState = 3;
-					}
-				}
-
-				if (selectingState == 0) {
-					selectingState = 1;
-					selectionStart = worldMouse;
-					selectionEnd = worldMouse;
-					if (!Keys.Modifier(Keymod.Shift) || !Keys.Modifier(Keymod.Ctrl)) {
-						selectedRooms.Clear();
-					}
-				}
-			}
-			else {
-				if ((selectingState == 3 && Mouse.Moved || selectingState == 4) && roomPossibleSelect != null && holdingStart != null) {
-					if (selectingState == 3) {
-						if (Keys.Modifier(Keymod.Shift) || Keys.Modifier(Keymod.Ctrl)) {
-							selectedRooms.Add(roomPossibleSelect);
-						}
-						else {
-							if (!selectedRooms.Contains(roomPossibleSelect)) {
-								selectedRooms.Clear();
-								selectedRooms.Add(roomPossibleSelect);
-							}
-						}
-						region.rooms.Remove(roomPossibleSelect);
-						region.rooms.Add(roomPossibleSelect);
-						selectingState = 4;
-					}
-
-					MoveChange change = new MoveChange();
-
-					Vector2 offset = worldMouse - (Vector2) holdingStart;
-					if (roomSnap)
-						offset.Round();
-
-					foreach (Room room in selectedRooms) {
-						Vector2 newRoomPosition = room.Position;
-						if (roomSnap)
-							newRoomPosition.Round();
-
-						newRoomPosition += offset;
-						Vector2 positionOffset = newRoomPosition - room.Position;
-						Vector2 devOffset = new Vector2();
-						Vector2 canonOffset = new Vector2();
-						if (Keys.Modifier(Keymod.Alt) || PositionType == RoomPosition.Both) {
-							if (PositionType == RoomPosition.Canon) {
-								canonOffset = positionOffset;
-								devOffset = canonOffset - room.DevPosition + room.CanonPosition;
-							}
-							else {
-								devOffset = positionOffset;
-								canonOffset = devOffset - room.CanonPosition + room.DevPosition;
-							}
-						}
-						else {
-							if (PositionType == RoomPosition.Canon) {
-								canonOffset = positionOffset;
-							}
-							else {
-								devOffset = positionOffset;
-							}
-						}
-						change.AddRoom(room, devOffset, canonOffset);
-					}
-
-					holdingStart += offset;
-					if (continueDrag && History.Last is MoveChange moveChange) {
-						change.Redo();
-						moveChange.Merge(change);
-					}
-					else {
-						History.Apply(change);
-						continueDrag = true;
-					}
-				}
-
-				if (selectingState == 1) {
-					selectionEnd = worldMouse;
-				}
-			}
-		}
-		else {
-			if (selectingState == 3 && roomPossibleSelect != null) {
-				region.rooms.Remove(roomPossibleSelect);
-				region.rooms.Add(roomPossibleSelect);
-				if (Keys.Modifier(Keymod.Shift) || Keys.Modifier(Keymod.Ctrl)) {
-					if (selectedRooms.Contains(roomPossibleSelect)) {
-						selectedRooms.Remove(roomPossibleSelect);
-					}
-					else {
-						selectedRooms.Add(roomPossibleSelect);
-					}
-				}
-				else {
-					selectedRooms.Clear();
-					selectedRooms.Add(roomPossibleSelect);
-				}
-
-				holdingType = 1;
-				if (roomSnap) {
-					foreach (Room room in selectedRooms) {
-						room.Position = room.Position.Rounded();
-					}
+					if (room.Intersects(selectionStart, selectionEnd)) selectedRooms.Add(room);
 				}
 			}
 
 			holdingRoom = null;
 			continueDrag = false;
-
-			if (selectingState == 1) {
-				foreach (Room room in region.rooms) {
-					if (room.Intersects(selectionStart, selectionEnd)) {
-						selectedRooms.Add(room);
-					}
-				}
-			}
 			selectingState = 0;
+		}
+	}
+
+	private static void HandleSelectionLogic(Room room) {
+		region.rooms.Remove(room);
+		region.rooms.Add(room);
+
+		bool isAdditive = Keys.Modifier(Keymod.Shift) || Keys.Modifier(Keymod.Ctrl);
+		if (isAdditive) {
+			if (selectedRooms.Contains(room)) selectedRooms.Remove(room);
+			else selectedRooms.Add(room);
+		} else {
+			if (!selectedRooms.Contains(room)) {
+				selectedRooms.Clear();
+				selectedRooms.Add(room);
+			}
+		}
+	}
+
+	private static void ApplyMovement() {
+		if (holdingStart == null) return;
+
+		MoveChange change = new MoveChange();
+		Vector2 offset = worldMouse - (Vector2) holdingStart;
+		if (roomSnap) offset.Round();
+
+		foreach (Room room in selectedRooms) {
+			Vector2 newPos = room.Position;
+			if (roomSnap) newPos.Round();
+			newPos += offset;
+
+			Vector2 diff = newPos - room.Position;
+			Vector2 dev = Vector2.Zero, canon = Vector2.Zero;
+
+			bool moveBoth = Keys.Modifier(Keymod.Alt) || PositionType == RoomPosition.Both;
+			
+			if (PositionType == RoomPosition.Canon) {
+				canon = diff;
+				if (moveBoth) dev = canon - room.DevPosition + room.CanonPosition;
+			} else {
+				dev = diff;
+				if (moveBoth) canon = dev - room.CanonPosition + room.DevPosition;
+			}
+			change.AddRoom(room, dev, canon);
+		}
+
+		holdingStart += offset;
+		if (continueDrag && History.Last is MoveChange moveChange) {
+			change.Redo();
+			moveChange.Merge(change);
+		} else {
+			History.Apply(change);
+			continueDrag = true;
 		}
 	}
 
@@ -714,13 +582,7 @@ public static class WorldWindow {
 
 		UpdateConnectionControls();
 
-		// LATER: Merge into same function and cleanup
-		if (Settings.OriginalControls) {
-			UpdateOriginalControls();
-		}
-		else {
-			UpdateFloodForgeControls();
-		}
+		UpdateControls();
 
 		if (PopupManager.Windows.Count != 0)
 			return;
@@ -1066,13 +928,13 @@ public static class WorldWindow {
 	public enum RoomPosition {
 		Canon,
 		Dev,
-		Both
+		Both,
 	}
 
 	public enum RoomColors {
 		None,
 		Layer,
-		Subregion
+		Subregion,
 	}
 
 	private static Room? CopyRoom(string fromFilePath, string toFilePath) {
