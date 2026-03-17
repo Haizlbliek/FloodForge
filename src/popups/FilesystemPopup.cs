@@ -303,11 +303,15 @@ public class FilesystemPopup : Popup {
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
 			string root = Path.GetPathRoot(this.currentPath) ?? "";
 			if (UI.TextButton(root, new Rect(this.bounds.x0 + 0.16f, this.bounds.y1 - 0.12f, this.bounds.x0 + 0.21f, this.bounds.y1 - 0.07f))) {
-				DriveInfo[] drives = DriveInfo.GetDrives();
-				int idx = Array.FindIndex(drives, d => d.Name.Equals(root, StringComparison.InvariantCultureIgnoreCase));
-				string newRoot = drives[(idx + 1) % drives.Length].Name;
-				this.currentPath = Path.Combine(newRoot, this.currentPath[root.Length..]);
-				// REVIEW
+				DriveInfo[] drives = [.. DriveInfo.GetDrives().Where(d => d.IsReady)];
+				if (drives.Length > 0) {
+					int idx = Array.FindIndex(drives, d => d.Name.Equals(root, StringComparison.InvariantCultureIgnoreCase));
+					string newRoot = drives[(idx + 1) % drives.Length].Name;
+					this.currentPath = Path.Combine(newRoot, this.currentPath[root.Length..]);
+					if (!Directory.Exists(this.currentPath)) {
+						this.currentPath = newRoot;
+					}
+				}
 			}
 		}
 
