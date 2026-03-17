@@ -1717,9 +1717,11 @@ public static class DropletWindow {
 			this.buttons = [
 				new Button("Export Geometry", b => {
 					ExportGeometry();
+					PopupManager.Add(new InfoPopup("Exported successfully"));
 				}),
 				new Button("Render", b => {
 					Render();
+					PopupManager.Add(new InfoPopup("Rendered successfully"));
 				}),
 				new Button("Export Leditor Project", b => {
 					PopupManager.Add(
