@@ -16,10 +16,10 @@ public class SubregionPopup : Popup {
 		Main.Scroll += this.Scroll;
 	}
 
-	protected void Scroll(float x, float y) {
+	protected void Scroll(float deltaX, float deltaY) {
 		if (!this.hovered || this.minimized) return;
 
-		this.targetScroll -= y * 0.1f;
+		this.targetScroll += deltaY * 0.1f;
 		this.ClampScroll();
 	}
 
