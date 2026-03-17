@@ -77,12 +77,12 @@ public static class WorldParser {
 	}
 
 	public static bool ParseMapRoom(string line) {
-		string roomName = line[..line.IndexOf(':')];
+		string? roomName = line[..line.IndexOf(':')];
 		string roomPath = WorldWindow.region.roomsPath;
 
 		if (roomName.ToLowerInvariant().StartsWith("gate")) {
 			Logger.Info("Found gate " + roomName);
-			roomPath = PathUtil.FindDirectory(Path.Combine(roomPath, ".."), "gates") ?? "";
+			roomPath = PathUtil.FindDirectory(PathUtil.Combine(roomPath, ".."), "gates") ?? "";
 			if (roomPath.IsNullOrEmpty()) {
 				Logger.Warn("Failed to load gate! Missing gates folder");
 				return true;

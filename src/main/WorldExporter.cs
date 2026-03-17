@@ -30,7 +30,7 @@ public static class WorldExporter {
 		Logger.Info("Exporting map file");
 
 		string fileName = $"map_{WorldWindow.region.acronym}.txt";
-		string path = Path.Combine(WorldWindow.region.exportPath, fileName);
+		string path = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, fileName);
 
 		Backup.File(path);
 
@@ -193,8 +193,7 @@ public static class WorldExporter {
 		Logger.Info("Exporting world file");
 
 		string fileName = $"world_{WorldWindow.region.acronym}.txt";
-		string path = Path.Combine(WorldWindow.region.exportPath, fileName);
-
+		string path = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, fileName);
 		Backup.File(path);
 
 		try {
@@ -488,7 +487,7 @@ public static class WorldExporter {
 	public static void ExportImageFile(string outputPath) {
 		Logger.Info("Exporting image file");
 
-		string mapPath = Path.Combine(WorldWindow.region.exportPath, $"map_image_{WorldWindow.region.acronym}.txt");
+		string mapPath = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_image_{WorldWindow.region.acronym}.txt");
 		Backup.File(mapPath);
 
 		StreamWriter? mapFile = null;

@@ -15,9 +15,17 @@ public static class PathUtil {
 		return files[0];
 	}
 
+	public static string FindOrAssumeFile(string parent, string fileName) {
+		return FindFile(parent, fileName) ?? Combine(parent, fileName);
+	}
+
 	public static string? FindDirectory(string parent, string fileName) {
 		string[] dirs = Directory.GetDirectories(parent, fileName, new EnumerationOptions() { MatchCasing = MatchCasing.CaseInsensitive, RecurseSubdirectories = false });
 		if (dirs.Length == 0) return null;
 		return dirs[0];
+	}
+
+	public static string FindOrAssumeDirectory(string parent, string fileName) {
+		return FindDirectory(parent, fileName) ?? Combine(parent, fileName);
 	}
 }
