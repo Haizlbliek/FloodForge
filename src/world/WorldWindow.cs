@@ -35,7 +35,7 @@ public static class WorldWindow {
 
 	public static List<Room> selectedRooms = []; // REVIEW - HashSet?
 	public static Room? roomPossibleSelect = null;
-	public static int selectingState = 0; // LATER - Make not an int
+	private static SelectingState selectingState = SelectingState.None;
 	public static Vector2 selectionStart;
 	public static Vector2 selectionEnd;
 
@@ -59,6 +59,14 @@ public static class WorldWindow {
 		None,
 		NoConnection,
 		Connection
+	}
+
+	private enum SelectingState {
+		None,
+		Selecting,
+		PendingDrag,
+		Dragging,
+		Panning,
 	}
 
 	public static Room? HoveringRoom => region.rooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
@@ -92,7 +100,7 @@ public static class WorldWindow {
 	public static void Reset() {
 		selectedRooms.Clear();
 		roomPossibleSelect = null;
-		selectingState = 0;
+		selectingState = SelectingState.None;
 		region = new Region();
 	}
 
@@ -230,22 +238,22 @@ public static class WorldWindow {
 
 		if (Mouse.Left) {
 			if (!Mouse.LastLeft) {
-				if (selectingState == 0) {
+				if (selectingState == SelectingState.None) {
 					Room? room = HoveringRoom;
 
 					if (room != null) {
 						holdingRoom = room;
 						holdingStart = worldMouse;
 						roomPossibleSelect = room;
-						selectingState = 3;
+						selectingState = SelectingState.PendingDrag;
 						if (!isOriginal && Main.AprilFools) Sfx.Play($"assets/objects/click{new Random().Next(1, 3)}.wav");
 					}
 				}
 
-				if (selectingState == 0) {
+				if (selectingState == SelectingState.None) {
 					bool isPanning = isOriginal && !Keys.Modifier(Keymod.Shift);
 					
-					selectingState = isPanning ? 5 : 1;
+					selectingState = isPanning ? SelectingState.Panning : SelectingState.Selecting;
 					selectionStart = isPanning ? Mouse.Pos : worldMouse;
 					selectionEnd = selectionStart;
 
@@ -254,18 +262,18 @@ public static class WorldWindow {
 				}
 			}
 			else {
-				if ((selectingState == 3 && Mouse.Moved || selectingState == 4) && roomPossibleSelect != null && holdingStart != null) {
-					if (selectingState == 3) {
+				if ((selectingState == SelectingState.PendingDrag && Mouse.Moved || selectingState == SelectingState.Dragging) && roomPossibleSelect != null && holdingStart != null) {
+					if (selectingState == SelectingState.PendingDrag) {
 						HandleSelectionLogic(roomPossibleSelect);
-						selectingState = 4;
+						selectingState = SelectingState.Dragging;
 					}
 
 					ApplyMovement();
 				}
 
-				if (selectingState == 1) selectionEnd = worldMouse;
+				if (selectingState == SelectingState.Selecting) selectionEnd = worldMouse;
 				
-				if (selectingState == 5) {
+				if (selectingState == SelectingState.Panning) {
 					selectionEnd = Mouse.Pos;
 					cameraPanTo += (selectionStart - selectionEnd) * cameraScale;
 					selectionStart = selectionEnd;
@@ -273,14 +281,14 @@ public static class WorldWindow {
 			}
 		}
 		else {
-			if (selectingState == 3 && roomPossibleSelect != null) {
+			if (selectingState == SelectingState.PendingDrag && roomPossibleSelect != null) {
 				HandleSelectionLogic(roomPossibleSelect);
 				if (roomSnap) {
 					foreach (Room room in selectedRooms) room.Position = room.Position.Rounded();
 				}
 			}
 
-			if (selectingState == 1) {
+			if (selectingState == SelectingState.Selecting) {
 				foreach (Room room in region.rooms) {
 					if (room.Intersects(selectionStart, selectionEnd)) selectedRooms.Add(room);
 				}
@@ -288,7 +296,7 @@ public static class WorldWindow {
 
 			holdingRoom = null;
 			continueDrag = false;
-			selectingState = 0;
+			selectingState = SelectingState.None;
 		}
 	}
 
@@ -790,7 +798,7 @@ public static class WorldWindow {
 
 		DrawCurrentConnection();
 
-		if (selectingState == 1) {
+		if (selectingState == SelectingState.Selecting) {
 			Program.gl.Enable(EnableCap.Blend);
 			Immediate.Color(0.1f, 0.1f, 0.1f, 0.125f);
 			UI.FillRect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y);
