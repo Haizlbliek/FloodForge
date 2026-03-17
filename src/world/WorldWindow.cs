@@ -830,7 +830,7 @@ public static class WorldWindow {
 
 		Connection? hoveringConnection = HoveringConnection;
 		Room? hoveringRoom = HoveringRoom;
-		int screenCount = region.rooms.Aggregate(0, (a, b) => a + b.data.cameraCount);
+		int screenCount = region.rooms.Aggregate(0, (a, b) => a + b.data.cameras.Count);
 
 		List<string> debugText = [];
 		debugText.Add("    Count:");
@@ -968,7 +968,7 @@ public static class WorldWindow {
 		change.AddRoom(room);
 		History.Apply(change);
 
-		for (int i = 0; i < room.data.cameraCount; i++) {
+		for (int i = 0; i < room.data.cameras.Count; i++) {
 			string imageSuffix = $"_{i + 1}.png";
 			string imagePath = fromRoom + imageSuffix;
 

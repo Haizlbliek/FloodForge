@@ -48,11 +48,6 @@ public static class DropletWindow {
 	}
 	private static readonly string[] GeometryToolNames = [ "Wall", "Slope", "Platform", "Background Wall", "Horizontal Pole", "Vertical Pole", "Spear", "Rock", "Shortcut", "Room Exit", "Creature Den", "Wack a Mole Hole", "Scavenger Den", "Garbage Worm", "Wormgrass", "Batfly Hive" ];
 
-	private class Camera {
-		public Vector2 position;
-		public Vector2[] angles = [ Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero ];
-	}
-
 	private struct WaterSpot {
 		public Vector2 pos;
 		public Vector2 size;
@@ -77,9 +72,8 @@ public static class DropletWindow {
 	private static EditorTab currentTab;
 	private static GeometryTool selectedTool = GeometryTool.Wall;
 
-	private static List<Camera> cameras = [];
-	private static Camera? selectedCamera;
-	private static List<DevObject> objects = [];
+	private static RoomData.Camera? selectedCamera;
+	private static readonly List<DevObject> objects = [];
 
 	private static uint[]? backupGeometry = null;
 	private static int backupWaterHeight;
@@ -87,6 +81,7 @@ public static class DropletWindow {
 	private static bool backupEnclosedRoom;
 	private static int backupWidth;
 	private static int backupHeight;
+	private static RoomData.Camera[] backupCameras = [];
 
 	private static bool terrainNeedsRefresh = false;
 	private static bool hasTerrain = false;
@@ -612,7 +607,7 @@ public static class DropletWindow {
 	private static readonly Vector2 cameraSizeTiles = new Vector2(70, 40);
 	private static readonly Vector2 cameraSizeLarge = new Vector2(68.3f, 38.4f);
 	private static readonly Vector2 cameraSizeSmall = new Vector2(51.2f, 38.4f);
-	private static Camera? draggingCamera = null;
+	private static RoomData.Camera? draggingCamera = null;
 	private static int draggingCameraAngle = -1;
 	private static Vector2 dragStart;
 	private static void UpdateCameraTab() {
@@ -624,21 +619,21 @@ public static class DropletWindow {
 		Program.gl.Enable(EnableCap.Blend);
 		int i = 1;
 		bool newSelectedCamera = false;
-		foreach (Camera camera in cameras) {
+		foreach (RoomData.Camera camera in Room.data.cameras) {
 			bool selected = selectedCamera == camera;
-			Vector2 center = camera.position + cameraSizeTiles * 0.5f;
+			Vector2 center = camera.position / 20f + cameraSizeTiles * 0.5f;
 			Immediate.Color(0f, 1f, 0f, selected ? 0.25f : 0.15f);
 			Immediate.Begin(Immediate.PrimitiveType.QUADS);
-			Immediate.Vertex(camera.position.x + camera.angles[0].x * 4f, -camera.position.y + camera.angles[0].y * 4f);
-			Immediate.Vertex(camera.position.x + camera.angles[1].x * 4f + cameraSizeTiles.x, -camera.position.y + camera.angles[1].y * 4f);
-			Immediate.Vertex(camera.position.x + camera.angles[2].x * 4f + cameraSizeTiles.x, -camera.position.y + camera.angles[2].y * 4f - cameraSizeTiles.y);
-			Immediate.Vertex(camera.position.x + camera.angles[3].x * 4f, -camera.position.y + camera.angles[3].y * 4f - cameraSizeTiles.y);
+			Immediate.Vertex(camera.position.x / 20f + camera.angles[0].x * 4f, -camera.position.y / 20f + camera.angles[0].y * 4f);
+			Immediate.Vertex(camera.position.x / 20f + camera.angles[1].x * 4f + cameraSizeTiles.x, -camera.position.y / 20f + camera.angles[1].y * 4f);
+			Immediate.Vertex(camera.position.x / 20f + camera.angles[2].x * 4f + cameraSizeTiles.x, -camera.position.y / 20f + camera.angles[2].y * 4f - cameraSizeTiles.y);
+			Immediate.Vertex(camera.position.x / 20f + camera.angles[3].x * 4f, -camera.position.y / 20f + camera.angles[3].y * 4f - cameraSizeTiles.y);
 			Immediate.End();
 
 			Immediate.Color(0f, 0f, 0f);
 			UI.StrokeRect(Rect.FromSize(center.x - cameraSizeLarge.x * 0.5f, -center.y - cameraSizeLarge.y * 0.5f, cameraSizeLarge.x, cameraSizeLarge.y));
-			UI.Line(camera.position.x, -center.y, camera.position.x + cameraSizeTiles.x, -center.y);
-			UI.Line(center.x, -camera.position.y, center.x, -camera.position.y - cameraSizeTiles.y);
+			UI.Line(camera.position.x / 20f, -center.y, camera.position.x / 20f + cameraSizeTiles.x, -center.y);
+			UI.Line(center.x, -camera.position.y / 20f, center.x, -camera.position.y / 20f - cameraSizeTiles.y);
 			Immediate.Color(0.0f, 1.0f, 0.0f);
 			UI.StrokeRect(Rect.FromSize(center.x - cameraSizeSmall.x * 0.5f, -center.y - cameraSizeSmall.y * 0.5f, cameraSizeSmall.x, cameraSizeSmall.y));
 			Immediate.Color(1f, 1f, 1f);
@@ -646,26 +641,26 @@ public static class DropletWindow {
 			i++;
 
 			if (selected) {
-				if (DrawCameraAngle(camera.position * Vector2.NegY, ref camera.angles[0], draggingCamera == camera && draggingCameraAngle == 0)) {
+				if (DrawCameraAngle(camera.position / 20f * Vector2.NegY, ref camera.angles[0], draggingCamera == camera && draggingCameraAngle == 0)) {
 					newSelectedCamera = true; draggingCamera = camera; draggingCameraAngle = 0;
 				}
-				if (DrawCameraAngle(camera.position * Vector2.NegY + new Vector2(cameraSizeTiles.x, 0f), ref camera.angles[1], draggingCamera == camera && draggingCameraAngle == 1)) {
+				if (DrawCameraAngle(camera.position / 20f * Vector2.NegY + new Vector2(cameraSizeTiles.x, 0f), ref camera.angles[1], draggingCamera == camera && draggingCameraAngle == 1)) {
 					newSelectedCamera = true; draggingCamera = camera; draggingCameraAngle = 1;
 				}
-				if (DrawCameraAngle(camera.position * Vector2.NegY + new Vector2(cameraSizeTiles.x, -cameraSizeTiles.y), ref camera.angles[2], draggingCamera == camera && draggingCameraAngle == 2)) {
+				if (DrawCameraAngle(camera.position / 20f * Vector2.NegY + new Vector2(cameraSizeTiles.x, -cameraSizeTiles.y), ref camera.angles[2], draggingCamera == camera && draggingCameraAngle == 2)) {
 					newSelectedCamera = true; draggingCamera = camera; draggingCameraAngle = 2;
 				}
-				if (DrawCameraAngle(camera.position * Vector2.NegY + new Vector2(0f, -cameraSizeTiles.y), ref camera.angles[3], draggingCamera == camera && draggingCameraAngle == 3)) {
+				if (DrawCameraAngle(camera.position / 20f * Vector2.NegY + new Vector2(0f, -cameraSizeTiles.y), ref camera.angles[3], draggingCamera == camera && draggingCameraAngle == 3)) {
 					newSelectedCamera = true; draggingCamera = camera; draggingCameraAngle = 3;
 				}
 			}
 
 			if (draggingCamera == camera && draggingCameraAngle == -1) {
-				camera.position += (transformedMouse - dragStart) * Vector2.NegY;
+				camera.position += (transformedMouse - dragStart) * Vector2.NegY * 20f;
 				dragStart = transformedMouse;
 			}
 
-			if (!newSelectedCamera && !blockMouse && Mouse.JustLeft && new Rect(camera.position.x, -camera.position.y, camera.position.x + cameraSizeTiles.x, -camera.position.y - cameraSizeTiles.y).Inside(transformedMouse)) {
+			if (!newSelectedCamera && !blockMouse && Mouse.JustLeft && Rect.FromSize(camera.position.x / 20f, -camera.position.y / 20f, cameraSizeTiles.x, -cameraSizeTiles.y).Inside(transformedMouse)) {
 				newSelectedCamera = true;
 				selectedCamera = camera;
 				draggingCamera = camera;
@@ -680,18 +675,18 @@ public static class DropletWindow {
 		}
 
 		if (Keys.JustPressed(Key.C)) {
-			cameras.Add(new Camera() {
-				position = transformedMouse * Vector2.NegY - cameraSizeTiles * 0.5f,
+			Room.data.cameras.Add(new RoomData.Camera() {
+				position = (transformedMouse * Vector2.NegY - cameraSizeTiles * 0.5f) * 20f,
 			});
-			selectedCamera = cameras[^1];
+			selectedCamera = Room.data.cameras[^1];
 		}
 
 		if (Keys.JustPressed(Key.X) && selectedCamera != null) {
-			if (cameras.Count == 1) {
+			if (Room.data.cameras.Count == 1) {
 				PopupManager.Add(new InfoPopup("Cannot delete last camera"));
 			}
 			else {
-				cameras.Remove(selectedCamera);
+				Room.data.cameras.Remove(selectedCamera);
 				selectedCamera = null;
 			}
 		}
@@ -701,10 +696,10 @@ public static class DropletWindow {
 		if (!showObjects) return;
 
 		Program.gl.Enable(EnableCap.Blend);
-		foreach (Camera camera in cameras) {
-			Vector2 center = camera.position + cameraSizeTiles * 0.5f;
+		foreach (RoomData.Camera camera in Room.data.cameras) {
+			Vector2 center = camera.position / 20f + cameraSizeTiles * 0.5f;
 			Immediate.Color(0.0f, 1.0f, 0.0f);
-			UI.StrokeRect(Rect.FromSize(camera.position.x, -camera.position.y, cameraSizeTiles.x, -cameraSizeTiles.y));
+			UI.StrokeRect(Rect.FromSize(camera.position.x / 20f, -camera.position.y / 20f, cameraSizeTiles.x, -cameraSizeTiles.y));
 			UI.StrokeRect(Rect.FromSize(center.x - cameraSizeSmall.x * 0.5f, -center.y - cameraSizeSmall.y * 0.5f, cameraSizeSmall.x, cameraSizeSmall.y));
 		}
 		Program.gl.Disable(EnableCap.Blend);
@@ -1180,21 +1175,6 @@ public static class DropletWindow {
 		menuItems.Draw();
 	}
 
-	public static void SetCameraAngle(string from, ref Vector2 angle) {
-		try {
-			int commaIndex = from.IndexOf(',');
-			if (commaIndex == -1) throw new FormatException();
-
-			double theta = double.Parse(from[..commaIndex]) * (Math.PI / 180.0);
-			double radius = double.Parse(from[(commaIndex + 1)..]);
-
-			angle.x = (float)(Math.Sin(theta) * radius);
-			angle.y = (float)(Math.Cos(theta) * radius);
-		} catch (Exception) {
-			Logger.Warn("Failed parsing camera angle: " + from);
-		}
-	}
-
 	public static void Backup() {
 		backupGeometry = new uint[Room.width * Room.height];
 		for (int i = 0; i < Room.width * Room.height; i++) {
@@ -1205,56 +1185,15 @@ public static class DropletWindow {
 		backupEnclosedRoom = Room.data.enclosedRoom;
 		backupWidth = Room.width;
 		backupHeight = Room.height;
+		backupCameras = [.. Room.data.cameras.Select(x => new RoomData.Camera() { position = x.position, angles = [ ..x.angles ] })];
 	}
 
 	public static void LoadRoom(Room room) {
 		Room = room;
-		cameras.Clear();
 
 		if (!File.Exists(Room.Path)) {
 			Logger.Error("Failed to open droplet room file: " + Room.Path);
 			return;
-		}
-
-		string[] lines = File.ReadAllLines(Room.Path);
-		if (lines.Length < 5) return;
-
-		string[] camerasData = lines[3].Split('|', StringSplitOptions.RemoveEmptyEntries);
-		Logger.Info($"Found {camerasData.Length} camera{(camerasData.Length == 1 ? "" : "s")}");
-		Logger.Info(string.Join(" | ", camerasData));
-
-		foreach (string cameraData in camerasData) {
-			string[] parts = cameraData.Split(',');
-			if (parts.Length < 2) continue;
-
-			int x = 0, y = 0;
-			try {
-				x = int.Parse(parts[0]);
-				y = int.Parse(parts[1]);
-			} catch {
-				Logger.Warn($"Can't open droplet room due to invalid camera positions ({cameraData})");
-			}
-			cameras.Add(new Camera {
-				position = new Vector2(x / 20.0f, y / 20.0f)
-			});
-		}
-
-		if (lines.Length >= 13 && lines[12].StartsWith("camera angles:")) {
-			string[] angleData = lines[12][(lines[12].IndexOf(':') + 1)..].Split('|');
-			for (int i = 0; i < cameras.Count; i++) {
-				if (i >= angleData.Length) break;
-
-				string[] angles = angleData[i].Split(';');
-				if (angles.Length != 4) {
-					Logger.Warn($"Failed to parse camera {i}; Not enough camera angles");
-					continue;
-				}
-
-				SetCameraAngle(angles[0], ref cameras[i].angles[0]);
-				SetCameraAngle(angles[1], ref cameras[i].angles[1]);
-				SetCameraAngle(angles[2], ref cameras[i].angles[2]);
-				SetCameraAngle(angles[3], ref cameras[i].angles[3]);
-			}
 		}
 
 		objects.Clear();
@@ -1331,6 +1270,7 @@ public static class DropletWindow {
 		Room.data.waterHeight = backupWaterHeight;
 		Room.data.waterInFront = backupWaterInFront;
 		Room.data.enclosedRoom = backupEnclosedRoom;
+		Room.data.cameras = [.. backupCameras.Select(x => new RoomData.Camera() { position = x.position, angles = [ ..x.angles ] })];
 		Room.valid = true;
 
 		for (int i = 0; i < backupWidth * backupHeight; i++) {
@@ -1355,9 +1295,9 @@ public static class DropletWindow {
 		geo.Append("\n");
 		geo.AppendLine("0.0000*1.0000|0|0");
 
-		for (int i = 0; i < cameras.Count; i++) {
+		for (int i = 0; i < Room.data.cameras.Count; i++) {
 			if (i > 0) geo.Append("|");
-			geo.Append($"{Mathf.RoundToInt(cameras[i].position.x * 20.0f)},{Mathf.RoundToInt(cameras[i].position.y * 20.0f)}");
+			geo.Append($"{Mathf.RoundToInt(Room.data.cameras[i].position.x)},{Mathf.RoundToInt(Room.data.cameras[i].position.y)}");
 		}
 		geo.Append("\n");
 
@@ -1396,9 +1336,9 @@ public static class DropletWindow {
 		geo.Append("\n");
 
 		geo.Append("camera angles:");
-		for (int i = 0; i < cameras.Count; i++) {
+		for (int i = 0; i < Room.data.cameras.Count; i++) {
 			if (i > 0) geo.Append("|");
-			Camera c = cameras[i];
+			RoomData.Camera c = Room.data.cameras[i];
 
 			static string FormatAngle(Vector2 ang) {
 				return $"{MathF.Atan2(ang.x, ang.y) * (180f / Mathf.PI):F4},{ang.Length:F4}";
@@ -1534,7 +1474,7 @@ public static class DropletWindow {
 		data[index + 2] = b;
 	}
 
-	private static void RenderCamera(Camera camera, string outputPath) {
+	private static void RenderCamera(RoomData.Camera camera, string outputPath) {
 		byte[] image = new byte[CameraTextureWidth * CameraTextureHeight * 3];
 
 		for (int y = 0; y < CameraTextureHeight; y++) {
@@ -1542,8 +1482,8 @@ public static class DropletWindow {
 				int id = (x + y * CameraTextureWidth) * 3;
 
 				Vector2 tp = new Vector2(
-					camera.position.x + x * 1.0f / 20.0f,
-					camera.position.y + y * 1.0f / 20.0f
+					camera.position.x / 20f + x * 1.0f / 20.0f,
+					camera.position.y / 20f + y * 1.0f / 20.0f
 				);
 				int tileX = Mathf.RoundToInt(tp.x);
 				int tileY = Mathf.RoundToInt(tp.y);
@@ -1597,8 +1537,8 @@ public static class DropletWindow {
 	private static void Render() {
 		ExportGeometry();
 
-		for (int i = 0; i < cameras.Count; i++) {
-			RenderCamera(cameras[i], PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.Name}_{i + 1}.png")!);
+		for (int i = 0; i < Room.data.cameras.Count; i++) {
+			RenderCamera(Room.data.cameras[i], PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.Name}_{i + 1}.png")!);
 		}
 	}
 
@@ -1657,16 +1597,16 @@ public static class DropletWindow {
 		project.AppendLine($"[#mouse: 1, #lastMouse: 0, #mouseClick: 0, #pal: 1, #pals: [[#detCol: color( 255, 0, 0 )]], #eCol1: 1, #eCol2: 2, #totEcols: 5, #tileSeed: 225, #colGlows: [0, 0], #size: point({Room.width + 24}, {Room.height + 8}), #extraTiles: [12, 3, 12, 5], #light: 1]");
 
 		project.Append("[#cameras: [");
-		for (int i = 0; i < cameras.Count; i++) {
+		for (int i = 0; i < Room.data.cameras.Count; i++) {
 			if (i > 0) project.Append(", ");
-			Camera c = cameras[i];
+			RoomData.Camera c = Room.data.cameras[i];
 			project.Append($"point({(c.position.x + 12.0f) * 20.0f:F1}, {(c.position.y + 3.0f) * 20.0f:F1})");
 		}
 		project.Append("], #selectedCamera: 0, #quads: [");
 
-		for (int i = 0; i < cameras.Count; i++) {
+		for (int i = 0; i < Room.data.cameras.Count; i++) {
 			if (i > 0) project.Append(", ");
-			Camera c = cameras[i];
+			RoomData.Camera c = Room.data.cameras[i];
 
 			static string AngLen(Vector2 a) {
 				return $"[{Math.Atan2(a.x, a.y) * (180.0 / Math.PI):F4}, {a.Length:F4}]";

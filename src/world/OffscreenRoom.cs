@@ -19,7 +19,6 @@ public class OffscreenRoom : Room {
 	protected override void LoadGeometry() {
 		this.width = 72;
 		this.height = 43;
-		this.data.cameraCount = 0;
 		this.valid = true;
 		this.data.tags.Add("OffscreenRoom");
 	}

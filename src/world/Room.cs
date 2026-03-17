@@ -107,6 +107,21 @@ public class Room {
 		this.connections.Remove(connection);
 	}
 
+	private static void SetCameraAngle(string from, ref Vector2 angle) {
+		try {
+			int commaIndex = from.IndexOf(',');
+			if (commaIndex == -1) throw new FormatException();
+
+			double theta = double.Parse(from[..commaIndex]) * (Math.PI / 180.0);
+			double radius = double.Parse(from[(commaIndex + 1)..]);
+
+			angle.x = (float)(Math.Sin(theta) * radius);
+			angle.y = (float)(Math.Cos(theta) * radius);
+		} catch (Exception) {
+			Logger.Warn("Failed parsing camera angle: " + from);
+		}
+	}
+
 	protected virtual void LoadGeometry() {
 		if (!File.Exists(this.Path)) {
 			Logger.Warn($"Failed to load '{this.Name}'. File '{this.Path}' doesn't exist");
@@ -131,12 +146,45 @@ public class Room {
 			this.data.waterInFront = int.Parse(levelData[2]) == 1;
 		}
 
-		string[] cameraData = lines[3].Split('|');
-		this.data.cameraCount = cameraData.Length;
+		string[] camerasData = lines[3].Split('|', StringSplitOptions.RemoveEmptyEntries);
+		foreach (string cameraData in camerasData) {
+			string[] parts = cameraData.Split(',');
+			if (parts.Length < 2) {
+				Logger.Warn($"Room has invalid camera position count ({cameraData})");
+				continue;
+			}
+
+			int x = 0, y = 0;
+			try {
+				x = int.Parse(parts[0]);
+				y = int.Parse(parts[1]);
+			} catch {
+				Logger.Warn($"Room has invalid camera position ({cameraData})");
+			}
+			this.data.cameras.Add(new RoomData.Camera() {
+				position = new Vector2(x, y)
+			});
+		}
 
 		this.data.enclosedRoom = lines[4].Contains("Solid");
 
-		// LATER: Parse camera data
+		if (lines.Length >= 13 && lines[12].StartsWith("camera angles:")) {
+			string[] angleData = lines[12][(lines[12].IndexOf(':') + 1)..].Split('|');
+			for (int i = 0; i < this.data.cameras.Count; i++) {
+				if (i >= angleData.Length) break;
+
+				string[] angles = angleData[i].Split(';');
+				if (angles.Length != 4) {
+					Logger.Warn($"Failed to parse camera {i}; Not enough camera angles");
+					continue;
+				}
+
+				SetCameraAngle(angles[0], ref this.data.cameras[i].angles[0]);
+				SetCameraAngle(angles[1], ref this.data.cameras[i].angles[1]);
+				SetCameraAngle(angles[2], ref this.data.cameras[i].angles[2]);
+				SetCameraAngle(angles[3], ref this.data.cameras[i].angles[3]);
+			}
+		}
 
 		string[] objectData = lines[5].Split('|', StringSplitOptions.RemoveEmptyEntries);
 
@@ -384,7 +432,7 @@ public class Room {
 		if (!Settings.WarnMissingImages) return;
 
 		string path = PathUtil.Parent(this.Path);
-		for (int i = 0; i < this.data.cameraCount; i++) {
+		for (int i = 0; i < this.data.cameras.Count; i++) {
 			string imageFile = $"{this.Name}_{i + 1}.png";
 
 			if (PathUtil.FindFile(path, imageFile) == null) {
@@ -701,7 +749,7 @@ public class Room {
 				}
 
 				if ((tile & FLAG_SHORTCUT) > 0) {
-					//NOTE - Might add outlining RoomSolid if it looks weird
+					// NOTE - Might add outlining RoomSolid if it looks weird
 
 					this.AddQuad(
 						new Vertex(x0 + 0.4375f, y0 - 0.4375f, Themes.RoomShortcutDot),
