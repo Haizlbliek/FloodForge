@@ -6,5 +6,5 @@ public enum RoomAttractiveness {
 	Forbidden,
 	Avoid,
 	Like,
-	Stay
+	Stay,
 }
