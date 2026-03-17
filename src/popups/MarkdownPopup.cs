@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.IO;
-using Silk.NET.Core.Native;
 using Stride.Core.Extensions;
 
 namespace FloodForge.Popups;

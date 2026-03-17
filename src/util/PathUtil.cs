@@ -1,5 +1,3 @@
-using System.IO;
-
 public static class PathUtil {
 	public static string Combine(string a, string b) {
 		return Path.GetFullPath(Path.Combine(a, b));

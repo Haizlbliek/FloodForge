@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.IO;
 using Stride.Core;
 using Stride.Core.Extensions;
 

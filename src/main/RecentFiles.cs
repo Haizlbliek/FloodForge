@@ -1,9 +1,7 @@
-using System.IO;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;
 
-// TODO: Fix the backwards-ness
 public static class RecentFiles {
 	public static List<string> recents = [];
 	public static List<string> recentNames = [];

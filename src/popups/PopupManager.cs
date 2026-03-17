@@ -1,5 +1,3 @@
-using System.Linq;
-
 namespace FloodForge.Popups;
 
 public static class PopupManager {

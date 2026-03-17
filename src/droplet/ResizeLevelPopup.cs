@@ -163,7 +163,7 @@ public class ResizeLevelPopup : Popup {
 			}
 
 			Immediate.Color(Themes.Text);
-			UI.font.Write("Stretch room", this.bounds.x1 - 0.06f, this.bounds.y1 - 0.4f, -0.03f, Font.Center.XY); // TODO: Right bottom align
+			UI.font.Write("Stretch room", this.bounds.x1 - 0.29f, this.bounds.y1 - 0.37f, 0.03f);
 			if (UI.CheckBox(Rect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.41f, 0.05f, 0.05f), ref this.stretchRoom)) {
 				DropletWindow.resizeSize = new Vector2i(int.Parse(this.Width.value), int.Parse(this.Height.value));
 				this.SetResizeOffset(this.resizeAnchor, this.stretchRoom);
@@ -176,7 +176,7 @@ public class ResizeLevelPopup : Popup {
 			}
 
 			Immediate.Color(Themes.Text);
-			UI.font.Write("(No undo!)", bounds.x0 + 0.32f, bounds.y1 - 0.4f, 0.03f, Font.Center.Y); // TODO: Bottom align
+			UI.font.Write("(No undo!)", this.bounds.x0 + 0.32f, this.bounds.y1 - 0.41f + 0.05f / 2f, 0.03f, Font.Center.Y);
 		}
 		catch (Exception) {
 			Immediate.Color(Themes.Popup);

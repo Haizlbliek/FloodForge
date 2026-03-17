@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.Threading;
 using Silk.NET.Input;
 using Silk.NET.SDL;
 

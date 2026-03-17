@@ -1,4 +1,3 @@
-using System.Globalization;
 using FloodForge.Popups;
 using Silk.NET.Input;
 using Silk.NET.SDL;
@@ -24,7 +23,7 @@ public class DenPopup : Popup {
 	private float sliderMin = 0f;
 	private float sliderMax = 1f;
 	private bool sliderFloat = true;
-	private Den den;
+	private readonly Den den;
 	private bool hasSlider;
 	private int mouseSection;
 	private bool lastMouseClickSlider;

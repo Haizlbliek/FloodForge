@@ -1,4 +1,3 @@
-using System.IO;
 using FloodForge.Droplet;
 using FloodForge.Popups;
 using Stride.Core.Extensions;

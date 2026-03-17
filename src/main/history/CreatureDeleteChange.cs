@@ -1,5 +1,3 @@
-using System.IO;
-
 namespace FloodForge.World;
 
 public class CreatureDeleteChange : Change {

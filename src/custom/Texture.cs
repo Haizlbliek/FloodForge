@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using Silk.NET.Core;
-using Silk.NET.OpenGL;
 using StbImageSharp;
 
 namespace Custom;

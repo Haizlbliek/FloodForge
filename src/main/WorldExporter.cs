@@ -1,4 +1,3 @@
-using System.IO;
 using StbImageWriteSharp;
 using Stride.Core.Extensions;
 

@@ -1,4 +1,3 @@
-using System.IO;
 using System.Text.RegularExpressions;
 using Silk.NET.Input;
 using Silk.NET.SDL;
@@ -28,7 +27,6 @@ public class FilesystemPopup : Popup {
 	protected string currentPath;
 	protected int directoryIndex = 0;
 
-	// NOTE Make sure to use directoryIndex=0 for world_xx and directoryIndex=1 for add room
 	public FilesystemPopup(Action<string[]> callback, int directoryIndex = 0) : base() {
 		this.directoryIndex = directoryIndex;
 		while (previousDirectories.Count <= directoryIndex) {

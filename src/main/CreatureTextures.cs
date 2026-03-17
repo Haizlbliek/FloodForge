@@ -1,4 +1,3 @@
-using System.IO;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;

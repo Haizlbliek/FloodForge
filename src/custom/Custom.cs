@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using Silk.NET.Maths;
-using Silk.NET.OpenGL;
-
 namespace Custom;
 
 public static class Custom {

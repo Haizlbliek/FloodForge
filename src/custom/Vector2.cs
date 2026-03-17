@@ -1,7 +1,3 @@
-using System;
-using System.Runtime.InteropServices;
-using Silk.NET.Maths;
-
 namespace Custom;
 
 [StructLayout(LayoutKind.Sequential)]

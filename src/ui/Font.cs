@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
-using Silk.NET.GLFW;
-using Silk.NET.Maths;
-using Silk.NET.OpenGL;
 
 namespace FloodForge;
 

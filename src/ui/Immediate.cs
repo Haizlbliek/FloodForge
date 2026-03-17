@@ -1,5 +1,3 @@
-using Silk.NET.Maths;
-using Silk.NET.OpenGL;
 using Cstm = Custom.Custom;
 
 namespace FloodForge;

@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using Silk.NET.OpenGL;
-
 namespace Custom;
 
 public class Shader {
