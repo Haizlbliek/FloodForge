@@ -6,7 +6,6 @@ using Silk.NET.SDL;
 using StbImageWriteSharp;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using static FloodForge.Main;
 
 namespace FloodForge.Droplet;
@@ -1449,8 +1448,6 @@ public static class DropletWindow {
 			sw.Write("PlacedObjects: " + placedObjectsLine + "\n");
 		}
 		sw.Write(after);
-
-		PopupManager.Add(new InfoPopup("Export Successful!"));
 	}
 
 	private static bool ValidSlopePos(uint geo, Vector2 tp) {

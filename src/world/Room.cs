@@ -33,6 +33,7 @@ public class Room {
 	public RoomData data;
 	public uint[] geometry = null!;
 	public List<(ShortcutType, Vector2i)> shortcutExits = [];
+	public Dictionary<Vector2i, Vector2i[]> shortcutPaths = [];
 	public List<Vector2i> roomExits = [];
 	public List<Vector2i> roomShortcutEntrances = [];
 	public List<Vector2i> denShortcutEntrances = [];
@@ -300,9 +301,9 @@ public class Room {
 
 		for (int i = 0; i < this.shortcutExits.Count; i++) {
 			Vector2i forwardDirection = Vector2i.Zero;
-			Vector2i currentPosition = this.shortcutExits[i].Item2;
+			Vector2i initialPosition = this.shortcutExits[i].Item2;
+			Vector2i currentPosition = initialPosition;
 			bool hasDirection = true;
-
 			if (this.TileIsShortcut(currentPosition.x - 1, currentPosition.y)) {
 				forwardDirection.x = -1;
 			}
@@ -321,6 +322,7 @@ public class Room {
 				continue;
 			}
 
+			List<Vector2i> exitPath = [];
 			for (int runs = 0; runs < 10000; runs++) {
 				currentPosition += forwardDirection;
 
@@ -350,16 +352,24 @@ public class Room {
 
 				if ((this.GetTile(currentPosition.x, currentPosition.y) & 15) == 4) {
 					hasDirection = true;
+					exitPath.Add(currentPosition);
 					break;
 				}
 
 				if (!hasDirection) break;
+				exitPath.Add(currentPosition);
 			}
 
 			if (hasDirection) {
-				verifiedConnections.Add(new VerifiedConnection(this.shortcutExits[i].Item1, currentPosition, this.shortcutExits[i].Item2));
+				verifiedConnections.Add(new VerifiedConnection(this.shortcutExits[i].Item1, currentPosition, initialPosition));
 				verifiedShortcuts.Add(this.shortcutExits[i]);
+				this.shortcutPaths[currentPosition] = exitPath.ToArray();
 			}
+			string outString = "";
+			foreach(Vector2i item in exitPath) {
+				outString += string.Format("item: {0}; {1}\n", item.x, item.y);
+			}
+			Logger.Info("Final exitPath for index " + i + " at position " + currentPosition + ":\n" + outString);
 		}
 
 		verifiedConnections.Reverse();
@@ -902,6 +912,36 @@ public class Room {
 
 				Immediate.Color(connected ? Themes.RoomConnection : Themes.RoomShortcutRoom);
 				UI.FillCircle(entrancePos.x, entrancePos.y, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
+				
+				// Draw end of shortcut-roomexit path
+				Vector2 pointEndA = (this.roomExits[(int)i] + new Vector2(0.5f, 0.5f)) * new Vector2(1, -1) + this.Position;
+				Immediate.Color(Themes.RoomConnection);
+				UI.FillCircle(pointEndA, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
+
+				// Find the index of the connection associated with this RoomExit (if it's connected to something)
+				int getConnectionIndex = 0;
+				bool connectionFound = false;
+				if (connected) {
+					for (int j = 0; j < this.connections.Count; j++) {
+						int connection = this.connections[j].roomA == this ? (int)this.connections[j].connectionA : (int)this.connections[j].connectionB;
+						if (connection == i) {
+							connectionFound = true;
+							getConnectionIndex = j;
+							break;
+						}
+					}
+				}
+
+				// Draws shortcutpath if either the associated exit or connection is hovered over.
+				if(i == this.hoveredRoomExit || connectionFound && this.connections[getConnectionIndex].Hovered) {
+					Vector2i roomEntranceShortcutPosition = this.GetRoomEntranceShortcutPosition(i);
+					if (this.shortcutPaths.TryGetValue(roomEntranceShortcutPosition, out var result)) {
+						Immediate.Color(Themes.RoomConnectionHover);
+						foreach (Vector2i dot in result) { // DRAWING SHORTCUT PATH
+							UI.FillCircle((dot + new Vector2(0.5f, 0.5f)) * new Vector2(1, -1) + this.Position, 0.3f, 8);
+						}
+					}
+				}
 			}
 		}
 

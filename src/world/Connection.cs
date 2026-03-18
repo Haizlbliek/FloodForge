@@ -157,8 +157,8 @@ public class Connection {
 		bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer];
 		float opacity = Settings.ConnectionOpacity;
 		if (!aVisible && !bVisible || opacity < 0.01f) return;
-
-		if (aVisible && bVisible && this.Hovered) {
+		bool hovered = this.Hovered;
+		if (aVisible && bVisible && hovered) {
 			Immediate.Color(Themes.RoomConnectionHover);
 		} else {
 			Immediate.Color(Themes.RoomConnection);
@@ -177,7 +177,22 @@ public class Connection {
 			this.directionStrength = this.directionStrength * 0.5f + 150f;
 		}
 
+		//Vector2 pointEndA = (this.roomA.roomExits[(int) this.connectionA] + new Vector2(0.5f, 0.5f)) * new Vector2(1, -1);
+		//Vector2 pointEndB = (this.roomB.roomExits[(int) this.connectionB] + new Vector2(0.5f, 0.5f)) * new Vector2(1, -1);
 		Vector2 center;
+		/*if (hovered) {
+			if (this.roomA.shortcutPaths.ContainsKey(this.roomA.GetRoomEntranceShortcutPosition(this.connectionA))) {
+				Immediate.Color(Themes.RoomConnectionHover);
+				foreach (Vector2i dot in this.roomA.shortcutPaths[this.roomA.GetRoomEntranceShortcutPosition(this.connectionA)]) { // DRAWING SHORTCUT PATH
+					UI.FillCircle((dot + new Vector2(0.5f, 0.5f)) * new Vector2(1, -1) + this.roomA.Position, 0.3f, 8);
+				}// end of shortcut path draw
+			}
+			if (this.roomB.shortcutPaths.ContainsKey(this.roomB.GetRoomEntranceShortcutPosition(this.connectionB))) {
+				foreach (Vector2i dot in this.roomB.shortcutPaths[this.roomB.GetRoomEntranceShortcutPosition(this.connectionB)]) { // DRAWING SHORTCUT PATH
+					UI.FillCircle((dot + new Vector2(0.5f, 0.5f)) * new Vector2(1, -1) + this.roomB.Position, 0.3f, 8);
+				}// end of shortcut path draw
+			}
+		}*/
 
 		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 			this.DrawCustomLine(pointA.x, pointA.y, pointB.x, pointB.y, alphaA, alphaB);
@@ -186,7 +201,7 @@ public class Connection {
 			Vector2 directionA = this.roomA.GetRoomEntranceDirectionVector(this.connectionA);
 			Vector2 directionB = this.roomB.GetRoomEntranceDirectionVector(this.connectionB);
 
-			if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
+			if (directionA.x == -directionB.x || directionA.y == -directionB.y) { // increases directionStrength if shortcuts both face the same direction
 				this.directionStrength *= 0.3333f;
 			} else {
 				this.directionStrength *= 0.6666f;
