@@ -4,9 +4,6 @@ using FloodForge.World;
 using Silk.NET.Input;
 using Silk.NET.SDL;
 using StbImageWriteSharp;
-using System.IO;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using static FloodForge.Main;
 
 namespace FloodForge.Droplet;

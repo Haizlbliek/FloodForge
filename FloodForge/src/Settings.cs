@@ -8,8 +8,8 @@ public static class Settings {
 	public static Setting<float> CameraPanSpeed = Setting.Of("CameraPanSpeed", 0.4f);
 	public static Setting<float> CameraZoomSpeed = Setting.Of("CameraZoomSpeed", 0.4f);
 	public static Setting<float> PopupScrollSpeed = Setting.Of("PopupScrollSpeed", 0.4f);
-	public static Setting<STConnectionType> ConnectionType = Setting.Of<STConnectionType>("ConnectionType", STConnectionType.Bezier);
-	public static Setting<STConnectionPoint> ConnectionPoint = Setting.Of<STConnectionPoint>("ConnectionPoint", STConnectionPoint.Entrance);
+	public static Setting<STConnectionType> ConnectionType = Setting.Of("ConnectionType", STConnectionType.Bezier);
+	public static Setting<STConnectionPoint> ConnectionPoint = Setting.Of("ConnectionPoint", STConnectionPoint.Entrance);
 	public static Setting<float> WorldIconScale = Setting.Of("WorldIconScale", 1f).Override(value => value.ToLowerInvariant() == "camera" ? (true, -1) : (false, default));
 	public static Setting<string> DefaultFilePath = Setting.Of("DefaultFilePath", "");
 	public static Setting<bool> OriginalControls = Setting.Of("OriginalControls", false);
@@ -19,8 +19,8 @@ public static class Settings {
 	public static Setting<bool> UpdateWorldFiles = Setting.Of("UpdateWorldFiles", true);
 	public static Setting<Color> NoSubregionColor = Setting.Of("NoSubregionColor", Color.White);
 	public static Setting<float> RoomTintStrength = Setting.Of("RoomTintStrength", 0.5f);
-	public static Setting<STForceExportCasing> ForceExportCasing = Setting.Of<STForceExportCasing>("ForceExportCasing", STForceExportCasing.None);
-	public static Setting<STDropletGridVisibility> DropletGridVisibility = Setting.Of<STDropletGridVisibility>("DropletGridVisibility", STDropletGridVisibility.Air);
+	public static Setting<STForceExportCasing> ForceExportCasing = Setting.Of("ForceExportCasing", STForceExportCasing.None);
+	public static Setting<STDropletGridVisibility> DropletGridVisibility = Setting.Of("DropletGridVisibility", STDropletGridVisibility.Air);
 	public static Setting<float> ConnectionOpacity = Setting.Of("ConnectionOpacity", 1f);
 	public static SubregionColorsSetting SubregionColors = new SubregionColorsSetting("SubregionColors", [ Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Cyan, Color.Magenta, new Color(1f, 0.5f, 0f), new Color(0.5f, 0.5f, 0.5f), new Color(0.5f, 0f, 1f), new Color(1f, 0.5f, 1f) ]);
 	public static Setting<bool> DisableAprilFoolsUpdates = Setting.Of("DisableAprilFoolsUpdates", false);
