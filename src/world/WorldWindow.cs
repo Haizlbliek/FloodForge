@@ -20,6 +20,7 @@ public static class WorldWindow {
 	public static RoomPosition PositionType { get; private set; } = RoomPosition.Canon;
 	public static RoomColors ColorType { get; private set; } = RoomColors.None;
 	public static readonly bool[] VisibleLayers = [true, true, true];
+	public static bool changeConnectBehaviour = true;
 
 	public static Region region = null!;
 	public static Vector2 cameraOffset;
@@ -162,8 +163,17 @@ public static class WorldWindow {
 				continue;
 
 			for (uint i = 0; i < room.roomShortcutEntrances.Count; i++) {
-				Vector2 spot = room.GetRoomEntrancePosition(i);
-				float sqrDist = (worldMouse - spot).SqrLength;
+				Vector2 spot = new();
+				float sqrDist = 0;
+				spot = room.GetRoomEntrancePosition(i);
+				sqrDist = (worldMouse - spot).SqrLength;
+				if (sqrDist < maxSqrDist) {
+					maxSqrDist = sqrDist;
+					hoveringRoom = room;
+					hoveringConnection = i;
+				}
+				spot = room.GetRoomExitPosition(i);
+				sqrDist = (worldMouse - spot).SqrLength;
 				if (sqrDist < maxSqrDist) {
 					maxSqrDist = sqrDist;
 					hoveringRoom = room;
@@ -180,14 +190,14 @@ public static class WorldWindow {
 					return;
 				}
 
-				ConnectionStart = hoveringRoom.GetRoomEntrancePosition(hoveringConnection);
+				ConnectionStart = hoveringRoom.GetConfiguredRoomEntrancePosition(hoveringConnection);
 				ConnectionEnd = ConnectionStart;
 				CurrentConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
 				connectionState = ConnectionState.Connection;
 			}
 			else if (connectionState == ConnectionState.Connection && CurrentConnection != null) {
 				if (hoveringRoom != null) {
-					ConnectionEnd = hoveringRoom.GetRoomEntrancePosition(hoveringConnection);
+					ConnectionEnd = hoveringRoom.GetConfiguredRoomEntrancePosition(hoveringConnection);
 					CurrentConnection.roomB = hoveringRoom;
 					CurrentConnection.connectionB = hoveringConnection;
 					CurrentConnectionValid = true;
@@ -637,8 +647,8 @@ public static class WorldWindow {
 			UI.Line(ConnectionStart.Value, ConnectionEnd.Value, cameraScale / 4f);
 		}
 		else {
-			Vector2 directionA = CurrentConnection.roomA.GetRoomEntranceDirectionVector(CurrentConnection.connectionA);
-			Vector2 directionB = CurrentConnection.roomB?.GetRoomEntranceDirectionVector(CurrentConnection.connectionB) ?? Vector2.Zero;
+			Vector2 directionA = CurrentConnection.roomA.GetConfiguredRoomEntranceDirection(CurrentConnection.connectionA);
+			Vector2 directionB = CurrentConnection.roomB?.GetConfiguredRoomEntranceDirection(CurrentConnection.connectionB) ?? Vector2.Zero;
 
 			if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
 				directionStrength *= 0.3333f;
@@ -1199,6 +1209,11 @@ public static class WorldWindow {
 						button.text = "Canon";
 					}
 				}),
+
+				new Button("Connect: Path", button => {
+					changeConnectBehaviour = !changeConnectBehaviour;
+					button.text = changeConnectBehaviour ? "Connect: Path" : "Connect: Default";
+				})
 			];
 		}
 

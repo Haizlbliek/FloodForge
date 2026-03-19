@@ -40,8 +40,8 @@ public class Connection {
 	public Rect AABB {
 		get {
 			float padding = WorldWindow.SelectorScale / 4f;
-			Vector2 pointA = this.roomA.GetRoomEntrancePosition(this.connectionA);
-			Vector2 pointB = this.roomB.GetRoomEntrancePosition(this.connectionB);
+			Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
+			Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
 
 			Vector2 min, max;
 
@@ -49,8 +49,8 @@ public class Connection {
 				min = Vector2.Min(pointA, pointB);
 				max = Vector2.Max(pointA, pointB);
 			} else {
-				Vector2 directionA = this.roomA.GetRoomEntranceDirectionVector(this.connectionA) * this.directionStrength;
-				Vector2 directionB = this.roomB.GetRoomEntranceDirectionVector(this.connectionB) * this.directionStrength;
+				Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA) * this.directionStrength;
+				Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB) * this.directionStrength;
 
 				Vector2 cp1 = pointA + directionA;
 				Vector2 cp2 = pointB + directionB;
@@ -74,15 +74,15 @@ public class Connection {
 
 			float lineDist = WorldWindow.SelectorScale / 4f;
 
-			Vector2 pointA = this.roomA.GetRoomEntrancePosition(this.connectionA);
-			Vector2 pointB = this.roomB.GetRoomEntrancePosition(this.connectionB);
+			Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
+			Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
 
 			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 				return MathUtil.LineDistance(WorldWindow.worldMouse, pointA, pointB) < lineDist;
 			}
 
-			Vector2 directionA = this.roomA.GetRoomEntranceDirectionVector(this.connectionA) * this.directionStrength;
-			Vector2 directionB = this.roomB.GetRoomEntranceDirectionVector(this.connectionB) * this.directionStrength;
+			Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA) * this.directionStrength;
+			Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB) * this.directionStrength;
 
 			Vector2 lastPoint = MathUtil.BezierCubic(0f, pointA, pointA + directionA, pointB + directionB, pointB);
 			float overSegments = 1f / this.segments;
@@ -157,20 +157,55 @@ public class Connection {
 		bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer];
 		float opacity = Settings.ConnectionOpacity;
 		if (!aVisible && !bVisible || opacity < 0.01f) return;
-		bool hovered = this.Hovered;
-		if (aVisible && bVisible && hovered) {
-			Immediate.Color(Themes.RoomConnectionHover);
+		bool hovered = this.Hovered || Keys.Modifier(Silk.NET.SDL.Keymod.Shift);
+
+		bool roomConnectionHoverColor = aVisible && bVisible && hovered;
+		Color connectionColorA = new();
+		Color connectionColorB = new();
+		bool blendColors = false;
+
+		if (roomConnectionHoverColor) {
+			connectionColorA = Themes.RoomConnectionHover;
+			connectionColorB = Themes.RoomConnectionHover;
 		} else {
-			Immediate.Color(Themes.RoomConnection);
+			connectionColorA = Themes.RoomConnection;
+			connectionColorB = Themes.RoomConnection;
 		}
+
+
+		if (WorldWindow.ColorType == WorldWindow.RoomColors.Layer) {
+			connectionColorA = this.roomA.data.layer switch {
+				0 => Themes.Layer0Color,
+				1 => Themes.Layer1Color,
+				2 => Themes.Layer2Color,
+				_ => Color.White,
+			};
+			connectionColorB = this.roomB.data.layer switch {
+				0 => Themes.Layer0Color,
+				1 => Themes.Layer1Color,
+				2 => Themes.Layer2Color,
+				_ => Color.White,
+			};
+			if (!roomConnectionHoverColor) {
+				connectionColorA = Color.Lerp(connectionColorA, Themes.RoomAir, 0.5f);
+				connectionColorB = Color.Lerp(connectionColorB, Themes.RoomAir, 0.5f);
+			}
+		}
+		if (!connectionColorA.Equals(connectionColorB)) {
+			blendColors = true;
+		}
+		if (!blendColors){
+			Immediate.Color(connectionColorA);
+		}
+
 		float alphaA = aVisible ? opacity : 0f;
 		float alphaB = bVisible ? opacity : 0f;
 		if (opacity <= 0.999f || aVisible != bVisible) {
 			Program.gl.Enable(EnableCap.Blend);
 		}
 
-		Vector2 pointA = this.roomA.GetRoomEntrancePosition(this.connectionA);
-		Vector2 pointB = this.roomB.GetRoomEntrancePosition(this.connectionB);
+		Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
+		Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
 		this.segments = Math.Clamp((int) ((pointA - pointB).Length / 2f), 4, 100);
 		this.directionStrength = (pointA - pointB).Length;
 		if (this.directionStrength > 300f) {
@@ -183,8 +218,8 @@ public class Connection {
 			this.DrawCustomLine(pointA.x, pointA.y, pointB.x, pointB.y, alphaA, alphaB);
 			center = (pointA + pointB) * 0.5f;
 		} else {
-			Vector2 directionA = this.roomA.GetRoomEntranceDirectionVector(this.connectionA);
-			Vector2 directionB = this.roomB.GetRoomEntranceDirectionVector(this.connectionB);
+			Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA);
+			Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB);
 
 			if (directionA.x == -directionB.x || directionA.y == -directionB.y) { // increases directionStrength if shortcuts both face the same direction
 				this.directionStrength *= 0.3333f;
@@ -198,6 +233,9 @@ public class Connection {
 			Vector2 lastPoint = MathUtil.BezierCubic(0f, pointA, pointA + directionA, pointB + directionB, pointB);
 			float overSegments = 1f / this.segments;
 			for (float t = overSegments; t <= 1.01f; t += overSegments) {
+				if (blendColors) {
+					Immediate.Color(Color.Lerp(connectionColorA, connectionColorB, t));
+				}
 				Vector2 point = MathUtil.BezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
 				this.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, Mathf.Lerp(alphaA, alphaB, t - overSegments), Mathf.Lerp(alphaA, alphaB, t));
 				lastPoint = point;
