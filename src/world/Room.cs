@@ -670,6 +670,39 @@ public class Room {
 	protected List<Vertex> vertices = [];
 	protected List<uint> indices = [];
 
+	protected void AddQuad(float xPos, float yPos, Themes.ThemeColor theme) {
+		this.AddQuad(new Vector2(xPos, yPos), Vector2.One, theme);
+	}
+
+	protected void AddQuad(Vector2 centerPosition, Themes.ThemeColor theme) {
+		this.AddQuad(centerPosition, Vector2.One, theme);
+	}
+
+	protected void AddQuad(float xPos, float yPos, float scale, Themes.ThemeColor theme) {
+		this.AddQuad(new Vector2(xPos, yPos), Vector2.One * scale, theme);
+	}
+
+	protected void AddQuad(Vector2 centerPosition, float scale, Themes.ThemeColor theme) {
+		this.AddQuad(centerPosition, Vector2.One * scale, theme);
+	}
+
+	protected void AddQuad(float xPos, float yPos, Vector2 scale, Themes.ThemeColor theme) {
+		this.AddQuad(new(xPos, yPos), scale, theme);
+	}
+
+	protected void AddQuad(Vector2 centerPosition, Vector2 scale, Themes.ThemeColor theme) {
+		float x0 = centerPosition.x - (scale.x/2);
+		float x1 = centerPosition.x + (scale.x/2);
+		float y0 = centerPosition.y + (scale.y / 2);
+		float y1 = centerPosition.y - (scale.y / 2);
+		this.AddQuad(
+			new Vertex(x0, y0, theme),
+			new Vertex(x1, y0, theme),
+			new Vertex(x1, y1, theme),
+			new Vertex(x0, y1, theme)
+		);
+	}
+
 	protected void AddQuad(Vertex a, Vertex b, Vertex c, Vertex d) {
 		this.vertices.Add(a);
 		this.vertices.Add(b);
@@ -701,6 +734,14 @@ public class Room {
 		this.allShortcutEntrances.Clear();
 		this.currentIndex = 0;
 
+		// Background
+		/*this.AddQuad(
+			new Vertex(0, 0, Themes.RoomSolid),
+			new Vertex(this.width, 0, Themes.RoomSolid),
+			new Vertex(this.width, -this.height, Themes.RoomSolid),
+			new Vertex(0, -this.height, Themes.RoomSolid)
+		);*/
+
 		for (int x = 0; x < this.width; x++) {
 			for (int y = 0; y < this.height; y++) {
 				uint tile = this.GetTile(x, y);
@@ -715,15 +756,10 @@ public class Room {
 
 				if (type == 4) {
 					this.allShortcutEntrances.Add(new(x, y));
-					this.AddQuad(
-						new Vertex(x0, y0, Themes.RoomShortcutEntrance),
-						new Vertex(x1, y0, Themes.RoomShortcutEntrance),
-						new Vertex(x1, y1, Themes.RoomShortcutEntrance),
-						new Vertex(x0, y1, Themes.RoomShortcutEntrance)
-					);
+					this.AddQuad(x2, y2, Themes.RoomShortcutEntrance);
 				}
 				else if (type != 1) { // draws air if the tile isn't fully solid.
-					Color air = ((tile & FLAG_BACKGROUND_SOLID) > 0) ? Themes.RoomLayer2Solid : Themes.RoomAir;
+					Themes.ThemeColor air = ((tile & FLAG_BACKGROUND_SOLID) > 0) ? Themes.RoomLayer2Solid : Themes.RoomAir;
 
 					if (type == 2) {
 						uint direction = (tile >> 10) & 3;
@@ -757,12 +793,7 @@ public class Room {
 						}
 					}
 					else {
-						this.AddQuad(
-							new Vertex(x0, y0, air),
-							new Vertex(x1, y0, air),
-							new Vertex(x1, y1, air),
-							new Vertex(x0, y1, air)
-						);
+						this.AddQuad(x2, y2, air); // possibility for greedy meshing, since right now every tile of air now gets its own quad.
 					}
 				}
 
@@ -776,32 +807,17 @@ public class Room {
 				}
 
 				if ((tile & FLAG_VERTICAL_POLE) > 0) {
-					this.AddQuad(
-						new Vertex(x0 + 0.375f, y0, Themes.RoomPole),
-						new Vertex(x1 - 0.375f, y0, Themes.RoomPole),
-						new Vertex(x1 - 0.375f, y1, Themes.RoomPole),
-						new Vertex(x0 + 0.375f, y1, Themes.RoomPole)
-					);
+					this.AddQuad(x2, y2, new Vector2(0.25f, 1f), Themes.RoomPole);
 				}
 
 				if ((tile & FLAG_HORIZONTAL_POLE) > 0) {
-					this.AddQuad(
-						new Vertex(x0, y0 - 0.375f, Themes.RoomPole),
-						new Vertex(x1, y0 - 0.375f, Themes.RoomPole),
-						new Vertex(x1, y1 + 0.375f, Themes.RoomPole),
-						new Vertex(x0, y1 + 0.375f, Themes.RoomPole)
-					);
+					this.AddQuad(x2, y2, new Vector2(1f, 0.25f), Themes.RoomPole);
 				}
 
 				if ((tile & FLAG_SHORTCUT) > 0 && tile != 4) {
 					// NOTE - Might add outlining RoomSolid if it looks weird
 
-					this.AddQuad(
-						new Vertex(x0 + 0.4375f, y0 - 0.4375f, Themes.RoomShortcutDot),
-						new Vertex(x1 - 0.4375f, y0 - 0.4375f, Themes.RoomShortcutDot),
-						new Vertex(x1 - 0.4375f, y1 + 0.4375f, Themes.RoomShortcutDot),
-						new Vertex(x0 + 0.4375f, y1 + 0.4375f, Themes.RoomShortcutDot)
-					);
+					this.AddQuad(x2, y2, 0.1875f, Themes.RoomShortcutDot);
 				}
 			}
 		}
@@ -860,12 +876,12 @@ public class Room {
 				}
 			}
 			else
-			this.AddQuad(
-				new Vertex(x0, y0, color),
-				new Vertex(x1, y0, color),
-				new Vertex(x1, y1, color),
-				new Vertex(x0, y1, color)
-			);
+				this.AddQuad(
+					new Vertex(x0, y0, color),
+					new Vertex(x1, y0, color),
+					new Vertex(x1, y1, color),
+					new Vertex(x0, y1, color)
+				);
 		}
 
 		foreach (Vector2i entrance in this.denShortcutEntrances) {
@@ -994,8 +1010,12 @@ public class Room {
 		Vector2 position = positionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
 		UI.FillRect(position.x, position.y - this.height, position.x + this.width, position.y);
 	}
+	bool drawWireFrames = false;
 
 	public unsafe virtual void Draw(WorldWindow.RoomPosition positionType) {
+		if (this.drawWireFrames) {
+			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
+		}
 		Vector2 position = positionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
 
 		if (!this.valid) {
@@ -1045,6 +1065,9 @@ public class Room {
 			Immediate.Color(Themes.RoomWater);
 			UI.FillRect(position.x, position.y - (this.height - MathF.Min(this.data.waterHeight + 0.5f, this.height)), position.x + this.width, position.y - this.height);
 		}
+		if (this.drawWireFrames) {
+			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Fill);
+		}
 
 		Program.gl.Disable(EnableCap.Blend);
 
@@ -1074,7 +1097,7 @@ public class Room {
 					UI.StrokeCircle(entrancePos, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
 				else
 					UI.FillCircle(entrancePos, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
-				
+
 				// Room Exit
 				Immediate.Color(connected ? Themes.RoomConnection : Themes.RoomShortcutRoom);
 				if (WorldWindow.changeConnectBehaviour)
