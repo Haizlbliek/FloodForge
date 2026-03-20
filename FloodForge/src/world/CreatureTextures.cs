@@ -121,11 +121,21 @@ public static class CreatureTextures {
 	}
 
 	public static string Parse(string type) {
-		type = type.ToLowerInvariant();
-
 		if (type == "NONE") return "";
 
+		type = type.ToLowerInvariant();
+
 		if (parseMap.TryGetValue(type, out string? o)) {
+			return o;
+		}
+
+		return type;
+	}
+
+	public static string ExportName(string type) {
+		if (type.IsNullOrEmpty()) return "NONE";
+
+		if (exportCreatureNames.TryGetValue(type, out string? o)) {
 			return o;
 		}
 
