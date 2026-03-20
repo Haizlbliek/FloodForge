@@ -321,11 +321,13 @@ public static class WorldParser {
 		den.creatures.Add(lineage);
 
 		DenCreature creature = lineage;
+		bool first = true;
 		foreach (string creatureInDen in splits[3].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)) {
-			if (creature != lineage) {
+			if (!first) {
 				creature.lineageTo = new DenCreature("", 0, "", 0.0f);
 				creature = creature.lineageTo;
 			}
+			first = false;
 
 			string[] sections = creatureInDen.Split('-', StringSplitOptions.TrimEntries);
 			creature.type = CreatureTextures.Parse(sections[0]);
