@@ -1077,7 +1077,7 @@ public static class WorldWindow {
 				}),
 
 				new Button("Add Room", button => {
-					if (WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty()) {
+					if (WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty()) {
 						PopupManager.Add(new InfoPopup("You must create or import a region\nbefore adding rooms."));
 						return;
 					}
