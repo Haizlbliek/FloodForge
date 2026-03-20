@@ -818,7 +818,7 @@ public class Room {
 		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
 	}
 
-	public void DrawBlack(WorldWindow.RoomPosition positionType) {
+	public virtual void DrawBlack(WorldWindow.RoomPosition positionType) {
 		Immediate.Color(Themes.RoomSolid);
 		if (this.data.hidden) {
 			Immediate.Alpha(0.5f);
@@ -893,12 +893,14 @@ public class Room {
 
 					float x = position.x + item.position.x;
 					float y = position.y - this.height + item.position.y;
-					UI.CenteredTexture(item.texture, x, y, 0.5f);
+					UI.CenteredTexture(item.texture, x, y, WorldWindow.SelectorScale);
 				}
 			}
 
-			for (int i = 0; i < this.denShortcutEntrances.Count; i++) {
-				this.DrawDen(this.dens[i], position.x + this.denShortcutEntrances[i].x, position.y - this.denShortcutEntrances[i].y, i == this.hoveredDen);
+			if (WorldWindow.VisibleCreatures) {
+				for (int i = 0; i < this.denShortcutEntrances.Count; i++) {
+					this.DrawDen(this.dens[i], position.x + this.denShortcutEntrances[i].x, position.y - this.denShortcutEntrances[i].y, i == this.hoveredDen);
+				}
 			}
 
 			for (uint i = 0; i < this.roomShortcutEntrances.Count; i++) {

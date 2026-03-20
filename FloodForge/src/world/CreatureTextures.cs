@@ -61,7 +61,7 @@ public static class CreatureTextures {
 			if (!file.EndsWith(".png")) continue;
 
 			string item = "room-" + Path.GetFileNameWithoutExtension(file).ToLowerInvariant();
-			creatureTextures[item] = Texture.Load(file);
+			creatureTextures[item] = Texture.Load(file, TextureWrapMode.ClampToBorder);
 		}
 	}
 
