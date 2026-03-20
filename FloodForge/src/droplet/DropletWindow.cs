@@ -775,6 +775,13 @@ public static class DropletWindow {
 	}
 
 	public static void Draw() {
+		if (Keys.Modifier(Keymod.Alt)) {
+			if (Keys.JustPressed(Key.T)) {
+				PopupManager.Add(new MarkdownPopup("docs/TutorialDroplet.md"));
+				return;
+			}
+		}
+
 		hoverText = "";
 
 		if (!Mouse.Left && !Mouse.Right) {
