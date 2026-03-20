@@ -35,15 +35,15 @@ public static class Custom {
 		yield return matrix.M44;
 	}
 
-	public static void UseProgram(this Silk.NET.OpenGL.GL gl, Shader program) {
+	public static void UseProgram(this GL gl, Shader program) {
 		gl.UseProgram(program.shader);
 	}
 
-	public static int GetUniformLocation(this Silk.NET.OpenGL.GL gl, Shader program, string name) {
+	public static int GetUniformLocation(this GL gl, Shader program, string name) {
 		return gl.GetUniformLocation(program.shader, name);
 	}
 
-	public static uint GetAttribLocation(this Silk.NET.OpenGL.GL gl, Shader program, string name) {
+	public static uint GetAttribLocation(this GL gl, Shader program, string name) {
 		return (uint)gl.GetAttribLocation(program.shader, name);
 	}
 
