@@ -11,6 +11,7 @@ public class SplashArtPopup : Popup {
 	protected Texture uiIcons;
 	protected AppVersion version;
 	protected readonly List<IconButton> buttons = [];
+	protected DateTime? nightlyBuildDate;
 	protected UpdateStatus updateStatus = UpdateStatus.Searching;
 	protected string? updatePath;
 	protected string? updateChecksum;
@@ -28,6 +29,9 @@ public class SplashArtPopup : Popup {
 		this.uiIcons = Texture.Load("assets/uiIcons.png");
 
 		this.version = new AppVersion(File.ReadAllText("assets/version.txt"));
+		if (File.Exists("assets/nightly.txt") && DateTime.TryParse(File.ReadAllText("assets/nightly.txt").Trim(), out DateTime date)) {
+			this.nightlyBuildDate = date;
+		}
 		this.CheckForUpdates();
 		this.buttons.Add(new IconButton("Discord Server", 0f, 0f, 0.25f, 0.25f, () => {
 			Process.Start(new ProcessStartInfo() { FileName = "https://discord.gg/k5BExadp4x", UseShellExecute = true });
@@ -44,28 +48,40 @@ public class SplashArtPopup : Popup {
 		try {
 			HttpClient client = new HttpClient();
 			client.DefaultRequestHeaders.Add("User-Agent", "FloodForge-Updater");
-			Stream response = await client.GetStreamAsync("https://api.github.com/repos/Haizlbliek/FloodForge/releases/latest");
-			// Logger.Note(await client.GetStringAsync("https://api.github.com/repos/Haizlbliek/FloodForge/releases/latest"));
+			string url = this.nightlyBuildDate == null ? "https://api.github.com/repos/Haizlbliek/FloodForge/releases/latest" : "https://api.github.com/repos/Haizlbliek/FloodForge/releases/tags/nightly";
+			Stream response = await client.GetStreamAsync(url);
 			JsonNode? node = await JsonNode.ParseAsync(response);
 			if (node == null) {
-				Logger.Warn("Failed to fetch latest release version");
+				Logger.Warn("Failed to fetch release version");
 				this.updateStatus = UpdateStatus.Failed;
 				return;
 			}
-			JsonNode? node2 = node["tag_name"];
-			if (node2 == null) {
-				Logger.Warn("Failed to fetch latest release version");
-				this.updateStatus = UpdateStatus.Failed;
-				return;
+			if (this.nightlyBuildDate == null) {
+				JsonNode? node2 = node["tag_name"];
+				if (node2 == null) {
+					Logger.Warn("Failed to fetch release version");
+					this.updateStatus = UpdateStatus.Failed;
+					return;
+				}
+				string? value = (string?) node2;
+				if (value == null) {
+					Logger.Warn("Failed to fetch release version");
+					this.updateStatus = UpdateStatus.Failed;
+					return;
+				}
+				AppVersion latest = new AppVersion(value);
+				this.updateStatus = (this.version < latest) ? UpdateStatus.Available : UpdateStatus.Unavailable;
+			} else {
+				string? body = node["body"]?.ToString().Replace("BUILD_DATE: ", "").Trim();
+				if (body == null || !DateTime.TryParse(body, out DateTime date)) {
+					Logger.Warn("Failed to fetch release body");
+					this.updateStatus = UpdateStatus.Failed;
+					return;
+				}
+
+				this.updateStatus = (this.nightlyBuildDate < date) ? UpdateStatus.Available : UpdateStatus.Unavailable;
 			}
-			string? value = (string?) node2;
-			if (value == null) {
-				Logger.Warn("Failed to fetch latest release version");
-				this.updateStatus = UpdateStatus.Failed;
-				return;
-			}
-			AppVersion latest = new AppVersion(value);
-			this.updateStatus = (this.version < latest) ? UpdateStatus.Available : UpdateStatus.Unavailable;
+
 			if (this.updateStatus == UpdateStatus.Available) {
 				string targetFileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "FloodForge-Windows.zip" : "FloodForge-Linux.zip";
 				JsonArray? assets = node["assets"]?.AsArray();
