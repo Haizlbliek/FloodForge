@@ -4,8 +4,6 @@ using FloodForge.World;
 using Silk.NET.Input;
 using Silk.NET.SDL;
 using StbImageWriteSharp;
-using System.IO;
-using System.Security.Cryptography.X509Certificates;
 using static FloodForge.Main;
 
 namespace FloodForge.Droplet;
@@ -777,6 +775,13 @@ public static class DropletWindow {
 	}
 
 	public static void Draw() {
+		if (Keys.Modifier(Keymod.Alt)) {
+			if (Keys.JustPressed(Key.T)) {
+				PopupManager.Add(new MarkdownPopup("docs/TutorialDroplet.md"));
+				return;
+			}
+		}
+
 		hoverText = "";
 
 		if (!Mouse.Left && !Mouse.Right) {

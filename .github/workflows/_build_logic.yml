@@ -12,26 +12,41 @@ jobs:
   build:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    outputs:
+      build_date: ${{ steps.date.outputs.now }}
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Generate Timestamp
+        id: date
+        shell: bash
+        run: echo "now=$(date +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
           cache: true
 
-      - name: Publish
+      - name: Publish Main App
         run: |
-          dotnet publish ./FloodForge.csproj -c Release -o ./publish-temp --self-contained true -r ${{ matrix.os == 'ubuntu-latest' && 'linux-x64' || 'win-x64' }}
+          dotnet publish ./FloodForge/FloodForge.csproj -c Release -o ./publish-temp --self-contained true -r ${{ matrix.os == 'ubuntu-latest' && 'linux-x64' || 'win-x64' }}
+
+      - name: Publish Patcher
+        run: |
+          dotnet publish ./FloodForge.Patcher/FloodForge.Patcher.csproj -c Release -o ./publish-temp --self-contained true -r ${{ matrix.os == 'ubuntu-latest' && 'linux-x64' || 'win-x64' }}
 
       - name: Prepare & Zip (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir -p ./publish-temp/mods ./publish-temp/assets ./publish-temp/docs
-          cp -r ./assets/. ./publish-temp/assets/ 2>/dev/null || true
-          cp -r ./docs/. ./publish-temp/docs/ 2>/dev/null || true
+          cp -r ./FloodForge/assets/. ./publish-temp/assets/ 2>/dev/null || true
+          cp -r ./FloodForge/docs/. ./publish-temp/docs/ 2>/dev/null || true
+          if [ "${{ inputs.is_release }}" = "false" ]; then
+            echo "${{ steps.date.outputs.now }}" > ./publish-temp/assets/nightly.txt
+          fi
           cd publish-temp && zip -r ../FloodForge-linux.zip .
 
       - name: Prepare & Zip (Windows)
@@ -39,8 +54,11 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path "./publish-temp/mods", "./publish-temp/assets", "./publish-temp/docs"
-          if (Test-Path "./assets") { Copy-Item -Path "./assets/*" -Destination "./publish-temp/assets/" -Recurse -Force }
-          if (Test-Path "./docs") { Copy-Item -Path "./docs/*" -Destination "./publish-temp/docs/" -Recurse -Force }
+          if (Test-Path "./FloodForge/assets") { Copy-Item -Path "./FloodForge/assets/*" -Destination "./publish-temp/assets/" -Recurse -Force }
+          if (Test-Path "./FloodForge/docs") { Copy-Item -Path "./FloodForge/docs/*" -Destination "./publish-temp/docs/" -Recurse -Force }
+          if ("${{ inputs.is_release }}" -eq "false") {
+            Set-Content -Path "./publish-temp/assets/nightly.txt" -Value "${{ steps.date.outputs.now }}"
+          }
           Set-Location ./publish-temp
           Compress-Archive -Path * -DestinationPath ../FloodForge-windows.zip
 
@@ -49,6 +67,7 @@ jobs:
         with:
           name: build-artifacts-${{ matrix.os }}
           path: FloodForge-*.zip
+          retention-days: 1
 
   deploy:
     needs: build
@@ -63,16 +82,18 @@ jobs:
 
       - name: Handle Nightly Cleanup
         if: ${{ !inputs.is_release }}
-        run: gh release delete nightly --yes --cleanup-tag || true
+        run: |
+          gh release delete nightly --yes --cleanup-tag || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag_name }}
+          tag_name: ${{ inputs.is_release && inputs.tag_name || 'nightly' }}
           name: ${{ inputs.is_release && format('FloodForge {0}', inputs.tag_name) || 'Nightly Development Build' }}
           prerelease: ${{ !inputs.is_release }}
           draft: ${{ inputs.is_release }}
           files: ./artifacts/FloodForge-*.zip
-          body: ${{ inputs.is_release && '' || format('Automated build for {0}', github.sha) }}
+          body: |
+            ${{ inputs.is_release && '' || format('BUILD_DATE: {0}', needs.build.outputs.build_date) }}

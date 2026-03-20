@@ -822,11 +822,11 @@ public static class WorldWindow {
 		foreach (DenLineage lineage in den.creatures) {
 			DenCreature creature = lineage;
 			string line = "";
-			line += $"{creature.type} x {creature.count}";
+			line += $"{CreatureTextures.ExportName(creature.type)} x {creature.count}";
 			while (creature.lineageTo != null) {
 				creature = creature.lineageTo;
 				line += $" --{Mathf.FloorToInt(creature.lineageChance * 100f)}%-> ";
-				line += $"{creature.type} x {creature.count}";
+				line += $"{CreatureTextures.ExportName(creature.type)} x {creature.count}";
 			}
 			debugText.Add(line);
 		}
@@ -925,7 +925,7 @@ public static class WorldWindow {
 				return;
 			}
 			else if (Keys.JustPressed(Key.T)) {
-				PopupManager.Add(new MarkdownPopup("docs/controls.md"));
+				PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
 				return;
 			}
 		}
