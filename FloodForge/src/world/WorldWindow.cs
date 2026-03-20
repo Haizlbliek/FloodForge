@@ -915,7 +915,7 @@ public static class WorldWindow {
 				return;
 			}
 			else if (Keys.JustPressed(Key.T)) {
-				PopupManager.Add(new MarkdownPopup("docs/controls.md"));
+				PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
 				return;
 			}
 		}

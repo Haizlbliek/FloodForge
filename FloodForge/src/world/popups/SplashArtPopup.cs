@@ -221,8 +221,8 @@ public class SplashArtPopup : Popup {
 		if (Mouse.JustLeft) {
 			this.Close();
 
-			if (Settings.HideTutorial) {
-				PopupManager.Add(new MarkdownPopup("docs/controls.md"));
+			if (!Settings.HideTutorial) {
+				PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
 			}
 		}
 	}
