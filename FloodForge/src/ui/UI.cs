@@ -1,5 +1,6 @@
 using Silk.NET.Input;
 using Silk.NET.SDL;
+using Stride.Core.Extensions;
 
 namespace FloodForge;
 
@@ -326,8 +327,14 @@ public static class UI {
 		Immediate.Color(mods.disabled ? Themes.ButtonDisabled : Themes.Button);
 		UI.FillRect(rect);
 
-		Immediate.Color(mods.disabled ? Themes.TextDisabled : (selected ? Themes.TextHighlight : Themes.Text));
-		UI.font.Write(editable.value, rect.x0 + 0.01f, rect.CenterY, 0.03f, Font.Align.MiddleLeft);
+		if (editable.value.IsNullOrEmpty()) {
+			Immediate.Color(Themes.TextDisabled);
+			UI.font.Write(mods.placeholder, rect.x0 + 0.01f, rect.CenterY, 0.03f, Font.Align.MiddleLeft);
+		}
+		else {
+			Immediate.Color(mods.disabled ? Themes.TextDisabled : (selected ? Themes.TextHighlight : Themes.Text));
+			UI.font.Write(editable.value, rect.x0 + 0.01f, rect.CenterY, 0.03f, Font.Align.MiddleLeft);
+		}
 		if (selected && UI.selectTime < 30) {
 			float width = UI.font.Measure(editable.value[0..UI.selectIndex], 0.03f).x;
 			Immediate.Begin(Immediate.PrimitiveType.LINES);
@@ -442,6 +449,7 @@ public static class UI {
 
 	public class TextInputMods {
 		public bool disabled = false;
+		public string placeholder = "";
 	}
 
 	public readonly struct ButtonResponse {
@@ -536,6 +544,12 @@ public static class UI {
 			UI.UpdateTextInput(this);
 			UI.Delete(this);
 			this.submitted = true;
+		}
+
+		public void GrabFocus() {
+			UI.selectTime = 0;
+			UI.CurrentEditable = this;
+			UI.selectIndex = this.value.Length;
 		}
 
 		public enum Type {

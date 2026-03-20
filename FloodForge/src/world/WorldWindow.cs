@@ -48,6 +48,7 @@ public static class WorldWindow {
 	public static Vector2? holdingStart = null;
 	public static int holdingType = 0;
 	public static bool continueDrag = false;
+	public static Room? highlightRoom;
 
 	public static Connection? CurrentConnection;
 	public static Vector2? ConnectionStart;
@@ -119,16 +120,21 @@ public static class WorldWindow {
 		if (scrollY < -10f)
 			scrollY = -10f;
 		float zoom = MathF.Pow(1.25f, scrollY);
+		if (MathF.Abs(zoom - 1f) > 0.1f)
+			highlightRoom = null;
 
 		Vector2 previousWorldMouse = Mouse.Pos * cameraScale + cameraOffset;
 		cameraScaleTo *= zoom;
 		cameraScale += (cameraScaleTo - cameraScale) * (1f - MathF.Pow(1f - Settings.CameraZoomSpeed, Program.Delta * 60f));
 		worldMouse = Mouse.Pos * cameraScale + cameraOffset;
 
-		cameraOffset += previousWorldMouse - worldMouse;
-		cameraPanTo += previousWorldMouse - worldMouse;
+		if (highlightRoom == null) {
+			cameraOffset += previousWorldMouse - worldMouse;
+			cameraPanTo += previousWorldMouse - worldMouse;
+		}
 
 		if (Mouse.Middle) {
+			highlightRoom = null;
 			if (!cameraPanningBlocked && !cameraPanning) {
 				if (isHoveringPopup)
 					cameraPanningBlocked = true;
@@ -150,6 +156,13 @@ public static class WorldWindow {
 		}
 
 		cameraOffset += (cameraPanTo - cameraOffset) * (1f - MathF.Pow(1f - Settings.CameraPanSpeed, Program.Delta * 60f));
+	}
+
+	public static void FocusCameraOn(Room room) {
+		Vector2 focus = room.Position + new Vector2(room.width / 2f, room.height / -2f);
+		cameraPanTo = focus;
+		cameraScaleTo = MathF.Max(room.width, room.height * 1.1f) / 2f + 8f;
+		highlightRoom = room;
 	}
 
 	private static void UpdateConnectionControls() {
@@ -390,6 +403,10 @@ public static class WorldWindow {
 	}
 
 	private static void UpdateKeybinds() {
+		if (Keys.JustPressed(Key.F)) {
+			PopupManager.Add(new SearchPopup());
+		}
+
 		if (Keys.JustPressed(Key.I)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
 				History.Apply(new MoveToBackChange(rooms));

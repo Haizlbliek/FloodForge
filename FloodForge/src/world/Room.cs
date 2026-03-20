@@ -852,6 +852,11 @@ public class Room {
 		}
 
 		Color tint = this.GetTintColor();
+		if (WorldWindow.highlightRoom != null) {
+			if (WorldWindow.highlightRoom != this) {
+				tint *= 0.25f;
+			}
+		}
 
 		Program.gl.BindVertexArray(this._vao);
 		Program.gl.UseProgram(Preload.RoomShader);

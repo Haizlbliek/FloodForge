@@ -243,8 +243,8 @@ public class MarkdownPopup : Popup {
 					Immediate.Vertex(-0.77f, y - 0.04f);
 					Immediate.End();
 
-					this.WriteLine(textColor, item.text, x + 0.02f, y, 0.03f);
-					y -= 0.05f;
+					this.WriteLine(textColor, item.text, x + 0.05f, y, 0.03f);
+					y -= 0.04f;
 					break;
 				}
 
