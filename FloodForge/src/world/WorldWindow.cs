@@ -17,6 +17,7 @@ public static class WorldWindow {
 	private static readonly WorldMenuItems menuItems = new WorldMenuItems();
 
 	public static bool VisibleDevItems { get; private set; } = false;
+	public static bool VisibleCreatures { get; private set; } = true;
 	public static RoomPosition PositionType { get; private set; } = RoomPosition.Canon;
 	public static RoomColors ColorType { get; private set; } = RoomColors.None;
 	public static readonly bool[] VisibleLayers = [true, true, true];
@@ -464,7 +465,7 @@ public static class WorldWindow {
 			}
 		}
 
-		if (Keys.JustPressed(Key.C)) {
+		if (VisibleCreatures && Keys.JustPressed(Key.C)) {
 			bool found = false;
 
 			for (int i = region.rooms.Count - 1; i >= 0; i--) {
@@ -587,7 +588,7 @@ public static class WorldWindow {
 		UI.Update();
 
 		float scale = Settings.WorldIconScale;
-		SelectorScale = (scale < 0f) ? (cameraScale / 16f) : scale;
+		SelectorScale = (scale < 0f) ? MathF.Max(cameraScale / 16f, 1f) : scale;
 
 		if (Keys.Modifier(Keymod.Ctrl) && Keys.JustPressed(Key.Z)) {
 			if (Keys.Modifier(Keymod.Shift)) {
@@ -883,25 +884,27 @@ public static class WorldWindow {
 			}
 		}
 
-		for (int r = region.rooms.Count - 1; r >= 0; r--) {
-			Room room = region.rooms[r];
-			Vector2 roomMouse = worldMouse - room.Position;
-			Vector2 shortcutPosition;
+		if (VisibleCreatures) {
+			for (int r = region.rooms.Count - 1; r >= 0; r--) {
+				Room room = region.rooms[r];
+				Vector2 roomMouse = worldMouse - room.Position;
+				Vector2 shortcutPosition;
 
-			if (room is OffscreenRoom offscreenRoom) {
-				for (int j = 0; j <= room.dens.Count; j++) {
-					shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + r * 4f + 2.5f, -room.height * 0.25f - 0.5f);
-					if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-						DebugDen(offscreenRoom.GetDen(), offscreenRoom, ref debugText);
+				if (room is OffscreenRoom offscreenRoom) {
+					for (int j = 0; j <= room.dens.Count; j++) {
+						shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + r * 4f + 2.5f, -room.height * 0.25f - 0.5f);
+						if ((roomMouse - shortcutPosition).Length < SelectorScale) {
+							DebugDen(offscreenRoom.GetDen(), offscreenRoom, ref debugText);
+						}
 					}
 				}
-			}
-			else {
-				for (int j = 0; j < room.denShortcutEntrances.Count; j++) {
-					Vector2i shortcut = room.denShortcutEntrances[j];
-					shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
-					if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-						DebugDen(room.GetDen01(j), room, ref debugText);
+				else {
+					for (int j = 0; j < room.denShortcutEntrances.Count; j++) {
+						Vector2i shortcut = room.denShortcutEntrances[j];
+						shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
+						if ((roomMouse - shortcutPosition).Length < SelectorScale) {
+							DebugDen(room.GetDen01(j), room, ref debugText);
+						}
 					}
 				}
 			}
@@ -1185,6 +1188,11 @@ public static class WorldWindow {
 				new Button("Dev Items: Hidden", button => {
 					VisibleDevItems = !VisibleDevItems;
 					button.text = VisibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden";
+				}),
+
+				new Button("Creatures: Shown", button => {
+					VisibleCreatures = !VisibleCreatures;
+					button.text = VisibleCreatures ? "Creatures: Shown" : "Creatures: Hidden";
 				}),
 
 				new Button("Refresh Region", button => {
