@@ -21,6 +21,7 @@ public static class WorldWindow {
 	public static RoomColors ColorType { get; private set; } = RoomColors.None;
 	public static readonly bool[] VisibleLayers = [true, true, true];
 	public static bool changeConnectBehaviour = true;
+	public static bool showDebugVisuals = false;
 
 	public static Region region = null!;
 	public static Vector2 cameraOffset;

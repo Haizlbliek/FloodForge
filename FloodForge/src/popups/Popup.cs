@@ -1,3 +1,6 @@
+using FloodForge.World;
+using Silk.NET.Input;
+
 namespace FloodForge.Popups;
 
 public abstract class Popup {
@@ -22,12 +25,13 @@ public abstract class Popup {
 	protected RectPosition mouseEdge;
 	protected bool resizingWindow = false;
 	protected Vector2 pivotPoint;
+	protected Vector2i pivotDir;
 	protected Vector2 currentMousePos;
 	protected Rect newBounds;
 
 	public Popup() {
 		this.bounds = new Rect(-0.5f, -0.5f, 0.5f, 0.5f);
-		this.minimumBounds = new Rect(-0.1f, -0.03f, 0.1f, 0.03f);
+		this.minimumBounds = new Rect(-0.1f, -0.1f, 0.1f, 0.1f);
 		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).UV(0f, 0f, 0.25f, 0.25f);
 		this.minimizeButton = new UVRect(this.bounds.x1 - 0.1f, this.bounds.y1 - 0.05f, this.bounds.x1 - 0.05f, this.bounds.y1).UV(0f, 0.5f, 0.25f, 0.75f);
 		this.UpdateScaleControls(this.bounds);
@@ -106,6 +110,12 @@ public abstract class Popup {
 		} else {
 			UI.StrokeRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
 		}
+		if (this.CanDrag(Mouse.X, Mouse.Y)) {
+			Main.mouse?.Cursor.StandardCursor = StandardCursor.ResizeAll;
+		}
+		else {
+			Main.mouse?.Cursor.StandardCursor = StandardCursor.Default;
+		}
 
 		if (this.resizeable) {
 			this.UpdateScaleControls(this.bounds);
@@ -115,106 +125,155 @@ public abstract class Popup {
 			}
 			bool isOutsideExcludor = !this.scaleControlExcluder.Inside(Mouse.X, Mouse.Y);
 			bool isInsideIncluder = this.scaleControlIncluder.Inside(Mouse.X, Mouse.Y);
-
-			if (!this.minimized & !this.cursorOverButton & !this.resizingWindow & !this.CanDrag(Mouse.X, Mouse.Y)) {
-				Immediate.Color(Themes.Layer2Color);
-				if (this.coyoteHover && isOutsideExcludor) {
-					if (isInsideIncluder) {
-						UI.FillRect(this.scaleControlExcluder.x0, this.scaleControlExcluder.y0, this.scaleControlExcluder.x1, this.scaleControlExcluder.y1);
-						for (int x = 0; x <= 2; x++) {
-							for (int y = 0; y <= 2; y++) {
-								if (x == 1 && y == 1)
-									continue;
-								float currX0 = x == 0 ? this.scaleControlIncluder.x0 : x == 1 ? this.scaleControlExcluder.x0 : this.scaleControlExcluder.x1;
-								float currX1 = x == 0 ? this.scaleControlExcluder.x0 : x == 1 ? this.scaleControlExcluder.x1 : this.scaleControlIncluder.x1;
-								float currY0 = y == 0 ? this.scaleControlIncluder.y0 : y == 1 ? this.scaleControlExcluder.y0 : this.scaleControlExcluder.y1;
-								float currY1 = y == 0 ? this.scaleControlExcluder.y0 : y == 1 ? this.scaleControlExcluder.y1 : this.scaleControlIncluder.y1;
-								Rect currRect = new Rect(currX0, currY0, currX1, currY1);
-								if (currRect.Inside(Mouse.X, Mouse.Y)) {
-									UI.StrokeRect(currRect);
-									this.mouseEdge = (RectPosition) (x + y * 3);
-									if (Mouse.JustLeft) {
-										this.resizingWindow = true;
-										this.pivotPoint = this.mouseEdge switch {
-											RectPosition.UpLeft => new(this.bounds.x1, this.bounds.y1),
-											RectPosition.UpMid => new(this.bounds.CenterX, this.bounds.y1),
-											RectPosition.UpRight => new(this.bounds.x0, this.bounds.y1),
-											RectPosition.MidLeft => new(this.bounds.x1, this.bounds.CenterY),
-											RectPosition.Center => new(this.bounds.CenterX, this.bounds.CenterY),
-											RectPosition.MidRight => new(this.bounds.x0, this.bounds.CenterY),
-											RectPosition.DownLeft => new(this.bounds.x1, this.bounds.y0),
-											RectPosition.DownMid => new(this.bounds.CenterX, this.bounds.y0),
-											RectPosition.DownRight => new(this.bounds.x0, this.bounds.y0),
-											_ => new(0, 0)
-										};
+			if(!this.CanDrag(Mouse.X, Mouse.Y)) {
+				if (!this.minimized & !this.cursorOverButton & !this.resizingWindow) {
+					Immediate.Color(Themes.Layer2Color);
+					if (this.coyoteHover && isOutsideExcludor) {
+						if (isInsideIncluder) {
+							if (WorldWindow.showDebugVisuals)
+								UI.FillRect(this.scaleControlExcluder.x0, this.scaleControlExcluder.y0, this.scaleControlExcluder.x1, this.scaleControlExcluder.y1);
+							for (int x = 0; x <= 2; x++) {
+								for (int y = 0; y <= 2; y++) {
+									if (x == 1 && y == 1)
+										continue;
+									float currX0 = x == 0 ? this.scaleControlIncluder.x0 : x == 1 ? this.scaleControlExcluder.x0 : this.scaleControlExcluder.x1;
+									float currX1 = x == 0 ? this.scaleControlExcluder.x0 : x == 1 ? this.scaleControlExcluder.x1 : this.scaleControlIncluder.x1;
+									float currY0 = y == 0 ? this.scaleControlIncluder.y0 : y == 1 ? this.scaleControlExcluder.y0 : this.scaleControlExcluder.y1;
+									float currY1 = y == 0 ? this.scaleControlExcluder.y0 : y == 1 ? this.scaleControlExcluder.y1 : this.scaleControlIncluder.y1;
+									Rect currRect = new Rect(currX0, currY0, currX1, currY1);
+									if (currRect.Inside(Mouse.X, Mouse.Y)) {
+										if (WorldWindow.showDebugVisuals)
+											UI.StrokeRect(currRect);
+										this.mouseEdge = (RectPosition) (x + y * 3);
+										switch (this.mouseEdge) {
+											case RectPosition.Center:
+												Main.mouse?.Cursor.StandardCursor = StandardCursor.ResizeAll;
+												break;
+											case RectPosition.UpMid:
+											case RectPosition.DownMid:
+												Main.mouse?.Cursor.StandardCursor = StandardCursor.VResize;
+												break;
+											case RectPosition.MidLeft:
+											case RectPosition.MidRight:
+												Main.mouse?.Cursor.StandardCursor = StandardCursor.HResize;
+												break;
+											case RectPosition.UpLeft:
+											case RectPosition.DownRight:
+												Main.mouse?.Cursor.StandardCursor = StandardCursor.NeswResize;
+												break;
+											case RectPosition.UpRight:
+											case RectPosition.DownLeft:
+												Main.mouse?.Cursor.StandardCursor = StandardCursor.NwseResize;
+												break;
+										}
+										if (Mouse.JustLeft) {
+											this.resizingWindow = true;
+											this.pivotPoint = this.mouseEdge switch {
+												RectPosition.UpLeft => new(this.bounds.x1, this.bounds.y1),
+												RectPosition.UpMid => new(this.bounds.CenterX, this.bounds.y1),
+												RectPosition.UpRight => new(this.bounds.x0, this.bounds.y1),
+												RectPosition.MidLeft => new(this.bounds.x1, this.bounds.CenterY),
+												RectPosition.Center => new(this.bounds.CenterX, this.bounds.CenterY),
+												RectPosition.MidRight => new(this.bounds.x0, this.bounds.CenterY),
+												RectPosition.DownLeft => new(this.bounds.x1, this.bounds.y0),
+												RectPosition.DownMid => new(this.bounds.CenterX, this.bounds.y0),
+												RectPosition.DownRight => new(this.bounds.x0, this.bounds.y0),
+												_ => new(0, 0)
+											};
+											this.pivotDir = new Vector2i(float.Sign((Mouse.Pos - this.pivotPoint).x), float.Sign((Mouse.Pos - this.pivotPoint).y));
+										}
 									}
 								}
 							}
 						}
+						else {
+							this.coyoteHover = false;
+						}
 					}
 					else {
-						this.coyoteHover = false;
+						if (WorldWindow.showDebugVisuals)
+							UI.StrokeRect(this.scaleControlExcluder.x0, this.scaleControlExcluder.y0, this.scaleControlExcluder.x1, this.scaleControlExcluder.y1);
+					}
+					if (Mouse.JustRight) {
+						this.ResizePopup(this.initBounds);
 					}
 				}
-				else {
-					UI.StrokeRect(this.scaleControlExcluder.x0, this.scaleControlExcluder.y0, this.scaleControlExcluder.x1, this.scaleControlExcluder.y1);
-				}
-				if (Mouse.JustRight) {
-					this.bounds = this.initBounds;
-				}
-			}
-			else if (this.resizingWindow) {
-				if (!this.initBoundsSet) {
-					this.initBounds = this.bounds;
-					this.initBoundsSet = true;
-				}
-				if (Mouse.JustRight) {
-					this.resizingWindow = false;
-					this.bounds = this.initBounds;
-				}
-				if (!Mouse.Left) {
-					this.resizingWindow = false;
-					this.bounds = this.newBounds;
-				}
-				else {
-					this.currentMousePos = Mouse.Pos;
-					Rect originalBounds = this.bounds;
-					bool lockXScale = false;
-					bool lockYScale = false;
-					if (int.IsOddInteger((int) this.mouseEdge)) {
-						if (this.mouseEdge == (RectPosition) 1 || this.mouseEdge == (RectPosition) 7) {
-							lockXScale = true;
-						}
-						else {
-							lockYScale = true;
-						}
+				else if (this.resizingWindow) {
+					if (!this.initBoundsSet) {
+						this.initBounds = this.bounds;
+						this.minimumBounds = this.bounds;
+						this.initBoundsSet = true;
 					}
-					Vector2 PointB = new Vector2(
-						this.currentMousePos.x,
-						this.currentMousePos.y);
-					float newX0 = lockXScale ? originalBounds.x0 : Math.Min(PointB.x, this.pivotPoint.x);
-					float newX1 = lockXScale ? originalBounds.x1 : Math.Max(Math.Max(PointB.x, this.pivotPoint.x), this.minimumBounds.x1 - this.minimumBounds.x0);
-					float newY0 = lockYScale ? originalBounds.y0 : Math.Min(Math.Min(PointB.y, this.pivotPoint.y), this.minimumBounds.y0 - this.minimumBounds.y1);
-					float newY1 = lockYScale ? originalBounds.y1 : Math.Max(PointB.y, this.pivotPoint.y);
-					this.newBounds = new(newX0, newY0, newX1, newY1);
-					if (true) {
+					if (Mouse.JustRight) {
+						this.resizingWindow = false;
+						this.ResizePopup(this.initBounds);
+					}
+					if (!Mouse.Left) {
+						this.resizingWindow = false;
+						this.ResizePopup(this.newBounds);
+						Logger.Info(string.Format("x0: {0}; x1: {1}; y0: {2}; y1: {3}", this.bounds.x0, this.bounds.x1, this.bounds.y0, this.bounds.y1));
+					}
+					else {
+						this.currentMousePos = Mouse.Pos;
+						Rect originalBounds = this.bounds;
+						bool lockXScale = false;
+						bool lockYScale = false;
+						if (int.IsOddInteger((int) this.mouseEdge)) {
+							if (this.mouseEdge == (RectPosition) 1 || this.mouseEdge == (RectPosition) 7) {
+								lockXScale = true;
+							}
+							else {
+								lockYScale = true;
+							}
+						}
+						Vector2 PointB = new Vector2(
+							this.currentMousePos.x,
+							this.currentMousePos.y);
+
+						// All of this can probably be improved in terms of legibility.
+						// I feel like a lot of this is expecting cases that cannot exist.
+						float newX0 = lockXScale || this.pivotDir.x > 0 ? originalBounds.x0 : Math.Min(PointB.x, this.pivotPoint.x);
+						float newX1 = lockXScale || this.pivotDir.x < 0 ? originalBounds.x1 : Math.Max(PointB.x, this.pivotPoint.x);
+						float newY0 = lockYScale || this.pivotDir.y > 0 ? originalBounds.y0 : Math.Min(PointB.y, this.pivotPoint.y);
+						float newY1 = lockYScale || this.pivotDir.y < 0 ? originalBounds.y1 : Math.Max(PointB.y, this.pivotPoint.y);
+						if (!lockXScale) {
+							if (this.pivotDir.x > 0)
+								newX1 = Math.Max(this.pivotPoint.x + (this.minimumBounds.x1 - this.minimumBounds.x0), newX1);
+							else
+								newX0 = Math.Min(this.pivotPoint.x - (this.minimumBounds.x1 - this.minimumBounds.x0), newX0);
+						}
+						if (!lockYScale) {
+							if (this.pivotDir.y > 0)
+								newY1 = Math.Max(this.pivotPoint.y + (this.minimumBounds.y1 - this.minimumBounds.y0), newY1);
+							else
+								newY0 = Math.Min(this.pivotPoint.y - (this.minimumBounds.y1 - this.minimumBounds.y0), newY0);
+						}
+
+						this.newBounds = new(newX0, newY0, newX1, newY1);
+						if (WorldWindow.showDebugVisuals) {
+							Immediate.Color(Themes.BorderHighlight);
+							UI.StrokeRect(originalBounds);
+							UI.StrokeCircle(new(originalBounds.x0, originalBounds.y0), 0.02f, 8);
+							Immediate.Color(Themes.Layer2Color);
+							UI.StrokeCircle(PointB, 0.02f, 8);
+							UI.StrokeCircle(this.pivotPoint + (Vector2) this.pivotDir * 0.1f, 0.02f, 8);
+							Immediate.Color(Themes.Layer1Color);
+							UI.StrokeCircle(this.currentMousePos, 0.02f, 8);
+							Immediate.Color(Themes.Layer0Color);
+							UI.StrokeCircle(this.pivotPoint, 0.02f, 8);
+							Immediate.Color(Themes.RoomAir);
+							UI.StrokeCircle(new(newX0, newY0), 0.02f, 8);
+						}
 						Immediate.Color(Themes.BorderHighlight);
-						UI.StrokeRect(originalBounds);
-						UI.StrokeCircle(new(originalBounds.x0, originalBounds.y0), 0.02f, 8);
-						Immediate.Color(Themes.Layer2Color);
 						UI.StrokeRect(this.newBounds);
-						UI.StrokeCircle(PointB, 0.02f, 8);
-						Immediate.Color(Themes.Layer1Color);
-						UI.StrokeCircle(this.currentMousePos, 0.02f, 8);
-						Immediate.Color(Themes.Layer0Color);
-						UI.StrokeCircle(this.pivotPoint, 0.02f, 8);
-						Immediate.Color(Themes.RoomAir);
-						UI.StrokeCircle(new(newX0, newY0), 0.02f, 8);
 					}
+				}
+				else {
+					Main.mouse?.Cursor.StandardCursor = StandardCursor.Default;
 				}
 			}
 		}
-		else if(this.initBoundsSet) { this.bounds = this.initBounds; }
+		else if(this.initBoundsSet) { this.ResizePopup(this.initBounds); }
 	}
 
 	public virtual Rect InteractBounds() => this.minimized ? new Rect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1) : this.bounds;
@@ -230,8 +289,12 @@ public abstract class Popup {
 			bounds.x0 - this.scaleControlOuterMargin,
 			bounds.y0 - this.scaleControlOuterMargin,
 			bounds.x1 + this.scaleControlOuterMargin,
-			bounds.y1 + this.scaleControlOuterMargin
+			bounds.y1 + this.scaleControlOuterMargin * 2
 			);
+	}
+
+	public virtual void ResizePopup(Rect newRect) {
+		this.bounds = newRect;
 	}
 
 	public virtual void Close() {
@@ -244,9 +307,11 @@ public abstract class Popup {
 	public virtual void Reject() => this.Close();
 
 	public virtual bool CanDrag(float mouseX, float mouseY) {
-		if (mouseX >= this.bounds.x1 - 0.1f && mouseY >= this.bounds.y1 - 0.05f) return false;
+		if (this.resizingWindow)
+			return false;
+		if (mouseX <= this.bounds.x1 - 0.1f && mouseX >= this.bounds.x0 && mouseY <= this.bounds.y1 && mouseY >= this.bounds.y1 - 0.05f) return true;
 
-		return mouseY >= this.bounds.y1 - 0.05f;
+		return false;
 	}
 
 	public void Offset(Vector2 offset) {
