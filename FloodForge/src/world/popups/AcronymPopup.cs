@@ -4,9 +4,8 @@ namespace FloodForge.World;
 
 public class AcronymPopup : Popup {
 	protected string? setTo = null;
-	protected bool canClose;
 
-	protected virtual int MinLength => 2;
+	protected virtual int MinLength => 1;
 	protected virtual string BanLetters => "_/\\ ";
 
 	protected UI.TextInputEditable Acronym;
@@ -14,13 +13,21 @@ public class AcronymPopup : Popup {
 	public AcronymPopup() {
 		this.bounds = new Rect(-0.25f, -0.08f, 0.25f, 0.25f);
 		this.Acronym = new UI.TextInputEditable(UI.TextInputEditable.Type.Text, "") { bannedLetters = this.BanLetters };
+		this.Acronym.GrabFocus();
+	}
+
+	public override void Accept() {
+		if (this.Acronym.Focused || this.Acronym.value.Length < this.MinLength)
+			return;
+
+		this.Submit(this.Acronym.value);
+		this.Acronym.value = "";
+		this.Acronym.Submit();
 	}
 
 	public override void Close() {
-		if (this.canClose) {
-			base.Close();
-			UI.Delete(this.Acronym);
-		}
+		base.Close();
+		UI.Delete(this.Acronym);
 	}
 
 	public override void Draw() {
@@ -28,22 +35,23 @@ public class AcronymPopup : Popup {
 		if (this.minimized) return;
 
 		float centerX = this.bounds.CenterX;
+
 		if (this.setTo != null) {
 			this.Acronym.value = this.setTo;
 		}
-		UI.TextInputResponse response = UI.TextInput(new Rect(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.15f, this.bounds.x1 - 0.01f, this.bounds.y1 - 0.1f), this.Acronym);
-		this.canClose = !response.focused;
 
-		if (UI.TextButton("Cancel", new Rect(centerX - 0.2f, this.bounds.y1 - 0.28f, centerX - 0.05f, this.bounds.y1 - 0.22f), new UI.TextButtonMods() { disabled = response.focused })) {
-			this.canClose = true;
+		UI.TextInput(new Rect(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.14f, this.bounds.x1 - 0.01f, this.bounds.y1 - 0.19f), this.Acronym);
+
+		if (UI.TextButton("Cancel", new Rect(centerX - 0.2f, this.bounds.y1 - 0.28f, centerX - 0.05f, this.bounds.y1 - 0.22f))) {
 			this.Reject();
 			this.Acronym.value = "";
+			this.Acronym.Submit();
 		}
 
-		if (UI.TextButton("Confirm", new Rect(centerX + 0.05f, this.bounds.y1 - 0.28f, centerX + 0.2f, this.bounds.y1 - 0.22f), new UI.TextButtonMods() { disabled = response.focused || this.Acronym.value.Length < this.MinLength })) {
-			this.canClose = true;
+		if (UI.TextButton("Confirm", new Rect(centerX + 0.05f, this.bounds.y1 - 0.28f, centerX + 0.2f, this.bounds.y1 - 0.22f), new UI.TextButtonMods() { disabled = this.Acronym.value.Length < this.MinLength })) {
 			this.Submit(this.Acronym.value);
 			this.Acronym.value = "";
+			this.Acronym.Submit();
 		}
 	}
 

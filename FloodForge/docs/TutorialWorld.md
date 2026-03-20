@@ -4,6 +4,31 @@ Welcome to FloodForge!
 This is a tool developed by [Haizlbliek](https://github.com/haizlbliek) to help Rain World modders create and edit regions.
 It aims for intuitive controls, clean ui, and as few dependencies as possible.
 
+
+### 
+## Controls
+
+Middle click + drag to move camera
+Scroll to zoom
+
+Ctrl+Z - Undo
+Ctrl+Y - Redo
+X - Delete
+C - Open creature den
+G - Toggle visual merge
+L - Change layer
+T - Change tag
+S - Change subregion
+A - Change attractiveness
+H - Toggle visibility
+I - Move to back
+D - Change conditionals
+R - Open room in Droplet
+F - Search for room
+Alt+T - Open Tutorial
+Alt+S - Open Splash
+
+
 ### 
 ## How to...
 
@@ -74,31 +99,6 @@ or by pressing `...` in a den lineage, the conditionals popup opens
 - Select room size
 - `Create`
 - (See Droplet)
-
-# 
-## Controls
-
-### Any mode
-
-Middle click + drag to move camera
-Scroll to zoom
-
-Ctrl+Z - Undo
-Ctrl+Y - Redo
-X - Delete
-C - Open creature den
-G - Toggle visual merge
-L - Change layer
-T - Change tag
-S - Change subregion
-A - Change attractiveness
-H - Toggle visibility
-I - Move to back
-D - Change conditionals
-R - Open room in Droplet
-Alt+T - Open Tutorial
-Alt+S - Open Splash
-
 
 
 # 
