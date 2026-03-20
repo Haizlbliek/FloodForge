@@ -17,14 +17,6 @@ public static class WorldExporter {
 		return name;
 	}
 
-	private static string ExportCreatureName(string creatureId) {
-		if (CreatureTextures.exportCreatureNames.TryGetValue(creatureId, out string? o)) {
-			return o;
-		}
-
-		return creatureId;
-	}
-
 	public static void ExportMapFile() {
 		Logger.Info("Exporting map file");
 
@@ -348,9 +340,9 @@ public static class WorldExporter {
 							first = false;
 
 							if (room == WorldWindow.region.offscreenDen) {
-								writer.Write($"0-{ExportCreatureName(creature.type)}");
+								writer.Write($"0-{CreatureTextures.ExportName(creature.type)}");
 							} else {
-								writer.Write($"{i + room.roomShortcutEntrances.Count}-{ExportCreatureName(creature.type)}");
+								writer.Write($"{i + room.roomShortcutEntrances.Count}-{CreatureTextures.ExportName(creature.type)}");
 							}
 							if (!string.IsNullOrEmpty(creature.tag)) {
 								if (creature.tag == "MEAN") {
@@ -416,7 +408,7 @@ public static class WorldExporter {
 
 						DenCreature current = creature;
 						while (current != null) {
-							writer.Write(string.IsNullOrEmpty(current.type) || current.count == 0 ? "NONE" : ExportCreatureName(current.type));
+							writer.Write(string.IsNullOrEmpty(current.type) || current.count == 0 ? "NONE" : CreatureTextures.ExportName(current.type));
 
 							if (!string.IsNullOrEmpty(current.tag)) {
 								if (current.tag == "MEAN") {
@@ -466,7 +458,7 @@ public static class WorldExporter {
 						writer.Write(")");
 					}
 
-					writer.Write($"{RoomNameCasing(room.Name)} : {room.GarbageWormDenIndex}-{ExportCreatureName(worm.type)}");
+					writer.Write($"{RoomNameCasing(room.Name)} : {room.GarbageWormDenIndex}-{CreatureTextures.ExportName(worm.type)}");
 					if (worm.count > 1)
 						writer.Write($"-{worm.count}");
 					writer.WriteLine();
@@ -622,7 +614,7 @@ public static class WorldExporter {
 	private static void ExportRoomAttr(StreamWriter writer, string name, Dictionary<string, RoomAttractiveness> attrs) {
 		writer.Write($"Room_Attr: {name}: ");
 		foreach (KeyValuePair<string, RoomAttractiveness> attr in attrs) {
-			writer.Write(ExportCreatureName(attr.Key) + "-");
+			writer.Write(CreatureTextures.ExportName(attr.Key) + "-");
 			if (attr.Value != RoomAttractiveness.Default)
 				writer.Write(attr.Value.ToString());
 			writer.Write(",");
