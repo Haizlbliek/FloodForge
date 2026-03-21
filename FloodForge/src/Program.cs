@@ -7,7 +7,7 @@ public static class Program {
 	public static GL gl = null!;
 	public static uint _anyVao;
 
-	public static void Main(string[] args) {
+	public static void Main() {
 		WindowOptions options = WindowOptions.Default with {
 			Size = new Vector2D<int>(1280, 720),
 			Title = "FloodForge",
@@ -22,6 +22,7 @@ public static class Program {
 
 		window.Dispose();
 		Sfx.Cleanup();
+		RichPresenceManager.Cleanup();
 	}
 
 	private static void OnLoad() {
