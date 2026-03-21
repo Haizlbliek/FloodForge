@@ -207,7 +207,6 @@ public abstract class Popup {
 					if (!Mouse.Left) {
 						this.resizingWindow = false;
 						this.ResizePopup(this.newBounds);
-						Logger.Info(string.Format("x0: {0}; x1: {1}; y0: {2}; y1: {3}", this.bounds.x0, this.bounds.x1, this.bounds.y0, this.bounds.y1));
 					}
 					else {
 						this.currentMousePos = Mouse.Pos;

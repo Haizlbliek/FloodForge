@@ -49,7 +49,6 @@ public class ColorEditPopup : Popup {
 		}
 		Program.gl.Uniform1(this._hueLoc, this.hue / 360f);
 		float AspectRatio = Main.screenBounds.y / Main.screenBounds.x;
-		Logger.Info(AspectRatio);
 		Vector2 matrixScale = new(Main.screenBounds.y, Main.screenBounds.y);
 		if (AspectRatio > 1)
 			matrixScale /= AspectRatio;
