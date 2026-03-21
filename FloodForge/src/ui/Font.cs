@@ -99,6 +99,25 @@ public class Font {
 		return new Vector2(Math.Max(width, currentLineWidth), height);
 	}
 
+	public static string CropText(string input, float maxWidth, out float margin, bool fromRight = false) {
+		float totalSpaceInLine = maxWidth * Program.initialDisplayResolution.X;
+		string output = "";
+		float croppedTextWidth = 0f;
+		for (int i = fromRight ? input.Length - 1 : 0; fromRight ? i >= 0 : i < input.Length; i += fromRight ? -1 : 1) {
+			char textChar = input[i];
+			Character fontChar = UI.font.characters[textChar];
+			if (croppedTextWidth + fontChar.xAdvance >= totalSpaceInLine) {
+				break;
+			}
+			else {
+				croppedTextWidth += fontChar.xAdvance;
+				output = fromRight ? textChar + output : output + textChar;
+			}
+		}
+		margin = Mathf.Abs(totalSpaceInLine - croppedTextWidth) / Program.initialDisplayResolution.X;
+		return output;
+	}
+
 	public void Write(string text, float startX, float startY, float textSize, Align center) {
 		float scale = textSize / this.baseSize;
 		Vector2 size = this.Measure(text, textSize);
