@@ -64,11 +64,7 @@ public abstract class Popup {
 			}
 		}
 
-		this.cursorOverButton = false;
-		if (this.closeButton.Inside(Mouse.Pos)) {
-			this.cursorOverButton = true;
-		}
-		if (this.minimizeButton.Inside(Mouse.Pos)) {
+		if (this.closeButton.Inside(Mouse.Pos) || this.minimizeButton.Inside(Mouse.Pos)) {
 			this.cursorOverButton = true;
 		}
 
@@ -195,7 +191,7 @@ public abstract class Popup {
 							UI.StrokeRect(this.scaleControlExcluder.x0, this.scaleControlExcluder.y0, this.scaleControlExcluder.x1, this.scaleControlExcluder.y1);
 					}
 					if (Mouse.JustRight) {
-						this.ResizePopup(this.initBounds);
+						if(this.initBoundsSet) this.ResizePopup(this.initBounds);
 					}
 				}
 				else if (this.resizingWindow) {
@@ -274,6 +270,7 @@ public abstract class Popup {
 			}
 		}
 		else if(this.initBoundsSet) { this.ResizePopup(this.initBounds); }
+		this.cursorOverButton = false;
 	}
 
 	public virtual Rect InteractBounds() => this.minimized ? new Rect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1) : this.bounds;
