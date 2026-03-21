@@ -24,6 +24,7 @@ public static class Settings {
 	public static Setting<float> ConnectionOpacity = Setting.Of("ConnectionOpacity", 1f);
 	public static SubregionColorsSetting SubregionColors = new SubregionColorsSetting("SubregionColors", [ Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Cyan, Color.Magenta, new Color(1f, 0.5f, 0f), new Color(0.5f, 0.5f, 0.5f), new Color(0.5f, 0f, 1f), new Color(1f, 0.5f, 1f) ]);
 	public static Setting<bool> DisableAprilFoolsUpdates = Setting.Of("DisableAprilFoolsUpdates", false);
+	public static Setting<bool> DiscordRichPresence = Setting.Of("DiscordRichPresence", true);
 
 	public static Setting<bool> DEBUGVisibleOutputPadding = Setting.Of("DebugVisibleOutputPadding", true);
 
@@ -86,8 +87,8 @@ public static class Settings {
 			Settings.settings.Add(this.id, this);
 		}
 
-		public static Setting<T> Of<T>(string id, T value) where T : IParsable<T> {
-			return new Setting<T>(id, value);
+		public static Setting<T> Of<T>(string id, T defaultValue) where T : IParsable<T> {
+			return new Setting<T>(id, defaultValue);
 		}
 	}
 

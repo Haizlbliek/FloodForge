@@ -847,6 +847,11 @@ public static class WorldWindow {
 		Connection? hoveringConnection = HoveringConnection;
 		Room? hoveringRoom = HoveringRoom;
 		int screenCount = region.rooms.Aggregate(0, (a, b) => a + b.data.cameras.Count);
+		// TODO: Displayname
+		RichPresenceManager.Acronym = region.acronym;
+		RichPresenceManager.RoomCount = region.rooms.Count;
+		RichPresenceManager.ScreenCount = screenCount;
+		RichPresenceManager.ConnectionCount = region.connections.Count;
 
 		List<string> debugText = [];
 		debugText.Add("    Count:");

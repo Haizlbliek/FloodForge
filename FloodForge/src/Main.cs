@@ -29,6 +29,7 @@ public static class Main {
 		Logger.Info("Initializing...");
 		Preload.Initialize();
 		Settings.Initialize();
+		RichPresenceManager.Initialize();
 		if (Settings.DisableAprilFoolsUpdates) AprilFools = false;
 		Immediate.Initialize();
 		WorldWindow.Initialize();
