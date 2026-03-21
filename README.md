@@ -33,3 +33,13 @@ Please refer to the `LICENSE` file for full details.
 - Bitmap Fonts: Generated using [Snow Bamboo](https://snowb.org).
 - Splash Screen Art: Rendered from Rain World's Shoreline map.
 - All other artwork: Hand-created by the FloodForge team.
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=Haizlbliek%2FFloodForge&type=date&legend=top-left">
+	<picture>
+		<source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=Haizlbliek/FloodForge&type=date&theme=dark&legend=top-left" />
+		<source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=Haizlbliek/FloodForge&type=date&legend=top-left" />
+		<img alt="Star History Chart" src="https://api.star-history.com/image?repos=Haizlbliek/FloodForge&type=date&legend=top-left" />
+	</picture>
+</a>
