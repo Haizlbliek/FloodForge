@@ -9,21 +9,23 @@ on:
         type: string
 
 jobs:
-  build:
-    name: Build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+  pre-build:
+    runs-on: ubuntu-latest
     outputs:
       build_date: ${{ steps.date.outputs.now }}
+    steps:
+      - name: Generate Timestamp
+        id: date
+        run: echo "now=$(date +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+  build:
+    name: Build (${{ matrix.os }})
+    needs: pre-build
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
-
-      - name: Generate Timestamp
-        id: date
-        shell: bash
-        run: echo "now=$(date +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -45,7 +47,7 @@ jobs:
           cp -r ./FloodForge/assets/. ./publish-temp/assets/ 2>/dev/null || true
           cp -r ./FloodForge/docs/. ./publish-temp/docs/ 2>/dev/null || true
           if [ "${{ inputs.is_release }}" = "false" ]; then
-            echo "${{ steps.date.outputs.now }}" > ./publish-temp/assets/nightly.txt
+            echo "${{ needs.pre-build.outputs.build_date }}" > ./publish-temp/assets/nightly.txt
           fi
           cd publish-temp && zip -r ../FloodForge-linux.zip .
 
@@ -57,7 +59,7 @@ jobs:
           if (Test-Path "./FloodForge/assets") { Copy-Item -Path "./FloodForge/assets/*" -Destination "./publish-temp/assets/" -Recurse -Force }
           if (Test-Path "./FloodForge/docs") { Copy-Item -Path "./FloodForge/docs/*" -Destination "./publish-temp/docs/" -Recurse -Force }
           if ("${{ inputs.is_release }}" -eq "false") {
-            Set-Content -Path "./publish-temp/assets/nightly.txt" -Value "${{ steps.date.outputs.now }}"
+            Set-Content -Path "./publish-temp/assets/nightly.txt" -Value "${{ needs.pre-build.outputs.build_date }}"
           }
           Set-Location ./publish-temp
           Compress-Archive -Path * -DestinationPath ../FloodForge-windows.zip
@@ -70,7 +72,7 @@ jobs:
           retention-days: 1
 
   deploy:
-    needs: build
+    needs: [build, pre-build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -79,13 +81,6 @@ jobs:
         with:
           path: ./artifacts
           merge-multiple: true
-
-      - name: Handle Nightly Cleanup
-        if: ${{ !inputs.is_release }}
-        run: |
-          gh release delete nightly --yes --cleanup-tag || true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -96,4 +91,4 @@ jobs:
           draft: ${{ inputs.is_release }}
           files: ./artifacts/FloodForge-*.zip
           body: |
-            ${{ inputs.is_release && '' || format('BUILD_DATE: {0}', needs.build.outputs.build_date) }}
+            ${{ inputs.is_release && '' || format('BUILD_DATE: {0}', needs.pre-build.outputs.build_date) }}
