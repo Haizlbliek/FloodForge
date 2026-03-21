@@ -172,9 +172,9 @@ public class CreateRoomPopup : Popup {
 		bool canCreate = true;
 		if (this.RoomName.value.IsNullOrEmpty()) canCreate = false;
 		if (widthResponse.focused) canCreate = false;
-		if (int.Parse(this.Width.value) <= 0) canCreate = false;
+		if (!int.TryParse(this.Width.value, out int wVal) || wVal <= 0) canCreate = false;
 		if (heightResponse.focused) canCreate = false;
-		if (int.Parse(this.Height.value) <= 0) canCreate = false;
+		if (!int.TryParse(this.Height.value, out int hVal) || hVal <= 0) canCreate = false;
 		if (screenWidthResponse.focused) canCreate = false;
 		if (screenHeightResponse.focused) canCreate = false;
 
