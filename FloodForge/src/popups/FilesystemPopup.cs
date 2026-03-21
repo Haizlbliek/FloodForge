@@ -26,6 +26,8 @@ public class FilesystemPopup : Popup {
 	protected string[] files = [];
 	protected string currentPath;
 	protected int directoryIndex = 0;
+	protected Dictionary<string, string> rootPaths = [];
+	protected float fontSize = 0.04f;
 
 	public FilesystemPopup(Action<string[]> callback, int directoryIndex = 0) : base() {
 		this.directoryIndex = directoryIndex;
@@ -281,24 +283,23 @@ public class FilesystemPopup : Popup {
 			}
 
 			Immediate.Color(Themes.Text);
-			UI.font.Write("Show all", this.bounds.x0 + 0.09f, this.bounds.y0 + 0.09f, 0.04f);
+			UI.font.Write("Show all", this.bounds.x0 + 0.09f, this.bounds.y0 + 0.09f, this.fontSize);
 
 			Immediate.Color(Themes.TextDisabled);
-			UI.font.Write(this.hint, this.bounds.x0 + 0.35f, this.bounds.y0 + 0.09f, 0.04f);
+			UI.font.Write(this.hint, this.bounds.x0 + 0.35f, this.bounds.y0 + 0.09f, this.fontSize);
 		} else {
 			Immediate.Color(Themes.TextDisabled);
-			UI.font.Write(this.hint, this.bounds.x0 + 0.02f, this.bounds.y0 + 0.09f, 0.04f);
+			UI.font.Write(this.hint, this.bounds.x0 + 0.02f, this.bounds.y0 + 0.09f, this.fontSize);
 		}
 
 		if (UI.TextButton("Open", new Rect(this.bounds.x1 - 0.16f, this.bounds.y0 + 0.09f, this.bounds.x1 - 0.05f, this.bounds.y0 + 0.04f), new UI.TextButtonMods() { disabled = this.selected.Count == 0 && this.typeFilter == SelectionType.File })) {
 			this.Accept();
 		}
 
-		string croppedPath = this.currentPath.Length > 23 ? this.currentPath[^23..] : this.currentPath;
+		string croppedPath = Font.CropText(this.currentPath, this.bounds.x1 - 0.11f - (this.bounds.x0 + 0.23f), out _, true);
 
 		Immediate.Color(Themes.Text);
-		UI.font.Write(croppedPath, this.bounds.x0 + 0.23f, this.bounds.y1 - 0.07f, 0.04f);
-
+		UI.font.Write(croppedPath, this.bounds.x0 + 0.23f, this.bounds.y1 - 0.07f, this.fontSize);
 
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
 			string root = Path.GetPathRoot(this.currentPath) ?? "";
@@ -307,39 +308,52 @@ public class FilesystemPopup : Popup {
 				if (drives.Length > 0) {
 					int idx = Array.FindIndex(drives, d => d.Name.Equals(root, StringComparison.InvariantCultureIgnoreCase));
 					string newRoot = drives[(idx + 1) % drives.Length].Name;
+					this.rootPaths[root] = this.currentPath;
 					this.currentPath = Path.Combine(newRoot, this.currentPath[root.Length..]);
-					if (!Directory.Exists(this.currentPath)) {
+					if (this.rootPaths.TryGetValue(newRoot, out string? oldPath))
+						this.currentPath = oldPath;
+					if (!Directory.Exists(this.currentPath)) {	
 						this.currentPath = newRoot;
 					}
+					this.Refresh();
 				}
 			}
 		}
 
 
 		float offsetY = this.bounds.CenterY;
-		float y = 0.35f - this.scroll + offsetY;
+		float scrollAreaY1 = this.bounds.y1 - 0.135f;
+		float scrollAreaY0 = this.bounds.y0 + 0.2f;
+		float y = scrollAreaY1 - this.scroll;
 		bool hasExtras = false;
 
 		if (this.newDirectory != null) {
-			if (y > -0.35f + offsetY) {
-				if (y > 0.375f + offsetY) {
+			if (y > scrollAreaY0) {
+				if (y > scrollAreaY1) {
 					y -= 0.06f;
 				} else {
-					Immediate.Color(Themes.TextDisabled);
-					UI.FillRect(this.bounds.x0 + 0.1f, y, this.bounds.x1 - 0.1f, y - 0.05f);
-
-					Immediate.Color(Themes.TextHighlight);
-					UI.font.Write(this.newDirectory, this.bounds.x0 + 0.1f, y, 0.04f);
-
-					if (this.frame % 60 < 30) {
-						Immediate.Color(Themes.Text);
-						float cursorX = this.bounds.x0 + 0.1f + UI.font.Measure(this.newDirectory, 0.04f).x;
-						UI.FillRect(cursorX, y + 0.01f, cursorX + 0.005f, y - 0.06f);
+					if(UI.TextureButton(new UVRect(this.bounds.x1 - 0.09f, y - 0.05f, this.bounds.x1 - 0.04f, y).UV(0f, 0f, 0.25f, 0.25f))) {
+						this.newDirectory = null;
 					}
+					else {
+						Immediate.Color(Themes.TextDisabled);
+						UI.FillRect(this.bounds.x0 + 0.1f, y, this.bounds.x1 - 0.1f, y - 0.05f);
 
-					Immediate.Color(Themes.TextDisabled);
-					this.DrawIcon(5, y);
-					y -= 0.06f;
+						Immediate.Color(Themes.TextHighlight);
+						string cropText = Font.CropText(this.newDirectory, this.bounds.x1 - this.bounds.x0 - 0.1f, out float margin, true);
+						margin = (cropText.Length != this.newDirectory.Length ? margin : 0f);
+						UI.font.Write(cropText, margin + this.bounds.x0 + 0.1f, y, this.fontSize);
+
+						if (this.frame % 60 < 30) {
+							Immediate.Color(Themes.Text);
+							float cursorX = margin + this.bounds.x0 + 0.1f + UI.font.Measure(cropText, 0.04f).x;
+							UI.FillRect(cursorX, y + 0.01f, cursorX + 0.005f, y - 0.06f);
+						}
+
+						Immediate.Color(Themes.TextDisabled);
+						this.DrawIcon(5, y);
+						y -= 0.06f;
+					}
 				}
 			}
 		}
@@ -347,8 +361,8 @@ public class FilesystemPopup : Popup {
 		bool refreshing = false;
 
 		foreach (string path in this.directories) {
-			if (y <= -0.3f + offsetY) { hasExtras = true; break; }
-			if (y > 0.375f + offsetY) {
+			if (y <= scrollAreaY0) { hasExtras = true; break; }
+			if (y > scrollAreaY1) {
 				y -= 0.06f;
 				continue;
 			}
@@ -357,7 +371,7 @@ public class FilesystemPopup : Popup {
 			bool hover = rect.Inside(Mouse.X, Mouse.Y);
 
 			Immediate.Color(hover ? Themes.TextHighlight : Themes.Text);
-			UI.font.Write(path + "/", this.bounds.x0 + 0.1f, y, 0.04f);
+			UI.font.Write(path + "/", this.bounds.x0 + 0.1f, y, this.fontSize);
 
 			Immediate.Color(Themes.TextDisabled);
 			this.DrawIcon(5, y);
@@ -376,8 +390,8 @@ public class FilesystemPopup : Popup {
 
 		foreach (string path in this.files) {
 			if (refreshing) break;
-			if (y <= -0.3f + offsetY) { hasExtras = true; break; }
-			if (y > 0.375f + offsetY) {
+			if (y <= scrollAreaY0) { hasExtras = true; break; }
+			if (y > scrollAreaY1) {
 				y -= 0.06f;
 				continue;
 			}
@@ -402,7 +416,7 @@ public class FilesystemPopup : Popup {
 			if (this.selected.Contains(path)) {
 				UI.StrokeRect(this.bounds.x0 + 0.09f, y + 0.01f, this.bounds.x1 - 0.09f, y - 0.05f);
 			}
-			UI.font.Write(path, this.bounds.x0 + 0.1f, y, 0.04f);
+			UI.font.Write(path, this.bounds.x0 + 0.1f, y, this.fontSize);
 
 			Immediate.Color(Themes.TextDisabled);
 			this.DrawIcon(4, y);
@@ -412,7 +426,8 @@ public class FilesystemPopup : Popup {
 
 		if (hasExtras && !refreshing) {
 			Immediate.Color(Themes.TextDisabled);
-			UI.font.Write("...", this.bounds.x0 + 0.1f, MathF.Ceiling((y - offsetY) / 0.06f) * 0.06f + offsetY, 0.04f);
+			//UI.font.Write("...", this.bounds.x0 + 0.1f, MathF.Ceiling((y - offsetY) / 0.06f) * 0.06f + offsetY, 0.04f);
+			UI.font.Write("...", this.bounds.x0 + 0.1f, y, this.fontSize);
 		}
 	}
 
