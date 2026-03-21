@@ -105,10 +105,13 @@ public class SplashArtPopup : Popup {
 				if (!string.IsNullOrEmpty(downloadUrl)) {
 					this.updatePath = downloadUrl;
 
-					this.buttons.Add(new IconButton("Update Available!", 0.5f, 0f, 0.75f, 0.25f, async () => {
-						Logger.Note($"Downloading {this.updatePath} {this.updateChecksum}");
-						await Updater.Download(this.updatePath, this.updateChecksum!);
-						Logger.Note($"Downloaded");
+					this.buttons.Add(new IconButton("Update Available!", 0.5f, 0f, 0.75f, 0.25f, () => {
+						PopupManager.Add(new ConfirmPopup($"Update to latest {(this.nightlyBuildDate == null ? "version" : "nightly")}?").Okay(async () => {
+							PopupManager.Add(new InfoPopup("Downloading, please wait."));
+							Logger.Note($"Downloading {this.updatePath} {this.updateChecksum}");
+							await Updater.Download(this.updatePath, this.updateChecksum!);
+							Logger.Note($"Downloaded");
+						}));
 					}));
 				}
 				else {
