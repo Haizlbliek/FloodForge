@@ -160,8 +160,8 @@ public class Connection {
 		bool hovered = this.Hovered || Keys.Modifier(Silk.NET.SDL.Keymod.Shift);
 
 		bool roomConnectionHoverColor = aVisible && bVisible && hovered;
-		Color connectionColorA = new();
-		Color connectionColorB = new();
+		Color connectionColorA;
+		Color connectionColorB;
 		bool blendColors = false;
 
 		if (roomConnectionHoverColor) {
@@ -173,19 +173,9 @@ public class Connection {
 		}
 
 
-		if (WorldWindow.ColorType == WorldWindow.RoomColors.Layer) {
-			connectionColorA = this.roomA.data.layer switch {
-				0 => Themes.Layer0Color,
-				1 => Themes.Layer1Color,
-				2 => Themes.Layer2Color,
-				_ => Color.White,
-			};
-			connectionColorB = this.roomB.data.layer switch {
-				0 => Themes.Layer0Color,
-				1 => Themes.Layer1Color,
-				2 => Themes.Layer2Color,
-				_ => Color.White,
-			};
+		if (WorldWindow.ColorType != WorldWindow.RoomColors.None) {
+			connectionColorA = this.roomA.GetTintColor();
+			connectionColorB = this.roomB.GetTintColor();
 			if (!roomConnectionHoverColor) {
 				connectionColorA = Color.Lerp(connectionColorA, Themes.RoomAir, 0.5f);
 				connectionColorB = Color.Lerp(connectionColorB, Themes.RoomAir, 0.5f);
