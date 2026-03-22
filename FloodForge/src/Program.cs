@@ -7,9 +7,11 @@ public static class Program {
 	public static GL gl = null!;
 	public static uint _anyVao;
 
+	public static Vector2D<int> initialDisplayResolution = new Vector2D<int>(1280, 720);
+
 	public static void Main() {
 		WindowOptions options = WindowOptions.Default with {
-			Size = new Vector2D<int>(1280, 720),
+			Size = initialDisplayResolution,
 			Title = "FloodForge",
 			VideoMode = Monitor.GetMainMonitor(null).VideoMode,
 		};

@@ -14,6 +14,7 @@ public class ConfirmPopup : Popup {
 		float textWidth = this.question.Length > 0 ? this.question.Max(line => UI.font.Measure(line, 0.04f).x) : 0f;
 		float width = MathF.Max(0.4f, textWidth + 0.05f);
 		this.bounds = new Rect(width * -0.5f, height * -0.5f, width * 0.5f, height * 0.5f);
+		this.resizeable = false;
 	}
 
 	public ConfirmPopup SetOkay(string okay) {
