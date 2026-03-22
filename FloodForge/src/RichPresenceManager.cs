@@ -7,6 +7,7 @@ namespace FloodForge;
 public static class RichPresenceManager {
 	private static DiscordRpcClient? client = null;
 	private static string acronym = "";
+	private static string displayName = "";
 	private static int roomCount = 0;
 	private static int screenCount = 0;
 	private static int connectionCount = 0;
@@ -16,6 +17,10 @@ public static class RichPresenceManager {
 
 	public static string Acronym {
 		set { if (acronym != value) { acronym = value; RequestRefresh(); } }
+	}
+
+	public static string DisplayName {
+		set { if (displayName != value) { displayName = value; RequestRefresh(); } }
 	}
 
 	public static int RoomCount {
@@ -47,7 +52,10 @@ public static class RichPresenceManager {
 			return;
 		}
 
-		Set("Editing " + acronym.ToUpperInvariant(), $"{roomCount} rooms, {screenCount} screens, {connectionCount} connections");
+		Set(
+			$"Editing {(displayName != null ? (displayName + $" ({acronym.ToUpperInvariant()})") : acronym.ToUpperInvariant())}",
+			$"{roomCount} rooms, {screenCount} screens, {connectionCount} connections"
+		);
 	}
 
 	public static void Initialize() {
@@ -56,6 +64,7 @@ public static class RichPresenceManager {
 		client = new DiscordRpcClient("1484944143980560544") {
 			Logger = new DiscordLoggerBridge() { Level = LogLevel.Warning }
 		};
+		client.OnError += (sender, e) => {};
 		client.OnReady += (sender, e) => {
 			Logger.Info($"Received Ready from user {e.User.Username}");
 		};
@@ -88,11 +97,11 @@ public static class RichPresenceManager {
 		}
 
 		public void Warning(string message, params object[] args) {
-			Logger.Warn(string.Format(message, args));
+			// Logger.Warn(string.Format(message, args));
 		}
 
 		public void Error(string message, params object[] args) {
-			Logger.Error(string.Format(message, args));
+			// Logger.Error(string.Format(message, args));
 		}
 
 		public void Trace(string message, params object[] args) {

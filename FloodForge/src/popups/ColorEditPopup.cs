@@ -105,7 +105,13 @@ public class ColorEditPopup : Popup {
 		float hueY = Mathf.Lerp(this.sliderRect.y0, this.sliderRect.y1, this.hue / 360f);
 		UI.Line(this.sliderRect.x0 - 0.01f, hueY, this.sliderRect.x1 + 0.01f, hueY);
 
-		if (Mouse.JustLeft && !Mouse.Disabled && this.sliderRect.Inside(Mouse.Pos)) {
+		bool sliderHover = this.sliderRect.Inside(Mouse.Pos);
+		if (sliderHover) {
+			Main.mouse?.Cursor.StandardCursor = Silk.NET.Input.StandardCursor.VResize;
+			this.mouseCursorSet = true;
+		}
+
+		if (Mouse.JustLeft && !Mouse.Disabled && sliderHover) {
 			this.sliderFocused = true;
 		}
 		if (this.sliderFocused) {

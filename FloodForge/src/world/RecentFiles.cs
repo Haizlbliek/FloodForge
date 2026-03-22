@@ -6,12 +6,6 @@ public static class RecentFiles {
 	public static List<string> recents = [];
 	public static List<string> recentNames = [];
 
-	public static string GetRegionDisplayname(string worldPath) {
-		string? displaynamePath = PathUtil.FindFile(PathUtil.Parent(worldPath), "displayname.txt");
-
-		return displaynamePath == null ? "" : File.ReadAllText(displaynamePath).Trim();
-	}
-
 	public static void Initialize() {
 		string recentsPath = "assets/recents.txt";
 		if (!File.Exists(recentsPath)) return;
@@ -21,7 +15,7 @@ public static class RecentFiles {
 			if (!File.Exists(path)) continue;
 
 			recents.Add(path);
-			recentNames.Add(GetRegionDisplayname(path));
+			recentNames.Add(WorldParser.GetRegionDisplayname(path));
 		}
 	}
 
@@ -33,7 +27,7 @@ public static class RecentFiles {
 			name = recentNames[i];
 			recentNames.RemoveAt(i);
 		}
-		name ??= GetRegionDisplayname(path);
+		name ??= WorldParser.GetRegionDisplayname(path);
 		recents.Add(path);
 		recentNames.Add(name);
 		Save();
