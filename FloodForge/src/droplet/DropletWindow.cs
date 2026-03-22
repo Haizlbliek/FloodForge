@@ -1453,8 +1453,6 @@ public static class DropletWindow {
 			sw.Write("PlacedObjects: " + placedObjectsLine + "\n");
 		}
 		sw.Write(after);
-
-		PopupManager.Add(new InfoPopup("Export Successful!"));
 	}
 
 	private static bool ValidSlopePos(uint geo, Vector2 tp) {

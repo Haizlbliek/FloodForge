@@ -8,6 +8,7 @@ namespace FloodForge;
 public static class Main {
 	public static Random random = new Random();
 	public static IInputContext input = null!;
+	public static IMouse? mouse = null!;
 
 	public static Vector2 GlobalMouse { get; private set; }
 	public static bool fullscreen = false;
@@ -44,7 +45,7 @@ public static class Main {
 			keyboard.KeyUp += KeyUp;
 		}
 	
-		IMouse? mouse = input.Mice.FirstOrDefault();
+		mouse = input.Mice.FirstOrDefault();
 		mouse?.Scroll += OnScroll;
 
 		UI.Initialize();
