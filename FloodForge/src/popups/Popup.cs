@@ -126,7 +126,7 @@ public abstract class Popup {
 					Immediate.Color(Themes.Layer2Color);
 					if (this.coyoteHover && isOutsideExcludor) {
 						if (isInsideIncluder) {
-							if (WorldWindow.showDebugVisuals)
+							if (Settings.DEBUGVisiblePopupVisuals)
 								UI.FillRect(this.scaleControlExcluder.x0, this.scaleControlExcluder.y0, this.scaleControlExcluder.x1, this.scaleControlExcluder.y1);
 							for (int x = 0; x <= 2; x++) {
 								for (int y = 0; y <= 2; y++) {
@@ -138,7 +138,7 @@ public abstract class Popup {
 									float currY1 = y == 0 ? this.scaleControlExcluder.y0 : y == 1 ? this.scaleControlExcluder.y1 : this.scaleControlIncluder.y1;
 									Rect currRect = new Rect(currX0, currY0, currX1, currY1);
 									if (currRect.Inside(Mouse.X, Mouse.Y)) {
-										if (WorldWindow.showDebugVisuals)
+										if (Settings.DEBUGVisiblePopupVisuals)
 											UI.StrokeRect(currRect);
 										this.mouseEdge = (RectPosition) (x + y * 3);
 										switch (this.mouseEdge) {
@@ -187,7 +187,7 @@ public abstract class Popup {
 						}
 					}
 					else {
-						if (WorldWindow.showDebugVisuals)
+						if (Settings.DEBUGVisiblePopupVisuals)
 							UI.StrokeRect(this.scaleControlExcluder.x0, this.scaleControlExcluder.y0, this.scaleControlExcluder.x1, this.scaleControlExcluder.y1);
 					}
 					if (Mouse.JustRight) {
@@ -245,7 +245,7 @@ public abstract class Popup {
 						}
 
 						this.newBounds = new(newX0, newY0, newX1, newY1);
-						if (WorldWindow.showDebugVisuals) {
+						if (Settings.DEBUGVisiblePopupVisuals) {
 							Immediate.Color(Themes.BorderHighlight);
 							UI.StrokeRect(originalBounds);
 							UI.StrokeCircle(new(originalBounds.x0, originalBounds.y0), 0.02f, 8);

@@ -84,7 +84,7 @@ public static class RichPresenceManager {
 		public LogLevel Level { get; set; }
 
 		public void Info(string message, params object[] args) {
-			Logger.Info(string.Format(message, args));
+			// Logger.Info(string.Format(message, args));
 		}
 
 		public void Warning(string message, params object[] args) {

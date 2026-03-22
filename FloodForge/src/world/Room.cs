@@ -1010,10 +1010,9 @@ public class Room {
 		Vector2 position = positionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
 		UI.FillRect(position.x, position.y - this.height, position.x + this.width, position.y);
 	}
-	bool drawWireFrames = false;
 
 	public unsafe virtual void Draw(WorldWindow.RoomPosition positionType) {
-		if (this.drawWireFrames) {
+		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
 		}
 		Vector2 position = positionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
@@ -1070,7 +1069,7 @@ public class Room {
 			Immediate.Color(Themes.RoomWater);
 			UI.FillRect(position.x, position.y - (this.height - MathF.Min(this.data.waterHeight + 0.5f, this.height)), position.x + this.width, position.y - this.height);
 		}
-		if (this.drawWireFrames) {
+		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Fill);
 		}
 
@@ -1199,7 +1198,7 @@ public class Room {
 		}
 	}
 
-	protected Color GetTintColor() {
+	public Color GetTintColor() {
 		switch (WorldWindow.ColorType) {
 
 			case WorldWindow.RoomColors.Layer:
