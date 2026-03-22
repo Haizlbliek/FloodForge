@@ -19,11 +19,13 @@ public class FilesystemPopup : Popup {
 	protected float scroll;
 	protected float targetScroll;
 	protected int frame;
+	protected bool awaitingDeleteConfirmation = false;
 	protected bool calledCallback = false;
 	protected Action<string[]> callback;
 	protected HashSet<string> selected = [];
 	protected string[] directories = [];
 	protected string[] files = [];
+	protected List<string> createdFolders = [];
 	protected string currentPath;
 	protected int directoryIndex = 0;
 	protected Dictionary<string, string> rootPaths = [];
@@ -172,12 +174,14 @@ public class FilesystemPopup : Popup {
 		previousDirectories[this.directoryIndex] = this.currentPath;
 
 		if (this.newDirectory != null) {
-			if (this.newDirectory != "" || Path.Exists(Path.Join(this.currentPath, this.newDirectory))) {
+			string newDirectoryPath = Path.Join(this.currentPath, this.newDirectory);
+			if (this.newDirectory != "" && Path.Exists(newDirectoryPath)) {
 				this.newDirectory = null;
 				return;
 			}
 
-			Directory.CreateDirectory(Path.Join(this.currentPath, this.newDirectory));
+			Directory.CreateDirectory(newDirectoryPath);
+			this.createdFolders.Add(newDirectoryPath);
 			this.newDirectory = null;
 			this.Refresh();
 			this.ClampScroll();
@@ -244,6 +248,12 @@ public class FilesystemPopup : Popup {
 			this.frame = 0;
 			this.newDirectory += key.ToString()[^1];
 		}
+	}
+
+	public void DeleteFolder(string path) {
+		Directory.Delete(path, true);
+		this.createdFolders.Remove(path);
+		this.Refresh();
 	}
 
 	public override void Draw() {
@@ -371,16 +381,28 @@ public class FilesystemPopup : Popup {
 			}
 
 			Rect rect = new Rect(this.bounds.x0 + 0.1f, y, this.bounds.x1 - 0.1f, y - 0.06f);
-			bool hover = rect.Inside(Mouse.X, Mouse.Y);
+			bool hover = rect.Inside(Mouse.X, Mouse.Y) &! this.awaitingDeleteConfirmation;
 
 			Immediate.Color(hover ? Themes.TextHighlight : Themes.Text);
 			UI.font.Write(path + "/", this.bounds.x0 + 0.1f, y, this.fontSize);
+			string currentFolderPath = Path.Join(this.currentPath, path);
+			if (this.createdFolders.Contains(currentFolderPath)) {
+				if (UI.TextureButton(new UVRect(this.bounds.x1 - 0.09f, y - 0.05f, this.bounds.x1 - 0.04f, y).UV(0f, 0f, 0.25f, 0.25f))) {
+					if (Directory.GetFileSystemEntries(currentFolderPath).Length != 0) {
+						this.awaitingDeleteConfirmation = true;
+						PopupManager.Add(new ConfirmPopup("Delete folder?").SetButtons("Delete", "Cancel").Swap().Okay(() => { this.DeleteFolder(currentFolderPath); this.awaitingDeleteConfirmation = false; }).Cancel(() => { this.awaitingDeleteConfirmation = false; }));
+					}
+					else {
+						this.DeleteFolder(currentFolderPath);
+					}
+				}
+			}
 
 			Immediate.Color(Themes.TextDisabled);
 			this.DrawIcon(5, y);
 
 			if (hover && Mouse.JustLeft) {
-				this.currentPath = Path.Join(this.currentPath, path);
+				this.currentPath = currentFolderPath;
 				this.scroll = 0f;
 				this.targetScroll = 0f;
 				this.Refresh();
