@@ -58,6 +58,12 @@ public class ConfirmPopup : Popup {
 	}
 
 	public override void Draw() {
+		Rect left = new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.CenterX - 0.005f, this.bounds.y0 + 0.06f);
+		Rect right = new Rect(this.bounds.CenterX + 0.005f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y0 + 0.06f);
+		if (left.Inside(Mouse.Pos) || right.Inside(Mouse.Pos)) {
+			this.cursorOverButton = true;
+		}
+
 		base.Draw();
 
 		if (this.minimized) return;
@@ -68,9 +74,6 @@ public class ConfirmPopup : Popup {
 			float y = this.bounds.y1 - 0.08f - 0.05f * idx;
 			UI.font.Write(this.question[idx], this.bounds.CenterX, y, 0.04f, Font.Align.TopCenter | Font.Align.MiddleLeft);
 		}
-
-		Rect left = new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.CenterX - 0.005f, this.bounds.y0 + 0.06f);
-		Rect right = new Rect(this.bounds.CenterX + 0.005f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y0 + 0.06f);
 
 		if (UI.TextButton(this.cancel, this.swap ? right : left)) {
 			this.Reject();

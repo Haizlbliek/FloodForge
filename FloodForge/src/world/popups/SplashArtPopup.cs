@@ -118,6 +118,9 @@ public class SplashArtPopup : Popup {
 					Logger.Warn($"Could not find a release asset for {targetFileName}");
 				}
 			}
+		} catch (HttpRequestException) {
+			Logger.Warn("Failed to fetch latest release version");
+			this.updateStatus = UpdateStatus.Failed;
 		} catch (Exception ex) {
 			Logger.Warn("Failed to fetch latest release version");
 			Logger.Info(ex);
