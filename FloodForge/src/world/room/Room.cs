@@ -435,12 +435,14 @@ public class Room {
 
 				if ((this.GetTile(currentPosition.x, currentPosition.y) & 15) == 4) {
 					hasDirection = true;
-					exitPath.Add(currentPosition);
+					if(!exitPath.Contains(currentPosition))
+						exitPath.Add(currentPosition);
 					break;
 				}
 
 				if (!hasDirection) break;
-				exitPath.Add(currentPosition);
+				if (!exitPath.Contains(currentPosition))
+					exitPath.Add(currentPosition);
 			}
 
 			if (hasDirection) {
@@ -448,11 +450,11 @@ public class Room {
 				verifiedShortcuts.Add(this.shortcutExits[i]);
 				this.shortcutPaths[currentPosition] = (exitPath.ToArray(), initialDirection);
 			}
-			// string outString = "";
-			// foreach (Vector2i item in exitPath) {
-			// 	outString += string.Format("item: {0}; {1}\n", item.x, item.y);
-			// }
-			// Logger.Info("Final exitPath for index " + i + " with exitTile position " + currentPosition + ":\n" + outString);
+			string outString = "";
+			foreach(Vector2i item in exitPath) {
+				outString += string.Format("item: {0}; {1}\n", item.x, item.y);
+			}
+			Logger.Info("Final exitPath for room " + this.Name + "<" + i + "> with exitTile position " + currentPosition + ":\n" + outString);
 		}
 
 		verifiedConnections.Reverse();
