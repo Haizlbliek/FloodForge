@@ -1310,15 +1310,17 @@ public static class DropletWindow {
 			placedObjectsLine = output.ToString();
 		}
 
-		settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.name + "_settings.txt");
-		using StreamWriter sw = new StreamWriter(settingsPath);
-		sw.Write(before);
-		if (!string.IsNullOrWhiteSpace(placedObjectsLine)) {
-			if (!placedObjectsLine.EndsWith(", "))
-				placedObjectsLine += ", ";
-			sw.Write("PlacedObjects: " + placedObjectsLine + "\n");
+		if (before != null && before != "" || after != null && after != "" || !string.IsNullOrWhiteSpace(placedObjectsLine)) {
+			settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.Name + "_settings.txt");
+			using StreamWriter sw = new StreamWriter(settingsPath);
+			sw.Write(before);
+			if (!string.IsNullOrWhiteSpace(placedObjectsLine)) {
+				if (!placedObjectsLine.EndsWith(", "))
+					placedObjectsLine += ", ";
+				sw.Write("PlacedObjects: " + placedObjectsLine + "\n");
+			}
+			sw.Write(after);
 		}
-		sw.Write(after);
 	}
 
 	private static bool ValidSlopePos(uint geo, Vector2 tp) {
@@ -1342,7 +1344,7 @@ public static class DropletWindow {
 		data[index + 2] = b;
 	}
 
-	private static void RenderCamera(RoomData.Camera camera, string outputPath) {
+	private static bool RenderCamera(RoomData.Camera camera, string roomFolderPath, string newImageName) {
 		byte[] image = new byte[CameraTextureWidth * CameraTextureHeight * 3];
 
 		for (int y = 0; y < CameraTextureHeight; y++) {
@@ -1390,7 +1392,10 @@ public static class DropletWindow {
 				}
 			}
 		}
-
+		string? outputPath = PathUtil.FindFile(roomFolderPath, newImageName);
+		if (outputPath == null || outputPath == "") {
+			outputPath = Path.Combine(roomFolderPath, newImageName);
+		}
 		FloodForge.Backup.File(outputPath);
 
 		try {
@@ -1398,17 +1403,23 @@ public static class DropletWindow {
 			ImageWriter writer = new ImageWriter();
 			writer.WritePng(image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
 			Logger.Info("Screen exported");
-		} catch (Exception ex) {
+			return true;
+		}
+		catch (Exception ex) {
 			Logger.Error("Exporting screen failed: " + ex.Message);
+			return false;
 		}
 	}
 
-	private static void Render() {
+	public static bool Render() {
 		ExportGeometry();
-
+		bool success = true;
 		for (int i = 0; i < Room.data.cameras.Count; i++) {
-			RenderCamera(Room.data.cameras[i], PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.name}_{i + 1}.png")!);
+			Logger.Info(PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.Name}_{i + 1}.png")!);
+			if (!RenderCamera(Room.data.cameras[i], WorldWindow.region.roomsPath, $"{Room.Name}_{i + 1}.png"))
+				success = false;
 		}
+		return success;
 	}
 
 	private static void ExportProject(string path) {
@@ -1538,8 +1549,12 @@ public static class DropletWindow {
 					PopupManager.Add(new InfoPopup("Exported successfully"));
 				}),
 				new Button("Render", b => {
-					Render();
-					PopupManager.Add(new InfoPopup("Rendered successfully"));
+					if(Render()){
+						PopupManager.Add(new InfoPopup("Rendered successfully"));
+					}
+					else{
+						PopupManager.Add(new InfoPopup("Render failed!\nView log.txt for more information."));
+					}
 				}),
 				new Button("Export Leditor Project", b => {
 					PopupManager.Add(

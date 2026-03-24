@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using FloodForge.Droplet;
 using FloodForge.Popups;
 using Silk.NET.Input;
@@ -603,28 +604,30 @@ public static class WorldWindow {
 		float scale = Settings.WorldIconScale;
 		SelectorScale = (scale < 0f) ? MathF.Max(cameraScale / 16f, 1f) : scale;
 
-		if (Keys.Modifier(Keymod.Ctrl) && Keys.JustPressed(Key.Z)) {
-			if (Keys.Modifier(Keymod.Shift)) {
+		if (renderRoomsTask == null || renderRoomsTask.IsCompleted) {
+			if (Keys.Modifier(Keymod.Ctrl) && Keys.JustPressed(Key.Z)) {
+				if (Keys.Modifier(Keymod.Shift)) {
+					History.Redo();
+				}
+				else {
+					History.Undo();
+				}
+			}
+			if (Keys.Modifier(Keymod.Ctrl) && Keys.JustPressed(Key.Y)) {
 				History.Redo();
 			}
-			else {
-				History.Undo();
-			}
+
+			roomSnap = !Keys.Modifier(Keymod.Alt);
+
+			UpdateConnectionControls();
+
+			UpdateControls();
+
+			if (PopupManager.Windows.Count != 0)
+				return;
+
+			UpdateKeybinds();
 		}
-		if (Keys.Modifier(Keymod.Ctrl) && Keys.JustPressed(Key.Y)) {
-			History.Redo();
-		}
-
-		roomSnap = !Keys.Modifier(Keymod.Alt);
-
-		UpdateConnectionControls();
-
-		UpdateControls();
-
-		if (PopupManager.Windows.Count != 0)
-			return;
-
-		UpdateKeybinds();
 	}
 
 	private static void DrawGrid() {
@@ -1088,6 +1091,43 @@ public static class WorldWindow {
 		}
 	}
 
+	static Task? renderRoomsTask;
+	private static async Task MassRenderRooms() {
+		{
+			if (selectedRooms.Count <= 0) {
+				PopupManager.Add(new InfoPopup("Select at least one room!"));
+			}
+			else {
+				Logger.Info("Mass-rendering rooms!");
+				InfoPopup renderStatusPopup = new InfoPopup("Rendering rooms\n_/_\ninit");
+				PopupManager.Add(renderStatusPopup);
+				PopupManager.Draw();
+				int successCount = 0;
+				int finished = 0;
+				int totalCount = selectedRooms.Count;
+				foreach (Room room in selectedRooms) {
+					Logger.Info("Loading " + (finished + 1) + "/" + totalCount);
+					renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nloading");
+					PopupManager.Draw();
+					await Task.Run(() => DropletWindow.LoadRoom(room));
+					renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nrendering");
+					PopupManager.Draw();
+					Logger.Info("Rendering room " + room.Name);
+					if (await Task.Run(DropletWindow.Render)) {
+						successCount++;
+						Logger.Info("Success");
+					}
+					else {
+						Logger.Warn("Error while rendering " + room);
+					}
+					finished++;
+				}
+				Logger.Info("Finished mass-render.");
+				renderStatusPopup.UpdateText("Finished mass-render:\n" + successCount + "/" + finished + " succeeded.");
+			}
+		}
+	}
+
 	private static Room HandleStandardFile(string path, string filename, string acronym) {
 		if (acronym.Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase) || WorldWindow.region.exportPath.IsNullOrEmpty()) {
 			return CreateAndAddRoom(path, filename);
@@ -1255,7 +1295,9 @@ public static class WorldWindow {
 				new Button("Connect: Path", button => {
 					changeConnectBehaviour = !changeConnectBehaviour;
 					button.text = changeConnectBehaviour ? "Connect: Path" : "Connect: Default";
-				})
+				}),
+
+				new Button("Mass Render", button => { renderRoomsTask = Task.Run(MassRenderRooms); })
 			];
 		}
 
