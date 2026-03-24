@@ -390,12 +390,12 @@ public static class WorldWindow {
 		}
 
 		Room? room = HoveringRoom;
-		if (room == null || room is OffscreenRoom)
+		if (room != null && room is OffscreenRoom)
 			return;
 
 		RoomAndConnectionChange change = new RoomAndConnectionChange(false);
 
-		if (selectedRooms.Contains(room)) {
+		if (selectedRooms.Count != 0) {
 			foreach (Room room1 in selectedRooms) {
 				if (room1 is OffscreenRoom)
 					continue;
@@ -406,7 +406,7 @@ public static class WorldWindow {
 			}
 			selectedRooms.Clear();
 		}
-		else {
+		if(room != null) {
 			change.AddRoom(room);
 			region.connections.Where(c => c.roomA == room || c.roomB == room)
 				.ForEach(change.AddConnection);
@@ -1024,7 +1024,7 @@ public static class WorldWindow {
 		return room;
 	}
 
-	private static void CreateAndAddRoom(string path, string name, string tag = "") {
+	private static Room CreateAndAddRoom(string path, string name, string tag = "") {
 		RoomAndConnectionChange change = new RoomAndConnectionChange(true);
 		Room room = new Room(path, name);
 		if (tag.Length > 0)
@@ -1032,12 +1032,14 @@ public static class WorldWindow {
 		room.CanonPosition = room.DevPosition = WorldWindow.cameraOffset;
 		change.AddRoom(room);
 		History.Apply(change);
+		return room;
 	}
 
 	private static void HandleRoomFilesSelected(string[] paths) {
 		if (paths.Length == 0)
 			return;
 
+		int pathCount = 0;
 		foreach (string path in paths) {
 			if (!path.EndsWith(".txt")) {
 				PopupManager.Add(new InfoPopup("File must be .txt: " + path));
@@ -1052,7 +1054,13 @@ public static class WorldWindow {
 				HandleGateFile(path, filename);
 			}
 			else {
-				HandleStandardFile(path, filename, acronym);
+				Room newRoom = HandleStandardFile(path, filename, acronym);
+				if (newRoom != null) {
+					newRoom.CanonPosition.x += (pathCount - paths.Length / 2) * 15f;
+					newRoom.CanonPosition.y -= (pathCount - paths.Length / 2) * 5f;
+					selectedRooms.Add(newRoom);
+					pathCount++;
+				}
 			}
 		}
 	}
@@ -1080,9 +1088,9 @@ public static class WorldWindow {
 		}
 	}
 
-	private static void HandleStandardFile(string path, string filename, string acronym) {
+	private static Room HandleStandardFile(string path, string filename, string acronym) {
 		if (acronym.Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase) || WorldWindow.region.exportPath.IsNullOrEmpty()) {
-			CreateAndAddRoom(path, filename);
+			return CreateAndAddRoom(path, filename);
 		}
 		else {
 			PopupManager.Add(
@@ -1099,6 +1107,7 @@ public static class WorldWindow {
 					})
 			);
 		}
+		return null!;
 	}
 
 	public class WorldMenuItems : MenuItems {

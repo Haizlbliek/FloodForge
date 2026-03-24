@@ -425,12 +425,23 @@ public class FilesystemPopup : Popup {
 			bool hover = rect.Inside(Mouse.X, Mouse.Y);
 
 			if (hover && Mouse.JustLeft) {
-				if (this.allowMultiple && Keys.Modifier(Keymod.Shift | Keymod.Ctrl)) {
-					if (this.selected.Contains(path)) {
-						this.selected.Remove(path);
+				if (this.allowMultiple && Keys.Modifier(Keymod.Shift) || Keys.Modifier(Keymod.Ctrl)) {
+					if (Keys.Modifier(Keymod.Shift)) {
+						string latestSelected = this.selected.Last();
+						bool startSelecting = false;
+						foreach (string selectPath in this.files) {
+							if (selectPath == latestSelected || selectPath == path) {
+								startSelecting = !startSelecting;
+							}
+							if (startSelecting || selectPath == latestSelected || selectPath == path) {
+								this.selected.Add(selectPath);
+							}
+						}
 					}
-					else {
-						this.selected.Add(path);
+					else if (Keys.Modifier(Keymod.Ctrl)) {
+						if (!this.selected.Remove(path)) {
+							this.selected.Add(path);
+						}
 					}
 				}
 				else {
