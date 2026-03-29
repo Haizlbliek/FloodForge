@@ -166,7 +166,7 @@ public static class WorldParser {
 			else if (line.StartsWith("Connection: ")) {
 				// LATER
 			}
-			else if (line.StartsWith("SpawnMigrationStream: ") || line.StartsWith("SpawnMigrationStreamMidpoint: ")) {
+			else if (line.StartsWith("SpawnMigrationStream: ") || line.StartsWith("SpawnMigrationStreamMidpoint: ") || line.StartsWith("Def_Mat: ") || line.StartsWith("R: ") || line.StartsWith("[REFERENCE]") || line.StartsWith("I: ") || line.StartsWith("[IMAGE]")) {
 				WorldWindow.region.extraMap += line + "\n";
 				// LATER
 			}
