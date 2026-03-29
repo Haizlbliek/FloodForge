@@ -44,12 +44,15 @@ RoomSolid              | Solid in rooms
 RoomLayer2Solid        | Solid layer 2 in rooms
 RoomPole               | Poles in rooms
 RoomPlatform           | Platforms in rooms
+RoomWater              | Water in rooms
 RoomShortcutEnterance  | Shortcut entrances in rooms
 RoomShortcutDot        | Shortcut dots in rooms
 RoomShortcutRoom       | Room exits in rooms
 RoomShortcutDen        | Dens in rooms
+RoomShortcutArrow      | Arrows for shortcut entrances
 RoomConnection         | Connections
 RoomConnectionHover    | Connections when hovered
+RoomConnectionInvalid  | Connections when attempting to place in an invalid configuration
 Layer0Color            | Special color multiplied into rooms when on layer 0
 Layer1Color            | Special color multiplied into rooms when on layer 1
 Layer2Color            | Special color multiplied into rooms when on layer 2

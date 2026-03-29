@@ -33,8 +33,10 @@ public static class Themes {
 	public static readonly ThemeColor RoomShortcutDot = Register("RoomShortcutDot", new Color(1f, 1f, 1f));
 	public static readonly ThemeColor RoomShortcutRoom = Register("RoomShortcutRoom", new Color(1f, 0f, 1f));
 	public static readonly ThemeColor RoomShortcutDen = Register("RoomShortcutDen", new Color(0f, 1f, 0f));
+	public static readonly ThemeColor RoomShortcutArrow = Register("RoomShortcutArrow", new Color(0f, 1f, 1f));
 	public static readonly ThemeColor RoomConnection = Register("RoomConnection", new Color(1f, 1f, 0f));
 	public static readonly ThemeColor RoomConnectionHover = Register("RoomConnectionHover", new Color(0f, 1f, 1f));
+	public static readonly ThemeColor RoomConnectionInvalid = Register("RoomConnectionInvalid", new Color(1f, 0f, 0f));
 	public static readonly ThemeColor Layer0Color = Register("Layer0Color", new Color(1f, 0f, 0f));
 	public static readonly ThemeColor Layer1Color = Register("Layer1Color", new Color(1f, 1f, 1f));
 	public static readonly ThemeColor Layer2Color = Register("Layer2Color", new Color(0f, 1f, 0f));
@@ -98,7 +100,7 @@ public static class Themes {
 		if (!Directory.Exists(path)) return;
 
 		FileSystemWatcher watcher = new FileSystemWatcher(path, "theme.cfg") {
-			NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
+			NotifyFilter = NotifyFilters.LastWrite,
 			EnableRaisingEvents = true
 		};
 

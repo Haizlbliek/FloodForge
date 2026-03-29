@@ -648,12 +648,7 @@ public static class WorldWindow {
 		if (ConnectionStart == null || ConnectionEnd == null || CurrentConnection == null)
 			return;
 
-		if (CurrentConnectionValid) {
-			Immediate.Color(1f, 1f, 0f);
-		}
-		else {
-			Immediate.Color(1f, 0f, 0f);
-		}
+		Immediate.Color(CurrentConnectionValid ? Themes.RoomConnectionHover : Themes.RoomConnectionInvalid);
 
 		int segments = Mathf.RoundToInt((ConnectionStart - ConnectionEnd).Value.Length / 2f);
 		segments = Math.Clamp(segments, 4, 100);
