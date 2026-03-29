@@ -108,7 +108,7 @@ public static class WorldParser {
 			WorldWindow.region.rooms.Add(room);
 		}
 
-		string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", ""))];
+		string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", "").Trim())];
 		float canonX = float.Parse(data[0]) / 3f;
 		float canonY = float.Parse(data[1]) / 3f;
 		float devX = float.Parse(data[2]) / 3f;
