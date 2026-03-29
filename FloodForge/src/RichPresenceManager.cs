@@ -3,7 +3,6 @@ using DiscordRPC.Logging;
 
 namespace FloodForge;
 
-// TODO: Displayname
 public static class RichPresenceManager {
 	private static DiscordRpcClient? client = null;
 	private static string acronym = "";
@@ -53,7 +52,7 @@ public static class RichPresenceManager {
 		}
 
 		Set(
-			$"Editing {(displayName != null ? (displayName + $" ({acronym.ToUpperInvariant()})") : acronym.ToUpperInvariant())}",
+			$"Editing {((displayName != null && displayName != "") ? (displayName + $" ({acronym.ToUpperInvariant()})") : acronym.ToUpperInvariant())}",
 			$"{roomCount} rooms, {screenCount} screens, {connectionCount} connections"
 		);
 	}
