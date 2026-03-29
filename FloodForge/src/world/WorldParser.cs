@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Stride.Core;
 using Stride.Core.Extensions;
 
@@ -329,14 +330,16 @@ public static class WorldParser {
 			}
 			first = false;
 
-			string[] sections = creatureInDen.Split('-', StringSplitOptions.TrimEntries);
+			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
 			creature.type = CreatureTextures.Parse(sections[0]);
 			creature.count = 1;
-			creature.lineageChance = float.Parse(sections[^1]);
+			string chanceString, lineageString;
+			chanceString = sections[1][0] == '{' ? (sections.Length == 3 ? sections[2] : "") : sections[1];
+			lineageString = sections[1][0] == '{' ? sections[1] : (sections.Length == 3 ? sections[2] : "");
+			creature.lineageChance = float.Parse(chanceString);
 
-			if (sections.Length == 3 && sections[1][0] == '{') {
-				string tag = sections[1][1..^1];
-				(creature.tag, creature.data) = ParseCreatureTag(tag);
+			if (!lineageString.IsNullOrEmpty()) {
+				(creature.tag, creature.data) = ParseCreatureTag(lineageString[1..^1]);
 			}
 		}
 
@@ -401,7 +404,7 @@ public static class WorldParser {
 	}
 
 	private static bool ParseWorldCreature(string line) {
-		string[] splits = line.Split(':', StringSplitOptions.TrimEntries);
+		string[] splits = line.Split(" : ", StringSplitOptions.TrimEntries);
 		TimelineType timelineType = TimelineType.All;
 		HashSet<string> timelines = [];
 
