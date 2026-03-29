@@ -1,3 +1,4 @@
+using System.Globalization;
 using FloodForge.Droplet;
 using FloodForge.Popups;
 using FloodForge.World;
@@ -23,6 +24,8 @@ public static class Main {
 	public static event Action<Key> KeyPress = (key) => {};
 
 	public static void Initialize() {
+		CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+		CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 		DateTime now = DateTime.Now;
 		Anniversary = now.Year == 2025 && now.Month == 11 && now.Day < 22;
 		AprilFools = now.Month == 4 && now.Day == 1;
