@@ -122,6 +122,60 @@ public static class UI {
 		Immediate.End();
 	}
 
+	private static void RoundedRect(float x0, float y0, float x1, float y1, float radius, Immediate.PrimitiveType type) {
+		float maxRadius = Math.Min(Math.Abs(x1 - x0), Math.Abs(y1 - y0)) * 0.5f;
+		radius = Math.Min(radius, maxRadius);
+
+		if (radius <= 0) {
+			Immediate.Begin(type);
+			Immediate.Vertex(x0, y0);
+			Immediate.Vertex(x1, y0);
+			Immediate.Vertex(x1, y1);
+			Immediate.Vertex(x0, y1);
+			Immediate.End();
+			return;
+		}
+
+		Immediate.Begin(type);
+
+		int segments = 8;
+		float step = (float)Math.PI * 0.5f / segments;
+
+		// Top-Right Corner
+		for (int i = 0; i <= segments; i++) {
+			float angle = i * step;
+			Immediate.Vertex(x1 - radius + Mathf.Cos(angle) * radius, y0 + radius - Mathf.Sin(angle) * radius);
+		}
+
+		// Top-Left Corner
+		for (int i = 0; i <= segments; i++) {
+			float angle = Mathf.PI * 0.5f + i * step;
+			Immediate.Vertex(x0 + radius + Mathf.Cos(angle) * radius, y0 + radius - Mathf.Sin(angle) * radius);
+		}
+
+		// Bottom-Left Corner
+		for (int i = 0; i <= segments; i++) {
+			float angle = Mathf.PI + i * step;
+			Immediate.Vertex(x0 + radius + Mathf.Cos(angle) * radius, y1 - radius - Mathf.Sin(angle) * radius);
+		}
+
+		// Bottom-Right Corner
+		for (int i = 0; i <= segments; i++) {
+			float angle = Mathf.PI * 1.5f + i * step;
+			Immediate.Vertex(x1 - radius + Mathf.Cos(angle) * radius, y1 - radius - Mathf.Sin(angle) * radius);
+		}
+
+		Immediate.End();
+	}
+
+	public static void FillRoundedRect(float x0, float y0, float x1, float y1, float radius) {
+		RoundedRect(x0, y0, x1, y1, radius, Immediate.PrimitiveType.TRIANGLE_FAN);
+	}
+
+	public static void StrokeRoundedRect(float x0, float y0, float x1, float y1, float radius) {
+		RoundedRect(x0, y0, x1, y1, radius, Immediate.PrimitiveType.LINE_LOOP);
+	}
+
 	public static void StrokeRect(float x0, float y0, float x1, float y1) {
 		Immediate.Begin(Immediate.PrimitiveType.LINE_LOOP);
 		Immediate.Vertex(x0, y0);
@@ -247,15 +301,40 @@ public static class UI {
 		StrokeCircle(pos.x, pos.y, radius, resolution);
 	}
 
+	public static void ButtonFillRect(Rect rect) {
+		FillRoundedRect(rect.x0, rect.y0, rect.x1, rect.y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+	public static void ButtonFillRect(UVRect rect) {
+		FillRoundedRect(rect.x0, rect.y0, rect.x1, rect.y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+	public static void ButtonFillRect(float x0, float y0, float x1, float y1) {
+		FillRoundedRect(x0, y0, x1, y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+	public static void ButtonStrokeRect(Rect rect) {
+		StrokeRoundedRect(rect.x0, rect.y0, rect.x1, rect.y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+	public static void ButtonStrokeRect(UVRect rect) {
+		StrokeRoundedRect(rect.x0, rect.y0, rect.x1, rect.y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+	public static void ButtonStrokeRect(float x0, float y0, float x1, float y1) {
+		StrokeRoundedRect(x0, y0, x1, y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+
 	public static ButtonResponse Button(Rect rect, ButtonMods? mods = null) {
 		mods ??= new ButtonMods();
 		bool highlight = CanClick && rect.Inside(Mouse.Pos);
 
 		Immediate.Color(mods.disabled ? Themes.ButtonDisabled : Themes.Button);
-		FillRect(rect);
+		ButtonFillRect(rect);
 
 		Immediate.Color(mods.disabled ? Themes.Border : ((highlight || mods.selected) ? Themes.BorderHighlight : Themes.Border));
-		StrokeRect(rect);
+		ButtonStrokeRect(rect);
 
 		return new ButtonResponse(highlight && Mouse.JustLeft && !mods.disabled, highlight);
 	}
@@ -266,13 +345,13 @@ public static class UI {
 		bool highlight = can && rect.Inside(Mouse.Pos);
 
 		Immediate.Color(mods.disabled ? Themes.ButtonDisabled : Themes.Button);
-		FillRect(rect);
+		ButtonFillRect(rect);
 
 		Immediate.Color(mods.textColor ?? (mods.disabled ? Themes.TextDisabled : (mods.selected ? Themes.TextHighlight : Themes.Text)));
 		UI.font.Write(text, rect.CenterX, rect.CenterY, 0.03f, Font.Align.MiddleCenter);
 
 		Immediate.Color(mods.disabled ? Themes.Border : ((highlight || mods.selected) ? Themes.BorderHighlight : Themes.Border));
-		StrokeRect(rect);
+		ButtonStrokeRect(rect);
 
 		return new ButtonResponse(highlight && Mouse.JustLeft && !mods.disabled, highlight);
 	}
@@ -283,7 +362,7 @@ public static class UI {
 		bool highlight = can && rect.Inside(Mouse.Pos);
 
 		Immediate.Color(mods.disabled ? Themes.ButtonDisabled : Themes.Button);
-		FillRect(rect);
+		ButtonFillRect(rect);
 
 		Program.gl.Enable(EnableCap.Blend);
 		Immediate.UseTexture(mods.texture);
@@ -302,7 +381,7 @@ public static class UI {
 		Program.gl.Disable(EnableCap.Blend);
 
 		Immediate.Color(mods.disabled ? Themes.Border : ((highlight || mods.selected) ? Themes.BorderHighlight : Themes.Border));
-		StrokeRect(rect);
+		ButtonStrokeRect(rect);
 
 		return new ButtonResponse(highlight && Mouse.JustLeft && !mods.disabled, highlight);
 	}
@@ -325,7 +404,7 @@ public static class UI {
 		editable.submitted = false;
 
 		Immediate.Color(mods.disabled ? Themes.ButtonDisabled : Themes.Button);
-		UI.FillRect(rect);
+		UI.ButtonFillRect(rect);
 
 		if (editable.value.IsNullOrEmpty()) {
 			Immediate.Color(Themes.TextDisabled);
@@ -344,7 +423,7 @@ public static class UI {
 		}
 
 		Immediate.Color((!mods.disabled && (highlight || selected)) ? Themes.BorderHighlight : Themes.Border);
-		UI.StrokeRect(rect);
+		ButtonStrokeRect(rect);
 
 		if (highlight && Mouse.JustLeft && !mods.disabled) {
 			if (selected) {

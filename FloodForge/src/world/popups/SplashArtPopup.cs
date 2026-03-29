@@ -140,7 +140,7 @@ public class SplashArtPopup : Popup {
 
 	public override void Draw() {
 		Immediate.Color(0f, 0f, 0f);
-		UI.FillRect(-0.9f, -0.65f, 0.9f, 0.65f);
+		UI.ButtonFillRect(-0.9f, -0.65f, 0.9f, 0.65f);
 
 		Program.gl.Enable(EnableCap.Blend);
 		Immediate.UseTexture(this.splashArt);
@@ -188,7 +188,8 @@ public class SplashArtPopup : Popup {
 			UI.font.Write(recent, -0.88f, y, 0.03f, Font.Align.MiddleLeft);
 		}
 
-		UI.StrokeRect(-0.9f, -0.65f, 0.9f, 0.65f);
+		Immediate.Color(1f, 1f, 1f);
+		UI.ButtonStrokeRect(-0.9f, -0.65f, 0.9f, 0.65f);
 		UI.Line(-0.9f, -0.25f, 0.9f, -0.25f);
 
 		const float rowHeight = 0.06f;
