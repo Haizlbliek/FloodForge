@@ -60,20 +60,24 @@ public static class Themes {
 	}
 
 	public static void Load(string theme) {
-		string[] lines = File.ReadAllLines($"assets/themes/{theme}/theme.cfg");
+		try {
+			string[] lines = File.ReadAllLines($"assets/themes/{theme}/theme.cfg");
 
-		foreach (string l in lines) {
-			string line = l.Trim();
-			if (line == "" || line.StartsWith('#')) continue;
+			foreach (string l in lines) {
+				string line = l.Trim();
+				if (line == "" || line.StartsWith('#')) continue;
 
-			string key = line[..line.IndexOf('=')].Trim();
-			string value = line[(line.IndexOf('=') + 1)..].Trim();
+				string key = line[..line.IndexOf('=')].Trim();
+				string value = line[(line.IndexOf('=') + 1)..].Trim();
 
-			if (ids.TryGetValue(key, out int idx)) {
-				colors[idx] = Color.Parse(value, null);
-			} else {
-				Logger.Warn($"No theme color: '{key}'");
+				if (ids.TryGetValue(key, out int idx)) {
+					colors[idx] = Color.Parse(value, null);
+				} else {
+					Logger.Warn($"No theme color: '{key}'");
+				}
 			}
+		} catch (Exception ex) {
+			Logger.Error($"Failed to load theme {theme}:\n{ex}");
 		}
 	}
 
