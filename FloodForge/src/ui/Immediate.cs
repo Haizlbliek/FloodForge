@@ -13,6 +13,7 @@ public static class Immediate {
 		LINE_STRIP,
 		LINE_LOOP,
 		TRIANGLES,
+		TRIANGLE_FAN,
 		QUADS,
 	}
 
@@ -393,6 +394,21 @@ void main() {
 					PushIndex(DrawState.currentIndex++);
 
 					DrawState.active_idx0 = 0;
+				}
+				break;
+
+			case PrimitiveType.TRIANGLE_FAN:
+				if (DrawState.active_idx0 > 2) {
+					BeginDraw(3, 3, GLEnum.Triangles);
+					PushVertex(DrawState.verts[0], cpuTransform);
+					PushVertex(DrawState.verts[1], cpuTransform);
+					PushVertex(DrawState.verts[2], cpuTransform);
+					PushIndex(DrawState.currentIndex++);
+					PushIndex(DrawState.currentIndex++);
+					PushIndex(DrawState.currentIndex++);
+					DrawState.verts[1] = DrawState.verts[2];
+
+					DrawState.active_idx0 = 2;
 				}
 				break;
 

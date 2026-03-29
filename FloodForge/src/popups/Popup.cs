@@ -241,11 +241,11 @@ public abstract class Popup {
 
 		if (!this.minimized) {
 			Immediate.Color(Themes.Popup);
-			UI.FillRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
+			UI.ButtonFillRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
 		}
 
 		Immediate.Color(Themes.PopupHeader);
-		UI.FillRect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
+		UI.ButtonFillRect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
 
 		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).UV(0f, 0f, 0.25f, 0.25f);
 		if (UI.TextureButton(this.closeButton)) {
@@ -273,9 +273,9 @@ public abstract class Popup {
 
 		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
 		if (this.minimized) {
-			UI.StrokeRect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
+			UI.ButtonStrokeRect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
 		} else {
-			UI.StrokeRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
+			UI.ButtonStrokeRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
 		}
 
 		if (this.CanDrag(Mouse.X, Mouse.Y)) {
