@@ -63,7 +63,11 @@ public static class Themes {
 
 	public static void Load(string theme) {
 		try {
-			string[] lines = File.ReadAllLines($"assets/themes/{theme}/theme.cfg");
+			string path = $"assets/themes/{theme}/theme.cfg";
+			if (!File.Exists(path))
+				return;
+
+			string[] lines = File.ReadAllLines(path);
 
 			foreach (string l in lines) {
 				string line = l.Trim();
