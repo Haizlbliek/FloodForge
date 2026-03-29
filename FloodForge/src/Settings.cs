@@ -1,3 +1,4 @@
+using System.Globalization;
 using FloodForge.SettingTypes;
 
 namespace FloodForge;
@@ -114,7 +115,7 @@ public static class Settings {
 				}
 			}
 
-			this.value = T.Parse(stringValue, null);
+			this.value = T.Parse(stringValue, CultureInfo.InvariantCulture);
 		}
 
 		public Setting<T> Override(Func<string, (bool, T)> func) {
