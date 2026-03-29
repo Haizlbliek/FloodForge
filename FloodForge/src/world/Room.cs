@@ -844,7 +844,7 @@ public class Room {
 			if ((this.GetTile(x, y + 1) & FLAG_SHORTCUT) > 0) {
 				direction = direction != 0 ? 128 : 4;
 			}
-			Themes.ThemeColor color = Themes.RoomShortcutEntrance;
+			Color color = Themes.RoomShortcutRoom;
 			if (direction != 0) {
 				if (direction == 1) {
 					this.AddTriangle(
@@ -916,7 +916,7 @@ public class Room {
 				if ((this.GetTile(x, y + 1) & FLAG_SHORTCUT) > 0) {
 					direction = direction != 0 ? 128 : 4;
 				}
-				Themes.ThemeColor color = Themes.RoomShortcutRoom;
+				Color color = Themes.RoomShortcutRoom;
 				if (direction != 0) {
 					if (direction == 1) {
 						this.AddTriangle(
