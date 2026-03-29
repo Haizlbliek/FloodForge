@@ -241,10 +241,10 @@ public class Room {
 			for (int y = 0; y < this.height; y++) {
 				if ((this.geometry[idx] & 15) == 2) {
 					int bits = 0;
-					bits += (this.GetTile(x - 1, y) == 1u) ? 1 : 0;
-					bits += (this.GetTile(x + 1, y) == 1u) ? 2 : 0;
-					bits += (this.GetTile(x, y - 1) == 1u) ? 4 : 0;
-					bits += (this.GetTile(x, y + 1) == 1u) ? 8 : 0;
+					bits += (this.GetTile(x - 1, y) % 16 == 1u) ? 1 : 0;
+					bits += (this.GetTile(x + 1, y) % 16 == 1u) ? 2 : 0;
+					bits += (this.GetTile(x, y - 1) % 16 == 1u) ? 4 : 0;
+					bits += (this.GetTile(x, y + 1) % 16 == 1u) ? 8 : 0;
 					int type = -1;
 
 					if (bits == 1 + 4) type = 0;

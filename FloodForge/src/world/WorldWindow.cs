@@ -6,6 +6,7 @@ using Silk.NET.Input;
 using Silk.NET.SDL;
 using Stride.Core;
 using Stride.Core.Extensions;
+using TextCopy;
 
 namespace FloodForge.World;
 
@@ -37,6 +38,7 @@ public static class WorldWindow {
 	public static Vector2 worldMouse;
 
 	public static List<Room> selectedRooms = []; // REVIEW - HashSet?
+	public static List<Room> oldSelection = [];
 	public static Room? roomPossibleSelect = null;
 	private static SelectingState selectingState = SelectingState.None;
 	public static Vector2 selectionStart;
@@ -955,6 +957,10 @@ public static class WorldWindow {
 	}
 
 	public static void Draw() {
+		if (renderRoomsTask == null || renderRoomsTask.IsCompleted) {
+			oldSelection.Clear();
+			oldSelection = selectedRooms[..];
+		}
 		if (Keys.Modifier(Keymod.Alt)) {
 			if (Keys.JustPressed(Key.S)) {
 				PopupManager.Add(new SplashArtPopup());
@@ -1092,38 +1098,46 @@ public static class WorldWindow {
 	}
 
 	static Task? renderRoomsTask;
+	public static InfoPopup? renderStatusPopup;
 	private static async Task MassRenderRooms() {
 		{
-			if (selectedRooms.Count <= 0) {
-				PopupManager.Add(new InfoPopup("Select at least one room!"));
+			List<Room> rooms = [];
+			foreach (Room room in oldSelection) {
+				if (room is not OffscreenRoom) {
+					rooms.Add(room);
+				}
+			}
+			if (rooms.Count <= 0) {
+				PopupManager.Add(new InfoPopup("Select at least one valid room!"));
 			}
 			else {
 				Logger.Info("Mass-rendering rooms!");
-				InfoPopup renderStatusPopup = new InfoPopup("Rendering rooms\n_/_\ninit");
+				renderStatusPopup = new InfoPopup("Rendering rooms\n_/_\ninit");
 				PopupManager.Add(renderStatusPopup);
-				PopupManager.Draw();
+
 				int successCount = 0;
 				int finished = 0;
-				int totalCount = selectedRooms.Count;
-				foreach (Room room in selectedRooms) {
-					Logger.Info("Loading " + (finished + 1) + "/" + totalCount);
+				int totalCount = rooms.Count;
+
+				string lastText = "";
+				foreach (Room room in rooms) {
 					renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nloading");
-					PopupManager.Draw();
 					await Task.Run(() => DropletWindow.LoadRoom(room));
 					renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nrendering");
-					PopupManager.Draw();
-					Logger.Info("Rendering room " + room.Name);
+					lastText = renderStatusPopup.GetText();
 					if (await Task.Run(DropletWindow.Render)) {
 						successCount++;
-						Logger.Info("Success");
 					}
 					else {
 						Logger.Warn("Error while rendering " + room);
 					}
 					finished++;
 				}
-				Logger.Info("Finished mass-render.");
-				renderStatusPopup.UpdateText("Finished mass-render:\n" + successCount + "/" + finished + " succeeded.");
+				Logger.Info("Finished mass-render.\nSelection: " + rooms.Count + "\nSucceeded: " + successCount + "/" + finished);
+				if (successCount == finished) {
+					renderStatusPopup.Close();
+					PopupManager.Add(new ConfirmPopup("Finished mass-render:\n" + successCount + "/" + finished + " succeeded.").SetOkay("Copy path").SetCancel("Continue").Okay(() => { ClipboardService.SetText(WorldWindow.region.roomsPath); }));
+				}
 			}
 		}
 	}
@@ -1297,7 +1311,7 @@ public static class WorldWindow {
 					button.text = changeConnectBehaviour ? "Connect: Path" : "Connect: Default";
 				}),
 
-				new Button("Mass Render", button => { renderRoomsTask = Task.Run(MassRenderRooms); })
+				new Button("Mass Render", button => { renderRoomsTask = Task.Run(MassRenderRooms); }, () => { return oldSelection.Count != 0; })
 			];
 		}
 

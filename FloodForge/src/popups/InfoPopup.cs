@@ -16,6 +16,17 @@ public class InfoPopup : Popup {
 		this.bounds = new Rect(width * -0.5f, height * -0.5f, width * 0.5f, height * 0.5f);
 	}
 
+	public string GetText() {
+		string returnString = "";
+		foreach(string item in this.text) {
+			if(returnString != "") {
+				returnString += "\n";
+			}
+			returnString += item;
+		}
+		return returnString;
+	}
+
 	public override void Draw() {
 		base.Draw();
 
