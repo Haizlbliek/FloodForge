@@ -23,8 +23,7 @@ public static class Program {
 		window.Run();
 
 		window.Dispose();
-		Sfx.Cleanup();
-		RichPresenceManager.Cleanup();
+		FloodForge.Main.Cleanup();
 	}
 
 	private static void OnLoad() {
