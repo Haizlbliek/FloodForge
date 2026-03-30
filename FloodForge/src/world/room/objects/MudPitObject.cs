@@ -19,7 +19,7 @@ public class MudPitObject : DevObject {
 
 		Immediate.Color(0.478f, 0.282f, 0.196f);
 		UI.StrokeRect(rect);
-		Immediate.Alpha(0.25f);
+		Immediate.Alpha(0.5f);
 		Program.gl.Enable(EnableCap.Blend);
 		UI.FillRect(rect);
 		Program.gl.Disable(EnableCap.Blend);

@@ -1090,6 +1090,21 @@ public class Room {
 		UI.FillRect(position.x, position.y - this.height, position.x + this.width, position.y);
 	}
 
+	private void DrawWater(Vector2 position) {
+		Immediate.Color(Themes.RoomWater);
+		if (!WorldWindow.VisibleDevItems) {
+			UI.FillRect(position.x, position.y - (this.height - MathF.Min(this.data.waterHeight + 0.5f, this.height)), position.x + this.width, position.y - this.height);
+			return;
+		}
+
+		Program.gl.Enable(EnableCap.Blend);
+		foreach (RoomVisuals.WaterSpot spot in this.visuals.water) {
+			Rect waterRect = Rect.FromSize(position.x + spot.pos.x / 20f, position.y - this.height + spot.pos.y / 20f, spot.size.x / 20f, spot.size.y / 20f);
+			UI.FillRect(waterRect);
+		}
+		Program.gl.Disable(EnableCap.Blend);
+	}
+
 	public unsafe virtual void Draw(WorldWindow.RoomPosition positionType) {
 		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
@@ -1112,8 +1127,7 @@ public class Room {
 
 		Program.gl.Enable(EnableCap.Blend);
 		if (this.data.waterHeight != -1 && !this.data.waterInFront) {
-			Immediate.Color(Themes.RoomWater);
-			UI.FillRect(position.x, position.y - (this.height - MathF.Min(this.data.waterHeight + 0.5f, this.height)), position.x + this.width, position.y - this.height);
+			this.DrawWater(position);
 		}
 
 		Color tint = this.GetTintColor();
@@ -1145,8 +1159,15 @@ public class Room {
 		Program.gl.UseProgram(0);
 
 		if (this.data.waterHeight != -1 && this.data.waterInFront) {
-			Immediate.Color(Themes.RoomWater);
-			UI.FillRect(position.x, position.y - (this.height - MathF.Min(this.data.waterHeight + 0.5f, this.height)), position.x + this.width, position.y - this.height);
+			this.DrawWater(position);
+		}
+		if (WorldWindow.VisibleDevItems && this.visuals.hasTerrain && this.visuals.terrain.Count >= 2) {
+			Immediate.Color(0f, 1f, 0f);
+			Immediate.Begin(Immediate.PrimitiveType.LINE_STRIP);
+			foreach (Vector2 point in this.visuals.terrain) {
+				Immediate.Vertex(position.x + point.x / 20f, position.y + point.y / 20f - this.height);
+			}
+			Immediate.End();
 		}
 		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Fill);
