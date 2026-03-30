@@ -42,6 +42,17 @@ public class RoomVisuals {
 		return SampleHandle(left.Middle.y, left.Right.y, right.Left.y, right.Middle.y, (leftPos + rightPos) * 0.5f);
 	}
 
+	private float SampleTerrain(float x) {
+		TerrainHandleObject[] handles = [.. this.room.data.objects.OfType<TerrainHandleObject>()];
+		if (handles.Length < 2) return -100000f;
+
+		int handleIndex = 0;
+		while (handleIndex < handles.Length - 2 && handles[handleIndex + 1].Middle.x < x) {
+			handleIndex++;
+		}
+		return SampleTerrain(handles[handleIndex], handles[handleIndex + 1], x);
+	}
+
 	private void RefreshTerrain() {
 		this.terrain.Clear();
 		TerrainHandleObject[] handles = [.. this.room.data.objects.OfType<TerrainHandleObject>()];
@@ -65,14 +76,16 @@ public class RoomVisuals {
 
 	private void RefreshWater() {
 		this.water.Clear();
-		this.water.Add(new RoomVisuals.WaterSpot(new Vector2(0f, 0f), new Vector2(this.room.width * 20f, this.room.data.waterHeight * 20f + 10f)));
+		if (this.room.data.waterHeight == -1) return;
+
+		this.water.Add(new WaterSpot(new Vector2(0f, 0f), new Vector2(this.room.width * 20f, this.room.data.waterHeight * 20f + 10f)));
 		foreach (AirPocketObject airPocket in this.room.data.objects.OfType<AirPocketObject>()) {
-			RoomVisuals.WaterSpot spot = new RoomVisuals.WaterSpot(airPocket.nodes[0].position, airPocket.nodes[1].position);
+			WaterSpot spot = new WaterSpot(airPocket.nodes[0].position, airPocket.nodes[1].position);
 			if (spot.size.x <= 0f || spot.size.y <= 0f) continue;
 
 			for (int i = this.water.Count - 1; i >= 0; i--) {
 				if (this.water[i].Intersects(spot)) {
-					List<RoomVisuals.WaterSpot> splits = RoomVisuals.WaterSpot.Split(this.water[i], spot);
+					List<WaterSpot> splits = RoomVisuals.WaterSpot.Split(this.water[i], spot);
 					if (splits.Count == 0) {
 						this.water.RemoveAt(i);
 					}
@@ -103,6 +116,34 @@ public class RoomVisuals {
 		}
 	}
 
+	public bool Underwater(int x, int y) {
+		Vector2 p = new Vector2(x, this.room.height - y) * 20f;
+		try {
+			WaterSpot? spot = this.water.First(s => s.Intersects(p));
+			return spot != null;
+		} catch (Exception) {
+			return false;
+		}
+	}
+
+	private int UnderTerrain(float x, float y) {
+		float height = this.SampleTerrain(x);
+		return height > y ? 1 : 0;
+	}
+
+	public bool UnderTerrain(int ox, int oy, out bool slope) {
+		float x = ox * 20f + 10f, y = (this.room.height - oy) * 20f + 10f;
+		float v = 4f;
+		int count =
+			this.UnderTerrain(x - v, y - v) +
+			this.UnderTerrain(x + v, y - v) +
+			this.UnderTerrain(x - v, y + v) +
+			this.UnderTerrain(x + v, y + v);
+
+		slope = count < 4;
+		return count > 0;
+	}
+
 	public struct WaterSpot {
 		public Vector2 pos;
 		public Vector2 size;
@@ -110,6 +151,10 @@ public class RoomVisuals {
 		public WaterSpot(Vector2 pos, Vector2 size) {
 			this.pos = pos;
 			this.size = size;
+		}
+
+		public readonly bool Intersects(Vector2 p) {
+			return p.x >= this.pos.x && p.x < this.pos.x + this.size.x && p.y >= this.pos.y && p.y < this.pos.y + this.size.y;
 		}
 
 		public readonly bool Intersects(WaterSpot other) {

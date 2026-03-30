@@ -560,22 +560,13 @@ public static class WorldExporter {
 
 		byte[] imageData = new byte[textureWidth * textureHeight * 3];
 
-		bool debugPadding = Settings.DEBUGVisibleOutputPadding;
-
 		for (int y = 0; y < textureHeight; y++) {
 			for (int x = 0; x < textureWidth; x++) {
 				int i = (y * textureWidth + x) * 3;
-				if (debugPadding) {
-					if (x < 10 || (y % layerHeight) < 10 || x >= textureWidth - 10 || (y % layerHeight) >= layerHeight - 10) {
-						imageData[i] = 0;
-						imageData[i + 1] = 255;
-						imageData[i + 2] = 255;
-					}
-					else {
-						imageData[i] = 0;
-						imageData[i + 1] = 255;
-						imageData[i + 2] = 0;
-					}
+				if (Settings.DEBUGVisibleOutputPadding && (x < 10 || (y % layerHeight) < 10 || x >= textureWidth - 10 || (y % layerHeight) >= layerHeight - 10)) {
+					imageData[i] = 0;
+					imageData[i + 1] = 255;
+					imageData[i + 2] = 255;
 				}
 				else {
 					imageData[i] = 0;
@@ -627,7 +618,16 @@ public static class WorldExporter {
 						g = 0;
 					}
 
-					if (r > 0 && oy >= room.height - room.data.waterHeight) {
+					if (room.visuals.UnderTerrain(ox, oy, out bool slope)) {
+						g = 0;
+						if (slope) {
+							r = Math.Min(r, (byte) 153);
+						} else {
+							r = 0;
+						}
+					}
+
+					if (r > 0 && room.visuals.Underwater(ox, oy)) {
 						b = 255;
 					}
 
