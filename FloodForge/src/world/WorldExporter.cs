@@ -600,8 +600,7 @@ public static class WorldExporter {
 
 					int i = (targetY * textureWidth + targetX) * 3;
 					uint tile = room.GetTile(ox, oy);
-					uint tileType = tile % 16;
-					uint tileData = tile / 16;
+					uint tileType = tile & 15;
 
 					byte r = 0, g = 0, b = 0;
 
@@ -609,11 +608,11 @@ public static class WorldExporter {
 						r = 255;
 						g = 0;
 					}
-					else if (tileType == 1) {
+					if (tileType == 1) {
 						r = 0;
 						g = 0;
 					}
-					else if (tileType == 2 || tileType == 3 || (tileData & 1) != 0 || (tileData & 2) != 0) {
+					if (tileType == 2 || tileType == 3 || (tile & Room.FLAG_HORIZONTAL_POLE) != 0 || (tile & Room.FLAG_VERTICAL_POLE) != 0) {
 						r = 153;
 						g = 0;
 					}
