@@ -31,7 +31,8 @@ public class Room {
 	public int width;
 	public int height;
 	public bool valid;
-	public RoomData data;
+	public readonly RoomData data;
+	public readonly RoomVisuals visuals;
 	public uint[] geometry = null!;
 	public List<(ShortcutType, Vector2i)> shortcutExits = [];
 	public Dictionary<Vector2i, (Vector2i[], Vector2i)> shortcutPaths = [];
@@ -63,9 +64,11 @@ public class Room {
 		this.valid = false;
 
 		this.data = new RoomData();
+		this.visuals = new RoomVisuals(this);
 
 		this.LoadGeometry();
 		this.LoadSettings();
+		this.visuals.Refresh();
 		this.GenerateMesh();
 		this.CheckImages();
 	}

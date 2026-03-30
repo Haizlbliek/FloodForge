@@ -45,20 +45,6 @@ public static class DropletWindow {
 	}
 	private static readonly string[] GeometryToolNames = [ "Wall", "Slope", "Platform", "Background Wall", "Horizontal Pole", "Vertical Pole", "Spear", "Rock", "Shortcut", "Room Exit", "Creature Den", "Wack a Mole Hole", "Scavenger Den", "Garbage Worm", "Wormgrass", "Batfly Hive" ];
 
-	private struct WaterSpot {
-		public Vector2 pos;
-		public Vector2 size;
-
-		public WaterSpot(Vector2 pos, Vector2 size) {
-			this.pos = pos;
-			this.size = size;
-		}
-
-		public readonly bool Intersects(WaterSpot other) {
-			return this.pos.x <= other.pos.x + other.size.x && this.pos.y <= other.pos.y + other.size.y && this.pos.x + this.size.x >= other.pos.x && this.pos.y + this.size.y >= other.pos.y;
-		}
-	}
-
 	private static Vector2 transformedMouse;
 	private static Rect roomRect;
 	private static Vector2i mouseTile;
@@ -79,12 +65,6 @@ public static class DropletWindow {
 	private static int backupHeight;
 	private static RoomData.Camera[] backupCameras = [];
 	private static List<DevObject> backupObjects = [];
-
-	private static bool terrainNeedsRefresh = false;
-	private static bool hasTerrain = false;
-	private static List<Vector2> terrain = [];
-	private static bool waterNeedsRefresh = false;
-	private static List<WaterSpot> water = [];
 
 	private static Vector2 cameraOffset;
 	private static float cameraScale = 40f;
@@ -144,57 +124,13 @@ public static class DropletWindow {
 		cameraOffset += (targetCameraPan - cameraOffset) * (1f - MathF.Pow(1f - Settings.CameraPanSpeed, Program.Delta * 60f));
 	}
 
-	private static float SampleHandle(float a, float b, float c, float d, float t) {
-		float it = 1f - t;
-		return it * it * it * a + 3f * it * it * t * b + 3f * it * t * t * c + t * t * t * d;
-	}
-
-	private static float SampleTerrain(TerrainHandleObject left, TerrainHandleObject right, float x) {
-		if (x < left.Middle.x) {
-			return Mathf.Lerp(left.Middle.y, left.Left.y, Mathf.InverseLerp(x, left.Middle.x, left.Left.x));
-		}
-		if (x > right.Middle.x) {
-			return Mathf.Lerp(right.Middle.y, right.Right.y, Mathf.InverseLerp(x, right.Middle.x, right.Right.x));
-		}
-
-		float leftPos = 0f;
-		float rightPos = 1f;
-		for (int i = 0; i < 16; i++) {
-			float middlePos = (leftPos + rightPos) * 0.5f;
-			if (SampleHandle(left.Middle.x, left.Right.x, right.Left.x, right.Middle.x, middlePos) < x) {
-				leftPos = middlePos;
-			}
-			else {
-				rightPos = middlePos;
-			}
-		}
-
-		return SampleHandle(left.Middle.y, left.Right.y, right.Left.y, right.Middle.y, (leftPos + rightPos) * 0.5f);
-	}
-
-	private static List<WaterSpot> SplitWater(WaterSpot water, WaterSpot by) {
-		WaterSpot left = new WaterSpot(water.pos, new Vector2(by.pos.x - water.pos.x, water.size.y));
-		WaterSpot right = new WaterSpot(new Vector2(by.pos.x + by.size.x, water.pos.y), water.size - new Vector2(by.pos.x + by.size.x - water.pos.x, 0f));
-		float middlePosX = MathF.Max(by.pos.x, water.pos.x);
-		float middleSizeX = MathF.Min(by.pos.x + by.size.x, water.pos.x + water.size.x) - middlePosX;
-		WaterSpot bottom = new WaterSpot(new Vector2(middlePosX, water.pos.y), new Vector2(middleSizeX, by.pos.y - water.pos.y));
-		WaterSpot top = new WaterSpot(new Vector2(middlePosX, by.pos.y + by.size.y), new Vector2(middleSizeX, water.size.y - (by.pos.y + by.size.y - water.pos.y)));
-
-		List<WaterSpot> values = [];
-		if (left.size.x > 0f && left.size.y > 0f) values.Add(left);
-		if (right.size.x > 0f && right.size.y > 0f) values.Add(right);
-		if (bottom.size.x > 0f && bottom.size.y > 0f) values.Add(bottom);
-		if (top.size.x > 0f && top.size.y > 0f) values.Add(top);
-		return values;
-	}
-
 	private static Node? movingNode = null;
 
 	private static void UpdateDetailsTab() {
-		if (hasTerrain && terrain.Count >= 2) {
+		if (Room.visuals.hasTerrain && Room.visuals.terrain.Count >= 2) {
 			Immediate.Color(0f, 1f, 0f);
 			Immediate.Begin(Immediate.PrimitiveType.LINE_STRIP);
-			foreach (Vector2 point in terrain) {
+			foreach (Vector2 point in Room.visuals.terrain) {
 				Immediate.Vertex(roomRect.x0 + point.x / 20f, roomRect.y0 + point.y / 20f);
 			}
 			Immediate.End();
@@ -251,10 +187,10 @@ public static class DropletWindow {
 			}
 
 			if (movingNode.devObject is TerrainHandleObject) {
-				terrainNeedsRefresh = true;
+				Room.visuals.terrainNeedsRefresh = true;
 			}
 			if (movingNode.devObject is AirPocketObject) {
-				waterNeedsRefresh = true;
+				Room.visuals.waterNeedsRefresh = true;
 			}
 
 			if (!Mouse.Left) {
@@ -272,67 +208,20 @@ public static class DropletWindow {
 			if (!blockMouse && Keys.Pressed(Key.W) && Room.data.waterHeight != -1) {
 				Room.data.waterHeight = Room.height - mouseTile.y - 1;
 				if (Room.data.waterHeight < 0) Room.data.waterHeight = 0;
-				waterNeedsRefresh = true;
+				Room.visuals.waterNeedsRefresh = true;
 			}
 		}
 
-		if (terrainNeedsRefresh) {
-			terrain.Clear();
-			TerrainHandleObject[] handles = [.. Room.data.objects.OfType<TerrainHandleObject>()];
-
-			if (handles.Length >= 2) {
-				Array.Sort(handles, (a, b) => a.Middle.x.CompareTo(b.Middle.x));
-				int handleIndex = 0;
-				int segments = Room.width + 1;
-				for (float x = 0; x < segments * 20f; x += 20f) {
-					while (handleIndex < handles.Length - 2 && handles[handleIndex + 1].Middle.x < x) {
-						handleIndex++;
-					}
-					terrain.Add(new Vector2(x, SampleTerrain(handles[handleIndex], handles[handleIndex + 1], x)));
-				}
-				hasTerrain = true;
-			}
-			else {
-				hasTerrain = false;
-			}
-		}
-
-		if (waterNeedsRefresh) {
-			water.Clear();
-			water.Add(new WaterSpot(new Vector2(0f, 0f), new Vector2(Room.width * 20f, Room.data.waterHeight * 20f + 10f)));
-			foreach (AirPocketObject airPocket in Room.data.objects.OfType<AirPocketObject>()) {
-				WaterSpot spot = new WaterSpot(airPocket.nodes[0].position, airPocket.nodes[1].position);
-				if (spot.size.x <= 0f || spot.size.y <= 0f) continue;
-
-				for (int i = water.Count - 1; i >= 0; i--) {
-					if (water[i].Intersects(spot)) {
-						List<WaterSpot> splits = SplitWater(water[i], spot);
-						if (splits.Count == 0) {
-							water.RemoveAt(i);
-						}
-						else {
-							water[i] = splits[0];
-							for (int j = 1; j < splits.Count; j++) {
-								water.Add(splits[j]);
-							}
-						}
-					}
-				}
-
-				spot.size.y = MathF.Min(airPocket.nodes[2].position.y, spot.size.y);
-				if (spot.size.y <= 0f) continue;
-				water.Add(spot);
-			}
-		}
+		Room.visuals.Refresh();
 	}
 
 	private static void UpdateNotDetailsTab() {
 		if (!showObjects) return;
 
-		if (hasTerrain && terrain.Count >= 2) {
+		if (Room.visuals.hasTerrain && Room.visuals.terrain.Count >= 2) {
 			Immediate.Color(0f, 1f, 0f);
 			Immediate.Begin(Immediate.PrimitiveType.LINE_STRIP);
-			foreach (Vector2 point in terrain) {
+			foreach (Vector2 point in Room.visuals.terrain) {
 				Immediate.Vertex(roomRect.x0 + point.x / 20f, roomRect.y0 + point.y / 20f);
 			}
 			Immediate.End();
@@ -718,7 +607,7 @@ public static class DropletWindow {
 
 		Program.gl.Enable(EnableCap.Blend);
 		Immediate.Color(0f, 0f, 0.5f, 0.5f);
-		foreach (WaterSpot spot in water) {
+		foreach (RoomVisuals.WaterSpot spot in Room.visuals.water) {
 			Rect waterRect = Rect.FromSize(roomRect.x0 + spot.pos.x / 20f, roomRect.y0 + spot.pos.y / 20f, spot.size.x / 20f, spot.size.y / 20f);
 			UI.FillRect(waterRect);
 		}
@@ -1220,6 +1109,9 @@ public static class DropletWindow {
 
 		backupGeometry = null;
 		Room.RegenerateGeometry();
+		Room.visuals.terrainNeedsRefresh = true;
+		Room.visuals.waterNeedsRefresh = true;
+		Room.visuals.Refresh();
 	}
 
 	public static void LoadRoom(Room room) {
@@ -1231,8 +1123,8 @@ public static class DropletWindow {
 		}
 
 		Backup();
-		terrainNeedsRefresh = true;
-		waterNeedsRefresh = true;
+		Room.visuals.terrainNeedsRefresh = true;
+		Room.visuals.waterNeedsRefresh = true;
 	}
 
 	private static void ExportGeometry() {
@@ -1305,8 +1197,9 @@ public static class DropletWindow {
 		File.WriteAllText(geoPath, geo.ToString());
 
 		Backup();
-		terrainNeedsRefresh = true;
-		waterNeedsRefresh = true;
+		Room.visuals.terrainNeedsRefresh = true;
+		Room.visuals.waterNeedsRefresh = true;
+		Room.visuals.Refresh();
 
 		string? settingsPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.name + "_settings.txt");
 		FloodForge.Backup.File(settingsPath);
