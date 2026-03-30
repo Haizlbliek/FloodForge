@@ -26,7 +26,7 @@ public static class Noise {
 		float theta = 2f * Mathf.PI * random;
 		float phi = MathF.Acos(1f - 2f * random);
 
-		return 
+		return
 			(x - ix) * Mathf.Sin(phi) * Mathf.Cos(theta) +
 			(y - iy) * Mathf.Cos(phi) +
 			(z - iz) * Mathf.Sin(phi) * Mathf.Sin(theta)

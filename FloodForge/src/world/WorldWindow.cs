@@ -276,7 +276,7 @@ public static class WorldWindow {
 
 				if (selectingState == SelectingState.None) {
 					bool isPanning = isOriginal && !Keys.Modifier(Keymod.Shift);
-					
+	
 					selectingState = isPanning ? SelectingState.Panning : SelectingState.Selecting;
 					selectionStart = isPanning ? Mouse.Pos : worldMouse;
 					selectionEnd = selectionStart;
@@ -296,7 +296,7 @@ public static class WorldWindow {
 				}
 
 				if (selectingState == SelectingState.Selecting) selectionEnd = worldMouse;
-				
+	
 				if (selectingState == SelectingState.Panning) {
 					selectionEnd = Mouse.Pos;
 					cameraPanTo += (selectionStart - selectionEnd) * cameraScale;
@@ -356,7 +356,7 @@ public static class WorldWindow {
 			Vector2 dev = Vector2.Zero, canon = Vector2.Zero;
 
 			bool moveBoth = Keys.Modifier(Keymod.Alt) || PositionType == RoomPosition.Both;
-			
+	
 			if (PositionType == RoomPosition.Canon) {
 				canon = diff;
 				if (moveBoth) dev = canon - room.DevPosition + room.CanonPosition;
@@ -726,7 +726,7 @@ public static class WorldWindow {
 					vel2.y = v2Next;
 				}
 			}
-			
+	
 			if (Math.Abs(vel1.Length + vel2.Length) > 5f) {
 				Sfx.Play($"assets/objects/bump{Random.Shared.Next(1, 6)}.wav");
 			}

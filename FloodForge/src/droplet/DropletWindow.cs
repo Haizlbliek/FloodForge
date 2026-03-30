@@ -1555,7 +1555,7 @@ public static class DropletWindow {
 			project.Append("[");
 			for (int y = -3; y < Room.height + 5; y++) {
 				if (y != -3) project.Append(", ");
-				
+
 				uint geo = Room.GetTile(x, y);
 				int solidA = 0;
 				List<string> flags = [];
@@ -1565,9 +1565,9 @@ public static class DropletWindow {
 				else if ((geo % 16) == 2) {
 					solidA = 2 + ((geo & 2048) > 0 ? 1 : 0) + ((geo & 1024) > 0 ? 0 : 2);
 				}
-				else if ((geo % 16) == 4) { 
-					solidA = 7; 
-					flags.Add("4"); 
+				else if ((geo % 16) == 4) {
+					solidA = 7;
+					flags.Add("4");
 				}
 
 				if ((geo & 16) > 0) flags.Add("2");
@@ -1635,11 +1635,11 @@ public static class DropletWindow {
 			for (int x = 0; x < width; x++) {
 				float xRatio = (width > 1) ? (float)x / (width - 1) : 0;
 				int bx = (int)(xRatio * (backupWidth - 1));
-				
+
 				for (int y = 0; y < height; y++) {
 					float yRatio = (height > 1) ? (float)y / (height - 1) : 0;
 					int by = (int)(yRatio * (backupHeight - 1));
-					
+
 					int i = x * height + y;
 					Room.geometry[i] = backupGeometry![bx * backupHeight + by];
 				}

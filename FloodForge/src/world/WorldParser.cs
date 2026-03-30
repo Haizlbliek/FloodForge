@@ -145,7 +145,7 @@ public static class WorldParser {
 							extra.merge = false;
 						}
 					}
-				
+	
 					extraRoomData[data[1]] = extra;
 				}
 			}

@@ -216,9 +216,9 @@ public class SplashArtPopup : Popup {
 			Immediate.UseTexture(this.uiIcons);
 			Program.gl.Enable(EnableCap.Blend);
 			Immediate.Color(1f, 1f, 1f);
-			
+	
 			UI.FillRect(UVRect.FromSize(0.31f, startY - yOffset, 0.05f, 0.05f).UV(button.UVs.u1, button.UVs.v1, button.UVs.u2, button.UVs.v2));
-			
+	
 			Immediate.UseTexture(0);
 			Program.gl.Disable(EnableCap.Blend);
 
