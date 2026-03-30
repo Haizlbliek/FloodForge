@@ -4,7 +4,36 @@ using Stride.Core.Extensions;
 namespace FloodForge.World;
 
 public static class WorldExporter {
+	private static string AcronymCasing(string acronym) {
+		if (Settings.ForceExportCasing.value == Settings.STForceExportCasing.MatchAcronym) {
+			return acronym;
+		}
+
+		return Settings.ForceExportCasing.value == Settings.STForceExportCasing.Lower ? acronym.ToLowerInvariant() : acronym.ToUpperInvariant();
+	}
+
 	private static string RoomNameCasing(string name) {
+		if (name.StartsWith("gate_", StringComparison.InvariantCultureIgnoreCase)) {
+			string[] regions = name.Split('_');
+			string gateName = Settings.ForceExportCasing.value == Settings.STForceExportCasing.Lower ? "gate_" : "GATE_";
+
+			if (regions[1].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
+				gateName += AcronymCasing(WorldWindow.region.acronym);
+			} else {
+				gateName += AcronymCasing(WorldWindow.region.FindAcronym(regions[1]));
+			}
+
+			gateName += "_";
+
+			if (regions[2].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
+				gateName += AcronymCasing(WorldWindow.region.acronym);
+			} else {
+				gateName += AcronymCasing(WorldWindow.region.FindAcronym(regions[2]));
+			}
+
+			return gateName;
+		}
+
 		if (Settings.ForceExportCasing.value == Settings.STForceExportCasing.Lower) {
 			return name.ToLowerInvariant();
 		}

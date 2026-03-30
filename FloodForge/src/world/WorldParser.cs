@@ -8,18 +8,6 @@ namespace FloodForge.World;
 public static class WorldParser {
 	private static readonly List<(string, Dictionary<string, RoomAttractiveness>)> roomAttractiveness = [];
 
-	private static string FindAcronym(string regionsPath, string lowerAcronym) {
-		foreach (string l in File.ReadAllLines(regionsPath)) {
-			string line = (l.StartsWith("[ADD]") ? l[5..] : l).Trim();
-
-			if (line.ToLowerInvariant() == lowerAcronym) {
-				return line;
-			}
-		}
-
-		return lowerAcronym;
-	}
-
 	public static RoomAttractiveness ParseRoomAttractiveness(string value) {
 		return value switch {
 			"neutral" => RoomAttractiveness.Neutral,
@@ -104,7 +92,7 @@ public static class WorldParser {
 				Logger.Info("File '", Path.Combine(roomPath, roomName), ".txt' could not be found");
 			}
 
-			room = new Room(filePath ?? "", roomName.ToLowerInvariant());
+			room = new Room(filePath ?? "", roomName);
 			WorldWindow.region.rooms.Add(room);
 		}
 
@@ -230,11 +218,11 @@ public static class WorldParser {
 
 		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.Name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 		if (room == null) {
-			if (roomName.ToLowerInvariant().StartsWith("offscreenden")) {
+			if (roomName.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
 				room = new OffscreenRoom(roomName, roomName);
 			} else {
 				string path = WorldWindow.region.roomsPath;
-				if (roomName.ToLowerInvariant().StartsWith("gate")) {
+				if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
 					path = PathUtil.FindDirectory(PathUtil.Parent(path), "gates") ?? "";
 					if (path.IsNullOrEmpty()) {
 						Logger.Warn($"Couldn't find gates folder in {WorldWindow.region.roomsPath}");
@@ -804,32 +792,44 @@ public static class WorldParser {
 		WorldWindow.region.exportPath = PathUtil.Parent(worldPath);
 		WorldWindow.region.acronym = Path.GetFileNameWithoutExtension(worldPath);
 		WorldWindow.region.acronym = WorldWindow.region.acronym[(WorldWindow.region.acronym.IndexOfReverse('_') + 1)..];
-		string? regionsPath = Path.GetDirectoryName(PathUtil.Parent(WorldWindow.region.exportPath))?.ToLowerInvariant() == "world"
-			? PathUtil.FindFile(PathUtil.Parent(WorldWindow.region.exportPath), "regions.txt")
-			: null;
 
-		if (regionsPath == null) {
-			Logger.Info("../world/regions.txt doesn't exist, checking for modify");
-			regionsPath = PathUtil.FindDirectory(PathUtil.Parent(Path.Combine(WorldWindow.region.exportPath, "..")), "modify");
+		{
+			// `world/xx/world_xx.txt` -> `world/regions.txt`
+			string? regionsPath = Path.GetFileNameWithoutExtension(PathUtil.Parent(WorldWindow.region.exportPath))?.ToLowerInvariant() == "world"
+				? PathUtil.FindFile(PathUtil.Parent(WorldWindow.region.exportPath), "regions.txt")
+				: null;
+			if (regionsPath != null)
+				WorldWindow.region.regionsPaths.Add(regionsPath);
+
+			string main = PathUtil.Parent(Path.Combine(WorldWindow.region.exportPath, ".."));
+
+			// `world/xx/world_xx.txt` -> `modify/world/regions.txt`
+			regionsPath = PathUtil.FindDirectory(main, "modify");
 			if (regionsPath != null) {
-				Logger.Info("../modify found");
 				regionsPath = PathUtil.FindDirectory(regionsPath, "world");
 			}
 			if (regionsPath != null) {
-				Logger.Info("../modify/world found");
 				regionsPath = PathUtil.FindFile(regionsPath, "regions.txt");
+				if (regionsPath != null)
+					WorldWindow.region.regionsPaths.Add(regionsPath);
 			}
-			else {
-				Logger.Info("../modify/world/regions.txt doesn't exist");
+
+			// `mods/MOD/world/xx/world_xx.txt` -> `world/regions.txt`
+			if (Path.GetFileNameWithoutExtension(PathUtil.Parent(main))?.ToLowerInvariant() == "mods") {
+				Logger.Info("Mods!");
+				regionsPath = PathUtil.FindDirectory(PathUtil.Parent(Path.Combine(main, "..")), "world");
+				if (regionsPath != null) {
+					Logger.Info("World!");
+					regionsPath = PathUtil.FindFile(regionsPath, "regions.txt");
+					if (regionsPath != null)
+						WorldWindow.region.regionsPaths.Add(regionsPath);
+				}
 			}
+
+			Logger.Info(string.Join(", ", WorldWindow.region.regionsPaths));
 		}
 
-		if (regionsPath != null) {
-			Logger.Info("Found regions.txt, looking for acronym");
-			WorldWindow.region.acronym = FindAcronym(regionsPath, WorldWindow.region.acronym);
-		} else {
-			Logger.Info("regions.txt not found");
-		}
+		WorldWindow.region.acronym = WorldWindow.region.FindAcronym(WorldWindow.region.acronym);
 
 		Logger.Info("Opening world ", WorldWindow.region.acronym);
 
