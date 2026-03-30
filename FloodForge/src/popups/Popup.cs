@@ -255,7 +255,8 @@ public abstract class Popup {
 		this.minimizeButton = new UVRect(this.bounds.x1 - 0.1f, this.bounds.y1 - 0.05f, this.bounds.x1 - 0.05f, this.bounds.y1);
 		if (this.minimized) {
 			this.minimizeButton.UV(0.25f, 0.5f, 0.5f, 0.75f);
-		} else {
+		}
+		else {
 			this.minimizeButton.UV(0f, 0.5f, 0.25f, 0.75f);
 		}
 
@@ -274,7 +275,8 @@ public abstract class Popup {
 		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
 		if (this.minimized) {
 			UI.ButtonStrokeRect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
-		} else {
+		}
+		else {
 			UI.ButtonStrokeRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
 		}
 

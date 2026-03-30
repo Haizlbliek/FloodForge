@@ -35,7 +35,8 @@ public class MarkdownPopup : Popup {
 			if (text.IsNullOrEmpty()) {
 				if (addNewline == 1) {
 					addNewline = 2;
-				} else {
+				}
+				else {
 					addNewline = 0;
 				}
 
@@ -110,7 +111,8 @@ public class MarkdownPopup : Popup {
 					code = false;
 					result.Push(new MDStyledText(current, code: true));
 					current = "";
-				} else {
+				}
+				else {
 					current += c;
 				}
 			}

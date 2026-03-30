@@ -23,7 +23,8 @@ public class ResizeLevelPopup : Popup {
 	protected void SetResizeOffset(Vector2i anchor, bool stretch) {
 		if (stretch) {
 			DropletWindow.resizeOffset = Vector2i.Zero;
-		} else {
+		}
+		else {
 			DropletWindow.resizeOffset = new Vector2i(
 				(int) ((DropletWindow.Room.width - DropletWindow.resizeSize.x) * (anchor.x + 1f) / 2f),
 				(int) ((DropletWindow.Room.height - DropletWindow.resizeSize.y) * (anchor.y + 1f) / 2f)

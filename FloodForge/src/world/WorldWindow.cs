@@ -332,7 +332,8 @@ public static class WorldWindow {
 		if (isAdditive) {
 			if (selectedRooms.Contains(room)) selectedRooms.Remove(room);
 			else selectedRooms.Add(room);
-		} else {
+		}
+		else {
 			if (!selectedRooms.Contains(room)) {
 				selectedRooms.Clear();
 				selectedRooms.Add(room);
@@ -360,7 +361,8 @@ public static class WorldWindow {
 			if (PositionType == RoomPosition.Canon) {
 				canon = diff;
 				if (moveBoth) dev = canon - room.DevPosition + room.CanonPosition;
-			} else {
+			}
+			else {
 				dev = diff;
 				if (moveBoth) canon = dev - room.CanonPosition + room.DevPosition;
 			}
@@ -371,7 +373,8 @@ public static class WorldWindow {
 		if (continueDrag && History.Last is MoveChange moveChange) {
 			change.Redo();
 			moveChange.Merge(change);
-		} else {
+		}
+		else {
 			History.Apply(change);
 			continueDrag = true;
 		}
@@ -712,7 +715,8 @@ public static class WorldWindow {
 					vel1.x = v1Next;
 					vel2.x = v2Next;
 				}
-			} else {
+			}
+			else {
 				float dir = diffY > 0 ? 1 : -1;
 
 				pos1.y += overlapY * 0.5f * dir;

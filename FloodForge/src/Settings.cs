@@ -49,7 +49,8 @@ public static class Settings {
 
 			if (settings.TryGetValue(key, out Setting? setting)) {
 				setting.Set(value);
-			} else {
+			}
+			else {
 				Logger.Warn($"No setting '{key}'");
 			}
 		}

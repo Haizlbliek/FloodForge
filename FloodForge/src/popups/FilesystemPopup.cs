@@ -187,7 +187,8 @@ public class FilesystemPopup : Popup {
 		this.calledCallback = true;
 		if (this.typeFilter == SelectionType.Folder) {
 			this.callback([this.currentPath]);
-		} else {
+		}
+		else {
 			this.callback([.. this.selected.Select(x => Path.Combine(this.currentPath, x))]);
 		}
 
@@ -287,7 +288,8 @@ public class FilesystemPopup : Popup {
 
 			Immediate.Color(Themes.TextDisabled);
 			UI.font.Write(this.hint, this.bounds.x0 + 0.35f, this.bounds.y0 + 0.09f, this.fontSize);
-		} else {
+		}
+		else {
 			Immediate.Color(Themes.TextDisabled);
 			UI.font.Write(this.hint, this.bounds.x0 + 0.02f, this.bounds.y0 + 0.09f, this.fontSize);
 		}
@@ -331,7 +333,8 @@ public class FilesystemPopup : Popup {
 			if (y > scrollAreaY0) {
 				if (y > scrollAreaY1) {
 					y -= 0.06f;
-				} else {
+				}
+				else {
 					if(UI.TextureButton(new UVRect(this.bounds.x1 - 0.09f, y - 0.05f, this.bounds.x1 - 0.04f, y).UV(0f, 0f, 0.25f, 0.25f))) {
 						this.newDirectory = null;
 					}
@@ -403,10 +406,12 @@ public class FilesystemPopup : Popup {
 				if (this.allowMultiple && Keys.Modifier(Keymod.Shift | Keymod.Ctrl)) {
 					if (this.selected.Contains(path)) {
 						this.selected.Remove(path);
-					} else {
+					}
+					else {
 						this.selected.Add(path);
 					}
-				} else {
+				}
+				else {
 					this.selected.Clear();
 					this.selected.Add(path);
 				}

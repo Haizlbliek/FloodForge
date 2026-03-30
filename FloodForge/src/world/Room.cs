@@ -142,7 +142,8 @@ public class Room {
 		if (levelData.Length == 1) {
 			this.data.waterHeight = -1;
 			this.data.waterInFront = false;
-		} else {
+		}
+		else {
 			this.data.waterHeight = int.Parse(levelData[1]);
 			this.data.waterInFront = int.Parse(levelData[2]) == 1;
 		}
@@ -248,7 +249,8 @@ public class Room {
 
 					if (type == -1) {
 						Logger.Note($"Invalid slope type {this.Name}({x}, {y})");
-					} else {
+					}
+					else {
 						this.geometry[idx] += (uint) (1024 * type);
 					}
 				}
@@ -594,7 +596,8 @@ public class Room {
 		set {
 			if (WorldWindow.PositionType == WorldWindow.RoomPosition.Canon) {
 				this.CanonPosition = value;
-			} else {
+			}
+			else {
 				this.DevPosition = value;
 			}
 		}
@@ -608,7 +611,8 @@ public class Room {
 		set {
 			if (WorldWindow.PositionType == WorldWindow.RoomPosition.Canon) {
 				this.DevPosition = value;
-			} else {
+			}
+			else {
 				this.CanonPosition = value;
 			}
 		}
@@ -1178,7 +1182,8 @@ public class Room {
 			if (creature.lineageTo == null) {
 				Immediate.Color(Color.White);
 				UI.font.Write(creature.count.ToString(), rectX + 0.5f + scale * 0.25f, rectY - 0.5f - scale * 0.5f, 0.5f * scale, Font.Align.MiddleCenter);
-			} else {
+			}
+			else {
 				while (creature.lineageTo != null) {
 					float chance = creature.lineageChance;
 					creature = creature.lineageTo;

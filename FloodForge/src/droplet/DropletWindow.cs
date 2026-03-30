@@ -289,7 +289,8 @@ public static class DropletWindow {
 					terrain.Add(new Vector2(x, SampleTerrain(handles[handleIndex], handles[handleIndex + 1], x)));
 				}
 				hasTerrain = true;
-			} else {
+			}
+			else {
 				hasTerrain = false;
 			}
 		}
@@ -390,7 +391,8 @@ public static class DropletWindow {
 		if (remove) {
 			if (!hasFlag) return;
 			Room.geometry[index] &= ~(mask | 128);
-		} else {
+		}
+		else {
 			Room.geometry[index] |= mask | 128;
 			VerifyShortcut(x, y);
 		}
@@ -1371,7 +1373,8 @@ public static class DropletWindow {
 				if (line.StartsWith("PlacedObjects:")) {
 					placedObjectsLine = line;
 					isBefore = false;
-				} else {
+				}
+				else {
 					if (isBefore) before += line + "\n";
 					else after += line + "\n";
 				}
@@ -1517,7 +1520,8 @@ public static class DropletWindow {
 				else {
 					if ((geo & 512) > 0) {
 						SetPixel(image, id, 131, 0, 0);
-					} else {
+					}
+					else {
 						SetPixel(image, id, 255, 255, 255);
 					}
 				}
@@ -1644,7 +1648,8 @@ public static class DropletWindow {
 					Room.geometry[i] = backupGeometry![bx * backupHeight + by];
 				}
 			}
-		} else {
+		}
+		else {
 			for (int x = 0; x < width; x++) {
 				int bx = x + resizeOffset.x;
 				for (int y = 0; y < height; y++) {
@@ -1653,7 +1658,8 @@ public static class DropletWindow {
 
 					if (bx < 0 || by < 0 || bx >= backupWidth || by >= backupHeight) {
 						Room.geometry[i] = 0;
-					} else {
+					}
+					else {
 						Room.geometry[i] = backupGeometry![bx * backupHeight + by];
 					}
 				}

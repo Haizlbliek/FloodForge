@@ -71,7 +71,8 @@ public class SplashArtPopup : Popup {
 				}
 				AppVersion latest = new AppVersion(value);
 				this.updateStatus = (this.version < latest) ? UpdateStatus.Available : UpdateStatus.Unavailable;
-			} else {
+			}
+			else {
 				string? body = node["body"]?.ToString().Replace("BUILD_DATE: ", "").Trim();
 				if (body == null || !DateTime.TryParse(body, out DateTime date)) {
 					Logger.Warn("Failed to fetch release body");
