@@ -1,8 +1,14 @@
-namespace FloodForge.Droplet;
+namespace FloodForge.World;
 
 public class MudPitObject : DevObject {
 	public MudPitObject() {
 		this.AddNode(new Vector2(200f, 30f), this.nodes[0]);
+	}
+
+	public override MudPitObject Clone() {
+		MudPitObject clone = new MudPitObject();
+		DevObject.SetNodes(this, clone);
+		return clone;
 	}
 
 	public override void Draw(Vector2 offset) {

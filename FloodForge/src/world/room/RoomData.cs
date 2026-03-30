@@ -18,6 +18,7 @@ public class RoomData {
 	public Dictionary<string, RoomAttractiveness> attractiveness = [];
 	public HashSet<string> tags = [];
 	public List<Camera> cameras = [];
+	public List<DevObject> objects = [];
 
 	public bool ExtraFlags => this.hidden || !this.merge;
 

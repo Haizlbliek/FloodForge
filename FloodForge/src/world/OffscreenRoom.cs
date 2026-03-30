@@ -23,6 +23,9 @@ public class OffscreenRoom : Room {
 		this.data.tags.Add("OffscreenRoom");
 	}
 
+	protected override void LoadSettings() {
+	}
+
 	public override void DrawBlack(WorldWindow.RoomPosition positionType) {
 		if (!WorldWindow.VisibleCreatures) return;
 
@@ -38,7 +41,7 @@ public class OffscreenRoom : Room {
 		UI.FillRect(position.x, position.y, position.x + this.width, position.y - this.height);
 
 		Immediate.Color(Themes.RoomSolid);
-		UI.font.Write(this.Name, position.x + (this.width * 0.5f), position.y - (this.height * 0.5f), 5f, Font.Align.MiddleCenter);
+		UI.font.Write(this.name, position.x + (this.width * 0.5f), position.y - (this.height * 0.5f), 5f, Font.Align.MiddleCenter);
 
 		if (this.dens.Count == 0) {
 			this.dens.Add(new Den());

@@ -835,7 +835,7 @@ public static class WorldWindow {
 
 	public static void DebugDen(Den den, Room room, ref List<string> debugText) {
 		debugText.Add("");
-		debugText.Add($"Den: {room.Name}");
+		debugText.Add($"Den: {room.name}");
 		foreach (DenLineage lineage in den.creatures) {
 			DenCreature creature = lineage;
 			string line = "";
@@ -871,9 +871,9 @@ public static class WorldWindow {
 		if (hoveringConnection != null) {
 			debugText.Add("");
 			debugText.Add("    Connection:");
-			debugText.Add($"Room A: {hoveringConnection.roomA.Name}");
+			debugText.Add($"Room A: {hoveringConnection.roomA.name}");
 			debugText.Add($"Connection A: {hoveringConnection.connectionA}");
-			debugText.Add($"Room B: {hoveringConnection.roomB.Name}");
+			debugText.Add($"Room B: {hoveringConnection.roomB.name}");
 			debugText.Add($"Connection B: {hoveringConnection.connectionB}");
 		}
 
@@ -882,10 +882,10 @@ public static class WorldWindow {
 			debugText.Add("    Room:");
 			if (!hoveringRoom.valid) {
 				debugText.Add($"INVALID - Check {region.acronym}-rooms");
-				debugText.Add($"Name: {hoveringRoom.Name}");
+				debugText.Add($"Name: {hoveringRoom.name}");
 			}
 			else {
-				debugText.Add($"Name: {hoveringRoom.Name}");
+				debugText.Add($"Name: {hoveringRoom.name}");
 				debugText.Add($"Tags: {string.Join(" ", hoveringRoom.data.tags)}");
 				debugText.Add($"Size: {hoveringRoom.width}x{hoveringRoom.height}");
 				debugText.Add($"Dens: {hoveringRoom.dens.Count}");

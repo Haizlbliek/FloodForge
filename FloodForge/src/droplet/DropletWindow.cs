@@ -70,7 +70,6 @@ public static class DropletWindow {
 	private static GeometryTool selectedTool = GeometryTool.Wall;
 
 	private static RoomData.Camera? selectedCamera;
-	private static readonly List<DevObject> objects = [];
 
 	private static uint[]? backupGeometry = null;
 	private static int backupWaterHeight;
@@ -79,6 +78,7 @@ public static class DropletWindow {
 	private static int backupWidth;
 	private static int backupHeight;
 	private static RoomData.Camera[] backupCameras = [];
+	private static List<DevObject> backupObjects = [];
 
 	private static bool terrainNeedsRefresh = false;
 	private static bool hasTerrain = false;
@@ -203,7 +203,7 @@ public static class DropletWindow {
 		Node? hoveringNode = null;
 		Vector2 nodeMouse = new Vector2(transformedMouse.x, transformedMouse.y + (roomRect.y1 - roomRect.y0)) * 20f;
 		float mouseDistance = 0.3f * cameraScale;
-		foreach (DevObject devObject in objects) {
+		foreach (DevObject devObject in Room.data.objects) {
 			devObject.Draw(new Vector2(roomRect.x0, roomRect.y0));
 
 			foreach (Node node in devObject.nodes) {
@@ -257,7 +257,7 @@ public static class DropletWindow {
 
 			if (!Mouse.Left) {
 				if (needsDeleted) {
-					objects.Remove(movingNode.devObject);
+					Room.data.objects.Remove(movingNode.devObject);
 				}
 
 				hoveringNode = null;
@@ -276,7 +276,7 @@ public static class DropletWindow {
 
 		if (terrainNeedsRefresh) {
 			terrain.Clear();
-			TerrainHandleObject[] handles = [.. objects.OfType<TerrainHandleObject>()];
+			TerrainHandleObject[] handles = [.. Room.data.objects.OfType<TerrainHandleObject>()];
 
 			if (handles.Length >= 2) {
 				Array.Sort(handles, (a, b) => a.Middle.x.CompareTo(b.Middle.x));
@@ -298,7 +298,7 @@ public static class DropletWindow {
 		if (waterNeedsRefresh) {
 			water.Clear();
 			water.Add(new WaterSpot(new Vector2(0f, 0f), new Vector2(Room.width * 20f, Room.data.waterHeight * 20f + 10f)));
-			foreach (AirPocketObject airPocket in objects.OfType<AirPocketObject>()) {
+			foreach (AirPocketObject airPocket in Room.data.objects.OfType<AirPocketObject>()) {
 				WaterSpot spot = new WaterSpot(airPocket.nodes[0].position, airPocket.nodes[1].position);
 				if (spot.size.x <= 0f || spot.size.y <= 0f) continue;
 
@@ -336,7 +336,7 @@ public static class DropletWindow {
 			Immediate.End();
 		}
 
-		foreach (DevObject devObject in objects) {
+		foreach (DevObject devObject in Room.data.objects) {
 			devObject.Draw(new Vector2(roomRect.x0, roomRect.y0));
 		}
 	}
@@ -1107,13 +1107,13 @@ public static class DropletWindow {
 			UI.Line(sidebar.x0, barY, sidebar.x1, sidebar.y1 - 0.2f);
 
 			if (UI.TextButton("Add TerrainHandle", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.06f, 0.39f, 0.05f))) {
-				objects.Add(new TerrainHandleObject());
+				Room.data.objects.Add(new TerrainHandleObject());
 			}
 			if (UI.TextButton("Add MudPit", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.12f, 0.39f, 0.05f))) {
-				objects.Add(new MudPitObject());
+				Room.data.objects.Add(new MudPitObject());
 			}
 			if (UI.TextButton("Add AirPocket", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.18f, 0.39f, 0.05f))) {
-				objects.Add(new AirPocketObject());
+				Room.data.objects.Add(new AirPocketObject());
 			}
 
 			if (trashCanState > 0) {
@@ -1192,77 +1192,7 @@ public static class DropletWindow {
 		backupWidth = Room.width;
 		backupHeight = Room.height;
 		backupCameras = [.. Room.data.cameras.Select(x => new RoomData.Camera() { position = x.position, angles = [ ..x.angles ] })];
-	}
-
-	public static void LoadRoom(Room room) {
-		Room = room;
-
-		if (!File.Exists(Room.Path)) {
-			Logger.Error("Failed to open droplet room file: " + Room.Path);
-			return;
-		}
-
-		objects.Clear();
-
-		string folder = Path.GetDirectoryName(Room.Path)!;
-		string settingsPath = PathUtil.FindFile(folder, Room.Name + "_settings.txt")!;
-
-		if (settingsPath != null) {
-			foreach (string line in File.ReadLines(settingsPath)) {
-				if (line.StartsWith("PlacedObjects: ")) {
-					string data = line["PlacedObjects: ".Length..];
-					string[] poData = data.Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
-
-					foreach (string po in poData) {
-						try {
-							int start = po.IndexOf('<');
-							int next = po.IndexOf('>', start);
-							int end = po.IndexOf('>', next + 1);
-
-							string xStr = po.Substring(start + 1, next - start - 1);
-							string yStr = po.Substring(next + 2, end - next - 2);
-							string last = po[(end + 2)..];
-
-							Vector2 pos = new Vector2(float.Parse(xStr), float.Parse(yStr));
-							string[] splits = last.Split('~');
-
-							if (po.StartsWith("TerrainHandle>")) {
-								TerrainHandleObject obj = new TerrainHandleObject();
-								obj.nodes[0].position = pos;
-								if (splits.Length >= 4) {
-									obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
-									obj.nodes[2].position = new Vector2(float.Parse(splits[2]), float.Parse(splits[3]));
-								}
-								objects.Add(obj);
-							}
-							else if (po.StartsWith("MudPit>")) {
-								MudPitObject obj = new MudPitObject();
-								obj.nodes[0].position = pos;
-								if (splits.Length >= 2) {
-									obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
-								}
-								objects.Add(obj);
-							}
-							else if (po.StartsWith("AirPocket>")) {
-								AirPocketObject obj = new AirPocketObject();
-								obj.nodes[0].position = pos;
-								if (splits.Length >= 6) {
-									obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
-									obj.nodes[2].position.y = float.Parse(splits[5]);
-								}
-								objects.Add(obj);
-							}
-						} catch {
-							Logger.Warn("Failed to parse Placed Object: " + po);
-						}
-					}
-				}
-			}
-		}
-
-		Backup();
-		terrainNeedsRefresh = true;
-		waterNeedsRefresh = true;
+		backupObjects = [.. Room.data.objects.Select(x => x.Clone())];
 	}
 
 	public static void Reset() {
@@ -1277,6 +1207,7 @@ public static class DropletWindow {
 		Room.data.waterInFront = backupWaterInFront;
 		Room.data.enclosedRoom = backupEnclosedRoom;
 		Room.data.cameras = [.. backupCameras.Select(x => new RoomData.Camera() { position = x.position, angles = [ ..x.angles ] })];
+		Room.data.objects = [.. backupObjects.Select(x => x.Clone())];
 		Room.valid = true;
 
 		for (int i = 0; i < backupWidth * backupHeight; i++) {
@@ -1287,13 +1218,26 @@ public static class DropletWindow {
 		Room.RegenerateGeometry();
 	}
 
+	public static void LoadRoom(Room room) {
+		Room = room;
+
+		if (!File.Exists(Room.path)) {
+			Logger.Error("Failed to open droplet room file: " + Room.path);
+			return;
+		}
+
+		Backup();
+		terrainNeedsRefresh = true;
+		waterNeedsRefresh = true;
+	}
+
 	private static void ExportGeometry() {
-		string geoPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.Name + ".txt")!;
+		string geoPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.name + ".txt")!;
 		FloodForge.Backup.File(geoPath);
 
 		StringBuilder geo = new StringBuilder();
 
-		geo.AppendLine(Room.Name);
+		geo.AppendLine(Room.name);
 		geo.Append($"{Room.width}*{Room.height}");
 		if (Room.data.waterHeight != -1) {
 			geo.Append($"|{Room.data.waterHeight}|{(Room.data.waterInFront ? "1" : "0")}");
@@ -1360,7 +1304,7 @@ public static class DropletWindow {
 		terrainNeedsRefresh = true;
 		waterNeedsRefresh = true;
 
-		string? settingsPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.Name + "_settings.txt");
+		string? settingsPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.name + "_settings.txt");
 		FloodForge.Backup.File(settingsPath);
 
 		string before = "";
@@ -1387,9 +1331,9 @@ public static class DropletWindow {
 			string[] poData = data.Split([", "], StringSplitOptions.RemoveEmptyEntries);
 
 			int terrainIdx = 0, mudIdx = 0, airIdx = 0;
-			TerrainHandleObject[] terrainHandleObjects = [.. objects.OfType<TerrainHandleObject>()];
-			MudPitObject[] mudPitObjects = [.. objects.OfType<MudPitObject>()];
-			AirPocketObject[] airPocketObjects = [.. objects.OfType<AirPocketObject>()];
+			TerrainHandleObject[] terrainHandleObjects = [.. Room.data.objects.OfType<TerrainHandleObject>()];
+			MudPitObject[] mudPitObjects = [.. Room.data.objects.OfType<MudPitObject>()];
+			AirPocketObject[] airPocketObjects = [.. Room.data.objects.OfType<AirPocketObject>()];
 
 			foreach (string po in poData) {
 				if (string.IsNullOrWhiteSpace(po)) continue;
@@ -1447,7 +1391,7 @@ public static class DropletWindow {
 			placedObjectsLine = output.ToString();
 		}
 
-		settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.Name + "_settings.txt");
+		settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.name + "_settings.txt");
 		using StreamWriter sw = new StreamWriter(settingsPath);
 		sw.Write(before);
 		if (!string.IsNullOrWhiteSpace(placedObjectsLine)) {
@@ -1544,12 +1488,12 @@ public static class DropletWindow {
 		ExportGeometry();
 
 		for (int i = 0; i < Room.data.cameras.Count; i++) {
-			RenderCamera(Room.data.cameras[i], PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.Name}_{i + 1}.png")!);
+			RenderCamera(Room.data.cameras[i], PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.name}_{i + 1}.png")!);
 		}
 	}
 
 	private static void ExportProject(string path) {
-		string fileName = Path.Combine(path, Room.Name + ".txt");
+		string fileName = Path.Combine(path, Room.name + ".txt");
 		StringBuilder project = new StringBuilder();
 
 		project.Append("[");
