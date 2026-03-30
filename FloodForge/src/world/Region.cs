@@ -1,6 +1,5 @@
 namespace FloodForge.World;
 
-// TODO: Add display name
 public class Region {
 	public string acronym = "";
 	public string displayName = "";
