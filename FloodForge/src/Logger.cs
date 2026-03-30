@@ -2,6 +2,10 @@ public static class Logger {
 	private static readonly StreamWriter logFile;
 
 	static Logger() {
+		if (File.Exists("log.txt")) {
+			File.Copy("log.txt", "log.old.txt", true);
+		}
+
 		logFile = new StreamWriter("log.txt");
 	}
 
