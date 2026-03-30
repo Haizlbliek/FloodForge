@@ -758,34 +758,6 @@ public static class WorldParser {
 		return true;
 	}
 
-	private static void LoadExtraRoomData(string? path, Room room) {
-		if (path == null) return;
-
-		List<RoomData.DevItem> devItems = [];
-
-		foreach (string line in File.ReadAllLines(path)) {
-			if (line.IsNullOrEmpty()) continue;
-			if (!line.StartsWith("PlacedObjects:")) continue;
-
-			string[] splits = line[(line.IndexOf(':') + 1)..].Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-			foreach (string item in splits) {
-				string[] splits2 = item.Split('>');
-				string key = splits2[0];
-
-				Texture texture = CreatureTextures.GetTexture($"room-{key}");
-				if (texture == CreatureTextures.UnknownCreature) continue;
-
-				RoomData.DevItem devItem = new RoomData.DevItem(key, texture, new Vector2(
-					float.Parse(splits2[1][1..]) / 20f,
-					float.Parse(splits2[2][1..]) / 20f
-				));
-				devItems.Add(devItem);
-			}
-		}
-
-		room.data.devItems = [ ..devItems ];
-	}
-
 	public static string GetRegionDisplayname(string worldPath) {
 		string? displaynamePath = PathUtil.FindFile(PathUtil.Parent(worldPath), "displayname.txt");
 
@@ -877,8 +849,6 @@ public static class WorldParser {
 
 				room.data.attractiveness = attr.Item2;
 			}
-
-			LoadExtraRoomData(PathUtil.FindFile(WorldWindow.region.roomsPath, room.name + "_settings.txt"), room);
 		}
 
 		Logger.Info("Searching for display name");

@@ -2,6 +2,7 @@ using Stride.Core.Extensions;
 
 namespace FloodForge.World;
 
+// TODO: Fix room water behind level rendering
 public class Room {
 	public const uint FLAG_VERTICAL_POLE = 16;
 	public const uint FLAG_HORIZONTAL_POLE = 32;
@@ -333,6 +334,17 @@ public class Room {
 								obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
 								obj.nodes[2].position.y = float.Parse(splits[5]);
 							}
+							this.data.objects.Add(obj);
+						}
+						else {
+							string[] splits2 = po.Split('>');
+							string key = splits2[0];
+
+							Texture texture = CreatureTextures.GetTexture($"room-{key}");
+							if (texture == CreatureTextures.UnknownCreature) continue;
+
+							GenericItemObject obj = new GenericItemObject(key, texture);
+							obj.nodes[0].position = pos;
 							this.data.objects.Add(obj);
 						}
 					} catch {
@@ -1141,12 +1153,8 @@ public class Room {
 
 		if (positionType == WorldWindow.PositionType) {
 			if (WorldWindow.VisibleDevItems) {
-				foreach (RoomData.DevItem item in this.data.devItems) {
-					if (item.texture == null) continue;
-
-					float x = position.x + item.position.x;
-					float y = position.y - this.height + item.position.y;
-					UI.CenteredTexture(item.texture, x, y, WorldWindow.SelectorScale);
+				foreach (DevObject devObject in this.data.objects) {
+					devObject.Draw(this.Position + new Vector2(0f, -this.height));
 				}
 			}
 
