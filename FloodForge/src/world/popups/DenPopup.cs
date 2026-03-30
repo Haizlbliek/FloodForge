@@ -545,7 +545,8 @@ public class DenPopup : Popup {
 				denPopupLineageExtended = !denPopupLineageExtended;
 				if (denPopupLineageExtended) {
 					this.bounds.x0 -= 0.22f;
-				} else {
+				}
+				else {
 					this.bounds.x0 += 0.22f;
 				}
 			}

@@ -42,7 +42,8 @@ public static class WorldParser {
 				}
 				if (room.ToLowerInvariant() == "default") {
 					WorldWindow.region.defaultAttractiveness = attractiveness;
-				} else {
+				}
+				else {
 					roomAttractiveness.Add((room, attractiveness));
 				}
 			}
@@ -87,7 +88,8 @@ public static class WorldParser {
 			}
 
 			room = WorldWindow.region.offscreenDen;
-		} else {
+		}
+		else {
 			if (filePath == null) {
 				Logger.Info("File '", Path.Combine(roomPath, roomName), ".txt' could not be found");
 			}
@@ -111,7 +113,8 @@ public static class WorldParser {
 		room.data.layer = layer;
 		if (subregion.IsNullOrEmpty()) {
 			room.data.subregion = -1;
-		} else {
+		}
+		else {
 			int idx = WorldWindow.region.subregions.IndexOf(subregion);
 			if (idx != -1) {
 				room.data.subregion = idx;
@@ -220,7 +223,8 @@ public static class WorldParser {
 		if (room == null) {
 			if (roomName.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
 				room = new OffscreenRoom(roomName, roomName);
-			} else {
+			}
+			else {
 				string path = WorldWindow.region.roomsPath;
 				if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
 					path = PathUtil.FindDirectory(PathUtil.Parent(path), "gates") ?? "";
@@ -284,7 +288,8 @@ public static class WorldParser {
 		}
 		else if (tag.Contains(':')) {
 			return ("LENGTH", float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
-		} else {
+		}
+		else {
 			return (tag, 0f);
 		}
 	}
@@ -372,7 +377,8 @@ public static class WorldParser {
 				if (sections[2][0] == '{') {
 					(lineage.tag, lineage.data) = ParseCreatureTag(sections[2][1..^1]);
 					lineage.count = 1;
-				} else {
+				}
+				else {
 					lineage.count = int.Parse(sections[2]);
 				}
 			}
@@ -422,7 +428,8 @@ public static class WorldParser {
 
 		if (lineage) {
 			if (!ParseWorldCreatureLineage(splits, room, timelineType, timelines)) return false;
-		} else {
+		}
+		else {
 			if (!ParseWorldCreatureNormal(splits, room, timelineType, timelines)) return false;
 		}
 
@@ -542,7 +549,8 @@ public static class WorldParser {
 			if (connection == null) {
 				Logger.Warn("Link missing connection, adding new connection anyways");
 				Logger.Warn($"> {link}");
-			} else {
+			}
+			else {
 				connectionId = (int) ((connection.roomA == room) ? connection.connectionA : connection.connectionB);
 
 				if (connection.timelineType == TimelineType.Only) {
@@ -850,7 +858,8 @@ public static class WorldParser {
 		if (mapPath != null) {
 			Logger.Info("Loading map");
 			if (!ParseMap(mapPath)) return false;
-		} else {
+		}
+		else {
 			Logger.Info("Map file not found");
 		}
 

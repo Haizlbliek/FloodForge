@@ -78,7 +78,8 @@ public static class Themes {
 
 				if (ids.TryGetValue(key, out int idx)) {
 					colors[idx] = Color.Parse(value, null);
-				} else {
+				}
+				else {
 					Logger.Warn($"No theme color: '{key}'");
 				}
 			}

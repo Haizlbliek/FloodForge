@@ -70,7 +70,8 @@ public static class PopupManager {
 			if (Mouse.Left) {
 				holdingPopup.Offset(Mouse.Pos - holdingStart);
 				holdingStart = Mouse.Pos;
-			} else {
+			}
+			else {
 				holdingPopup = null;
 			}
 		}

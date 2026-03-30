@@ -19,7 +19,8 @@ public static class WorldExporter {
 
 			if (regions[1].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
 				gateName += AcronymCasing(WorldWindow.region.acronym);
-			} else {
+			}
+			else {
 				gateName += AcronymCasing(WorldWindow.region.FindAcronym(regions[1]));
 			}
 
@@ -27,7 +28,8 @@ public static class WorldExporter {
 
 			if (regions[2].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
 				gateName += AcronymCasing(WorldWindow.region.acronym);
-			} else {
+			}
+			else {
 				gateName += AcronymCasing(WorldWindow.region.FindAcronym(regions[2]));
 			}
 
@@ -239,7 +241,8 @@ public static class WorldExporter {
 
 					if (connection.roomA == room) {
 						defaultState[(int) connection.connectionA] = (RoomNameCasing(connection.roomB.Name), false);
-					} else {
+					}
+					else {
 						defaultState[(int) connection.connectionB] = (RoomNameCasing(connection.roomA.Name), false);
 					}
 				}
@@ -357,7 +360,8 @@ public static class WorldExporter {
 
 						if (room == WorldWindow.region.offscreenDen) {
 							writer.Write("OFFSCREEN : ");
-						} else {
+						}
+						else {
 							writer.Write($"{RoomNameCasing(room.Name)} : ");
 						}
 
@@ -370,7 +374,8 @@ public static class WorldExporter {
 
 							if (room == WorldWindow.region.offscreenDen) {
 								writer.Write($"0-{CreatureTextures.ExportName(creature.type)}");
-							} else {
+							}
+							else {
 								writer.Write($"{i + room.roomShortcutEntrances.Count}-{CreatureTextures.ExportName(creature.type)}");
 							}
 							if (!string.IsNullOrEmpty(creature.tag)) {
@@ -379,14 +384,16 @@ public static class WorldExporter {
 								} else if (creature.tag == "LENGTH") {
 									if (creature.type == "polemimic") {
 										writer.Write($"-{{{ (int)creature.data }}}");
-									} else {
+									}
+									else {
 										writer.Write($"-{{{creature.data}}}");
 									}
 								} else if (creature.tag == "SEED") {
 									writer.Write($"-{{Seed:{ (int)creature.data }}}");
 								} else if (creature.tag == "RotType") {
 									writer.Write($"-{{RotType:{ (int)creature.data }}}");
-								} else {
+								}
+								else {
 									writer.Write($"-{{{creature.tag}}}");
 								}
 							}
@@ -425,13 +432,15 @@ public static class WorldExporter {
 
 						if (room == WorldWindow.region.offscreenDen) {
 							writer.Write("OFFSCREEN : ");
-						} else {
+						}
+						else {
 							writer.Write($"{RoomNameCasing(room.Name)} : ");
 						}
 
 						if (room == WorldWindow.region.offscreenDen) {
 							writer.Write("0 : ");
-						} else {
+						}
+						else {
 							writer.Write($"{i + room.roomShortcutEntrances.Count} : ");
 						}
 
@@ -445,14 +454,16 @@ public static class WorldExporter {
 								} else if (current.tag == "LENGTH") {
 									if (current.type == "polemimic") {
 										writer.Write($"-{{{ (int)current.data }}}");
-									} else {
+									}
+									else {
 										writer.Write($"-{{{current.data}}}");
 									}
 								} else if (current.tag == "SEED") {
 									writer.Write($"-{{Seed:{ (int)current.data }}}");
 								} else if (current.tag == "RotType") {
 									writer.Write($"-{{RotType:{ (int)current.data }}}");
-								} else {
+								}
+								else {
 									writer.Write($"-{{{current.tag}}}");
 								}
 							}

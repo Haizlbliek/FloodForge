@@ -10,7 +10,8 @@ public class CreatureDeleteChange : Change {
 		this.lastCreature = lastCreature;
 		if (this.lastCreature == null) {
 			this.previous = this.creature.lineageTo!;
-		} else {
+		}
+		else {
 			this.previous = this.lastCreature.lineageTo!;
 		}
 
