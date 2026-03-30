@@ -70,7 +70,7 @@ public static class Sfx {
 
 		// Simple WAV Header Parsing
 		reader.ReadBytes(12); // RIFF...WAVE
-		reader.ReadBytes(4);  // fmt 
+		reader.ReadBytes(4);  // fmt
 		reader.ReadInt32();   // chunk size
 		reader.ReadInt16();   // format tag
 		int channels = reader.ReadInt16();

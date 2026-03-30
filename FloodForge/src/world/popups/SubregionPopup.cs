@@ -84,7 +84,7 @@ public class SubregionPopup : Popup {
 				}
 				else {
 					bool canRemove = !WorldWindow.region.rooms.Any(r => r.data.subregion == idx);
-					
+	
 					if (canRemove) {
 						SubregionChange change = new SubregionChange(idx);
 

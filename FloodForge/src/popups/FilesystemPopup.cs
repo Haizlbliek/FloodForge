@@ -312,7 +312,7 @@ public class FilesystemPopup : Popup {
 					this.currentPath = Path.Combine(newRoot, this.currentPath[root.Length..]);
 					if (this.rootPaths.TryGetValue(newRoot, out string? oldPath))
 						this.currentPath = oldPath;
-					if (!Directory.Exists(this.currentPath)) {	
+					if (!Directory.Exists(this.currentPath)) {
 						this.currentPath = newRoot;
 					}
 					this.Refresh();

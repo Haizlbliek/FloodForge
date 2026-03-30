@@ -40,7 +40,7 @@ public class ColorEditPopup : Popup {
 
 		Immediate.Color(Themes.Background);
 		UI.FillRect(this.selectorRect);
-		
+	
 		Immediate.UseProgram(Preload.ColorSquareShader.shader);
 		if (this._hueLoc == 0) {
 			this._hueLoc = Program.gl.GetUniformLocation(Preload.ColorSquareShader, "hue");
@@ -60,7 +60,7 @@ public class ColorEditPopup : Popup {
 		Immediate.TexCoord(0f, 0f); Immediate.Vertex(this.selectorRect.x0, this.selectorRect.y0);
 		Immediate.End();
 		Immediate.UseProgram(0);
-		
+	
 		if (Mouse.JustLeft && !Mouse.Disabled && this.selectorRect.Inside(Mouse.Pos)) {
 			this.centerFocused = true;
 		}
