@@ -204,6 +204,8 @@ public static class DropletWindow {
 		Vector2 nodeMouse = new Vector2(transformedMouse.x, transformedMouse.y + (roomRect.y1 - roomRect.y0)) * 20f;
 		float mouseDistance = 0.3f * cameraScale;
 		foreach (DevObject devObject in Room.data.objects) {
+			if (!devObject.ShowInDroplet) continue;
+
 			devObject.Draw(new Vector2(roomRect.x0, roomRect.y0));
 
 			foreach (Node node in devObject.nodes) {
@@ -337,6 +339,8 @@ public static class DropletWindow {
 		}
 
 		foreach (DevObject devObject in Room.data.objects) {
+			if (!devObject.ShowInDroplet) continue;
+
 			devObject.Draw(new Vector2(roomRect.x0, roomRect.y0));
 		}
 	}
