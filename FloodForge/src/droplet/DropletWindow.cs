@@ -1021,12 +1021,14 @@ public static class DropletWindow {
 
 			if (UI.TextButton("Add TerrainHandle", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.06f, 0.39f, 0.05f))) {
 				Room.data.objects.Add(new TerrainHandleObject());
+				Room.visuals.terrainNeedsRefresh = true;
 			}
 			if (UI.TextButton("Add MudPit", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.12f, 0.39f, 0.05f))) {
 				Room.data.objects.Add(new MudPitObject());
 			}
 			if (UI.TextButton("Add AirPocket", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.18f, 0.39f, 0.05f))) {
 				Room.data.objects.Add(new AirPocketObject());
+				Room.visuals.waterNeedsRefresh = true;
 			}
 
 			if (trashCanState > 0) {
