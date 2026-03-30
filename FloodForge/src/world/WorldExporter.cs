@@ -381,16 +381,19 @@ public static class WorldExporter {
 							if (!string.IsNullOrEmpty(creature.tag)) {
 								if (creature.tag == "MEAN") {
 									writer.Write($"-{{Mean:{creature.data}}}");
-								} else if (creature.tag == "LENGTH") {
+								}
+								else if (creature.tag == "LENGTH") {
 									if (creature.type == "polemimic") {
 										writer.Write($"-{{{ (int)creature.data }}}");
 									}
 									else {
 										writer.Write($"-{{{creature.data}}}");
 									}
-								} else if (creature.tag == "SEED") {
+								}
+								else if (creature.tag == "SEED") {
 									writer.Write($"-{{Seed:{ (int)creature.data }}}");
-								} else if (creature.tag == "RotType") {
+								}
+								else if (creature.tag == "RotType") {
 									writer.Write($"-{{RotType:{ (int)creature.data }}}");
 								}
 								else {
@@ -451,16 +454,19 @@ public static class WorldExporter {
 							if (!string.IsNullOrEmpty(current.tag)) {
 								if (current.tag == "MEAN") {
 									writer.Write($"-{{Mean:{current.data}}}");
-								} else if (current.tag == "LENGTH") {
+								}
+								else if (current.tag == "LENGTH") {
 									if (current.type == "polemimic") {
 										writer.Write($"-{{{ (int)current.data }}}");
 									}
 									else {
 										writer.Write($"-{{{current.data}}}");
 									}
-								} else if (current.tag == "SEED") {
+								}
+								else if (current.tag == "SEED") {
 									writer.Write($"-{{Seed:{ (int)current.data }}}");
-								} else if (current.tag == "RotType") {
+								}
+								else if (current.tag == "RotType") {
 									writer.Write($"-{{RotType:{ (int)current.data }}}");
 								}
 								else {

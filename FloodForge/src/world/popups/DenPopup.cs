@@ -280,7 +280,8 @@ public class DenPopup : Popup {
 			if (creature.data < 0) {
 				xPos = mainX + 0.805f;
 			}
-		} else if (creature.tag == "SEED" || creature.tag == "RotType") {
+		}
+		else if (creature.tag == "SEED" || creature.tag == "RotType") {
 			xPos = (creature.data < 4) ? mainX + 0.81f : mainX + 0.809f;
 		}
 		UI.font.Write(result, xPos, sliderY + 0.028f, 0.026f, Font.Align.MiddleLeft);

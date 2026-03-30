@@ -617,38 +617,53 @@ public static class DropletWindow {
 	private static void SetToolUv(ref UVRect rect, int tool) {
 		if (tool == 0) {
 			rect.UV(0.5f, 0.125f, 0.625f, 0.0f);
-		} else if (tool == 1) {
+		}
+		else if (tool == 1) {
 			rect.UV(0.625f, 0.125f, 0.75f, 0.0f);
-		} else if (tool == 2) {
+		}
+		else if (tool == 2) {
 			rect.UV(0.75f, 0.125f, 0.875f, 0.0f);
-		} else if (tool == 3) {
+		}
+		else if (tool == 3) {
 			rect.UV(0.875f, 0.125f, 1.0f, 0.0f);
 
-		} else if (tool == 4) {
+		}
+		else if (tool == 4) {
 			rect.UV(0.5f, 0.25f, 0.625f, 0.125f);
-		} else if (tool == 5) {
+		}
+		else if (tool == 5) {
 			rect.UV(0.625f, 0.25f, 0.75f, 0.125f);
-		} else if (tool == 6) {
+		}
+		else if (tool == 6) {
 			rect.UV(0.0f, 0.375f, 0.125f, 0.25f);
-		} else if (tool == 7) {
+		}
+		else if (tool == 7) {
 			rect.UV(0.125f, 0.375f, 0.25f, 0.25f);
 
-		} else if (tool == 8) {
+		}
+		else if (tool == 8) {
 			rect.UV(0.75f, 0.25f, 0.875f, 0.125f);
-		} else if (tool == 9) {
+		}
+		else if (tool == 9) {
 			rect.UV(0.0f, 0.5f, 0.125f, 0.375f);
-		} else if (tool == 10) {
+		}
+		else if (tool == 10) {
 			rect.UV(0.125f, 0.5f, 0.25f, 0.375f);
-		} else if (tool == 11) {
+		}
+		else if (tool == 11) {
 			rect.UV(0.375f, 0.5f, 0.5f, 0.375f);
 
-		} else if (tool == 12) {
+		}
+		else if (tool == 12) {
 			rect.UV(0.25f, 0.5f, 0.375f, 0.375f);
-		} else if (tool == 13) {
+		}
+		else if (tool == 13) {
 			rect.UV(0.25f, 0.25f, 0.375f, 0.125f);
-		} else if (tool == 14) {
+		}
+		else if (tool == 14) {
 			rect.UV(0.25f, 0.375f, 0.375f, 0.25f);
-		} else if (tool == 15) {
+		}
+		else if (tool == 15) {
 			rect.UV(0.375f, 0.375f, 0.5f, 0.25f);
 		}
 	}
@@ -779,17 +794,20 @@ public static class DropletWindow {
 						Immediate.Vertex(x1, y0);
 						Immediate.Vertex(x0, y0);
 						Immediate.Vertex(x0, y1);
-					} else if (type == 1) {
+					}
+					else if (type == 1) {
 						Immediate.Vertex(x0, y0);
 						Immediate.Vertex(x1, y1);
 						Immediate.Vertex(x0, y1);
 						Immediate.Vertex(x0, y0);
-					} else if (type == 2) {
+					}
+					else if (type == 2) {
 						Immediate.Vertex(x0, y0);
 						Immediate.Vertex(x1, y0);
 						Immediate.Vertex(x1, y1);
 						Immediate.Vertex(x0, y0);
-					} else if (type == 3) {
+					}
+					else if (type == 3) {
 						Immediate.Vertex(x0, y1);
 						Immediate.Vertex(x1, y0);
 						Immediate.Vertex(x1, y1);
@@ -977,7 +995,8 @@ public static class DropletWindow {
 					}
 				}
 			}
-		} else if (currentTab == EditorTab.Details) {
+		}
+		else if (currentTab == EditorTab.Details) {
 			bool hasWater = Room.data.waterHeight != -1;
 
 			UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - 0.06f, 0.05f, 0.05f), ref Room.data.enclosedRoom);
@@ -986,7 +1005,8 @@ public static class DropletWindow {
 
 			if (!hasWater) {
 				Room.data.waterHeight = -1;
-			} else if (Room.data.waterHeight == -1) {
+			}
+			else if (Room.data.waterHeight == -1) {
 				Room.data.waterHeight = Room.height / 2;
 			}
 
