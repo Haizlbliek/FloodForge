@@ -1131,10 +1131,8 @@ public class Room {
 		}
 
 		Color tint = this.GetTintColor();
-		if (WorldWindow.highlightRoom != null) {
-			if (WorldWindow.highlightRoom != this) {
-				tint *= 0.25f;
-			}
+		if (WorldWindow.highlightRoom != null && WorldWindow.highlightRoom != this) {
+			tint *= 0.25f;
 		}
 
 		Program.gl.BindVertexArray(this._vao);
