@@ -23,9 +23,29 @@ public static class Main {
 	public static event Action<float, float> Scroll = (x, y) => {};
 	public static event Action<Key> KeyPress = (key) => {};
 
+	private static FileStream lockFile = null!;
+
 	public static void Initialize() {
+		string sessionId = Guid.NewGuid().ToString();
+		string sessionPath = $"{sessionId}.lock";
+		bool crashed = false;
+		foreach (var file in Directory.GetFiles(".", "*.lock")) {
+			try {
+				using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
+					crashed = true;
+				}
+				File.Delete(file);
+			} catch (Exception) {
+			}
+		}
+		lockFile = new FileStream(sessionPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+
 		CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 		CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+		AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
+			Logger.Error(e.ExceptionObject);
+		};
+
 		DateTime now = DateTime.Now;
 		Anniversary = now.Year == 2025 && now.Month == 11 && now.Day < 22;
 		AprilFools = now.Month == 4 && now.Day == 1;
@@ -53,8 +73,21 @@ public static class Main {
 
 		UI.Initialize();
 
-		PopupManager.Add(new SplashArtPopup());
+		if (crashed) {
+			PopupManager.Add(new MarkdownPopup("docs/crash.md"));
+		}
+		else {
+			PopupManager.Add(new SplashArtPopup());
+		}
 		if (Main.AprilFools) Sfx.Play($"assets/objects/open.wav");
+	}
+
+	public static void Cleanup() {
+		Sfx.Cleanup();
+		RichPresenceManager.Cleanup();
+
+		lockFile.Dispose();
+		File.Delete(lockFile.Name);
 	}
 
 	private static void OnScroll(IMouse mouse, ScrollWheel wheel) {
@@ -107,7 +140,8 @@ public static class Main {
 
 		if (mode == Mode.World) {
 			World.WorldWindow.Draw();
-		} else if (mode == Mode.Droplet) {
+		}
+		else if (mode == Mode.Droplet) {
 			Droplet.DropletWindow.Draw();
 		}
 
@@ -124,7 +158,8 @@ public static class Main {
 		if (Keys.JustPressed(Key.Escape)) {
 			if (PopupManager.Windows.Count > 0) {
 				PopupManager.Windows.Last().Reject();
-			} else {
+			}
+			else {
 				if (mode == Mode.Droplet) {
 					PopupManager.Add(new ConfirmPopup("Exit Droplet?\nUnsaved changes will be lost").Okay(() => {
 						mode = Mode.World;
