@@ -19,8 +19,8 @@ public class Room {
 	public const uint FLAG_ROCK = 262144;
 	public const uint FLAG_SPEAR = 524288;
 
-	public string Path;
-	public string Name;
+	public string path;
+	public string name;
 	public TimelineType TimelineType;
 	public HashSet<string> Timelines = [];
 	public Vector2 CanonPosition;
@@ -51,8 +51,8 @@ public class Room {
 	public bool Visible => WorldWindow.VisibleLayers[this.data.layer];
 
 	public Room(string path, string name) {
-		this.Path = path;
-		this.Name = name;
+		this.path = path;
+		this.name = name;
 		this.TimelineType = TimelineType.All;
 
 		this.CanonPosition = Vector2.Zero;
@@ -64,6 +64,7 @@ public class Room {
 		this.data = new RoomData();
 
 		this.LoadGeometry();
+		this.LoadSettings();
 		this.GenerateMesh();
 		this.CheckImages();
 	}
@@ -90,7 +91,7 @@ public class Room {
 
 	public Den GetDen01(int id) {
 		if (id < 0 || id >= this.dens.Count) {
-			throw new Exception($"Invalid Den {id} for {this.Name}");
+			throw new Exception($"Invalid Den {id} for {this.name}");
 		}
 
 		return this.dens[id];
@@ -124,8 +125,8 @@ public class Room {
 	}
 
 	protected virtual void LoadGeometry() {
-		if (!File.Exists(this.Path)) {
-			Logger.Warn($"Failed to load '{this.Name}'. File '{this.Path}' doesn't exist");
+		if (!File.Exists(this.path)) {
+			Logger.Warn($"Failed to load '{this.name}'. File '{this.path}' doesn't exist");
 			this.width = 72;
 			this.height = 43;
 			this.geometry = new uint[this.width * this.height];
@@ -133,7 +134,7 @@ public class Room {
 			return;
 		}
 
-		string[] lines = File.ReadAllLines(this.Path);
+		string[] lines = File.ReadAllLines(this.path);
 
 		string[] levelData = lines[1].Split('|');
 		this.width = int.Parse(levelData[0][..levelData[0].IndexOf('*')]);
@@ -248,7 +249,7 @@ public class Room {
 					else if (bits == 2 + 8) type = 3;
 
 					if (type == -1) {
-						Logger.Note($"Invalid slope type {this.Name}({x}, {y})");
+						Logger.Note($"Invalid slope type {this.name}({x}, {y})");
 					}
 					else {
 						this.geometry[idx] += (uint) (1024 * type);
@@ -280,6 +281,65 @@ public class Room {
 
 		foreach (Vector2i den in this.denShortcutEntrances) {
 			this.dens.Add(new Den());
+		}
+	}
+
+	protected virtual void LoadSettings() {
+		this.data.objects.Clear();
+
+		string folder = Path.GetDirectoryName(this.path)!;
+		string? settingsPath = PathUtil.FindFile(folder, this.name + "_settings.txt");
+		if (settingsPath == null) return;
+
+		foreach (string line in File.ReadLines(settingsPath)) {
+			if (line.StartsWith("PlacedObjects: ")) {
+				string data = line["PlacedObjects: ".Length..];
+				string[] poData = data.Split([", "], StringSplitOptions.RemoveEmptyEntries);
+
+				foreach (string po in poData) {
+					try {
+						int start = po.IndexOf('<');
+						int next = po.IndexOf('>', start);
+						int end = po.IndexOf('>', next + 1);
+
+						string xStr = po.Substring(start + 1, next - start - 1);
+						string yStr = po.Substring(next + 2, end - next - 2);
+						string last = po[(end + 2)..];
+
+						Vector2 pos = new Vector2(float.Parse(xStr), float.Parse(yStr));
+						string[] splits = last.Split('~');
+
+						if (po.StartsWith("TerrainHandle>")) {
+							TerrainHandleObject obj = new TerrainHandleObject();
+							obj.nodes[0].position = pos;
+							if (splits.Length >= 4) {
+								obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
+								obj.nodes[2].position = new Vector2(float.Parse(splits[2]), float.Parse(splits[3]));
+							}
+							this.data.objects.Add(obj);
+						}
+						else if (po.StartsWith("MudPit>")) {
+							MudPitObject obj = new MudPitObject();
+							obj.nodes[0].position = pos;
+							if (splits.Length >= 2) {
+								obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
+							}
+							this.data.objects.Add(obj);
+						}
+						else if (po.StartsWith("AirPocket>")) {
+							AirPocketObject obj = new AirPocketObject();
+							obj.nodes[0].position = pos;
+							if (splits.Length >= 6) {
+								obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
+								obj.nodes[2].position.y = float.Parse(splits[5]);
+							}
+							this.data.objects.Add(obj);
+						}
+					} catch {
+						Logger.Warn("Failed to parse Placed Object: " + po);
+					}
+				}
+			}
 		}
 	}
 
@@ -320,7 +380,7 @@ public class Room {
 			}
 
 			if (forwardDirection.x == 0 && forwardDirection.y == 0) {
-				Logger.Warn($"Couldn't load shortcut {this.Name}({currentPosition.x}, {currentPosition.y})");
+				Logger.Warn($"Couldn't load shortcut {this.name}({currentPosition.x}, {currentPosition.y})");
 				continue;
 			}
 			Vector2i initialDirection = forwardDirection * new Vector2i(-1, 1);
@@ -445,12 +505,12 @@ public class Room {
 	protected void CheckImages() {
 		if (!Settings.WarnMissingImages) return;
 
-		string path = PathUtil.Parent(this.Path);
+		string path = PathUtil.Parent(this.path);
 		for (int i = 0; i < this.data.cameras.Count; i++) {
-			string imageFile = $"{this.Name}_{i + 1}.png";
+			string imageFile = $"{this.name}_{i + 1}.png";
 
 			if (PathUtil.FindFile(path, imageFile) == null) {
-				Logger.Warn($"{this.Name} is missing image {imageFile}");
+				Logger.Warn($"{this.name} is missing image {imageFile}");
 			}
 		}
 	}

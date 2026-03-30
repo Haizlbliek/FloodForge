@@ -69,7 +69,7 @@ public static class WorldExporter {
 					(room.DevPosition.y - room.height * 0.5f) * 3.0f
 				);
 
-				string line = $"{RoomNameCasing(room.Name)}: " +
+				string line = $"{RoomNameCasing(room.name)}: " +
 							$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
 							$"{devPosition.x:G12}><{devPosition.y:G12}><" +
 							$"{room.data.layer}><";
@@ -86,7 +86,7 @@ public static class WorldExporter {
 				if (room is OffscreenRoom || !room.data.ExtraFlags)
 					continue;
 
-				writer.Write($"//FloodForge;ROOM|{RoomNameCasing(room.Name)}");
+				writer.Write($"//FloodForge;ROOM|{RoomNameCasing(room.name)}");
 				if (room.data.hidden)
 					writer.Write("|hidden");
 				if (!room.data.merge)
@@ -106,8 +106,8 @@ public static class WorldExporter {
 				connB = new Vector2i(connB.x, connection.roomB.height - connB.y - 1);
 
 				writer.WriteLine($"Connection: " +
-					$"{RoomNameCasing(connection.roomA.Name)}," +
-					$"{RoomNameCasing(connection.roomB.Name)}," +
+					$"{RoomNameCasing(connection.roomA.name)}," +
+					$"{RoomNameCasing(connection.roomB.name)}," +
 					$"{connA.x},{connA.y}," +
 					$"{connB.x},{connB.y}," +
 					$"{(int) connection.roomA.GetRoomEntranceDirection(connection.connectionA)}," +
@@ -144,7 +144,7 @@ public static class WorldExporter {
 			}
 
 			if (connection.timelineType == TimelineType.Only) {
-				writer.Write($"{timeline} : {RoomNameCasing(room.Name)} : ");
+				writer.Write($"{timeline} : {RoomNameCasing(room.name)} : ");
 
 				if (state[timeline][connectionId].first == "DISCONNECTED") {
 					int disconnectedBefore = 0;
@@ -157,10 +157,10 @@ public static class WorldExporter {
 				else {
 					writer.Write(state[timeline][connectionId].first);
 				}
-				writer.WriteLine($" : {RoomNameCasing(otherRoom.Name)}");
+				writer.WriteLine($" : {RoomNameCasing(otherRoom.name)}");
 
-				if (RoomNameCasing(otherRoom.Name) != state[timeline][connectionId].first) {
-					state[timeline][connectionId] = (RoomNameCasing(otherRoom.Name), true);
+				if (RoomNameCasing(otherRoom.name) != state[timeline][connectionId].first) {
+					state[timeline][connectionId] = (RoomNameCasing(otherRoom.name), true);
 				}
 			}
 			else if (connection.timelineType == TimelineType.Except) {
@@ -170,7 +170,7 @@ public static class WorldExporter {
 					if (!state[otherTimeline][connectionId].second)
 						continue;
 
-					writer.Write($"{otherTimeline} : {RoomNameCasing(room.Name)} : ");
+					writer.Write($"{otherTimeline} : {RoomNameCasing(room.name)} : ");
 					if (state[otherTimeline][connectionId].first == "DISCONNECTED") {
 						int disconnectedBefore = 0;
 						for (int i = 0; i < connectionId; i++) {
@@ -182,10 +182,10 @@ public static class WorldExporter {
 					else {
 						writer.Write(state[otherTimeline][connectionId].first);
 					}
-					writer.WriteLine($" : {RoomNameCasing(otherRoom.Name)}");
+					writer.WriteLine($" : {RoomNameCasing(otherRoom.name)}");
 				}
 
-				writer.Write($"{timeline} : {RoomNameCasing(room.Name)} : ");
+				writer.Write($"{timeline} : {RoomNameCasing(room.name)} : ");
 				if (state[timeline][connectionId].second) {
 					if (state[timeline][connectionId].first == "DISCONNECTED") {
 						int disconnectedBefore = 0;
@@ -200,12 +200,12 @@ public static class WorldExporter {
 					}
 				}
 				else {
-					writer.Write(RoomNameCasing(otherRoom.Name));
+					writer.Write(RoomNameCasing(otherRoom.name));
 				}
 				writer.WriteLine($" : {defaultState[connectionId].first}");
 
-				if (RoomNameCasing(otherRoom.Name) != defaultState[connectionId].first) {
-					defaultState[connectionId] = (RoomNameCasing(otherRoom.Name), false);
+				if (RoomNameCasing(otherRoom.name) != defaultState[connectionId].first) {
+					defaultState[connectionId] = (RoomNameCasing(otherRoom.name), false);
 				}
 			}
 		}
@@ -240,10 +240,10 @@ public static class WorldExporter {
 						continue;
 
 					if (connection.roomA == room) {
-						defaultState[(int) connection.connectionA] = (RoomNameCasing(connection.roomB.Name), false);
+						defaultState[(int) connection.connectionA] = (RoomNameCasing(connection.roomB.name), false);
 					}
 					else {
-						defaultState[(int) connection.connectionB] = (RoomNameCasing(connection.roomA.Name), false);
+						defaultState[(int) connection.connectionB] = (RoomNameCasing(connection.roomA.name), false);
 					}
 				}
 
@@ -261,7 +261,7 @@ public static class WorldExporter {
 					ParseConditionalLinkConnection(writer, room, connection, timelines, state, defaultState);
 				}
 
-				roomDefaultStates[RoomNameCasing(room.Name)] = defaultState;
+				roomDefaultStates[RoomNameCasing(room.name)] = defaultState;
 
 				if (room.TimelineType == TimelineType.All || room.Timelines.Count == 0) {
 					continue;
@@ -277,7 +277,7 @@ public static class WorldExporter {
 
 				writer.Write(" : ");
 				writer.Write((room.TimelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
-				writer.WriteLine($" : {RoomNameCasing(room.Name)}");
+				writer.WriteLine($" : {RoomNameCasing(room.name)}");
 			}
 			writer.WriteLine("END CONDITIONAL LINKS");
 			writer.WriteLine();
@@ -288,9 +288,9 @@ public static class WorldExporter {
 				if (room is OffscreenRoom)
 					continue;
 
-				writer.Write($"{RoomNameCasing(room.Name)} : ");
+				writer.Write($"{RoomNameCasing(room.name)} : ");
 
-				List<(string, bool)> connections = roomDefaultStates[RoomNameCasing(room.Name)];
+				List<(string, bool)> connections = roomDefaultStates[RoomNameCasing(room.name)];
 
 				for (int i = 0; i < room.roomShortcutEntrances.Count; i++) {
 					if (i > 0) writer.Write(", ");
@@ -362,7 +362,7 @@ public static class WorldExporter {
 							writer.Write("OFFSCREEN : ");
 						}
 						else {
-							writer.Write($"{RoomNameCasing(room.Name)} : ");
+							writer.Write($"{RoomNameCasing(room.name)} : ");
 						}
 
 						bool first = true;
@@ -434,7 +434,7 @@ public static class WorldExporter {
 							writer.Write("OFFSCREEN : ");
 						}
 						else {
-							writer.Write($"{RoomNameCasing(room.Name)} : ");
+							writer.Write($"{RoomNameCasing(room.name)} : ");
 						}
 
 						if (room == WorldWindow.region.offscreenDen) {
@@ -498,7 +498,7 @@ public static class WorldExporter {
 						writer.Write(")");
 					}
 
-					writer.Write($"{RoomNameCasing(room.Name)} : {room.GarbageWormDenIndex}-{CreatureTextures.ExportName(worm.type)}");
+					writer.Write($"{RoomNameCasing(room.name)} : {room.GarbageWormDenIndex}-{CreatureTextures.ExportName(worm.type)}");
 					if (worm.count > 1)
 						writer.Write($"-{worm.count}");
 					writer.WriteLine();
@@ -591,7 +591,7 @@ public static class WorldExporter {
 			int layerXOffset = 10;
 			int layerYOffset = (2 - room.data.layer) * layerHeight + 10;
 
-			mapFile?.WriteLine($"{RoomNameCasing(room.Name)}: {roomPosition.x + layerXOffset},{roomPosition.y + layerYOffset},{room.width},{room.height}");
+			mapFile?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{roomPosition.y + layerYOffset},{room.width},{room.height}");
 
 			for (int ox = 0; ox < room.width; ox++) {
 				for (int oy = 0; oy < room.height; oy++) {
@@ -684,7 +684,7 @@ public static class WorldExporter {
 			if (room.data.attractiveness.IsNullOrEmpty())
 				continue;
 
-			ExportRoomAttr(writer, RoomNameCasing(room.Name), room.data.attractiveness);
+			ExportRoomAttr(writer, RoomNameCasing(room.name), room.data.attractiveness);
 		}
 
 		foreach (var item in WorldWindow.region.overrideSubregionColors) {

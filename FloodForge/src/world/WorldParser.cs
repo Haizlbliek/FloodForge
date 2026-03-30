@@ -168,7 +168,7 @@ public static class WorldParser {
 		}
 
 		foreach (var pair in extraRoomData) {
-			Room room = WorldWindow.region.rooms.First(x => x.Name.Equals(pair.Key, StringComparison.InvariantCultureIgnoreCase));
+			Room room = WorldWindow.region.rooms.First(x => x.name.Equals(pair.Key, StringComparison.InvariantCultureIgnoreCase));
 			room.data.hidden = pair.Value.hidden;
 			room.data.merge = pair.Value.merge;
 		}
@@ -219,7 +219,7 @@ public static class WorldParser {
 		string[] connections = data[1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 		string[] tags = data[2..];
 
-		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.Name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
+		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 		if (room == null) {
 			if (roomName.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
 				room = new OffscreenRoom(roomName, roomName);
@@ -256,7 +256,7 @@ public static class WorldParser {
 				ConnectionToAdd connectionData = connectionsToAdd[i];
 				if (connectionData.roomB != null) continue;
 
-				if (connectionData.roomA.Name.Equals(connection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(roomName, StringComparison.InvariantCultureIgnoreCase)) {
+				if (connectionData.roomA.name.Equals(connection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(roomName, StringComparison.InvariantCultureIgnoreCase)) {
 					connectionsToAdd[i] = connectionData with { roomB = room, connectionB = connectionId };
 					alreadyExists = true;
 					break;
@@ -303,7 +303,7 @@ public static class WorldParser {
 		}
 
 		if (!room.HasDen(denId)) {
-			Logger.Warn($"{room.Name} missing den {denId}");
+			Logger.Warn($"{room.name} missing den {denId}");
 			return false;
 		}
 
@@ -362,7 +362,7 @@ public static class WorldParser {
 			}
 
 			if (!room.HasDen(denId)) {
-				Logger.Warn($"{room.Name} missing den {denId}");
+				Logger.Warn($"{room.name} missing den {denId}");
 				return false;
 			}
 
@@ -419,7 +419,7 @@ public static class WorldParser {
 		string roomName = lineage ? splits[1] : splits[0];
 		Room? room = (roomName.ToLowerInvariant() == "offscreen")
 			? WorldWindow.region.offscreenDen
-			: WorldWindow.region.rooms.FirstOrDefault(x => x.Name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
+			: WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 
 		if (room == null) {
 			Logger.Warn($"No room {roomName}({lineage}) for creature");
@@ -450,7 +450,7 @@ public static class WorldParser {
 
 		if (parts.Length == 3) {
 			string roomName2 = parts[2];
-			Room? room2 = WorldWindow.region.rooms.FirstOrDefault(x => x.Name.Equals(roomName2, StringComparison.InvariantCultureIgnoreCase));
+			Room? room2 = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName2, StringComparison.InvariantCultureIgnoreCase));
 			if (room2 == null) {
 				Logger.Warn($"Skipping line due to missing room {roomName2}");
 				Logger.Warn($"> {link}");
@@ -484,7 +484,7 @@ public static class WorldParser {
 		}
 
 		string roomName = parts[1];
-		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.Name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
+		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 		if (room == null) {
 			Logger.Warn($"Skipping line due to missing room {roomName}");
 			Logger.Warn($"> {link}");
@@ -505,7 +505,7 @@ public static class WorldParser {
 		Connection? connection = room.connections.FirstOrDefault(otherConnection => {
 			Room otherRoom = (otherConnection.roomA == room) ? otherConnection.roomB : otherConnection.roomA;
 
-			return otherRoom.Name.Equals(currentConnection, StringComparison.InvariantCultureIgnoreCase);
+			return otherRoom.name.Equals(currentConnection, StringComparison.InvariantCultureIgnoreCase);
 		});
 
 		if (toConnection.ToLowerInvariant() == "disconnected") {
@@ -584,7 +584,7 @@ public static class WorldParser {
 		for (int i = 0; i < conditionalConnectionsToAdd.Count; i++) {
 			ConditionalConnection connectionData = conditionalConnectionsToAdd[i];
 
-			if (connectionData.roomB == null && connectionData.roomA.Name.Equals(toConnection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(room.Name, StringComparison.InvariantCultureIgnoreCase)) {
+			if (connectionData.roomB == null && connectionData.roomA.name.Equals(toConnection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(room.name, StringComparison.InvariantCultureIgnoreCase)) {
 				conditionalConnectionsToAdd[i] = connectionData with {
 					roomB = room,
 					connectionB = (uint) connectionId
@@ -702,12 +702,12 @@ public static class WorldParser {
 
 		foreach (ConnectionToAdd connectionData in connectionsToAdd) {
 			if (connectionData.roomB == null || connectionData.connectionB == null) {
-				Logger.Warn($"Failed to load connection from {connectionData.roomA.Name} to {connectionData.roomB?.Name ?? connectionData.roomBName}");
+				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? connectionData.roomBName}");
 				continue;
 			}
 
 			if (!connectionData.roomA.ValidConnection(connectionData.connectionA) || !connectionData.roomB.ValidConnection(connectionData.connectionB.Value)) {
-				Logger.Warn($"Failed to load connection from {connectionData.roomA.Name} to {connectionData.roomB?.Name ?? connectionData.roomBName} - Not valid connections");
+				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? connectionData.roomBName} - Not valid connections");
 				continue;
 			}
 
@@ -728,19 +728,19 @@ public static class WorldParser {
 		foreach (ConditionalConnection connectionData in conditionalConnectionsToAdd) {
 			if (connectionData.roomB == null) {
 				Logger.Warn("Conditional connection failed to load - missing other room");
-				Logger.Warn($"> {connectionData.roomA.Name} {connectionData.connectionA} - {connectionData.roomBName}");
+				Logger.Warn($"> {connectionData.roomA.name} {connectionData.connectionA} - {connectionData.roomBName}");
 				continue;
 			}
 
 			if (connectionData.connectionB == null) {
 				Logger.Warn("Conditional connection failed to load - missing other connection");
-				Logger.Warn($"> {connectionData.roomA.Name} {connectionData.connectionA} - {connectionData.roomBName}");
+				Logger.Warn($"> {connectionData.roomA.name} {connectionData.connectionA} - {connectionData.roomBName}");
 				continue;
 			}
 
 			if (!connectionData.roomA.ValidConnection(connectionData.connectionA) || !connectionData.roomB.ValidConnection(connectionData.connectionB.Value)) {
 				Logger.Warn("Conditional connection failed to load - invalid connection indices");
-				Logger.Warn($"> {connectionData.roomA.Name} {connectionData.connectionA} - {connectionData.roomB.Name} {connectionData.connectionB}");
+				Logger.Warn($"> {connectionData.roomA.name} {connectionData.connectionA} - {connectionData.roomB.name} {connectionData.connectionB}");
 				continue;
 			}
 
@@ -873,12 +873,12 @@ public static class WorldParser {
 			if (room is OffscreenRoom) continue;
 
 			foreach (var attr in roomAttractiveness) {
-				if (!attr.Item1.Equals(room.Name, StringComparison.InvariantCultureIgnoreCase)) continue;
+				if (!attr.Item1.Equals(room.name, StringComparison.InvariantCultureIgnoreCase)) continue;
 
 				room.data.attractiveness = attr.Item2;
 			}
 
-			LoadExtraRoomData(PathUtil.FindFile(WorldWindow.region.roomsPath, room.Name + "_settings.txt"), room);
+			LoadExtraRoomData(PathUtil.FindFile(WorldWindow.region.roomsPath, room.name + "_settings.txt"), room);
 		}
 
 		Logger.Info("Searching for display name");
