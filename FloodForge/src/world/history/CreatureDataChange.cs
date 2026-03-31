@@ -4,32 +4,33 @@ public class CreatureDataChange : Change {
 	protected DenCreature creature;
 	public string undoType, redoType;
 	public int undoCount, redoCount;
-	public string undoTag, redoTag;
-	public float undoData, redoData;
+	public IEnumerable<DenCreature.Tag> undoTags, redoTags;
 
-	public CreatureDataChange(DenCreature creature, string type, int count, string tag, float data) {
+	public CreatureDataChange(DenCreature creature, string type, int count, List<DenCreature.Tag> tags) {
 		this.creature = creature;
 		this.undoType = creature.type;
 		this.redoType = type;
 		this.undoCount = creature.count;
 		this.redoCount = count;
-		this.undoTag = creature.tag;
-		this.redoTag = tag;
-		this.undoData = creature.data;
-		this.redoData = data;
+		this.undoTags = creature.tags.Select(x => x.Clone());
+		this.redoTags = tags.Select(x => x.Clone());
 	}
 
 	public override void Undo() {
 		this.creature.type = this.undoType;
 		this.creature.count = this.undoCount;
-		this.creature.tag = this.undoTag;
-		this.creature.data = this.undoData;
+		this.creature.tags.Clear();
+		foreach (DenCreature.Tag tag in this.undoTags) {
+			this.creature.tags.Add(tag.Clone());
+		}
 	}
 
 	public override void Redo() {
 		this.creature.type = this.redoType;
 		this.creature.count = this.redoCount;
-		this.creature.tag = this.redoTag;
-		this.creature.data = this.redoData;
+		this.creature.tags.Clear();
+		foreach (DenCreature.Tag tag in this.redoTags) {
+			this.creature.tags.Add(tag.Clone());
+		}
 	}
 }

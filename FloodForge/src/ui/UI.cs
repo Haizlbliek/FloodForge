@@ -441,6 +441,74 @@ public static class UI {
 		return new TextInputResponse(UI.CurrentEditable == editable, highlight, submitted);
 	}
 
+	public static SliderResponse Slider(Rect rect, SliderFloatEditable editable, ref float value, SliderMods? mods = null) {
+		mods ??= new SliderMods();
+		float centerY = rect.CenterY;
+		bool highlight = CanClick && rect.Inside(Mouse.Pos) && !mods.disabled;
+		bool submitted = false;
+
+		Immediate.Color(Themes.Border);
+		UI.Line(rect.x0, centerY, rect.x1, centerY);
+
+		float progress = (value - editable.min) / (editable.max - editable.min);
+		float x = progress * (rect.x1 - rect.x0 - 0.02f) + rect.x0 + 0.01f;
+		Immediate.Color(Themes.Border);
+		UI.ButtonFillRect(x - 0.005f, rect.y0, x + 0.005f, rect.y1);
+		if (highlight || CurrentEditable == editable) {
+			Immediate.Color(Themes.BorderHighlight);
+			UI.ButtonStrokeRect(x - 0.005f, rect.y0, x + 0.005f, rect.y1);
+		}
+
+		if (Mouse.JustLeft && highlight) {
+			UI.CurrentEditable = editable;
+		}
+		if (CurrentEditable == editable) {
+			if (!Mouse.Left) {
+				CurrentEditable = null;
+				submitted = true;
+			}
+			else {
+				value = Mathf.Clamp01((Mouse.X - rect.x0 - 0.01f) / (rect.x1 - rect.x0 - 0.02f)) * (editable.max - editable.min) + editable.min;
+			}
+		}
+
+		return new SliderResponse(CurrentEditable == editable, submitted, new Vector2(x, centerY));
+	}
+
+	public static SliderResponse Slider(Rect rect, SliderIntEditable editable, ref int value, SliderMods? mods = null) {
+		mods ??= new SliderMods();
+		float centerY = rect.CenterY;
+		bool highlight = CanClick && rect.Inside(Mouse.Pos) && !mods.disabled;
+		bool submitted = false;
+
+		Immediate.Color(Themes.Border);
+		UI.Line(rect.x0, centerY, rect.x1, centerY);
+
+		float progress = (value - editable.min) / (float) (editable.max - editable.min);
+		float x = progress * (rect.x1 - rect.x0 - 0.02f) + rect.x0 + 0.01f;
+		Immediate.Color(Themes.Border);
+		UI.ButtonFillRect(x - 0.005f, rect.y0, x + 0.005f, rect.y1);
+		if (highlight || CurrentEditable == editable) {
+			Immediate.Color(Themes.BorderHighlight);
+			UI.ButtonStrokeRect(x - 0.005f, rect.y0, x + 0.005f, rect.y1);
+		}
+
+		if (Mouse.JustLeft && highlight) {
+			UI.CurrentEditable = editable;
+		}
+		if (CurrentEditable == editable) {
+			if (!Mouse.Left) {
+				CurrentEditable = null;
+				submitted = true;
+			}
+			else {
+				value = Mathf.RoundToInt(Mathf.Clamp01((Mouse.X - rect.x0 - 0.01f) / (rect.x1 - rect.x0 - 0.02f)) * (editable.max - editable.min) + editable.min);
+			}
+		}
+
+		return new SliderResponse(CurrentEditable == editable, submitted, new Vector2(x, centerY));
+	}
+
 	public static void CenteredTexture(Texture texture, float x, float y, float scale) {
 		Immediate.Color(1f, 1f, 1f);
 		Program.gl.Enable(EnableCap.Blend);
@@ -531,6 +599,10 @@ public static class UI {
 		public string placeholder = "";
 	}
 
+	public class SliderMods {
+		public bool disabled = false;
+	}
+
 	public readonly struct ButtonResponse {
 		public readonly bool clicked, hovered;
 
@@ -551,6 +623,17 @@ public static class UI {
 			this.focused = focused;
 			this.hovered = hovered;
 			this.submitted = submitted;
+		}
+	}
+
+	public class SliderResponse {
+		public readonly bool dragging, submitted;
+		public readonly Vector2 sliderPos;
+
+		public SliderResponse(bool dragging, bool submitted, Vector2 sliderPos) {
+			this.dragging = dragging;
+			this.submitted = submitted;
+			this.sliderPos = sliderPos;
 		}
 	}
 
@@ -637,6 +720,26 @@ public static class UI {
 			SignedFloat,
 			UnsignedInteger,
 			SignedInteger,
+		}
+	}
+
+	public class SliderFloatEditable : Editable {
+		public float min;
+		public float max;
+
+		public SliderFloatEditable(float min, float max) {
+			this.min = min;
+			this.max = max;
+		}
+	}
+
+	public class SliderIntEditable : Editable {
+		public int min;
+		public int max;
+
+		public SliderIntEditable(int min, int max) {
+			this.min = min;
+			this.max = max;
 		}
 	}
 }

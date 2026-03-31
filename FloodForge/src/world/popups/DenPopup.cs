@@ -5,13 +5,11 @@ using Stride.Core.Extensions;
 
 namespace FloodForge.World;
 
+// TODO: Resize main section width based on popup size
 public class DenPopup : Popup {
 	protected const float buttonSize = 1f / 14f;
 	protected const float buttonPadding = 0.01f;
 	protected const int CreatureRows = 7;
-
-	protected static bool denPopupLineageExtended = true;
-	protected static bool denPopupTagsExtended = true;
 
 	private float scrollCreatures = 0f;
 	private float scrollCreaturesTo = 0f;
@@ -20,61 +18,85 @@ public class DenPopup : Popup {
 	private float scrollLineages = 0f;
 	private float scrollLineagesTo = 0f;
 	private int scrollLineagesMax = 0;
-	private float sliderMin = 0f;
-	private float sliderMax = 1f;
-	private bool sliderFloat = true;
+	private int scrollTagsMax = 0;
 	private readonly Den den;
-	private bool hasSlider;
 	private int mouseSection;
-	private bool lastMouseClickSlider;
-	private bool mouseClickSlider;
 	private int selectedCreature;
 	private DenCreature? selectedLineage;
 	private float editingLineageChance;
 	private DenCreature? selectedLineageChance;
-	private float lineageSidebarWidth;
 	private string hoverText = "";
 
-	protected static bool IsNotLizard(string type) => type is not "blacklizard" and not "bluelizard" and not "cyanlizard" and not "greenlizard" and not "pinklizard" and not "redlizard" and not "whitelizard" and not "yellowlizard" and not "salamander" and not "eellizard" and not "spitlizard" and not "trainlizard" and not "zooplizard" and not "basilisklizard" and not "blizzardlizard" and not "indigolizard";
+	private List<CreatureTags.Tag> editableTags = [];
+	private readonly List<UI.Editable?> editables = [];
 
-	// LATER: Make dynamic
-	protected static void CheckFlag(DenCreature? creature) {
-		if (creature == null) return;
+	protected static void CheckTags(DenCreature? creature) {
+		if (creature == null)
+			return;
 
 		if (creature.type == "") {
-			creature.tag = "";
-			creature.data = 0f;
+			creature.tags.Clear();
+			return;
 		}
 
-		bool notLizard = IsNotLizard(creature.type);
+		for (int i = creature.tags.Count - 1; i >= 0; i--) {
+			DenCreature.Tag tag = creature.tags[i];
 
-		if (creature.tag == "MEAN" && notLizard) {
-			creature.tag = "";
+			if (tag.id.Supports(creature.type)) {
+				tag.id.displayType.Clamp(tag);
+			}
+			else {
+				creature.tags.Remove(tag);
+			}
 		}
-		if (creature.tag == "LENGTH" && creature.type != "polemimic" && creature.type != "centipede") {
-			creature.tag = "";
+	}
+
+	protected void UpdateEditables(DenCreature? creature) {
+		if (creature == null)
+			return;
+
+		this.editableTags = [..CreatureTags.Tags(creature.type)];
+
+		foreach (UI.Editable? editable in this.editables) {
+			if (editable == null)
+				continue;
+
+			UI.Delete(editable);
 		}
-		if (creature.tag == "Winter" && creature.type != "bigspider" && creature.type != "spitterspider" && creature.type != "yeek" && notLizard) {
-			creature.tag = "";
-		}
-		if (creature.tag == "Voidsea"
-			&& creature.type != "redlizard"
-			&& creature.type != "redcentipede"
-			&& creature.type != "bigspider"
-			&& creature.type != "daddylonglegs"
-			&& creature.type != "brotherlonglegs"
-			&& creature.type != "terrorlonglegs"
-			&& creature.type != "bigeel"
-			&& creature.type != "cyanlizard") {
-			creature.tag = "";
-		}
-		if (creature.tag != "MEAN" && creature.tag != "LENGTH" && creature.tag != "SEED") {
-			creature.data = 0f;
+		this.editables.Clear();
+
+		foreach (CreatureTags.Tag tag in this.editableTags) {
+			DenCreature.Tag? creatureTag = creature.tags.FirstOrDefault(t => t.id == tag);
+
+			if (tag.displayType == CreatureTags.DisplayType.InputString) {
+				this.editables.Add(new UI.TextInputEditable(UI.TextInputEditable.Type.Text, (creatureTag as DenCreature.StringTag)?.data ?? ""));
+			}
+			else if (tag.displayType == CreatureTags.DisplayType.InputUnsignedInteger) {
+				this.editables.Add(new UI.TextInputEditable(UI.TextInputEditable.Type.UnsignedInteger, ((creatureTag as DenCreature.IntegerTag)?.data ?? 0).ToString()));
+			}
+			else if (tag.displayType == CreatureTags.DisplayType.InputSignedInteger) {
+				this.editables.Add(new UI.TextInputEditable(UI.TextInputEditable.Type.SignedInteger, ((creatureTag as DenCreature.IntegerTag)?.data ?? 0).ToString()));
+			}
+			else if (tag.displayType == CreatureTags.DisplayType.InputUnsignedFloat) {
+				this.editables.Add(new UI.TextInputEditable(UI.TextInputEditable.Type.UnsignedFloat, ((creatureTag as DenCreature.IntegerTag)?.data ?? 0).ToString()));
+			}
+			else if (tag.displayType == CreatureTags.DisplayType.InputSignedFloat) {
+				this.editables.Add(new UI.TextInputEditable(UI.TextInputEditable.Type.SignedFloat, ((creatureTag as DenCreature.IntegerTag)?.data ?? 0).ToString()));
+			}
+			else if (tag.displayType is CreatureTags.DisplayType.FloatSlider floatSlider) {
+				this.editables.Add(new UI.SliderFloatEditable(floatSlider.min, floatSlider.max));
+			}
+			else if (tag.displayType is CreatureTags.DisplayType.IntSlider intSlider) {
+				this.editables.Add(new UI.SliderIntEditable(intSlider.min, intSlider.max));
+			}
+			else {
+				this.editables.Add(null);
+			}
 		}
 	}
 
 	protected static void SetCreature(DenCreature creature, string creatureType) {
-		DenCreature newCreature = new DenCreature(creature.type, creature.count, creature.tag, creature.data);
+		DenCreature newCreature = new DenCreature(creature);
 
 		if (creatureType == CreatureTextures.CLEAR) {
 			newCreature.type = "";
@@ -97,49 +119,20 @@ public class DenPopup : Popup {
 			newCreature.count = 1;
 		}
 
-		CheckFlag(newCreature);
-
-		History.Apply(new CreatureDataChange(creature, newCreature.type, newCreature.count, newCreature.tag, newCreature.data));
+		CheckTags(newCreature);
+		History.Apply(new CreatureDataChange(creature, newCreature.type, newCreature.count, newCreature.tags));
 	}
 
-	protected static void SetTag(DenCreature creature, string creatureTag) {
-		DenCreature newCreature = new DenCreature(creature.type, creature.count, creature.tag == creatureTag ? "" : creatureTag, creature.data);
-		CheckFlag(newCreature);
-		History.Apply(new CreatureDataChange(creature, newCreature.type, newCreature.count, newCreature.tag, newCreature.data));
-	}
-
-	protected void FixSlider() {
-		if (this.selectedLineage == null) return;
-
-		this.sliderFloat = true;
-		if (this.selectedLineage.tag == "MEAN") {
-			this.sliderMin = -1f;
-			this.sliderMax = 1f;
+	protected static void ToggleTag(DenCreature creature, CreatureTags.Tag creatureTag) {
+		DenCreature newCreature = new DenCreature(creature);
+		if (newCreature.tags.Any(x => x.id == creatureTag)) {
+			newCreature.tags.Remove(newCreature.tags.First(x => x.id == creatureTag));
 		}
-		else if (this.selectedLineage.tag == "LENGTH") {
-			if (this.selectedLineage.tag == "centipede") {
-				this.sliderMin = 0.1f;
-				this.sliderMax = 1f;
-			}
-			else {
-				this.sliderMin = 1f;
-				this.sliderMax = 32f;
-			}
+		else {
+			newCreature.tags.Add(DenCreature.CreateFrom(creatureTag));
 		}
-		else if (this.selectedLineage.tag == "SEED") {
-			this.sliderMin = -2_147_483_648;
-			this.sliderMax = 2_147_483_647;
-			this.sliderFloat = false;
-			// TODO: Make not a slider
-		}
-		else if (this.selectedLineage.tag == "RotType") {
-			if (IsNotLizard(this.selectedLineage.type)) {
-				this.selectedLineage.tag = "";
-			}
-			this.sliderMin = 0f;
-			this.sliderMax = 3f;
-			this.sliderFloat = false;
-		}
+		CheckTags(newCreature);
+		History.Apply(new CreatureDataChange(creature, newCreature.type, newCreature.count, newCreature.tags));
 	}
 
 	public DenPopup(Den den) {
@@ -153,8 +146,8 @@ public class DenPopup : Popup {
 		}
 		this.selectedLineage = this.den.creatures[0];
 		this.selectedLineageChance = null;
-		CheckFlag(this.selectedLineage);
-		this.FixSlider();
+		CheckTags(this.selectedLineage);
+		this.UpdateEditables(this.selectedLineage);
 	}
 
 	protected void DrawCreatures(float mainX, bool unknown, DenCreature? creature) {
@@ -191,12 +184,13 @@ public class DenPopup : Popup {
 
 				if (response.clicked) {
 					SetCreature(creature, type);
-					this.FixSlider();
+					CheckTags(creature);
+					this.UpdateEditables(creature);
 					selected = true;
 				}
 
 				if (response.hovered) {
-					this.hoverText = "Creature - " + type;
+					this.hoverText = CreatureTextures.ExportName(type);
 				}
 
 				if (selected) {
@@ -215,7 +209,7 @@ public class DenPopup : Popup {
 	protected void DrawTags(float mainX, DenCreature? creature) {
 		Program.gl.Disable(EnableCap.ScissorTest);
 		Immediate.Color(Themes.Text);
-		UI.font.Write("Tag:", mainX + 0.7f, this.bounds.y1 - 0.07f, 0.035f, Font.Align.TopCenter);
+		UI.font.Write("Tags:", mainX + 0.6f + 0.125f, this.bounds.y1 - 0.07f, 0.035f, Font.Align.TopCenter);
 		Program.gl.Enable(EnableCap.ScissorTest);
 
 		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
@@ -223,80 +217,74 @@ public class DenPopup : Popup {
 
 		if (creature == null) return;
 
-		float tagCenterX = mainX + 0.7f;
-		int count = CreatureTextures.creatureTags.Count;
+		int y = 0;
+		foreach (CreatureTags.Tag tag in this.editableTags) {
+			bool selected = creature.tags.Any(t => t.id == tag);
+			UVRect rect = UVRect.FromSize(
+				mainX + 0.6f + buttonPadding,
+				this.bounds.y1 - 0.1f - buttonPadding * 0.5f - (y + 1) * (buttonSize + buttonPadding) - this.scrollTags,
+				buttonSize,
+				buttonSize
+			);
 
-		for (int y = 0; y <= count / 2; y++) {
-			for (int x = 0; x < 2; x++) {
-				int id = x + y * 2;
-				if (id >= count) break;
+			UI.ButtonResponse response = UI.TextureButton(rect, new UI.TextureButtonMods { selected = selected, texture = CreatureTextures.GetTexture(tag.id, false), textureColor = selected ? Color.White : Color.Grey});
+			if (response.clicked) {
+				ToggleTag(creature, tag);
+				this.UpdateEditables(creature);
+			}
 
-				string tag = CreatureTextures.creatureTags[id];
-				bool selected = creature.tag == tag;
-				UVRect rect = UVRect.FromSize(
-					tagCenterX + (x - 1f) * (buttonSize + buttonPadding) + buttonPadding * 0.5f,
-					this.bounds.y1 - 0.1f - buttonPadding * 0.5f - (y + 1) * (buttonSize + buttonPadding) - this.scrollTags,
-					buttonSize,
-					buttonSize
-				);
-				UI.ButtonResponse response = UI.TextureButton(rect, new UI.TextureButtonMods { selected = selected, texture = CreatureTextures.GetTexture(tag, false), textureColor = selected ? Color.White : Color.Grey});
-				if (response.clicked) {
-					SetTag(creature, tag);
-					this.FixSlider();
-				}
+			if (response.hovered)
+				this.hoverText = tag.id;
 
-				if (response.hovered) {
-					this.hoverText = "Tag - " + tag;
+			UI.Editable? editable = this.editables[y];
+			DenCreature.Tag? creatureTag = creature.tags.FirstOrDefault(t => t.id == tag);
+
+			if (editable == null) {
+			}
+			else if (editable is UI.TextInputEditable textInput) {
+				UI.TextInputResponse inputResponse = UI.TextInput(Rect.FromSize(rect.x1 + buttonPadding, rect.CenterY - 0.025f, 0.2f, 0.05f), textInput, new UI.TextInputMods() { disabled = !selected });
+				if (inputResponse.submitted) {
+					if (creatureTag is DenCreature.StringTag stringTag) {
+						stringTag.data = textInput.value;
+					}
+					else if (creatureTag is DenCreature.IntegerTag intTag && int.TryParse(textInput.value, out int value)) {
+						intTag.data = value;
+					}
+					else if (creatureTag is DenCreature.FloatTag floatTag && float.TryParse(textInput.value, out float value2)) {
+						floatTag.data = value2;
+					}
 				}
 			}
-		}
-
-
-		if (!this.hasSlider) return;
-
-		if (Mouse.JustLeft && Mouse.X >= mainX + 0.825f && Mouse.X <= mainX + 0.875f && Mouse.Y >= this.bounds.y0 + 0.05f && Mouse.Y <= this.bounds.y1 - 0.1f) {
-			this.mouseClickSlider = true;
-		}
-
-		Program.gl.Disable(EnableCap.ScissorTest);
-
-		Immediate.Color(Themes.Border);
-		UI.Line(mainX + 0.85f, this.bounds.y0 + 0.05f, mainX + 0.85f, this.bounds.y1 - 0.1f);
-
-		float progress = (creature.data - this.sliderMin) / (this.sliderMax - this.sliderMin);
-		float sliderY = ((this.bounds.y1 - this.bounds.y0 - 0.2f) * progress) + this.bounds.y0 + 0.075f;
-		UI.FillRect(mainX + 0.825f, sliderY - 0.005f, mainX + 0.875f, sliderY + 0.005f);
-
-		Immediate.Color(Themes.Text);
-		string result = "";
-		if (creature.tag == "MEAN" || creature.tag == "LENGTH") {
-			result = $"{creature.data,3:F2}";
-		}
-		else if (creature.tag == "SEED" || creature.tag == "RotType") {
-			result = $"{(int)creature.data,5}";
-		}
-		float xPos = mainX + 0.82f;
-		if (creature.tag == "MEAN" || creature.tag == "LENGTH") {
-			if (creature.data < 0) {
-				xPos = mainX + 0.805f;
+			else if (editable is UI.SliderIntEditable intEditable && creatureTag is DenCreature.IntegerTag intTag) {
+				UI.SliderResponse slider = UI.Slider(Rect.FromSize(rect.x1 + buttonPadding, rect.CenterY - 0.025f, 0.2f, 0.05f), intEditable, ref intTag.data, new UI.SliderMods() { disabled = !selected });
+				Immediate.Color(Themes.Text);
+				bool swap = slider.sliderPos.x > rect.x1 + 0.1f + buttonPadding;
+				float x = slider.sliderPos.x + (swap ? -0.01f : 0.01f);
+				UI.font.Write($"{intTag.data}", x, slider.sliderPos.y, 0.03f, swap ? Font.Align.MiddleRight : Font.Align.MiddleLeft);
 			}
-		}
-		else if (creature.tag == "SEED" || creature.tag == "RotType") {
-			xPos = (creature.data < 4) ? mainX + 0.81f : mainX + 0.809f;
-		}
-		UI.font.Write(result, xPos, sliderY + 0.028f, 0.026f, Font.Align.MiddleLeft);
+			else if (editable is UI.SliderFloatEditable floatEditable && creatureTag is DenCreature.FloatTag floatTag) {
+				UI.SliderResponse slider = UI.Slider(Rect.FromSize(rect.x1 + buttonPadding, rect.CenterY - 0.025f, 0.2f, 0.05f), floatEditable, ref floatTag.data, new UI.SliderMods() { disabled = !selected });
+				Immediate.Color(Themes.Text);
+				bool swap = slider.sliderPos.x > rect.x1 + 0.1f + buttonPadding;
+				float x = slider.sliderPos.x + (swap ? -0.01f : 0.01f);
+				UI.font.Write($"{floatTag.data:F3}", x, slider.sliderPos.y, 0.03f, swap ? Font.Align.MiddleRight : Font.Align.MiddleLeft);
+			}
 
-		Program.gl.Enable(EnableCap.ScissorTest);
+			y++;
+		}
+		this.scrollTagsMax = y;
 	}
 
 	protected void DrawLineages() {
+		this.scrollLineagesMax = 0;
+
 		Program.gl.Disable(EnableCap.ScissorTest);
 		Immediate.Color(Themes.Text);
 		UI.font.Write("Lineages:", this.bounds.x0 + 0.11f, this.bounds.y1 - 0.07f, 0.035f, Font.Align.TopCenter);
 		Program.gl.Enable(EnableCap.ScissorTest);
 
 		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
-		UI.Line(this.bounds.x0 + this.lineageSidebarWidth, this.bounds.y0, this.bounds.x0 + this.lineageSidebarWidth, this.bounds.y1);
+		UI.Line(this.bounds.x0 + 0.22f, this.bounds.y0, this.bounds.x0 + 0.22f, this.bounds.y1);
 
 		float dotsCenterX = this.bounds.x0 + 0.11f - (this.den.creatures.Count - 1) * 0.015f;
 		float dotsCenterY = this.bounds.y1 - 0.13f;
@@ -322,8 +310,8 @@ public class DenPopup : Popup {
 				this.selectedCreature = this.den.creatures.Count;
 			}
 			this.selectedLineage = this.den.creatures.Count == 0 ? null : this.den.creatures[this.selectedCreature];
-			CheckFlag(this.selectedLineage);
-			this.FixSlider();
+			CheckTags(this.selectedLineage);
+			this.UpdateEditables(this.selectedLineage);
 		}
 
 		// Delete
@@ -338,8 +326,8 @@ public class DenPopup : Popup {
 				this.selectedCreature = 0;
 			}
 			this.selectedLineage = this.den.creatures.Count == 0 ? null : this.den.creatures[this.selectedCreature];
-			CheckFlag(this.selectedLineage);
-			this.FixSlider();
+			CheckTags(this.selectedLineage);
+			this.UpdateEditables(this.selectedLineage);
 		}
 
 		// Add
@@ -350,8 +338,8 @@ public class DenPopup : Popup {
 
 			this.selectedCreature = this.den.creatures.Count - 1;
 			this.selectedLineage = this.den.creatures[this.selectedCreature];
-			CheckFlag(this.selectedLineage);
-			this.FixSlider();
+			CheckTags(this.selectedLineage);
+			this.UpdateEditables(this.selectedLineage);
 		}
 
 		// Right
@@ -364,8 +352,8 @@ public class DenPopup : Popup {
 				this.selectedCreature = 0;
 			}
 			this.selectedLineage = this.den.creatures[this.selectedCreature];
-			CheckFlag(this.selectedLineage);
-			this.FixSlider();
+			CheckTags(this.selectedLineage);
+			this.UpdateEditables(this.selectedLineage);
 		}
 
 		float clipBottom = (this.bounds.y0 + 0.01f + buttonPadding + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
@@ -397,8 +385,8 @@ public class DenPopup : Popup {
 
 			if (response.clicked) {
 				this.selectedLineage = creature;
-				CheckFlag(this.selectedLineage);
-				this.FixSlider();
+				CheckTags(this.selectedLineage);
+				this.UpdateEditables(this.selectedLineage);
 			}
 
 			if (creature.lineageTo != null) {
@@ -424,7 +412,7 @@ public class DenPopup : Popup {
 			)) {
 				if (lastCreature == null) {
 					if (creature.lineageTo == null) {
-						History.Apply(new CreatureDataChange(creature, "", 0, "", 0f));
+						History.Apply(new CreatureDataChange(creature, "", 0, []));
 					}
 					else {
 						if (this.selectedLineage == creature.lineageTo) {
@@ -469,8 +457,7 @@ public class DenPopup : Popup {
 
 	public override void Draw() {
 		this.hoverText = "";
-		this.lineageSidebarWidth = denPopupLineageExtended ? 0.22f : 0f;
-		this.mouseSection = (Mouse.X > (this.bounds.x0 + 0.6f + this.lineageSidebarWidth)) ? 2 : (Mouse.X > this.bounds.x0 + this.lineageSidebarWidth) ? 1 : 0;
+		this.mouseSection = (Mouse.X > (this.bounds.x0 + 0.6f + 0.22f)) ? 2 : (Mouse.X > this.bounds.x0 + 0.22f) ? 1 : 0;
 
 		int lastSelectedCreature = this.selectedCreature;
 		this.selectedCreature = Math.Clamp(this.selectedCreature, 0, Math.Max(this.den.creatures.Count - 1, 0));
@@ -486,18 +473,11 @@ public class DenPopup : Popup {
 
 		DenCreature? creature = this.selectedLineage;
 		bool unknown = creature != null && !CreatureTextures.Known(creature.type);
-		this.hasSlider = creature != null && (creature.tag == "MEAN" || creature.tag == "SEED" || creature.tag == "LENGTH" || creature.tag == "RotType");
 
-		this.bounds.x1 = this.bounds.x0 + 0.6f;
-		if (denPopupTagsExtended) {
-			this.bounds.x1 += 0.2f;
-			if (this.hasSlider)
-				this.bounds.x1 += 0.1f;
+		this.minimumBounds.x1 = this.minimumBounds.x0 + 0.6f + 0.3f + 0.22f;
+		if (this.bounds.x1 - this.bounds.x0 < this.minimumBounds.x1 - this.minimumBounds.x0) {
+			this.bounds.x1 = this.bounds.x0 + this.minimumBounds.x1 - this.minimumBounds.x0;
 		}
-		else {
-			this.hasSlider = false;
-		}
-		this.bounds.x1 += this.lineageSidebarWidth;
 
 		base.Draw();
 
@@ -507,7 +487,7 @@ public class DenPopup : Popup {
 		this.scrollCreatures += (this.scrollCreaturesTo - this.scrollCreatures) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 		this.scrollTags += (this.scrollTagsTo - this.scrollTags) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 
-		float mainX = this.bounds.x0 + this.lineageSidebarWidth;
+		float mainX = this.bounds.x0 + 0.22f;
 		Program.gl.Enable(EnableCap.ScissorTest);
 		float clipBottom = (this.bounds.y0 + 0.01f + buttonPadding + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
 		float clipTop = (this.bounds.y1 - 0.1f - buttonPadding + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
@@ -515,65 +495,29 @@ public class DenPopup : Popup {
 		UI.Clip(new Rect(float.NegativeInfinity, this.bounds.y0 + 0.01f + buttonPadding, float.PositiveInfinity, this.bounds.y1 - 0.1f));
 
 		this.DrawCreatures(mainX, unknown, creature);
-
-		if (denPopupTagsExtended) this.DrawTags(mainX, creature);
-
-		this.scrollLineagesMax = 0;
-		if (denPopupLineageExtended) this.DrawLineages();
+		this.DrawTags(mainX, creature);
+		this.DrawLineages();
 
 		Program.gl.Disable(EnableCap.ScissorTest);
 		UI.ClearClip();
 
-		// Draw expand buttons
-		{
-			UVRect rectLineage = new UVRect(mainX, this.bounds.y1 - 0.1f, mainX + 0.05f, this.bounds.y1 - 0.05f);
-			if (denPopupLineageExtended) {
-				rectLineage.UV(0f, 0.5f, 0.25f, 0.75f);
-			}
-			else {
-				rectLineage.UV(0.25f, 0.5f, 0.5f, 0.75f);
-			}
+		// if (this.hasSlider && this.mouseClickSlider && creature != null) {
+		// 	if (!Mouse.Left) {
+		// 		this.mouseClickSlider = false;
+		// 	}
 
-			UVRect rectTags = new UVRect(mainX + 0.55f, this.bounds.y1 - 0.1f, mainX + 0.6f, this.bounds.y1 - 0.05f);
-			if (denPopupTagsExtended) {
-				rectTags.UV(0f, 0.5f, 0.25f, 0.75f);
-			}
-			else {
-				rectTags.UV(0.25f, 0.5f, 0.5f, 0.75f);
-			}
+		// 	float P = Mathf.Clamp01((Mouse.Y - this.bounds.y0 - 0.075f) / (this.bounds.y1 - this.bounds.y0 - 0.2f));
+		// 	float val = P * (this.sliderMax - this.sliderMin) + this.sliderMin;
+		// 	if (!this.sliderFloat) val = MathF.Round(val);
 
-			if (UI.TextureButton(rectLineage)) {
-				denPopupLineageExtended = !denPopupLineageExtended;
-				if (denPopupLineageExtended) {
-					this.bounds.x0 -= 0.22f;
-				}
-				else {
-					this.bounds.x0 += 0.22f;
-				}
-			}
-
-			if (UI.TextureButton(rectTags)) {
-				denPopupTagsExtended = !denPopupTagsExtended;
-			}
-		}
-
-		if (this.hasSlider && this.mouseClickSlider && creature != null) {
-			if (!Mouse.Left) {
-				this.mouseClickSlider = false;
-			}
-
-			float P = Mathf.Clamp01((Mouse.Y - this.bounds.y0 - 0.075f) / (this.bounds.y1 - this.bounds.y0 - 0.2f));
-			float val = P * (this.sliderMax - this.sliderMin) + this.sliderMin;
-			if (!this.sliderFloat) val = MathF.Round(val);
-
-			if (!this.lastMouseClickSlider || History.Last is not CreatureDataChange change) {
-				History.Apply(new CreatureDataChange(creature, creature.type, creature.count, creature.tag, val));
-			}
-			else {
-				creature.data = val;
-				change.redoData = val;
-			}
-		}
+		// 	if (!this.lastMouseClickSlider || History.Last is not CreatureDataChange change) {
+		// 		History.Apply(new CreatureDataChange(creature, creature.type, creature.count, creature.tag, val));
+		// 	}
+		// 	else {
+		// 		creature.data = val;
+		// 		change.redoData = val;
+		// 	}
+		// }
 
 		if (!this.hoverText.IsNullOrEmpty() && this.hovered) {
 			float width = UI.font.Measure(this.hoverText, 0.04f).x + 0.02f;
@@ -585,8 +529,6 @@ public class DenPopup : Popup {
 			Immediate.Color(Themes.Text);
 			UI.font.Write(this.hoverText, Mouse.X + 0.01f, Mouse.Y + 0.03f, 0.04f, Font.Align.MiddleLeft);
 		}
-
-		this.lastMouseClickSlider = this.mouseClickSlider;
 	}
 
 	public override void Accept() {}
@@ -604,7 +546,7 @@ public class DenPopup : Popup {
 
 	protected void ClampScroll() {
 		{
-			int count = CreatureTextures.creatureOrder.Count / CreatureRows - 1;
+			int count = Mathf.CeilToInt(CreatureTextures.creatureOrder.Count / (float) CreatureRows) - 2;
 			float size = count * (buttonSize + buttonPadding);
 			if (this.scrollCreaturesTo < -size) {
 				this.scrollCreaturesTo = -size;
@@ -622,7 +564,7 @@ public class DenPopup : Popup {
 		}
 
 		{
-			int count = CreatureTextures.creatureTags.Count / 2;
+			int count = this.scrollTagsMax - 2;
 			float size = count * (buttonSize + buttonPadding);
 			if (this.scrollTagsTo < -size) {
 				this.scrollTagsTo = -size;

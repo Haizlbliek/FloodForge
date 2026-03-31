@@ -213,6 +213,42 @@ public static class WorldExporter {
 		}
 	}
 
+	private static void ExportCreatureTags(DenCreature creature, StreamWriter writer) {
+		if (creature.tags.Count <= 0) {
+			return;
+		}
+
+		writer.Write("-{");
+		bool first = true;
+		foreach (DenCreature.Tag tag in creature.tags) {
+			if (!first) writer.Write(",");
+			first = false;
+
+			if (tag.id == CreatureTags.Mean) {
+				writer.Write($"Mean:{((DenCreature.FloatTag) tag).data}");
+			}
+			else if (tag.id == CreatureTags.POLEMIMIC_LENGTH) {
+				writer.Write($"{((DenCreature.IntegerTag) tag).data}");
+			}
+			else if (tag.id == CreatureTags.CENTIPEDE_LENGTH) {
+				writer.Write($"{((DenCreature.FloatTag) tag).data}");
+			}
+			else if (tag.id == CreatureTags.Seed) {
+				writer.Write($"Seed:{((DenCreature.IntegerTag) tag).data}");
+			}
+			else if (tag.id == CreatureTags.RotType) {
+				writer.Write($"RotType:{((DenCreature.IntegerTag) tag).data}");
+			}
+			else if (tag.id == CreatureTags.NamedAttr) {
+				writer.Write($"NamedAttr:{((DenCreature.StringTag) tag).data}");
+			}
+			else {
+				writer.Write($"{tag.id.id}");
+			}
+		}
+		writer.Write("}");
+	}
+
 	public static void ExportWorldFile() {
 		Logger.Info("Exporting world file");
 
@@ -380,28 +416,7 @@ public static class WorldExporter {
 							else {
 								writer.Write($"{i + room.roomShortcutEntrances.Count}-{CreatureTextures.ExportName(creature.type)}");
 							}
-							if (!string.IsNullOrEmpty(creature.tag)) {
-								if (creature.tag == "MEAN") {
-									writer.Write($"-{{Mean:{creature.data}}}");
-								}
-								else if (creature.tag == "LENGTH") {
-									if (creature.type == "polemimic") {
-										writer.Write($"-{{{ (int)creature.data }}}");
-									}
-									else {
-										writer.Write($"-{{{creature.data}}}");
-									}
-								}
-								else if (creature.tag == "SEED") {
-									writer.Write($"-{{Seed:{ (int)creature.data }}}");
-								}
-								else if (creature.tag == "RotType") {
-									writer.Write($"-{{RotType:{ (int)creature.data }}}");
-								}
-								else {
-									writer.Write($"-{{{creature.tag}}}");
-								}
-							}
+							ExportCreatureTags(creature, writer);
 							if (creature.count > 1)
 								writer.Write($"-{creature.count}");
 						}
@@ -453,28 +468,7 @@ public static class WorldExporter {
 						while (current != null) {
 							writer.Write(string.IsNullOrEmpty(current.type) || current.count == 0 ? "NONE" : CreatureTextures.ExportName(current.type));
 
-							if (!string.IsNullOrEmpty(current.tag)) {
-								if (current.tag == "MEAN") {
-									writer.Write($"-{{Mean:{current.data}}}");
-								}
-								else if (current.tag == "LENGTH") {
-									if (current.type == "polemimic") {
-										writer.Write($"-{{{ (int)current.data }}}");
-									}
-									else {
-										writer.Write($"-{{{current.data}}}");
-									}
-								}
-								else if (current.tag == "SEED") {
-									writer.Write($"-{{Seed:{ (int)current.data }}}");
-								}
-								else if (current.tag == "RotType") {
-									writer.Write($"-{{RotType:{ (int)current.data }}}");
-								}
-								else {
-									writer.Write($"-{{{current.tag}}}");
-								}
-							}
+							ExportCreatureTags(current, writer);
 
 							if (current.lineageTo == null) {
 								writer.WriteLine("-0");
