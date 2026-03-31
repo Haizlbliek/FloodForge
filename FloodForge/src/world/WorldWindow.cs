@@ -23,7 +23,8 @@ public static class WorldWindow {
 	public static RoomPosition PositionType { get; private set; } = RoomPosition.Canon;
 	public static RoomColors ColorType { get; private set; } = RoomColors.None;
 	public static readonly bool[] VisibleLayers = [true, true, true];
-	public static bool changeConnectBehaviour = true;
+	public static bool changeConnectBehaviour = true; // POSSIBILITY: Auto-mode? Which basically chooses whichever looks better for any given connection?
+													  // (I.E. choose the one that's closest, but preferably one that does not invert (for example, CC_S01))
 
 	public static Region region = null!;
 	public static Vector2 cameraOffset;
@@ -1311,7 +1312,15 @@ public static class WorldWindow {
 					button.text = changeConnectBehaviour ? "Connect: Path" : "Connect: Default";
 				}),
 
-				new Button("Mass Render", button => { renderRoomsTask = Task.Run(MassRenderRooms); }, () => { return oldSelection.Count != 0; })
+				new Button("Mass Render", button => {
+					PopupManager.Add(new ConfirmPopup("Render " + oldSelection.Count + " rooms?" + (
+						region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
+						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
+						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" : ""
+						)).Okay(() => {
+							renderRoomsTask = Task.Run(MassRenderRooms); 
+						})); 
+				}, () => { return oldSelection.Count != 0; })
 			];
 		}
 
