@@ -289,6 +289,8 @@ public class Room {
 	}
 
 	protected virtual void LoadSettings() {
+		if (this.path.IsNullOrEmpty()) return;
+
 		this.data.objects.Clear();
 
 		string folder = Path.GetDirectoryName(this.path)!;
