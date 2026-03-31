@@ -334,14 +334,17 @@ public static class WorldParser {
 			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
 			creature.type = CreatureTextures.Parse(sections[0]);
 			creature.count = 1;
-			string chanceString, tagString;
-			chanceString = sections[1][0] == '{' ? (sections.Length == 3 ? sections[2] : "") : sections[1];
-			tagString = sections[1][0] == '{' ? sections[1] : (sections.Length == 3 ? sections[2] : "");
-			creature.lineageChance = float.Parse(chanceString);
 
-			if (!tagString.IsNullOrEmpty()) {
-				tagString = tagString[1..^1];
-				string[] tags = tagString.Split(',');
+			for (int i = 1; i < sections.Length; i++) {
+				string section = sections[i];
+
+				if (section[0] != '{') {
+					creature.lineageChance = float.Parse(section);
+					continue;
+				}
+
+				section = section[1..^1];
+				string[] tags = section.Split(',');
 				foreach (string tagStr in tags) {
 					creature.AddTag(ParseCreatureTag(tagStr, creature.type));
 				}
@@ -380,37 +383,25 @@ public static class WorldParser {
 			}
 
 			Den den = room.GetDen(denId);
-			DenLineage lineage = new DenLineage(CreatureTextures.Parse(creature), 0) {
+			DenLineage lineage = new DenLineage(CreatureTextures.Parse(creature), 1) {
 				timelineType = timelineType,
 				timelines = timelines
 			};
 			den.creatures.Add(lineage);
 
-			if (sections.Length == 3) {
-				if (sections[2][0] == '{') {
-					string tagString = sections[2][1..^1];
-					string[] tags = tagString.Split(',');
-					foreach (string tagStr in tags) {
-						lineage.AddTag(ParseCreatureTag(tagStr, lineage.type));
-					}
-					lineage.count = 1;
+			for (int i = 2; i < sections.Length; i++) {
+				string section = sections[i];
+
+				if (section[0] != '{') {
+					lineage.count = int.Parse(section);
+					continue;
 				}
-				else {
-					lineage.count = int.Parse(sections[2]);
-				}
-			}
-			else if (sections.Length == 4) {
-				bool tagFirst = sections[2][0] == '{';
-				string tagString = sections[tagFirst ? 2 : 3][1..^1];
-				string countString = sections[tagFirst ? 3 : 2];
-				string[] tags = tagString.Split(',');
+
+				section = section[1..^1];
+				string[] tags = section.Split(',');
 				foreach (string tagStr in tags) {
 					lineage.AddTag(ParseCreatureTag(tagStr, lineage.type));
 				}
-				lineage.count = int.Parse(countString);
-			}
-			else {
-				lineage.count = 1;
 			}
 		}
 
