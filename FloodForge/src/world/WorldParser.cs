@@ -70,7 +70,6 @@ public static class WorldParser {
 		string roomPath = WorldWindow.region.roomsPath;
 
 		if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
-			Logger.Info("Found gate " + roomName);
 			roomPath = PathUtil.FindDirectory(PathUtil.Combine(roomPath, ".."), "gates") ?? "";
 			if (roomPath.IsNullOrEmpty()) {
 				Logger.Warn("Failed to load gate! Missing gates folder");
