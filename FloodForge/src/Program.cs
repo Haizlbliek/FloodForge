@@ -42,7 +42,7 @@ public static class Program {
 	public static float Delta { get; private set; }
 
 	private static void OnRender(double delta) {
-		Delta = (float) delta;
+		Delta = MathF.Min((float) delta, 0.1f);
 		try {
 			FloodForge.Main.Render();
 		} catch (Exception ex) {
