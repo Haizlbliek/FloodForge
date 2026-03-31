@@ -3,6 +3,7 @@ BasiliskLizard
 BlizzardLizard
 PeachLizard
 Loach
+RotLoach
 Barnacle
 Angler
 ScavengerTemplar
