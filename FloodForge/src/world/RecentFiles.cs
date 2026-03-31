@@ -20,7 +20,7 @@ public static class RecentFiles {
 	}
 
 	public static void AddPath(string path) {
-		int i = recents.FindIndex(x => x.ToLowerInvariant() == path.ToLowerInvariant());
+		int i = recents.FindIndex(x => x.Equals(path, StringComparison.InvariantCultureIgnoreCase));
 		string? name = null;
 		if (i != -1) {
 			recents.RemoveAt(i);
