@@ -43,6 +43,7 @@ public static class Updater {
 				UseShellExecute = true
 			});
 
+			Main.Cleanup();
 			Environment.Exit(0);
 		}
 		else {
