@@ -454,7 +454,7 @@ public class Room {
 			foreach(Vector2i item in exitPath) {
 				outString += string.Format("item: {0}; {1}\n", item.x, item.y);
 			}
-			Logger.Info("Final exitPath for room " + this.Name + "<" + i + "> with exitTile position " + currentPosition + ":\n" + outString);
+			Logger.Info("Final exitPath for room " + this.name + "<" + i + "> with exitTile position " + currentPosition + ":\n" + outString);
 		}
 
 		verifiedConnections.Reverse();
