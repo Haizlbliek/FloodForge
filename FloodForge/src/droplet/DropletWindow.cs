@@ -1311,7 +1311,7 @@ public static class DropletWindow {
 		}
 
 		if (before != null && before != "" || after != null && after != "" || !string.IsNullOrWhiteSpace(placedObjectsLine)) {
-			settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.Name + "_settings.txt");
+			settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.name + "_settings.txt");
 			using StreamWriter sw = new StreamWriter(settingsPath);
 			sw.Write(before);
 			if (!string.IsNullOrWhiteSpace(placedObjectsLine)) {
@@ -1555,10 +1555,10 @@ public static class DropletWindow {
 		}
 
 		for (int i = 0; i < Room.data.cameras.Count; i++) {
-			Logger.Info(PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.Name}_{i + 1}.png")!);
+			Logger.Info(PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.name}_{i + 1}.png")!);
 			if(WorldWindow.renderStatusPopup != null) WorldWindow.renderStatusPopup?.UpdateText(updateBaseText + " " + (i + 1) + "/" + Room.data.cameras.Count);
 			try {
-				if (!RenderCamera(Room.data.cameras[i], WorldWindow.region.roomsPath, $"{Room.Name}_{i + 1}.png"))
+				if (!RenderCamera(Room.data.cameras[i], WorldWindow.region.roomsPath, $"{Room.name}_{i + 1}.png"))
 					success = false;
 			}
 			catch (Exception e) {
