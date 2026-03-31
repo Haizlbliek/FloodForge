@@ -323,7 +323,7 @@ public static class WorldParser {
 
 		DenCreature creature = lineage;
 		bool first = true;
-		foreach (string creatureInDen in splits[3].Split(", ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)) {
+		foreach (string creatureInDen in Regex.Split(splits[3], @",(?![^{]*})").Select(s => s.Trim())) {
 			if (!first) {
 				creature.lineageTo = new DenCreature("", 0);
 				creature = creature.lineageTo;
@@ -354,8 +354,7 @@ public static class WorldParser {
 	}
 
 	private static bool ParseWorldCreatureNormal(string[] splits, Room room, TimelineType timelineType, HashSet<string> timelines) {
-		string[] creaturesInDen = Regex.Split(splits[1], @",(?![^{]*})");
-		foreach (string creatureInDen in creaturesInDen) {
+		foreach (string creatureInDen in Regex.Split(splits[1], @",(?![^{]*})").Select(s => s.Trim())) {
 			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
 			int denId = int.Parse(sections[0], NumberStyles.Any, CultureInfo.InvariantCulture);
 			string creature = sections[1];
