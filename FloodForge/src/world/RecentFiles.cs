@@ -28,8 +28,8 @@ public static class RecentFiles {
 			recentNames.RemoveAt(i);
 		}
 		name ??= WorldParser.GetRegionDisplayname(path);
-		recents.Add(path);
-		recentNames.Add(name);
+		recents.Insert(0, path);
+		recentNames.Insert(0, name);
 		Save();
 	}
 

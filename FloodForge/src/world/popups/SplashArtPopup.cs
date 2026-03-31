@@ -163,12 +163,11 @@ public class SplashArtPopup : Popup {
 		UI.font.Write("Recent worlds:", -0.88f, -0.28f, 0.03f, Font.Align.MiddleLeft);
 
 		for (int i = 0; i < 8; i++) {
-			int revIndex = Math.Min(RecentFiles.recents.Count, 8) - 1 - i;
-			if (revIndex < 0) break;
+			if (i >= RecentFiles.recents.Count) break;
 
-			string recent = RecentFiles.recentNames[revIndex];
+			string recent = RecentFiles.recentNames[i];
 			if (recent.IsNullOrEmpty()) {
-				recent = Path.GetFileNameWithoutExtension(RecentFiles.recents[revIndex]);
+				recent = Path.GetFileNameWithoutExtension(RecentFiles.recents[i]);
 			}
 
 			float y = -0.33f - i * 0.04f;
@@ -180,7 +179,7 @@ public class SplashArtPopup : Popup {
 
 				if (Mouse.JustLeft) {
 					this.Close();
-					WorldParser.ImportWorldFile(RecentFiles.recents[revIndex]);
+					WorldParser.ImportWorldFile(RecentFiles.recents[i]);
 					return;
 				}
 			}
