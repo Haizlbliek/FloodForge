@@ -253,7 +253,9 @@ public class Room {
 					else if (bits == 2 + 8) type = 3;
 
 					if (type == -1) {
-						Logger.Note($"Invalid slope type {this.name}({x}, {y})");
+						if (Settings.DEBUGLogInvalidSlopes) {
+							Logger.Note($"Invalid slope type {this.name}({x}, {y})");
+						}
 					}
 					else {
 						this.geometry[idx] += (uint) (1024 * type);
