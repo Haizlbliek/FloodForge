@@ -55,4 +55,8 @@ public static class Custom {
 			set.Add(value);
 		}
 	}
+
+	public static Dictionary<TKey, TValue> Clone<TKey, TValue>(this Dictionary<TKey, TValue> self) where TKey : notnull {
+		return new Dictionary<TKey, TValue>(self, self.Comparer);
+	}
 }

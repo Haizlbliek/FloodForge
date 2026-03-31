@@ -8,7 +8,7 @@ public class LineageChange : Change {
 
 	public LineageChange(Den den) {
 		this.den = den;
-		this.lineage = new DenLineage("", 0, "", 0f);
+		this.lineage = new DenLineage("", 0);
 		this.index = -1;
 		this.creating = true;
 	}

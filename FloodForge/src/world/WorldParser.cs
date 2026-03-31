@@ -276,22 +276,30 @@ public static class WorldParser {
 		tags.ForEach(tag => room.data.tags.Toggle(tag));
 	}
 
-	private static (string, float) ParseCreatureTag(string tag) {
+	private static DenCreature.Tag ParseCreatureTag(string tag, string type) {
 		if (tag.StartsWith("Mean")) {
-			return ("MEAN", float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+			return new DenCreature.FloatTag(CreatureTags.Mean, float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
 		}
 		else if (tag.StartsWith("Seed")) {
-			return ("SEED", float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+			return new DenCreature.IntegerTag(CreatureTags.Seed, int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
 		}
 		else if (tag.StartsWith("RotType")) {
-			return ("RotType", float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+			return new DenCreature.IntegerTag(CreatureTags.RotType, int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
 		}
-		else if (tag.Contains(':')) {
-			return ("LENGTH", float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+
+		if (!tag.Contains(':')) {
+			try {
+				if (type == "polemimic") {
+					return new DenCreature.IntegerTag(CreatureTags.POLEMIMIC_LENGTH, int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+				}
+				else {
+					return new DenCreature.FloatTag(CreatureTags.CENTIPEDE_LENGTH, float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+				}
+			}
+			catch (FormatException) {}
 		}
-		else {
-			return (tag, 0f);
-		}
+
+		return new DenCreature.Tag(CreatureTags.GetOrCreate(tag));
 	}
 
 	private static bool ParseWorldCreatureLineage(string[] splits, Room room, TimelineType timelineType, HashSet<string> timelines) {
@@ -308,7 +316,7 @@ public static class WorldParser {
 		}
 
 		Den den = room.GetDen(denId);
-		DenLineage lineage = new DenLineage("", 0, "", 0.0f) {
+		DenLineage lineage = new DenLineage("", 0) {
 			timelineType = timelineType,
 			timelines = timelines
 		};
@@ -316,9 +324,9 @@ public static class WorldParser {
 
 		DenCreature creature = lineage;
 		bool first = true;
-		foreach (string creatureInDen in splits[3].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)) {
+		foreach (string creatureInDen in splits[3].Split(", ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)) {
 			if (!first) {
-				creature.lineageTo = new DenCreature("", 0, "", 0.0f);
+				creature.lineageTo = new DenCreature("", 0);
 				creature = creature.lineageTo;
 			}
 			first = false;
@@ -326,13 +334,17 @@ public static class WorldParser {
 			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
 			creature.type = CreatureTextures.Parse(sections[0]);
 			creature.count = 1;
-			string chanceString, lineageString;
+			string chanceString, tagString;
 			chanceString = sections[1][0] == '{' ? (sections.Length == 3 ? sections[2] : "") : sections[1];
-			lineageString = sections[1][0] == '{' ? sections[1] : (sections.Length == 3 ? sections[2] : "");
+			tagString = sections[1][0] == '{' ? sections[1] : (sections.Length == 3 ? sections[2] : "");
 			creature.lineageChance = float.Parse(chanceString);
 
-			if (!lineageString.IsNullOrEmpty()) {
-				(creature.tag, creature.data) = ParseCreatureTag(lineageString[1..^1]);
+			if (!tagString.IsNullOrEmpty()) {
+				tagString = tagString[1..^1];
+				string[] tags = tagString.Split(',');
+				foreach (string tagStr in tags) {
+					creature.AddTag(ParseCreatureTag(tagStr, creature.type));
+				}
 			}
 		}
 
@@ -340,7 +352,8 @@ public static class WorldParser {
 	}
 
 	private static bool ParseWorldCreatureNormal(string[] splits, Room room, TimelineType timelineType, HashSet<string> timelines) {
-		foreach (string creatureInDen in splits[1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)) {
+		string[] creaturesInDen = Regex.Split(splits[1], @",(?![^{]*})");
+		foreach (string creatureInDen in creaturesInDen) {
 			string[] sections = creatureInDen.Split('-', StringSplitOptions.TrimEntries);
 			int denId = int.Parse(sections[0], NumberStyles.Any, CultureInfo.InvariantCulture);
 			string creature = sections[1];
@@ -367,7 +380,7 @@ public static class WorldParser {
 			}
 
 			Den den = room.GetDen(denId);
-			DenLineage lineage = new DenLineage(CreatureTextures.Parse(creature), 0, "", 0.0f) {
+			DenLineage lineage = new DenLineage(CreatureTextures.Parse(creature), 0) {
 				timelineType = timelineType,
 				timelines = timelines
 			};
@@ -375,7 +388,11 @@ public static class WorldParser {
 
 			if (sections.Length == 3) {
 				if (sections[2][0] == '{') {
-					(lineage.tag, lineage.data) = ParseCreatureTag(sections[2][1..^1]);
+					string tagString = sections[2][1..^1];
+					string[] tags = tagString.Split(',');
+					foreach (string tagStr in tags) {
+						lineage.AddTag(ParseCreatureTag(tagStr, lineage.type));
+					}
 					lineage.count = 1;
 				}
 				else {
@@ -384,9 +401,12 @@ public static class WorldParser {
 			}
 			else if (sections.Length == 4) {
 				bool tagFirst = sections[2][0] == '{';
-				string tagString = sections[tagFirst ? 2 : 3];
+				string tagString = sections[tagFirst ? 2 : 3][1..^1];
 				string countString = sections[tagFirst ? 3 : 2];
-				(lineage.tag, lineage.data) = ParseCreatureTag(tagString[1..^1]);
+				string[] tags = tagString.Split(',');
+				foreach (string tagStr in tags) {
+					lineage.AddTag(ParseCreatureTag(tagStr, lineage.type));
+				}
 				lineage.count = int.Parse(countString);
 			}
 			else {
