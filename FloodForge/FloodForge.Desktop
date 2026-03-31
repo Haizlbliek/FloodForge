@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=FloodForge
+Exec=/FloodForge
+Icon=/assets/icon.png
+Terminal=false
+Categories=Game;
