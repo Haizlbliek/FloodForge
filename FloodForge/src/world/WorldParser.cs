@@ -356,7 +356,7 @@ public static class WorldParser {
 	private static bool ParseWorldCreatureNormal(string[] splits, Room room, TimelineType timelineType, HashSet<string> timelines) {
 		string[] creaturesInDen = Regex.Split(splits[1], @",(?![^{]*})");
 		foreach (string creatureInDen in creaturesInDen) {
-			string[] sections = creatureInDen.Split('-', StringSplitOptions.TrimEntries);
+			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
 			int denId = int.Parse(sections[0], NumberStyles.Any, CultureInfo.InvariantCulture);
 			string creature = sections[1];
 
