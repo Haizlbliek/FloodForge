@@ -48,7 +48,8 @@ public class Connection {
 			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 				min = Vector2.Min(pointA, pointB);
 				max = Vector2.Max(pointA, pointB);
-			} else {
+			}
+			else {
 				Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA) * this.directionStrength;
 				Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB) * this.directionStrength;
 
@@ -167,7 +168,8 @@ public class Connection {
 		if (roomConnectionHoverColor) {
 			connectionColorA = Themes.RoomConnectionHover;
 			connectionColorB = Themes.RoomConnectionHover;
-		} else {
+		}
+		else {
 			connectionColorA = Themes.RoomConnection;
 			connectionColorB = Themes.RoomConnection;
 		}
@@ -207,13 +209,15 @@ public class Connection {
 		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 			this.DrawCustomLine(pointA.x, pointA.y, pointB.x, pointB.y, alphaA, alphaB);
 			center = (pointA + pointB) * 0.5f;
-		} else {
+		}
+		else {
 			Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA);
 			Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB);
 
 			if (directionA.x == -directionB.x || directionA.y == -directionB.y) { // increases directionStrength if shortcuts both face the same direction
 				this.directionStrength *= 0.3333f;
-			} else {
+			}
+			else {
 				this.directionStrength *= 0.6666f;
 			}
 

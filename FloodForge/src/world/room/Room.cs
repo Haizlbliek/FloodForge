@@ -2,6 +2,7 @@ using Stride.Core.Extensions;
 
 namespace FloodForge.World;
 
+// TODO: Fix room water behind level rendering
 public class Room {
 	public const uint FLAG_VERTICAL_POLE = 16;
 	public const uint FLAG_HORIZONTAL_POLE = 32;
@@ -19,8 +20,8 @@ public class Room {
 	public const uint FLAG_ROCK = 262144;
 	public const uint FLAG_SPEAR = 524288;
 
-	public string Path;
-	public string Name;
+	public string path;
+	public string name;
 	public TimelineType TimelineType;
 	public HashSet<string> Timelines = [];
 	public Vector2 CanonPosition;
@@ -30,7 +31,8 @@ public class Room {
 	public int width;
 	public int height;
 	public bool valid;
-	public RoomData data;
+	public readonly RoomData data;
+	public readonly RoomVisuals visuals;
 	public uint[] geometry = null!;
 	public List<(ShortcutType, Vector2i)> shortcutExits = [];
 	public Dictionary<Vector2i, (Vector2i[], Vector2i)> shortcutPaths = [];
@@ -51,8 +53,8 @@ public class Room {
 	public bool Visible => WorldWindow.VisibleLayers[this.data.layer];
 
 	public Room(string path, string name) {
-		this.Path = path;
-		this.Name = name;
+		this.path = path;
+		this.name = name;
 		this.TimelineType = TimelineType.All;
 
 		this.CanonPosition = Vector2.Zero;
@@ -62,8 +64,11 @@ public class Room {
 		this.valid = false;
 
 		this.data = new RoomData();
+		this.visuals = new RoomVisuals(this);
 
 		this.LoadGeometry();
+		this.LoadSettings();
+		this.visuals.Refresh();
 		this.GenerateMesh();
 		this.CheckImages();
 	}
@@ -90,7 +95,7 @@ public class Room {
 
 	public Den GetDen01(int id) {
 		if (id < 0 || id >= this.dens.Count) {
-			throw new Exception($"Invalid Den {id} for {this.Name}");
+			throw new Exception($"Invalid Den {id} for {this.name}");
 		}
 
 		return this.dens[id];
@@ -124,8 +129,8 @@ public class Room {
 	}
 
 	protected virtual void LoadGeometry() {
-		if (!File.Exists(this.Path)) {
-			Logger.Warn($"Failed to load '{this.Name}'. File '{this.Path}' doesn't exist");
+		if (!File.Exists(this.path)) {
+			Logger.Warn($"Failed to load '{this.name}'. File '{this.path}' doesn't exist");
 			this.width = 72;
 			this.height = 43;
 			this.geometry = new uint[this.width * this.height];
@@ -133,7 +138,7 @@ public class Room {
 			return;
 		}
 
-		string[] lines = File.ReadAllLines(this.Path);
+		string[] lines = File.ReadAllLines(this.path);
 
 		string[] levelData = lines[1].Split('|');
 		this.width = int.Parse(levelData[0][..levelData[0].IndexOf('*')]);
@@ -142,7 +147,8 @@ public class Room {
 		if (levelData.Length == 1) {
 			this.data.waterHeight = -1;
 			this.data.waterInFront = false;
-		} else {
+		}
+		else {
 			this.data.waterHeight = int.Parse(levelData[1]);
 			this.data.waterInFront = int.Parse(levelData[2]) == 1;
 		}
@@ -247,8 +253,11 @@ public class Room {
 					else if (bits == 2 + 8) type = 3;
 
 					if (type == -1) {
-						Logger.Note($"Invalid slope type {this.Name}({x}, {y})");
-					} else {
+						if (Settings.DEBUGLogInvalidSlopes) {
+							Logger.Note($"Invalid slope type {this.name}({x}, {y})");
+						}
+					}
+					else {
 						this.geometry[idx] += (uint) (1024 * type);
 					}
 				}
@@ -278,6 +287,78 @@ public class Room {
 
 		foreach (Vector2i den in this.denShortcutEntrances) {
 			this.dens.Add(new Den());
+		}
+	}
+
+	protected virtual void LoadSettings() {
+		if (this.path.IsNullOrEmpty()) return;
+
+		this.data.objects.Clear();
+
+		string folder = Path.GetDirectoryName(this.path)!;
+		string? settingsPath = PathUtil.FindFile(folder, this.name + "_settings.txt");
+		if (settingsPath == null) return;
+
+		foreach (string line in File.ReadLines(settingsPath)) {
+			if (line.StartsWith("PlacedObjects: ")) {
+				string data = line["PlacedObjects: ".Length..];
+				string[] poData = data.Split([", "], StringSplitOptions.RemoveEmptyEntries);
+
+				foreach (string po in poData) {
+					try {
+						int start = po.IndexOf('<');
+						int next = po.IndexOf('>', start);
+						int end = po.IndexOf('>', next + 1);
+
+						string xStr = po.Substring(start + 1, next - start - 1);
+						string yStr = po.Substring(next + 2, end - next - 2);
+						string last = po[(end + 2)..];
+
+						Vector2 pos = new Vector2(float.Parse(xStr), float.Parse(yStr));
+						string[] splits = last.Split('~');
+
+						if (po.StartsWith("TerrainHandle>")) {
+							TerrainHandleObject obj = new TerrainHandleObject();
+							obj.nodes[0].position = pos;
+							if (splits.Length >= 4) {
+								obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
+								obj.nodes[2].position = new Vector2(float.Parse(splits[2]), float.Parse(splits[3]));
+							}
+							this.data.objects.Add(obj);
+						}
+						else if (po.StartsWith("MudPit>")) {
+							MudPitObject obj = new MudPitObject();
+							obj.nodes[0].position = pos;
+							if (splits.Length >= 2) {
+								obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
+							}
+							this.data.objects.Add(obj);
+						}
+						else if (po.StartsWith("AirPocket>")) {
+							AirPocketObject obj = new AirPocketObject();
+							obj.nodes[0].position = pos;
+							if (splits.Length >= 6) {
+								obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
+								obj.nodes[2].position.y = float.Parse(splits[5]);
+							}
+							this.data.objects.Add(obj);
+						}
+						else {
+							string[] splits2 = po.Split('>');
+							string key = splits2[0];
+
+							Texture texture = CreatureTextures.GetTexture($"room-{key}");
+							if (texture == CreatureTextures.UnknownCreature) continue;
+
+							GenericItemObject obj = new GenericItemObject(key, texture);
+							obj.nodes[0].position = pos;
+							this.data.objects.Add(obj);
+						}
+					} catch {
+						Logger.Warn("Failed to parse Placed Object: " + po);
+					}
+				}
+			}
 		}
 	}
 
@@ -318,7 +399,7 @@ public class Room {
 			}
 
 			if (forwardDirection.x == 0 && forwardDirection.y == 0) {
-				Logger.Warn($"Couldn't load shortcut {this.Name}({currentPosition.x}, {currentPosition.y})");
+				Logger.Warn($"Couldn't load shortcut {this.name}({currentPosition.x}, {currentPosition.y})");
 				continue;
 			}
 			Vector2i initialDirection = forwardDirection * new Vector2i(-1, 1);
@@ -367,11 +448,11 @@ public class Room {
 				verifiedShortcuts.Add(this.shortcutExits[i]);
 				this.shortcutPaths[currentPosition] = (exitPath.ToArray(), initialDirection);
 			}
-			string outString = "";
-			foreach(Vector2i item in exitPath) {
-				outString += string.Format("item: {0}; {1}\n", item.x, item.y);
-			}
-			Logger.Info("Final exitPath for index " + i + " with exitTile position " + currentPosition + ":\n" + outString);
+			// string outString = "";
+			// foreach (Vector2i item in exitPath) {
+			// 	outString += string.Format("item: {0}; {1}\n", item.x, item.y);
+			// }
+			// Logger.Info("Final exitPath for index " + i + " with exitTile position " + currentPosition + ":\n" + outString);
 		}
 
 		verifiedConnections.Reverse();
@@ -443,12 +524,12 @@ public class Room {
 	protected void CheckImages() {
 		if (!Settings.WarnMissingImages) return;
 
-		string path = PathUtil.Parent(this.Path);
+		string path = PathUtil.Parent(this.path);
 		for (int i = 0; i < this.data.cameras.Count; i++) {
-			string imageFile = $"{this.Name}_{i + 1}.png";
+			string imageFile = $"{this.name}_{i + 1}.png";
 
 			if (PathUtil.FindFile(path, imageFile) == null) {
-				Logger.Warn($"{this.Name} is missing image {imageFile}");
+				Logger.Warn($"{this.name} is missing image {imageFile}");
 			}
 		}
 	}
@@ -594,7 +675,8 @@ public class Room {
 		set {
 			if (WorldWindow.PositionType == WorldWindow.RoomPosition.Canon) {
 				this.CanonPosition = value;
-			} else {
+			}
+			else {
 				this.DevPosition = value;
 			}
 		}
@@ -608,7 +690,8 @@ public class Room {
 		set {
 			if (WorldWindow.PositionType == WorldWindow.RoomPosition.Canon) {
 				this.DevPosition = value;
-			} else {
+			}
+			else {
 				this.CanonPosition = value;
 			}
 		}
@@ -844,7 +927,7 @@ public class Room {
 			if ((this.GetTile(x, y + 1) & FLAG_SHORTCUT) > 0) {
 				direction = direction != 0 ? 128 : 4;
 			}
-			Themes.ThemeColor color = Themes.Layer1Color;
+			Color color = Themes.RoomShortcutArrow;
 			if (direction != 0) {
 				if (direction == 1) {
 					this.AddTriangle(
@@ -916,7 +999,7 @@ public class Room {
 				if ((this.GetTile(x, y + 1) & FLAG_SHORTCUT) > 0) {
 					direction = direction != 0 ? 128 : 4;
 				}
-				Themes.ThemeColor color = Themes.RoomShortcutRoom;
+				Color color = Themes.RoomShortcutArrow;
 				if (direction != 0) {
 					if (direction == 1) {
 						this.AddTriangle(
@@ -1011,6 +1094,21 @@ public class Room {
 		UI.FillRect(position.x, position.y - this.height, position.x + this.width, position.y);
 	}
 
+	private void DrawWater(Vector2 position) {
+		Immediate.Color(Themes.RoomWater);
+		if (!WorldWindow.VisibleDevItems) {
+			UI.FillRect(position.x, position.y - (this.height - MathF.Min(this.data.waterHeight + 0.5f, this.height)), position.x + this.width, position.y - this.height);
+			return;
+		}
+
+		Program.gl.Enable(EnableCap.Blend);
+		foreach (RoomVisuals.WaterSpot spot in this.visuals.water) {
+			Rect waterRect = Rect.FromSize(position.x + spot.pos.x / 20f, position.y - this.height + spot.pos.y / 20f, spot.size.x / 20f, spot.size.y / 20f);
+			UI.FillRect(waterRect);
+		}
+		Program.gl.Disable(EnableCap.Blend);
+	}
+
 	public unsafe virtual void Draw(WorldWindow.RoomPosition positionType) {
 		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
@@ -1033,15 +1131,12 @@ public class Room {
 
 		Program.gl.Enable(EnableCap.Blend);
 		if (this.data.waterHeight != -1 && !this.data.waterInFront) {
-			Immediate.Color(Themes.RoomWater);
-			UI.FillRect(position.x, position.y - (this.height - MathF.Min(this.data.waterHeight + 0.5f, this.height)), position.x + this.width, position.y - this.height);
+			this.DrawWater(position);
 		}
 
 		Color tint = this.GetTintColor();
-		if (WorldWindow.highlightRoom != null) {
-			if (WorldWindow.highlightRoom != this) {
-				tint *= 0.25f;
-			}
+		if (WorldWindow.highlightRoom != null && WorldWindow.highlightRoom != this) {
+			tint *= 0.25f;
 		}
 
 		Program.gl.BindVertexArray(this._vao);
@@ -1066,8 +1161,15 @@ public class Room {
 		Program.gl.UseProgram(0);
 
 		if (this.data.waterHeight != -1 && this.data.waterInFront) {
-			Immediate.Color(Themes.RoomWater);
-			UI.FillRect(position.x, position.y - (this.height - MathF.Min(this.data.waterHeight + 0.5f, this.height)), position.x + this.width, position.y - this.height);
+			this.DrawWater(position);
+		}
+		if (WorldWindow.VisibleDevItems && this.visuals.hasTerrain && this.visuals.terrain.Count >= 2) {
+			Immediate.Color(0f, 1f, 0f);
+			Immediate.Begin(Immediate.PrimitiveType.LINE_STRIP);
+			foreach (Vector2 point in this.visuals.terrain) {
+				Immediate.Vertex(position.x + point.x / 20f, position.y + point.y / 20f - this.height);
+			}
+			Immediate.End();
 		}
 		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Fill);
@@ -1077,12 +1179,8 @@ public class Room {
 
 		if (positionType == WorldWindow.PositionType) {
 			if (WorldWindow.VisibleDevItems) {
-				foreach (RoomData.DevItem item in this.data.devItems) {
-					if (item.texture == null) continue;
-
-					float x = position.x + item.position.x;
-					float y = position.y - this.height + item.position.y;
-					UI.CenteredTexture(item.texture, x, y, WorldWindow.SelectorScale);
+				foreach (DevObject devObject in this.data.objects) {
+					devObject.Draw(this.Position + new Vector2(0f, -this.height));
 				}
 			}
 
@@ -1178,7 +1276,8 @@ public class Room {
 			if (creature.lineageTo == null) {
 				Immediate.Color(Color.White);
 				UI.font.Write(creature.count.ToString(), rectX + 0.5f + scale * 0.25f, rectY - 0.5f - scale * 0.5f, 0.5f * scale, Font.Align.MiddleCenter);
-			} else {
+			}
+			else {
 				while (creature.lineageTo != null) {
 					float chance = creature.lineageChance;
 					creature = creature.lineageTo;

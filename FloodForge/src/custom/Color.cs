@@ -65,9 +65,11 @@ public struct Color : IParsable<Color> {
 		if (delta > 0.0f) {
 			if (cmax == color.r) {
 				h = 60.0f * ((color.g - color.b) / delta % 6.0f);
-			} else if (cmax == color.g) {
+			}
+			else if (cmax == color.g) {
 				h = 60.0f * (((color.b - color.r) / delta) + 2.0f);
-			} else {
+			}
+			else {
 				h = 60.0f * (((color.r - color.g) / delta) + 4.0f);
 			}
 			if (h < 0.0f) h += 360.0f;

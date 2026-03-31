@@ -95,7 +95,7 @@ public class Font {
 			if (!this.characters.TryGetValue(c, out var ch)) continue;
 			currentLineWidth += ch.xAdvance * scale * this.separationScale;
 		}
-		
+	
 		return new Vector2(Math.Max(width, currentLineWidth), height);
 	}
 
@@ -191,11 +191,11 @@ public class Font {
 		public static readonly Align TopLeft      = new Align(MaskTop | MaskLeft);
 		public static readonly Align TopCenter    = new Align(MaskTop | MaskCenter);
 		public static readonly Align TopRight     = new Align(MaskTop | MaskRight);
-		
+	
 		public static readonly Align MiddleLeft   = new Align(MaskMiddle | MaskLeft);
 		public static readonly Align MiddleCenter = new Align(MaskMiddle | MaskCenter);
 		public static readonly Align MiddleRight  = new Align(MaskMiddle | MaskRight);
-		
+	
 		public static readonly Align BottomLeft   = new Align(MaskBottom | MaskLeft);
 		public static readonly Align BottomCenter = new Align(MaskBottom | MaskCenter);
 		public static readonly Align BottomRight  = new Align(MaskBottom | MaskRight);
@@ -213,7 +213,7 @@ public class Font {
 		public static Align operator &(Align left, Align right) => new Align(left._value & right._value);
 
 		public bool HasFlag(Align flag) => flag._value != 0 && (this._value & flag._value) == flag._value;
-		
+	
 		public override bool Equals(object? obj) => obj is Align other && this._value == other._value;
 		public override int GetHashCode() => this._value.GetHashCode();
 	}

@@ -39,6 +39,10 @@ public static class PopupManager {
 				}
 				break;
 			}
+			if (popup.Resizing) {
+				interactingPopup = popup;
+				break;
+			}
 		}
 
 		Mouse.Disabled = interactingPopup != null;
@@ -47,20 +51,6 @@ public static class PopupManager {
 	public static void Draw() {
 		Mouse.Disabled = false;
 
-		if (Keys.Modifier(Silk.NET.SDL.Keymod.Alt)) {
-			if (Keys.JustPressed(Silk.NET.Input.Key.Number1)) {
-				PopupManager.Add(new ColorEditPopup(Custom.Color.Black, x => { }));
-			}
-			if (Keys.JustPressed(Silk.NET.Input.Key.Number2)) {
-				PopupManager.Add(new ConfirmPopup("ConfirmPopup"));
-			}
-			if (Keys.JustPressed(Silk.NET.Input.Key.Number3)) {
-				PopupManager.Add(new FilesystemPopup(x => { }));
-			}
-			if (Keys.JustPressed(Silk.NET.Input.Key.Number4)) {
-				PopupManager.Add(new InfoPopup("InfoPopup"));
-			}
-		}
 		for (int i = Windows.Count - 1; i >= 0; i--) {
 			Popup popup = Windows[i];
 
@@ -80,7 +70,8 @@ public static class PopupManager {
 			if (Mouse.Left) {
 				holdingPopup.Offset(Mouse.Pos - holdingStart);
 				holdingStart = Mouse.Pos;
-			} else {
+			}
+			else {
 				holdingPopup = null;
 			}
 		}
@@ -88,6 +79,7 @@ public static class PopupManager {
 		foreach (Popup popup in Windows) {
 			Mouse.Disabled = popup != mousePopup;
 			popup.Draw();
+			popup.FinishDraw();
 		}
 		Mouse.Disabled = interactingPopup != null;
 	}

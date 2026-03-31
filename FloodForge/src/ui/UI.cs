@@ -122,6 +122,60 @@ public static class UI {
 		Immediate.End();
 	}
 
+	private static void RoundedRect(float x0, float y0, float x1, float y1, float radius, Immediate.PrimitiveType type) {
+		float maxRadius = Math.Min(Math.Abs(x1 - x0), Math.Abs(y1 - y0)) * 0.5f;
+		radius = Math.Min(radius, maxRadius);
+
+		if (radius <= 0) {
+			Immediate.Begin(type);
+			Immediate.Vertex(x0, y0);
+			Immediate.Vertex(x1, y0);
+			Immediate.Vertex(x1, y1);
+			Immediate.Vertex(x0, y1);
+			Immediate.End();
+			return;
+		}
+
+		Immediate.Begin(type);
+
+		int segments = 8;
+		float step = (float)Math.PI * 0.5f / segments;
+
+		// Top-Right Corner
+		for (int i = 0; i <= segments; i++) {
+			float angle = i * step;
+			Immediate.Vertex(x1 - radius + Mathf.Cos(angle) * radius, y0 + radius - Mathf.Sin(angle) * radius);
+		}
+
+		// Top-Left Corner
+		for (int i = 0; i <= segments; i++) {
+			float angle = Mathf.PI * 0.5f + i * step;
+			Immediate.Vertex(x0 + radius + Mathf.Cos(angle) * radius, y0 + radius - Mathf.Sin(angle) * radius);
+		}
+
+		// Bottom-Left Corner
+		for (int i = 0; i <= segments; i++) {
+			float angle = Mathf.PI + i * step;
+			Immediate.Vertex(x0 + radius + Mathf.Cos(angle) * radius, y1 - radius - Mathf.Sin(angle) * radius);
+		}
+
+		// Bottom-Right Corner
+		for (int i = 0; i <= segments; i++) {
+			float angle = Mathf.PI * 1.5f + i * step;
+			Immediate.Vertex(x1 - radius + Mathf.Cos(angle) * radius, y1 - radius - Mathf.Sin(angle) * radius);
+		}
+
+		Immediate.End();
+	}
+
+	public static void FillRoundedRect(float x0, float y0, float x1, float y1, float radius) {
+		RoundedRect(x0, y0, x1, y1, radius, Immediate.PrimitiveType.TRIANGLE_FAN);
+	}
+
+	public static void StrokeRoundedRect(float x0, float y0, float x1, float y1, float radius) {
+		RoundedRect(x0, y0, x1, y1, radius, Immediate.PrimitiveType.LINE_LOOP);
+	}
+
 	public static void StrokeRect(float x0, float y0, float x1, float y1) {
 		Immediate.Begin(Immediate.PrimitiveType.LINE_LOOP);
 		Immediate.Vertex(x0, y0);
@@ -247,15 +301,40 @@ public static class UI {
 		StrokeCircle(pos.x, pos.y, radius, resolution);
 	}
 
+	public static void ButtonFillRect(Rect rect) {
+		FillRoundedRect(rect.x0, rect.y0, rect.x1, rect.y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+	public static void ButtonFillRect(UVRect rect) {
+		FillRoundedRect(rect.x0, rect.y0, rect.x1, rect.y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+	public static void ButtonFillRect(float x0, float y0, float x1, float y1) {
+		FillRoundedRect(x0, y0, x1, y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+	public static void ButtonStrokeRect(Rect rect) {
+		StrokeRoundedRect(rect.x0, rect.y0, rect.x1, rect.y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+	public static void ButtonStrokeRect(UVRect rect) {
+		StrokeRoundedRect(rect.x0, rect.y0, rect.x1, rect.y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+	public static void ButtonStrokeRect(float x0, float y0, float x1, float y1) {
+		StrokeRoundedRect(x0, y0, x1, y1, Settings.RoundedUI ? 0.01f : 0f);
+	}
+
+
 	public static ButtonResponse Button(Rect rect, ButtonMods? mods = null) {
 		mods ??= new ButtonMods();
 		bool highlight = CanClick && rect.Inside(Mouse.Pos);
 
 		Immediate.Color(mods.disabled ? Themes.ButtonDisabled : Themes.Button);
-		FillRect(rect);
+		ButtonFillRect(rect);
 
 		Immediate.Color(mods.disabled ? Themes.Border : ((highlight || mods.selected) ? Themes.BorderHighlight : Themes.Border));
-		StrokeRect(rect);
+		ButtonStrokeRect(rect);
 
 		return new ButtonResponse(highlight && Mouse.JustLeft && !mods.disabled, highlight);
 	}
@@ -266,13 +345,13 @@ public static class UI {
 		bool highlight = can && rect.Inside(Mouse.Pos);
 
 		Immediate.Color(mods.disabled ? Themes.ButtonDisabled : Themes.Button);
-		FillRect(rect);
+		ButtonFillRect(rect);
 
 		Immediate.Color(mods.textColor ?? (mods.disabled ? Themes.TextDisabled : (mods.selected ? Themes.TextHighlight : Themes.Text)));
 		UI.font.Write(text, rect.CenterX, rect.CenterY, 0.03f, Font.Align.MiddleCenter);
 
 		Immediate.Color(mods.disabled ? Themes.Border : ((highlight || mods.selected) ? Themes.BorderHighlight : Themes.Border));
-		StrokeRect(rect);
+		ButtonStrokeRect(rect);
 
 		return new ButtonResponse(highlight && Mouse.JustLeft && !mods.disabled, highlight);
 	}
@@ -283,7 +362,7 @@ public static class UI {
 		bool highlight = can && rect.Inside(Mouse.Pos);
 
 		Immediate.Color(mods.disabled ? Themes.ButtonDisabled : Themes.Button);
-		FillRect(rect);
+		ButtonFillRect(rect);
 
 		Program.gl.Enable(EnableCap.Blend);
 		Immediate.UseTexture(mods.texture);
@@ -302,7 +381,7 @@ public static class UI {
 		Program.gl.Disable(EnableCap.Blend);
 
 		Immediate.Color(mods.disabled ? Themes.Border : ((highlight || mods.selected) ? Themes.BorderHighlight : Themes.Border));
-		StrokeRect(rect);
+		ButtonStrokeRect(rect);
 
 		return new ButtonResponse(highlight && Mouse.JustLeft && !mods.disabled, highlight);
 	}
@@ -325,7 +404,7 @@ public static class UI {
 		editable.submitted = false;
 
 		Immediate.Color(mods.disabled ? Themes.ButtonDisabled : Themes.Button);
-		UI.FillRect(rect);
+		UI.ButtonFillRect(rect);
 
 		if (editable.value.IsNullOrEmpty()) {
 			Immediate.Color(Themes.TextDisabled);
@@ -344,7 +423,7 @@ public static class UI {
 		}
 
 		Immediate.Color((!mods.disabled && (highlight || selected)) ? Themes.BorderHighlight : Themes.Border);
-		UI.StrokeRect(rect);
+		ButtonStrokeRect(rect);
 
 		if (highlight && Mouse.JustLeft && !mods.disabled) {
 			if (selected) {
@@ -360,6 +439,74 @@ public static class UI {
 		}
 
 		return new TextInputResponse(UI.CurrentEditable == editable, highlight, submitted);
+	}
+
+	public static SliderResponse Slider(Rect rect, SliderFloatEditable editable, ref float value, SliderMods? mods = null) {
+		mods ??= new SliderMods();
+		float centerY = rect.CenterY;
+		bool highlight = CanClick && rect.Inside(Mouse.Pos) && !mods.disabled;
+		bool submitted = false;
+
+		Immediate.Color(Themes.Border);
+		UI.Line(rect.x0, centerY, rect.x1, centerY);
+
+		float progress = (value - editable.min) / (editable.max - editable.min);
+		float x = progress * (rect.x1 - rect.x0 - 0.02f) + rect.x0 + 0.01f;
+		Immediate.Color(Themes.Border);
+		UI.ButtonFillRect(x - 0.005f, rect.y0, x + 0.005f, rect.y1);
+		if (highlight || CurrentEditable == editable) {
+			Immediate.Color(Themes.BorderHighlight);
+			UI.ButtonStrokeRect(x - 0.005f, rect.y0, x + 0.005f, rect.y1);
+		}
+
+		if (Mouse.JustLeft && highlight) {
+			UI.CurrentEditable = editable;
+		}
+		if (CurrentEditable == editable) {
+			if (!Mouse.Left) {
+				CurrentEditable = null;
+				submitted = true;
+			}
+			else {
+				value = Mathf.Clamp01((Mouse.X - rect.x0 - 0.01f) / (rect.x1 - rect.x0 - 0.02f)) * (editable.max - editable.min) + editable.min;
+			}
+		}
+
+		return new SliderResponse(CurrentEditable == editable, submitted, new Vector2(x, centerY));
+	}
+
+	public static SliderResponse Slider(Rect rect, SliderIntEditable editable, ref int value, SliderMods? mods = null) {
+		mods ??= new SliderMods();
+		float centerY = rect.CenterY;
+		bool highlight = CanClick && rect.Inside(Mouse.Pos) && !mods.disabled;
+		bool submitted = false;
+
+		Immediate.Color(Themes.Border);
+		UI.Line(rect.x0, centerY, rect.x1, centerY);
+
+		float progress = (value - editable.min) / (float) (editable.max - editable.min);
+		float x = progress * (rect.x1 - rect.x0 - 0.02f) + rect.x0 + 0.01f;
+		Immediate.Color(Themes.Border);
+		UI.ButtonFillRect(x - 0.005f, rect.y0, x + 0.005f, rect.y1);
+		if (highlight || CurrentEditable == editable) {
+			Immediate.Color(Themes.BorderHighlight);
+			UI.ButtonStrokeRect(x - 0.005f, rect.y0, x + 0.005f, rect.y1);
+		}
+
+		if (Mouse.JustLeft && highlight) {
+			UI.CurrentEditable = editable;
+		}
+		if (CurrentEditable == editable) {
+			if (!Mouse.Left) {
+				CurrentEditable = null;
+				submitted = true;
+			}
+			else {
+				value = Mathf.RoundToInt(Mathf.Clamp01((Mouse.X - rect.x0 - 0.01f) / (rect.x1 - rect.x0 - 0.02f)) * (editable.max - editable.min) + editable.min);
+			}
+		}
+
+		return new SliderResponse(CurrentEditable == editable, submitted, new Vector2(x, centerY));
 	}
 
 	public static void CenteredTexture(Texture texture, float x, float y, float scale) {
@@ -452,6 +599,10 @@ public static class UI {
 		public string placeholder = "";
 	}
 
+	public class SliderMods {
+		public bool disabled = false;
+	}
+
 	public readonly struct ButtonResponse {
 		public readonly bool clicked, hovered;
 
@@ -472,6 +623,17 @@ public static class UI {
 			this.focused = focused;
 			this.hovered = hovered;
 			this.submitted = submitted;
+		}
+	}
+
+	public class SliderResponse {
+		public readonly bool dragging, submitted;
+		public readonly Vector2 sliderPos;
+
+		public SliderResponse(bool dragging, bool submitted, Vector2 sliderPos) {
+			this.dragging = dragging;
+			this.submitted = submitted;
+			this.sliderPos = sliderPos;
 		}
 	}
 
@@ -558,6 +720,26 @@ public static class UI {
 			SignedFloat,
 			UnsignedInteger,
 			SignedInteger,
+		}
+	}
+
+	public class SliderFloatEditable : Editable {
+		public float min;
+		public float max;
+
+		public SliderFloatEditable(float min, float max) {
+			this.min = min;
+			this.max = max;
+		}
+	}
+
+	public class SliderIntEditable : Editable {
+		public int min;
+		public int max;
+
+		public SliderIntEditable(int min, int max) {
+			this.min = min;
+			this.max = max;
 		}
 	}
 }

@@ -45,20 +45,6 @@ public static class DropletWindow {
 	}
 	private static readonly string[] GeometryToolNames = [ "Wall", "Slope", "Platform", "Background Wall", "Horizontal Pole", "Vertical Pole", "Spear", "Rock", "Shortcut", "Room Exit", "Creature Den", "Wack a Mole Hole", "Scavenger Den", "Garbage Worm", "Wormgrass", "Batfly Hive" ];
 
-	private struct WaterSpot {
-		public Vector2 pos;
-		public Vector2 size;
-
-		public WaterSpot(Vector2 pos, Vector2 size) {
-			this.pos = pos;
-			this.size = size;
-		}
-
-		public readonly bool Intersects(WaterSpot other) {
-			return this.pos.x <= other.pos.x + other.size.x && this.pos.y <= other.pos.y + other.size.y && this.pos.x + this.size.x >= other.pos.x && this.pos.y + this.size.y >= other.pos.y;
-		}
-	}
-
 	private static Vector2 transformedMouse;
 	private static Rect roomRect;
 	private static Vector2i mouseTile;
@@ -70,7 +56,6 @@ public static class DropletWindow {
 	private static GeometryTool selectedTool = GeometryTool.Wall;
 
 	private static RoomData.Camera? selectedCamera;
-	private static readonly List<DevObject> objects = [];
 
 	private static uint[]? backupGeometry = null;
 	private static int backupWaterHeight;
@@ -79,12 +64,7 @@ public static class DropletWindow {
 	private static int backupWidth;
 	private static int backupHeight;
 	private static RoomData.Camera[] backupCameras = [];
-
-	private static bool terrainNeedsRefresh = false;
-	private static bool hasTerrain = false;
-	private static List<Vector2> terrain = [];
-	private static bool waterNeedsRefresh = false;
-	private static List<WaterSpot> water = [];
+	private static List<DevObject> backupObjects = [];
 
 	private static Vector2 cameraOffset;
 	private static float cameraScale = 40f;
@@ -144,57 +124,13 @@ public static class DropletWindow {
 		cameraOffset += (targetCameraPan - cameraOffset) * (1f - MathF.Pow(1f - Settings.CameraPanSpeed, Program.Delta * 60f));
 	}
 
-	private static float SampleHandle(float a, float b, float c, float d, float t) {
-		float it = 1f - t;
-		return it * it * it * a + 3f * it * it * t * b + 3f * it * t * t * c + t * t * t * d;
-	}
-
-	private static float SampleTerrain(TerrainHandleObject left, TerrainHandleObject right, float x) {
-		if (x < left.Middle.x) {
-			return Mathf.Lerp(left.Middle.y, left.Left.y, Mathf.InverseLerp(x, left.Middle.x, left.Left.x));
-		}
-		if (x > right.Middle.x) {
-			return Mathf.Lerp(right.Middle.y, right.Right.y, Mathf.InverseLerp(x, right.Middle.x, right.Right.x));
-		}
-
-		float leftPos = 0f;
-		float rightPos = 1f;
-		for (int i = 0; i < 16; i++) {
-			float middlePos = (leftPos + rightPos) * 0.5f;
-			if (SampleHandle(left.Middle.x, left.Right.x, right.Left.x, right.Middle.x, middlePos) < x) {
-				leftPos = middlePos;
-			}
-			else {
-				rightPos = middlePos;
-			}
-		}
-
-		return SampleHandle(left.Middle.y, left.Right.y, right.Left.y, right.Middle.y, (leftPos + rightPos) * 0.5f);
-	}
-
-	private static List<WaterSpot> SplitWater(WaterSpot water, WaterSpot by) {
-		WaterSpot left = new WaterSpot(water.pos, new Vector2(by.pos.x - water.pos.x, water.size.y));
-		WaterSpot right = new WaterSpot(new Vector2(by.pos.x + by.size.x, water.pos.y), water.size - new Vector2(by.pos.x + by.size.x - water.pos.x, 0f));
-		float middlePosX = MathF.Max(by.pos.x, water.pos.x);
-		float middleSizeX = MathF.Min(by.pos.x + by.size.x, water.pos.x + water.size.x) - middlePosX;
-		WaterSpot bottom = new WaterSpot(new Vector2(middlePosX, water.pos.y), new Vector2(middleSizeX, by.pos.y - water.pos.y));
-		WaterSpot top = new WaterSpot(new Vector2(middlePosX, by.pos.y + by.size.y), new Vector2(middleSizeX, water.size.y - (by.pos.y + by.size.y - water.pos.y)));
-
-		List<WaterSpot> values = [];
-		if (left.size.x > 0f && left.size.y > 0f) values.Add(left);
-		if (right.size.x > 0f && right.size.y > 0f) values.Add(right);
-		if (bottom.size.x > 0f && bottom.size.y > 0f) values.Add(bottom);
-		if (top.size.x > 0f && top.size.y > 0f) values.Add(top);
-		return values;
-	}
-
 	private static Node? movingNode = null;
 
 	private static void UpdateDetailsTab() {
-		if (hasTerrain && terrain.Count >= 2) {
+		if (Room.visuals.hasTerrain && Room.visuals.terrain.Count >= 2) {
 			Immediate.Color(0f, 1f, 0f);
 			Immediate.Begin(Immediate.PrimitiveType.LINE_STRIP);
-			foreach (Vector2 point in terrain) {
+			foreach (Vector2 point in Room.visuals.terrain) {
 				Immediate.Vertex(roomRect.x0 + point.x / 20f, roomRect.y0 + point.y / 20f);
 			}
 			Immediate.End();
@@ -203,7 +139,9 @@ public static class DropletWindow {
 		Node? hoveringNode = null;
 		Vector2 nodeMouse = new Vector2(transformedMouse.x, transformedMouse.y + (roomRect.y1 - roomRect.y0)) * 20f;
 		float mouseDistance = 0.3f * cameraScale;
-		foreach (DevObject devObject in objects) {
+		foreach (DevObject devObject in Room.data.objects) {
+			if (!devObject.ShowInDroplet) continue;
+
 			devObject.Draw(new Vector2(roomRect.x0, roomRect.y0));
 
 			foreach (Node node in devObject.nodes) {
@@ -249,15 +187,15 @@ public static class DropletWindow {
 			}
 
 			if (movingNode.devObject is TerrainHandleObject) {
-				terrainNeedsRefresh = true;
+				Room.visuals.terrainNeedsRefresh = true;
 			}
 			if (movingNode.devObject is AirPocketObject) {
-				waterNeedsRefresh = true;
+				Room.visuals.waterNeedsRefresh = true;
 			}
 
 			if (!Mouse.Left) {
 				if (needsDeleted) {
-					objects.Remove(movingNode.devObject);
+					Room.data.objects.Remove(movingNode.devObject);
 				}
 
 				hoveringNode = null;
@@ -270,72 +208,28 @@ public static class DropletWindow {
 			if (!blockMouse && Keys.Pressed(Key.W) && Room.data.waterHeight != -1) {
 				Room.data.waterHeight = Room.height - mouseTile.y - 1;
 				if (Room.data.waterHeight < 0) Room.data.waterHeight = 0;
-				waterNeedsRefresh = true;
+				Room.visuals.waterNeedsRefresh = true;
 			}
 		}
 
-		if (terrainNeedsRefresh) {
-			terrain.Clear();
-			TerrainHandleObject[] handles = [.. objects.OfType<TerrainHandleObject>()];
-
-			if (handles.Length >= 2) {
-				Array.Sort(handles, (a, b) => a.Middle.x.CompareTo(b.Middle.x));
-				int handleIndex = 0;
-				int segments = Room.width + 1;
-				for (float x = 0; x < segments * 20f; x += 20f) {
-					while (handleIndex < handles.Length - 2 && handles[handleIndex + 1].Middle.x < x) {
-						handleIndex++;
-					}
-					terrain.Add(new Vector2(x, SampleTerrain(handles[handleIndex], handles[handleIndex + 1], x)));
-				}
-				hasTerrain = true;
-			} else {
-				hasTerrain = false;
-			}
-		}
-
-		if (waterNeedsRefresh) {
-			water.Clear();
-			water.Add(new WaterSpot(new Vector2(0f, 0f), new Vector2(Room.width * 20f, Room.data.waterHeight * 20f + 10f)));
-			foreach (AirPocketObject airPocket in objects.OfType<AirPocketObject>()) {
-				WaterSpot spot = new WaterSpot(airPocket.nodes[0].position, airPocket.nodes[1].position);
-				if (spot.size.x <= 0f || spot.size.y <= 0f) continue;
-
-				for (int i = water.Count - 1; i >= 0; i--) {
-					if (water[i].Intersects(spot)) {
-						List<WaterSpot> splits = SplitWater(water[i], spot);
-						if (splits.Count == 0) {
-							water.RemoveAt(i);
-						}
-						else {
-							water[i] = splits[0];
-							for (int j = 1; j < splits.Count; j++) {
-								water.Add(splits[j]);
-							}
-						}
-					}
-				}
-
-				spot.size.y = MathF.Min(airPocket.nodes[2].position.y, spot.size.y);
-				if (spot.size.y <= 0f) continue;
-				water.Add(spot);
-			}
-		}
+		Room.visuals.Refresh();
 	}
 
 	private static void UpdateNotDetailsTab() {
 		if (!showObjects) return;
 
-		if (hasTerrain && terrain.Count >= 2) {
+		if (Room.visuals.hasTerrain && Room.visuals.terrain.Count >= 2) {
 			Immediate.Color(0f, 1f, 0f);
 			Immediate.Begin(Immediate.PrimitiveType.LINE_STRIP);
-			foreach (Vector2 point in terrain) {
+			foreach (Vector2 point in Room.visuals.terrain) {
 				Immediate.Vertex(roomRect.x0 + point.x / 20f, roomRect.y0 + point.y / 20f);
 			}
 			Immediate.End();
 		}
 
-		foreach (DevObject devObject in objects) {
+		foreach (DevObject devObject in Room.data.objects) {
+			if (!devObject.ShowInDroplet) continue;
+
 			devObject.Draw(new Vector2(roomRect.x0, roomRect.y0));
 		}
 	}
@@ -390,7 +284,8 @@ public static class DropletWindow {
 		if (remove) {
 			if (!hasFlag) return;
 			Room.geometry[index] &= ~(mask | 128);
-		} else {
+		}
+		else {
 			Room.geometry[index] |= mask | 128;
 			VerifyShortcut(x, y);
 		}
@@ -712,7 +607,7 @@ public static class DropletWindow {
 
 		Program.gl.Enable(EnableCap.Blend);
 		Immediate.Color(0f, 0f, 0.5f, 0.5f);
-		foreach (WaterSpot spot in water) {
+		foreach (RoomVisuals.WaterSpot spot in Room.visuals.water) {
 			Rect waterRect = Rect.FromSize(roomRect.x0 + spot.pos.x / 20f, roomRect.y0 + spot.pos.y / 20f, spot.size.x / 20f, spot.size.y / 20f);
 			UI.FillRect(waterRect);
 		}
@@ -722,38 +617,53 @@ public static class DropletWindow {
 	private static void SetToolUv(ref UVRect rect, int tool) {
 		if (tool == 0) {
 			rect.UV(0.5f, 0.125f, 0.625f, 0.0f);
-		} else if (tool == 1) {
+		}
+		else if (tool == 1) {
 			rect.UV(0.625f, 0.125f, 0.75f, 0.0f);
-		} else if (tool == 2) {
+		}
+		else if (tool == 2) {
 			rect.UV(0.75f, 0.125f, 0.875f, 0.0f);
-		} else if (tool == 3) {
+		}
+		else if (tool == 3) {
 			rect.UV(0.875f, 0.125f, 1.0f, 0.0f);
 
-		} else if (tool == 4) {
+		}
+		else if (tool == 4) {
 			rect.UV(0.5f, 0.25f, 0.625f, 0.125f);
-		} else if (tool == 5) {
+		}
+		else if (tool == 5) {
 			rect.UV(0.625f, 0.25f, 0.75f, 0.125f);
-		} else if (tool == 6) {
+		}
+		else if (tool == 6) {
 			rect.UV(0.0f, 0.375f, 0.125f, 0.25f);
-		} else if (tool == 7) {
+		}
+		else if (tool == 7) {
 			rect.UV(0.125f, 0.375f, 0.25f, 0.25f);
 
-		} else if (tool == 8) {
+		}
+		else if (tool == 8) {
 			rect.UV(0.75f, 0.25f, 0.875f, 0.125f);
-		} else if (tool == 9) {
+		}
+		else if (tool == 9) {
 			rect.UV(0.0f, 0.5f, 0.125f, 0.375f);
-		} else if (tool == 10) {
+		}
+		else if (tool == 10) {
 			rect.UV(0.125f, 0.5f, 0.25f, 0.375f);
-		} else if (tool == 11) {
+		}
+		else if (tool == 11) {
 			rect.UV(0.375f, 0.5f, 0.5f, 0.375f);
 
-		} else if (tool == 12) {
+		}
+		else if (tool == 12) {
 			rect.UV(0.25f, 0.5f, 0.375f, 0.375f);
-		} else if (tool == 13) {
+		}
+		else if (tool == 13) {
 			rect.UV(0.25f, 0.25f, 0.375f, 0.125f);
-		} else if (tool == 14) {
+		}
+		else if (tool == 14) {
 			rect.UV(0.25f, 0.375f, 0.375f, 0.25f);
-		} else if (tool == 15) {
+		}
+		else if (tool == 15) {
 			rect.UV(0.375f, 0.375f, 0.5f, 0.25f);
 		}
 	}
@@ -884,17 +794,20 @@ public static class DropletWindow {
 						Immediate.Vertex(x1, y0);
 						Immediate.Vertex(x0, y0);
 						Immediate.Vertex(x0, y1);
-					} else if (type == 1) {
+					}
+					else if (type == 1) {
 						Immediate.Vertex(x0, y0);
 						Immediate.Vertex(x1, y1);
 						Immediate.Vertex(x0, y1);
 						Immediate.Vertex(x0, y0);
-					} else if (type == 2) {
+					}
+					else if (type == 2) {
 						Immediate.Vertex(x0, y0);
 						Immediate.Vertex(x1, y0);
 						Immediate.Vertex(x1, y1);
 						Immediate.Vertex(x0, y0);
-					} else if (type == 3) {
+					}
+					else if (type == 3) {
 						Immediate.Vertex(x0, y1);
 						Immediate.Vertex(x1, y0);
 						Immediate.Vertex(x1, y1);
@@ -1082,7 +995,8 @@ public static class DropletWindow {
 					}
 				}
 			}
-		} else if (currentTab == EditorTab.Details) {
+		}
+		else if (currentTab == EditorTab.Details) {
 			bool hasWater = Room.data.waterHeight != -1;
 
 			UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - 0.06f, 0.05f, 0.05f), ref Room.data.enclosedRoom);
@@ -1091,7 +1005,8 @@ public static class DropletWindow {
 
 			if (!hasWater) {
 				Room.data.waterHeight = -1;
-			} else if (Room.data.waterHeight == -1) {
+			}
+			else if (Room.data.waterHeight == -1) {
 				Room.data.waterHeight = Room.height / 2;
 			}
 
@@ -1105,13 +1020,15 @@ public static class DropletWindow {
 			UI.Line(sidebar.x0, barY, sidebar.x1, sidebar.y1 - 0.2f);
 
 			if (UI.TextButton("Add TerrainHandle", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.06f, 0.39f, 0.05f))) {
-				objects.Add(new TerrainHandleObject());
+				Room.data.objects.Add(new TerrainHandleObject());
+				Room.visuals.terrainNeedsRefresh = true;
 			}
 			if (UI.TextButton("Add MudPit", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.12f, 0.39f, 0.05f))) {
-				objects.Add(new MudPitObject());
+				Room.data.objects.Add(new MudPitObject());
 			}
 			if (UI.TextButton("Add AirPocket", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.18f, 0.39f, 0.05f))) {
-				objects.Add(new AirPocketObject());
+				Room.data.objects.Add(new AirPocketObject());
+				Room.visuals.waterNeedsRefresh = true;
 			}
 
 			if (trashCanState > 0) {
@@ -1190,77 +1107,7 @@ public static class DropletWindow {
 		backupWidth = Room.width;
 		backupHeight = Room.height;
 		backupCameras = [.. Room.data.cameras.Select(x => new RoomData.Camera() { position = x.position, angles = [ ..x.angles ] })];
-	}
-
-	public static void LoadRoom(Room room) {
-		Room = room;
-
-		if (!File.Exists(Room.Path)) {
-			Logger.Error("Failed to open droplet room file: " + Room.Path);
-			return;
-		}
-
-		objects.Clear();
-
-		string folder = Path.GetDirectoryName(Room.Path)!;
-		string settingsPath = PathUtil.FindFile(folder, Room.Name + "_settings.txt")!;
-
-		if (settingsPath != null) {
-			foreach (string line in File.ReadLines(settingsPath)) {
-				if (line.StartsWith("PlacedObjects: ")) {
-					string data = line["PlacedObjects: ".Length..];
-					string[] poData = data.Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
-
-					foreach (string po in poData) {
-						try {
-							int start = po.IndexOf('<');
-							int next = po.IndexOf('>', start);
-							int end = po.IndexOf('>', next + 1);
-
-							string xStr = po.Substring(start + 1, next - start - 1);
-							string yStr = po.Substring(next + 2, end - next - 2);
-							string last = po[(end + 2)..];
-
-							Vector2 pos = new Vector2(float.Parse(xStr), float.Parse(yStr));
-							string[] splits = last.Split('~');
-
-							if (po.StartsWith("TerrainHandle>")) {
-								TerrainHandleObject obj = new TerrainHandleObject();
-								obj.nodes[0].position = pos;
-								if (splits.Length >= 4) {
-									obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
-									obj.nodes[2].position = new Vector2(float.Parse(splits[2]), float.Parse(splits[3]));
-								}
-								objects.Add(obj);
-							}
-							else if (po.StartsWith("MudPit>")) {
-								MudPitObject obj = new MudPitObject();
-								obj.nodes[0].position = pos;
-								if (splits.Length >= 2) {
-									obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
-								}
-								objects.Add(obj);
-							}
-							else if (po.StartsWith("AirPocket>")) {
-								AirPocketObject obj = new AirPocketObject();
-								obj.nodes[0].position = pos;
-								if (splits.Length >= 6) {
-									obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
-									obj.nodes[2].position.y = float.Parse(splits[5]);
-								}
-								objects.Add(obj);
-							}
-						} catch {
-							Logger.Warn("Failed to parse Placed Object: " + po);
-						}
-					}
-				}
-			}
-		}
-
-		Backup();
-		terrainNeedsRefresh = true;
-		waterNeedsRefresh = true;
+		backupObjects = [.. Room.data.objects.Select(x => x.Clone())];
 	}
 
 	public static void Reset() {
@@ -1275,6 +1122,7 @@ public static class DropletWindow {
 		Room.data.waterInFront = backupWaterInFront;
 		Room.data.enclosedRoom = backupEnclosedRoom;
 		Room.data.cameras = [.. backupCameras.Select(x => new RoomData.Camera() { position = x.position, angles = [ ..x.angles ] })];
+		Room.data.objects = [.. backupObjects.Select(x => x.Clone())];
 		Room.valid = true;
 
 		for (int i = 0; i < backupWidth * backupHeight; i++) {
@@ -1283,15 +1131,31 @@ public static class DropletWindow {
 
 		backupGeometry = null;
 		Room.RegenerateGeometry();
+		Room.visuals.terrainNeedsRefresh = true;
+		Room.visuals.waterNeedsRefresh = true;
+		Room.visuals.Refresh();
+	}
+
+	public static void LoadRoom(Room room) {
+		Room = room;
+
+		if (!File.Exists(Room.path)) {
+			Logger.Error("Failed to open droplet room file: " + Room.path);
+			return;
+		}
+
+		Backup();
+		Room.visuals.terrainNeedsRefresh = true;
+		Room.visuals.waterNeedsRefresh = true;
 	}
 
 	private static void ExportGeometry() {
-		string geoPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.Name + ".txt")!;
+		string geoPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.name + ".txt")!;
 		FloodForge.Backup.File(geoPath);
 
 		StringBuilder geo = new StringBuilder();
 
-		geo.AppendLine(Room.Name);
+		geo.AppendLine(Room.name);
 		geo.Append($"{Room.width}*{Room.height}");
 		if (Room.data.waterHeight != -1) {
 			geo.Append($"|{Room.data.waterHeight}|{(Room.data.waterInFront ? "1" : "0")}");
@@ -1355,10 +1219,11 @@ public static class DropletWindow {
 		File.WriteAllText(geoPath, geo.ToString());
 
 		Backup();
-		terrainNeedsRefresh = true;
-		waterNeedsRefresh = true;
+		Room.visuals.terrainNeedsRefresh = true;
+		Room.visuals.waterNeedsRefresh = true;
+		Room.visuals.Refresh();
 
-		string? settingsPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.Name + "_settings.txt");
+		string? settingsPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.name + "_settings.txt");
 		FloodForge.Backup.File(settingsPath);
 
 		string before = "";
@@ -1371,7 +1236,8 @@ public static class DropletWindow {
 				if (line.StartsWith("PlacedObjects:")) {
 					placedObjectsLine = line;
 					isBefore = false;
-				} else {
+				}
+				else {
 					if (isBefore) before += line + "\n";
 					else after += line + "\n";
 				}
@@ -1384,9 +1250,9 @@ public static class DropletWindow {
 			string[] poData = data.Split([", "], StringSplitOptions.RemoveEmptyEntries);
 
 			int terrainIdx = 0, mudIdx = 0, airIdx = 0;
-			TerrainHandleObject[] terrainHandleObjects = [.. objects.OfType<TerrainHandleObject>()];
-			MudPitObject[] mudPitObjects = [.. objects.OfType<MudPitObject>()];
-			AirPocketObject[] airPocketObjects = [.. objects.OfType<AirPocketObject>()];
+			TerrainHandleObject[] terrainHandleObjects = [.. Room.data.objects.OfType<TerrainHandleObject>()];
+			MudPitObject[] mudPitObjects = [.. Room.data.objects.OfType<MudPitObject>()];
+			AirPocketObject[] airPocketObjects = [.. Room.data.objects.OfType<AirPocketObject>()];
 
 			foreach (string po in poData) {
 				if (string.IsNullOrWhiteSpace(po)) continue;
@@ -1444,7 +1310,7 @@ public static class DropletWindow {
 			placedObjectsLine = output.ToString();
 		}
 
-		settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.Name + "_settings.txt");
+		settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.name + "_settings.txt");
 		using StreamWriter sw = new StreamWriter(settingsPath);
 		sw.Write(before);
 		if (!string.IsNullOrWhiteSpace(placedObjectsLine)) {
@@ -1517,7 +1383,8 @@ public static class DropletWindow {
 				else {
 					if ((geo & 512) > 0) {
 						SetPixel(image, id, 131, 0, 0);
-					} else {
+					}
+					else {
 						SetPixel(image, id, 255, 255, 255);
 					}
 				}
@@ -1540,12 +1407,12 @@ public static class DropletWindow {
 		ExportGeometry();
 
 		for (int i = 0; i < Room.data.cameras.Count; i++) {
-			RenderCamera(Room.data.cameras[i], PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.Name}_{i + 1}.png")!);
+			RenderCamera(Room.data.cameras[i], PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.name}_{i + 1}.png")!);
 		}
 	}
 
 	private static void ExportProject(string path) {
-		string fileName = Path.Combine(path, Room.Name + ".txt");
+		string fileName = Path.Combine(path, Room.name + ".txt");
 		StringBuilder project = new StringBuilder();
 
 		project.Append("[");
@@ -1555,7 +1422,7 @@ public static class DropletWindow {
 			project.Append("[");
 			for (int y = -3; y < Room.height + 5; y++) {
 				if (y != -3) project.Append(", ");
-				
+
 				uint geo = Room.GetTile(x, y);
 				int solidA = 0;
 				List<string> flags = [];
@@ -1565,9 +1432,9 @@ public static class DropletWindow {
 				else if ((geo % 16) == 2) {
 					solidA = 2 + ((geo & 2048) > 0 ? 1 : 0) + ((geo & 1024) > 0 ? 0 : 2);
 				}
-				else if ((geo % 16) == 4) { 
-					solidA = 7; 
-					flags.Add("4"); 
+				else if ((geo % 16) == 4) {
+					solidA = 7;
+					flags.Add("4");
 				}
 
 				if ((geo & 16) > 0) flags.Add("2");
@@ -1635,16 +1502,17 @@ public static class DropletWindow {
 			for (int x = 0; x < width; x++) {
 				float xRatio = (width > 1) ? (float)x / (width - 1) : 0;
 				int bx = (int)(xRatio * (backupWidth - 1));
-				
+
 				for (int y = 0; y < height; y++) {
 					float yRatio = (height > 1) ? (float)y / (height - 1) : 0;
 					int by = (int)(yRatio * (backupHeight - 1));
-					
+
 					int i = x * height + y;
 					Room.geometry[i] = backupGeometry![bx * backupHeight + by];
 				}
 			}
-		} else {
+		}
+		else {
 			for (int x = 0; x < width; x++) {
 				int bx = x + resizeOffset.x;
 				for (int y = 0; y < height; y++) {
@@ -1653,7 +1521,8 @@ public static class DropletWindow {
 
 					if (bx < 0 || by < 0 || bx >= backupWidth || by >= backupHeight) {
 						Room.geometry[i] = 0;
-					} else {
+					}
+					else {
 						Room.geometry[i] = backupGeometry![bx * backupHeight + by];
 					}
 				}

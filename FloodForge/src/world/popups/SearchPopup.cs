@@ -59,10 +59,11 @@ public class SearchPopup : Popup {
 
 		this.Close();
 
+		// TODO: Search for closest and show all options
 		Room? room = WorldWindow.region.rooms.FirstOrDefault(r => {
 			return
-				r.Name[(WorldWindow.region.acronym.Length + 1)..].Equals(search, StringComparison.InvariantCultureIgnoreCase) ||
-				r.Name.Equals(search, StringComparison.InvariantCultureIgnoreCase);
+				r.name[(WorldWindow.region.acronym.Length + 1)..].Equals(search, StringComparison.InvariantCultureIgnoreCase) ||
+				r.name.Equals(search, StringComparison.InvariantCultureIgnoreCase);
 		});
 		if (room == null)
 			return;
