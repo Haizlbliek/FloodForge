@@ -31,6 +31,7 @@ Big Needle>BigNeedleWorm
 SmallNeedle>SmallNeedleWorm
 Small Needle>SmallNeedleWorm
 Mimic>PoleMimic
+Pole Mimic>PoleMimic
 Tentacle>TentaclePlant
 Tentacle Plant>TentaclePlant
 Lantern Mouse>LanternMouse
