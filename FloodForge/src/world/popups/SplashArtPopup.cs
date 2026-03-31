@@ -32,7 +32,10 @@ public class SplashArtPopup : Popup {
 		if (File.Exists("assets/nightly.txt") && DateTime.TryParse(File.ReadAllText("assets/nightly.txt").Trim(), out DateTime date)) {
 			this.nightlyBuildDate = date;
 		}
-		this.CheckForUpdates();
+		if (!Settings.DisableUpdater) {
+			this.CheckForUpdates();
+		}
+
 		this.buttons.Add(new IconButton("Discord Server", 0f, 0f, 0.25f, 0.25f, () => {
 			Process.Start(new ProcessStartInfo() { FileName = "https://discord.gg/k5BExadp4x", UseShellExecute = true });
 		}));
