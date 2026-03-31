@@ -43,14 +43,13 @@ public class RoomVisuals {
 	}
 
 	private float SampleTerrain(float x) {
-		TerrainHandleObject[] handles = [.. this.room.data.objects.OfType<TerrainHandleObject>()];
-		if (handles.Length < 2) return -100000f;
+		if (!this.hasTerrain) return -10000f;
 
-		int handleIndex = 0;
-		while (handleIndex < handles.Length - 2 && handles[handleIndex + 1].Middle.x < x) {
-			handleIndex++;
-		}
-		return SampleTerrain(handles[handleIndex], handles[handleIndex + 1], x);
+		float xa = MathF.Floor(x / 20f) * 20f;
+		float xb = MathF.Ceiling(x / 20f) * 20f;
+		float ya = this.terrain[Mathf.FloorToInt(xa / 20f)].y;
+		float yb = this.terrain[Mathf.FloorToInt(xb / 20f)].y;
+		return Mathf.Lerp(ya, yb, Mathf.InverseLerp(x, xa, xb));
 	}
 
 	private void RefreshTerrain() {
