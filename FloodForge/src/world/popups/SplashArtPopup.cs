@@ -38,14 +38,18 @@ public class SplashArtPopup : Popup {
 
 		this.buttons.Add(new IconButton("Discord Server", 0f, 0f, 0.25f, 0.25f, () => {
 			Process.Start(new ProcessStartInfo() { FileName = "https://discord.gg/k5BExadp4x", UseShellExecute = true });
+			return false;
 		}));
 
 		if (Main.Anniversary) {
 			this.buttons.Add(new IconButton("Anniversary Event", 0.25f, 0f, 0.5f, 0.25f, () => {
 				PopupManager.Add(new MarkdownPopup("docs/anniversary.md"));
+				return true;
 			}));
 		}
 	}
+
+	private class FailedException : Exception {}
 
 	private async void CheckForUpdates() {
 		try {
@@ -57,20 +61,20 @@ public class SplashArtPopup : Popup {
 			if (node == null) {
 				Logger.Warn("Failed to fetch release version");
 				this.updateStatus = UpdateStatus.Failed;
-				return;
+				throw new FailedException();
 			}
 			if (this.nightlyBuildDate == null) {
 				JsonNode? node2 = node["tag_name"];
 				if (node2 == null) {
 					Logger.Warn("Failed to fetch release version");
 					this.updateStatus = UpdateStatus.Failed;
-					return;
+					throw new FailedException();
 				}
 				string? value = (string?) node2;
 				if (value == null) {
 					Logger.Warn("Failed to fetch release version");
 					this.updateStatus = UpdateStatus.Failed;
-					return;
+					throw new FailedException();
 				}
 				AppVersion latest = new AppVersion(value);
 				this.updateStatus = (this.version < latest) ? UpdateStatus.Available : UpdateStatus.Unavailable;
@@ -80,7 +84,7 @@ public class SplashArtPopup : Popup {
 				if (body == null || !DateTime.TryParse(body, out DateTime date)) {
 					Logger.Warn("Failed to fetch release body");
 					this.updateStatus = UpdateStatus.Failed;
-					return;
+					throw new FailedException();
 				}
 
 				this.updateStatus = (this.nightlyBuildDate < date) ? UpdateStatus.Available : UpdateStatus.Unavailable;
@@ -104,6 +108,7 @@ public class SplashArtPopup : Popup {
 				if (this.updateChecksum == null) {
 					Logger.Warn("Failed to fetch latest release checksum");
 					this.updateStatus = UpdateStatus.Failed;
+					throw new FailedException();
 				}
 
 				if (!string.IsNullOrEmpty(downloadUrl)) {
@@ -116,19 +121,35 @@ public class SplashArtPopup : Popup {
 							await Updater.Download(this.updatePath, this.updateChecksum!);
 							Logger.Note($"Downloaded");
 						}));
+						return true;
 					}));
 				}
 				else {
 					Logger.Warn($"Could not find a release asset for {targetFileName}");
 				}
 			}
-		} catch (HttpRequestException) {
+		}
+		catch (HttpRequestException) {
 			Logger.Warn("Failed to fetch latest release version");
 			this.updateStatus = UpdateStatus.Failed;
-		} catch (Exception ex) {
+		}
+		catch (FailedException) {
+		}
+		catch (Exception ex) {
 			Logger.Warn("Failed to fetch latest release version");
 			Logger.Info(ex);
 			this.updateStatus = UpdateStatus.Failed;
+		}
+
+		if (this.updateStatus == UpdateStatus.Failed) {
+			IconButton b = null!;
+			b = new IconButton("Failed to fetch Update", 0.75f, 0f, 1f, 0.25f, () => {
+				this.updateStatus = UpdateStatus.Searching;
+				this.CheckForUpdates();
+				this.buttons.Remove(b);
+				return false;
+			});
+			this.buttons.Add(b);
 		}
 	}
 
@@ -210,8 +231,9 @@ public class SplashArtPopup : Popup {
 				UI.FillRect(fillRect);
 
 				if (Mouse.JustLeft) {
-					this.Close();
-					button.callback?.Invoke();
+					if (button.callback?.Invoke() ?? false) {
+						this.Close();
+					}
 					return;
 				}
 			}
@@ -240,9 +262,9 @@ public class SplashArtPopup : Popup {
 	protected class IconButton {
 		public string label;
 		public (float u1, float v1, float u2, float v2) UVs;
-		public Action callback;
+		public Func<bool> callback;
 
-		public IconButton(string label, float u1, float v1, float u2, float v2, Action callback) {
+		public IconButton(string label, float u1, float v1, float u2, float v2, Func<bool> callback) {
 			this.label = label;
 			this.UVs = (u1, v1, u2, v2);
 			this.callback = callback;
