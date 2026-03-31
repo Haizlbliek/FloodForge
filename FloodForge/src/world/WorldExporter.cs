@@ -3,8 +3,6 @@ using Stride.Core.Extensions;
 
 namespace FloodForge.World;
 
-// TODO: Make sure terrain exports properly
-// TODO: Check if Rain World has it's own terrain exporting system (Make it work the same)
 public static class WorldExporter {
 	private static string AcronymCasing(string acronym) {
 		if (Settings.ForceExportCasing.value == Settings.STForceExportCasing.MatchAcronym) {
