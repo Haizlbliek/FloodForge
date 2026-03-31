@@ -334,10 +334,8 @@ public static class WorldWindow {
 
 		bool isAdditive = Keys.Modifier(Keymod.Shift) || Keys.Modifier(Keymod.Ctrl);
 		if (isAdditive) {
-			if (selectedRooms.Contains(room)) selectedRooms.Remove(room);
-			else selectedRooms.Add(room);
-		}
-		else {
+			if (!selectedRooms.Remove(room)) selectedRooms.Add(room);
+		} else {
 			if (!selectedRooms.Contains(room)) {
 				selectedRooms.Clear();
 				selectedRooms.Add(room);
