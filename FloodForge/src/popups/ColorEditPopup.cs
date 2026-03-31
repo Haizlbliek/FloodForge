@@ -40,7 +40,7 @@ public class ColorEditPopup : Popup {
 
 		Immediate.Color(Themes.Background);
 		UI.FillRect(this.selectorRect);
-		
+	
 		Immediate.UseProgram(Preload.ColorSquareShader.shader);
 		if (this._hueLoc == 0) {
 			this._hueLoc = Program.gl.GetUniformLocation(Preload.ColorSquareShader, "hue");
@@ -60,7 +60,7 @@ public class ColorEditPopup : Popup {
 		Immediate.TexCoord(0f, 0f); Immediate.Vertex(this.selectorRect.x0, this.selectorRect.y0);
 		Immediate.End();
 		Immediate.UseProgram(0);
-		
+	
 		if (Mouse.JustLeft && !Mouse.Disabled && this.selectorRect.Inside(Mouse.Pos)) {
 			this.centerFocused = true;
 		}
@@ -105,7 +105,13 @@ public class ColorEditPopup : Popup {
 		float hueY = Mathf.Lerp(this.sliderRect.y0, this.sliderRect.y1, this.hue / 360f);
 		UI.Line(this.sliderRect.x0 - 0.01f, hueY, this.sliderRect.x1 + 0.01f, hueY);
 
-		if (Mouse.JustLeft && !Mouse.Disabled && this.sliderRect.Inside(Mouse.Pos)) {
+		bool sliderHover = this.sliderRect.Inside(Mouse.Pos);
+		if (sliderHover) {
+			Main.mouse?.Cursor.StandardCursor = Silk.NET.Input.StandardCursor.VResize;
+			this.mouseCursorSet = true;
+		}
+
+		if (Mouse.JustLeft && !Mouse.Disabled && sliderHover) {
 			this.sliderFocused = true;
 		}
 		if (this.sliderFocused) {

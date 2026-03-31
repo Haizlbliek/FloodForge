@@ -38,3 +38,4 @@ BigNeedleWorm
 SmallNeedleWorm
 JetFish
 BigEel
+Overseer

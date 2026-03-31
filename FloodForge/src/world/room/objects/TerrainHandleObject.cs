@@ -1,4 +1,4 @@
-namespace FloodForge.Droplet;
+namespace FloodForge.World;
 
 public class TerrainHandleObject : DevObject {
 	public Vector2 Left => this.nodes[0].position + this.nodes[1].position;
@@ -8,6 +8,12 @@ public class TerrainHandleObject : DevObject {
 	public TerrainHandleObject() {
 		this.AddNode(new Vector2(-40f, 0f), this.nodes[0]);
 		this.AddNode(new Vector2(40f, 0f), this.nodes[0]);
+	}
+
+	public override TerrainHandleObject Clone() {
+		TerrainHandleObject clone = new TerrainHandleObject();
+		DevObject.SetNodes(this, clone);
+		return clone;
 	}
 
 	public override void Draw(Vector2 offset) {

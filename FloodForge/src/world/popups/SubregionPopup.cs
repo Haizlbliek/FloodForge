@@ -84,7 +84,7 @@ public class SubregionPopup : Popup {
 				}
 				else {
 					bool canRemove = !WorldWindow.region.rooms.Any(r => r.data.subregion == idx);
-					
+	
 					if (canRemove) {
 						SubregionChange change = new SubregionChange(idx);
 
@@ -133,7 +133,7 @@ public class SubregionPopup : Popup {
 
 		float centerX = this.bounds.CenterX;
 		Immediate.Color(Themes.Text);
-		string title = this.rooms.Count == 1 ? this.rooms.First().Name : "Selected Rooms";
+		string title = this.rooms.Count == 1 ? this.rooms.First().name : "Selected Rooms";
 		UI.font.Write(title, centerX, this.bounds.y1 - 0.1f, 0.04f, Font.Align.MiddleCenter);
 
 		Program.gl.Enable(EnableCap.ScissorTest);

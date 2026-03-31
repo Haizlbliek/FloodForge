@@ -23,7 +23,8 @@ public class ResizeLevelPopup : Popup {
 	protected void SetResizeOffset(Vector2i anchor, bool stretch) {
 		if (stretch) {
 			DropletWindow.resizeOffset = Vector2i.Zero;
-		} else {
+		}
+		else {
 			DropletWindow.resizeOffset = new Vector2i(
 				(int) ((DropletWindow.Room.width - DropletWindow.resizeSize.x) * (anchor.x + 1f) / 2f),
 				(int) ((DropletWindow.Room.height - DropletWindow.resizeSize.y) * (anchor.y + 1f) / 2f)
@@ -143,15 +144,20 @@ public class ResizeLevelPopup : Popup {
 					int diff = Math.Abs(x - this.resizeAnchor.x) + Math.Abs(yp - this.resizeAnchor.y);
 					if (diff >= 2 || this.stretchRoom) {
 						rect.UV(0.0f, 0.0f, 0.0f, 0.0f);
-					} else if (diff == 0) {
+					}
+					else if (diff == 0) {
 						rect.UV(0.5f, 0.25f, 0.75f, 0.5f);
-					} else if (x < this.resizeAnchor.x) {
+					}
+					else if (x < this.resizeAnchor.x) {
 						rect.UV(0.5f, 0.5f, 0.75f, 0.75f);
-					} else if (x > this.resizeAnchor.x) {
+					}
+					else if (x > this.resizeAnchor.x) {
 						rect.UV(0.75f, 0.5f, 1.0f, 0.75f);
-					} else if (yp < this.resizeAnchor.y) {
+					}
+					else if (yp < this.resizeAnchor.y) {
 						rect.UV(0.75f, 0.75f, 1.0f, 1.0f);
-					} else if (yp > this.resizeAnchor.y) {
+					}
+					else if (yp > this.resizeAnchor.y) {
 						rect.UV(0.5f, 0.75f, 0.75f, 1.0f);
 					}
 					if (UI.TextureButton(rect, new UI.TextureButtonMods() { selected = x == this.resizeAnchor.x && yp == this.resizeAnchor.y, disabled = this.stretchRoom })) {

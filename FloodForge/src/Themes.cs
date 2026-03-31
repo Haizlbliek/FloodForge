@@ -7,6 +7,7 @@ public static class Themes {
 	private static Color[] colors = new Color[16];
 	private static int length = 0;
 	private static string[] activeThemes = null!;
+	private static readonly List<FileSystemWatcher> watchers = [];
 
 	public static readonly ThemeColor Background = Register("Background", new Color(0.3f, 0.3f, 0.3f));
 	public static readonly ThemeColor Grid = Register("Grid", new Color(0.75f, 0.75f, 0.75f));
@@ -32,8 +33,10 @@ public static class Themes {
 	public static readonly ThemeColor RoomShortcutDot = Register("RoomShortcutDot", new Color(1f, 1f, 1f));
 	public static readonly ThemeColor RoomShortcutRoom = Register("RoomShortcutRoom", new Color(1f, 0f, 1f));
 	public static readonly ThemeColor RoomShortcutDen = Register("RoomShortcutDen", new Color(0f, 1f, 0f));
+	public static readonly ThemeColor RoomShortcutArrow = Register("RoomShortcutArrow", new Color(0f, 1f, 1f));
 	public static readonly ThemeColor RoomConnection = Register("RoomConnection", new Color(1f, 1f, 0f));
 	public static readonly ThemeColor RoomConnectionHover = Register("RoomConnectionHover", new Color(0f, 1f, 1f));
+	public static readonly ThemeColor RoomConnectionInvalid = Register("RoomConnectionInvalid", new Color(1f, 0f, 0f));
 	public static readonly ThemeColor Layer0Color = Register("Layer0Color", new Color(1f, 0f, 0f));
 	public static readonly ThemeColor Layer1Color = Register("Layer1Color", new Color(1f, 1f, 1f));
 	public static readonly ThemeColor Layer2Color = Register("Layer2Color", new Color(0f, 1f, 0f));
@@ -59,25 +62,62 @@ public static class Themes {
 	}
 
 	public static void Load(string theme) {
-		string[] lines = File.ReadAllLines($"assets/themes/{theme}/theme.cfg");
+		try {
+			string path = $"assets/themes/{theme}/theme.cfg";
+			if (!File.Exists(path))
+				return;
 
-		foreach (string l in lines) {
-			string line = l.Trim();
-			if (line == "" || line.StartsWith('#')) continue;
+			string[] lines = File.ReadAllLines(path);
 
-			string key = line[..line.IndexOf('=')].Trim();
-			string value = line[(line.IndexOf('=') + 1)..].Trim();
+			foreach (string l in lines) {
+				string line = l.Trim();
+				if (line == "" || line.StartsWith('#')) continue;
 
-			if (ids.TryGetValue(key, out int idx)) {
-				colors[idx] = Color.Parse(value, null);
-			} else {
-				Logger.Warn($"No theme color: '{key}'");
+				string key = line[..line.IndexOf('=')].Trim();
+				string value = line[(line.IndexOf('=') + 1)..].Trim();
+
+				if (ids.TryGetValue(key, out int idx)) {
+					colors[idx] = Color.Parse(value, null);
+				}
+				else {
+					Logger.Warn($"No theme color: '{key}'");
+				}
 			}
+		} catch (Exception ex) {
+			Logger.Error($"Failed to load theme {theme}:\n{ex}");
 		}
 	}
 
 	public static void LoadFromSetting(string value) {
+		foreach (FileSystemWatcher watcher in watchers) watcher.Dispose();
+		watchers.Clear();
+
 		activeThemes = value.Split(',');
+		foreach (string theme in activeThemes) {
+			string trimmed = theme.Trim();
+			Load(trimmed);
+			WatchTheme(trimmed);
+		}
+	}
+
+	private static void WatchTheme(string theme) {
+		string path = Path.GetFullPath($"assets/themes/{theme}");
+		if (!Directory.Exists(path)) return;
+
+		FileSystemWatcher watcher = new FileSystemWatcher(path, "theme.cfg") {
+			NotifyFilter = NotifyFilters.LastWrite,
+			EnableRaisingEvents = true
+		};
+
+		watcher.Changed += (s, e) => {
+			Logger.Info($"Theme file {theme} changed. Reloading...");
+			ReloadAll();
+		};
+
+		watchers.Add(watcher);
+	}
+
+	private static void ReloadAll() {
 		foreach (string theme in activeThemes) {
 			Load(theme.Trim());
 		}

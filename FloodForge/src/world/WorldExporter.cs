@@ -4,7 +4,38 @@ using Stride.Core.Extensions;
 namespace FloodForge.World;
 
 public static class WorldExporter {
+	private static string AcronymCasing(string acronym) {
+		if (Settings.ForceExportCasing.value == Settings.STForceExportCasing.MatchAcronym) {
+			return acronym;
+		}
+
+		return Settings.ForceExportCasing.value == Settings.STForceExportCasing.Lower ? acronym.ToLowerInvariant() : acronym.ToUpperInvariant();
+	}
+
 	private static string RoomNameCasing(string name) {
+		if (name.StartsWith("gate_", StringComparison.InvariantCultureIgnoreCase)) {
+			string[] regions = name.Split('_');
+			string gateName = Settings.ForceExportCasing.value == Settings.STForceExportCasing.Lower ? "gate_" : "GATE_";
+
+			if (regions[1].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
+				gateName += AcronymCasing(WorldWindow.region.acronym);
+			}
+			else {
+				gateName += AcronymCasing(WorldWindow.region.FindAcronym(regions[1]));
+			}
+
+			gateName += "_";
+
+			if (regions[2].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
+				gateName += AcronymCasing(WorldWindow.region.acronym);
+			}
+			else {
+				gateName += AcronymCasing(WorldWindow.region.FindAcronym(regions[2]));
+			}
+
+			return gateName;
+		}
+
 		if (Settings.ForceExportCasing.value == Settings.STForceExportCasing.Lower) {
 			return name.ToLowerInvariant();
 		}
@@ -38,7 +69,7 @@ public static class WorldExporter {
 					(room.DevPosition.y - room.height * 0.5f) * 3.0f
 				);
 
-				string line = $"{RoomNameCasing(room.Name)}: " +
+				string line = $"{RoomNameCasing(room.name)}: " +
 							$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
 							$"{devPosition.x:G12}><{devPosition.y:G12}><" +
 							$"{room.data.layer}><";
@@ -55,7 +86,7 @@ public static class WorldExporter {
 				if (room is OffscreenRoom || !room.data.ExtraFlags)
 					continue;
 
-				writer.Write($"//FloodForge;ROOM|{RoomNameCasing(room.Name)}");
+				writer.Write($"//FloodForge;ROOM|{RoomNameCasing(room.name)}");
 				if (room.data.hidden)
 					writer.Write("|hidden");
 				if (!room.data.merge)
@@ -75,8 +106,8 @@ public static class WorldExporter {
 				connB = new Vector2i(connB.x, connection.roomB.height - connB.y - 1);
 
 				writer.WriteLine($"Connection: " +
-					$"{RoomNameCasing(connection.roomA.Name)}," +
-					$"{RoomNameCasing(connection.roomB.Name)}," +
+					$"{RoomNameCasing(connection.roomA.name)}," +
+					$"{RoomNameCasing(connection.roomB.name)}," +
 					$"{connA.x},{connA.y}," +
 					$"{connB.x},{connB.y}," +
 					$"{(int) connection.roomA.GetRoomEntranceDirection(connection.connectionA)}," +
@@ -113,7 +144,7 @@ public static class WorldExporter {
 			}
 
 			if (connection.timelineType == TimelineType.Only) {
-				writer.Write($"{timeline} : {RoomNameCasing(room.Name)} : ");
+				writer.Write($"{timeline} : {RoomNameCasing(room.name)} : ");
 
 				if (state[timeline][connectionId].first == "DISCONNECTED") {
 					int disconnectedBefore = 0;
@@ -126,10 +157,10 @@ public static class WorldExporter {
 				else {
 					writer.Write(state[timeline][connectionId].first);
 				}
-				writer.WriteLine($" : {RoomNameCasing(otherRoom.Name)}");
+				writer.WriteLine($" : {RoomNameCasing(otherRoom.name)}");
 
-				if (RoomNameCasing(otherRoom.Name) != state[timeline][connectionId].first) {
-					state[timeline][connectionId] = (RoomNameCasing(otherRoom.Name), true);
+				if (RoomNameCasing(otherRoom.name) != state[timeline][connectionId].first) {
+					state[timeline][connectionId] = (RoomNameCasing(otherRoom.name), true);
 				}
 			}
 			else if (connection.timelineType == TimelineType.Except) {
@@ -139,7 +170,7 @@ public static class WorldExporter {
 					if (!state[otherTimeline][connectionId].second)
 						continue;
 
-					writer.Write($"{otherTimeline} : {RoomNameCasing(room.Name)} : ");
+					writer.Write($"{otherTimeline} : {RoomNameCasing(room.name)} : ");
 					if (state[otherTimeline][connectionId].first == "DISCONNECTED") {
 						int disconnectedBefore = 0;
 						for (int i = 0; i < connectionId; i++) {
@@ -151,10 +182,10 @@ public static class WorldExporter {
 					else {
 						writer.Write(state[otherTimeline][connectionId].first);
 					}
-					writer.WriteLine($" : {RoomNameCasing(otherRoom.Name)}");
+					writer.WriteLine($" : {RoomNameCasing(otherRoom.name)}");
 				}
 
-				writer.Write($"{timeline} : {RoomNameCasing(room.Name)} : ");
+				writer.Write($"{timeline} : {RoomNameCasing(room.name)} : ");
 				if (state[timeline][connectionId].second) {
 					if (state[timeline][connectionId].first == "DISCONNECTED") {
 						int disconnectedBefore = 0;
@@ -169,15 +200,51 @@ public static class WorldExporter {
 					}
 				}
 				else {
-					writer.Write(RoomNameCasing(otherRoom.Name));
+					writer.Write(RoomNameCasing(otherRoom.name));
 				}
 				writer.WriteLine($" : {defaultState[connectionId].first}");
 
-				if (RoomNameCasing(otherRoom.Name) != defaultState[connectionId].first) {
-					defaultState[connectionId] = (RoomNameCasing(otherRoom.Name), false);
+				if (RoomNameCasing(otherRoom.name) != defaultState[connectionId].first) {
+					defaultState[connectionId] = (RoomNameCasing(otherRoom.name), false);
 				}
 			}
 		}
+	}
+
+	private static void ExportCreatureTags(DenCreature creature, StreamWriter writer) {
+		if (creature.tags.Count <= 0) {
+			return;
+		}
+
+		writer.Write("-{");
+		bool first = true;
+		foreach (DenCreature.Tag tag in creature.tags) {
+			if (!first) writer.Write(",");
+			first = false;
+
+			if (tag.id == CreatureTags.Mean) {
+				writer.Write($"Mean:{((DenCreature.FloatTag) tag).data}");
+			}
+			else if (tag.id == CreatureTags.POLEMIMIC_LENGTH) {
+				writer.Write($"{((DenCreature.IntegerTag) tag).data}");
+			}
+			else if (tag.id == CreatureTags.CENTIPEDE_LENGTH) {
+				writer.Write($"{((DenCreature.FloatTag) tag).data}");
+			}
+			else if (tag.id == CreatureTags.Seed) {
+				writer.Write($"Seed:{((DenCreature.IntegerTag) tag).data}");
+			}
+			else if (tag.id == CreatureTags.RotType) {
+				writer.Write($"RotType:{((DenCreature.IntegerTag) tag).data}");
+			}
+			else if (tag.id == CreatureTags.NamedAttr) {
+				writer.Write($"NamedAttr:{((DenCreature.StringTag) tag).data}");
+			}
+			else {
+				writer.Write($"{tag.id.id}");
+			}
+		}
+		writer.Write("}");
 	}
 
 	public static void ExportWorldFile() {
@@ -209,9 +276,10 @@ public static class WorldExporter {
 						continue;
 
 					if (connection.roomA == room) {
-						defaultState[(int) connection.connectionA] = (RoomNameCasing(connection.roomB.Name), false);
-					} else {
-						defaultState[(int) connection.connectionB] = (RoomNameCasing(connection.roomA.Name), false);
+						defaultState[(int) connection.connectionA] = (RoomNameCasing(connection.roomB.name), false);
+					}
+					else {
+						defaultState[(int) connection.connectionB] = (RoomNameCasing(connection.roomA.name), false);
 					}
 				}
 
@@ -229,7 +297,7 @@ public static class WorldExporter {
 					ParseConditionalLinkConnection(writer, room, connection, timelines, state, defaultState);
 				}
 
-				roomDefaultStates[RoomNameCasing(room.Name)] = defaultState;
+				roomDefaultStates[RoomNameCasing(room.name)] = defaultState;
 
 				if (room.TimelineType == TimelineType.All || room.Timelines.Count == 0) {
 					continue;
@@ -245,7 +313,7 @@ public static class WorldExporter {
 
 				writer.Write(" : ");
 				writer.Write((room.TimelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
-				writer.WriteLine($" : {RoomNameCasing(room.Name)}");
+				writer.WriteLine($" : {RoomNameCasing(room.name)}");
 			}
 			writer.WriteLine("END CONDITIONAL LINKS");
 			writer.WriteLine();
@@ -256,9 +324,9 @@ public static class WorldExporter {
 				if (room is OffscreenRoom)
 					continue;
 
-				writer.Write($"{RoomNameCasing(room.Name)} : ");
+				writer.Write($"{RoomNameCasing(room.name)} : ");
 
-				List<(string, bool)> connections = roomDefaultStates[RoomNameCasing(room.Name)];
+				List<(string, bool)> connections = roomDefaultStates[RoomNameCasing(room.name)];
 
 				for (int i = 0; i < room.roomShortcutEntrances.Count; i++) {
 					if (i > 0) writer.Write(", ");
@@ -328,8 +396,9 @@ public static class WorldExporter {
 
 						if (room == WorldWindow.region.offscreenDen) {
 							writer.Write("OFFSCREEN : ");
-						} else {
-							writer.Write($"{RoomNameCasing(room.Name)} : ");
+						}
+						else {
+							writer.Write($"{RoomNameCasing(room.name)} : ");
 						}
 
 						bool first = true;
@@ -341,26 +410,11 @@ public static class WorldExporter {
 
 							if (room == WorldWindow.region.offscreenDen) {
 								writer.Write($"0-{CreatureTextures.ExportName(creature.type)}");
-							} else {
+							}
+							else {
 								writer.Write($"{i + room.roomShortcutEntrances.Count}-{CreatureTextures.ExportName(creature.type)}");
 							}
-							if (!string.IsNullOrEmpty(creature.tag)) {
-								if (creature.tag == "MEAN") {
-									writer.Write($"-{{Mean:{creature.data}}}");
-								} else if (creature.tag == "LENGTH") {
-									if (creature.type == "polemimic") {
-										writer.Write($"-{{{ (int)creature.data }}}");
-									} else {
-										writer.Write($"-{{{creature.data}}}");
-									}
-								} else if (creature.tag == "SEED") {
-									writer.Write($"-{{Seed:{ (int)creature.data }}}");
-								} else if (creature.tag == "RotType") {
-									writer.Write($"-{{RotType:{ (int)creature.data }}}");
-								} else {
-									writer.Write($"-{{{creature.tag}}}");
-								}
-							}
+							ExportCreatureTags(creature, writer);
 							if (creature.count > 1)
 								writer.Write($"-{creature.count}");
 						}
@@ -396,13 +450,15 @@ public static class WorldExporter {
 
 						if (room == WorldWindow.region.offscreenDen) {
 							writer.Write("OFFSCREEN : ");
-						} else {
-							writer.Write($"{RoomNameCasing(room.Name)} : ");
+						}
+						else {
+							writer.Write($"{RoomNameCasing(room.name)} : ");
 						}
 
 						if (room == WorldWindow.region.offscreenDen) {
 							writer.Write("0 : ");
-						} else {
+						}
+						else {
 							writer.Write($"{i + room.roomShortcutEntrances.Count} : ");
 						}
 
@@ -410,23 +466,7 @@ public static class WorldExporter {
 						while (current != null) {
 							writer.Write(string.IsNullOrEmpty(current.type) || current.count == 0 ? "NONE" : CreatureTextures.ExportName(current.type));
 
-							if (!string.IsNullOrEmpty(current.tag)) {
-								if (current.tag == "MEAN") {
-									writer.Write($"-{{Mean:{current.data}}}");
-								} else if (current.tag == "LENGTH") {
-									if (current.type == "polemimic") {
-										writer.Write($"-{{{ (int)current.data }}}");
-									} else {
-										writer.Write($"-{{{current.data}}}");
-									}
-								} else if (current.tag == "SEED") {
-									writer.Write($"-{{Seed:{ (int)current.data }}}");
-								} else if (current.tag == "RotType") {
-									writer.Write($"-{{RotType:{ (int)current.data }}}");
-								} else {
-									writer.Write($"-{{{current.tag}}}");
-								}
-							}
+							ExportCreatureTags(current, writer);
 
 							if (current.lineageTo == null) {
 								writer.WriteLine("-0");
@@ -458,7 +498,7 @@ public static class WorldExporter {
 						writer.Write(")");
 					}
 
-					writer.Write($"{RoomNameCasing(room.Name)} : {room.GarbageWormDenIndex}-{CreatureTextures.ExportName(worm.type)}");
+					writer.Write($"{RoomNameCasing(room.name)} : {room.GarbageWormDenIndex}-{CreatureTextures.ExportName(worm.type)}");
 					if (worm.count > 1)
 						writer.Write($"-{worm.count}");
 					writer.WriteLine();
@@ -514,22 +554,13 @@ public static class WorldExporter {
 
 		byte[] imageData = new byte[textureWidth * textureHeight * 3];
 
-		bool debugPadding = Settings.DEBUGVisibleOutputPadding;
-
 		for (int y = 0; y < textureHeight; y++) {
 			for (int x = 0; x < textureWidth; x++) {
 				int i = (y * textureWidth + x) * 3;
-				if (debugPadding) {
-					if (x < 10 || (y % layerHeight) < 10 || x >= textureWidth - 10 || (y % layerHeight) >= layerHeight - 10) {
-						imageData[i] = 0;
-						imageData[i + 1] = 255;
-						imageData[i + 2] = 255;
-					}
-					else {
-						imageData[i] = 0;
-						imageData[i + 1] = 255;
-						imageData[i + 2] = 0;
-					}
+				if (Settings.DEBUGVisibleOutputPadding && (x < 10 || (y % layerHeight) < 10 || x >= textureWidth - 10 || (y % layerHeight) >= layerHeight - 10)) {
+					imageData[i] = 0;
+					imageData[i + 1] = 255;
+					imageData[i + 2] = 255;
 				}
 				else {
 					imageData[i] = 0;
@@ -551,7 +582,7 @@ public static class WorldExporter {
 			int layerXOffset = 10;
 			int layerYOffset = (2 - room.data.layer) * layerHeight + 10;
 
-			mapFile?.WriteLine($"{RoomNameCasing(room.Name)}: {roomPosition.x + layerXOffset},{roomPosition.y + layerYOffset},{room.width},{room.height}");
+			mapFile?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{roomPosition.y + layerYOffset},{room.width},{room.height}");
 
 			for (int ox = 0; ox < room.width; ox++) {
 				for (int oy = 0; oy < room.height; oy++) {
@@ -563,8 +594,7 @@ public static class WorldExporter {
 
 					int i = (targetY * textureWidth + targetX) * 3;
 					uint tile = room.GetTile(ox, oy);
-					uint tileType = tile % 16;
-					uint tileData = tile / 16;
+					uint tileType = tile & 15;
 
 					byte r = 0, g = 0, b = 0;
 
@@ -572,16 +602,25 @@ public static class WorldExporter {
 						r = 255;
 						g = 0;
 					}
-					else if (tileType == 1) {
+					if (tileType == 1) {
 						r = 0;
 						g = 0;
 					}
-					else if (tileType == 2 || tileType == 3 || (tileData & 1) != 0 || (tileData & 2) != 0) {
+					if (tileType == 2 || tileType == 3 || (tile & Room.FLAG_HORIZONTAL_POLE) != 0 || (tile & Room.FLAG_VERTICAL_POLE) != 0) {
 						r = 153;
 						g = 0;
 					}
 
-					if (r > 0 && oy >= room.height - room.data.waterHeight) {
+					if (room.visuals.UnderTerrain(ox, oy, out bool slope)) {
+						g = 0;
+						if (slope) {
+							r = Math.Min(r, (byte) 153);
+						} else {
+							r = 0;
+						}
+					}
+
+					if (r > 0 && room.visuals.Underwater(ox, oy)) {
 						b = 255;
 					}
 
@@ -644,7 +683,7 @@ public static class WorldExporter {
 			if (room.data.attractiveness.IsNullOrEmpty())
 				continue;
 
-			ExportRoomAttr(writer, RoomNameCasing(room.Name), room.data.attractiveness);
+			ExportRoomAttr(writer, RoomNameCasing(room.name), room.data.attractiveness);
 		}
 
 		foreach (var item in WorldWindow.region.overrideSubregionColors) {

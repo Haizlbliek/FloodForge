@@ -13,6 +13,7 @@ public static class Immediate {
 		LINE_STRIP,
 		LINE_LOOP,
 		TRIANGLES,
+		TRIANGLE_FAN,
 		QUADS,
 	}
 
@@ -241,7 +242,8 @@ void main() {
 					Cstm.gl.UniformMatrix4(DrawState.mvpUniform, 1, false, mvpPtr);
 				}
 			}
-		} else {
+		}
+		else {
 			float[] projArray = DrawState.mats[(int)EMatrixMode.PROJECTION].cur.ToArray();
 			unsafe {
 				fixed (float* projPtr = projArray) {
@@ -262,7 +264,8 @@ void main() {
 	public static void UseTexture(uint textureId) {
 		if (textureId == 0) {
 			DrawState.activeTexture = DrawState.placeholderTexture;
-		} else {
+		}
+		else {
 			DrawState.activeTexture = textureId;
 		}
 	}
@@ -275,7 +278,8 @@ void main() {
 		if (programId == 0) {
 			DrawState.activeProgram = DrawState.gpuProgram;
 			Cstm.gl.UseProgram(0);
-		} else {
+		}
+		else {
 			DrawState.activeProgram = programId;
 			Cstm.gl.UseProgram(programId);
 		}
@@ -370,7 +374,8 @@ void main() {
 
 					DrawState.active_idx1 = DrawState.currentIndex;
 					PushVertex(DrawState.verts[0], cpuTransform);
-				} else {
+				}
+				else {
 					BeginDraw(1, 2, GLEnum.Lines);
 
 					PushVertex(DrawState.verts[1], cpuTransform);
@@ -393,6 +398,21 @@ void main() {
 					PushIndex(DrawState.currentIndex++);
 
 					DrawState.active_idx0 = 0;
+				}
+				break;
+
+			case PrimitiveType.TRIANGLE_FAN:
+				if (DrawState.active_idx0 > 2) {
+					BeginDraw(3, 3, GLEnum.Triangles);
+					PushVertex(DrawState.verts[0], cpuTransform);
+					PushVertex(DrawState.verts[1], cpuTransform);
+					PushVertex(DrawState.verts[2], cpuTransform);
+					PushIndex(DrawState.currentIndex++);
+					PushIndex(DrawState.currentIndex++);
+					PushIndex(DrawState.currentIndex++);
+					DrawState.verts[1] = DrawState.verts[2];
+
+					DrawState.active_idx0 = 2;
 				}
 				break;
 

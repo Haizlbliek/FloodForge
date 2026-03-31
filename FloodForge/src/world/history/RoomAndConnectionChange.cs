@@ -46,7 +46,8 @@ public class RoomAndConnectionChange : Change {
 	public override void Undo() {
 		if (this.adding) {
 			this.Remove();
-		} else {
+		}
+		else {
 			this.Add();
 		}
 	}
@@ -54,7 +55,8 @@ public class RoomAndConnectionChange : Change {
 	public override void Redo() {
 		if (this.adding) {
 			this.Add();
-		} else {
+		}
+		else {
 			this.Remove();
 		}
 	}

@@ -35,7 +35,8 @@ public class MoveChange : MultipleRoomChange {
 				this.rooms[i].DevVel += this.devOffsets[i] * multiplier;
 				this.rooms[i].CanonVel += this.canonOffsets[i] * multiplier;
 			}
-		} else {
+		}
+		else {
 			for (int i = 0; i < this.rooms.Count; i++) {
 				this.rooms[i].DevPosition += this.devOffsets[i] * multiplier;
 				this.rooms[i].CanonPosition += this.canonOffsets[i] * multiplier;

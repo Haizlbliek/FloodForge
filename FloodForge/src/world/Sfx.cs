@@ -8,10 +8,8 @@ public static class Sfx {
 	private static unsafe Device* _device;
 	private static unsafe Context* _context;
 
-	// Use a list to track active sources and their buffers
-	private static readonly List<uint> ActiveSources = new();
-	// Cache buffers by path to avoid re-loading the same file from disk
-	private static readonly Dictionary<string, uint> BufferCache = new();
+	private static readonly List<uint> ActiveSources = [];
+	private static readonly Dictionary<string, uint> BufferCache = [];
 
 	public static unsafe void Initialize() {
 		_al = AL.GetApi();
@@ -23,16 +21,13 @@ public static class Sfx {
 	}
 
 	public static void Play(string filePath) {
-		// 1. Get or Load the buffer
 		if (!BufferCache.TryGetValue(filePath, out uint buffer)) {
 			buffer = LoadWav(filePath);
 			BufferCache[filePath] = buffer;
 		}
 
-		// 2. Cleanup finished sources before starting a new one
 		CleanupFinishedSources();
 
-		// 3. Create a new source for this specific playback instance
 		uint source = _al.GenSource();
 		_al.SetSourceProperty(source, SourceInteger.Buffer, buffer);
 		_al.SourcePlay(source);
@@ -68,18 +63,16 @@ public static class Sfx {
 		using var stream = File.OpenRead(path);
 		using var reader = new BinaryReader(stream);
 
-		// Simple WAV Header Parsing
-		reader.ReadBytes(12); // RIFF...WAVE
-		reader.ReadBytes(4);  // fmt 
-		reader.ReadInt32();   // chunk size
-		reader.ReadInt16();   // format tag
+		reader.ReadBytes(12);
+		reader.ReadBytes(4);
+		reader.ReadInt32();
+		reader.ReadInt16();
 		int channels = reader.ReadInt16();
 		int sampleRate = reader.ReadInt32();
-		reader.ReadInt32();   // byte rate
-		reader.ReadInt16();   // block align
+		reader.ReadInt32();
+		reader.ReadInt16();
 		int bitsPerSample = reader.ReadInt16();
 
-		// Skip to data chunk
 		while (new string(reader.ReadChars(4)) != "data") { }
 		int dataSize = reader.ReadInt32();
 		byte[] data = reader.ReadBytes(dataSize);

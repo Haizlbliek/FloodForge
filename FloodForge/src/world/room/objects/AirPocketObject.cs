@@ -1,9 +1,15 @@
-namespace FloodForge.Droplet;
+namespace FloodForge.World;
 
 public class AirPocketObject : DevObject {
 	public AirPocketObject() {
 		this.AddNode(new Vector2(100f, 200f), this.nodes[0]);
 		this.AddNode(new Vector2(0f, 80f), this.nodes[0]);
+	}
+
+	public override AirPocketObject Clone() {
+		AirPocketObject clone = new AirPocketObject();
+		DevObject.SetNodes(this, clone);
+		return clone;
 	}
 
 	public override void Draw(Vector2 offset) {

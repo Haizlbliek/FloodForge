@@ -17,7 +17,7 @@ public class CreatureLineageChange : Change {
 	public CreatureLineageChange(DenCreature creature) {
 		this.chance = false;
 		this.creature = creature;
-		this.creatureAdd = new DenCreature("", 0, "", 0f);
+		this.creatureAdd = new DenCreature("", 0);
 	}
 
 	public override void Undo() {

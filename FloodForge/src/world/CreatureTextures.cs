@@ -18,6 +18,11 @@ public static class CreatureTextures {
 	public static Texture UnknownCreature { get; private set; } = null!;
 
 	private static void LoadCreaturesFromFolder(string path) {
+		if (!Directory.Exists(path)) {
+			Logger.Error("Creatures not found: " + path);
+			return;
+		}
+
 		Logger.Info("Loading creatures from: " + path);
 
 		foreach (string file in Directory.EnumerateFiles(path)) {

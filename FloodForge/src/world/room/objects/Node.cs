@@ -1,9 +1,9 @@
-namespace FloodForge.Droplet;
+namespace FloodForge.World;
 
-public class Node {
+public sealed class Node {
 	public Vector2 position;
 	public Node? parent;
-	public DevObject devObject;
+	public readonly DevObject devObject;
 
 	public Vector2 GlobalPosition => this.parent == null ? this.position : (this.position + this.parent.GlobalPosition);
 

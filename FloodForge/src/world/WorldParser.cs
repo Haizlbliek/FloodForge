@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Stride.Core;
 using Stride.Core.Extensions;
 
@@ -6,18 +7,6 @@ namespace FloodForge.World;
 
 public static class WorldParser {
 	private static readonly List<(string, Dictionary<string, RoomAttractiveness>)> roomAttractiveness = [];
-
-	private static string FindAcronym(string regionsPath, string lowerAcronym) {
-		foreach (string l in File.ReadAllLines(regionsPath)) {
-			string line = (l.StartsWith("[ADD]") ? l[5..] : l).Trim();
-
-			if (line.ToLowerInvariant() == lowerAcronym) {
-				return line;
-			}
-		}
-
-		return lowerAcronym;
-	}
 
 	public static RoomAttractiveness ParseRoomAttractiveness(string value) {
 		return value switch {
@@ -51,9 +40,10 @@ public static class WorldParser {
 					creature = CreatureTextures.Parse(creature);
 					attractiveness[creature] = ParseRoomAttractiveness(value.ToLowerInvariant());
 				}
-				if (room.ToLowerInvariant() == "default") {
+				if (room.Equals("default", StringComparison.InvariantCultureIgnoreCase)) {
 					WorldWindow.region.defaultAttractiveness = attractiveness;
-				} else {
+				}
+				else {
 					roomAttractiveness.Add((room, attractiveness));
 				}
 			}
@@ -79,8 +69,7 @@ public static class WorldParser {
 		string? roomName = line[..line.IndexOf(':')];
 		string roomPath = WorldWindow.region.roomsPath;
 
-		if (roomName.ToLowerInvariant().StartsWith("gate")) {
-			Logger.Info("Found gate " + roomName);
+		if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
 			roomPath = PathUtil.FindDirectory(PathUtil.Combine(roomPath, ".."), "gates") ?? "";
 			if (roomPath.IsNullOrEmpty()) {
 				Logger.Warn("Failed to load gate! Missing gates folder");
@@ -91,23 +80,24 @@ public static class WorldParser {
 		string? filePath = PathUtil.FindFile(roomPath, roomName + ".txt");
 
 		Room room;
-		if (roomName.ToLowerInvariant().StartsWith("offscreenden")) {
+		if (roomName.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
 			if (WorldWindow.region.offscreenDen == null) {
 				WorldWindow.region.offscreenDen = new OffscreenRoom(roomName, roomName);
 				WorldWindow.region.rooms.Add(WorldWindow.region.offscreenDen);
 			}
 
 			room = WorldWindow.region.offscreenDen;
-		} else {
+		}
+		else {
 			if (filePath == null) {
 				Logger.Info("File '", Path.Combine(roomPath, roomName), ".txt' could not be found");
 			}
 
-			room = new Room(filePath ?? "", roomName.ToLowerInvariant());
+			room = new Room(filePath ?? "", roomName);
 			WorldWindow.region.rooms.Add(room);
 		}
 
-		string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", ""))];
+		string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", "").Trim())];
 		float canonX = float.Parse(data[0]) / 3f;
 		float canonY = float.Parse(data[1]) / 3f;
 		float devX = float.Parse(data[2]) / 3f;
@@ -122,7 +112,8 @@ public static class WorldParser {
 		room.data.layer = layer;
 		if (subregion.IsNullOrEmpty()) {
 			room.data.subregion = -1;
-		} else {
+		}
+		else {
 			int idx = WorldWindow.region.subregions.IndexOf(subregion);
 			if (idx != -1) {
 				room.data.subregion = idx;
@@ -156,7 +147,7 @@ public static class WorldParser {
 							extra.merge = false;
 						}
 					}
-				
+	
 					extraRoomData[data[1]] = extra;
 				}
 			}
@@ -166,7 +157,7 @@ public static class WorldParser {
 			else if (line.StartsWith("Connection: ")) {
 				// LATER
 			}
-			else if (line.StartsWith("SpawnMigrationStream: ") || line.StartsWith("SpawnMigrationStreamMidpoint: ")) {
+			else if (line.StartsWith("SpawnMigrationStream: ") || line.StartsWith("SpawnMigrationStreamMidpoint: ") || line.StartsWith("Def_Mat: ") || line.StartsWith("R: ") || line.StartsWith("[REFERENCE]") || line.StartsWith("I: ") || line.StartsWith("[IMAGE]")) {
 				WorldWindow.region.extraMap += line + "\n";
 				// LATER
 			}
@@ -176,7 +167,7 @@ public static class WorldParser {
 		}
 
 		foreach (var pair in extraRoomData) {
-			Room room = WorldWindow.region.rooms.First(x => x.Name.Equals(pair.Key, StringComparison.InvariantCultureIgnoreCase));
+			Room room = WorldWindow.region.rooms.First(x => x.name.Equals(pair.Key, StringComparison.InvariantCultureIgnoreCase));
 			room.data.hidden = pair.Value.hidden;
 			room.data.merge = pair.Value.merge;
 		}
@@ -227,13 +218,14 @@ public static class WorldParser {
 		string[] connections = data[1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 		string[] tags = data[2..];
 
-		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.Name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
+		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 		if (room == null) {
-			if (roomName.ToLowerInvariant().StartsWith("offscreenden")) {
+			if (roomName.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
 				room = new OffscreenRoom(roomName, roomName);
-			} else {
+			}
+			else {
 				string path = WorldWindow.region.roomsPath;
-				if (roomName.ToLowerInvariant().StartsWith("gate")) {
+				if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
 					path = PathUtil.FindDirectory(PathUtil.Parent(path), "gates") ?? "";
 					if (path.IsNullOrEmpty()) {
 						Logger.Warn($"Couldn't find gates folder in {WorldWindow.region.roomsPath}");
@@ -263,7 +255,7 @@ public static class WorldParser {
 				ConnectionToAdd connectionData = connectionsToAdd[i];
 				if (connectionData.roomB != null) continue;
 
-				if (connectionData.roomA.Name.Equals(connection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(roomName, StringComparison.InvariantCultureIgnoreCase)) {
+				if (connectionData.roomA.name.Equals(connection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(roomName, StringComparison.InvariantCultureIgnoreCase)) {
 					connectionsToAdd[i] = connectionData with { roomB = room, connectionB = connectionId };
 					alreadyExists = true;
 					break;
@@ -283,21 +275,30 @@ public static class WorldParser {
 		tags.ForEach(tag => room.data.tags.Toggle(tag));
 	}
 
-	private static (string, float) ParseCreatureTag(string tag) {
+	private static DenCreature.Tag ParseCreatureTag(string tag, string type) {
 		if (tag.StartsWith("Mean")) {
-			return ("MEAN", float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+			return new DenCreature.FloatTag(CreatureTags.Mean, float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
 		}
 		else if (tag.StartsWith("Seed")) {
-			return ("SEED", float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+			return new DenCreature.IntegerTag(CreatureTags.Seed, int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
 		}
 		else if (tag.StartsWith("RotType")) {
-			return ("RotType", float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+			return new DenCreature.IntegerTag(CreatureTags.RotType, int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
 		}
-		else if (tag.Contains(':')) {
-			return ("LENGTH", float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
-		} else {
-			return (tag, 0f);
+
+		if (!tag.Contains(':')) {
+			try {
+				if (type == "polemimic") {
+					return new DenCreature.IntegerTag(CreatureTags.POLEMIMIC_LENGTH, int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+				}
+				else {
+					return new DenCreature.FloatTag(CreatureTags.CENTIPEDE_LENGTH, float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+				}
+			}
+			catch (FormatException) {}
 		}
+
+		return new DenCreature.Tag(CreatureTags.GetOrCreate(tag));
 	}
 
 	private static bool ParseWorldCreatureLineage(string[] splits, Room room, TimelineType timelineType, HashSet<string> timelines) {
@@ -309,12 +310,12 @@ public static class WorldParser {
 		}
 
 		if (!room.HasDen(denId)) {
-			Logger.Warn($"{room.Name} missing den {denId}");
+			Logger.Warn($"{room.name} missing den {denId}");
 			return false;
 		}
 
 		Den den = room.GetDen(denId);
-		DenLineage lineage = new DenLineage("", 0, "", 0.0f) {
+		DenLineage lineage = new DenLineage("", 0) {
 			timelineType = timelineType,
 			timelines = timelines
 		};
@@ -322,21 +323,30 @@ public static class WorldParser {
 
 		DenCreature creature = lineage;
 		bool first = true;
-		foreach (string creatureInDen in splits[3].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)) {
+		foreach (string creatureInDen in splits[3].Split(", ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)) {
 			if (!first) {
-				creature.lineageTo = new DenCreature("", 0, "", 0.0f);
+				creature.lineageTo = new DenCreature("", 0);
 				creature = creature.lineageTo;
 			}
 			first = false;
 
-			string[] sections = creatureInDen.Split('-', StringSplitOptions.TrimEntries);
+			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
 			creature.type = CreatureTextures.Parse(sections[0]);
 			creature.count = 1;
-			creature.lineageChance = float.Parse(sections[^1]);
 
-			if (sections.Length == 3 && sections[1][0] == '{') {
-				string tag = sections[1][1..^1];
-				(creature.tag, creature.data) = ParseCreatureTag(tag);
+			for (int i = 1; i < sections.Length; i++) {
+				string section = sections[i];
+
+				if (section[0] != '{') {
+					creature.lineageChance = float.Parse(section);
+					continue;
+				}
+
+				section = section[1..^1];
+				string[] tags = section.Split(',');
+				foreach (string tagStr in tags) {
+					creature.AddTag(ParseCreatureTag(tagStr, creature.type));
+				}
 			}
 		}
 
@@ -344,7 +354,8 @@ public static class WorldParser {
 	}
 
 	private static bool ParseWorldCreatureNormal(string[] splits, Room room, TimelineType timelineType, HashSet<string> timelines) {
-		foreach (string creatureInDen in splits[1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)) {
+		string[] creaturesInDen = Regex.Split(splits[1], @",(?![^{]*})");
+		foreach (string creatureInDen in creaturesInDen) {
 			string[] sections = creatureInDen.Split('-', StringSplitOptions.TrimEntries);
 			int denId = int.Parse(sections[0], NumberStyles.Any, CultureInfo.InvariantCulture);
 			string creature = sections[1];
@@ -366,34 +377,30 @@ public static class WorldParser {
 			}
 
 			if (!room.HasDen(denId)) {
-				Logger.Warn($"{room.Name} missing den {denId}");
+				Logger.Warn($"{room.name} missing den {denId}");
 				return false;
 			}
 
 			Den den = room.GetDen(denId);
-			DenLineage lineage = new DenLineage(CreatureTextures.Parse(creature), 0, "", 0.0f) {
+			DenLineage lineage = new DenLineage(CreatureTextures.Parse(creature), 1) {
 				timelineType = timelineType,
 				timelines = timelines
 			};
 			den.creatures.Add(lineage);
 
-			if (sections.Length == 3) {
-				if (sections[2][0] == '{') {
-					(lineage.tag, lineage.data) = ParseCreatureTag(sections[2][1..^1]);
-					lineage.count = 1;
-				} else {
-					lineage.count = int.Parse(sections[2]);
+			for (int i = 2; i < sections.Length; i++) {
+				string section = sections[i];
+
+				if (section[0] != '{') {
+					lineage.count = int.Parse(section);
+					continue;
 				}
-			}
-			else if (sections.Length == 4) {
-				bool tagFirst = sections[2][0] == '{';
-				string tagString = sections[tagFirst ? 2 : 3];
-				string countString = sections[tagFirst ? 3 : 2];
-				(lineage.tag, lineage.data) = ParseCreatureTag(tagString[1..^1]);
-				lineage.count = int.Parse(countString);
-			}
-			else {
-				lineage.count = 1;
+
+				section = section[1..^1];
+				string[] tags = section.Split(',');
+				foreach (string tagStr in tags) {
+					lineage.AddTag(ParseCreatureTag(tagStr, lineage.type));
+				}
 			}
 		}
 
@@ -401,14 +408,14 @@ public static class WorldParser {
 	}
 
 	private static bool ParseWorldCreature(string line) {
-		string[] splits = line.Split(':', StringSplitOptions.TrimEntries);
+		string[] splits = line.Split(" : ", StringSplitOptions.TrimEntries);
 		TimelineType timelineType = TimelineType.All;
 		HashSet<string> timelines = [];
 
 		if (splits[0][0] == '(') {
 			string v = splits[0][1..splits[0].IndexOf(')')];
 			splits[0] = splits[0][(splits[0].IndexOf(')') + 1)..].Trim();
-			if (v.ToLowerInvariant().StartsWith("x-")) {
+			if (v.StartsWith("x-", StringComparison.InvariantCultureIgnoreCase)) {
 				timelineType = TimelineType.Except;
 				v = v[2..];
 			}
@@ -418,11 +425,11 @@ public static class WorldParser {
 			timelines = [.. v.Split(',')];
 		}
 
-		bool lineage = splits[0].ToLowerInvariant() == "lineage";
+		bool lineage = splits[0].Equals("lineage", StringComparison.InvariantCultureIgnoreCase);
 		string roomName = lineage ? splits[1] : splits[0];
-		Room? room = (roomName.ToLowerInvariant() == "offscreen")
+		Room? room = roomName.Equals("offscreen", StringComparison.InvariantCultureIgnoreCase)
 			? WorldWindow.region.offscreenDen
-			: WorldWindow.region.rooms.FirstOrDefault(x => x.Name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
+			: WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 
 		if (room == null) {
 			Logger.Warn($"No room {roomName}({lineage}) for creature");
@@ -431,7 +438,8 @@ public static class WorldParser {
 
 		if (lineage) {
 			if (!ParseWorldCreatureLineage(splits, room, timelineType, timelines)) return false;
-		} else {
+		}
+		else {
 			if (!ParseWorldCreatureNormal(splits, room, timelineType, timelines)) return false;
 		}
 
@@ -452,7 +460,7 @@ public static class WorldParser {
 
 		if (parts.Length == 3) {
 			string roomName2 = parts[2];
-			Room? room2 = WorldWindow.region.rooms.FirstOrDefault(x => x.Name.Equals(roomName2, StringComparison.InvariantCultureIgnoreCase));
+			Room? room2 = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName2, StringComparison.InvariantCultureIgnoreCase));
 			if (room2 == null) {
 				Logger.Warn($"Skipping line due to missing room {roomName2}");
 				Logger.Warn($"> {link}");
@@ -486,7 +494,7 @@ public static class WorldParser {
 		}
 
 		string roomName = parts[1];
-		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.Name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
+		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 		if (room == null) {
 			Logger.Warn($"Skipping line due to missing room {roomName}");
 			Logger.Warn($"> {link}");
@@ -507,10 +515,10 @@ public static class WorldParser {
 		Connection? connection = room.connections.FirstOrDefault(otherConnection => {
 			Room otherRoom = (otherConnection.roomA == room) ? otherConnection.roomB : otherConnection.roomA;
 
-			return otherRoom.Name.Equals(currentConnection, StringComparison.InvariantCultureIgnoreCase);
+			return otherRoom.name.Equals(currentConnection, StringComparison.InvariantCultureIgnoreCase);
 		});
 
-		if (toConnection.ToLowerInvariant() == "disconnected") {
+		if (toConnection.Equals("disconnected", StringComparison.InvariantCultureIgnoreCase)) {
 			if (connection == null) {
 				Logger.Warn("Skipping line due to missing connection");
 				Logger.Warn($"> {link}");
@@ -551,7 +559,8 @@ public static class WorldParser {
 			if (connection == null) {
 				Logger.Warn("Link missing connection, adding new connection anyways");
 				Logger.Warn($"> {link}");
-			} else {
+			}
+			else {
 				connectionId = (int) ((connection.roomA == room) ? connection.connectionA : connection.connectionB);
 
 				if (connection.timelineType == TimelineType.Only) {
@@ -585,7 +594,7 @@ public static class WorldParser {
 		for (int i = 0; i < conditionalConnectionsToAdd.Count; i++) {
 			ConditionalConnection connectionData = conditionalConnectionsToAdd[i];
 
-			if (connectionData.roomB == null && connectionData.roomA.Name.Equals(toConnection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(room.Name, StringComparison.InvariantCultureIgnoreCase)) {
+			if (connectionData.roomB == null && connectionData.roomA.name.Equals(toConnection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(room.name, StringComparison.InvariantCultureIgnoreCase)) {
 				conditionalConnectionsToAdd[i] = connectionData with {
 					roomB = room,
 					connectionB = (uint) connectionId
@@ -691,7 +700,7 @@ public static class WorldParser {
 			else if (parseState == WorldParseState.Creatures) {
 				if (!ParseWorldCreature(line)) {
 					Logger.Warn("Invalid world creature " + line);
-					return false;
+					continue;
 				}
 			}
 			else if (parseState == WorldParseState.ConditionalLinks) {
@@ -703,12 +712,12 @@ public static class WorldParser {
 
 		foreach (ConnectionToAdd connectionData in connectionsToAdd) {
 			if (connectionData.roomB == null || connectionData.connectionB == null) {
-				Logger.Warn($"Failed to load connection from {connectionData.roomA.Name} to {connectionData.roomB?.Name ?? connectionData.roomBName}");
+				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? connectionData.roomBName}");
 				continue;
 			}
 
 			if (!connectionData.roomA.ValidConnection(connectionData.connectionA) || !connectionData.roomB.ValidConnection(connectionData.connectionB.Value)) {
-				Logger.Warn($"Failed to load connection from {connectionData.roomA.Name} to {connectionData.roomB?.Name ?? connectionData.roomBName} - Not valid connections");
+				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? connectionData.roomBName} - Not valid connections");
 				continue;
 			}
 
@@ -729,19 +738,19 @@ public static class WorldParser {
 		foreach (ConditionalConnection connectionData in conditionalConnectionsToAdd) {
 			if (connectionData.roomB == null) {
 				Logger.Warn("Conditional connection failed to load - missing other room");
-				Logger.Warn($"> {connectionData.roomA.Name} {connectionData.connectionA} - {connectionData.roomBName}");
+				Logger.Warn($"> {connectionData.roomA.name} {connectionData.connectionA} - {connectionData.roomBName}");
 				continue;
 			}
 
 			if (connectionData.connectionB == null) {
 				Logger.Warn("Conditional connection failed to load - missing other connection");
-				Logger.Warn($"> {connectionData.roomA.Name} {connectionData.connectionA} - {connectionData.roomBName}");
+				Logger.Warn($"> {connectionData.roomA.name} {connectionData.connectionA} - {connectionData.roomBName}");
 				continue;
 			}
 
 			if (!connectionData.roomA.ValidConnection(connectionData.connectionA) || !connectionData.roomB.ValidConnection(connectionData.connectionB.Value)) {
 				Logger.Warn("Conditional connection failed to load - invalid connection indices");
-				Logger.Warn($"> {connectionData.roomA.Name} {connectionData.connectionA} - {connectionData.roomB.Name} {connectionData.connectionB}");
+				Logger.Warn($"> {connectionData.roomA.name} {connectionData.connectionA} - {connectionData.roomB.name} {connectionData.connectionB}");
 				continue;
 			}
 
@@ -759,68 +768,58 @@ public static class WorldParser {
 		return true;
 	}
 
-	private static void LoadExtraRoomData(string? path, Room room) {
-		if (path == null) return;
+	public static string GetRegionDisplayname(string worldPath) {
+		string? displaynamePath = PathUtil.FindFile(PathUtil.Parent(worldPath), "displayname.txt");
 
-		List<RoomData.DevItem> devItems = [];
-
-		foreach (string line in File.ReadAllLines(path)) {
-			if (line.IsNullOrEmpty()) continue;
-			if (!line.StartsWith("PlacedObjects:")) continue;
-
-			string[] splits = line[(line.IndexOf(':') + 1)..].Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-			foreach (string item in splits) {
-				string[] splits2 = item.Split('>');
-				string key = splits2[0];
-
-				Texture texture = CreatureTextures.GetTexture($"room-{key}");
-				if (texture == CreatureTextures.UnknownCreature) continue;
-
-				RoomData.DevItem devItem = new RoomData.DevItem(key, texture, new Vector2(
-					float.Parse(splits2[1][1..]) / 20f,
-					float.Parse(splits2[2][1..]) / 20f
-				));
-				devItems.Add(devItem);
-			}
-		}
-
-		room.data.devItems = [ ..devItems ];
+		return displaynamePath == null ? "" : File.ReadAllText(displaynamePath).Trim();
 	}
 
-	public static bool ImportWorldFile(string path) {
+	public static bool ImportWorldFile(string worldPath) {
 		History.Clear();
-		RecentFiles.AddPath(path);
+		RecentFiles.AddPath(worldPath);
 		roomAttractiveness.Clear();
 		WorldWindow.Reset();
-		WorldWindow.region.exportPath = PathUtil.Parent(path);
-		WorldWindow.region.acronym = Path.GetFileNameWithoutExtension(path);
+		WorldWindow.region.exportPath = PathUtil.Parent(worldPath);
+		WorldWindow.region.acronym = Path.GetFileNameWithoutExtension(worldPath);
 		WorldWindow.region.acronym = WorldWindow.region.acronym[(WorldWindow.region.acronym.IndexOfReverse('_') + 1)..];
-		string? regionsPath = Path.GetDirectoryName(PathUtil.Parent(WorldWindow.region.exportPath))?.ToLowerInvariant() == "world"
-			? PathUtil.FindFile(PathUtil.Parent(WorldWindow.region.exportPath), "regions.txt")
-			: null;
 
-		if (regionsPath == null) {
-			Logger.Info("../world/regions.txt doesn't exist, checking for modify");
-			regionsPath = PathUtil.FindDirectory(PathUtil.Parent(Path.Combine(WorldWindow.region.exportPath, "..")), "modify");
+		{
+			// `world/xx/world_xx.txt` -> `world/regions.txt`
+			string? regionsPath = Path.GetFileNameWithoutExtension(PathUtil.Parent(WorldWindow.region.exportPath))?.ToLowerInvariant() == "world"
+				? PathUtil.FindFile(PathUtil.Parent(WorldWindow.region.exportPath), "regions.txt")
+				: null;
+			if (regionsPath != null)
+				WorldWindow.region.regionsPaths.Add(regionsPath);
+
+			string main = PathUtil.Parent(Path.Combine(WorldWindow.region.exportPath, ".."));
+
+			// `world/xx/world_xx.txt` -> `modify/world/regions.txt`
+			regionsPath = PathUtil.FindDirectory(main, "modify");
 			if (regionsPath != null) {
-				Logger.Info("../modify found");
 				regionsPath = PathUtil.FindDirectory(regionsPath, "world");
 			}
 			if (regionsPath != null) {
-				Logger.Info("../modify/world found");
 				regionsPath = PathUtil.FindFile(regionsPath, "regions.txt");
+				if (regionsPath != null)
+					WorldWindow.region.regionsPaths.Add(regionsPath);
 			}
-			else {
-				Logger.Info("../modify/world/regions.txt doesn't exist");
+
+			// `mods/MOD/world/xx/world_xx.txt` -> `world/regions.txt`
+			if (Path.GetFileNameWithoutExtension(PathUtil.Parent(main))?.ToLowerInvariant() == "mods") {
+				Logger.Info("Mods!");
+				regionsPath = PathUtil.FindDirectory(PathUtil.Parent(Path.Combine(main, "..")), "world");
+				if (regionsPath != null) {
+					Logger.Info("World!");
+					regionsPath = PathUtil.FindFile(regionsPath, "regions.txt");
+					if (regionsPath != null)
+						WorldWindow.region.regionsPaths.Add(regionsPath);
+				}
 			}
+
+			Logger.Info(string.Join(", ", WorldWindow.region.regionsPaths));
 		}
 
-		if (regionsPath != null) {
-			Logger.Info("Found regions.txt, looking for acronym");
-			WorldWindow.region.acronym = FindAcronym(regionsPath, WorldWindow.region.acronym);
-		} else {
-			Logger.Info("regions.txt not found");
-		}
+		WorldWindow.region.acronym = WorldWindow.region.FindAcronym(WorldWindow.region.acronym);
 
 		Logger.Info("Opening world ", WorldWindow.region.acronym);
 
@@ -841,27 +840,29 @@ public static class WorldParser {
 		if (mapPath != null) {
 			Logger.Info("Loading map");
 			if (!ParseMap(mapPath)) return false;
-		} else {
+		}
+		else {
 			Logger.Info("Map file not found");
 		}
 
 		Logger.Info("Loading world");
 
-		if (!ParseWorld(path)) return false;
+		if (!ParseWorld(worldPath)) return false;
 
 		Logger.Info("Loading extra room data");
 
 		foreach (Room room in WorldWindow.region.rooms) {
 			if (room is OffscreenRoom) continue;
 
-			foreach (var x in roomAttractiveness) {
-				if (!x.Item1.Equals(room.Name, StringComparison.InvariantCultureIgnoreCase)) continue;
+			foreach (var attr in roomAttractiveness) {
+				if (!attr.Item1.Equals(room.name, StringComparison.InvariantCultureIgnoreCase)) continue;
 
-				room.data.attractiveness = x.Item2;
+				room.data.attractiveness = attr.Item2;
 			}
-
-			LoadExtraRoomData(PathUtil.FindFile(WorldWindow.region.roomsPath, room.Name + "_settings.txt"), room);
 		}
+
+		Logger.Info("Searching for display name");
+		WorldWindow.region.displayName = GetRegionDisplayname(worldPath);
 
 		Logger.Info("World file imported");
 
