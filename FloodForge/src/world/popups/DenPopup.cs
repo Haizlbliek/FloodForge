@@ -190,7 +190,7 @@ public class DenPopup : Popup {
 				}
 
 				if (response.hovered) {
-					this.hoverText = CreatureTextures.ExportName(type);
+					this.hoverText = (unknown && type == CreatureTextures.UNKNOWN) ? creature.type : CreatureTextures.ExportName(type);
 				}
 
 				if (selected) {
