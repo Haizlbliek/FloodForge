@@ -40,7 +40,7 @@ public static class WorldParser {
 					creature = CreatureTextures.Parse(creature);
 					attractiveness[creature] = ParseRoomAttractiveness(value.ToLowerInvariant());
 				}
-				if (room.ToLowerInvariant() == "default") {
+				if (room.Equals("default", StringComparison.InvariantCultureIgnoreCase)) {
 					WorldWindow.region.defaultAttractiveness = attractiveness;
 				}
 				else {
@@ -69,7 +69,7 @@ public static class WorldParser {
 		string? roomName = line[..line.IndexOf(':')];
 		string roomPath = WorldWindow.region.roomsPath;
 
-		if (roomName.ToLowerInvariant().StartsWith("gate")) {
+		if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
 			Logger.Info("Found gate " + roomName);
 			roomPath = PathUtil.FindDirectory(PathUtil.Combine(roomPath, ".."), "gates") ?? "";
 			if (roomPath.IsNullOrEmpty()) {
@@ -81,7 +81,7 @@ public static class WorldParser {
 		string? filePath = PathUtil.FindFile(roomPath, roomName + ".txt");
 
 		Room room;
-		if (roomName.ToLowerInvariant().StartsWith("offscreenden")) {
+		if (roomName.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
 			if (WorldWindow.region.offscreenDen == null) {
 				WorldWindow.region.offscreenDen = new OffscreenRoom(roomName, roomName);
 				WorldWindow.region.rooms.Add(WorldWindow.region.offscreenDen);
@@ -416,7 +416,7 @@ public static class WorldParser {
 		if (splits[0][0] == '(') {
 			string v = splits[0][1..splits[0].IndexOf(')')];
 			splits[0] = splits[0][(splits[0].IndexOf(')') + 1)..].Trim();
-			if (v.ToLowerInvariant().StartsWith("x-")) {
+			if (v.StartsWith("x-", StringComparison.InvariantCultureIgnoreCase)) {
 				timelineType = TimelineType.Except;
 				v = v[2..];
 			}
@@ -426,9 +426,9 @@ public static class WorldParser {
 			timelines = [.. v.Split(',')];
 		}
 
-		bool lineage = splits[0].ToLowerInvariant() == "lineage";
+		bool lineage = splits[0].Equals("lineage", StringComparison.InvariantCultureIgnoreCase);
 		string roomName = lineage ? splits[1] : splits[0];
-		Room? room = (roomName.ToLowerInvariant() == "offscreen")
+		Room? room = roomName.Equals("offscreen", StringComparison.InvariantCultureIgnoreCase)
 			? WorldWindow.region.offscreenDen
 			: WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 
@@ -519,7 +519,7 @@ public static class WorldParser {
 			return otherRoom.name.Equals(currentConnection, StringComparison.InvariantCultureIgnoreCase);
 		});
 
-		if (toConnection.ToLowerInvariant() == "disconnected") {
+		if (toConnection.Equals("disconnected", StringComparison.InvariantCultureIgnoreCase)) {
 			if (connection == null) {
 				Logger.Warn("Skipping line due to missing connection");
 				Logger.Warn($"> {link}");

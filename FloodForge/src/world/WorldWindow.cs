@@ -1048,7 +1048,7 @@ public static class WorldWindow {
 			string acronym = Path.GetFileNameWithoutExtension(PathUtil.Parent(path));
 			acronym = acronym[0..acronym.IndexOfReverse('-')];
 
-			if (acronym.ToLowerInvariant() == "gates") {
+			if (acronym.Equals("gates", StringComparison.InvariantCultureIgnoreCase)) {
 				HandleGateFile(path, filename);
 			}
 			else {
@@ -1059,9 +1059,8 @@ public static class WorldWindow {
 
 	private static void HandleGateFile(string path, string filename) {
 		string[] names = filename.Split('_');
-		string regAcro = WorldWindow.region.acronym.ToLowerInvariant();
 
-		if (names[1].ToLowerInvariant() == regAcro || names[2].ToLowerInvariant() == regAcro) {
+		if (names[1].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase) || names[2].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
 			CreateAndAddRoom(path, filename, "GATE");
 		}
 		else {

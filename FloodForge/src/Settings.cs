@@ -11,7 +11,7 @@ public static class Settings {
 	public static Setting<float> PopupScrollSpeed = Setting.Of("PopupScrollSpeed", 0.4f);
 	public static Setting<STConnectionType> ConnectionType = Setting.Of("ConnectionType", STConnectionType.Bezier);
 	public static Setting<STConnectionPoint> ConnectionPoint = Setting.Of("ConnectionPoint", STConnectionPoint.Entrance);
-	public static Setting<float> WorldIconScale = Setting.Of("WorldIconScale", 1f).Override(value => value.ToLowerInvariant() == "camera" ? (true, -1) : (false, default));
+	public static Setting<float> WorldIconScale = Setting.Of("WorldIconScale", 1f).Override(value => value.Equals("camera", StringComparison.InvariantCultureIgnoreCase) ? (true, -1) : (false, default));
 	public static Setting<string> DefaultFilePath = Setting.Of("DefaultFilePath", "");
 	public static Setting<bool> OriginalControls = Setting.Of("OriginalControls", false);
 	public static Setting<bool> WarnMissingImages = Setting.Of("WarnMissingImages", false);
