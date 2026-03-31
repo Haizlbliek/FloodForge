@@ -126,7 +126,7 @@ public static class CreatureTextures {
 	}
 
 	public static string Parse(string type) {
-		if (type == "NONE") return "";
+		if (type.Equals("NONE", StringComparison.InvariantCultureIgnoreCase)) return "";
 
 		type = type.ToLowerInvariant();
 

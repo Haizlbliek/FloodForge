@@ -214,6 +214,8 @@ public static class WorldParser {
 
 	private static void ParseWorldRoom(string line, ref List<ConnectionToAdd> connectionsToAdd) {
 		string[] data = line.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		if (data.Length < 2) return;
+
 		string roomName = data[0];
 		string[] connections = data[1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 		string[] tags = data[2..];
@@ -323,7 +325,7 @@ public static class WorldParser {
 
 		DenCreature creature = lineage;
 		bool first = true;
-		foreach (string creatureInDen in splits[3].Split(", ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)) {
+		foreach (string creatureInDen in Regex.Split(splits[3], @",(?![^{]*})").Select(s => s.Trim())) {
 			if (!first) {
 				creature.lineageTo = new DenCreature("", 0);
 				creature = creature.lineageTo;
@@ -343,7 +345,7 @@ public static class WorldParser {
 				}
 
 				section = section[1..^1];
-				string[] tags = section.Split(',');
+				string[] tags = section.Split(',', '|');
 				foreach (string tagStr in tags) {
 					creature.AddTag(ParseCreatureTag(tagStr, creature.type));
 				}
@@ -354,8 +356,7 @@ public static class WorldParser {
 	}
 
 	private static bool ParseWorldCreatureNormal(string[] splits, Room room, TimelineType timelineType, HashSet<string> timelines) {
-		string[] creaturesInDen = Regex.Split(splits[1], @",(?![^{]*})");
-		foreach (string creatureInDen in creaturesInDen) {
+		foreach (string creatureInDen in Regex.Split(splits[1], @",(?![^{]*})").Select(s => s.Trim())) {
 			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
 			int denId = int.Parse(sections[0], NumberStyles.Any, CultureInfo.InvariantCulture);
 			string creature = sections[1];
@@ -397,7 +398,7 @@ public static class WorldParser {
 				}
 
 				section = section[1..^1];
-				string[] tags = section.Split(',');
+				string[] tags = section.Split(',', '|');
 				foreach (string tagStr in tags) {
 					lineage.AddTag(ParseCreatureTag(tagStr, lineage.type));
 				}
@@ -408,39 +409,44 @@ public static class WorldParser {
 	}
 
 	private static bool ParseWorldCreature(string line) {
-		string[] splits = line.Split(" : ", StringSplitOptions.TrimEntries);
-		TimelineType timelineType = TimelineType.All;
-		HashSet<string> timelines = [];
+		try {
+			string[] splits = line.Split(" : ", StringSplitOptions.TrimEntries);
+			TimelineType timelineType = TimelineType.All;
+			HashSet<string> timelines = [];
 
-		if (splits[0][0] == '(') {
-			string v = splits[0][1..splits[0].IndexOf(')')];
-			splits[0] = splits[0][(splits[0].IndexOf(')') + 1)..].Trim();
-			if (v.StartsWith("x-", StringComparison.InvariantCultureIgnoreCase)) {
-				timelineType = TimelineType.Except;
-				v = v[2..];
+			if (splits[0][0] == '(') {
+				string v = splits[0][1..splits[0].IndexOf(')')];
+				splits[0] = splits[0][(splits[0].IndexOf(')') + 1)..].Trim();
+				if (v.StartsWith("x-", StringComparison.InvariantCultureIgnoreCase)) {
+					timelineType = TimelineType.Except;
+					v = v[2..];
+				}
+				else {
+					timelineType = TimelineType.Only;
+				}
+				timelines = [.. v.Split(',')];
+			}
+
+			bool lineage = splits[0].Equals("lineage", StringComparison.InvariantCultureIgnoreCase);
+			string roomName = lineage ? splits[1] : splits[0];
+			Room? room = roomName.Equals("offscreen", StringComparison.InvariantCultureIgnoreCase)
+				? WorldWindow.region.offscreenDen
+				: WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
+
+			if (room == null) {
+				Logger.Warn($"No room {roomName}({lineage}) for creature");
+				return false;
+			}
+
+			if (lineage) {
+				if (!ParseWorldCreatureLineage(splits, room, timelineType, timelines)) return false;
 			}
 			else {
-				timelineType = TimelineType.Only;
+				if (!ParseWorldCreatureNormal(splits, room, timelineType, timelines)) return false;
 			}
-			timelines = [.. v.Split(',')];
 		}
-
-		bool lineage = splits[0].Equals("lineage", StringComparison.InvariantCultureIgnoreCase);
-		string roomName = lineage ? splits[1] : splits[0];
-		Room? room = roomName.Equals("offscreen", StringComparison.InvariantCultureIgnoreCase)
-			? WorldWindow.region.offscreenDen
-			: WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
-
-		if (room == null) {
-			Logger.Warn($"No room {roomName}({lineage}) for creature");
+		catch (Exception) {
 			return false;
-		}
-
-		if (lineage) {
-			if (!ParseWorldCreatureLineage(splits, room, timelineType, timelines)) return false;
-		}
-		else {
-			if (!ParseWorldCreatureNormal(splits, room, timelineType, timelines)) return false;
 		}
 
 		return true;
