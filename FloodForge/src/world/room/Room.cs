@@ -618,6 +618,9 @@ public class Room {
 	}
 
 	public uint GetRoomEntranceDirection(uint i) {
+		if (i >= this.roomShortcutEntrances.Count) {
+			throw new Exception($"Invalid shortcut index {i} for {this.name}");
+		}
 		Vector2i connection = this.roomShortcutEntrances[(int) i];
 
 		if (this.TileIsShortcut(connection.x - 1, connection.y)) return Direction.Left;
@@ -646,6 +649,9 @@ public class Room {
 	}
 
 	public Vector2i GetRoomEntranceShortcutPosition(uint i) {
+		if (i >= this.roomShortcutEntrances.Count) {
+			throw new Exception($"Invalid shortcut index {i} for {this.name}");
+		}
 		Vector2i connection = this.roomShortcutEntrances[(int) i];
 		return connection;
 	}
