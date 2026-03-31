@@ -44,7 +44,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir -p ./publish-temp/mods ./publish-temp/assets ./publish-temp/docs
-          cp ./FloodForge/FloodForge.Desktop ./publish-temp/
           cp -r ./FloodForge/assets/. ./publish-temp/assets/ 2>/dev/null || true
           cp -r ./FloodForge/docs/. ./publish-temp/docs/ 2>/dev/null || true
           if [ "${{ inputs.is_release }}" = "false" ]; then
