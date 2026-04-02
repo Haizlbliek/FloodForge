@@ -113,6 +113,12 @@ public class Room {
 		this.connections.Remove(connection);
 	}
 
+	public void MoveUpdate() {
+		foreach(Connection connection in this.connections) {
+			connection.recalculateBezier = true;
+		}
+	}
+
 	private static void SetCameraAngle(string from, ref Vector2 angle) {
 		try {
 			int commaIndex = from.IndexOf(',');

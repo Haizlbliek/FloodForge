@@ -12,10 +12,10 @@ public static class Profiler{
 	public static void InitProfiler() {
         if (Main.mode == Main.Mode.World && WorldWindow.EnableProfilerScreen) {
             enableProfiler = true;
-        contextStack = [];
-		segmentStopwatch = Stopwatch.StartNew();
-		sumStopwatch = Stopwatch.StartNew();
-	}
+            contextStack = [];
+		    segmentStopwatch = Stopwatch.StartNew();
+		    sumStopwatch = Stopwatch.StartNew();
+        }
         else {
             enableProfiler = false;
         }

@@ -13,6 +13,19 @@ public class Connection {
 	protected int segments;
 	protected float directionStrength;
 
+	public Rect fittedAABB;
+	public Rect paddedAABB {
+		get {
+			float padding = WorldWindow.SelectorScale / 4f;
+			return new Rect(
+				this.fittedAABB.x0 - padding,
+				this.fittedAABB.y0 - padding,
+				this.fittedAABB.x1 + padding,
+				this.fittedAABB.y1 + padding
+			);
+		}
+	}
+
 	public Connection(Room roomA, Room roomB, uint connectionA, uint connectionB) {
 		this.roomA = roomA;
 		this.roomB = roomB;
@@ -39,34 +52,57 @@ public class Connection {
 	// Not perfect, but it works
 	public Rect AABB {
 		get {
-			float padding = WorldWindow.SelectorScale / 4f;
-			Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
-			Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
+			return this.paddedAABB;
+		}
+	}
 
-			Vector2 min, max;
+	Vector2[] BezierPoints = [];
+	Vector2 BezierCenter;
+	public bool recalculateBezier = true;
 
-			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-				min = Vector2.Min(pointA, pointB);
-				max = Vector2.Max(pointA, pointB);
+	public void RecalculateBezier() {
+		Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
+		Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
+		this.segments = Math.Clamp((int) ((pointA - pointB).Length / 2f), 4, 100);
+		this.directionStrength = (pointA - pointB).Length;
+		if (this.directionStrength > 300f) {
+			this.directionStrength = this.directionStrength * 0.5f + 150f;
+		}
+		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
+			this.BezierCenter = (pointA + pointB) * 0.5f;
+			this.BezierPoints = [pointA, pointB];
+			this.fittedAABB = new Rect(pointA, pointB);
+		}
+		else {
+			Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA) * this.directionStrength;
+			Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB) * this.directionStrength;
+
+			if (directionA.x == -directionB.x || directionA.y == -directionB.y) { // increases directionStrength if shortcuts both face the same direction
+				this.directionStrength *= 0.3333f;
 			}
 			else {
-				Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA) * this.directionStrength;
-				Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB) * this.directionStrength;
-
-				Vector2 cp1 = pointA + directionA;
-				Vector2 cp2 = pointB + directionB;
-
-				min = Vector2.Min(Vector2.Min(pointA, pointB), Vector2.Min(cp1, cp2));
-				max = Vector2.Max(Vector2.Max(pointA, pointB), Vector2.Max(cp1, cp2));
+				this.directionStrength *= 0.5f;
 			}
+			
+			float overSegments = 1f / this.segments;
+			List<Vector2> bezierPoints = [];
+			Rect bounds = new(pointA, pointB);
 
-			return new Rect(
-				min.x - padding,
-				min.y - padding,
-				max.x + padding,
-				max.y + padding
-			);
+			bezierPoints.Add(pointA);
+			for (float t = overSegments; t <= 1.01f; t += overSegments) {
+				Vector2 point = MathUtil.BezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
+				bezierPoints.Add(point);
+				bounds = new(
+					Math.Min(bounds.x0, point.x),
+					Math.Min(bounds.y0, point.y),
+					Math.Max(bounds.x1, point.x),
+					Math.Max(bounds.y1, point.y)
+				);
+			}
+			this.BezierPoints = bezierPoints.ToArray();
+			this.fittedAABB = bounds;
 		}
+		this.recalculateBezier = false;
 	}
 
 	public bool Hovered {
@@ -82,20 +118,13 @@ public class Connection {
 				return MathUtil.LineDistance(WorldWindow.worldMouse, pointA, pointB) < lineDist;
 			}
 
-			Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA) * this.directionStrength;
-			Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB) * this.directionStrength;
-
-			Vector2 lastPoint = MathUtil.BezierCubic(0f, pointA, pointA + directionA, pointB + directionB, pointB);
-			float overSegments = 1f / this.segments;
-			for (float t = overSegments; t <= 1.01f; t += overSegments) {
-				Vector2 point = MathUtil.BezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
-
+			Vector2 lastPoint = pointA;
+			foreach (Vector2 point in this.BezierPoints) {
 				if (MathUtil.LineDistance(WorldWindow.worldMouse, lastPoint, point) < lineDist)
 					return true;
 
 				lastPoint = point;
 			}
-
 			return false;
 		}
 	}
@@ -154,6 +183,9 @@ public class Connection {
 	}
 
 	public void Draw() {
+		if(this.BezierPoints == null || this.BezierPoints.Length == 0 || this.recalculateBezier) {
+			this.RecalculateBezier();
+		}
 		bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer];
 		bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer];
 		float opacity = Settings.ConnectionOpacity;
@@ -198,44 +230,22 @@ public class Connection {
 
 		Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
 		Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
-		this.segments = Math.Clamp((int) ((pointA - pointB).Length / 2f), 4, 100);
-		this.directionStrength = (pointA - pointB).Length;
-		if (this.directionStrength > 300f) {
-			this.directionStrength = this.directionStrength * 0.5f + 150f;
-		}
-
-		Vector2 center;
 
 		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 			this.DrawCustomLine(pointA.x, pointA.y, pointB.x, pointB.y, alphaA, alphaB);
-			center = (pointA + pointB) * 0.5f;
 		}
 		else {
-			Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA);
-			Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB);
-
-			if (directionA.x == -directionB.x || directionA.y == -directionB.y) { // increases directionStrength if shortcuts both face the same direction
-				this.directionStrength *= 0.3333f;
-			}
-			else {
-				this.directionStrength *= 0.6666f;
-			}
-
-			directionA *= this.directionStrength;
-			directionB *= this.directionStrength;
-
-			Vector2 lastPoint = MathUtil.BezierCubic(0f, pointA, pointA + directionA, pointB + directionB, pointB);
-			float overSegments = 1f / this.segments;
-			for (float t = overSegments; t <= 1.01f; t += overSegments) {
+			Vector2 lastPoint = this.BezierPoints![0];
+			int curveLength = this.BezierPoints.Length;
+			for (int i = 1; i < curveLength; i++) {
+				float curveProgress = i / curveLength;
 				if (blendColors) {
-					Immediate.Color(Color.Lerp(connectionColorA, connectionColorB, t));
+					Immediate.Color(Color.Lerp(connectionColorA, connectionColorB, curveProgress));
 				}
-				Vector2 point = MathUtil.BezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
-				this.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, Mathf.Lerp(alphaA, alphaB, t - overSegments), Mathf.Lerp(alphaA, alphaB, t));
+				Vector2 point = this.BezierPoints[i];
+				this.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, Mathf.Lerp(alphaA, alphaB, 1 - curveProgress), Mathf.Lerp(alphaA, alphaB, curveProgress));
 				lastPoint = point;
 			}
-
-			center = MathUtil.BezierCubic(0.5f, pointA, pointA + directionA, pointB + directionB, pointB);
 		}
 
 		Program.gl.Disable(EnableCap.Blend);
@@ -246,8 +256,8 @@ public class Connection {
 		if (this.timelineType == TimelineType.Except) {
 			Immediate.Color(1f, 0f, 0f);
 			float xSize = 0.035f * WorldWindow.SelectorScale;
-			UI.Line(center.x - xSize, center.y - xSize, center.x + xSize, center.y + xSize, 0.25f * WorldWindow.SelectorScale);
-			UI.Line(center.x + xSize, center.y - xSize, center.x - xSize, center.y + xSize, 0.25f * WorldWindow.SelectorScale);
+			UI.Line(this.BezierCenter.x - xSize, this.BezierCenter.y - xSize, this.BezierCenter.x + xSize, this.BezierCenter.y + xSize, 0.25f * WorldWindow.SelectorScale);
+			UI.Line(this.BezierCenter.x + xSize, this.BezierCenter.y - xSize, this.BezierCenter.x - xSize, this.BezierCenter.y + xSize, 0.25f * WorldWindow.SelectorScale);
 		}
 
 		float size = 0.03125f * WorldWindow.SelectorScale;
@@ -261,7 +271,7 @@ public class Connection {
 
 				float ox = (width * -0.5f + x + 0.5f) * size * 2.2f;
 				float oy = (height * -0.5f + y + 0.5f) * size * 2.2f;
-				Rect rect = Rect.FromSize(center.x - size - ox, center.y - size - oy, size * 2f, size * 2f);
+				Rect rect = Rect.FromSize(this.BezierCenter.x - size - ox, this.BezierCenter.y - size - oy, size * 2f, size * 2f);
 				this.DrawTexturedRect(ConditionalTimelineTextures.GetTexture(it.Current), rect);
 			}
 		}
