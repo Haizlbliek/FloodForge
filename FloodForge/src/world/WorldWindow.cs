@@ -370,6 +370,7 @@ public static class WorldWindow {
 				dev = diff;
 				if (moveBoth) canon = dev - room.CanonPosition + room.DevPosition;
 			}
+			room.MoveUpdate();
 			change.AddRoom(room, dev, canon);
 		}
 
@@ -781,6 +782,7 @@ public static class WorldWindow {
 					ResolveCollision(ref room.DevPosition, ref room.DevVel, room.width, room.height, ref room2.DevPosition, ref room2.DevVel, room2.width, room2.height);
 					ResolveCollision(ref room.CanonPosition, ref room.CanonVel, room.width, room.height, ref room2.CanonPosition, ref room2.CanonVel, room2.width, room2.height);
 				}
+				room.MoveUpdate();
 			}
 
 			if (!VisibleLayers[room.data.layer])
@@ -828,8 +830,15 @@ public static class WorldWindow {
 		}
 		Program.gl.Disable(EnableCap.Blend);
 
+		Rect camBound = new Rect(cameraOffset - Main.screenBounds * WorldWindow.cameraScale, cameraOffset + Main.screenBounds * WorldWindow.cameraScale);
 		foreach (Connection connection in WorldWindow.region.connections) {
-			connection.Draw();
+			Rect connectionAABB = connection.fittedAABB;
+			if(Settings.DEBUGVisibleConnectionBounds) {
+				Immediate.Color(Color.Cyan);
+				UI.StrokeRect(connectionAABB);
+			}
+			if(connectionAABB.x0 < camBound.x1 && connectionAABB.x1 > camBound.x0 && connectionAABB.y0 < camBound.y1 && connectionAABB.y1 > camBound.y0)
+				connection.Draw();
 		}
 
 		DrawCurrentConnection();
@@ -1054,6 +1063,13 @@ public static class WorldWindow {
 		change.AddRoom(room);
 		History.Apply(change);
 		return room;
+	}
+
+	private static void MoveUpdate() {
+		foreach (Room room in region.rooms)
+		{
+			room.MoveUpdate();
+		}
 	}
 
 	private static void HandleRoomFilesSelected(string[] paths) {
@@ -1315,11 +1331,13 @@ public static class WorldWindow {
 						PositionType = RoomPosition.Canon;
 						button.text = "Canon";
 					}
+					MoveUpdate();
 				}),
 
 				new Button("Connect: Path", button => {
 					changeConnectBehaviour = !changeConnectBehaviour;
 					button.text = changeConnectBehaviour ? "Connect: Path" : "Connect: Default";
+					MoveUpdate();
 				}),
 
 				new Button("Mass Render", button => {

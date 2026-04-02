@@ -194,20 +194,20 @@ public static class Main {
 		Keys.End();
 
 		Profiler.MarkPoint(-2);
-		
-		if (Profiler.enableProfiler && Profiler.finalContext != null) {
-		string profilerText = "";
-		profilerText += Profiler.finalContext.ToString();
-		profilerText += $"\nTotal DrawTime: {Math.Floor(Profiler.finalContext.sumSpan.TotalMilliseconds * 1000)/1000}ms";
-		profilerText += $"\n{Math.Floor(1 / Profiler.finalContext.sumSpan.TotalSeconds)} FPS";
 
-		Immediate.Color(Color.White);
-		int i = 0;
-		foreach(string line in profilerText.Split('\n')) {
-			UI.font.Write(line, -Main.screenBounds.x, Main.screenBounds.y - 0.3f - (i * 0.04f), 0.03f);
-			i++;
+		if (Profiler.enableProfiler && Profiler.finalContext != null) {
+			string profilerText = "";
+			profilerText += Profiler.finalContext.ToString();
+			profilerText += $"\nTotal DrawTime: {Math.Floor(Profiler.finalContext.sumSpan.TotalMilliseconds * 1000)/1000}ms";
+			profilerText += $"\n{Math.Floor(1 / Profiler.finalContext.sumSpan.TotalSeconds)} FPS";
+
+			Immediate.Color(Color.White);
+			int i = 0;
+			foreach(string line in profilerText.Split('\n')) {
+				UI.font.Write(line, -Main.screenBounds.x, Main.screenBounds.y - 0.3f - (i * 0.04f), 0.03f);
+				i++;
+			}
 		}
-	}
 	}
 
 	public enum Mode {
