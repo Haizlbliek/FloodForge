@@ -1056,12 +1056,11 @@ public static class WorldWindow {
 
 			string filename = Path.GetFileNameWithoutExtension(path);
 			string acronym = Path.GetFileNameWithoutExtension(PathUtil.Parent(path));
-			acronym = acronym[0..acronym.IndexOfReverse('-')];
-
 			if (acronym.Equals("gates", StringComparison.InvariantCultureIgnoreCase)) {
 				HandleGateFile(path, filename);
 			}
 			else {
+				acronym = acronym[0..acronym.IndexOfReverse('-')];
 				Room newRoom = HandleStandardFile(path, filename, acronym);
 				if (newRoom != null) {
 					newRoom.CanonPosition.x += (pathCount - paths.Length / 2) * 15f;
