@@ -62,6 +62,8 @@ public static class WorldWindow {
 	public static bool CurrentConnectionValid;
 	private static ConnectionState connectionState;
 
+	public static bool EnableProfilerScreen = false;
+
 	private enum ConnectionState {
 		None,
 		NoConnection,
@@ -419,6 +421,10 @@ public static class WorldWindow {
 	}
 
 	private static void UpdateKeybinds() {
+		if (Keys.JustPressed(Key.F3)) {
+			EnableProfilerScreen = !EnableProfilerScreen;
+		}
+
 		if (Keys.JustPressed(Key.F)) {
 			PopupManager.Add(new SearchPopup());
 		}
@@ -744,10 +750,10 @@ public static class WorldWindow {
 	private static void DrawEditor() {
 		if (WorldWindow.region == null)
 			return;
-
 		Immediate.LoadIdentity();
 		Immediate.Ortho(cameraOffset.x, cameraOffset.y, cameraScale * Main.screenBounds.x, cameraScale * Main.screenBounds.y);
 		DrawGrid();
+		Profiler.MarkPoint("DRAWGRID");
 
 		Program.gl.Enable(EnableCap.Blend);
 		foreach (Room room in WorldWindow.region.rooms) {
@@ -811,6 +817,7 @@ public static class WorldWindow {
 				}
 			}
 		}
+		Profiler.MarkPoint("DRAWROOMS");
 
 		if (placingRoom) {
 			Immediate.Color(1f, 1f, 1f, 0.5f);
@@ -826,6 +833,7 @@ public static class WorldWindow {
 		}
 
 		DrawCurrentConnection();
+		Profiler.MarkPoint("DRAWCONNECTIONS");
 
 		if (selectingState == SelectingState.Selecting) {
 			Program.gl.Enable(EnableCap.Blend);
@@ -970,16 +978,21 @@ public static class WorldWindow {
 				return;
 			}
 		}
-
 		UpdateMain();
+		Profiler.MarkPoint("UPDATEMAIN");
+
+		Profiler.MarkPoint("DRAWEDITOR", 1);
 		DrawEditor();
+		Profiler.MarkPoint(-1);
 
 		Immediate.LoadIdentity();
 		Immediate.Ortho(-1f * Main.screenBounds.x, 1f * Main.screenBounds.x, -1f * Main.screenBounds.y, 1f * Main.screenBounds.y, 0f, 1f);
 
 		DrawDebugData();
+		Profiler.MarkPoint("DRAWDEBUG");
 
 		menuItems.Draw();
+		Profiler.MarkPoint("DRAWMENUITEMS");
 	}
 
 	public enum RoomPosition {
