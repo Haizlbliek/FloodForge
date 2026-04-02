@@ -50,6 +50,12 @@ public static class Main {
 		Anniversary = now.Year == 2025 && now.Month == 11 && now.Day < 22;
 		AprilFools = now.Month == 4 && now.Day == 1;
 
+		if (File.Exists("assets/version.txt")) {
+			Logger.Info("FloodForge Version: " + new AppVersion(File.ReadAllText("assets/version.txt")));	
+		}
+		else {
+			Logger.Warn("Unable to find assets/version.txt!");
+		}
 		Logger.Info("Initializing...");
 		Preload.Initialize();
 		Settings.Initialize();
@@ -108,6 +114,9 @@ public static class Main {
 	public static void Render() {
 		if (!Program.window.IsVisible) return;
 
+		Profiler.InitProfiler();
+		Profiler.MarkPoint("RENDER", 1);
+
 		Immediate.MatrixMode(Immediate.EMatrixMode.PROJECTION);
 		Immediate.LoadIdentity();
 		float size = MathF.Min(Program.window.FramebufferSize.X, Program.window.FramebufferSize.Y);
@@ -139,7 +148,9 @@ public static class Main {
 		UI.FillRect(-screenBounds.x, -screenBounds.y, screenBounds.x, screenBounds.y);
 
 		if (mode == Mode.World) {
+			Profiler.MarkPoint("WorldWindow.Draw", 1);
 			World.WorldWindow.Draw();
+			Profiler.MarkPoint(-1);
 		}
 		else if (mode == Mode.Droplet) {
 			Droplet.DropletWindow.Draw();
@@ -181,6 +192,22 @@ public static class Main {
 		}
 
 		Keys.End();
+
+		Profiler.MarkPoint(-2);
+		
+		if (Profiler.enableProfiler && Profiler.finalContext != null) {
+		string profilerText = "";
+		profilerText += Profiler.finalContext.ToString();
+		profilerText += $"\nTotal DrawTime: {Math.Floor(Profiler.finalContext.sumSpan.TotalMilliseconds * 1000)/1000}ms";
+		profilerText += $"\n{Math.Floor(1 / Profiler.finalContext.sumSpan.TotalSeconds)} FPS";
+
+		Immediate.Color(Color.White);
+		int i = 0;
+		foreach(string line in profilerText.Split('\n')) {
+			UI.font.Write(line, -Main.screenBounds.x, Main.screenBounds.y - 0.3f - (i * 0.04f), 0.03f);
+			i++;
+		}
+	}
 	}
 
 	public enum Mode {
