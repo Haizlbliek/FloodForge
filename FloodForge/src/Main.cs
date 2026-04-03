@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using FloodForge.Droplet;
 using FloodForge.Popups;
@@ -110,10 +111,10 @@ public static class Main {
 	private static void KeyUp(IKeyboard keyboard, Key key, int arg3) {
 		Keys.Release(key);
 	}
-
 	public static void Render() {
 		if (!Program.window.IsVisible) return;
 
+		Stopwatch diagnosticsStopwatch = Stopwatch.StartNew();
 		Profiler.InitProfiler();
 		Profiler.MarkPoint("RENDER", 1);
 
@@ -204,10 +205,11 @@ public static class Main {
 				(float min, float max) = Profiler.GetMinMaxFPS();
 				profilerText += $"\nRENDER FPS: AVG - {Math.Floor(Profiler.GetAVGFPS())}; MIN/MAX - {Math.Floor(min)} FPS/{Math.Floor(max)} FPS";
 				Profiler.Debug.AddProfilerMessage(profilerText);
-				Profiler.Debug.AddProfilerMessage($"Total delta: {Program.Delta}; fps: {Math.Floor(1/Program.Delta)}");
+				Profiler.Debug.AddProfilerMessage($"Program.Delta: {Program.Delta*1000}ms;\nMeasured time: {Math.Floor(diagnosticsStopwatch.Elapsed.TotalMilliseconds * 1000) / 1000}ms\nfps: {Math.Floor(1/Program.Delta)}");
 			}
 			Profiler.Debug.DrawProfilerMessages();
 		}
+		diagnosticsStopwatch.Stop();
 	}
 
 	public enum Mode {
