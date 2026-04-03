@@ -35,6 +35,7 @@ public static class WorldWindow {
 	private static Vector2 cameraPanStartMouse = Vector2.Zero;
 	public static float cameraScale = 32f;
 	private static float cameraScaleTo = 32f;
+	private static Rect camBound;
 	public static float SelectorScale { get; private set; } = 1f;
 	public static Vector2 worldMouse;
 
@@ -751,6 +752,9 @@ public static class WorldWindow {
 	private static void DrawEditor() {
 		if (WorldWindow.region == null)
 			return;
+			
+		camBound = new Rect(cameraOffset - Main.screenBounds * WorldWindow.cameraScale, cameraOffset + Main.screenBounds * WorldWindow.cameraScale);
+
 		Immediate.LoadIdentity();
 		Immediate.Ortho(cameraOffset.x, cameraOffset.y, cameraScale * Main.screenBounds.x, cameraScale * Main.screenBounds.y);
 		DrawGrid();
@@ -788,34 +792,36 @@ public static class WorldWindow {
 			if (!VisibleLayers[room.data.layer])
 				continue;
 
-			if (!room.data.merge) {
+			if(WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
+				if (!room.data.merge) {
+					if (PositionType == RoomPosition.Both) {
+						room.DrawBlack(RoomPosition.Canon);
+						room.DrawBlack(RoomPosition.Dev);
+					}
+					else {
+						room.DrawBlack(PositionType);
+					}
+				}
+
 				if (PositionType == RoomPosition.Both) {
-					room.DrawBlack(RoomPosition.Canon);
-					room.DrawBlack(RoomPosition.Dev);
+					room.Draw(RoomPosition.Canon);
+					room.Draw(RoomPosition.Dev);
 				}
 				else {
-					room.DrawBlack(PositionType);
+					room.Draw(PositionType);
+					if (Keys.Modifier(Keymod.Alt)) {
+						room.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
+					}
 				}
-			}
 
-			if (PositionType == RoomPosition.Both) {
-				room.Draw(RoomPosition.Canon);
-				room.Draw(RoomPosition.Dev);
-			}
-			else {
-				room.Draw(PositionType);
-				if (Keys.Modifier(Keymod.Alt)) {
-					room.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
-				}
-			}
-
-			if (selectedRooms.Contains(room)) {
-				Immediate.Color(Themes.SelectionBorder);
-				if (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) {
-					UI.StrokeRect(Rect.FromSize(room.DevPosition.x, room.DevPosition.y, room.width, -room.height), cameraScale / 4f);
-				}
-				if (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) {
-					UI.StrokeRect(Rect.FromSize(room.CanonPosition.x, room.CanonPosition.y, room.width, -room.height), cameraScale / 4f);
+				if (selectedRooms.Contains(room)) {
+					Immediate.Color(Themes.SelectionBorder);
+					if (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) {
+						UI.StrokeRect(Rect.FromSize(room.DevPosition.x, room.DevPosition.y, room.width, -room.height), cameraScale / 4f);
+					}
+					if (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) {
+						UI.StrokeRect(Rect.FromSize(room.CanonPosition.x, room.CanonPosition.y, room.width, -room.height), cameraScale / 4f);
+					}
 				}
 			}
 		}
@@ -830,15 +836,13 @@ public static class WorldWindow {
 		}
 		Program.gl.Disable(EnableCap.Blend);
 
-		Rect camBound = new Rect(cameraOffset - Main.screenBounds * WorldWindow.cameraScale, cameraOffset + Main.screenBounds * WorldWindow.cameraScale);
 		foreach (Connection connection in WorldWindow.region.connections) {
 			Rect connectionAABB = connection.fittedAABB;
 			if(Settings.DEBUGVisibleConnectionBounds) {
 				Immediate.Color(Color.Cyan);
 				UI.StrokeRect(connectionAABB);
 			}
-			if(connectionAABB.x0 < camBound.x1 && connectionAABB.x1 > camBound.x0 && connectionAABB.y0 < camBound.y1 && connectionAABB.y1 > camBound.y0)
-				connection.Draw();
+			connection.Draw();
 		}
 
 		DrawCurrentConnection();
@@ -1070,6 +1074,10 @@ public static class WorldWindow {
 		{
 			room.MoveUpdate();
 		}
+	}
+
+	public static bool CullTest(Rect bounds) {
+		return bounds.x0 < camBound.x1 && bounds.x1 > camBound.x0 && bounds.y0 < camBound.y1 && bounds.y1 > camBound.y0;
 	}
 
 	private static void HandleRoomFilesSelected(string[] paths) {
