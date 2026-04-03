@@ -91,7 +91,8 @@ public class Connection {
 			Rect bounds = new(pointA, pointB);
 
 			bezierPoints.Add(pointA);
-			for (float t = overSegments; t <= 1.01f; t += overSegments) {
+			for (float t = overSegments; t < 1 + overSegments; t += overSegments) {
+				t = Mathf.Clamp01(t);
 				Vector2 point = MathUtil.BezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
 				bezierPoints.Add(point);
 				bounds = new(
@@ -100,6 +101,7 @@ public class Connection {
 					Math.Max(bounds.x1, point.x),
 					Math.Max(bounds.y1, point.y)
 				);
+				if(t==1) break;
 			}
 			this.BezierPoints = bezierPoints.ToArray();
 			this.fittedAABB = bounds;
