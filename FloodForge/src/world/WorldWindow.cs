@@ -983,7 +983,7 @@ public static class WorldWindow {
 	}
 
 	public static void Draw() {
-		if (renderRoomsTask == null || renderRoomsTask.IsCompleted) {
+		if ((renderRoomsTask == null || renderRoomsTask.IsCompleted) && confirmRenderPopup == null) {
 			oldSelection.Clear();
 			oldSelection = selectedRooms[..];
 		}
@@ -1140,6 +1140,7 @@ public static class WorldWindow {
 
 	static Task? renderRoomsTask;
 	public static InfoPopup? renderStatusPopup;
+	public static ConfirmPopup? confirmRenderPopup;
 	private static async Task MassRenderRooms() {
 		{
 			List<Room> rooms = [];
@@ -1175,10 +1176,8 @@ public static class WorldWindow {
 					finished++;
 				}
 				Logger.Info("Finished mass-render.\nSelection: " + rooms.Count + "\nSucceeded: " + successCount + "/" + finished);
-				if (successCount == finished) {
-					renderStatusPopup.Close();
-					PopupManager.Add(new ConfirmPopup("Finished mass-render:\n" + successCount + "/" + finished + " succeeded.").SetOkay("Copy path").SetCancel("Continue").Okay(() => { ClipboardService.SetText(WorldWindow.region.roomsPath); }));
-				}
+				renderStatusPopup.Close();
+				PopupManager.Add(new ConfirmPopup("Finished mass-render:\n" + successCount + "/" + finished + " succeeded.").SetOkay("Copy path").SetCancel("Continue").Okay(() => { ClipboardService.SetText(WorldWindow.region.roomsPath); }));
 			}
 		}
 	}
@@ -1355,13 +1354,14 @@ public static class WorldWindow {
 				}),
 
 				new Button("Mass Render", button => {
-					PopupManager.Add(new ConfirmPopup("Render " + oldSelection.Count + " rooms?" + (
+					confirmRenderPopup = new ConfirmPopup("Render " + oldSelection.Count + " rooms?" + (
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" : ""
 						)).Okay(() => {
-							renderRoomsTask = Task.Run(MassRenderRooms); 
-						})); 
+							renderRoomsTask = Task.Run(MassRenderRooms);
+						});
+					PopupManager.Add(confirmRenderPopup);
 				}, () => { return oldSelection.Count != 0; })
 			];
 		}
