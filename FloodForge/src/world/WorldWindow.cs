@@ -754,6 +754,7 @@ public static class WorldWindow {
 			return;
 			
 		camBound = new Rect(cameraOffset - Main.screenBounds * WorldWindow.cameraScale, cameraOffset + Main.screenBounds * WorldWindow.cameraScale);
+		Main.AddProfilerMessage("cameraScale: " + WorldWindow.cameraScale);
 
 		Immediate.LoadIdentity();
 		Immediate.Ortho(cameraOffset.x, cameraOffset.y, cameraScale * Main.screenBounds.x, cameraScale * Main.screenBounds.y);
