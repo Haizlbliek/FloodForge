@@ -764,7 +764,7 @@ public static class WorldWindow {
 		Immediate.LoadIdentity();
 		Immediate.Ortho(cameraOffset.x, cameraOffset.y, cameraScale * Main.screenBounds.x, cameraScale * Main.screenBounds.y);
 		DrawGrid();
-		Profiler.MarkPoint("DRAWGRID");
+		Profiler.MarkPoint("DrawGrid");
 
 		Program.gl.Enable(EnableCap.Blend);
 		foreach (Room room in WorldWindow.region.rooms) {
@@ -831,7 +831,7 @@ public static class WorldWindow {
 				}
 			}
 		}
-		Profiler.MarkPoint("DRAWROOMS");
+		Profiler.MarkPoint("DrawRooms");
 
 		if (placingRoom) {
 			Immediate.Color(1f, 1f, 1f, 0.5f);
@@ -852,7 +852,7 @@ public static class WorldWindow {
 		}
 
 		DrawCurrentConnection();
-		Profiler.MarkPoint("DRAWCONNECTIONS");
+		Profiler.MarkPoint("DrawConnections");
 
 		if (selectingState == SelectingState.Selecting) {
 			Program.gl.Enable(EnableCap.Blend);
@@ -998,9 +998,9 @@ public static class WorldWindow {
 			}
 		}
 		UpdateMain();
-		Profiler.MarkPoint("UPDATEMAIN");
+		Profiler.MarkPoint("UpdateMain");
 
-		Profiler.MarkPoint("DRAWEDITOR", 1);
+		Profiler.MarkPoint("DrawEditor", 1);
 		DrawEditor();
 		Profiler.MarkPoint(-1);
 
@@ -1008,10 +1008,10 @@ public static class WorldWindow {
 		Immediate.Ortho(-1f * Main.screenBounds.x, 1f * Main.screenBounds.x, -1f * Main.screenBounds.y, 1f * Main.screenBounds.y, 0f, 1f);
 
 		DrawDebugData();
-		Profiler.MarkPoint("DRAWDEBUG");
+		Profiler.MarkPoint("DrawDebug");
 
 		menuItems.Draw();
-		Profiler.MarkPoint("DRAWMENUITEMS");
+		Profiler.MarkPoint("DrawMenuItems");
 	}
 
 	public enum RoomPosition {
