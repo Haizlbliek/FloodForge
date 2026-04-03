@@ -224,7 +224,9 @@ public static class Main {
 		profilerMessages = [];
 	}
 	public static void AddProfilerMessage(string message) {
-		profilerMessages.Add(message);
+		if (Profiler.enableProfiler) {
+			profilerMessages.Add(message);
+		}
 	}
 
 	public enum Mode {
