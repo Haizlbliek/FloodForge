@@ -1554,6 +1554,14 @@ public static class DropletWindow {
 			updateBaseText = WorldWindow.renderStatusPopup.GetText();
 		}
 
+		if(Room.data.cameras.Count <= 0) {
+			if (WorldWindow.renderStatusPopup != null)
+				PopupManager.Add(new InfoPopup($"Encountered error while rendering {Room.name}!\nNo cameras present in room!"));
+			else {
+				PopupManager.Add(new InfoPopup("Encountered error!\nNo cameras present in room!"));
+			}
+			success = false;
+		}
 		for (int i = 0; i < Room.data.cameras.Count; i++) {
 			Logger.Info(PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.name}_{i + 1}.png")!);
 			if(WorldWindow.renderStatusPopup != null) WorldWindow.renderStatusPopup?.UpdateText(updateBaseText + " " + (i + 1) + "/" + Room.data.cameras.Count);
@@ -1564,7 +1572,7 @@ public static class DropletWindow {
 			catch (Exception e) {
 				success = false;
 				if (WorldWindow.renderStatusPopup != null)
-					WorldWindow.renderStatusPopup?.UpdateText(updateBaseText + " " + (i + 1) + "/" + Room.data.cameras.Count + "\nError!\n" + e.Message);
+					PopupManager.Add(new InfoPopup($"Encountered error while rendering {Room.name}!\n{e.Message}"));
 				else {
 					PopupManager.Add(new InfoPopup("Encountered error!\n" + e.Message));
 				}
