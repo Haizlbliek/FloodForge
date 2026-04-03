@@ -200,6 +200,9 @@ public static class Main {
 				string profilerText = Profiler.finalContext.ToString();
 				profilerText += $"\nTotal DrawTime: {Math.Floor(Profiler.finalContext.sumSpan.TotalMilliseconds * 1000) / 1000}ms";
 				profilerText += $"\n{Math.Floor(1 / Profiler.finalContext.sumSpan.TotalSeconds)} FPS";
+				Profiler.AddFPSDataPoint((float) (1 / Profiler.finalContext.sumSpan.TotalSeconds));
+				(float min, float max) = Profiler.GetMinMaxFPS();
+				profilerText += $"\nFPS: AVG - {Math.Floor(Profiler.GetAVGFPS())}; MIN/MAX - {Math.Floor(min)} FPS/{Math.Floor(max)} FPS";
 				profilerMessages.Add(profilerText);
 			}
 			DrawProfilerMessages();
@@ -217,7 +220,7 @@ public static class Main {
 		int i = 0;
 		foreach(string part in profilerMessages) {
 			foreach(string line in part.Split("\n")) {
-				UI.font.Write(line, -Main.screenBounds.x, Main.screenBounds.y - 0.3f - (i * 0.04f), 0.03f);
+				UI.font.Write(line, -Main.screenBounds.x, Main.screenBounds.y - 0.1f - (i * 0.04f), 0.03f);
 				i++;
 			}
 		}
