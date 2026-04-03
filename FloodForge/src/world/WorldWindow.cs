@@ -131,7 +131,12 @@ public static class WorldWindow {
 		float zoom = MathF.Pow(1.25f, scrollY);
 		if (MathF.Abs(zoom - 1f) > 0.1f)
 			highlightRoom = null;
-
+		if(float.IsNaN(cameraOffset.x) || float.IsNaN(cameraOffset.y)) { // find a way to maintain position when tabbing out and into fullscreen
+			cameraOffset = Vector2.Zero;
+			cameraPanTo = Vector2.Zero;
+			cameraPanStart = Vector2.Zero;
+			cameraPanStartMouse = Vector2.Zero;
+		}
 		Vector2 previousWorldMouse = Mouse.Pos * cameraScale + cameraOffset;
 		cameraScaleTo *= zoom;
 		cameraScale += (cameraScaleTo - cameraScale) * (1f - MathF.Pow(1f - Settings.CameraZoomSpeed, Program.Delta * 60f));
