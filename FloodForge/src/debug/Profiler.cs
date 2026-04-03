@@ -8,7 +8,7 @@ public static class Profiler {
     public static ProfilerContext finalContext = null!;
     static Stopwatch segmentStopwatch = new();
     static Stopwatch sumStopwatch = new();
-    static float[] FPSHistory = new float[50];
+    static float[] FPSHistory = new float[100];
     static int currentIndex = 0;
     static int FPSHistoryFillLevel = 0;
     public static bool enableProfiler = false;
@@ -38,11 +38,12 @@ public static class Profiler {
         else {
             if (FPSHistory.Length == 0)
                 return 0f;
-            if(FPSHistoryFillLevel == currentIndex) {
+            if (FPSHistoryFillLevel == currentIndex) {
                 return FPSHistory.Average();
             }
             else {
-                if(FPSHistoryFillLevel == 0) return 0f;
+                if (FPSHistoryFillLevel == 0)
+                    return 0f;
                 float total = 0f;
                 for (int i = 0; i < FPSHistoryFillLevel; i++) {
                     total += FPSHistory[i];
@@ -59,13 +60,23 @@ public static class Profiler {
         else {
             if (FPSHistory.Length == 0)
                 return (0f, 0f);
-            return (FPSHistory.Min(), FPSHistory.Max());
+            float min;
+            if(FPSHistoryFillLevel == FPSHistory.Length) {
+                min = FPSHistory.Min();
+            }
+            else {
+                min = float.PositiveInfinity;
+                for(int i = 0; i < FPSHistoryFillLevel; i++) {
+                    min = float.Min(min, FPSHistory[i]);
+                }
+            }
+            return (min, FPSHistory.Max());
         }
     }
 
     public static void AddFPSDataPoint(float FPS) {
         if (FPSHistory.Length != 0) {
-            if(currentIndex >= FPSHistory.Length)
+            if (currentIndex >= FPSHistory.Length)
                 currentIndex = 0;
             FPSHistory[currentIndex] = FPS;
             FPSHistoryFillLevel = int.Max(currentIndex, FPSHistoryFillLevel);
@@ -167,11 +178,28 @@ public static class Profiler {
             return result;
         }
     }
-}
 
-//  mark point:
-//  if navigateContext == -1, move out of the context and mark this as the total span of said context (for example, first mark ("MAIN", 1) and then finally mark (-1))
-//      if the list of contexts is empty, instead end profiling.
-//  if navigateContext == 0, add the current things to the most recent Context
-//  if navigateContext == 1, create new ProfilerContext in current Context, then start a Stopwatch for said context so the relevant Contexttimer isn't interrupted
-//  if navigateContext == anything else, force back out of every context and end profiling.
+    public class Debug {
+        // perhaps this should be unified with DrawDebugInformation(), with every message being able to say which corner it wants to be in? Perhaps even which tab?
+        // so, for example, a script says AddMessage(message: "No Region Loaded", corner: 3, tab: "WorldEditor state")'  
+        // and then DrawDebugMessages goes through each corner, orders by tab and then renders it all?
+        // ofc, there'd also be a way to tell this profiler not to hide the debuginformation in the bottom left, since that's more generally useful
+        static List<string> profilerMessages = [];
+        public static void DrawProfilerMessages() {
+            Immediate.Color(Color.White);
+            int i = 0;
+            foreach (string part in profilerMessages) {
+                foreach (string line in part.Split("\n")) {
+                    UI.font.Write(line, -Main.screenBounds.x, Main.screenBounds.y - 0.1f - (i * 0.04f), 0.03f);
+                    i++;
+                }
+            }
+            profilerMessages = [];
+        }
+        public static void AddProfilerMessage(string message) {
+            if (Profiler.enableProfiler) {
+                profilerMessages.Add(message);
+            }
+        }
+    }
+}
