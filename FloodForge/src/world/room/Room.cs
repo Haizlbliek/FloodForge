@@ -1238,12 +1238,13 @@ public class Room {
 				}
 
 				// Draws shortcutpath if either the associated exit or connection is hovered over.
-				if(i == this.hoveredRoomExit || connectionFound && this.connections[getConnectionIndex].Hovered || Keys.Modifier(Silk.NET.SDL.Keymod.Shift)) {
+				bool shouldBeHighlighted = i == this.hoveredRoomExit || connectionFound && this.connections[getConnectionIndex].Hovered;
+				if(shouldBeHighlighted || Keys.Modifier(Silk.NET.SDL.Keymod.Shift)) {
 					Vector2i roomEntranceShortcutPosition = this.GetRoomEntranceShortcutPosition(i);
 					if (this.shortcutPaths.TryGetValue(roomEntranceShortcutPosition, out var result)) {
 						Vector2 positionOffset = this.Position + new Vector2(0.5f, -0.5f);
 						Immediate.Color((i == this.hoveredRoomExit) ? Themes.RoomConnectionHover : Themes.RoomConnection);
-						if(i == this.hoveredRoomExit && (WorldWindow.cameraScale < 75f || Keys.Pressed(Silk.NET.Input.Key.P))) {
+						if(shouldBeHighlighted && (WorldWindow.cameraScale < 75f || Keys.Pressed(Silk.NET.Input.Key.P))) {
 							bool drawnExit = false;
 							foreach (Vector2i dot in result.Item1) { // DRAWING SHORTCUT PATH, STARTS FROM ROOMEXIT, WHICH IS WHY IT DRAWS THE FIRST ORB BIGGER
 								UI.FillCircle(dot * new Vector2(1, -1) + positionOffset, drawnExit ? 0.4f : 0.5f , 8);
