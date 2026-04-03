@@ -64,25 +64,27 @@ public class Connection {
 		Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
 		Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
 		this.segments = Math.Clamp((int) ((pointA - pointB).Length / 2f), 4, 100);
-		this.directionStrength = (pointA - pointB).Length;
-		if (this.directionStrength > 300f) {
-			this.directionStrength = this.directionStrength * 0.5f + 150f;
-		}
 		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 			this.BezierCenter = (pointA + pointB) * 0.5f;
 			this.BezierPoints = [pointA, pointB];
 			this.fittedAABB = new Rect(pointA, pointB);
 		}
 		else {
-			Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA) * this.directionStrength;
-			Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB) * this.directionStrength;
+			Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA);
+			Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB);
 
+			this.directionStrength = (pointA - pointB).Length;
+			if (this.directionStrength > 300f) {
+				this.directionStrength = this.directionStrength * 0.5f + 150f;
+			}
 			if (directionA.x == -directionB.x || directionA.y == -directionB.y) { // increases directionStrength if shortcuts both face the same direction
 				this.directionStrength *= 0.3333f;
 			}
 			else {
-				this.directionStrength *= 0.5f;
+				this.directionStrength *= 0.6666f;
 			}
+			directionA *= this.directionStrength;
+			directionB *= this.directionStrength;
 			
 			float overSegments = 1f / this.segments;
 			List<Vector2> bezierPoints = [];
@@ -207,7 +209,6 @@ public class Connection {
 				connectionColorB = Themes.RoomConnection;
 			}
 
-
 			if (WorldWindow.ColorType != WorldWindow.RoomColors.None) {
 				connectionColorA = this.roomA.GetTintColor();
 				connectionColorB = this.roomB.GetTintColor();
@@ -239,7 +240,7 @@ public class Connection {
 				Vector2 lastPoint = this.BezierPoints![0];
 				int curveLength = this.BezierPoints.Length;
 				for (int i = 1; i < curveLength; i++) {
-					float curveProgress = i / curveLength;
+					float curveProgress = i / (float)curveLength;
 					if (blendColors) {
 						Immediate.Color(Color.Lerp(connectionColorA, connectionColorB, curveProgress));
 					}
