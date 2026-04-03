@@ -1160,24 +1160,37 @@ public static class WorldWindow {
 				int successCount = 0;
 				int finished = 0;
 				int totalCount = rooms.Count;
-
-				string lastText = "";
+				List<(string, string)> messages = [];
+				string errorMessage = "";
 				foreach (Room room in rooms) {
 					renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nloading");
 					await Task.Run(() => DropletWindow.LoadRoom(room));
 					renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nrendering");
-					lastText = renderStatusPopup.GetText();
-					if (await Task.Run(DropletWindow.Render)) {
+					errorMessage = "";
+					if (await Task.Run(() => DropletWindow.Render(out errorMessage))) {
 						successCount++;
 					}
 					else {
-						Logger.Warn("Error while rendering " + room);
+						Logger.Warn($"Error while rendering {room.name} - message: {errorMessage}");
+						messages.Add((room.name, errorMessage));
 					}
 					finished++;
 				}
-				Logger.Info("Finished mass-render.\nSelection: " + rooms.Count + "\nSucceeded: " + successCount + "/" + finished);
+				Logger.Info($"Finished mass-render.\nSelection: {totalCount}\nSucceeded: {successCount}/{finished}");
 				renderStatusPopup.Close();
-				PopupManager.Add(new ConfirmPopup("Finished mass-render:\n" + successCount + "/" + finished + " succeeded.").SetOkay("Copy path").SetCancel("Continue").Okay(() => { ClipboardService.SetText(WorldWindow.region.roomsPath); }));
+				if(successCount == finished) {
+					PopupManager.Add(new ConfirmPopup($"Finished mass-render.\n {successCount}/{finished} succeeded.").SetOkay("Copy path").SetCancel("Continue").Okay(() => { ClipboardService.SetText(WorldWindow.region.roomsPath); }));
+				}
+				else {
+					string reportString = $"Finished mass-render.\n {successCount}/{finished} succeeded.\nDetected errors:\n";
+					foreach ((string roomName, string message) in messages) {
+						reportString += $"{roomName} - {message}\n";
+					}
+					if(messages.Count == 0) {
+						reportString += $"No detected errors!";
+					}
+					PopupManager.Add(new ConfirmPopup(reportString + "View log.txt for more info."));
+				}
 			}
 		}
 	}
