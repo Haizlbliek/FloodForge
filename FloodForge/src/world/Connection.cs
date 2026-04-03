@@ -245,7 +245,7 @@ public class Connection {
 						Immediate.Color(Color.Lerp(connectionColorA, connectionColorB, curveProgress));
 					}
 					Vector2 point = this.BezierPoints[i];
-					this.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, Mathf.Lerp(alphaA, alphaB, 1 - curveProgress), Mathf.Lerp(alphaA, alphaB, curveProgress));
+					this.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, Mathf.Lerp(alphaA, alphaB, curveProgress - (1f / curveLength)), Mathf.Lerp(alphaA, alphaB, curveProgress));
 					lastPoint = point;
 				}
 			}
