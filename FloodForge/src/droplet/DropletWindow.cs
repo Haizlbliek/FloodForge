@@ -1546,20 +1546,17 @@ public static class DropletWindow {
 		}
 	}
 
-	public static bool Render() {
+	public static bool Render(out string errorMessage) {
 		ExportGeometry();
 		bool success = true;
+		errorMessage = "";
 		string updateBaseText = "";
 		if (WorldWindow.renderStatusPopup != null) {
 			updateBaseText = WorldWindow.renderStatusPopup.GetText();
 		}
 
 		if(Room.data.cameras.Count <= 0) {
-			if (WorldWindow.renderStatusPopup != null)
-				PopupManager.Add(new InfoPopup($"Encountered error while rendering {Room.name}!\nNo cameras present in room!"));
-			else {
-				PopupManager.Add(new InfoPopup("Encountered error!\nNo cameras present in room!"));
-			}
+			errorMessage += "No cameras in room!\n";
 			success = false;
 		}
 		for (int i = 0; i < Room.data.cameras.Count; i++) {
@@ -1571,11 +1568,7 @@ public static class DropletWindow {
 			}
 			catch (Exception e) {
 				success = false;
-				if (WorldWindow.renderStatusPopup != null)
-					PopupManager.Add(new InfoPopup($"Encountered error while rendering {Room.name}!\n{e.Message}"));
-				else {
-					PopupManager.Add(new InfoPopup("Encountered error!\n" + e.Message));
-				}
+				errorMessage += $"{e.Message}\n";
 				break;
 			}
 		}
@@ -1709,11 +1702,11 @@ public static class DropletWindow {
 					PopupManager.Add(new InfoPopup("Exported successfully"));
 				}),
 				new Button("Render", b => {
-					if(Render()){
+					if(Render(out string message)){
 						PopupManager.Add(new InfoPopup("Rendered successfully"));
 					}
 					else{
-						PopupManager.Add(new InfoPopup("Render failed!\nView log.txt for more information."));
+						PopupManager.Add(new InfoPopup($"Render failed!\nMessage: \n{message}View log.txt for more information."));
 					}
 				}),
 				new Button("Export Leditor Project", b => {
