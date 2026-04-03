@@ -781,7 +781,9 @@ public static class WorldWindow {
 				room.DrawBlack(PositionType);
 			}
 		}
+		Profiler.MarkPoint("rooms", 2, true);
 		foreach (Room room in WorldWindow.region.rooms) {
+			Profiler.MarkPoint("rooms", 1, true);
 			if (Main.AprilFools) {
 				room.CanonPosition += room.CanonVel * 0.1f;
 				room.DevPosition += room.DevVel * 0.1f;
@@ -830,6 +832,7 @@ public static class WorldWindow {
 					}
 				}
 			}
+			Profiler.MarkPoint("rooms", 0, true);
 		}
 		Profiler.MarkPoint("DrawRooms");
 
