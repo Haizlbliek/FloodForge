@@ -1366,9 +1366,9 @@ public static class DropletWindow {
 				image[i] = 255;
 			}
 
-			int firstTilePositionX = Mathf.FloorToInt(camera.position.x / 20);
+			int firstTilePositionX = Mathf.FloorToInt(camera.position.x / 20) - 1;
 			float TopLeftOffsetX = firstTilePositionX * 20 - camera.position.x;
-			int firstTilePositionY = Mathf.FloorToInt(camera.position.y / 20);
+			int firstTilePositionY = Mathf.FloorToInt(camera.position.y / 20) - 1;
 			float TopLeftOffsetY = firstTilePositionY * 20 - camera.position.y;
 			int lastTilePositionX = Mathf.CeilToInt((camera.position.x + CameraTextureWidth) / 20);
 			int lastTilePositionY = Mathf.CeilToInt((camera.position.y + CameraTextureHeight) / 20);
