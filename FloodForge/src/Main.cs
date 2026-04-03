@@ -202,8 +202,9 @@ public static class Main {
 				profilerText += $"\n{Math.Floor(1 / Profiler.finalContext.sumSpan.TotalSeconds)} FPS";
 				Profiler.AddFPSDataPoint((float) (1 / Profiler.finalContext.sumSpan.TotalSeconds));
 				(float min, float max) = Profiler.GetMinMaxFPS();
-				profilerText += $"\nFPS: AVG - {Math.Floor(Profiler.GetAVGFPS())}; MIN/MAX - {Math.Floor(min)} FPS/{Math.Floor(max)} FPS";
+				profilerText += $"\nRENDER FPS: AVG - {Math.Floor(Profiler.GetAVGFPS())}; MIN/MAX - {Math.Floor(min)} FPS/{Math.Floor(max)} FPS";
 				Profiler.Debug.AddProfilerMessage(profilerText);
+				Profiler.Debug.AddProfilerMessage($"Total delta: {Program.Delta}; fps: {Math.Floor(1/Program.Delta)}");
 			}
 			Profiler.Debug.DrawProfilerMessages();
 		}
