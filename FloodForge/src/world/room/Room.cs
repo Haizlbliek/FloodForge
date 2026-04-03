@@ -1241,9 +1241,38 @@ public class Room {
 				if(i == this.hoveredRoomExit || connectionFound && this.connections[getConnectionIndex].Hovered || Keys.Modifier(Silk.NET.SDL.Keymod.Shift)) {
 					Vector2i roomEntranceShortcutPosition = this.GetRoomEntranceShortcutPosition(i);
 					if (this.shortcutPaths.TryGetValue(roomEntranceShortcutPosition, out var result)) {
-						Immediate.Color(Themes.RoomConnectionHover);
-						foreach (Vector2i dot in result.Item1) { // DRAWING SHORTCUT PATH
-							UI.FillCircle((dot + new Vector2(0.5f, 0.5f)) * new Vector2(1, -1) + this.Position, this.roomExits.Contains(dot) ? 0.4f : 0.3f , 8);
+						Vector2 positionOffset = this.Position + new Vector2(0.5f, -0.5f);
+						Immediate.Color((i == this.hoveredRoomExit) ? Themes.RoomConnectionHover : Themes.RoomConnection);
+						if(i == this.hoveredRoomExit && (WorldWindow.cameraScale < 75f || Keys.Pressed(Silk.NET.Input.Key.P))) {
+							bool drawnExit = false;
+							foreach (Vector2i dot in result.Item1) { // DRAWING SHORTCUT PATH, STARTS FROM ROOMEXIT, WHICH IS WHY IT DRAWS THE FIRST ORB BIGGER
+								UI.FillCircle(dot * new Vector2(1, -1) + positionOffset, drawnExit ? 0.4f : 0.5f , 8);
+								drawnExit = true; 
+							}
+						}
+						else {
+							Vector2i lastDir = Vector2i.Zero;
+							Vector2i lastPos = Vector2i.Zero;
+							Vector2i newDir;
+							Vector2i pointA;
+							Vector2i pointB;
+							for (int j = 1; j < result.Item1.Length; j++) {
+								pointA = result.Item1[j-1] * new Vector2i(1, -1);
+								pointB = result.Item1[j] * new Vector2i(1, -1);
+								newDir = pointB - pointA;
+								if(lastDir == Vector2i.Zero) {
+									lastDir = newDir;
+									lastPos = pointA;
+								}
+								else if(newDir != lastDir) {
+									UI.Line(lastPos + positionOffset, pointA + positionOffset);
+									lastPos = pointA;
+									lastDir = newDir;
+								}
+								if(j == result.Item1.Length - 1) {
+									UI.Line(lastPos + positionOffset, pointB + positionOffset);
+								}
+							}
 						}
 					}
 				}
