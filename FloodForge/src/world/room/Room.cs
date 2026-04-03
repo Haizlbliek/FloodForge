@@ -735,6 +735,75 @@ public class Room {
 #region Rendering
 
 	[StructLayout(LayoutKind.Sequential)]
+	protected class Mesh () {
+		public uint currentIndex = 0;
+		public List<Vertex> vertices = [];
+		public List<uint> indices = [];
+
+		public void Clear() {
+			this.vertices.Clear();
+			this.indices.Clear();
+			this.currentIndex = 0;
+		}
+			
+		public void AddQuad(float xPos, float yPos, Themes.ThemeColor theme) {
+			this.AddQuad(new Vector2(xPos, yPos), Vector2.One, theme);
+		}
+
+		public void AddQuad(Vector2 centerPosition, Themes.ThemeColor theme) {
+			this.AddQuad(centerPosition, Vector2.One, theme);
+		}
+
+		public void AddQuad(float xPos, float yPos, float scale, Themes.ThemeColor theme) {
+			this.AddQuad(new Vector2(xPos, yPos), Vector2.One * scale, theme);
+		}
+
+		public void AddQuad(Vector2 centerPosition, float scale, Themes.ThemeColor theme) {
+			this.AddQuad(centerPosition, Vector2.One * scale, theme);
+		}
+
+		public void AddQuad(float xPos, float yPos, Vector2 scale, Themes.ThemeColor theme) {
+			this.AddQuad(new(xPos, yPos), scale, theme);
+		}
+
+		public void AddQuad(Vector2 centerPosition, Vector2 scale, Themes.ThemeColor theme) {
+			float x0 = centerPosition.x - (scale.x/2);
+			float x1 = centerPosition.x + (scale.x/2);
+			float y0 = centerPosition.y + (scale.y / 2);
+			float y1 = centerPosition.y - (scale.y / 2);
+			this.AddQuad(
+				new Vertex(x0, y0, theme),
+				new Vertex(x1, y0, theme),
+				new Vertex(x1, y1, theme),
+				new Vertex(x0, y1, theme)
+			);
+		}
+
+		public void AddQuad(Vertex a, Vertex b, Vertex c, Vertex d) {
+			this.vertices.Add(a);
+			this.vertices.Add(b);
+			this.vertices.Add(c);
+			this.vertices.Add(d);
+			this.indices.Add(this.currentIndex + 0);
+			this.indices.Add(this.currentIndex + 1);
+			this.indices.Add(this.currentIndex + 2);
+			this.indices.Add(this.currentIndex + 2);
+			this.indices.Add(this.currentIndex + 3);
+			this.indices.Add(this.currentIndex + 0);
+			this.currentIndex += 4;
+		}
+
+		public void AddTriangle(Vertex a, Vertex b, Vertex c) {
+			this.vertices.Add(a);
+			this.vertices.Add(b);
+			this.vertices.Add(c);
+			this.indices.Add(this.currentIndex + 0);
+			this.indices.Add(this.currentIndex + 1);
+			this.indices.Add(this.currentIndex + 2);
+			this.currentIndex += 3;
+		}
+	}
+
 	protected readonly struct Vertex {
 		public readonly float x, y;
 		public readonly float r, g, b, a;
@@ -758,86 +827,16 @@ public class Room {
 		}
 	}
 
+	protected Mesh roomMesh = new();
 	protected uint _vao = 0;
 	protected uint _vbo = 0;
 	protected uint _ebo = 0;
 	protected int _projLoc, _modelLoc, _tintLoc, _tintStrengthLoc;
-
-	protected uint currentIndex = 0;
-	protected List<Vertex> vertices = [];
-	protected List<uint> indices = [];
-
-	protected void AddQuad(float xPos, float yPos, Themes.ThemeColor theme) {
-		this.AddQuad(new Vector2(xPos, yPos), Vector2.One, theme);
-	}
-
-	protected void AddQuad(Vector2 centerPosition, Themes.ThemeColor theme) {
-		this.AddQuad(centerPosition, Vector2.One, theme);
-	}
-
-	protected void AddQuad(float xPos, float yPos, float scale, Themes.ThemeColor theme) {
-		this.AddQuad(new Vector2(xPos, yPos), Vector2.One * scale, theme);
-	}
-
-	protected void AddQuad(Vector2 centerPosition, float scale, Themes.ThemeColor theme) {
-		this.AddQuad(centerPosition, Vector2.One * scale, theme);
-	}
-
-	protected void AddQuad(float xPos, float yPos, Vector2 scale, Themes.ThemeColor theme) {
-		this.AddQuad(new(xPos, yPos), scale, theme);
-	}
-
-	protected void AddQuad(Vector2 centerPosition, Vector2 scale, Themes.ThemeColor theme) {
-		float x0 = centerPosition.x - (scale.x/2);
-		float x1 = centerPosition.x + (scale.x/2);
-		float y0 = centerPosition.y + (scale.y / 2);
-		float y1 = centerPosition.y - (scale.y / 2);
-		this.AddQuad(
-			new Vertex(x0, y0, theme),
-			new Vertex(x1, y0, theme),
-			new Vertex(x1, y1, theme),
-			new Vertex(x0, y1, theme)
-		);
-	}
-
-	protected void AddQuad(Vertex a, Vertex b, Vertex c, Vertex d) {
-		this.vertices.Add(a);
-		this.vertices.Add(b);
-		this.vertices.Add(c);
-		this.vertices.Add(d);
-		this.indices.Add(this.currentIndex + 0);
-		this.indices.Add(this.currentIndex + 1);
-		this.indices.Add(this.currentIndex + 2);
-		this.indices.Add(this.currentIndex + 2);
-		this.indices.Add(this.currentIndex + 3);
-		this.indices.Add(this.currentIndex + 0);
-		this.currentIndex += 4;
-	}
-
-	protected void AddTriangle(Vertex a, Vertex b, Vertex c) {
-		this.vertices.Add(a);
-		this.vertices.Add(b);
-		this.vertices.Add(c);
-		this.indices.Add(this.currentIndex + 0);
-		this.indices.Add(this.currentIndex + 1);
-		this.indices.Add(this.currentIndex + 2);
-		this.currentIndex += 3;
-	}
-
 	List<Vector2i> allShortcutEntrances = [];
-	protected unsafe virtual void GenerateMesh() {
-		this.vertices.Clear();
-		this.indices.Clear();
-		this.allShortcutEntrances.Clear();
-		this.currentIndex = 0;
 
-		// Background
-		/*this.AddQuad(
-			new Vertex(0, 0, Themes.RoomSolid),
-			new Vertex(this.width, 0, Themes.RoomSolid),
-			new Vertex(this.width, -this.height, Themes.RoomSolid),
-			new Vertex(0, -this.height, Themes.RoomSolid)
-		);*/
+	protected unsafe virtual void GenerateMesh() {
+		this.roomMesh.Clear();
+		this.allShortcutEntrances.Clear();
 
 		for (int x = 0; x < this.width; x++) {
 			for (int y = 0; y < this.height; y++) {
@@ -853,7 +852,7 @@ public class Room {
 
 				if (type == 4) {
 					this.allShortcutEntrances.Add(new(x, y));
-					this.AddQuad(x2, y2, Themes.RoomShortcutEntrance);
+					this.roomMesh.AddQuad(x2, y2, Themes.RoomShortcutEntrance);
 				}
 				else if (type != 1) { // draws air if the tile isn't fully solid.
 					Themes.ThemeColor air = ((tile & FLAG_BACKGROUND_SOLID) > 0) ? Themes.RoomLayer2Solid : Themes.RoomAir;
@@ -861,28 +860,28 @@ public class Room {
 					if (type == 2) {
 						uint direction = (tile >> 10) & 3;
 						if (direction == 0) {
-							this.AddTriangle(
+							this.roomMesh.AddTriangle(
 								new Vertex(x1, y1, air),
 								new Vertex(x0, y1, air),
 								new Vertex(x1, y0, air)
 							);
 						}
 						else if (direction == 1) {
-							this.AddTriangle(
+							this.roomMesh.AddTriangle(
 								new Vertex(x1, y0, air),
 								new Vertex(x0, y0, air),
 								new Vertex(x1, y1, air)
 							);
 						}
 						else if (direction == 2) {
-							this.AddTriangle(
+							this.roomMesh.AddTriangle(
 								new Vertex(x0, y1, air),
 								new Vertex(x1, y1, air),
 								new Vertex(x0, y0, air)
 							);
 						}
 						else if (direction == 3) {
-							this.AddTriangle(
+							this.roomMesh.AddTriangle(
 								new Vertex(x0, y0, air),
 								new Vertex(x1, y0, air),
 								new Vertex(x0, y1, air)
@@ -890,12 +889,12 @@ public class Room {
 						}
 					}
 					else {
-						this.AddQuad(x2, y2, air); // possibility for greedy meshing, since right now every tile of air now gets its own quad.
+						this.roomMesh.AddQuad(x2, y2, air); // possibility for greedy meshing, since right now every tile of air now gets its own quad.
 					}
 				}
 
 				if (type == 3) {
-					this.AddQuad(
+					this.roomMesh.AddQuad(
 						new Vertex(x0, y0, Themes.RoomPlatform),
 						new Vertex(x1, y0, Themes.RoomPlatform),
 						new Vertex(x1, y2, Themes.RoomPlatform),
@@ -904,17 +903,16 @@ public class Room {
 				}
 
 				if ((tile & FLAG_VERTICAL_POLE) > 0) {
-					this.AddQuad(x2, y2, new Vector2(0.25f, 1f), Themes.RoomPole);
+					this.roomMesh.AddQuad(x2, y2, new Vector2(0.25f, 1f), Themes.RoomPole);
 				}
 
 				if ((tile & FLAG_HORIZONTAL_POLE) > 0) {
-					this.AddQuad(x2, y2, new Vector2(1f, 0.25f), Themes.RoomPole);
+					this.roomMesh.AddQuad(x2, y2, new Vector2(1f, 0.25f), Themes.RoomPole);
 				}
 
 				if ((tile & FLAG_SHORTCUT) > 0 && tile != 4) {
 					// NOTE - Might add outlining RoomSolid if it looks weird
-
-					this.AddQuad(x2, y2, 0.1875f, Themes.RoomShortcutDot);
+					this.roomMesh.AddQuad(x2, y2, 0.1875f, Themes.RoomShortcutDot);
 				}
 			}
 		}
@@ -944,28 +942,28 @@ public class Room {
 			Color color = Themes.RoomShortcutArrow;
 			if (direction != 0) {
 				if (direction == 1) {
-					this.AddTriangle(
+					this.roomMesh.AddTriangle(
 						new Vertex(x0, y0, color),
 						new Vertex(x0, y1, color),
 						new Vertex(x1, y2, color)
 					);
 				}
 				else if (direction == 2) {
-					this.AddTriangle(
+					this.roomMesh.AddTriangle(
 						new Vertex(x0, y1, color),
 						new Vertex(x1, y1, color),
 						new Vertex(x2, y0, color)
 					);
 				}
 				else if (direction == 3) {
-					this.AddTriangle(
+					this.roomMesh.AddTriangle(
 						new Vertex(x1, y0, color),
 						new Vertex(x1, y1, color),
 						new Vertex(x0, y2, color)
 					);
 				}
 				else if (direction == 4) {
-					this.AddTriangle(
+					this.roomMesh.AddTriangle(
 						new Vertex(x0, y0, color),
 						new Vertex(x1, y0, color),
 						new Vertex(x2, y1, color)
@@ -973,7 +971,7 @@ public class Room {
 				}
 			}
 			else
-				this.AddQuad(
+				this.roomMesh.AddQuad(
 					new Vertex(x0, y0, color),
 					new Vertex(x1, y0, color),
 					new Vertex(x1, y1, color),
@@ -982,7 +980,7 @@ public class Room {
 		}
 
 		foreach (Vector2i entrance in this.denShortcutEntrances) {
-			this.AddQuad(
+			this.roomMesh.AddQuad(
 				new Vertex(entrance.x + 0.25f, -entrance.y - 0.25f, Themes.RoomShortcutDen),
 				new Vertex(entrance.x + 0.75f, -entrance.y - 0.25f, Themes.RoomShortcutDen),
 				new Vertex(entrance.x + 0.75f, -entrance.y - 0.75f, Themes.RoomShortcutDen),
@@ -1016,28 +1014,28 @@ public class Room {
 				Color color = Themes.RoomShortcutArrow;
 				if (direction != 0) {
 					if (direction == 1) {
-						this.AddTriangle(
+						this.roomMesh.AddTriangle(
 							new Vertex(x0, y0, color),
 							new Vertex(x0, y1, color),
 							new Vertex(x1, y2, color)
 						);
 					}
 					else if (direction == 2) {
-						this.AddTriangle(
+						this.roomMesh.AddTriangle(
 							new Vertex(x0, y1, color),
 							new Vertex(x1, y1, color),
 							new Vertex(x2, y0, color)
 						);
 					}
 					else if (direction == 3) {
-						this.AddTriangle(
+						this.roomMesh.AddTriangle(
 							new Vertex(x1, y0, color),
 							new Vertex(x1, y1, color),
 							new Vertex(x0, y2, color)
 						);
 					}
 					else if (direction == 4) {
-						this.AddTriangle(
+						this.roomMesh.AddTriangle(
 							new Vertex(x0, y0, color),
 							new Vertex(x1, y0, color),
 							new Vertex(x2, y1, color)
@@ -1045,12 +1043,12 @@ public class Room {
 					}
 				}
 				else {
-					this.AddTriangle(
+					this.roomMesh.AddTriangle(
 						new Vertex(x0, y0, color),
 						new Vertex(x0, y1, color),
 						new Vertex(x2, y2, color)
 					);
-					this.AddTriangle(
+					this.roomMesh.AddTriangle(
 						new Vertex(x2, y0, color),
 						new Vertex(x2, y1, color),
 						new Vertex(x1, y2, color)
@@ -1065,8 +1063,8 @@ public class Room {
 			this._ebo = Program.gl.GenBuffer();
 		}
 
-		Span<Vertex> vertices = CollectionsMarshal.AsSpan(this.vertices);
-		Span<uint> indices = CollectionsMarshal.AsSpan(this.indices);
+		Span<Vertex> vertices = CollectionsMarshal.AsSpan(this.roomMesh.vertices);
+		Span<uint> indices = CollectionsMarshal.AsSpan(this.roomMesh.indices);
 
 		Program.gl.BindVertexArray(this._vao);
 
@@ -1169,7 +1167,7 @@ public class Room {
 		Program.gl.Uniform4(this._tintLoc, tint.r, tint.g, tint.b, alpha);
 		Program.gl.Uniform1(this._tintStrengthLoc, Settings.RoomTintStrength);
 
-		Program.gl.DrawElements(PrimitiveType.Triangles, (uint) this.indices.Count, DrawElementsType.UnsignedInt, (void*) 0);
+		Program.gl.DrawElements(PrimitiveType.Triangles, (uint) this.roomMesh.indices.Count, DrawElementsType.UnsignedInt, (void*) 0);
 
 		Program.gl.BindVertexArray(0);
 		Program.gl.UseProgram(0);
