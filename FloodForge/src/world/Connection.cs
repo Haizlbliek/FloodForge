@@ -232,10 +232,9 @@ public class Connection {
 				Program.gl.Enable(EnableCap.Blend);
 			}
 
-			Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
-			Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
-
 			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
+				Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
+				Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
 				this.DrawCustomLine(pointA.x, pointA.y, pointB.x, pointB.y, alphaA, alphaB);
 			}
 			else {
