@@ -4,8 +4,8 @@ public class Connection {
 	public Room roomA;
 	public Room roomB;
 
-	public uint connectionA;
-	public uint connectionB;
+	public uint roomAExitID;
+	public uint roomBExitID;
 
 	public HashSet<string> timelines = [];
 	public TimelineType timelineType = TimelineType.All;
@@ -29,15 +29,15 @@ public class Connection {
 	public Connection(Room roomA, Room roomB, uint connectionA, uint connectionB) {
 		this.roomA = roomA;
 		this.roomB = roomB;
-		this.connectionA = connectionA;
-		this.connectionB = connectionB;
+		this.roomAExitID = connectionA;
+		this.roomBExitID = connectionB;
 	}
 
 	public Connection(Room roomA, uint connectionA, Room roomB, uint connectionB) {
 		this.roomA = roomA;
 		this.roomB = roomB;
-		this.connectionA = connectionA;
-		this.connectionB = connectionB;
+		this.roomAExitID = connectionA;
+		this.roomBExitID = connectionB;
 	}
 
 	public bool AllowsTimeline(string timeline) {
@@ -61,8 +61,8 @@ public class Connection {
 	public bool recalculateBezier = true;
 
 	public void RecalculateBezier() {
-		Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
-		Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
+		Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
+		Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
 		this.segments = Math.Clamp((int) ((pointA - pointB).Length / 2f), 4, 100);
 		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 			this.BezierCenter = (pointA + pointB) * 0.5f;
@@ -70,8 +70,8 @@ public class Connection {
 			this.fittedAABB = new Rect(pointA, pointB);
 		}
 		else {
-			Vector2 directionA = this.roomA.GetConfiguredRoomEntranceDirection(this.connectionA);
-			Vector2 directionB = this.roomB.GetConfiguredRoomEntranceDirection(this.connectionB);
+			Vector2 directionA = this.roomA.GetConnectionConnectDirection(this.roomAExitID);
+			Vector2 directionB = this.roomB.GetConnectionConnectDirection(this.roomBExitID);
 
 			this.directionStrength = (pointA - pointB).Length;
 			if (this.directionStrength > 300f) {
@@ -115,8 +115,8 @@ public class Connection {
 
 			float lineDist = WorldWindow.SelectorScale / 4f;
 
-			Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
-			Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
+			Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
+			Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
 
 			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 				return MathUtil.LineDistance(WorldWindow.worldMouse, pointA, pointB) < lineDist;
@@ -233,8 +233,8 @@ public class Connection {
 			}
 
 			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-				Vector2 pointA = this.roomA.GetConfiguredRoomEntrancePosition(this.connectionA);
-				Vector2 pointB = this.roomB.GetConfiguredRoomEntrancePosition(this.connectionB);
+				Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
+				Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
 				this.DrawCustomLine(pointA.x, pointA.y, pointB.x, pointB.y, alphaA, alphaB);
 			}
 			else {
