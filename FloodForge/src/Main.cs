@@ -111,11 +111,17 @@ public static class Main {
 	private static void KeyUp(IKeyboard keyboard, Key key, int arg3) {
 		Keys.Release(key);
 	}
+	static Stopwatch? postRenderStopwatch = null;
 	public static void Render() {
+		TimeSpan postRenderSpan = TimeSpan.Zero;
+		if(postRenderStopwatch != null) {
+			postRenderSpan = postRenderStopwatch.Elapsed;
+			postRenderStopwatch.Stop();
+		}
 		if (!Program.window.IsVisible) return;
-
 		Stopwatch diagnosticsStopwatch = Stopwatch.StartNew();
 		Profiler.InitProfiler();
+		Profiler.Debug.AddProfilerMessage($"postRenderSpan: {Math.Floor(postRenderSpan.TotalMilliseconds * 1000) / 1000}ms;\ngcTimeSpan: {Math.Floor(GC.GetTotalPauseDuration().TotalMilliseconds * 1000) / 1000}ms");
 		Profiler.MarkPoint("RENDER", 1);
 
 		Immediate.MatrixMode(Immediate.EMatrixMode.PROJECTION);
@@ -210,6 +216,9 @@ public static class Main {
 			Profiler.Debug.DrawProfilerMessages();
 		}
 		diagnosticsStopwatch.Stop();
+		
+		if(postRenderStopwatch == null) postRenderStopwatch = Stopwatch.StartNew();
+		else postRenderStopwatch.Restart();
 	}
 
 	public enum Mode {
