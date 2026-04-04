@@ -77,7 +77,7 @@ public class RoomVisuals {
 		this.water.Clear();
 		if (this.room.data.waterHeight == -1) return;
 
-		this.water.Add(new WaterSpot(new Vector2(0f, 0f), new Vector2(this.room.width * 20f, this.room.data.waterHeight * 20f + 10f)));
+		this.water.Add(new WaterSpot(new Vector2(0f, 0f), new Vector2(this.room.width * 20f, (Math.Min(this.room.data.waterHeight, this.room.height) * 20f) + 10f)));
 		foreach (AirPocketObject airPocket in this.room.data.objects.OfType<AirPocketObject>()) {
 			WaterSpot spot = new WaterSpot(airPocket.nodes[0].position, airPocket.nodes[1].position);
 			if (spot.size.x <= 0f || spot.size.y <= 0f) continue;
