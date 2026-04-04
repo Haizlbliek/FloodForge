@@ -48,7 +48,7 @@ public class OffscreenRoom : Room {
 			this.denShortcutEntrances.Add(new Vector2i(0, 0));
 		}
 
-		this.DrawDen(this.dens[0], position.x + this.width * 0.5f, position.y - this.height * 0.25f, 0 == this.hoveredDen);
+		this.DrawDen(this.dens[0], position.x + this.width * 0.5f, position.y - this.height * 0.25f, 0 == this.hoveredDen, WorldWindow.HoveringRoom == this);
 
 		Vector2 o = WorldWindow.worldMouse - position;
 		bool hovered = o.x >= 0f && o.y >= 0f && o.x <= this.width && o.y <= this.height;

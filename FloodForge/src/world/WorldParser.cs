@@ -183,31 +183,31 @@ public static class WorldParser {
 	}
 
 	private struct ConnectionToAdd {
-		public Room roomA;
-		public uint connectionA;
-		public Room? roomB = null;
-		public string roomBName = "";
-		public uint? connectionB = null;
+		public Room roomA; // actual reference to room A
+		public uint roomAExitID; // old: reference to shortcut entrance; goal: reference to roomexit
+		public Room? roomB = null; // actual reference to room B
+		public string roomBName = ""; // name of room B
+		public uint? roomBExitID = null; // old: reference to shortcut entrance; goal: reference to roomexit
 
 		public ConnectionToAdd(Room roomA, uint connectionA, string roomBName) {
 			this.roomA = roomA;
-			this.connectionA = connectionA;
+			this.roomAExitID = connectionA;
 			this.roomBName = roomBName;
 		}
 	}
 
 	private struct ConditionalConnection {
 		public Room roomA;
-		public uint connectionA;
+		public uint roomAExitID;
 		public Room? roomB = null;
 		public string roomBName = "";
-		public uint? connectionB = null;
+		public uint? roomBExitID = null;
 		public HashSet<string> timelines = [];
 		public TimelineType timelineType;
 
 		public ConditionalConnection(Room roomA, uint connectionA, string roomBName) {
 			this.roomA = roomA;
-			this.connectionA = connectionA;
+			this.roomAExitID = connectionA;
 			this.roomBName = roomBName;
 		}
 	}
@@ -246,19 +246,21 @@ public static class WorldParser {
 		}
 
 		uint connectionId = 0;
-		foreach (string connection in connections) {
+		foreach (string connection in connections) { // go through every room-connection
 			if (connection.ToLowerInvariant() == "disconnected") {
 				connectionId++;
 				continue;
 			}
 
 			bool alreadyExists = false;
-			for (int i = 0; i < connectionsToAdd.Count; i++) {
+			for (int i = 0; i < connectionsToAdd.Count; i++) { // look through the connections that have already been found
 				ConnectionToAdd connectionData = connectionsToAdd[i];
-				if (connectionData.roomB != null) continue;
+				if (connectionData.roomB != null) continue; // if a connection has already found its other side, skip that connection
 
+				// otherwise, check if the found connection: - comes from the room we're looking for, and: - is looking for this room
+				// this is probably where the ConnectionExtensions compatibility has to be first implemented, so it also looks for the right connection index.
 				if (connectionData.roomA.name.Equals(connection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(roomName, StringComparison.InvariantCultureIgnoreCase)) {
-					connectionsToAdd[i] = connectionData with { roomB = room, connectionB = connectionId };
+					connectionsToAdd[i] = connectionData with { roomB = room, roomBExitID = connectionId };
 					alreadyExists = true;
 					break;
 				}
@@ -544,11 +546,11 @@ public static class WorldParser {
 		int connectionId = -1;
 		if (isCurrentDisconnected) {
 			string timeline = timelines[0]; // LATER: Figure out what this does and clean up
-			bool[] connected = new bool[room.roomShortcutEntrances.Count];
+			bool[] connected = new bool[room.roomExits.Count];
 			foreach (Connection connection2 in room.connections) {
 				if (!connection2.AllowsTimeline(timeline)) continue;
 
-				connected[connection2.roomA == room ? connection2.connectionA : connection2.connectionB] = true;
+				connected[connection2.roomA == room ? connection2.roomAExitID : connection2.roomBExitID] = true;
 			}
 
 			for (int i = 0; i < connected.Length; i++) {
@@ -567,7 +569,7 @@ public static class WorldParser {
 				Logger.Warn($"> {link}");
 			}
 			else {
-				connectionId = (int) ((connection.roomA == room) ? connection.connectionA : connection.connectionB);
+				connectionId = (int) ((connection.roomA == room) ? connection.roomAExitID : connection.roomBExitID);
 
 				if (connection.timelineType == TimelineType.Only) {
 					timelines.ForEach(x => connection.timelines.Remove(x));
@@ -603,7 +605,7 @@ public static class WorldParser {
 			if (connectionData.roomB == null && connectionData.roomA.name.Equals(toConnection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(room.name, StringComparison.InvariantCultureIgnoreCase)) {
 				conditionalConnectionsToAdd[i] = connectionData with {
 					roomB = room,
-					connectionB = (uint) connectionId
+					roomBExitID = (uint) connectionId
 				};
 				return true;
 			}
@@ -611,10 +613,10 @@ public static class WorldParser {
 
 		conditionalConnectionsToAdd.Add(new ConditionalConnection() {
 			roomA = room,
-			connectionA = (uint) connectionId,
+			roomAExitID = (uint) connectionId,
 			roomBName = toConnection,
 			roomB = null,
-			connectionB = null,
+			roomBExitID = null,
 			timelines = [.. timelines],
 			timelineType = TimelineType.Only
 		});
@@ -717,17 +719,18 @@ public static class WorldParser {
 		Logger.Info("Loading connections");
 
 		foreach (ConnectionToAdd connectionData in connectionsToAdd) {
-			if (connectionData.roomB == null || connectionData.connectionB == null) {
+			Logger.Info($"connectionData - roomA: {connectionData.roomA.name} roomB: {connectionData.roomB?.name} roomAExitID: {connectionData.roomAExitID} roomBExitID: {connectionData.roomBExitID}");
+			if (connectionData.roomB == null || connectionData.roomBExitID == null) {
 				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? connectionData.roomBName}");
 				continue;
 			}
-
-			if (!connectionData.roomA.ValidConnection(connectionData.connectionA) || !connectionData.roomB.ValidConnection(connectionData.connectionB.Value)) {
+			
+			if (!connectionData.roomA.ValidConnection(connectionData.roomAExitID) || !connectionData.roomB.ValidConnection(connectionData.roomBExitID.Value)) {
 				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? connectionData.roomBName} - Not valid connections");
 				continue;
 			}
 
-			Connection connection = new Connection(connectionData.roomA, connectionData.connectionA, connectionData.roomB, connectionData.connectionB.Value);
+			Connection connection = new Connection(connectionData.roomA, connectionData.roomAExitID, connectionData.roomB, connectionData.roomBExitID.Value);
 			WorldWindow.region.connections.Add(connection);
 			connectionData.roomA.Connect(connection);
 			connectionData.roomB.Connect(connection);
@@ -737,30 +740,32 @@ public static class WorldParser {
 		Logger.Info("Loading conditional links");
 
 		List<ConditionalConnection> conditionalConnectionsToAdd = [];
+			Logger.Info("Checking links");
 		foreach (string link in conditionalLinks) {
+			Logger.Info("Link: " + link);
 			if (!ParseWorldConditionalLink(link, ref conditionalConnectionsToAdd)) return false;
 		}
 
 		foreach (ConditionalConnection connectionData in conditionalConnectionsToAdd) {
 			if (connectionData.roomB == null) {
 				Logger.Warn("Conditional connection failed to load - missing other room");
-				Logger.Warn($"> {connectionData.roomA.name} {connectionData.connectionA} - {connectionData.roomBName}");
+				Logger.Warn($"> {connectionData.roomA.name} {connectionData.roomAExitID} - {connectionData.roomBName}");
 				continue;
 			}
 
-			if (connectionData.connectionB == null) {
+			if (connectionData.roomBExitID == null) {
 				Logger.Warn("Conditional connection failed to load - missing other connection");
-				Logger.Warn($"> {connectionData.roomA.name} {connectionData.connectionA} - {connectionData.roomBName}");
+				Logger.Warn($"> {connectionData.roomA.name} {connectionData.roomAExitID} - {connectionData.roomBName}");
 				continue;
 			}
 
-			if (!connectionData.roomA.ValidConnection(connectionData.connectionA) || !connectionData.roomB.ValidConnection(connectionData.connectionB.Value)) {
+			if (!connectionData.roomA.ValidConnection(connectionData.roomAExitID) || !connectionData.roomB.ValidConnection(connectionData.roomBExitID.Value)) {
 				Logger.Warn("Conditional connection failed to load - invalid connection indices");
-				Logger.Warn($"> {connectionData.roomA.name} {connectionData.connectionA} - {connectionData.roomB.name} {connectionData.connectionB}");
+				Logger.Warn($"> {connectionData.roomA.name} {connectionData.roomAExitID} - {connectionData.roomB.name} {connectionData.roomBExitID}");
 				continue;
 			}
 
-			Connection connection = new Connection(connectionData.roomA, connectionData.connectionA, connectionData.roomB, connectionData.connectionB.Value) {
+			Connection connection = new Connection(connectionData.roomA, connectionData.roomAExitID, connectionData.roomB, connectionData.roomBExitID.Value) {
 				timelines = connectionData.timelines,
 				timelineType = connectionData.timelineType
 			};
