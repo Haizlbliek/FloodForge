@@ -188,17 +188,20 @@ public static class WorldWindow {
 			if (!WorldWindow.VisibleLayers[room.data.layer])
 				continue;
 
-			for (uint i = 0; i < room.roomShortcutEntrances.Count; i++) {
+			for (uint i = 0; i < room.roomExits.Count; i++) {
 				Vector2 spot = new();
 				float sqrDist = 0;
-				spot = room.GetRoomEntrancePosition(i);
-				sqrDist = (worldMouse - spot).SqrLength;
-				if (sqrDist < maxSqrDist) {
-					maxSqrDist = sqrDist;
-					hoveringRoom = room;
-					hoveringConnection = i;
+				if(room.roomExitPaths[room.roomExits[(int)i]].endType == Room.RoomPathEndType.shortcutEntrance)
+				{
+					spot = room.GetShortcutEntranceWorldPoint(i); // if the roomPath has a shortcutExit, first check that
+					sqrDist = (worldMouse - spot).SqrLength;
+					if (sqrDist < maxSqrDist) {
+						maxSqrDist = sqrDist;
+						hoveringRoom = room;
+						hoveringConnection = i;
+					}
 				}
-				spot = room.GetRoomExitPosition(i);
+				spot = room.GetConnectionConnectPoint(i); // then check the roomExit
 				sqrDist = (worldMouse - spot).SqrLength;
 				if (sqrDist < maxSqrDist) {
 					maxSqrDist = sqrDist;
@@ -216,16 +219,24 @@ public static class WorldWindow {
 					return;
 				}
 
-				ConnectionStart = hoveringRoom.GetConfiguredRoomEntrancePosition(hoveringConnection);
+				ConnectionStart = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
+				Immediate.Color(Color.White);
+				UI.StrokeCircle(hoveringRoom.GetConnectionConnectPoint(hoveringConnection), 5f, 8);
+				Immediate.Color(Color.Yellow);
+				UI.StrokeCircle(hoveringRoom.GetShortcutEntranceRoomPoint(hoveringConnection), 5f, 8);
 				ConnectionEnd = ConnectionStart;
 				CurrentConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
 				connectionState = ConnectionState.Connection;
 			}
 			else if (connectionState == ConnectionState.Connection && CurrentConnection != null) {
 				if (hoveringRoom != null) {
-					ConnectionEnd = hoveringRoom.GetConfiguredRoomEntrancePosition(hoveringConnection);
+					ConnectionEnd = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
+					Immediate.Color(Color.Cyan);
+					UI.StrokeCircle(hoveringRoom.GetConnectionConnectPoint(hoveringConnection), 5f, 8);
+					Immediate.Color(Color.Magenta);
+					UI.StrokeCircle(hoveringRoom.GetShortcutEntranceRoomPoint(hoveringConnection), 5f, 8);
 					CurrentConnection.roomB = hoveringRoom;
-					CurrentConnection.connectionB = hoveringConnection;
+					CurrentConnection.roomBExitID = hoveringConnection;
 					CurrentConnectionValid = true;
 
 					if (CurrentConnection.roomA == CurrentConnection.roomB) {
@@ -233,8 +244,8 @@ public static class WorldWindow {
 					}
 					else {
 						foreach (Connection other in CurrentConnection.roomB.connections) {
-							if (other.roomA == CurrentConnection.roomB && other.connectionA == CurrentConnection.connectionB &&
-								other.roomB == CurrentConnection.roomA && other.connectionB == CurrentConnection.connectionA
+							if (other.roomA == CurrentConnection.roomB && other.roomAExitID == CurrentConnection.roomBExitID &&
+								other.roomB == CurrentConnection.roomA && other.roomBExitID == CurrentConnection.roomAExitID
 							) {
 								CurrentConnectionValid = false;
 								break;
@@ -245,7 +256,7 @@ public static class WorldWindow {
 				else {
 					ConnectionEnd = worldMouse;
 					CurrentConnection.roomB = null!;
-					CurrentConnection.connectionB = 0;
+					CurrentConnection.roomBExitID = 0;
 					CurrentConnectionValid = false;
 				}
 			}
@@ -680,8 +691,8 @@ public static class WorldWindow {
 			UI.Line(ConnectionStart.Value, ConnectionEnd.Value, cameraScale / 4f);
 		}
 		else {
-			Vector2 directionA = CurrentConnection.roomA.GetConfiguredRoomEntranceDirection(CurrentConnection.connectionA);
-			Vector2 directionB = CurrentConnection.roomB?.GetConfiguredRoomEntranceDirection(CurrentConnection.connectionB) ?? Vector2.Zero;
+			Vector2 directionA = CurrentConnection.roomA.GetConnectionConnectDirection(CurrentConnection.roomAExitID);
+			Vector2 directionB = CurrentConnection.roomB?.GetConnectionConnectDirection(CurrentConnection.roomBExitID) ?? Vector2.Zero;
 
 			if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
 				directionStrength *= 0.3333f;
@@ -811,6 +822,7 @@ public static class WorldWindow {
 					}
 				}
 
+				// might need to update the Room.Draw function as well?
 				if (PositionType == RoomPosition.Both) {
 					room.Draw(RoomPosition.Canon);
 					room.Draw(RoomPosition.Dev);
@@ -851,9 +863,11 @@ public static class WorldWindow {
 				Immediate.Color(Color.Cyan);
 				UI.StrokeRect(connectionAABB);
 			}
+			// connection.Draw needs to be checked for sure
 			connection.Draw();
 		}
 
+		// this one uses similar logic to connection.Draw, so shouldn't be too different to handle
 		DrawCurrentConnection();
 		Profiler.MarkPoint("DrawConnections");
 
@@ -906,9 +920,9 @@ public static class WorldWindow {
 			debugText.Add("");
 			debugText.Add("    Connection:");
 			debugText.Add($"Room A: {hoveringConnection.roomA.name}");
-			debugText.Add($"Connection A: {hoveringConnection.connectionA}");
+			debugText.Add($"Connection A: {hoveringConnection.roomAExitID}");
 			debugText.Add($"Room B: {hoveringConnection.roomB.name}");
-			debugText.Add($"Connection B: {hoveringConnection.connectionB}");
+			debugText.Add($"Connection B: {hoveringConnection.roomBExitID}");
 		}
 
 		if (hoveringRoom != null) {

@@ -1,6 +1,6 @@
 namespace FloodForge.World;
 
-public enum ShortcutType {
+public enum RoomExitType {
 	Room,
 	Den,
 	Scavenger,

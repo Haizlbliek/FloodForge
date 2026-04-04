@@ -99,8 +99,8 @@ public static class WorldExporter {
 				if (connection.roomA.data.hidden || connection.roomB.data.hidden)
 					continue;
 
-				Vector2i connA = connection.roomA.GetRoomEntranceShortcutPosition(connection.connectionA);
-				Vector2i connB = connection.roomB.GetRoomEntranceShortcutPosition(connection.connectionB);
+				Vector2i connA = connection.roomA.GetShortcutEntranceRoomPoint(connection.roomAExitID);
+				Vector2i connB = connection.roomB.GetShortcutEntranceRoomPoint(connection.roomBExitID);
 
 				connA = new Vector2i(connA.x, connection.roomA.height - connA.y - 1);
 				connB = new Vector2i(connB.x, connection.roomB.height - connB.y - 1);
@@ -110,8 +110,8 @@ public static class WorldExporter {
 					$"{RoomNameCasing(connection.roomB.name)}," +
 					$"{connA.x},{connA.y}," +
 					$"{connB.x},{connB.y}," +
-					$"{(int) connection.roomA.GetRoomEntranceDirection(connection.connectionA)}," +
-					$"{(int) connection.roomB.GetRoomEntranceDirection(connection.connectionB)}");
+					$"{(int) connection.roomA.GetShortcutEntranceDirectionInt(connection.roomAExitID)}," +
+					$"{(int) connection.roomB.GetShortcutEntranceDirectionInt(connection.roomBExitID)}");
 			}
 
 			writer.Write(WorldWindow.region.extraMap);
@@ -127,11 +127,11 @@ public static class WorldExporter {
 
 		if (connection.roomA == room) {
 			otherRoom = connection.roomB;
-			connectionId = (int) connection.connectionA;
+			connectionId = (int) connection.roomAExitID;
 		}
 		else {
 			otherRoom = connection.roomA;
-			connectionId = (int) connection.connectionB;
+			connectionId = (int) connection.roomBExitID;
 		}
 
 		if (otherRoom == null || connectionId == -1)
@@ -268,7 +268,7 @@ public static class WorldExporter {
 				List<string> timelines = [];
 				Dictionary<string, List<(string, bool)>> state = [];
 				List<(string, bool)> defaultState = [];
-				for (int i = 0; i < room.roomShortcutEntrances.Count; i++) {
+				for (int i = 0; i < room.roomExits.Count; i++) {
 					defaultState.Add(("DISCONNECTED", false));
 				}
 				foreach (Connection connection in room.connections) {
@@ -276,10 +276,10 @@ public static class WorldExporter {
 						continue;
 
 					if (connection.roomA == room) {
-						defaultState[(int) connection.connectionA] = (RoomNameCasing(connection.roomB.name), false);
+						defaultState[(int) connection.roomAExitID] = (RoomNameCasing(connection.roomB.name), false);
 					}
 					else {
-						defaultState[(int) connection.connectionB] = (RoomNameCasing(connection.roomA.name), false);
+						defaultState[(int) connection.roomBExitID] = (RoomNameCasing(connection.roomA.name), false);
 					}
 				}
 
@@ -325,10 +325,12 @@ public static class WorldExporter {
 					continue;
 
 				writer.Write($"{RoomNameCasing(room.name)} : ");
+				Logger.Info($"{RoomNameCasing(room.name)} : ");
 
+				Logger.Info($"roomDefaultStates.Count: {roomDefaultStates};");
 				List<(string, bool)> connections = roomDefaultStates[RoomNameCasing(room.name)];
 
-				for (int i = 0; i < room.roomShortcutEntrances.Count; i++) {
+				for (int i = 0; i < room.roomExits.Count; i++) {
 					if (i > 0) writer.Write(", ");
 
 					writer.Write(connections[i].Item1);
@@ -412,7 +414,7 @@ public static class WorldExporter {
 								writer.Write($"0-{CreatureTextures.ExportName(creature.type)}");
 							}
 							else {
-								writer.Write($"{i + room.roomShortcutEntrances.Count}-{CreatureTextures.ExportName(creature.type)}");
+								writer.Write($"{i + room.allShortcutEntrancePoints.Count}-{CreatureTextures.ExportName(creature.type)}");
 							}
 							ExportCreatureTags(creature, writer);
 							if (creature.count > 1)
@@ -459,7 +461,7 @@ public static class WorldExporter {
 							writer.Write("0 : ");
 						}
 						else {
-							writer.Write($"{i + room.roomShortcutEntrances.Count} : ");
+							writer.Write($"{i + room.allShortcutEntrancePoints.Count} : ");
 						}
 
 						DenCreature current = creature;
