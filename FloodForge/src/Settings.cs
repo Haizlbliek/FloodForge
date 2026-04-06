@@ -32,6 +32,7 @@ public static class Settings {
 	public static Setting<bool> DEBUGVisibleOutputPadding = Setting.Of("DebugVisibleOutputPadding", false);
 	public static Setting<bool> DEBUGVisiblePopupVisuals = Setting.Of("DebugVisiblePopupVisuals", false);
 	public static Setting<bool> DEBUGVisibleConnectionBounds = Setting.Of("DebugVisibleConnectionBounds", false);
+	public static Setting<bool> DEBUGVisibleShortcutEntranceData = Setting.Of("DebugVisibleShortcutEntranceData", false);
 	public static Setting<bool> DEBUGRoomWireframe = Setting.Of("DebugRoomWireframe", false);
 	public static Setting<bool> DEBUGLogInvalidSlopes = Setting.Of("DebugLogInvalidSlopes", false);
 
