@@ -1219,15 +1219,10 @@ public class Room {
 		Program.gl.Disable(EnableCap.Blend);
 
 		if (positionType == WorldWindow.PositionType) {
+			float clippedSelectorScale = Math.Min(WorldWindow.SelectorScale, 10f);
 			if (WorldWindow.VisibleDevItems) {
 				foreach (DevObject devObject in this.data.objects) {
 					devObject.Draw(this.Position + new Vector2(0f, -this.height));
-				}
-			}
-
-			if (WorldWindow.VisibleCreatures) {
-				for (int i = 0; i < this.denShortcutEntrances.Count; i++) {
-					this.DrawDen(this.dens[i], position.x + this.denShortcutEntrances[i].x, position.y - this.denShortcutEntrances[i].y, i == this.hoveredDen, WorldWindow.HoveringRoom == this);
 				}
 			}
 
@@ -1241,16 +1236,16 @@ public class Room {
 				Immediate.Color(connected ? Themes.RoomConnection : Themes.RoomShortcutRoom);
 				if(entranceIsShortcutEntrance) {
 					if (WorldWindow.changeConnectBehaviour)
-						UI.StrokeCircle(entrancePos, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
+						UI.StrokeCircle(entrancePos, clippedSelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
 					else
-						UI.FillCircle(entrancePos, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
+						UI.FillCircle(entrancePos, clippedSelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
 				}
 
 				// Room Exit
 				if (WorldWindow.changeConnectBehaviour || !entranceIsShortcutEntrance)
-					UI.FillCircle(exitPos, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
+					UI.FillCircle(exitPos, clippedSelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
 				else
-					UI.StrokeCircle(exitPos, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
+					UI.StrokeCircle(exitPos, clippedSelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
 
 				// Find the index of the connection associated with this RoomExit (if it's connected to something)
 				int getConnectionIndex = 0;
@@ -1323,6 +1318,12 @@ public class Room {
 					}
 				}
 			}
+
+			if (WorldWindow.VisibleCreatures) {
+				for (int i = 0; i < this.denShortcutEntrances.Count; i++) {
+					this.DrawDen(this.dens[i], position.x + this.denShortcutEntrances[i].x, position.y - this.denShortcutEntrances[i].y, i == this.hoveredDen, WorldWindow.HoveringRoom == this);
+				}
+			}
 		}
 
 		if (this.TimelineType != TimelineType.All) {
@@ -1382,24 +1383,27 @@ public class Room {
 
 	protected void DrawDen(Den den, float x, float y, bool hovered, bool roomHovered) {
 		bool denEmpty = true;
+		bool drawnDen = false;
 
-		float clampedScale = WorldWindow.SelectorScale;
-		if(WorldWindow.cameraScale < 1000f || roomHovered) {
-			for (int i = 0; i < den.creatures.Count; i++) {
-				DenCreature creature = den.creatures[i];
-				if (creature.type.IsNullOrEmpty() && creature.lineageTo == null) continue;
+		float selectorScale = WorldWindow.SelectorScale;
+		for (int i = 0; i < den.creatures.Count; i++) {
+			DenCreature creature = den.creatures[i];
+			if (creature.type.IsNullOrEmpty() && creature.lineageTo == null) continue;
 
-				float scale = clampedScale;
-				float rectX = x + i * scale - (den.creatures.Count - 1f) * 0.5f * scale;
-				float rectY = y;
+			float scale = selectorScale;
+			float rectX = x + i * scale - (den.creatures.Count - 1f) * 0.5f * scale;
+			float rectY = y;
 
-				if (hovered) scale *= 1.5f;
+			if (hovered) scale *= 1.5f;
 
-				if (!creature.type.IsNullOrEmpty()) {
-					denEmpty = false;
+			if (!creature.type.IsNullOrEmpty()) {
+				denEmpty = false;
+			}
+			if (WorldWindow.cameraScale < 1000f || roomHovered) {
+				drawnDen = true;
+				if(!denEmpty) {
 					UI.CenteredTexture(CreatureTextures.GetTexture(creature.type), rectX, rectY, scale);
 				}
-
 				if (creature.lineageTo == null) {
 					Immediate.Color(Color.White);
 					UI.font.Write(creature.count.ToString(), rectX + 0.5f + scale * 0.25f, rectY - 0.5f - scale * 0.5f, 0.5f * scale, Font.Align.MiddleCenter);
@@ -1408,20 +1412,19 @@ public class Room {
 					while (creature.lineageTo != null) {
 						float chance = creature.lineageChance;
 						creature = creature.lineageTo;
-						rectY -= clampedScale;
+						rectY -= selectorScale;
 						if (!creature.type.IsNullOrEmpty()) {
 							UI.CenteredTexture(CreatureTextures.GetTexture(creature.type), rectX, rectY, scale);
 						}
 						Immediate.Color(Color.White);
-						UI.font.Write((int) (chance * 100f) + "%", rectX + 0.5f + scale * 0.25f, rectY + clampedScale - 0.4f - scale * 0.5f, 0.3f * scale, Font.Align.MiddleCenter);
+						UI.font.Write((int) (chance * 100f) + "%", rectX + 0.5f + scale * 0.25f, rectY + selectorScale - 0.4f - scale * 0.5f, 0.3f * scale, Font.Align.MiddleCenter);
 					}
 				}
 			}
 		}
-
-		if (denEmpty && WorldWindow.cameraScale < 400f || roomHovered) {
+		if (!drawnDen && (!denEmpty || denEmpty && WorldWindow.cameraScale < 400f || roomHovered)) {
 			Immediate.Color(Themes.RoomShortcutDen);
-			UI.FillCircle(x + 0.5f, y - 0.5f, clampedScale * (hovered ? 1.5f : 1f) * 0.25f, 8);
+			UI.FillCircle(x + 0.5f, y - 0.5f, selectorScale * (hovered ? 1.5f : 1f) * 0.25f, 8);
 		}
 	}
 
