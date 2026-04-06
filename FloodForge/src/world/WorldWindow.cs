@@ -182,6 +182,7 @@ public static class WorldWindow {
 	private static void UpdateConnectionControls() {
 		Room? hoveringRoom = null;
 		uint hoveringConnection = 0;
+		int hoveringShortcutEntrance = -1;
 		float maxSqrDist = SelectorScale * SelectorScale;
 		foreach (Room room in WorldWindow.region.rooms) {
 			room.hoveredRoomExit = -1;
@@ -199,6 +200,7 @@ public static class WorldWindow {
 						maxSqrDist = sqrDist;
 						hoveringRoom = room;
 						hoveringConnection = i;
+						hoveringShortcutEntrance = -1;
 					}
 				}
 				spot = room.GetConnectionConnectPoint(i); // then check the roomExit
@@ -207,10 +209,27 @@ public static class WorldWindow {
 					maxSqrDist = sqrDist;
 					hoveringRoom = room;
 					hoveringConnection = i;
+					hoveringShortcutEntrance = -1;
+				}
+			}
+			for (uint i = 0; i < room.allShortcutEntrancePoints.Count; i++) {
+				Vector2 spot = new();
+				float sqrDist = 0;
+				(Room.RoomConnection connection, bool matchesWithRoomExitPath) = room.shortcutEntrancePaths[room.allShortcutEntrancePoints[(int)i]];
+				if (!matchesWithRoomExitPath && connection.endType == Room.RoomPathEndType.roomExit) {
+					spot = room.RoomPositionToWorldPosition(connection.path.StartPosition);
+					sqrDist = (worldMouse - spot).SqrLength;
+					if (sqrDist < maxSqrDist) {
+						maxSqrDist = sqrDist;
+						hoveringRoom = room;
+						hoveringConnection = room.GetRoomExitIDFromShortcut(i);
+						hoveringShortcutEntrance = (int)i;
+					}
 				}
 			}
 		}
 		hoveringRoom?.hoveredRoomExit = (int) hoveringConnection;
+		hoveringRoom?.hoveredShortcutEntrance = hoveringShortcutEntrance;
 
 		if (Input.Connection) {
 			if (connectionState == ConnectionState.None) {

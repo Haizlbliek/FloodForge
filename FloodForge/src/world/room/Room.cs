@@ -44,6 +44,7 @@ public class Room {
 	public List<GarbageWormDen> garbageWormDens = [];
 	public int hoveredDen = -1; // LATER: Remove / improve
 	public int hoveredRoomExit = -1; // LATER: Remove / improve
+	public int hoveredShortcutEntrance = -1;
 
 	public List<Connection> connections = [];
 
@@ -215,19 +216,7 @@ public class Room {
 				switch (data[i]) {
 					case 1: this.geometry[idx] |= FLAG_VERTICAL_POLE; break;
 					case 2: this.geometry[idx] |= FLAG_HORIZONTAL_POLE; break;
-					case 3: 
-						this.geometry[idx] |= FLAG_SHORTCUT;
-						if(idx % this.width > 0 && (idx % this.width) + 1 < this.width && idx - this.width > 0 && idx + this.width < this.geometry.Length) {
-							int directionsWithShortcuts = 0;
-							if((this.geometry[idx + 1] & 15) == 4) directionsWithShortcuts++;
-							if((this.geometry[idx - 1] & 15) == 4) directionsWithShortcuts++;
-							if(directionsWithShortcuts > 1) break;
-							if((this.geometry[idx + this.width] & 15) == 4) directionsWithShortcuts++;
-							if(directionsWithShortcuts > 1) break;
-							if((this.geometry[idx - this.width] & 15) == 4) directionsWithShortcuts++;
-							if(directionsWithShortcuts == 1) this.allShortcutEntrancePoints.Add(new Vector2i(idx / this.height, idx % this.height));
-						}
-					break;
+					case 3: this.geometry[idx] |= FLAG_SHORTCUT; break;
 					case 6: this.geometry[idx] |= FLAG_BACKGROUND_SOLID; break;
 					case 7: this.geometry[idx] |= FLAG_BATFLY_HIVE; break;
 					case 8: this.geometry[idx] |= FLAG_WATERFALL; break;
@@ -251,11 +240,11 @@ public class Room {
 						break;
 				}
 			}
-
 			idx++;
 		}
 
 		this.valid = true;
+		this.CheckShortcutEntrancePoints();
 
 		idx = 0;
 		for (int x = 0; x < this.width; x++) {
@@ -424,6 +413,7 @@ public class Room {
 
 			List<Vector2i> pathTaken = [];
 			pathTaken.Add(currentPosition);
+			uint pathEndFlag = FLAG_ROOM_EXIT | FLAG_WACK_A_MOLE_HOLE | FLAG_DEN | FLAG_SCAVENGER_DEN;
 			for (int runs = 0; runs < 10000; runs++) {
 				currentPosition += forwardDirection;
 				if(!pathTaken.Contains(currentPosition))
@@ -435,25 +425,25 @@ public class Room {
 					forwardDirection.x = 0;
 					forwardDirection.y = 0;
 					hasDirection = false;
-					if (lastDirection.x != 1 && (room.TileIsShortcut(currentPosition.x - 1, currentPosition.y) || ((room.GetTile(currentPosition.x - 1, currentPosition.y) & FLAG_ROOM_EXIT) > 0))) {
+					if (lastDirection.x != 1 && (room.TileIsShortcut(currentPosition.x - 1, currentPosition.y) || ((room.GetTile(currentPosition.x - 1, currentPosition.y) & pathEndFlag) > 0))) {
 						forwardDirection.x = -1;
 						hasDirection = true;
 					}
-					else if (lastDirection.y != -1 && room.TileIsShortcut(currentPosition.x, currentPosition.y + 1) || ((room.GetTile(currentPosition.x, currentPosition.y + 1) & FLAG_ROOM_EXIT) > 0)) {
+					else if (lastDirection.y != -1 && room.TileIsShortcut(currentPosition.x, currentPosition.y + 1) || ((room.GetTile(currentPosition.x, currentPosition.y + 1) & pathEndFlag) > 0)) {
 						forwardDirection.y = 1;
 						hasDirection = true;
 					}
-					else if (lastDirection.x != -1 && room.TileIsShortcut(currentPosition.x + 1, currentPosition.y) || ((room.GetTile(currentPosition.x + 1, currentPosition.y) & FLAG_ROOM_EXIT) > 0)) {
+					else if (lastDirection.x != -1 && room.TileIsShortcut(currentPosition.x + 1, currentPosition.y) || ((room.GetTile(currentPosition.x + 1, currentPosition.y) & pathEndFlag) > 0)) {
 						forwardDirection.x = 1;
 						hasDirection = true;
 					}
-					else if (lastDirection.y != 1 && room.TileIsShortcut(currentPosition.x, currentPosition.y - 1) || ((room.GetTile(currentPosition.x, currentPosition.y - 1) & FLAG_ROOM_EXIT) > 0)) {
+					else if (lastDirection.y != 1 && room.TileIsShortcut(currentPosition.x, currentPosition.y - 1) || ((room.GetTile(currentPosition.x, currentPosition.y - 1) & pathEndFlag) > 0)) {
 						forwardDirection.y = -1;
 						hasDirection = true;
 					}
 				}
 
-				if ((room.GetTile(currentPosition.x, currentPosition.y) & 15) == 4 || (room.GetTile(currentPosition.x, currentPosition.y) & FLAG_ROOM_EXIT) > 0) {
+				if ((room.GetTile(currentPosition.x, currentPosition.y) & 15) == 4 || (room.GetTile(currentPosition.x, currentPosition.y) & pathEndFlag) > 0) {
 					hasDirection = true;
 					break;
 				}
@@ -463,6 +453,72 @@ public class Room {
 			this.Path = pathTaken.ToArray();
 			this.isDeadEnd = !hasDirection;
 		}
+	}
+	
+	void CheckShortcutEntrancePoints() {
+		this.allShortcutEntrancePoints.Clear();
+		string logstring = $"CheckShortcutEntrancePoints for {this.name}";
+		for (int y = 0; y < this.height; y++) {
+			for (int x = 0; x < this.width; x++) {
+				if ((this.GetTile(x, y) & FLAG_SHORTCUT) > 0) {
+					int[] tiles = new int[9];
+					
+					int index = 0;
+					for (int y2 = y - 1; y2 < y + 2; y2++) {
+						for(int x2 = x - 1; x2 < x + 2; x2++) {
+							int result = ((this.GetTile(x2, y2)&15) == 1) ? 1 : 0;
+							result += ((this.GetTile(x2, y2)&FLAG_SHORTCUT) > 0) ? 2 : 0;
+							result += ((this.GetTile(x2, y2)&FLAG_ROOM_EXIT) > 0) ? 4 : 0;
+							result += ((this.GetTile(x2, y2)&FLAG_DEN) > 0) ? 8 : 0;
+							result += ((this.GetTile(x2, y2)&FLAG_SCAVENGER_DEN) > 0) ? 16 : 0;
+							result += ((this.GetTile(x2, y2)&FLAG_WACK_A_MOLE_HOLE) > 0) ? 32 : 0;
+							tiles[index] = result;
+							index++;
+						}
+					}
+
+					int directionCount = 0;
+					int airGaps = 0;
+
+					// only check rest if the tile is just a shortcut
+					if(tiles[4] == 2 || tiles[4] == 3) {
+						// check if all corners are solid
+						if((tiles[0] & 1) == 0 || (tiles[2] & 1) == 0 || (tiles[6] & 1) == 0 || (tiles[8] & 1) == 0) airGaps = 99;
+
+						// check if only one of the sides is air
+						if((tiles[1] & 2) > 0) directionCount++; if((tiles[1] & 1) == 0) airGaps++;
+						if((tiles[3] & 2) > 0) directionCount++; if((tiles[3] & 1) == 0) airGaps++;
+						if((tiles[5] & 2) > 0) directionCount++; if((tiles[5] & 1) == 0) airGaps++;
+						if((tiles[7] & 2) > 0) directionCount++; if((tiles[7] & 1) == 0) airGaps++;
+
+						bool IsValidShortcutEntrance = directionCount == 1 && airGaps == 1;
+
+						if(IsValidShortcutEntrance) {
+							this.allShortcutEntrancePoints.Add(new Vector2i(x, y));
+						}
+						/*if(this.name == "TR_2intopipe") {
+							string[] str = new string[9];
+							for (int i = 0; i < 9; i++) {
+								int tile = tiles[i];
+								string value = ((tile & 32) > 0) ? "1" : "0";
+								value += ((tile & 16) > 0) ? "1" : "0";
+								value += ((tile & 8) > 0) ? "1" : "0";
+								value += ((tile & 4) > 0) ? "1" : "0";
+								value += ((tile & 2) > 0) ? "1" : "0";
+								value += ((tile & 1) > 0) ? "1" : "0";
+								str[i] = value;
+							}
+							Logger.Info($"tile {x}, {y}:\n{str[0]} - {str[1]} - {str[2]}\n{str[3]} - {str[4]} - {str[5]}\n{str[6]} - {str[7]} - {str[8]}\ndirectionCount: {directionCount};\nairGaps: {airGaps};\nIsValidShortcutEntrance:{IsValidShortcutEntrance}");
+						}*/
+					}
+				}
+			}
+		}
+		logstring += "\nallShortcutEntrancePoints:";
+		foreach(Vector2i position in this.allShortcutEntrancePoints) {
+			logstring += $"\n{position.x}; {position.y}";
+		}
+		Logger.Info(logstring);
 	}
 
 	protected void EnsureConnections() {
@@ -529,8 +585,13 @@ public class Room {
 				else if ((Tile & FLAG_SCAVENGER_DEN) > 0) endType = RoomPathEndType.scavengerDen;
 				else if ((Tile & FLAG_WACK_A_MOLE_HOLE) > 0) endType = RoomPathEndType.wackAMoleHole;
 			}
-
-			this.shortcutEntrancePaths.Add(this.allShortcutEntrancePoints[i], (new RoomConnection(shortcutPath, startType, endType), this.roomExitPaths.ContainsKey(shortcutPath.EndPosition)));
+			bool hasMatchingRoomExit = false;
+			if(this.roomExitPaths.TryGetValue(shortcutPath.EndPosition, out RoomConnection value)){
+				if(value.endType == RoomPathEndType.shortcutEntrance && value.path.EndPosition == shortcutPath.StartPosition) {
+					hasMatchingRoomExit = true;
+				}
+			}
+			this.shortcutEntrancePaths.Add(this.allShortcutEntrancePoints[i], (new RoomConnection(shortcutPath, startType, endType), hasMatchingRoomExit));
 		}
 
 		// Side Exits
@@ -600,20 +661,11 @@ public class Room {
 				if ((this.geometry[idx] & FLAG_SCAVENGER_DEN) > 0) {
 					this.allRoomExitPoints.Add((RoomExitType.Scavenger, new Vector2i(x, y)));
 				}
-				if ((this.geometry[idx] & FLAG_SHORTCUT) > 0) {
-					if(idx % this.width > 0 && (idx % this.width) + 1 < this.width && idx - this.width > 0 && idx + this.width < this.geometry.Length) {
-						int directionsWithShortcuts = 0;
-						if((this.geometry[idx + 1] & FLAG_SHORTCUT) > 0) directionsWithShortcuts++;
-						if((this.geometry[idx - 1] & FLAG_SHORTCUT) > 0) directionsWithShortcuts++;
-						if((this.geometry[idx + this.width] & FLAG_SHORTCUT) > 0) directionsWithShortcuts++;
-						if((this.geometry[idx - this.width] & FLAG_SHORTCUT) > 0) directionsWithShortcuts++;
-						if(directionsWithShortcuts == 1) this.allShortcutEntrancePoints.Add(new Vector2i(x, y));
-					}
-				}
 				idx++;
 			}
 		}
 
+		this.CheckShortcutEntrancePoints();
 		this.EnsureConnections();
 
 		// LATER: Parse dens
@@ -1262,7 +1314,7 @@ public class Room {
 				}
 
 				// Draws shortcutpath if either the associated exit or connection is hovered over.
-				bool shouldBeHighlighted = i == this.hoveredRoomExit || connectionFound && this.connections[getConnectionIndex].Hovered;
+				bool shouldBeHighlighted = (i == this.hoveredRoomExit || connectionFound && this.connections[getConnectionIndex].Hovered) && this.hoveredShortcutEntrance == -1;
 				if(shouldBeHighlighted || Keys.Modifier(Silk.NET.SDL.Keymod.Shift)) {
 					if (this.roomExitPaths.TryGetValue(this.roomExits[i], out var result)) {
 						this.DrawRoomPath(result, i == this.hoveredRoomExit, shouldBeHighlighted);
@@ -1270,8 +1322,22 @@ public class Room {
 				}
 			}
 			
-			// funnily enough, the edge case that is being handled here is so specific that I genuinely just don't know if this bit will ever be doing anything
-			// said edge case:
+			if(Settings.DEBUGVisibleShortcutEntranceData){
+				foreach((RoomConnection connection, bool isMatchedWithRoomExit) in this.shortcutEntrancePaths.Values) {
+					Immediate.Color(isMatchedWithRoomExit ? Color.Black : connection.endType switch { 
+						RoomPathEndType.deadend => new(1,0,0), 
+						RoomPathEndType.shortcutEntrance => new(1, 1, 1), 
+						RoomPathEndType.den => new(1, 1, 0), 
+						RoomPathEndType.scavengerDen => new(0, 1, 0), 
+						RoomPathEndType.roomExit => new(0.5f, 0.5f, 1), 
+						RoomPathEndType.wackAMoleHole => new(0.2f, 0.4f, 0.6f),
+						_ => Color.Black});
+					UI.StrokeCircle(this.RoomPositionToWorldPosition(connection.path.StartPosition), isMatchedWithRoomExit ? 0.25f : 2f, 8);
+					Immediate.Color(isMatchedWithRoomExit ? Color.Black : Color.Magenta);
+					UI.StrokeCircle(this.RoomPositionToWorldPosition(connection.path.EndPosition), isMatchedWithRoomExit ? 0.25f : 1f, 8);
+				}
+			}
+			// this bit handles the case where:
 			// a shortcut entrance that connects to a roomexit, without said roomexit connecting back to the same entrance
 			for (int i = 0; i < this.allShortcutEntrancePoints.Count; i++) {
 				if(this.shortcutEntrancePaths.TryGetValue(this.allShortcutEntrancePoints[i], out (RoomConnection connection, bool isMatchedWithRoomExit) value)){
@@ -1286,34 +1352,20 @@ public class Room {
 						Immediate.Color(roomExitIsConnected ? Themes.RoomConnection : Themes.RoomShortcutRoom);
 						if (WorldWindow.changeConnectBehaviour)
 						{
-							UI.StrokeCircle(entrancePos, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
-							UI.FillCircle(exitPos, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
+							UI.StrokeCircle(entrancePos, clippedSelectorScale * (i == this.hoveredShortcutEntrance ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
+							UI.FillCircle(exitPos, clippedSelectorScale * (i == this.hoveredShortcutEntrance ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
 						}
 						else
 						{
-							UI.FillCircle(entrancePos, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
-							UI.StrokeCircle(exitPos, WorldWindow.SelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
-						}
-						
-						// Find the index of the connection associated with this RoomExit (if it's connected to something)
-						int getConnectionIndex = 0;
-						bool connectionFound = false;
-						if (roomExitIsConnected) {
-							for (int j = 0; j < this.connections.Count; j++) {
-								int connection = this.connections[j].roomA == this ? (int)this.connections[j].roomAExitID : (int)this.connections[j].roomBExitID;
-								if (connection == exitID) {
-									connectionFound = true;
-									getConnectionIndex = j;
-									break;
-								}
-							}
+							UI.FillCircle(entrancePos, clippedSelectorScale * (i == this.hoveredShortcutEntrance ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
+							UI.StrokeCircle(exitPos, clippedSelectorScale * (i == this.hoveredShortcutEntrance ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
 						}
 
 						// Draws shortcutpath if the connection is hovered over. (since a roomexit isn't related to this entrance
 						// (otherwise it'd have been drawn with the roomExits), there is no exit to hover over that should highlight this shortcut entrance)
-						bool shouldBeHighlighted = connectionFound && this.connections[getConnectionIndex].Hovered;
+						bool shouldBeHighlighted = i == this.hoveredShortcutEntrance;
 						if(shouldBeHighlighted || Keys.Modifier(Silk.NET.SDL.Keymod.Shift)) {
-							this.DrawRoomPath(value.connection, false, shouldBeHighlighted);
+							this.DrawRoomPath(value.connection, shouldBeHighlighted, shouldBeHighlighted);
 						}
 					}
 				}
@@ -1343,6 +1395,7 @@ public class Room {
 		bool hovered = o.x >= 0f && o.y <= 0f && o.x <= this.width && o.y >= -this.height;
 		Immediate.Color(hovered ? Themes.RoomBorderHighlight : Themes.RoomBorder);
 		UI.StrokeRect(position.x, position.y, position.x + this.width, position.y - this.height);
+		this.hoveredShortcutEntrance = -1;
 	}
 
 	protected void DrawRoomPath(RoomConnection connectionPathToDraw, bool isHovered, bool isHighlighted) {
