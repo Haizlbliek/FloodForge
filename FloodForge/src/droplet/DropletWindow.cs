@@ -13,6 +13,7 @@ public static class DropletWindow {
 
 	private static Texture GeometryTexture = null!;
 	private static bool showObjects;
+	private static bool showMousePosition = false;
 	public static bool showResize;
 	public static Vector2i resizeSize;
 	public static Vector2i resizeOffset;
@@ -388,6 +389,11 @@ public static class DropletWindow {
 			}
 
 			selectedTool = (GeometryTool)tool;
+		}
+
+		if (showMousePosition) {
+			Immediate.Color(Color.White);
+			UI.font.Write($"x:{mouseTile.x} y:{mouseTile.y}", mouseTile.x, -mouseTile.y + 1, 0.6f);
 		}
 
 		if (!blockMouse) {
@@ -1722,6 +1728,12 @@ public static class DropletWindow {
 					showObjects = !showObjects;
 					b.text = showObjects ? "Hide objects" : "Show objects";
 				}),
+				new Button("Show Position", b => {
+					showMousePosition = !showMousePosition;
+					b.text = showMousePosition ? "Hide Position" : "Show Position";
+				}, () => {
+					return currentTab == EditorTab.Geometry;
+				}),
 				new Button("Resize", b => {
 					PopupManager.Add(new ResizeLevelPopup());
 				}),
@@ -1730,7 +1742,7 @@ public static class DropletWindow {
 						mode = Mode.World;
 						DropletWindow.Reset();
 					}));
-				})
+				}),
 			];
 		}
 	}
