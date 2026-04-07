@@ -40,6 +40,7 @@ public class MoveChange : MultipleRoomChange {
 			for (int i = 0; i < this.rooms.Count; i++) {
 				this.rooms[i].DevPosition += this.devOffsets[i] * multiplier;
 				this.rooms[i].CanonPosition += this.canonOffsets[i] * multiplier;
+				this.rooms[i].MoveUpdate();
 			}
 		}
 	}

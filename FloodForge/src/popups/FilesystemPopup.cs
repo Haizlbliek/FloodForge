@@ -354,7 +354,7 @@ public class FilesystemPopup : Popup {
 
 						Immediate.Color(Themes.TextHighlight);
 						string cropText = Font.CropText(this.newDirectory, this.bounds.x1 - this.bounds.x0 - 0.1f, out float margin, true);
-						margin = (cropText.Length != this.newDirectory.Length ? margin : 0f);
+						margin = cropText.Length != this.newDirectory.Length ? margin : 0f;
 						UI.font.Write(cropText, margin + this.bounds.x0 + 0.1f, y, this.fontSize);
 
 						if (this.frame % 60 < 30) {
