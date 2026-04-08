@@ -13,6 +13,7 @@ public static class DropletWindow {
 
 	private static Texture GeometryTexture = null!;
 	private static bool showObjects;
+	private static bool showMousePosition = false;
 	public static bool showResize;
 	public static Vector2i resizeSize;
 	public static Vector2i resizeOffset;
@@ -388,6 +389,11 @@ public static class DropletWindow {
 			}
 
 			selectedTool = (GeometryTool)tool;
+		}
+
+		if (showMousePosition) {
+			Immediate.Color(Color.White);
+			UI.font.Write($"x:{mouseTile.x} y:{mouseTile.y}", mouseTile.x, -mouseTile.y + 1, 0.6f);
 		}
 
 		if (!blockMouse) {
@@ -1310,18 +1316,20 @@ public static class DropletWindow {
 			placedObjectsLine = output.ToString();
 		}
 
-		settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.name + "_settings.txt");
-		using StreamWriter sw = new StreamWriter(settingsPath);
-		sw.Write(before);
-		if (!string.IsNullOrWhiteSpace(placedObjectsLine)) {
-			if (!placedObjectsLine.EndsWith(", "))
-				placedObjectsLine += ", ";
-			sw.Write("PlacedObjects: " + placedObjectsLine + "\n");
+		if (before != null && before != "" || after != null && after != "" || !string.IsNullOrWhiteSpace(placedObjectsLine)) {
+			settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.name + "_settings.txt");
+			using StreamWriter sw = new StreamWriter(settingsPath);
+			sw.Write(before);
+			if (!string.IsNullOrWhiteSpace(placedObjectsLine)) {
+				if (!placedObjectsLine.EndsWith(", "))
+					placedObjectsLine += ", ";
+				sw.Write("PlacedObjects: " + placedObjectsLine + "\n");
+			}
+			sw.Write(after);
 		}
-		sw.Write(after);
 	}
 
-	private static bool ValidSlopePos(uint geo, Vector2 tp) {
+	private static bool ValidSlopePos(uint geo, Vector2 tp) { // something in this function is broken, which is why the other overload doesn't simply make a new vector2 to call this one with.
 		uint type = (geo & (1024 | 2048)) / 1024;
 		float x = (tp.x - 0.5f) % 1f;
 		float y = (tp.y - 0.5f) % 1f;
@@ -1334,6 +1342,19 @@ public static class DropletWindow {
 		};
 	}
 
+	private static bool ValidSlopePos(uint geo, int xInTile, int yInTile) {
+		if (xInTile < 0 || xInTile > 19 || yInTile < 0 || yInTile > 19)
+			return false;
+		uint slopeType = (geo & (1024 | 2048)) / 1024;
+		return slopeType switch {
+			0 => 19 - xInTile > yInTile,
+			1 => 19 - xInTile > 19 - yInTile,
+			2 => xInTile > yInTile,
+			3 => xInTile > 19 - yInTile,
+			_ => false
+		};
+	}
+
 	private const int CameraTextureWidth = 1400;
 	private const int CameraTextureHeight = 800;
 	private static void SetPixel(byte[] data, int index, byte r, byte g, byte b) {
@@ -1342,55 +1363,180 @@ public static class DropletWindow {
 		data[index + 2] = b;
 	}
 
-	private static void RenderCamera(RoomData.Camera camera, string outputPath) {
+	private static bool RenderCamera(RoomData.Camera camera, string roomFolderPath, string newImageName) {
 		byte[] image = new byte[CameraTextureWidth * CameraTextureHeight * 3];
+		bool SwitchRenderProcess = true;
 
-		for (int y = 0; y < CameraTextureHeight; y++) {
-			for (int x = 0; x < CameraTextureWidth; x++) {
-				int id = (x + y * CameraTextureWidth) * 3;
+		if(SwitchRenderProcess) {
+			for(int i = 0; i < image.Length; i++) {
+				image[i] = 255;
+			}
 
-				Vector2 tp = new Vector2(
-					camera.position.x / 20f + x * 1.0f / 20.0f,
-					camera.position.y / 20f + y * 1.0f / 20.0f
-				);
-				int tileX = Mathf.RoundToInt(tp.x);
-				int tileY = Mathf.RoundToInt(tp.y);
-				uint geo = Room.GetTile(tileX, tileY);
+			int firstTilePositionX = Mathf.FloorToInt(camera.position.x / 20) - 1;
+			float TopLeftOffsetX = firstTilePositionX * 20 - camera.position.x;
+			int firstTilePositionY = Mathf.FloorToInt(camera.position.y / 20) - 1;
+			float TopLeftOffsetY = firstTilePositionY * 20 - camera.position.y;
+			int lastTilePositionX = Mathf.CeilToInt((camera.position.x + CameraTextureWidth) / 20);
+			int lastTilePositionY = Mathf.CeilToInt((camera.position.y + CameraTextureHeight) / 20);
 
-				float fracX = tp.x - MathF.Floor(tp.x);
-				float fracY = tp.y - MathF.Floor(tp.y);
-				float distFromCenterX = MathF.Abs(fracX - 0.5f);
-				float distFromCenterY = MathF.Abs(fracY - 0.5f);
+			for(int y = firstTilePositionY; y <= lastTilePositionY; y++) {
+				for(int x = firstTilePositionX; x <= lastTilePositionX; x++) {
+					uint tileType = Room.GetTile(x, y);
+					float offsetX = camera.position.x;// - (TopLeftOffsetX % 20);
+					float offsetY = camera.position.y;//  (TopLeftOffsetY % 20);
+					int pixelOffsetX = Mathf.FloorToInt(offsetX);
+					int pixelOffsetY = Mathf.FloorToInt(offsetY);
 
-				if ((geo & 128) > 0 && (distFromCenterY + distFromCenterX) < 0.25f) {
-					SetPixel(image, id, 31, 8, 0);
-				}
-				else if ((geo % 16) == 1 || (geo % 16) == 4) {
-					SetPixel(image, id, 121, 0, 0);
-				}
-				else if ((geo % 16) == 3 && fracY > 0.5f) {
-					SetPixel(image, id, 157, 16, 0);
-				}
-				else if ((geo % 16) == 2 && ValidSlopePos(geo, tp)) {
-					SetPixel(image, id, 121, 0, 0);
-				}
-				else if ((geo & 16) > 0 && distFromCenterX < 0.1f) {
-					SetPixel(image, id, 95, 0, 0);
-				}
-				else if ((geo & 32) > 0 && distFromCenterY < 0.1f) {
-					SetPixel(image, id, 95, 0, 0);
-				}
-				else {
-					if ((geo & 512) > 0) {
-						SetPixel(image, id, 131, 0, 0);
+					if ((tileType % 16) == 1) {
+						for (int tileY = 0; tileY < 20; tileY++) {
+							int pixelYPos = y * 20 - pixelOffsetY + tileY;
+							for (int tileX = 0; tileX < 20; tileX++) {
+								int pixelXPos = x * 20 - pixelOffsetX + tileX;
+
+								if(pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+									if (tileX == 0 || tileY == 0) {
+										SetPixel(image, index, 151, 0, 0);
+									}
+									else if (tileX == 19 || tileY == 19) {
+										SetPixel(image, index, 91, 0, 0);
+									}
+									else {
+										SetPixel(image, index, 121, 0, 0);
+									}
+								}
+							}
+						}
 					}
-					else {
-						SetPixel(image, id, 255, 255, 255);
+					else if ((tileType % 16) == 4) {
+						for (int tileY = 0; tileY < 20; tileY++) {
+							int pixelYPos = y * 20 - pixelOffsetY + tileY;
+							for (int tileX = 0; tileX < 20; tileX++) {
+								int pixelXPos = x * 20 - pixelOffsetX + tileX;
+
+								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+									if (tileX == 0 || tileY == 0) {
+										SetPixel(image, index, 155, 0, 0);
+									}
+									else if (tileX == 19 || tileY == 19) {
+										SetPixel(image, index, 95, 0, 0);
+									}
+									else if (tileX < 8 || tileX > 12 || tileY < 8 || tileY > 12) {
+										SetPixel(image, index, 125, 0, 0);
+									}
+								}
+							}
+						}
+					}
+					else if((tileType & 512) > 0) {
+						for (int tileY = 0; tileY < 20; tileY++) {
+							int pixelYPos = y * 20 - pixelOffsetY + tileY;
+							for (int tileX = 0; tileX < 20; tileX++) {
+								int pixelXPos = x * 20 - pixelOffsetX + tileX;
+
+								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+									if (tileX == 0 || tileY == 0) {
+										SetPixel(image, index, 161, 0, 0);
+									}
+									else if (tileX == 19 || tileY == 19) {
+										SetPixel(image, index, 101, 0, 0);
+									}
+									else {
+										SetPixel(image, index, 131, 0, 0);
+									}
+								}
+							}
+						}
+					}
+					if ((tileType % 16) == 2) {
+						for (int tileY = 0; tileY < 20; tileY++) {
+							for (int tileX = 0; tileX < 20; tileX++) {
+								int pixelYPos = y * 20 - pixelOffsetY + tileY;
+								int pixelXPos = x * 20 - pixelOffsetX + tileX;
+								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+									if (ValidSlopePos(tileType, tileX, tileY)) {
+										if (!ValidSlopePos(tileType, tileX, tileY - 1) || !ValidSlopePos(tileType, tileX - 1, tileY)) {
+											SetPixel(image, index, 151, 0, 0);
+										}
+										else if (!ValidSlopePos(tileType, tileX, tileY + 1) || !ValidSlopePos(tileType, tileX + 1, tileY)) {
+											SetPixel(image, index, 91, 0, 0);
+										}
+										else {
+											SetPixel(image, index, 121, 0, 0);
+										}
+									}
+								}
+							}
+						}
+					}
+					if ((tileType & 128) > 0 && (tileType % 16) != 4) {
+						bool isBackgroundShortcut = (tileType & 512) > 0 && (tileType % 16) != 1;
+						for (int tileY = 8; tileY < 12; tileY++) {
+							for (int tileX = 8; tileX < 12; tileX++) {
+								int pixelYPos = y * 20 - pixelOffsetY + tileY;
+								int pixelXPos = x * 20 - pixelOffsetX + tileX;
+
+								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+									if (!isBackgroundShortcut) {
+										SetPixel(image, index, 31, 8, 0);
+									}
+									else {
+										SetPixel(image, index, 51, 8, 0);
+									}
+								}
+							}
+						}
+					}
+					if ((tileType & 16) > 0) {
+						for (int tileY = 0; tileY < 20; tileY++) {
+							int pixelYPos = y * 20 - pixelOffsetY + tileY;
+							for (int tileX = 8; tileX < 12; tileX++) {
+								int pixelXPos = x * 20 - pixelOffsetX + tileX;
+
+								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+									SetPixel(image, index, 95, 0, 0);
+								}
+							}
+						}
+					}
+					if ((tileType & 32) > 0) {
+						for (int tileY = 8; tileY < 12; tileY++) {
+							int pixelYPos = y * 20 - pixelOffsetY + tileY;
+							for (int tileX = 0; tileX < 20; tileX++) {
+								int pixelXPos = x * 20 - pixelOffsetX + tileX;
+
+								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+									SetPixel(image, index, 95, 0, 0);
+								}
+							}
+						}
+					}
+					if ((tileType % 16) == 3) {
+						for (int tileY = 0; tileY < 10; tileY++) {
+							int pixelYPos = y * 20 - pixelOffsetY + tileY;
+							for (int tileX = 0; tileX < 20; tileX++) {
+								int pixelXPos = x * 20 - pixelOffsetX + tileX;
+
+								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+									SetPixel(image, index, 95, 0, 0);
+								}
+							}
+						}
 					}
 				}
 			}
 		}
-
+		string? outputPath = PathUtil.FindFile(roomFolderPath, newImageName);
+		if (outputPath == null || outputPath == "") {
+			outputPath = Path.Combine(roomFolderPath, newImageName);
+		}
 		FloodForge.Backup.File(outputPath);
 
 		try {
@@ -1398,17 +1544,41 @@ public static class DropletWindow {
 			ImageWriter writer = new ImageWriter();
 			writer.WritePng(image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
 			Logger.Info("Screen exported");
-		} catch (Exception ex) {
+			return true;
+		}
+		catch (Exception ex) {
 			Logger.Error("Exporting screen failed: " + ex.Message);
+			return false;
 		}
 	}
 
-	private static void Render() {
+	public static bool Render(out string errorMessage) {
 		ExportGeometry();
-
-		for (int i = 0; i < Room.data.cameras.Count; i++) {
-			RenderCamera(Room.data.cameras[i], PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.name}_{i + 1}.png")!);
+		bool success = true;
+		errorMessage = "";
+		string updateBaseText = "";
+		if (WorldWindow.renderStatusPopup != null) {
+			updateBaseText = WorldWindow.renderStatusPopup.GetText();
 		}
+
+		if(Room.data.cameras.Count <= 0) {
+			errorMessage += "No cameras in room!\n";
+			success = false;
+		}
+		for (int i = 0; i < Room.data.cameras.Count; i++) {
+			Logger.Info(PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.name}_{i + 1}.png")!);
+			if(WorldWindow.renderStatusPopup != null) WorldWindow.renderStatusPopup?.UpdateText(updateBaseText + " " + (i + 1) + "/" + Room.data.cameras.Count);
+			try {
+				if (!RenderCamera(Room.data.cameras[i], WorldWindow.region.roomsPath, $"{Room.name}_{i + 1}.png"))
+					success = false;
+			}
+			catch (Exception e) {
+				success = false;
+				errorMessage += $"{e.Message}\n";
+				break;
+			}
+		}
+		return success;
 	}
 
 	private static void ExportProject(string path) {
@@ -1538,8 +1708,12 @@ public static class DropletWindow {
 					PopupManager.Add(new InfoPopup("Exported successfully"));
 				}),
 				new Button("Render", b => {
-					Render();
-					PopupManager.Add(new InfoPopup("Rendered successfully"));
+					if(Render(out string message)){
+						PopupManager.Add(new InfoPopup("Rendered successfully"));
+					}
+					else{
+						PopupManager.Add(new InfoPopup($"Render failed!\nMessage: \n{message}View log.txt for more information."));
+					}
 				}),
 				new Button("Export Leditor Project", b => {
 					PopupManager.Add(
@@ -1554,6 +1728,12 @@ public static class DropletWindow {
 					showObjects = !showObjects;
 					b.text = showObjects ? "Hide objects" : "Show objects";
 				}),
+				new Button("Show Position", b => {
+					showMousePosition = !showMousePosition;
+					b.text = showMousePosition ? "Hide Position" : "Show Position";
+				}, () => {
+					return currentTab == EditorTab.Geometry;
+				}),
 				new Button("Resize", b => {
 					PopupManager.Add(new ResizeLevelPopup());
 				}),
@@ -1562,7 +1742,7 @@ public static class DropletWindow {
 						mode = Mode.World;
 						DropletWindow.Reset();
 					}));
-				})
+				}),
 			];
 		}
 	}

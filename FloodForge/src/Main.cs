@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using FloodForge.Droplet;
 using FloodForge.Popups;
@@ -50,6 +51,12 @@ public static class Main {
 		Anniversary = now.Year == 2025 && now.Month == 11 && now.Day < 22;
 		AprilFools = now.Month == 4 && now.Day == 1;
 
+		if (File.Exists("assets/version.txt")) {
+			Logger.Info("FloodForge Version: " + new AppVersion(File.ReadAllText("assets/version.txt")));	
+		}
+		else {
+			Logger.Warn("Unable to find assets/version.txt!");
+		}
 		Logger.Info("Initializing...");
 		Preload.Initialize();
 		Settings.Initialize();
@@ -104,9 +111,18 @@ public static class Main {
 	private static void KeyUp(IKeyboard keyboard, Key key, int arg3) {
 		Keys.Release(key);
 	}
-
+	static Stopwatch? postRenderStopwatch = null;
 	public static void Render() {
+		TimeSpan postRenderSpan = TimeSpan.Zero;
+		if(postRenderStopwatch != null) {
+			postRenderSpan = postRenderStopwatch.Elapsed;
+			postRenderStopwatch.Stop();
+		}
 		if (!Program.window.IsVisible) return;
+		Stopwatch diagnosticsStopwatch = Stopwatch.StartNew();
+		Profiler.InitProfiler();
+		Profiler.Debug.AddProfilerMessage($"postRenderSpan: {Math.Floor(postRenderSpan.TotalMilliseconds * 1000) / 1000}ms;\ngcTimeSpan: {Math.Floor(GC.GetTotalPauseDuration().TotalMilliseconds * 1000) / 1000}ms");
+		Profiler.MarkPoint("RENDER", 1);
 
 		Immediate.MatrixMode(Immediate.EMatrixMode.PROJECTION);
 		Immediate.LoadIdentity();
@@ -139,7 +155,9 @@ public static class Main {
 		UI.FillRect(-screenBounds.x, -screenBounds.y, screenBounds.x, screenBounds.y);
 
 		if (mode == Mode.World) {
+			Profiler.MarkPoint("WorldWindow.Draw", 1);
 			World.WorldWindow.Draw();
+			Profiler.MarkPoint(-1);
 		}
 		else if (mode == Mode.Droplet) {
 			Droplet.DropletWindow.Draw();
@@ -181,6 +199,26 @@ public static class Main {
 		}
 
 		Keys.End();
+
+		Profiler.MarkPoint(-2);
+
+		if (Profiler.enableProfiler) {
+			if (Profiler.finalContext != null) {
+				string profilerText = Profiler.finalContext.ToString();
+				profilerText += $"\nTotal DrawTime: {Math.Floor(Profiler.finalContext.sumSpan.TotalMilliseconds * 1000) / 1000}ms";
+				profilerText += $"\n{Math.Floor(1 / Profiler.finalContext.sumSpan.TotalSeconds)} FPS";
+				Profiler.AddFPSDataPoint((float) (1 / Profiler.finalContext.sumSpan.TotalSeconds));
+				(float min, float max) = Profiler.GetMinMaxFPS();
+				profilerText += $"\nRENDER FPS: AVG - {Math.Floor(Profiler.GetAVGFPS())}; MIN/MAX - {Math.Floor(min)} FPS/{Math.Floor(max)} FPS";
+				Profiler.Debug.AddProfilerMessage(profilerText);
+				Profiler.Debug.AddProfilerMessage($"Program.Delta: {Program.Delta*1000}ms;\nMeasured time: {Math.Floor(diagnosticsStopwatch.Elapsed.TotalMilliseconds * 1000) / 1000}ms\nfps: {Math.Floor(1/Program.Delta)}");
+			}
+			Profiler.Debug.DrawProfilerMessages();
+		}
+		diagnosticsStopwatch.Stop();
+		
+		if(postRenderStopwatch == null) postRenderStopwatch = Stopwatch.StartNew();
+		else postRenderStopwatch.Restart();
 	}
 
 	public enum Mode {

@@ -14,26 +14,41 @@ public abstract class MenuItems {
 
 		float x = -Main.screenBounds.x + 0.01f;
 		foreach (Button button in this.buttons) {
-			float width = UI.font.Measure(button.text, 0.03f).x + 0.02f;
-			UI.TextButtonMods mods = new UI.TextButtonMods();
-			if (button.Dark) {
-				mods.textColor = Themes.TextDisabled;
+			if (button.hasContextCheckCallback) {
+				button.renderButton = button.contextCheckCallback();
 			}
-			if (UI.TextButton(button.text, Rect.FromSize(x, Main.screenBounds.y - 0.05f, width, 0.04f), mods)) {
-				button.onclick(button);
+			if (button.renderButton) {
+				float width = UI.font.Measure(button.text, 0.03f).x + 0.02f;
+				UI.TextButtonMods mods = new UI.TextButtonMods();
+				if (button.Dark) {
+					mods.textColor = Themes.TextDisabled;
+				}
+				if (UI.TextButton(button.text, Rect.FromSize(x, Main.screenBounds.y - 0.05f, width, 0.04f), mods)) {
+					button.onclick(button);
+				}
+				x += width + 0.01f;
 			}
-			x += width + 0.01f;
 		}
 	}
 
 	protected class Button {
 		public string text;
 		public Action<Button> onclick;
+		public bool hasContextCheckCallback = false;
+		public Func<bool> contextCheckCallback;
+		public bool renderButton = true;
 		public virtual bool Dark => false;
 
 		public Button(string text, Action<Button> callback) {
 			this.text = text;
 			this.onclick = callback;
+			this.contextCheckCallback = new Func<bool>(() => { return true; });
+			this.hasContextCheckCallback = false;
+		}
+
+		public Button (string text, Action<Button> callback, Func<bool> contextCheckCallback) : this(text, callback) {
+			this.hasContextCheckCallback = true;
+			this.contextCheckCallback = contextCheckCallback;
 		}
 	}
 }
