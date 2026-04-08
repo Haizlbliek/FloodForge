@@ -27,6 +27,7 @@ R - Open room in Droplet
 F - Search for room
 Alt+T - Open Tutorial
 Alt+S - Open Splash
+Right-click - Reset popup size
 
 
 ### 
