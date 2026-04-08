@@ -48,9 +48,8 @@ public class ColorEditPopup : Popup {
 			this._modelLocC = Program.gl.GetUniformLocation(Preload.ColorSquareShader, "model");
 		}
 		Program.gl.Uniform1(this._hueLoc, this.hue / 360f);
-		float minimalSize = Math.Min(Main.screenBounds.y, Main.screenBounds.x);
-		Vector2 matrixScale = new(minimalSize, minimalSize);
-		Program.gl.UniformMatrix4(this._projLocC, false, [..Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x, matrixScale.x, -matrixScale.y, matrixScale.y, 0f, 1f)]);
+		float aspect = Main.screenBounds.x / Main.screenBounds.y;
+		Program.gl.UniformMatrix4(this._projLocC, false, [..Matrix4X4.CreateOrthographicOffCenter(-aspect, aspect, -1f, 1f, 0f, 1f)]);
 		Program.gl.UniformMatrix4(this._modelLocC, false, [..Matrix4X4.CreateTranslation(0f, 0f, 0f)]);
 
 		Immediate.Color(1f, 1f, 1f);
@@ -92,7 +91,7 @@ public class ColorEditPopup : Popup {
 			this._projLocH = Program.gl.GetUniformLocation(Preload.HueSliderShader, "projection");
 			this._modelLocH = Program.gl.GetUniformLocation(Preload.HueSliderShader, "model");
 		}
-		Program.gl.UniformMatrix4(this._projLocH, false, [..Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x, matrixScale.x, -matrixScale.y, matrixScale.y, 0f, 1f)]);
+		Program.gl.UniformMatrix4(this._projLocH, false, [..Matrix4X4.CreateOrthographicOffCenter(-aspect, aspect, -1f, 1f, 0f, 1f)]);
 		Program.gl.UniformMatrix4(this._modelLocH, false, [..Matrix4X4.CreateTranslation(0f, 0f, 0f)]);
 		Immediate.Color(1f, 1f, 1f);
 		Immediate.Begin(Immediate.PrimitiveType.QUADS);
