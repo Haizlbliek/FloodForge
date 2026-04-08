@@ -27,6 +27,9 @@ public class ColorEditPopup : Popup {
 
 		base.Draw();
 		if (this.minimized) return;
+		
+		if (this.callback.Target == null)
+			this.Close();
 
 		Vector3 hsv = this.color.ToHsv();
 
@@ -131,6 +134,7 @@ public class ColorEditPopup : Popup {
 
 	public override void Close() {
 		base.Close();
-		this.callback(this.color);
+		if(this.callback.Target != null)
+			this.callback(this.color);
 	}
 }
