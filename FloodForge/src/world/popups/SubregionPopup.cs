@@ -137,8 +137,8 @@ public class SubregionPopup : Popup {
 		UI.font.Write(title, centerX, this.bounds.y1 - 0.1f, 0.04f, Font.Align.MiddleCenter);
 
 		Program.gl.Enable(EnableCap.ScissorTest);
-		float clipBottom = (this.bounds.y0 + 0.01f + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
-		float clipTop = (this.bounds.y1 - 0.14f + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
+		float clipBottom = (this.bounds.y0 + 0.01f + Main.screenBounds.y) * 0.5f * MathF.Min(Program.window.FramebufferSize.X, Program.window.FramebufferSize.Y);
+		float clipTop = (this.bounds.y1 - 0.14f + Main.screenBounds.y) * 0.5f * MathF.Min(Program.window.FramebufferSize.X, Program.window.FramebufferSize.Y);
 		Program.gl.Scissor(0, (int) clipBottom, (uint) Program.window.FramebufferSize.X, (uint) (clipTop - clipBottom));
 
 		float y = this.bounds.y1 - 0.15f - this.scroll;
