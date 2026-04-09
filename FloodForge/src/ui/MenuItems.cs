@@ -1,3 +1,5 @@
+using FloodForge.Popups;
+
 namespace FloodForge;
 
 public abstract class MenuItems {
@@ -12,22 +14,41 @@ public abstract class MenuItems {
 		Immediate.Color(Themes.Border);
 		UI.Line(rect.x0, rect.y0, rect.x1, rect.y0);
 
-		float x = -Main.screenBounds.x + 0.01f;
+		float leftX = -Main.screenBounds.x + 0.01f;
+		float rightX = Main.screenBounds.x - 0.01f;
+
 		foreach (Button button in this.buttons) {
 			if (button.hasContextCheckCallback) {
-				button.renderButton = button.contextCheckCallback();
+				button.buttonEnabled = button.contextCheckCallback();
 			}
-			if (button.renderButton) {
+			if (button.buttonEnabled || Settings.DisabledButtonsMode.value != Settings.STDisabledButtonsMode.Hide ) {
+				bool onRight = (button is AlignedButton alignedButton) && alignedButton.alignment;
 				float width = UI.font.Measure(button.text, 0.03f).x + 0.02f;
 				UI.TextButtonMods mods = new UI.TextButtonMods();
-				if (button.Dark) {
+				if (button.Dark || (!button.buttonEnabled && Settings.DisabledButtonsMode.value == Settings.STDisabledButtonsMode.Grey)) {
 					mods.textColor = Themes.TextDisabled;
 				}
-				if (UI.TextButton(button.text, Rect.FromSize(x, Main.screenBounds.y - 0.05f, width, 0.04f), mods)) {
-					button.onclick(button);
+				if (UI.TextButton(button.text, Rect.FromSize(onRight ? rightX - width : leftX, Main.screenBounds.y - 0.05f, width, 0.04f), mods)) {
+					if(button.buttonEnabled)
+						button.onclick(button);
+					else if (button.disabledInteractMessage != "") {
+						PopupManager.Add(new InfoPopup(button.disabledInteractMessage));
+					}
 				}
-				x += width + 0.01f;
+				if(onRight) rightX -= width - 0.01f;
+				else leftX += width + 0.01f;
 			}
+		}
+	}
+	
+	protected class AlignedButton : Button {
+		public readonly bool alignment;
+		public AlignedButton(string text, bool alignment, Action<Button> callback) : base (text, callback) {
+			this.alignment = alignment;
+		}
+		
+		public AlignedButton(string text, bool alignment, Action<Button> callback, Func<bool> contextCheckCallback, string disabledInteractMessage = "") : base (text, callback, contextCheckCallback, disabledInteractMessage) {
+			this.alignment = alignment;
 		}
 	}
 
@@ -36,7 +57,8 @@ public abstract class MenuItems {
 		public Action<Button> onclick;
 		public bool hasContextCheckCallback = false;
 		public Func<bool> contextCheckCallback;
-		public bool renderButton = true;
+		public bool buttonEnabled = true;
+		public string disabledInteractMessage;
 		public virtual bool Dark => false;
 
 		public Button(string text, Action<Button> callback) {
@@ -44,11 +66,13 @@ public abstract class MenuItems {
 			this.onclick = callback;
 			this.contextCheckCallback = new Func<bool>(() => { return true; });
 			this.hasContextCheckCallback = false;
+			this.disabledInteractMessage = "";
 		}
 
-		public Button (string text, Action<Button> callback, Func<bool> contextCheckCallback) : this(text, callback) {
+		public Button (string text, Action<Button> callback, Func<bool> contextCheckCallback, string disabledInteractMessage = "") : this(text, callback) {
 			this.hasContextCheckCallback = true;
 			this.contextCheckCallback = contextCheckCallback;
+			this.disabledInteractMessage =disabledInteractMessage;
 		}
 	}
 }

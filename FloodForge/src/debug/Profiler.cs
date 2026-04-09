@@ -223,21 +223,30 @@ public static class Profiler {
 		// so, for example, a script says AddMessage(message: "No Region Loaded", corner: 3, tab: "WorldEditor state")'  
 		// and then DrawDebugMessages goes through each corner, orders by tab and then renders it all?
 		// ofc, there'd also be a way to tell this profiler not to hide the debuginformation in the bottom left, since that's more generally useful
-		static List<string> profilerMessages = [];
+		static List<string> profilerMessagesLeft = [];
+		static List<string> profilerMessagesRight = [];
 		public static void DrawProfilerMessages() {
 			Immediate.Color(Color.White);
 			int i = 0;
-			foreach (string part in profilerMessages) {
+			foreach (string part in profilerMessagesLeft) {
 				foreach (string line in part.Split("\n")) {
 					UI.font.Write(line, -Main.screenBounds.x, Main.screenBounds.y - 0.1f - (i * 0.04f), 0.03f);
 					i++;
 				}
 			}
-			profilerMessages = [];
+			i = 0;
+			foreach (string part in profilerMessagesRight) {
+				foreach (string line in part.Split("\n")) {
+					UI.font.Write(line, Main.screenBounds.x - UI.font.Measure(line, 0.03f).x, Main.screenBounds.y - 0.1f - (i * 0.04f), 0.03f);
+					i++;
+				}
+			}
+			profilerMessagesLeft = [];
+			profilerMessagesRight = [];
 		}
-		public static void AddProfilerMessage(string message) {
+		public static void AddProfilerMessage(string message, bool onRight = false) {
 			if (Profiler.enableProfiler) {
-				profilerMessages.Add(message);
+				if(onRight) profilerMessagesRight.Add(message); else profilerMessagesLeft.Add(message);
 			}
 		}
 	}
