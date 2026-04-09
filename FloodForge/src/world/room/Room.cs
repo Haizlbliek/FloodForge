@@ -457,7 +457,7 @@ public class Room {
 	
 	void CheckShortcutEntrancePoints() {
 		this.allShortcutEntrancePoints.Clear();
-		string logstring = $"CheckShortcutEntrancePoints for {this.name}";
+		// string logstring = $"CheckShortcutEntrancePoints for {this.name}";
 		for (int y = 0; y < this.height; y++) {
 			for (int x = 0; x < this.width; x++) {
 				if ((this.GetTile(x, y) & FLAG_SHORTCUT) > 0) {
@@ -514,11 +514,11 @@ public class Room {
 				}
 			}
 		}
-		logstring += "\nallShortcutEntrancePoints:";
-		foreach(Vector2i position in this.allShortcutEntrancePoints) {
-			logstring += $"\n{position.x}; {position.y}";
-		}
-		Logger.Info(logstring);
+		// logstring += "\nallShortcutEntrancePoints:";
+		// foreach(Vector2i position in this.allShortcutEntrancePoints) {
+		// 	logstring += $"\n{position.x}; {position.y}";
+		// }
+		// Logger.Info(logstring);
 	}
 
 	protected void EnsureConnections() {

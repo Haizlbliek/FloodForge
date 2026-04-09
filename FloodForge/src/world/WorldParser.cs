@@ -719,7 +719,7 @@ public static class WorldParser {
 		Logger.Info("Loading connections");
 
 		foreach (ConnectionToAdd connectionData in connectionsToAdd) {
-			Logger.Info($"connectionData - roomA: {connectionData.roomA.name} roomB: {connectionData.roomB?.name} roomAExitID: {connectionData.roomAExitID} roomBExitID: {connectionData.roomBExitID}");
+			// Logger.Info($"connectionData - roomA: {connectionData.roomA.name} roomB: {connectionData.roomB?.name} roomAExitID: {connectionData.roomAExitID} roomBExitID: {connectionData.roomBExitID}");
 			if (connectionData.roomB == null || connectionData.roomBExitID == null) {
 				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? connectionData.roomBName}");
 				continue;
