@@ -20,6 +20,7 @@ public static class Settings {
 	public static Setting<bool> UpdateWorldFiles = Setting.Of("UpdateWorldFiles", true);
 	public static Setting<Color> NoSubregionColor = Setting.Of("NoSubregionColor", Color.White);
 	public static Setting<float> RoomTintStrength = Setting.Of("RoomTintStrength", 0.5f);
+	public static Setting<STDisabledButtonsMode> DisabledButtonsMode = Setting.Of("DisabledButtonsMode", STDisabledButtonsMode.Grey);
 	public static Setting<STForceExportCasing> ForceExportCasing = Setting.Of("ForceExportCasing", STForceExportCasing.None);
 	public static Setting<STDropletGridVisibility> DropletGridVisibility = Setting.Of("DropletGridVisibility", STDropletGridVisibility.Air);
 	public static Setting<float> ConnectionOpacity = Setting.Of("ConnectionOpacity", 1f);
@@ -59,7 +60,11 @@ public static class Settings {
 			}
 		}
 	}
-
+	public class STDisabledButtonsMode : SettingType<STDisabledButtonsMode> {
+		public static readonly STDisabledButtonsMode None = STDisabledButtonsMode.Of("None");
+		public static readonly STDisabledButtonsMode Grey = STDisabledButtonsMode.Of("Grey");
+		public static readonly STDisabledButtonsMode Hide = STDisabledButtonsMode.Of("Hide");
+	}
 
 	public class STConnectionType : SettingType<STConnectionType> {
 		public static readonly STConnectionType Bezier = STConnectionType.Of("Bezier");

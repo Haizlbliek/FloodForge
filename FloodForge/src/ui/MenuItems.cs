@@ -17,17 +17,18 @@ public abstract class MenuItems {
 
 		foreach (Button button in this.buttons) {
 			if (button.hasContextCheckCallback) {
-				button.renderButton = button.contextCheckCallback();
+				button.buttonEnabled = button.contextCheckCallback();
 			}
-			if (button.renderButton) {
+			if (button.buttonEnabled || Settings.DisabledButtonsMode.value != Settings.STDisabledButtonsMode.Hide ) {
 				bool onRight = (button is AlignedButton alignedButton) && alignedButton.alignment;
 				float width = UI.font.Measure(button.text, 0.03f).x + 0.02f;
 				UI.TextButtonMods mods = new UI.TextButtonMods();
-				if (button.Dark) {
+				if (button.Dark || (!button.buttonEnabled && Settings.DisabledButtonsMode.value == Settings.STDisabledButtonsMode.Grey)) {
 					mods.textColor = Themes.TextDisabled;
 				}
 				if (UI.TextButton(button.text, Rect.FromSize(onRight ? rightX - width : leftX, Main.screenBounds.y - 0.05f, width, 0.04f), mods)) {
-					button.onclick(button);
+					if(button.buttonEnabled)
+						button.onclick(button);
 				}
 				if(onRight) rightX -= width - 0.01f;
 				else leftX += width + 0.01f;
@@ -51,7 +52,7 @@ public abstract class MenuItems {
 		public Action<Button> onclick;
 		public bool hasContextCheckCallback = false;
 		public Func<bool> contextCheckCallback;
-		public bool renderButton = true;
+		public bool buttonEnabled = true;
 		public virtual bool Dark => false;
 
 		public Button(string text, Action<Button> callback) {
