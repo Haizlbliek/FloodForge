@@ -16,6 +16,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="assets\**" CopyToPublishDirectory="PreserveNewest" />
+		<None Include="docs\**" CopyToPublishDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
 		<PackageReference Include="Silk.NET.Input" Version="2.22.0" />
 		<PackageReference Include="Silk.NET.OpenAL" Version="2.22.0" />
