@@ -215,8 +215,8 @@ public class Connection {
 				connectionColorA = this.roomA.GetTintColor();
 				connectionColorB = this.roomB.GetTintColor();
 				if (!roomConnectionHoverColor) {
-					connectionColorA = Color.Lerp(connectionColorA, Themes.RoomAir, 0.5f);
-					connectionColorB = Color.Lerp(connectionColorB, Themes.RoomAir, 0.5f);
+					connectionColorA = Color.Lerp(Themes.RoomAir, connectionColorA, Settings.RoomTintStrength);
+					connectionColorB = Color.Lerp(Themes.RoomAir, connectionColorB, Settings.RoomTintStrength);
 				}
 			}
 			if (!connectionColorA.Equals(connectionColorB)) {
