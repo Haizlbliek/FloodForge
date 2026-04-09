@@ -324,10 +324,10 @@ public static class WorldExporter {
 				if (room is OffscreenRoom)
 					continue;
 
-				writer.Write($"{RoomNameCasing(room.name)} : ");
-				Logger.Info($"{RoomNameCasing(room.name)} : ");
+				// writer.Write($"{RoomNameCasing(room.name)} : ");
+				// Logger.Info($"{RoomNameCasing(room.name)} : ");
 
-				Logger.Info($"roomDefaultStates.Count: {roomDefaultStates};");
+				// Logger.Info($"roomDefaultStates.Count: {roomDefaultStates};");
 				List<(string, bool)> connections = roomDefaultStates[RoomNameCasing(room.name)];
 
 				for (int i = 0; i < room.roomExits.Count; i++) {
