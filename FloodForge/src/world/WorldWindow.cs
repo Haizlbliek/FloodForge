@@ -1112,6 +1112,7 @@ public static class WorldWindow {
 	}
 
 	private static void MoveUpdate() {
+		if (region == null) return;
 		foreach (Room room in region.rooms)
 		{
 			room.MoveUpdate();
@@ -1295,6 +1296,10 @@ public static class WorldWindow {
 				}),
 
 				new Button("Export", button => {
+					if(WorldWindow.region == null) {
+						PopupManager.Add(new InfoPopup("You must create or import a region\nbefore exporting."));
+						return;
+					}
 					string lastExportDirectory = WorldWindow.region.exportPath;
 
 					if (!Settings.UpdateWorldFiles) {
@@ -1366,7 +1371,7 @@ public static class WorldWindow {
 				}),
 
 				new Button("Refresh Region", button => {
-					if (WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty()) {
+					if (WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty()) {
 						PopupManager.Add(new InfoPopup("You must create or import a region\nbefore refreshing"));
 						return;
 					}
