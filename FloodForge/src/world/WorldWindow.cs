@@ -22,9 +22,11 @@ public static class WorldWindow {
 	public static bool VisibleCreatures { get; private set; } = true;
 	public static RoomPosition PositionType { get; private set; } = RoomPosition.Canon;
 	public static RoomColors ColorType { get; private set; } = RoomColors.None;
-	public static readonly bool[] VisibleLayers = [true, true, true];
-	public static bool changeConnectBehaviour = true; // POSSIBILITY: Auto-mode? Which basically chooses whichever looks better for any given connection?
-													  // (I.E. choose the one that's closest, but preferably one that does not invert (for example, CC_S01))
+	public static readonly bool[] VisibleLayers = [ true, true, true ];
+
+	// REVIEW: Auto-mode? Which basically chooses whichever looks better for any given connection?
+	// (I.E. choose the one that's closest, but preferably one that does not invert (for example, CC_S01))
+	public static bool changeConnectBehaviour = true;
 
 	public static Region region = null!;
 	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty());
@@ -40,8 +42,8 @@ public static class WorldWindow {
 	public static float SelectorScale { get; private set; } = 1f;
 	public static Vector2 worldMouse;
 
-	public static List<Room> selectedRooms = []; // REVIEW - HashSet?
-	public static List<Room> oldSelection = [];
+	public static HashSet<Room> selectedRooms = []; // REVIEW - HashSet?
+	public static HashSet<Room> oldSelection = [];
 	public static Room? roomPossibleSelect = null;
 	private static SelectingState selectingState = SelectingState.None;
 	public static Vector2 selectionStart;
@@ -1014,7 +1016,7 @@ public static class WorldWindow {
 	public static void Draw() {
 		if ((renderRoomsTask == null || renderRoomsTask.IsCompleted) && confirmRenderPopup == null) {
 			oldSelection.Clear();
-			oldSelection = selectedRooms[..];
+			oldSelection = [..selectedRooms];
 		}
 		if (Keys.Modifier(Keymod.Alt)) {
 			if (Keys.JustPressed(Key.S)) {
