@@ -817,10 +817,8 @@ public static class WorldParser {
 
 			// `mods/MOD/world/xx/world_xx.txt` -> `world/regions.txt`
 			if (Path.GetFileNameWithoutExtension(PathUtil.Parent(main))?.ToLowerInvariant() == "mods") {
-				Logger.Info("Mods!");
 				regionsPath = PathUtil.FindDirectory(PathUtil.Parent(Path.Combine(main, "..")), "world");
 				if (regionsPath != null) {
-					Logger.Info("World!");
 					regionsPath = PathUtil.FindFile(regionsPath, "regions.txt");
 					if (regionsPath != null)
 						WorldWindow.region.regionsPaths.Add(regionsPath);
