@@ -240,10 +240,6 @@ public static class WorldWindow {
 				}
 
 				ConnectionStart = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
-				Immediate.Color(Color.White);
-				UI.StrokeCircle(hoveringRoom.GetConnectionConnectPoint(hoveringConnection), 5f, 8);
-				Immediate.Color(Color.Yellow);
-				UI.StrokeCircle(hoveringRoom.GetShortcutEntranceRoomPoint(hoveringConnection), 5f, 8);
 				ConnectionEnd = ConnectionStart;
 				CurrentConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
 				connectionState = ConnectionState.Connection;
@@ -251,10 +247,6 @@ public static class WorldWindow {
 			else if (connectionState == ConnectionState.Connection && CurrentConnection != null) {
 				if (hoveringRoom != null) {
 					ConnectionEnd = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
-					Immediate.Color(Color.Cyan);
-					UI.StrokeCircle(hoveringRoom.GetConnectionConnectPoint(hoveringConnection), 5f, 8);
-					Immediate.Color(Color.Magenta);
-					UI.StrokeCircle(hoveringRoom.GetShortcutEntranceRoomPoint(hoveringConnection), 5f, 8);
 					CurrentConnection.roomB = hoveringRoom;
 					CurrentConnection.roomBExitID = hoveringConnection;
 					CurrentConnectionValid = true;
