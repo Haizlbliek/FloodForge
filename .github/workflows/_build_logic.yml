@@ -41,21 +41,21 @@ jobs:
 
       - name: Publish All
         run: |
-          dotnet publish ./FloodForge.slnx -c Release -o ./publish-temp --self-contained true -p:PublishReadyToRun=true --no-restore -r ${{ matrix.os == 'ubuntu-latest' && 'linux' || 'win' }}-${{ matrix.arch }}
+          dotnet publish ./FloodForge/FloodForge.csproj -c Release -o ./publish-temp --self-contained true --no-restore -r ${{ matrix.os == 'ubuntu-latest' && 'linux' || 'win' }}-${{ matrix.arch }}
+          dotnet publish ./FloodForge.Patcher/FloodForge.Patcher.csproj -c Release -o ./publish-temp --self-contained true --no-restore -r ${{ matrix.os == 'ubuntu-latest' && 'linux' || 'win' }}-${{ matrix.arch }}
 
-      - name: Add Nightly Info
+      - name: Add Nightly
         shell: bash
         run: |
-          mkdir -p ./publish-temp/mods # Ensure empty mods folder exists
           if [ "${{ inputs.is_release }}" = "false" ]; then
             echo "${{ needs.pre-build.outputs.build_date }}" > ./publish-temp/assets/nightly.txt
           fi
 
-      - name: Prepare & Zip (Linux)
+      - name: Zip (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: cd publish-temp && zip -r ../FloodForge-linux-${{ matrix.arch }}.zip .
 
-      - name: Prepare & Zip (Windows)
+      - name: Zip (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: 7z a -tzip FloodForge-windows-${{ matrix.arch }}.zip .\publish-temp\*
