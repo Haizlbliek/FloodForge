@@ -41,8 +41,14 @@ public class FilesystemPopup : Popup {
 		Main.Scroll += this.Scroll;
 		Main.KeyPress += this.KeyPress;
 		this.currentPath = "";
-		this.SetupDirectory();
-		this.Refresh();
+		try {
+			this.SetupDirectory();
+			this.Refresh();
+		}
+		catch (Exception e) {
+			PopupManager.Add(new InfoPopup("Unable to open Filesystem!\nError message:\n" + e.Message));
+			this.Close();
+		}
 	}
 
 	protected void SetupDirectory() {
@@ -76,6 +82,15 @@ public class FilesystemPopup : Popup {
 				return;
 			}
 		}
+
+		Logger.Warn("No Rain World installation detected!");
+		foreach (DriveInfo drive in DriveInfo.GetDrives()) {
+			if (!drive.IsReady) continue;
+
+			this.currentPath = drive.RootDirectory.FullName;
+			return;
+		}
+		throw new DirectoryNotFoundException("No ready drives detected!");
 	}
 
 	public FilesystemPopup Filter(Regex filter) {
