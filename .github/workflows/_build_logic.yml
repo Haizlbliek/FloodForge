@@ -37,7 +37,7 @@ jobs:
           cache: true
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore ./FloodForge.slnx -r ${{ matrix.os == 'ubuntu-latest' && 'linux' || 'win' }}-${{ matrix.arch }}
 
       - name: Publish All
         run: |
