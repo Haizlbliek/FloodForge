@@ -46,7 +46,7 @@ public static class Program {
 
 		window.SetWindowIcon([ Custom.Texture.LoadRawImage("assets/icon.png") ]);
 
-		_anyVao = gl.CreateVertexArray();
+		_anyVao = gl.GenVertexArray();
 
 		FloodForge.Main.Initialize();
 	}
