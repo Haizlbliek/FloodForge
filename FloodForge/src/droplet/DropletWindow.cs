@@ -1,8 +1,8 @@
 using System.Text;
 using FloodForge.Popups;
 using FloodForge.World;
+using Silk.NET.GLFW;
 using Silk.NET.Input;
-using Silk.NET.SDL;
 using StbImageWriteSharp;
 using static FloodForge.Main;
 
@@ -407,7 +407,7 @@ public static class DropletWindow {
 					rectDrawing = -1;
 				}
 			}
-			else if (Keys.Modifier(Keymod.Shift) && (Mouse.Left || Mouse.Right)) {
+			else if (Keys.Modifier(Keys.Modifiers.Shift) && (Mouse.Left || Mouse.Right)) {
 				rectDrawing = Mouse.Left ? 0 : 1;
 				rectStart = mouseTile;
 			}
@@ -483,7 +483,7 @@ public static class DropletWindow {
 
 		if (dragging) {
 			angle = (transformedMouse - pos) / 4f;
-			if (!Keys.Modifier(Keymod.Shift)) {
+			if (!Keys.Modifier(Keys.Modifiers.Shift)) {
 				float len = angle.Length;
 				if (len > 1f) angle /= len;
 			}
@@ -691,7 +691,7 @@ public static class DropletWindow {
 	}
 
 	public static void Draw() {
-		if (Keys.Modifier(Keymod.Alt)) {
+		if (Keys.Modifier(Keys.Modifiers.Alt)) {
 			if (Keys.JustPressed(Key.T)) {
 				PopupManager.Add(new MarkdownPopup("docs/TutorialDroplet.md"));
 				return;

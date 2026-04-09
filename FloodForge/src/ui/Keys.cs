@@ -1,5 +1,4 @@
 using Silk.NET.Input;
-using Silk.NET.SDL;
 
 namespace FloodForge;
 
@@ -40,11 +39,11 @@ public static class Keys {
 		return keys.Contains(key) && !lastKeys.Contains(key);
 	}
 
-	public static bool Modifier(Keymod key) {
+	public static bool Modifier(Modifiers key) {
 		return key switch {
-			Keymod.Shift => keys.Contains(Key.ShiftLeft) || keys.Contains(Key.ShiftRight),
-			Keymod.Ctrl => keys.Contains(Key.ControlLeft) || keys.Contains(Key.ControlRight),
-			Keymod.Alt => keys.Contains(Key.AltLeft) || keys.Contains(Key.AltRight),
+			Modifiers.Shift => keys.Contains(Key.ShiftLeft) || keys.Contains(Key.ShiftRight),
+			Modifiers.Control => keys.Contains(Key.ControlLeft) || keys.Contains(Key.ControlRight),
+			Modifiers.Alt => keys.Contains(Key.AltLeft) || keys.Contains(Key.AltRight),
 			_ => false,
 		};
 	}
@@ -80,5 +79,13 @@ public static class Keys {
 		return (shiftPressed || capsPressed)
 			? char.ToUpper(character)
 			: char.ToLower(character);
+	}
+
+	public enum Modifiers {
+		Shift,
+		Control,
+		Alt,
+		Meta,
+		Caps
 	}
 }

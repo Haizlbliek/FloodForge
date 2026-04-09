@@ -1,6 +1,5 @@
 using FloodForge.Popups;
 using Silk.NET.Input;
-using Silk.NET.SDL;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;
@@ -103,7 +102,7 @@ public class DenPopup : Popup {
 			newCreature.count = 0;
 		}
 		else if (newCreature.type == creatureType || creatureType == CreatureTextures.UNKNOWN) {
-			if (Keys.Modifier(Keymod.Shift)) {
+			if (Keys.Modifier(Keys.Modifiers.Shift)) {
 				newCreature.count--;
 				if (newCreature.count <= 0) {
 					newCreature.type = "";

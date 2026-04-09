@@ -1,5 +1,4 @@
 using FloodForge.Popups;
-using Silk.NET.SDL;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;
@@ -68,7 +67,7 @@ public class SubregionPopup : Popup {
 			}
 
 			if (UI.TextButton("X", new Rect(0.335f + centerX, y, 0.385f + centerX, y - 0.05f))) {
-				if (Keys.Modifier(Keymod.Shift)) {
+				if (Keys.Modifier(Keys.Modifiers.Shift)) {
 					SubregionChange change = new SubregionChange(idx);
 
 					foreach (Room otherRoom in WorldWindow.region.rooms) {

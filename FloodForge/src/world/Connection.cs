@@ -195,7 +195,7 @@ public class Connection {
 			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer];
 			float opacity = Settings.ConnectionOpacity;
 			if (!aVisible && !bVisible || opacity < 0.01f) return;
-			bool hovered = this.Hovered || Keys.Modifier(Silk.NET.SDL.Keymod.Shift);
+			bool hovered = this.Hovered || Keys.Modifier(Keys.Modifiers.Shift);
 
 			bool roomConnectionHoverColor = aVisible && bVisible && hovered;
 			Color connectionColorA;

@@ -1315,7 +1315,7 @@ public class Room {
 
 				// Draws shortcutpath if either the associated exit or connection is hovered over.
 				bool shouldBeHighlighted = (i == this.hoveredRoomExit || connectionFound && this.connections[getConnectionIndex].Hovered) && this.hoveredShortcutEntrance == -1;
-				if(shouldBeHighlighted || Keys.Modifier(Silk.NET.SDL.Keymod.Shift)) {
+				if(shouldBeHighlighted || Keys.Modifier(Keys.Modifiers.Shift)) {
 					if (this.roomExitPaths.TryGetValue(this.roomExits[i], out var result)) {
 						this.DrawRoomPath(result, i == this.hoveredRoomExit, shouldBeHighlighted);
 					}
@@ -1364,7 +1364,7 @@ public class Room {
 						// Draws shortcutpath if the connection is hovered over. (since a roomexit isn't related to this entrance
 						// (otherwise it'd have been drawn with the roomExits), there is no exit to hover over that should highlight this shortcut entrance)
 						bool shouldBeHighlighted = i == this.hoveredShortcutEntrance;
-						if(shouldBeHighlighted || Keys.Modifier(Silk.NET.SDL.Keymod.Shift)) {
+						if(shouldBeHighlighted || Keys.Modifier(Keys.Modifiers.Shift)) {
 							this.DrawRoomPath(value.connection, shouldBeHighlighted, shouldBeHighlighted);
 						}
 					}

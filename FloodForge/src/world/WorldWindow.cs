@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using FloodForge.Droplet;
 using FloodForge.Popups;
 using Silk.NET.Input;
-using Silk.NET.SDL;
 using Stride.Core;
 using Stride.Core.Extensions;
 using TextCopy;
@@ -312,13 +311,13 @@ public static class WorldWindow {
 				}
 
 				if (selectingState == SelectingState.None) {
-					bool isPanning = isOriginal && !Keys.Modifier(Keymod.Shift);
+					bool isPanning = isOriginal && !Keys.Modifier(Keys.Modifiers.Shift);
 	
 					selectingState = isPanning ? SelectingState.Panning : SelectingState.Selecting;
 					selectionStart = isPanning ? Mouse.Pos : worldMouse;
 					selectionEnd = selectionStart;
 
-					bool isAdditive = (!isOriginal && Keys.Modifier(Keymod.Shift)) || Keys.Modifier(Keymod.Ctrl);
+					bool isAdditive = (!isOriginal && Keys.Modifier(Keys.Modifiers.Shift)) || Keys.Modifier(Keys.Modifiers.Control);
 					if (!isAdditive && !isPanning) selectedRooms.Clear();
 				}
 			}
@@ -365,7 +364,7 @@ public static class WorldWindow {
 		region.rooms.Remove(room);
 		region.rooms.Add(room);
 
-		bool isAdditive = Keys.Modifier(Keymod.Shift) || Keys.Modifier(Keymod.Ctrl);
+		bool isAdditive = Keys.Modifier(Keys.Modifiers.Shift) || Keys.Modifier(Keys.Modifiers.Control);
 		if (isAdditive) {
 			if (!selectedRooms.Remove(room)) selectedRooms.Add(room);
 		} else {
@@ -391,7 +390,7 @@ public static class WorldWindow {
 			Vector2 diff = newPos - room.Position;
 			Vector2 dev = Vector2.Zero, canon = Vector2.Zero;
 
-			bool moveBoth = Keys.Modifier(Keymod.Alt) || PositionType == RoomPosition.Both;
+			bool moveBoth = Keys.Modifier(Keys.Modifiers.Alt) || PositionType == RoomPosition.Both;
 	
 			if (PositionType == RoomPosition.Canon) {
 				canon = diff;
@@ -644,19 +643,19 @@ public static class WorldWindow {
 		SelectorScale = (scale < 0f) ? MathF.Max(cameraScale / 16f, 1f) : scale;
 
 		if (renderRoomsTask == null || renderRoomsTask.IsCompleted) {
-			if (Keys.Modifier(Keymod.Ctrl) && Keys.JustPressed(Key.Z)) {
-				if (Keys.Modifier(Keymod.Shift)) {
+			if (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.Z)) {
+				if (Keys.Modifier(Keys.Modifiers.Shift)) {
 					History.Redo();
 				}
 				else {
 					History.Undo();
 				}
 			}
-			if (Keys.Modifier(Keymod.Ctrl) && Keys.JustPressed(Key.Y)) {
+			if (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.Y)) {
 				History.Redo();
 			}
 
-			roomSnap = !Keys.Modifier(Keymod.Alt);
+			roomSnap = !Keys.Modifier(Keys.Modifiers.Alt);
 
 			UpdateConnectionControls();
 
@@ -843,7 +842,7 @@ public static class WorldWindow {
 				}
 				else {
 					room.Draw(PositionType);
-					if (Keys.Modifier(Keymod.Alt)) {
+					if (Keys.Modifier(Keys.Modifiers.Alt)) {
 						room.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
 					}
 				}
@@ -1018,7 +1017,7 @@ public static class WorldWindow {
 			oldSelection.Clear();
 			oldSelection = [..selectedRooms];
 		}
-		if (Keys.Modifier(Keymod.Alt)) {
+		if (Keys.Modifier(Keys.Modifiers.Alt)) {
 			if (Keys.JustPressed(Key.S)) {
 				PopupManager.Add(new SplashArtPopup());
 				return;
@@ -1418,7 +1417,7 @@ public static class WorldWindow {
 			}
 
 			private void Click() {
-				if (!Keys.Modifier(Keymod.Shift)) {
+				if (!Keys.Modifier(Keys.Modifiers.Shift)) {
 					VisibleLayers[this.layer] = !VisibleLayers[this.layer];
 					return;
 				}
