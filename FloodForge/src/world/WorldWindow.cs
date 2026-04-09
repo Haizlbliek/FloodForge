@@ -1275,7 +1275,8 @@ public static class WorldWindow {
 					);
 				}, () => {
 					return WorldWindow.ValidRegionLoaded;
-				}),
+				},
+				"You must create or import a region\nbefore adding rooms."),
 
 				new Button("Import", button => {
 					PopupManager.Add(new FilesystemPopup(selection => {
@@ -1322,7 +1323,8 @@ public static class WorldWindow {
 					WorldWindow.region.exportPath = lastExportDirectory;
 				}, () => {
 					return WorldWindow.ValidRegionLoaded;
-				}),
+				},
+				"You must create or import a region\nbefore exporting."),
 
 				new Button("No Colors", button => {
 					if (ColorType == RoomColors.None) {
@@ -1361,7 +1363,8 @@ public static class WorldWindow {
 					}
 
 					WorldParser.ImportWorldFile(path);
-				}, () => { return WorldWindow.ValidRegionLoaded; }),
+				}, () => { return WorldWindow.ValidRegionLoaded; },
+				"You must create or import a region\nbefore refreshing."),
 
 				new Button("Canon", button => {
 					if (PositionType == RoomPosition.Canon) {
@@ -1394,7 +1397,8 @@ public static class WorldWindow {
 							renderRoomsTask = Task.Run(MassRenderRooms);
 						});
 					PopupManager.Add(confirmRenderPopup);
-				}, () => { return oldSelection.Count != 0 && WorldWindow.ValidRegionLoaded; })
+				}, () => { return oldSelection.Count != 0 && WorldWindow.ValidRegionLoaded; },
+				"Select at least one valid room\nto render.")
 			];
 		}
 
