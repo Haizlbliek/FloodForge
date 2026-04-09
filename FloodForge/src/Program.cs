@@ -18,7 +18,7 @@ public static class Program {
 				Title = "FloodForge",
 				VideoMode = VideoMode.Default,
 				API = isArm64
-					? new GraphicsAPI(ContextAPI.OpenGLES, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 0))
+					? new GraphicsAPI(ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 3))
 					: GraphicsAPI.Default,
 			};
 			window = Window.Create(options);
