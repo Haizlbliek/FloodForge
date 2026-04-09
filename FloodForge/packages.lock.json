@@ -56,14 +56,14 @@
           "Silk.NET.Windowing.Glfw": "2.22.0"
         }
       },
-      "Silk.NET.Windowing.Sdl": {
+      "Silk.NET.Windowing.Glfw": {
         "type": "Direct",
-        "requested": "[2.22.0, )",
-        "resolved": "2.22.0",
-        "contentHash": "IyOJJh8M8VBcjiQ/7U+B+4R4u4gKXDN7PZfwzZ/sgV3eOj2PadDDKxCq11Qzfri2P+XLDxnrVikkNciGkuL/jg==",
+        "requested": "[2.23.0, )",
+        "resolved": "2.23.0",
+        "contentHash": "aYBudKmENmvLRn9p15HbdvlQTnnXskcDfTfbYwSb/4fr263rGLwYuDw/txUEc2jihHJiWCp5+75Y7z5wTJWl7g==",
         "dependencies": {
-          "Silk.NET.SDL": "2.22.0",
-          "Silk.NET.Windowing.Common": "2.22.0"
+          "Silk.NET.GLFW": "2.23.0",
+          "Silk.NET.Windowing.Common": "2.23.0"
         }
       },
       "StbImageSharp": {
@@ -125,8 +125,8 @@
       },
       "Microsoft.Extensions.DependencyModel": {
         "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "NSmDw3K0ozNDgShSIpsZcbFIzBX4w28nDag+TfaQujkXGazBm+lid5onlWoCBy4VsLxqnnKjEBbGSJVWJMf43g=="
+        "resolved": "9.0.9",
+        "contentHash": "fNGvKct2De8ghm0Bpfq0iWthtzIWabgOTi+gJhNOPhNJIowXNEUE2eZNW/zNCzrHVA3PXg2yZ+3cWZndC2IqYA=="
       },
       "Microsoft.NETCore.Platforms": {
         "type": "Transitive",
@@ -145,19 +145,19 @@
       },
       "Silk.NET.Core": {
         "type": "Transitive",
-        "resolved": "2.22.0",
-        "contentHash": "XbDilPmvsQIrvxZkeVCNNX3LyRtA3hN6UykAiyZjlu/JkYh68U3WQummpP+j7jsxlX8s/pOrrU3vbN8LnMl0VA==",
+        "resolved": "2.23.0",
+        "contentHash": "D7AT/nnwlB+4RZ84XY8QNGBZMJI5z9l4CSSETIJ1wCfRJzRt/341y3MRZ4HbnFz4r/IGaWOEZr86iE+0/65yyQ==",
         "dependencies": {
           "Microsoft.DotNet.PlatformAbstractions": "3.1.6",
-          "Microsoft.Extensions.DependencyModel": "8.0.0"
+          "Microsoft.Extensions.DependencyModel": "9.0.9"
         }
       },
       "Silk.NET.GLFW": {
         "type": "Transitive",
-        "resolved": "2.22.0",
-        "contentHash": "I1u6CmwwtD+5OIHditbMBVHRQUHZWhfW3Z38mvydxwkZpAvjs5BCxyen6ecOVpbYD6I0EOjZ42M3IsaZbwiYUg==",
+        "resolved": "2.23.0",
+        "contentHash": "UIs4sH57xlPUNHQ/1bt9rymPWlGy8IMDCNv86h0iM4TOA1CkIx0XM/n/tA4AReh1zQkNrvkxPEdZ3Blvy1dyXg==",
         "dependencies": {
-          "Silk.NET.Core": "2.22.0",
+          "Silk.NET.Core": "2.23.0",
           "Ultz.Native.GLFW": "3.4.0"
         }
       },
@@ -180,35 +180,16 @@
       },
       "Silk.NET.Maths": {
         "type": "Transitive",
-        "resolved": "2.22.0",
-        "contentHash": "W9b5UlUGCu5Ywb5f8ZyIWJ475ucY+mT/nEiSTo3JH098VxHaZS/02bYr9f29VWBaJhh3DwMkfxQvgTyXzTrHyw=="
-      },
-      "Silk.NET.SDL": {
-        "type": "Transitive",
-        "resolved": "2.22.0",
-        "contentHash": "t73lM7RnEX7otXOblQ38zjDbGfdEseJKHGgIaFien9lKjGp1jg28RLEY+toUXT5kH0DzgXGIoYAs7AkcCFyyyg==",
-        "dependencies": {
-          "Silk.NET.Core": "2.22.0",
-          "Silk.NET.Maths": "2.22.0",
-          "Ultz.Native.SDL": "2.30.8"
-        }
+        "resolved": "2.23.0",
+        "contentHash": "r8PdIVzME8EH0qAgbmRPO87I4GfgR2j8TofT7EMuRJDf1QluoQwnVypDoFJjQ2ZBSRsGYk5unYxxogI05Ogsmw=="
       },
       "Silk.NET.Windowing.Common": {
         "type": "Transitive",
-        "resolved": "2.22.0",
-        "contentHash": "ynasHSQ4jGrmpn/07UagE3qVNRLzWvg+fbM8uHI0d5LF95y++Kuno42QLkP/UEruC1YovI+NRhMfGJy0gDQaZg==",
+        "resolved": "2.23.0",
+        "contentHash": "ThStSinmY9KQI8DGiF5XEhkLJVnBcgRTBTzL9ijg1wMZAYuckz7ykrNw04fjRm2Gryh6tCNGbvz2XaY0efeFzg==",
         "dependencies": {
-          "Silk.NET.Core": "2.22.0",
-          "Silk.NET.Maths": "2.22.0"
-        }
-      },
-      "Silk.NET.Windowing.Glfw": {
-        "type": "Transitive",
-        "resolved": "2.22.0",
-        "contentHash": "hBNxNSLvx/jdfvbU6oCsXcgLfqf9hMlEc6Mq/rllJ0eUTLloacuOZHTM8V702QGf7hOR+Mo4bTFqTqBnC0CM7g==",
-        "dependencies": {
-          "Silk.NET.GLFW": "2.22.0",
-          "Silk.NET.Windowing.Common": "2.22.0"
+          "Silk.NET.Core": "2.23.0",
+          "Silk.NET.Maths": "2.23.0"
         }
       },
       "System.ValueTuple": {
@@ -220,11 +201,6 @@
         "type": "Transitive",
         "resolved": "3.4.0",
         "contentHash": "Iy22JopynbOJ32vA0lBhFEzGi65GQJBuJHYBYRBpydrDpNoTiHnjIXfA65Gu+8qsOr/ZEoIF8r9aHCgAXuO6DA=="
-      },
-      "Ultz.Native.SDL": {
-        "type": "Transitive",
-        "resolved": "2.30.8",
-        "contentHash": "akI6qe9zjA3T9Y5421cfHYKonIkV1rSr3Dgo5qOwxthXXRwTVsnJwb/Ap2x6/6BZcbhczeY+4aUw+2FYJF9LYw=="
       }
     }
   }

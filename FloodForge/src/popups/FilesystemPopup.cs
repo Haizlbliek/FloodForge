@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using Silk.NET.Input;
-using Silk.NET.SDL;
 
 // TODO: Select by absolute paths, not the filename
 
@@ -237,7 +236,7 @@ public class FilesystemPopup : Popup {
 	protected void KeyPress(Key key) {
 		if (this.newDirectory == null) return;
 
-		if (key == Key.V && Keys.Modifier(Keymod.Ctrl)) {
+		if (key == Key.V && Keys.Modifier(Keys.Modifiers.Control)) {
 			this.newDirectory += Clipboard.Get().Replace("\\", "").Replace("/", "").Replace(".", "");
 			this.frame = 0;
 			return;
@@ -256,7 +255,7 @@ public class FilesystemPopup : Popup {
 		if (key >= Key.A && key <= Key.Z) {
 			this.frame = 0;
 			string k = key.ToString();
-			this.newDirectory += Keys.Modifier(Keymod.Shift) ? k.ToUpper() : k.ToLower();
+			this.newDirectory += Keys.Modifier(Keys.Modifiers.Shift) ? k.ToUpper() : k.ToLower();
 		}
 
 		if (key >= Key.Number0 && key <= Key.Number9) {
@@ -440,8 +439,8 @@ public class FilesystemPopup : Popup {
 			bool hover = rect.Inside(Mouse.X, Mouse.Y);
 
 			if (hover && Mouse.JustLeft) {
-				if (this.allowMultiple && Keys.Modifier(Keymod.Shift) || Keys.Modifier(Keymod.Ctrl)) {
-					if (Keys.Modifier(Keymod.Shift)) {
+				if (this.allowMultiple && Keys.Modifier(Keys.Modifiers.Shift) || Keys.Modifier(Keys.Modifiers.Control)) {
+					if (Keys.Modifier(Keys.Modifiers.Shift)) {
 						string latestSelected = this.selected.Last();
 						bool startSelecting = false;
 						foreach (string selectPath in this.files) {
@@ -453,7 +452,7 @@ public class FilesystemPopup : Popup {
 							}
 						}
 					}
-					else if (Keys.Modifier(Keymod.Ctrl)) {
+					else if (Keys.Modifier(Keys.Modifiers.Control)) {
 						if (!this.selected.Remove(path)) {
 							this.selected.Add(path);
 						}

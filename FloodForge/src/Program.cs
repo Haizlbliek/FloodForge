@@ -10,25 +10,32 @@ public static class Program {
 	public static Vector2D<int> initialDisplayResolution = new Vector2D<int>(1280, 720);
 
 	public static void Main() {
-		bool isArm64 = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
+		try {
+			bool isArm64 = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
 
-		WindowOptions options = WindowOptions.Default with {
-			Size = initialDisplayResolution,
-			Title = "FloodForge",
-			VideoMode = VideoMode.Default,
-			API = isArm64
-				? new GraphicsAPI(ContextAPI.OpenGLES, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 0))
-				: GraphicsAPI.Default,
-		};
-		window = Window.Create(options);
+			WindowOptions options = WindowOptions.Default with {
+				Size = initialDisplayResolution,
+				Title = "FloodForge",
+				VideoMode = VideoMode.Default,
+				API = isArm64
+					? new GraphicsAPI(ContextAPI.OpenGLES, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 0))
+					: GraphicsAPI.Default,
+			};
+			window = Window.Create(options);
 
-		window.Load += OnLoad;
-		window.Render += OnRender;
+			window.Load += OnLoad;
+			window.Render += OnRender;
 
-		window.Run();
+			window.Run();
 
-		window.Dispose();
-		FloodForge.Main.Cleanup();
+			window.Dispose();
+			FloodForge.Main.Cleanup();
+		} catch (Exception ex) {
+			if (File.Exists("crashlog.txt")) File.Delete("crashlog.txt");
+
+			string error = $"{ex.Message}\n{ex.StackTrace}";
+			File.WriteAllText("crashlog.txt", error, System.Text.Encoding.UTF8);
+		}
 	}
 
 	private static void OnLoad() {

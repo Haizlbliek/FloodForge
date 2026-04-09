@@ -1,5 +1,7 @@
 using FloodForge.Popups;
-using Silk.NET.SDL;
+using Silk.NET.GLFW;
+
+// using Silk.NET.SDL;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;
@@ -65,7 +67,7 @@ public class TagPopup : Popup {
 		bool selected = tagId == "" && roomTags.Count == 0 || roomTags.Contains(tagId);
 
 		if (UI.TextButton(tag, rect, new UI.TextButtonMods { selected = selected })) {
-			if (Keys.Modifier(Keymod.Shift)) {
+			if (Keys.Modifier(Keys.Modifiers.Shift)) {
 				if (!tagId.IsNullOrEmpty()) this.ToggleTag(tagId);
 			}
 			else {

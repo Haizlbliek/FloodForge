@@ -1,5 +1,4 @@
 using Silk.NET.Input;
-using Silk.NET.SDL;
 using Stride.Core.Extensions;
 
 namespace FloodForge;
@@ -51,8 +50,8 @@ public static class UI {
 			if ((int) key >= 33 && (int) key <= 126) {
 				write = Keys.ParseCharacter(
 					(char) key,
-					Keys.Modifier(Keymod.Shift),
-					Keys.Modifier(Keymod.Caps)
+					Keys.Modifier(Keys.Modifiers.Shift),
+					false
 				);
 			}
 
