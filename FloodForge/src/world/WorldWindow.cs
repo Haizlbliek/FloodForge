@@ -27,6 +27,7 @@ public static class WorldWindow {
 													  // (I.E. choose the one that's closest, but preferably one that does not invert (for example, CC_S01))
 
 	public static Region region = null!;
+	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty());
 	public static Vector2 cameraOffset;
 	private static bool cameraPanning = false;
 	private static bool cameraPanningBlocked = false;
@@ -1274,17 +1275,14 @@ public static class WorldWindow {
 				}),
 
 				new Button("Add Room", button => {
-					if (WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty()) {
-						PopupManager.Add(new InfoPopup("You must create or import a region\nbefore adding rooms."));
-						return;
-					}
-
 					PopupManager.Add(
 						new FilesystemPopup(HandleRoomFilesSelected, 1)
 							.Filter(new Regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"))
 							.Multiple()
 							.Hint("xx_a01.txt")
 					);
+				}, () => {
+					return WorldWindow.ValidRegionLoaded;
 				}),
 
 				new Button("Import", button => {
@@ -1296,10 +1294,6 @@ public static class WorldWindow {
 				}),
 
 				new Button("Export", button => {
-					if(WorldWindow.region == null) {
-						PopupManager.Add(new InfoPopup("You must create or import a region\nbefore exporting."));
-						return;
-					}
 					string lastExportDirectory = WorldWindow.region.exportPath;
 
 					if (!Settings.UpdateWorldFiles) {
@@ -1315,11 +1309,6 @@ public static class WorldWindow {
 						ExportMap();
 					}
 					else {
-						if (string.IsNullOrEmpty(WorldWindow.region.acronym)) {
-							PopupManager.Add(new InfoPopup("You must create or import a region\nbefore exporting."));
-							return;
-						}
-
 						PopupManager.Add(
 							new FilesystemPopup((pathStrings) => {
 								if (pathStrings == null || pathStrings.Length == 0) return;
@@ -1339,6 +1328,8 @@ public static class WorldWindow {
 					}
 
 					WorldWindow.region.exportPath = lastExportDirectory;
+				}, () => {
+					return WorldWindow.ValidRegionLoaded;
 				}),
 
 				new Button("No Colors", button => {
@@ -1354,28 +1345,23 @@ public static class WorldWindow {
 						ColorType = RoomColors.None;
 						button.text = "No Colors";
 					}
-				}),
+				}, () => { return WorldWindow.ValidRegionLoaded; }),
 
-				new LayerButton(0),
-				new LayerButton(1),
-				new LayerButton(2),
+				new LayerButton(0, () => { return WorldWindow.ValidRegionLoaded; }),
+				new LayerButton(1, () => { return WorldWindow.ValidRegionLoaded; }),
+				new LayerButton(2, () => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Dev Items: Hidden", button => {
 					VisibleDevItems = !VisibleDevItems;
 					button.text = VisibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden";
-				}),
+				}, () => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Creatures: Shown", button => {
 					VisibleCreatures = !VisibleCreatures;
 					button.text = VisibleCreatures ? "Creatures: Shown" : "Creatures: Hidden";
-				}),
+				}, () => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Refresh Region", button => {
-					if (WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty()) {
-						PopupManager.Add(new InfoPopup("You must create or import a region\nbefore refreshing"));
-						return;
-					}
-
 					string? path = PathUtil.FindFile(WorldWindow.region.exportPath, $"world_{WorldWindow.region.acronym}.txt");
 					if (path == null) {
 						PopupManager.Add(new InfoPopup("Could not find world_xx.txt file!"));
@@ -1383,7 +1369,7 @@ public static class WorldWindow {
 					}
 
 					WorldParser.ImportWorldFile(path);
-				}),
+				}, () => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Canon", button => {
 					if (PositionType == RoomPosition.Canon) {
@@ -1399,15 +1385,15 @@ public static class WorldWindow {
 						button.text = "Canon";
 					}
 					MoveUpdate();
-				}),
+				}, () => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Connect: Path", button => {
 					changeConnectBehaviour = !changeConnectBehaviour;
 					button.text = changeConnectBehaviour ? "Connect: Path" : "Connect: Default";
 					MoveUpdate();
-				}),
+				}, () => { return WorldWindow.ValidRegionLoaded; }),
 
-				new Button("Mass Render", button => {
+				new AlignedButton("Mass Render", true, button => {
 					confirmRenderPopup = new ConfirmPopup("Render " + oldSelection.Count + " rooms?" + (
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
@@ -1416,7 +1402,7 @@ public static class WorldWindow {
 							renderRoomsTask = Task.Run(MassRenderRooms);
 						});
 					PopupManager.Add(confirmRenderPopup);
-				}, () => { return oldSelection.Count != 0; })
+				}, () => { return oldSelection.Count != 0 && WorldWindow.ValidRegionLoaded; })
 			];
 		}
 
@@ -1426,6 +1412,10 @@ public static class WorldWindow {
 			public override bool Dark => !VisibleLayers[this.layer];
 
 			public LayerButton(int layer) : base((layer + 1).ToString(), b => { ((LayerButton) b).Click(); }) {
+				this.layer = layer;
+			}
+
+			public LayerButton(int layer, Func<bool> contextCallback) : base((layer + 1).ToString(), b => { ((LayerButton) b).Click(); }, contextCallback) {
 				this.layer = layer;
 			}
 
