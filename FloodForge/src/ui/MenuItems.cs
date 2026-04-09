@@ -1,3 +1,5 @@
+using FloodForge.Popups;
+
 namespace FloodForge;
 
 public abstract class MenuItems {
@@ -29,6 +31,9 @@ public abstract class MenuItems {
 				if (UI.TextButton(button.text, Rect.FromSize(onRight ? rightX - width : leftX, Main.screenBounds.y - 0.05f, width, 0.04f), mods)) {
 					if(button.buttonEnabled)
 						button.onclick(button);
+					else if (button.disabledInteractMessage != "") {
+						PopupManager.Add(new InfoPopup(button.disabledInteractMessage));
+					}
 				}
 				if(onRight) rightX -= width - 0.01f;
 				else leftX += width + 0.01f;
@@ -42,7 +47,7 @@ public abstract class MenuItems {
 			this.alignment = alignment;
 		}
 		
-		public AlignedButton(string text, bool alignment, Action<Button> callback, Func<bool> contextCheckCallback) : base (text, callback, contextCheckCallback) {
+		public AlignedButton(string text, bool alignment, Action<Button> callback, Func<bool> contextCheckCallback, string disabledInteractMessage = "") : base (text, callback, contextCheckCallback, disabledInteractMessage) {
 			this.alignment = alignment;
 		}
 	}
@@ -53,6 +58,7 @@ public abstract class MenuItems {
 		public bool hasContextCheckCallback = false;
 		public Func<bool> contextCheckCallback;
 		public bool buttonEnabled = true;
+		public string disabledInteractMessage;
 		public virtual bool Dark => false;
 
 		public Button(string text, Action<Button> callback) {
@@ -60,11 +66,13 @@ public abstract class MenuItems {
 			this.onclick = callback;
 			this.contextCheckCallback = new Func<bool>(() => { return true; });
 			this.hasContextCheckCallback = false;
+			this.disabledInteractMessage = "";
 		}
 
-		public Button (string text, Action<Button> callback, Func<bool> contextCheckCallback) : this(text, callback) {
+		public Button (string text, Action<Button> callback, Func<bool> contextCheckCallback, string disabledInteractMessage = "") : this(text, callback) {
 			this.hasContextCheckCallback = true;
 			this.contextCheckCallback = contextCheckCallback;
+			this.disabledInteractMessage =disabledInteractMessage;
 		}
 	}
 }
