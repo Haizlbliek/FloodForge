@@ -24,6 +24,10 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest ]
+        arch: [ x64, arm64 ]
+        exclude:
+          - os: ubuntu-latest
+            arch: arm64
     steps:
       - uses: actions/checkout@v4
 
@@ -34,11 +38,11 @@ jobs:
 
       - name: Publish Main App
         run: |
-          dotnet publish ./FloodForge/FloodForge.csproj -c Release -o ./publish-temp --self-contained true -r ${{ matrix.os == 'ubuntu-latest' && 'linux-x64' || 'win-x64' }}
+          dotnet publish ./FloodForge/FloodForge.csproj -c Release -o ./publish-temp --self-contained true -r ${{ matrix.os == 'ubuntu-latest' && 'linux' || 'win' }}-${{ matrix.arch }}
 
       - name: Publish Patcher
         run: |
-          dotnet publish ./FloodForge.Patcher/FloodForge.Patcher.csproj -c Release -o ./publish-temp --self-contained true -r ${{ matrix.os == 'ubuntu-latest' && 'linux-x64' || 'win-x64' }}
+          dotnet publish ./FloodForge.Patcher/FloodForge.Patcher.csproj -c Release -o ./publish-temp --self-contained true -r ${{ matrix.os == 'ubuntu-latest' && 'linux' || 'win' }}-${{ matrix.arch }}
 
       - name: Prepare & Zip (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -49,7 +53,7 @@ jobs:
           if [ "${{ inputs.is_release }}" = "false" ]; then
             echo "${{ needs.pre-build.outputs.build_date }}" > ./publish-temp/assets/nightly.txt
           fi
-          cd publish-temp && zip -r ../FloodForge-linux.zip .
+          cd publish-temp && zip -r ../FloodForge-linux-${{ matrix.arch }}.zip .
 
       - name: Prepare & Zip (Windows)
         if: matrix.os == 'windows-latest'
@@ -62,7 +66,7 @@ jobs:
             Set-Content -Path "./publish-temp/assets/nightly.txt" -Value "${{ needs.pre-build.outputs.build_date }}"
           }
           Set-Location ./publish-temp
-          Compress-Archive -Path * -DestinationPath ../FloodForge-windows.zip
+          Compress-Archive -Path * -DestinationPath ../FloodForge-windows-${{ matrix.arch }}.zip
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -72,7 +76,7 @@ jobs:
           retention-days: 1
 
   deploy:
-    needs: [build, pre-build]
+    needs: [ build, pre-build ]
     runs-on: ubuntu-latest
     permissions:
       contents: write

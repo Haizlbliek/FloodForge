@@ -10,10 +10,15 @@ public static class Program {
 	public static Vector2D<int> initialDisplayResolution = new Vector2D<int>(1280, 720);
 
 	public static void Main() {
+		bool isArm64 = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
+
 		WindowOptions options = WindowOptions.Default with {
 			Size = initialDisplayResolution,
 			Title = "FloodForge",
-			VideoMode = Monitor.GetMainMonitor(null).VideoMode,
+			VideoMode = VideoMode.Default,
+			API = isArm64
+				? new GraphicsAPI(ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 3))
+				: GraphicsAPI.Default,
 		};
 		window = Window.Create(options);
 
