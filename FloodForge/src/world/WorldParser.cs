@@ -213,11 +213,11 @@ public static class WorldParser {
 	}
 
 	private static void ParseWorldRoom(string line, ref List<ConnectionToAdd> connectionsToAdd) {
-		string[] data = line.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		string[] data = line.Split(':', StringSplitOptions.TrimEntries);
 		if (data.Length < 2) return;
 
 		string roomName = data[0];
-		string[] connections = data[1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		string[] connections = data[1].Split(',', StringSplitOptions.TrimEntries);
 		string[] tags = data[2..];
 
 		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
@@ -276,7 +276,7 @@ public static class WorldParser {
 		}
 
 		room.data.tags = [ ];
-		tags.ForEach(tag => room.data.tags.Toggle(tag));
+		tags.ForEach(room.data.tags.Toggle);
 	}
 
 	private static DenCreature.Tag ParseCreatureTag(string tag, string type) {
