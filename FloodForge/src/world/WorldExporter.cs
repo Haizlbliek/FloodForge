@@ -324,7 +324,7 @@ public static class WorldExporter {
 				if (room is OffscreenRoom)
 					continue;
 
-				// writer.Write($"{RoomNameCasing(room.name)} : ");
+				writer.Write($"{RoomNameCasing(room.name)} : ");
 				// Logger.Info($"{RoomNameCasing(room.name)} : ");
 
 				// Logger.Info($"roomDefaultStates.Count: {roomDefaultStates};");
