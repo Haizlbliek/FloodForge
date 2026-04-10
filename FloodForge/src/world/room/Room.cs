@@ -476,7 +476,6 @@ public class Room {
 	
 	void CheckShortcutEntrancePoints() {
 		this.allShortcutEntrancePoints.Clear();
-		// string logstring = $"CheckShortcutEntrancePoints for {this.name}";
 		for (int y = 0; y < this.height; y++) {
 			for (int x = 0; x < this.width; x++) {
 				if ((this.GetTile(x, y) & FLAG_SHORTCUT) > 0) {
@@ -485,12 +484,12 @@ public class Room {
 					int index = 0;
 					for (int y2 = y - 1; y2 < y + 2; y2++) {
 						for(int x2 = x - 1; x2 < x + 2; x2++) {
-							int result = ((this.GetTile(x2, y2)&15) == 1) ? 1 : 0;
-							result += ((this.GetTile(x2, y2)&FLAG_SHORTCUT) > 0) ? 2 : 0;
-							result += ((this.GetTile(x2, y2)&FLAG_ROOM_EXIT) > 0) ? 4 : 0;
-							result += ((this.GetTile(x2, y2)&FLAG_DEN) > 0) ? 8 : 0;
-							result += ((this.GetTile(x2, y2)&FLAG_SCAVENGER_DEN) > 0) ? 16 : 0;
-							result += ((this.GetTile(x2, y2)&FLAG_WACK_A_MOLE_HOLE) > 0) ? 32 : 0;
+							int result = ((this.GetTile(x2, y2)&15) == 1) ? 1 : 0;					//  1 == solid
+							result += ((this.GetTile(x2, y2)&FLAG_SHORTCUT) > 0) ? 2 : 0;			//  2 == shortcut
+							result += ((this.GetTile(x2, y2)&FLAG_ROOM_EXIT) > 0) ? 4 : 0;			//  4 == roomexit
+							result += ((this.GetTile(x2, y2)&FLAG_DEN) > 0) ? 8 : 0;				//  8 == den
+							result += ((this.GetTile(x2, y2)&FLAG_SCAVENGER_DEN) > 0) ? 16 : 0;		// 16 == scav
+							result += ((this.GetTile(x2, y2)&FLAG_WACK_A_MOLE_HOLE) > 0) ? 32 : 0;	// 32 == wack-a-mole-hole
 							tiles[index] = result;
 							index++;
 						}
@@ -504,40 +503,45 @@ public class Room {
 						// check if all corners are solid
 						if((tiles[0] & 1) == 0 || (tiles[2] & 1) == 0 || (tiles[6] & 1) == 0 || (tiles[8] & 1) == 0) airGaps = 99;
 
-						// check if only one of the sides is air
-						if((tiles[1] & 2) > 0) directionCount++; if((tiles[1] & 1) == 0) airGaps++;
-						if((tiles[3] & 2) > 0) directionCount++; if((tiles[3] & 1) == 0) airGaps++;
-						if((tiles[5] & 2) > 0) directionCount++; if((tiles[5] & 1) == 0) airGaps++;
-						if((tiles[7] & 2) > 0) directionCount++; if((tiles[7] & 1) == 0) airGaps++;
-
-						bool IsValidShortcutEntrance = directionCount == 1 && airGaps == 1;
-
-						if(IsValidShortcutEntrance) {
+						int dirFlags = 0;
+						int airFlags = 0;
+						if((tiles[1] & 62) > 0) {
+							directionCount++; 
+							dirFlags |= 1; }
+						if((tiles[1] & 1) == 0) {
+							airGaps++;
+						 	airFlags |= 8; }
+						if((tiles[3] & 62) > 0) {
+							directionCount++; 
+							dirFlags |= 2; }
+						if((tiles[3] & 1) == 0) {
+							airGaps++;
+						 	airFlags |= 4; }
+						if((tiles[5] & 62) > 0) {
+							directionCount++; 
+							dirFlags |= 4; }
+						if((tiles[5] & 1) == 0) {
+							airGaps++;
+						 	airFlags |= 2; }
+						if((tiles[7] & 62) > 0) {
+							directionCount++; 
+							dirFlags |= 8; }
+						if((tiles[7] & 1) == 0) {
+							airGaps++;
+						 	airFlags |= 1; }
+						
+						// check:
+						// - that only one of the sides is air,
+						// - that only one of the sides has direction
+						// - that the shortcut's direction and the airgap's direction are correct
+						// (correct as in opposite, which is why the bit assignments are opposite)
+						if((directionCount == 1) && (airGaps == 1) && (airFlags == dirFlags)) {
 							this.allShortcutEntrancePoints.Add(new Vector2i(x, y));
 						}
-						/*if(this.name == "TR_2intopipe") {
-							string[] str = new string[9];
-							for (int i = 0; i < 9; i++) {
-								int tile = tiles[i];
-								string value = ((tile & 32) > 0) ? "1" : "0";
-								value += ((tile & 16) > 0) ? "1" : "0";
-								value += ((tile & 8) > 0) ? "1" : "0";
-								value += ((tile & 4) > 0) ? "1" : "0";
-								value += ((tile & 2) > 0) ? "1" : "0";
-								value += ((tile & 1) > 0) ? "1" : "0";
-								str[i] = value;
-							}
-							Logger.Info($"tile {x}, {y}:\n{str[0]} - {str[1]} - {str[2]}\n{str[3]} - {str[4]} - {str[5]}\n{str[6]} - {str[7]} - {str[8]}\ndirectionCount: {directionCount};\nairGaps: {airGaps};\nIsValidShortcutEntrance:{IsValidShortcutEntrance}");
-						}*/
 					}
 				}
 			}
 		}
-		// logstring += "\nallShortcutEntrancePoints:";
-		// foreach(Vector2i position in this.allShortcutEntrancePoints) {
-		// 	logstring += $"\n{position.x}; {position.y}";
-		// }
-		// Logger.Info(logstring);
 	}
 
 	protected void EnsureConnections() {
