@@ -29,6 +29,7 @@ public static class Settings {
 	public static Setting<bool> DiscordRichPresence = Setting.Of("DiscordRichPresence", true);
 	public static Setting<bool> RoundedUI = Setting.Of("RoundedUI", false);
 	public static Setting<bool> DisableUpdater = Setting.Of("DisableUpdater", false);
+	public static Setting<string> RainedPath = Setting.Of("RainedPath", "");
 
 	public static Setting<bool> DEBUGVisibleOutputPadding = Setting.Of("DebugVisibleOutputPadding", false);
 	public static Setting<bool> DEBUGVisiblePopupVisuals = Setting.Of("DebugVisiblePopupVisuals", false);

@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using System.Text;
 using FloodForge.Popups;
 using FloodForge.World;
 using Silk.NET.GLFW;
 using Silk.NET.Input;
 using StbImageWriteSharp;
+using Stride.Core.Extensions;
 using static FloodForge.Main;
 
 namespace FloodForge.Droplet;
@@ -1659,6 +1661,27 @@ public static class DropletWindow {
 		project.AppendLine("[#props: [], #lastKeys: [#w: 0, #a: 0, #s: 0, #d: 0, #L: 0, #n: 0, #m1: 0, #m2: 0, #c: 0, #z: 0], #Keys: [#w: 0, #a: 0, #s: 0, #d: 0, #L: 0, #n: 0, #m1: 0, #m2: 0, #c: 0, #z: 0], #workLayer: 1, #lstMsPs: point(0, 0), #pmPos: point(1, 1), #pmSavPosL: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], #propRotation: 0, #propStretchX: 1, #propStretchY: 1, #propFlipX: 1, #propFlipY: 1, #depth: 0, #color: 0]");
 
 		File.WriteAllText(fileName, project.ToString());
+
+		if (!Settings.RainedPath.value.IsNullOrEmpty() && File.Exists(Settings.RainedPath)) {
+			PopupManager.Add(new ConfirmPopup("Open in Rained?").Okay(() => {
+				// TODO: Don't open a new exe when Rained is already running
+
+				ProcessStartInfo startInfo = new ProcessStartInfo {
+					FileName = Settings.RainedPath,
+					UseShellExecute = false,
+					CreateNoWindow = false,
+					WorkingDirectory = Path.GetDirectoryName(Settings.RainedPath),
+					Arguments = $"\"{fileName}\""
+				};
+
+				try {
+					Process.Start(startInfo);
+				}
+				catch (Exception ex) {
+					Logger.Error($"Error launching Rained: {ex.Message}");
+				}
+			}));
+		}
 	}
 
 	public static void ResizeRoom(int width, int height, bool stretch) {
