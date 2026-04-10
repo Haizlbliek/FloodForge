@@ -41,6 +41,7 @@ public class Room {
 	public Dictionary<Vector2i, RoomConnection> roomExitPaths = [];
 	public Dictionary<Vector2i, (RoomConnection, bool matchesWithRoomExitPath)> shortcutEntrancePaths = [];
 	public List<Vector2i> denShortcutEntrances = [];
+	public int nonDenExitCount = 0;
 	public List<Den> dens = [];
 	public List<GarbageWormDen> garbageWormDens = [];
 	public int hoveredDen = -1; // LATER: Remove / improve
@@ -95,7 +96,7 @@ public class Room {
 	}
 
 	public bool HasDen(int id) {
-		return this.HasDen01(id - this.allShortcutEntrancePoints.Count) || id == this.GarbageWormDenIndex;
+		return this.HasDen01(id - this.nonDenExitCount) || id == this.GarbageWormDenIndex;
 	}
 
 	public bool HasDen01(int id) {
@@ -103,11 +104,11 @@ public class Room {
 	}
 
 	public Den GetDen(int id) {
-		return this.GetDen01(id - this.allShortcutEntrancePoints.Count);
+		return this.GetDen01(id - this.nonDenExitCount);
 	}
 
 	public int GetDenId(Vector2i pos) {
-		return this.denShortcutEntrances.IndexOf(pos) + this.allShortcutEntrancePoints.Count;
+		return this.denShortcutEntrances.IndexOf(pos);
 	}
 
 	public int GetDenId01(Vector2i pos) {
@@ -115,7 +116,7 @@ public class Room {
 	}
 
 	public Den GetDen01(int id) {
-		if (id < 0 || id >= this.dens.Count) {
+		if (id < 0 || id > this.dens.Count) {
 			throw new Exception($"Invalid Den {id} for {this.name}");
 		}
 
@@ -546,6 +547,7 @@ public class Room {
 
 	protected void EnsureConnections() {
 		this.specialExitCount = 0;
+		this.nonDenExitCount = 0;
 		this.roomExits.Clear();
 		this.roomExitPaths.Clear();
 		this.shortcutEntrancePaths.Clear();
@@ -589,9 +591,6 @@ public class Room {
 			if(startType == RoomPathEndType.roomExit) {
 				this.roomExitPaths.Add(this.allRoomExitPoints[i].Item2, new RoomConnection(roomExitPath, startType, endType));
 			}
-			else if(startType == RoomPathEndType.den && endType == RoomPathEndType.shortcutEntrance) {
-				this.denShortcutEntrances.Add(roomExitPath.EndPosition);
-			}
 		}
 
 		for (int i = 0; i < this.allShortcutEntrancePoints.Count; i++) {
@@ -615,6 +614,12 @@ public class Room {
 				}
 			}
 			this.shortcutEntrancePaths.Add(this.allShortcutEntrancePoints[i], (new RoomConnection(shortcutPath, startType, endType), hasMatchingRoomExit));
+			if(endType == RoomPathEndType.den) {
+				this.denShortcutEntrances.Add(shortcutPath.StartPosition);
+			}
+			else if(endType == RoomPathEndType.roomExit) {
+				this.nonDenExitCount++;
+			}
 		}
 
 		// Side Exits
