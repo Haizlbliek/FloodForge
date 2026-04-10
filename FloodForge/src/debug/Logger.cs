@@ -15,23 +15,27 @@ public static class Logger {
 		logFile.Flush();
 	}
 
-	public static void Info(params object[] args) {
-		Console.ResetColor();
-		Write("[INFO] " + string.Join("", args));
-	}
-
 	public static void Note(params object[] args) {
 		Console.ForegroundColor = ConsoleColor.Gray;
 		Write("[NOTE] " + string.Join("", args));
+		Profiler.Debug.AddLogMessage(string.Join("", args), 0);
 	}
 
-	public static void Error(params object[] args) {
-		Console.ForegroundColor = ConsoleColor.Red;
-		Write("[ERROR] " + string.Join("", args));
+	public static void Info(params object[] args) {
+		Console.ResetColor();
+		Write("[INFO] " + string.Join("", args));
+		Profiler.Debug.AddLogMessage(string.Join("", args), 1);
 	}
 
 	public static void Warn(params object[] args) {
 		Console.ForegroundColor = ConsoleColor.Yellow;
 		Write("[WARN] " + string.Join("", args));
+		Profiler.Debug.AddLogMessage(string.Join("", args), 2);
+	}
+
+	public static void Error(params object[] args) {
+		Console.ForegroundColor = ConsoleColor.Red;
+		Write("[ERROR] " + string.Join("", args));
+		Profiler.Debug.AddLogMessage(string.Join("", args), 3);
 	}
 }
