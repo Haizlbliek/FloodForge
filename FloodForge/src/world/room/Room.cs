@@ -1,3 +1,4 @@
+using FloodForge.Popups;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;
@@ -70,11 +71,27 @@ public class Room {
 		this.data = new RoomData();
 		this.visuals = new RoomVisuals(this);
 
-		this.LoadGeometry();
-		this.LoadSettings();
-		this.visuals.Refresh();
-		this.GenerateMesh();
-		this.CheckImages();
+		try {
+			this.LoadGeometry();
+			this.LoadSettings();
+			this.visuals.Refresh();
+			this.GenerateMesh();
+			this.CheckImages();
+		}
+		catch (Exception e) {
+			Logger.Error($"Failed to load {this.name}!\n{e}");
+			try { 
+				this.SetToInvalidRoom();
+				PopupManager.Add(new InfoPopup($"Failed to load {this.name}!")); 
+			} catch {}
+		}
+	}
+
+	public void SetToInvalidRoom() {
+		this.valid = false;
+		this.width = 72;
+		this.height = 43;
+		this.geometry = new uint[this.width * this.height];
 	}
 
 	public bool HasDen(int id) {
@@ -141,16 +158,18 @@ public class Room {
 	protected virtual void LoadGeometry() {
 		if (!File.Exists(this.path)) {
 			Logger.Warn($"Failed to load '{this.name}'. File '{this.path}' doesn't exist");
-			this.width = 72;
-			this.height = 43;
-			this.geometry = new uint[this.width * this.height];
-			this.valid = false;
+			this.SetToInvalidRoom();
 			return;
 		}
 
 		string[] lines = File.ReadAllLines(this.path);
 
 		string[] levelData = lines[1].Split('|');
+		if(levelData.Length <= 0) {
+			Logger.Warn($"Failed to load '{this.name}'. File contains no leveldata.");
+			this.SetToInvalidRoom();
+			return;
+		}
 		this.width = int.Parse(levelData[0][..levelData[0].IndexOf('*')]);
 		this.height = int.Parse(levelData[0][(levelData[0].IndexOf('*') + 1)..]);
 		this.geometry = new uint[this.width * this.height];
