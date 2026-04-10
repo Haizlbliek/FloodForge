@@ -29,6 +29,7 @@ public static class WorldWindow {
 
 	public static Region region = null!;
 	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty());
+	public static bool invalidCreaturesEncountered = false;
 	public static Vector2 cameraOffset;
 	private static bool cameraPanning = false;
 	private static bool cameraPanningBlocked = false;
@@ -1250,6 +1251,7 @@ public static class WorldWindow {
 
 	public class WorldMenuItems : MenuItems {
 		private static void ExportMap() {
+			WorldWindow.invalidCreaturesEncountered = false;
 			WorldExporter.ExportMapFile();
 			WorldExporter.ExportWorldFile();
 
@@ -1288,40 +1290,49 @@ public static class WorldWindow {
 				}),
 
 				new Button("Export", button => {
-					string lastExportDirectory = WorldWindow.region.exportPath;
+					// apologies for making this whole lambda so incredibly bloated. Should it be moved to a more separate method?
+					void ExportButtonFunction() {
+						string lastExportDirectory = WorldWindow.region.exportPath;
 
-					if (!Settings.UpdateWorldFiles) {
-						WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory("worlds", WorldWindow.region.acronym);
-						Logger.Info($"Special exporting to directory: {WorldWindow.region.exportPath}");
+						if (!Settings.UpdateWorldFiles) {
+							WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory("worlds", WorldWindow.region.acronym);
+							Logger.Info($"Special exporting to directory: {WorldWindow.region.exportPath}");
 
-						if (!Directory.Exists(WorldWindow.region.exportPath)) {
-							Directory.CreateDirectory(WorldWindow.region.exportPath);
-						}
-					}
-
-					if (!string.IsNullOrEmpty(WorldWindow.region.exportPath)) {
-						ExportMap();
-					}
-					else {
-						PopupManager.Add(
-							new FilesystemPopup((pathStrings) => {
-								if (pathStrings == null || pathStrings.Length == 0) return;
-
-								string selectedPath = pathStrings[0];
-								WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory(selectedPath, WorldWindow.region.acronym);
-								WorldWindow.region.roomsPath = PathUtil.FindOrAssumeDirectory(selectedPath, $"{WorldWindow.region.acronym}-rooms");
-
+							if (!Directory.Exists(WorldWindow.region.exportPath)) {
 								Directory.CreateDirectory(WorldWindow.region.exportPath);
-								Directory.CreateDirectory(WorldWindow.region.roomsPath);
+							}
+						}
 
-								ExportMap();
-							}, 0)
-							.Filter(FilesystemPopup.SelectionType.Folder)
-							.Hint("YOUR_MOD/world/")
-						);
+						if (!string.IsNullOrEmpty(WorldWindow.region.exportPath)) {
+							ExportMap();
+						}
+						else {
+							PopupManager.Add(
+								new FilesystemPopup((pathStrings) => {
+									if (pathStrings == null || pathStrings.Length == 0) return;
+
+									string selectedPath = pathStrings[0];
+									WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory(selectedPath, WorldWindow.region.acronym);
+									WorldWindow.region.roomsPath = PathUtil.FindOrAssumeDirectory(selectedPath, $"{WorldWindow.region.acronym}-rooms");
+
+									Directory.CreateDirectory(WorldWindow.region.exportPath);
+									Directory.CreateDirectory(WorldWindow.region.roomsPath);
+
+									ExportMap();
+								}, 0)
+								.Filter(FilesystemPopup.SelectionType.Folder)
+								.Hint("YOUR_MOD/world/")
+							);
+						}
+
+						WorldWindow.region.exportPath = lastExportDirectory;
 					}
-
-					WorldWindow.region.exportPath = lastExportDirectory;
+					if(!invalidCreaturesEncountered){
+						ExportButtonFunction();
+					}
+					else{
+						PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(ExportButtonFunction));
+					}
 				}, () => {
 					return WorldWindow.ValidRegionLoaded;
 				},

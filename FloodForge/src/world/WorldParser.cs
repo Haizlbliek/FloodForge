@@ -713,6 +713,7 @@ public static class WorldParser {
 			else if (parseState == WorldParseState.Creatures) {
 				if (!ParseWorldCreature(line)) {
 					Logger.Warn("Invalid world creature " + line);
+					WorldWindow.invalidCreaturesEncountered = true;
 					continue;
 				}
 			}
