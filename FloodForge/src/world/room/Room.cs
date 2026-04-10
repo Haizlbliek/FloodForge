@@ -54,7 +54,7 @@ public class Room {
 	// then, this could also be added to connections so that a room that connects to the same room multiple times isn't allowed to exist without feedback
 
 	private int specialExitCount = 0;
-	public int GarbageWormDenIndex => this.specialExitCount + this.allShortcutEntrancePoints.Count + this.denShortcutEntrances.Count;
+	public int GarbageWormDenIndex => this.specialExitCount + this.nonDenExitCount + this.denShortcutEntrances.Count;
 
 	public bool Visible => WorldWindow.VisibleLayers[this.data.layer];
 
@@ -108,7 +108,7 @@ public class Room {
 	}
 
 	public int GetDenId(Vector2i pos) {
-		return this.denShortcutEntrances.IndexOf(pos);
+		return this.denShortcutEntrances.IndexOf(pos) + this.nonDenExitCount;
 	}
 
 	public int GetDenId01(Vector2i pos) {
@@ -116,7 +116,7 @@ public class Room {
 	}
 
 	public Den GetDen01(int id) {
-		if (id < 0 || id > this.dens.Count) {
+		if (id < 0 || id >= this.dens.Count) {
 			throw new Exception($"Invalid Den {id} for {this.name}");
 		}
 
