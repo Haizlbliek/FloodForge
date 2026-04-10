@@ -247,6 +247,10 @@ public static class WorldParser {
 
 		uint connectionId = 0;
 		foreach (string connection in connections) { // go through every room-connection
+			if (connection.IsNullOrEmpty())
+			{
+				continue;
+			}
 			if (connection.ToLowerInvariant() == "disconnected") {
 				connectionId++;
 				continue;
@@ -447,7 +451,8 @@ public static class WorldParser {
 				if (!ParseWorldCreatureNormal(splits, room, timelineType, timelines)) return false;
 			}
 		}
-		catch (Exception) {
+		catch (Exception e) {
+			Logger.Warn(e);
 			return false;
 		}
 
