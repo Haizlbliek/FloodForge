@@ -409,11 +409,23 @@ public class Room {
 
 	public class RoomPath {
 		public Vector2i[] Path;
-		public Vector2i StartPosition => this.Path[0];
-		public Vector2i EndPosition => this.Path[^1];
-		public Vector2i StartDirection => (this.Path[1] - this.Path[0]) * new Vector2i(-1, 1);
+		public Vector2i StartPosition {
+			get {
+				return this.Path?.Length > 0 ? this.Path[0] : Vector2i.Zero;
+			}
+		}
+		public Vector2i EndPosition {
+			get {
+				return this.Path?.Length > 1 ? this.Path[^1] : this.StartPosition;
+			}
+		}
+		public Vector2i StartDirection {
+			get {
+				return this.Path.Length > 1 ? (this.Path[1] - this.Path[0]) * new Vector2i(-1, 1) : Vector2i.Zero;
+			}
+		}
 		public bool isDeadEnd = false;
-		public Vector2i EndDirection => this.isDeadEnd ? Vector2i.Zero : (this.Path[^1] - this.Path[^2]);
+		public Vector2i EndDirection => (this.isDeadEnd || this.Path.Length <= 1) ? Vector2i.Zero : (this.Path[^1] - this.Path[^2]);
 		public RoomPath(Room room, Vector2i startPosition) {
 			Vector2i forwardDirection = Vector2i.Zero;
 			Vector2i currentPosition = startPosition;
@@ -469,6 +481,7 @@ public class Room {
 				}
 
 				if (!hasDirection) break;
+				if (runs + 1 == 10000) hasDirection = false;
 			}
 			this.Path = pathTaken.ToArray();
 			this.isDeadEnd = !hasDirection;
