@@ -952,6 +952,60 @@ public static class WorldWindow {
 				debugText.Add($"Tags: {string.Join(" ", hoveringRoom.data.tags)}");
 				debugText.Add($"Size: {hoveringRoom.width}x{hoveringRoom.height}");
 				debugText.Add($"Dens: {hoveringRoom.dens.Count}");
+				// CONNECTION DEBUG
+				{
+					List<string> encounteredConnections = [];
+					List<string> connectionStringList = [];
+					string connectionList = "";
+					for (uint index = 0; index < hoveringRoom.roomExits.Count; index++) {
+						if(hoveringRoom.AnyConnectionConnectedTo(index)) {
+							foreach (Connection connection in hoveringRoom.connections) {
+								string finalString = "";
+								bool canHaveArrows = false;
+								if(connection.roomA.name != hoveringRoom.name && connection.roomBExitID == index) {
+									finalString += connection.roomA.name;
+									encounteredConnections.Add(connection.roomA.name);	
+									canHaveArrows = true;
+								}
+								else if(connection.roomB.name != hoveringRoom.name && connection.roomAExitID == index) {
+									finalString += connection.roomB.name;
+									encounteredConnections.Add(connection.roomB.name);
+									canHaveArrows = true;
+								}
+								if(connection == hoveringConnection && canHaveArrows) finalString = $">{finalString}<";
+								connectionList += finalString;
+							}
+						}
+						else {
+							connectionList += "DISCONNECTED";
+						}
+						if(index + 1 < hoveringRoom.roomExits.Count)
+							connectionList += ", ";
+						if(connectionList.Length > 75) {
+							connectionStringList.Add(connectionList);
+							connectionList = "";
+						};
+					}
+					if(connectionList != "") connectionStringList.Add(connectionList);
+					debugText.Add($"Connections: {hoveringRoom.roomExitPaths.Count}{(hoveringRoom.roomExitPaths.Count > 0 ? " : " + (connectionStringList.Count > 0 ? connectionStringList[0] : "") : "")}");
+					if (connectionStringList.Count > 1) foreach (string line in connectionStringList[1..]) {
+						debugText.Add(line);
+					}
+					List<string> duplicateConnections = [];
+					string duplicateString = "";
+					for (int index = 0; index < encounteredConnections.Count; index++) {
+						for(int index2 = index + 1; index2 < encounteredConnections.Count; index2++) {
+							if(!duplicateConnections.Contains(encounteredConnections[index]) && encounteredConnections[index] == encounteredConnections[index2]) {
+								duplicateConnections.Add(encounteredConnections[index]);
+								duplicateString += (duplicateString.Length > 0 ? ", " : "") + encounteredConnections[index];
+								continue;
+							}
+						}
+					}
+					
+					if(duplicateConnections.Count > 0) debugText.Add($" > This room has duplicate connections: {duplicateString}");
+				}
+				// END CONNECTION DEBUG
 				debugText.Add($"Subregion: {(hoveringRoom.data.subregion == -1 ? "<<NONE>>" : region.subregions[hoveringRoom.data.subregion])}");
 				debugText.Add($"Layer: {hoveringRoom.data.layer}");
 				if (!hoveringRoom.data.merge)
