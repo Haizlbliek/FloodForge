@@ -1305,6 +1305,44 @@ public static class WorldWindow {
 	}
 
 	public class WorldMenuItems : MenuItems {
+		private static event Action<TimelineType, HashSet<string>>? UpdateVisibleTimelines;
+		private static void ExportButton() {
+			string lastExportDirectory = WorldWindow.region.exportPath;
+
+			if (!Settings.UpdateWorldFiles) {
+				WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory("worlds", WorldWindow.region.acronym);
+				Logger.Info($"Special exporting to directory: {WorldWindow.region.exportPath}");
+
+				if (!Directory.Exists(WorldWindow.region.exportPath)) {
+					Directory.CreateDirectory(WorldWindow.region.exportPath);
+				}
+			}
+
+			if (!string.IsNullOrEmpty(WorldWindow.region.exportPath)) {
+				ExportMap();
+			}
+			else {
+				PopupManager.Add(
+					new FilesystemPopup((pathStrings) => {
+						if (pathStrings == null || pathStrings.Length == 0) return;
+
+						string selectedPath = pathStrings[0];
+						WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory(selectedPath, WorldWindow.region.acronym);
+						WorldWindow.region.roomsPath = PathUtil.FindOrAssumeDirectory(selectedPath, $"{WorldWindow.region.acronym}-rooms");
+
+						Directory.CreateDirectory(WorldWindow.region.exportPath);
+						Directory.CreateDirectory(WorldWindow.region.roomsPath);
+
+						ExportMap();
+					}, 0)
+					.Filter(FilesystemPopup.SelectionType.Folder)
+					.Hint("YOUR_MOD/world/")
+				);
+			}
+
+			WorldWindow.region.exportPath = lastExportDirectory;
+		}
+
 		private static void ExportMap() {
 			WorldWindow.invalidCreaturesEncountered = false;
 			WorldExporter.ExportMapFile();
@@ -1346,48 +1384,12 @@ public static class WorldWindow {
 				}),
 
 				new Button("Export", button => {
-					// apologies for making this whole lambda so incredibly bloated. Should it be moved to a more separate method?
-					void ExportButtonFunction() {
-						string lastExportDirectory = WorldWindow.region.exportPath;
-
-						if (!Settings.UpdateWorldFiles) {
-							WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory("worlds", WorldWindow.region.acronym);
-							Logger.Info($"Special exporting to directory: {WorldWindow.region.exportPath}");
-
-							if (!Directory.Exists(WorldWindow.region.exportPath)) {
-								Directory.CreateDirectory(WorldWindow.region.exportPath);
-							}
-						}
-
-						if (!string.IsNullOrEmpty(WorldWindow.region.exportPath)) {
-							ExportMap();
-						}
-						else {
-							PopupManager.Add(
-								new FilesystemPopup((pathStrings) => {
-									if (pathStrings == null || pathStrings.Length == 0) return;
-
-									string selectedPath = pathStrings[0];
-									WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory(selectedPath, WorldWindow.region.acronym);
-									WorldWindow.region.roomsPath = PathUtil.FindOrAssumeDirectory(selectedPath, $"{WorldWindow.region.acronym}-rooms");
-
-									Directory.CreateDirectory(WorldWindow.region.exportPath);
-									Directory.CreateDirectory(WorldWindow.region.roomsPath);
-
-									ExportMap();
-								}, 0)
-								.Filter(FilesystemPopup.SelectionType.Folder)
-								.Hint("YOUR_MOD/world/")
-							);
-						}
-
-						WorldWindow.region.exportPath = lastExportDirectory;
-					}
 					if(!invalidCreaturesEncountered){
 						WorldWindow.ExportFinished = false;
+						ExportButton();
 					}
 					else{
-						PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(ExportButtonFunction));
+						PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(ExportButton));
 					}
 				}, () => {
 					return WorldWindow.ValidRegionLoaded && WorldWindow.ExportFinished;
