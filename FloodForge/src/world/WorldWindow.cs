@@ -23,6 +23,9 @@ public static class WorldWindow {
 	public static RoomColors ColorType { get; private set; } = RoomColors.None;
 	public static readonly bool[] VisibleLayers = [ true, true, true ];
 
+	public static TimelineType VisibleTimelineType;
+	public static HashSet<string> VisibleTimelines = [];
+
 	// REVIEW: Auto-mode? Which basically chooses whichever looks better for any given connection?
 	// (I.E. choose the one that's closest, but preferably one that does not invert (for example, CC_S01))
 	public static bool changeConnectBehaviour = true;
@@ -797,7 +800,7 @@ public static class WorldWindow {
 		foreach (Room room in WorldWindow.region.rooms) {
 			if (!room.data.merge)
 				continue;
-			if (!VisibleLayers[room.data.layer])
+			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
 				continue;
 
 			if (PositionType == RoomPosition.Both) {
@@ -824,7 +827,7 @@ public static class WorldWindow {
 				room.MoveUpdate();
 			}
 
-			if (!VisibleLayers[room.data.layer])
+			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
 				continue;
 
 			if(WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
@@ -1174,6 +1177,35 @@ public static class WorldWindow {
 		return bounds.x0 < camBound.x1 && bounds.x1 > camBound.x0 && bounds.y0 < camBound.y1 && bounds.y1 > camBound.y0;
 	}
 
+	public static bool CheckVisibleTimeline (TimelineType timelineType, HashSet<string> timelines) {
+		if(VisibleTimelineType == TimelineType.All) return true;
+		if (timelineType == TimelineType.All && VisibleTimelineType != TimelineType.Only) return true;
+		if(VisibleTimelineType == TimelineType.Except) {
+			if (timelineType == TimelineType.Only) {
+				foreach(string timeline in timelines) {
+					if (!VisibleTimelines.Contains(timeline)) { return true; }
+				}
+			}
+			else if (timelineType == TimelineType.Except) {
+				return true; // should really technically only return true if timelines does not exclude literally every slugcat that isn't excepted by world.
+			}
+		}
+		else if(VisibleTimelineType == TimelineType.Only) {
+			if (timelineType == TimelineType.All && VisibleTimelines.Count != 0) return true;
+			if (timelineType == TimelineType.Only) {
+				foreach (string timeline in timelines) {
+					if (VisibleTimelines.Contains(timeline)) { return true; }
+				}
+			}
+			else if (timelineType == TimelineType.Except) {
+				foreach (string timeline in VisibleTimelines) {
+					if (!timelines.Contains(timeline)) { return true; }
+				}
+			}
+		}
+		return false;
+	}
+
 	private static void HandleRoomFilesSelected(string[] paths) {
 		if (paths.Length == 0)
 			return;
@@ -1415,6 +1447,33 @@ public static class WorldWindow {
 				new LayerButton(0, () => { return WorldWindow.ValidRegionLoaded; }),
 				new LayerButton(1, () => { return WorldWindow.ValidRegionLoaded; }),
 				new LayerButton(2, () => { return WorldWindow.ValidRegionLoaded; }),
+
+				new Button("Timeline", button => {
+					PopupManager.Add(new TimelinePopup(
+						WorldWindow.VisibleTimelineType, 
+						WorldWindow.VisibleTimelines,
+						(TimelineType) => {
+							WorldWindow.VisibleTimelineType = TimelineType;
+							UpdateVisibleTimelines?.Invoke(WorldWindow.VisibleTimelineType, WorldWindow.VisibleTimelines);
+							if(VisibleTimelineType == TimelineType.All) button.text = "Timeline";
+							else if(VisibleTimelineType == TimelineType.Only) button.text = "<Timeline>";
+							else button.text = ">Timeline<";
+						},
+						(selected, timeline) => {
+							if(selected)
+								WorldWindow.VisibleTimelines.Remove(timeline);
+							else
+								WorldWindow.VisibleTimelines.Add(timeline);
+							UpdateVisibleTimelines?.Invoke(WorldWindow.VisibleTimelineType, WorldWindow.VisibleTimelines);
+							if(VisibleTimelineType == TimelineType.All) button.text = "Timeline";
+							else if(VisibleTimelineType == TimelineType.Only) button.text = "<Timeline>";
+							else button.text = ">Timeline<";
+						},
+						ref UpdateVisibleTimelines));
+					}, () => {
+						return WorldWindow.ValidRegionLoaded;
+					}
+				),
 
 				new Button("Dev Items: Hidden", button => {
 					VisibleDevItems = !VisibleDevItems;
