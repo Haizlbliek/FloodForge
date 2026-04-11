@@ -1481,12 +1481,17 @@ public class Room {
 		bool drawnDen = false;
 
 		float selectorScale = WorldWindow.SelectorScale;
+		int drawnCreatures = 0;
 		for (int i = 0; i < den.creatures.Count; i++) {
 			DenCreature creature = den.creatures[i];
-			if (creature.type.IsNullOrEmpty() && creature.lineageTo == null) continue;
+			if (creature.type.IsNullOrEmpty() && creature.lineageTo == null) {
+				drawnCreatures++;
+				continue;
+			}
+			if (creature is DenLineage denLineage && !WorldWindow.CheckVisibleTimeline(denLineage.timelineType, denLineage.timelines)) continue;
 
 			float scale = selectorScale;
-			float rectX = x + i * scale - (den.creatures.Count - 1f) * 0.5f * scale;
+			float rectX = x + drawnCreatures * scale - (den.creatures.Count - 1f) * 0.5f * scale;
 			float rectY = y;
 
 			if (hovered) scale *= 1.5f;
@@ -1516,6 +1521,7 @@ public class Room {
 					}
 				}
 			}
+			drawnCreatures++;
 		}
 		if (!drawnDen && (!denEmpty || denEmpty && WorldWindow.cameraScale < 400f || roomHovered)) {
 			Immediate.Color(Themes.RoomShortcutDen);
