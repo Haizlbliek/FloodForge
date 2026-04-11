@@ -30,6 +30,7 @@ public static class WorldWindow {
 	public static Region region = null!;
 	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty());
 	public static bool invalidCreaturesEncountered = false;
+	public static bool ExportFinished = true;
 	public static Vector2 cameraOffset;
 	private static bool cameraPanning = false;
 	private static bool cameraPanningBlocked = false;
@@ -1260,6 +1261,7 @@ public static class WorldWindow {
 
 			WorldExporter.ExportPropertiesFile(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "properties.txt"));
 			PopupManager.Add(new InfoPopup("Exported successfully!"));
+			WorldWindow.ExportFinished = true;
 			if (Main.AprilFools) Sfx.Play("assets/objects/yay.wav");
 		}
 
@@ -1328,13 +1330,13 @@ public static class WorldWindow {
 						WorldWindow.region.exportPath = lastExportDirectory;
 					}
 					if(!invalidCreaturesEncountered){
-						ExportButtonFunction();
+						WorldWindow.ExportFinished = false;
 					}
 					else{
 						PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(ExportButtonFunction));
 					}
 				}, () => {
-					return WorldWindow.ValidRegionLoaded;
+					return WorldWindow.ValidRegionLoaded && WorldWindow.ExportFinished;
 				},
 				"You must create or import a region\nbefore exporting."),
 
