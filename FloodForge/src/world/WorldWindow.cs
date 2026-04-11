@@ -570,10 +570,11 @@ public static class WorldWindow {
 		if (Keys.JustPressed(Key.D)) {
 			Connection? connection = HoveringConnection;
 			if (connection != null) {
-				PopupManager.Add(new ConditionalPopup(connection));
+				connection.conditionalPopup = PopupManager.Add(new ConditionalPopup(connection)) as ConditionalPopup;
 			}
 			else if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
-				PopupManager.Add(new ConditionalPopup(rooms));
+				ConditionalPopup? conditionalPopup = PopupManager.Add(new ConditionalPopup(rooms)) as ConditionalPopup;
+				rooms.ForEach((room) => {room.conditionalPopup = conditionalPopup;});
 			}
 		}
 

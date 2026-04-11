@@ -100,6 +100,7 @@ public class DenCreature {
 public class DenLineage : DenCreature {
 	public TimelineType timelineType = TimelineType.All;
 	public HashSet<string> timelines = [];
+	public ConditionalPopup? conditionalPopup;
 
 	public DenLineage(string type, int count) : base(type, count) {
 	}

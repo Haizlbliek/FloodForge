@@ -25,6 +25,7 @@ public class Room {
 	public string name;
 	public TimelineType TimelineType;
 	public HashSet<string> Timelines = [];
+	public ConditionalPopup? conditionalPopup;
 	public Vector2 CanonPosition;
 	public Vector2 DevPosition;
 	public Vector2 CanonVel;
