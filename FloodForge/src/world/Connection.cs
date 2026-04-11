@@ -9,6 +9,7 @@ public class Connection {
 
 	public HashSet<string> timelines = [];
 	public TimelineType timelineType = TimelineType.All;
+	public ConditionalPopup? conditionalPopup;
 
 	protected int segments;
 	protected float directionStrength;
