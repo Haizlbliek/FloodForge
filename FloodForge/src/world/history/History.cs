@@ -9,16 +9,27 @@ public static class History {
 	private static bool Collectingchanges = false;
 	private static List<Change> collectedChanges = [];
 	private static List<Type> typesToCollect = [];
+	
+	/// <summary>
+	/// Start collecting changes of types <c>collectingTypes</c> instead of applying them directly.
+	/// Does not yet support multiple differing collections happening at the same time.
+	/// Make sure to use <c>StopCollectingChanges</c> in order to avoid nullifying all changes of types <c>collectingTypes</c>.
+	/// </summary>
 	public static void StartCollectingChanges(List<Type> collectingTypes) {
+		collectedChanges = [];
 		Collectingchanges = true;
 		typesToCollect = collectingTypes;
 	}
 	
-	public static void StopCollectingChanges(out Change[] collectedChanges) {
+	
+	/// <summary>
+	/// Stop collecting changes and return an array of all collected changes.
+	/// Of note: this does not automatically apply the collected changes. Apply them after if necessary.
+	/// Does not yet support multiple differing collections happening at the same time.
+	/// </summary>
+	public static Change[] StopCollectingChanges() {
 		Collectingchanges = false;
-		collectedChanges = [.. History.collectedChanges];
-		History.collectedChanges = [];
-		return;
+		return [.. History.collectedChanges];
 	}
 
 	public static void Apply(Change change) {

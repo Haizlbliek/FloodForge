@@ -1264,7 +1264,7 @@ public static class WorldWindow {
 			}
 		}
 		if(paths.Length > 1) {
-			History.StopCollectingChanges(out Change[] collectedChanges);
+			Change[] collectedChanges = History.StopCollectingChanges();
 			if(collectedChanges.Length != 0) {
 				MassChange change = new MassChange(collectedChanges);
 				History.Apply(change);
