@@ -1363,7 +1363,7 @@ public static class DropletWindow {
 		data[index + 2] = b;
 	}
 
-	private static bool RenderCamera(RoomData.Camera camera, string roomFolderPath, string newImageName) {
+	private static bool RenderCamera(RoomData.Camera camera, string roomFolderPath, string newImageName) { // NOTE - Shortcutdots don't seem to line up properly
 		byte[] image = new byte[CameraTextureWidth * CameraTextureHeight * 3];
 		bool SwitchRenderProcess = true;
 

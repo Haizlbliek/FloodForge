@@ -183,11 +183,11 @@ public static class WorldParser {
 	}
 
 	private struct ConnectionToAdd {
-		public Room roomA; // actual reference to room A
-		public uint roomAExitID; // old: reference to shortcut entrance; goal: reference to roomexit
-		public Room? roomB = null; // actual reference to room B
-		public string roomBName = ""; // name of room B
-		public uint? roomBExitID = null; // old: reference to shortcut entrance; goal: reference to roomexit
+		public Room roomA;
+		public uint roomAExitID;
+		public Room? roomB = null;
+		public string roomBName = "";
+		public uint? roomBExitID = null;
 
 		public ConnectionToAdd(Room roomA, uint connectionA, string roomBName) {
 			this.roomA = roomA;

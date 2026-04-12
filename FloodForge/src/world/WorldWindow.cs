@@ -847,7 +847,6 @@ public static class WorldWindow {
 					}
 				}
 
-				// might need to update the Room.Draw function as well?
 				if (PositionType == RoomPosition.Both) {
 					room.Draw(RoomPosition.Canon);
 					room.Draw(RoomPosition.Dev);
@@ -888,11 +887,9 @@ public static class WorldWindow {
 				Immediate.Color(Color.Cyan);
 				UI.StrokeRect(connectionAABB);
 			}
-			// connection.Draw needs to be checked for sure
 			connection.Draw();
 		}
 
-		// this one uses similar logic to connection.Draw, so shouldn't be too different to handle
 		DrawCurrentConnection();
 		Profiler.MarkPoint("DrawConnections");
 
