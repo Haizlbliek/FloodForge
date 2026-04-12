@@ -1237,6 +1237,7 @@ public static class WorldWindow {
 		if (paths.Length == 0)
 			return;
 
+		if(paths.Length > 1) History.StartCollectingChanges([typeof(RoomAndConnectionChange), typeof(RoomReplacementChange)]);
 		int pathCount = 0;
 		foreach (string path in paths) {
 			if (!path.EndsWith(".txt")) {
@@ -1263,6 +1264,13 @@ public static class WorldWindow {
 					selectedRooms.Add(newRoom);
 					pathCount++;
 				}
+			}
+		}
+		if(paths.Length > 1) {
+			History.StopCollectingChanges(out Change[] collectedChanges);
+			if(collectedChanges.Length != 0) {
+				MassChange change = new MassChange(collectedChanges);
+				History.Apply(change);
 			}
 		}
 	}
