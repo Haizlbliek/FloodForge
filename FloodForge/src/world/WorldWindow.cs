@@ -1244,12 +1244,6 @@ public static class WorldWindow {
 				HandleGateFile(path, filename);
 			}
 			else {
-				if (acronym[Math.Max(acronym.IndexOfReverse('-'), 0)..] == "rooms")
-					acronym = acronym[0..acronym.IndexOfReverse('-')];
-				else if (filename.Split('_').Length > 0)
-					acronym = filename.Split('_')[0];
-				else
-					acronym = "";
 				Room newRoom = HandleStandardFile(path, filename, acronym);
 				if (newRoom != null) {
 					newRoom.CanonPosition.x += (pathCount - paths.Length / 2) * 15f;
@@ -1349,6 +1343,12 @@ public static class WorldWindow {
 	}
 
 	private static Room HandleStandardFile(string path, string filename, string acronym, bool isGateFile = false) {
+		if (acronym[Math.Max(acronym.IndexOfReverse('-'), 0)..] == "rooms")
+			acronym = acronym[0..acronym.IndexOfReverse('-')];
+		else if (filename.Split('_').Length > 0)
+			acronym = filename.Split('_')[0];
+		else
+			acronym = "";
 		if ((acronym.Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase) &! acronym.IsNullOrEmpty()) || region.exportPath.IsNullOrEmpty()) {
 			return CreateAndAddRoom(path, filename);
 		}
