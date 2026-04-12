@@ -59,7 +59,7 @@ public class Room {
 	private int specialExitCount = 0;
 	public int GarbageWormDenIndex => this.specialExitCount + this.nonDenExitCount + this.denShortcutEntrances.Count;
 
-	public bool Visible => WorldWindow.VisibleLayers[this.data.layer];
+	public bool Visible => WorldWindow.VisibleLayers[this.data.layer] &! this.replaced && WorldWindow.CheckVisibleTimeline(this.TimelineType, this.Timelines);
 
 	public Room(string path, string name, bool pathOutsideRoomsFolder = false) {
 		this.pathOutsideRoomsFolder = pathOutsideRoomsFolder;

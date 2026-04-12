@@ -245,13 +245,15 @@ public static class WorldWindow {
 					return;
 				}
 
-				ConnectionStart = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
-				ConnectionEnd = ConnectionStart;
-				CurrentConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
-				connectionState = ConnectionState.Connection;
+				if(hoveringRoom.Visible) {
+					ConnectionStart = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
+					ConnectionEnd = ConnectionStart;
+					CurrentConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
+					connectionState = ConnectionState.Connection;
+				}
 			}
 			else if (connectionState == ConnectionState.Connection && CurrentConnection != null) {
-				if (hoveringRoom != null) {
+				if (hoveringRoom != null && hoveringRoom.Visible) {
 					ConnectionEnd = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
 					CurrentConnection.roomB = hoveringRoom;
 					CurrentConnection.roomBExitID = hoveringConnection;
@@ -306,7 +308,7 @@ public static class WorldWindow {
 				if (selectingState == SelectingState.None) {
 					Room? room = HoveringRoom;
 
-					if (room != null) {
+					if (room != null && room.Visible) {
 						holdingRoom = room;
 						holdingStart = worldMouse;
 						roomPossibleSelect = room;
@@ -355,7 +357,7 @@ public static class WorldWindow {
 
 			if (selectingState == SelectingState.Selecting) {
 				foreach (Room room in region.rooms) {
-					if (room.Intersects(selectionStart, selectionEnd)) selectedRooms.Add(room);
+					if (room.Intersects(selectionStart, selectionEnd)) if(room.Visible) selectedRooms.Add(room);
 				}
 			}
 
