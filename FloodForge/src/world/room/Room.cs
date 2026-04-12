@@ -21,6 +21,7 @@ public class Room {
 	public const uint FLAG_SPEAR = 524288;
 
 	public bool pathOutsideRoomsFolder = false;
+	public bool replaced = false;
 	public string path;
 	public string name;
 	public TimelineType TimelineType;
