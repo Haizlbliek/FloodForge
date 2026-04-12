@@ -33,6 +33,14 @@ public static class History {
 		return [.. History.collectedChanges];
 	}
 
+	/// <summary>
+	/// Stop collecting changes and return a new MassChange from all collected changes.
+	/// Does not yet support multiple differing collections happening at the same time.
+	/// </summary>
+	public static MassChange GetCollectedMassChange() {
+		return new MassChange(StopCollectingChanges());
+	}
+
 	public static void Apply(Change change) {
 		if (!Collectingchanges || (typesToCollect.Count != 0 && !typesToCollect.Contains(change.GetType()))) {
 			change.Redo();
