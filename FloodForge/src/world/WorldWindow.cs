@@ -1473,7 +1473,7 @@ public static class WorldWindow {
 						PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(ExportButton));
 					}
 				}, button => {
-					return WorldWindow.ValidRegionLoaded && WorldWindow.ExportFinished;
+					return WorldWindow.region != null && WorldWindow.ExportFinished;
 				},
 				"You must create or import a region\nbefore exporting."),
 
