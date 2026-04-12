@@ -22,7 +22,6 @@ public class Room {
 	public const uint FLAG_SPEAR = 524288;
 
 	public bool pathOutsideRoomsFolder = false;
-	public bool replaced = false;
 	public string path;
 	public string name;
 	public TimelineType TimelineType;
@@ -59,7 +58,7 @@ public class Room {
 	private int specialExitCount = 0;
 	public int GarbageWormDenIndex => this.specialExitCount + this.nonDenExitCount + this.denShortcutEntrances.Count;
 
-	public bool Visible => WorldWindow.VisibleLayers[this.data.layer] &! this.replaced && WorldWindow.CheckVisibleTimeline(this.TimelineType, this.Timelines);
+	public bool Visible => WorldWindow.VisibleLayers[this.data.layer] && WorldWindow.CheckVisibleTimeline(this.TimelineType, this.Timelines);
 
 	public Room(string path, string name, bool pathOutsideRoomsFolder = false) {
 		this.pathOutsideRoomsFolder = pathOutsideRoomsFolder;

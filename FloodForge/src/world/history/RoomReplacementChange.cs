@@ -3,8 +3,9 @@ using Stride.Core;
 namespace FloodForge.World;
 
 public class RoomReplacementChange : Change {
-    protected readonly RoomAndConnectionChange initialRoomChange;
+    protected readonly RoomAndConnectionChange newRoomCreateChange;
     protected readonly Room newRoom;
+    protected readonly RoomAndConnectionChange replacedRoomRemoveChange;
     protected readonly Room replacedRoom;
 
     protected readonly string filePath;
@@ -41,12 +42,14 @@ public class RoomReplacementChange : Change {
                 this.newImages[i] = File.ReadAllBytes(imagePath);
         }
         
-		this.initialRoomChange = new RoomAndConnectionChange(true);
-		this.initialRoomChange.AddRoom(this.newRoom);
+		this.newRoomCreateChange = new RoomAndConnectionChange(true);
+		this.newRoomCreateChange.AddRoom(this.newRoom);
+        this.replacedRoomRemoveChange = new RoomAndConnectionChange(false);
+        this.replacedRoomRemoveChange.AddRoom(this.replacedRoom);
     }
 
     public override void Redo() {
-        this.initialRoomChange.Redo();
+        this.newRoomCreateChange.Redo();
 
         for(int i = 0; i < this.newRoom.data.cameras.Count; i++) {
             string imageSuffix = $"_{i + 1}.png";
@@ -55,7 +58,6 @@ public class RoomReplacementChange : Change {
         }
         File.WriteAllText(this.filePath, this.newFile);
 
-        this.replacedRoom.replaced = true;
         List<Connection> connectionsToRemove = [];
         foreach(Connection connection in this.replacedRoom.connections) {
             this.newRoom.connections.Add(connection);
@@ -73,9 +75,13 @@ public class RoomReplacementChange : Change {
         }
         this.newRoom.DevPosition = this.replacedRoom.DevPosition;
         this.newRoom.CanonPosition = this.replacedRoom.CanonPosition;
+
+        this.replacedRoomRemoveChange.Redo();
     }
 
 	public override void Undo() {
+        this.replacedRoomRemoveChange.Undo();
+
         List<Connection> connectionsToRemove = [];
         foreach(Connection connection in this.newRoom.connections) {
             this.replacedRoom.connections.Add(connection);
@@ -86,7 +92,7 @@ public class RoomReplacementChange : Change {
         foreach(Connection connectionToRemove in connectionsToRemove) {
             this.newRoom.connections.Remove(connectionToRemove);
         }
-        this.initialRoomChange.Undo();
+        this.newRoomCreateChange.Undo();
 
         for(int i = 0; i < this.replacedRoom.data.cameras.Count; i++) {
             string imageSuffix = $"_{i + 1}.png";
@@ -94,7 +100,5 @@ public class RoomReplacementChange : Change {
             File.WriteAllBytes(imagePath, this.oldImages[i]);
         }
         File.WriteAllText(this.filePath, this.oldFile);
-
-        this.replacedRoom.replaced = false;
 	}
 }
