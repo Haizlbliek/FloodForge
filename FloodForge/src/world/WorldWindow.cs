@@ -1058,9 +1058,9 @@ public static class WorldWindow {
 		Subregion,
 	}
 
-	private static Room? CopyRoom(string fromFilePath, string toFilePath) {
-		if (File.Exists(toFilePath)) {
-			return null;
+	private static Room? CopyRoom(string fromFilePath, string toFilePath, bool forceOverwrite = false) {
+		if (File.Exists(toFilePath) &! forceOverwrite) {
+			return null!;
 		}
 
 		FileInfo fromFile = new FileInfo(fromFilePath);
@@ -1068,6 +1068,9 @@ public static class WorldWindow {
 		string fromRoom = Path.GetFileNameWithoutExtension(fromFile.Name);
 		string toRoom = Path.GetFileNameWithoutExtension(toFile.Name);
 
+		if(forceOverwrite) {
+			File.Delete(toFilePath);
+		}
 		File.Copy(fromFilePath, toFilePath);
 		bool initial = Settings.WarnMissingImages;
 		Settings.WarnMissingImages.value = false;
@@ -1089,10 +1092,10 @@ public static class WorldWindow {
 
 			if (sourceImage != null) {
 				string destImage = Path.Combine(toFile.DirectoryName!, toRoom + imageSuffix);
+				if(forceOverwrite) File.Delete(destImage);
 				File.Copy(sourceImage, destImage);
 			}
 		}
-
 		return room;
 	}
 
@@ -1247,8 +1250,18 @@ public static class WorldWindow {
 					.SetOkay("Yes")
 					.Okay(() => {
 						string filename = Path.GetFileName(path);
-						string newName = $"{WorldWindow.region.acronym}{filename[filename.IndexOf('_')..]}.txt";
-						CopyRoom(path, PathUtil.Combine(path, $"../{newName}"))?.data.tags = ["GATE"];
+						string newName = $"{region.acronym}{filename[filename.IndexOf('_')..]}";
+						string toPath = PathUtil.Combine(region.roomsPath, $"../{region.acronym}-rooms/{newName}");
+						if (File.Exists(toPath)) {				
+							PopupManager.Add(new ConfirmPopup($"File {newName}already exists in\n{toPath[..Math.Max(0, toPath.IndexOfReverse('\\'))].Split("StreamingAssets")[^1]}\nOverwrite existing file?")
+							.SetOkay("Overwrite")
+							.SetCancel("Cancel")
+							.Okay(() => {
+								CopyRoom(path, toPath, true);
+							}));
+						}
+						else
+							CopyRoom(path, toPath)?.data.tags = isGateFile ? ["GATE"] : [];
 					})
 			);
 		}
