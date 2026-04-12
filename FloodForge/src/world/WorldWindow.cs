@@ -947,6 +947,8 @@ public static class WorldWindow {
 			}
 			else {
 				debugText.Add($"Name: {hoveringRoom.name}");
+				if(hoveringRoom.pathOutsideRoomsFolder)
+					debugText.Add($" > Room imported from outside {region.acronym}-rooms");
 				debugText.Add($"Tags: {string.Join(" ", hoveringRoom.data.tags)}");
 				debugText.Add($"Size: {hoveringRoom.width}x{hoveringRoom.height}");
 				debugText.Add($"Dens: {hoveringRoom.dens.Count}");
@@ -1094,9 +1096,9 @@ public static class WorldWindow {
 		return room;
 	}
 
-	private static Room CreateAndAddRoom(string path, string name, string tag = "") {
+	private static Room CreateAndAddRoom(string path, string name, string tag = "", bool importFromOutside = false) {
 		RoomAndConnectionChange change = new RoomAndConnectionChange(true);
-		Room room = new Room(path, name);
+		Room room = new Room(path, name, importFromOutside);
 		if (tag.Length > 0)
 			room.data.tags = [tag];
 		room.CanonPosition = room.DevPosition = WorldWindow.cameraOffset;
@@ -1149,7 +1151,7 @@ public static class WorldWindow {
 	private static void HandleGateFile(string path, string filename) {
 		string[] names = filename.Split('_');
 
-		if (names[1].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase) || names[2].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
+		if (names[1].Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase) || names[2].Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
 			CreateAndAddRoom(path, filename, "GATE");
 		}
 		else {
@@ -1157,12 +1159,12 @@ public static class WorldWindow {
 				new ConfirmPopup("Change which acronym?")
 					.SetOkay(names[2])
 					.Okay(() => {
-						string newName = $"gate_{names[1]}_{WorldWindow.region.acronym}.txt";
+						string newName = $"gate_{names[1]}_{region.acronym}.txt";
 						CopyRoom(path, PathUtil.Combine(path, $"../{newName}"))?.data.tags = ["GATE"];
 					})
 					.SetCancel(names[1])
 					.Cancel(() => {
-						string newName = $"gate_{WorldWindow.region.acronym}_{names[2]}.txt";
+						string newName = $"gate_{region.acronym}_{names[2]}.txt";
 						CopyRoom(path, PathUtil.Combine(path, $"../{newName}"))?.data.tags = ["GATE"];
 					})
 			);
@@ -1226,16 +1228,16 @@ public static class WorldWindow {
 		}
 	}
 
-	private static Room HandleStandardFile(string path, string filename, string acronym) {
-		if (acronym.Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase) || WorldWindow.region.exportPath.IsNullOrEmpty()) {
+	private static Room HandleStandardFile(string path, string filename, string acronym, bool isGateFile = false) {
+		if ((acronym.Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase) &! acronym.IsNullOrEmpty()) || region.exportPath.IsNullOrEmpty()) {
 			return CreateAndAddRoom(path, filename);
 		}
 		else {
 			PopupManager.Add(
-				new ConfirmPopup($"Copy room to {WorldWindow.region.acronym}-rooms?")
+				new ConfirmPopup($"Room {filename} isn't located inside {region.acronym}.\nCopy room to {region.acronym}-rooms?")
 					.SetCancel("Just Add")
 					.Cancel(() => {
-						CreateAndAddRoom(path, filename);
+						CreateAndAddRoom(path, filename, importFromOutside: true);
 					})
 					.SetOkay("Yes")
 					.Okay(() => {
