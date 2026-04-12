@@ -798,6 +798,8 @@ public static class WorldWindow {
 
 		Program.gl.Enable(EnableCap.Blend);
 		foreach (Room room in WorldWindow.region.rooms) {
+			if (room.replaced)
+				continue;
 			if (!room.data.merge)
 				continue;
 			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
@@ -827,6 +829,8 @@ public static class WorldWindow {
 				room.MoveUpdate();
 			}
 
+			if (room.replaced)
+				continue;
 			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
 				continue;
 
@@ -953,6 +957,8 @@ public static class WorldWindow {
 			}
 			else {
 				debugText.Add($"Name: {hoveringRoom.name}");
+				if(hoveringRoom.pathOutsideRoomsFolder)
+					debugText.Add($" > Room imported from outside {region.acronym}-rooms");
 				debugText.Add($"Tags: {string.Join(" ", hoveringRoom.data.tags)}");
 				debugText.Add($"Size: {hoveringRoom.width}x{hoveringRoom.height}");
 				debugText.Add($"Dens: {hoveringRoom.dens.Count}");
@@ -1116,9 +1122,9 @@ public static class WorldWindow {
 		Subregion,
 	}
 
-	private static Room? CopyRoom(string fromFilePath, string toFilePath) {
-		if (File.Exists(toFilePath)) {
-			return null;
+	private static Room? CopyRoom(string fromFilePath, string toFilePath, bool forceOverwrite = false) {
+		if (File.Exists(toFilePath) &! forceOverwrite) {
+			return null!;
 		}
 
 		FileInfo fromFile = new FileInfo(fromFilePath);
@@ -1126,6 +1132,9 @@ public static class WorldWindow {
 		string fromRoom = Path.GetFileNameWithoutExtension(fromFile.Name);
 		string toRoom = Path.GetFileNameWithoutExtension(toFile.Name);
 
+		if(forceOverwrite) {
+			File.Delete(toFilePath);
+		}
 		File.Copy(fromFilePath, toFilePath);
 		bool initial = Settings.WarnMissingImages;
 		Settings.WarnMissingImages.value = false;
@@ -1134,10 +1143,38 @@ public static class WorldWindow {
 			DevPosition = WorldWindow.cameraOffset
 		};
 		Settings.WarnMissingImages.value = initial;
-
+		Room? roomToDelete = null;
+		if (forceOverwrite) {
+			foreach (Room roomToCheck in region.rooms) {
+				if(roomToCheck.name == room.name) {
+					roomToDelete = roomToCheck;
+					break;
+				}
+			}
+		}
 		RoomAndConnectionChange change = new RoomAndConnectionChange(true);
 		change.AddRoom(room);
 		History.Apply(change);
+		if(roomToDelete != null) {
+			roomToDelete.replaced = true;
+			List<Connection> connectionsToRemove = [];
+			foreach(Connection connection in roomToDelete.connections) {
+				room.connections.Add(connection);
+				connectionsToRemove.Add(connection);
+				if (connection.roomA == roomToDelete) connection.roomA = room;
+				if (connection.roomB == roomToDelete) connection.roomB = room;
+			}
+			foreach(Connection connectionToRemove in connectionsToRemove) {
+				roomToDelete.connections.Remove(connectionToRemove);
+			}
+			foreach (Vector2i denPos in roomToDelete.denShortcutEntrances) {
+				int id = roomToDelete.GetDenId(denPos);
+				if(room.HasDen(id))
+					room.dens[id] = roomToDelete.GetDen(id);
+			}
+			room.DevPosition = roomToDelete.DevPosition;
+			room.CanonPosition = roomToDelete.CanonPosition;
+		}
 
 		for (int i = 0; i < room.data.cameras.Count; i++) {
 			string imageSuffix = $"_{i + 1}.png";
@@ -1147,16 +1184,16 @@ public static class WorldWindow {
 
 			if (sourceImage != null) {
 				string destImage = Path.Combine(toFile.DirectoryName!, toRoom + imageSuffix);
+				if(forceOverwrite) File.Delete(destImage);
 				File.Copy(sourceImage, destImage);
 			}
 		}
-
 		return room;
 	}
 
-	private static Room CreateAndAddRoom(string path, string name, string tag = "") {
+	private static Room CreateAndAddRoom(string path, string name, string tag = "", bool importFromOutside = false) {
 		RoomAndConnectionChange change = new RoomAndConnectionChange(true);
-		Room room = new Room(path, name);
+		Room room = new Room(path, name, importFromOutside);
 		if (tag.Length > 0)
 			room.data.tags = [tag];
 		room.CanonPosition = room.DevPosition = WorldWindow.cameraOffset;
@@ -1223,7 +1260,12 @@ public static class WorldWindow {
 				HandleGateFile(path, filename);
 			}
 			else {
-				acronym = acronym[0..acronym.IndexOfReverse('-')];
+				if (acronym[Math.Max(acronym.IndexOfReverse('-'), 0)..] == "rooms")
+					acronym = acronym[0..acronym.IndexOfReverse('-')];
+				else if (filename.Split('_').Length > 0)
+					acronym = filename.Split('_')[0];
+				else
+					acronym = "";
 				Room newRoom = HandleStandardFile(path, filename, acronym);
 				if (newRoom != null) {
 					newRoom.CanonPosition.x += (pathCount - paths.Length / 2) * 15f;
@@ -1238,7 +1280,7 @@ public static class WorldWindow {
 	private static void HandleGateFile(string path, string filename) {
 		string[] names = filename.Split('_');
 
-		if (names[1].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase) || names[2].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
+		if (names[1].Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase) || names[2].Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
 			CreateAndAddRoom(path, filename, "GATE");
 		}
 		else {
@@ -1246,12 +1288,12 @@ public static class WorldWindow {
 				new ConfirmPopup("Change which acronym?")
 					.SetOkay(names[2])
 					.Okay(() => {
-						string newName = $"gate_{names[1]}_{WorldWindow.region.acronym}.txt";
+						string newName = $"gate_{names[1]}_{region.acronym}.txt";
 						CopyRoom(path, PathUtil.Combine(path, $"../{newName}"))?.data.tags = ["GATE"];
 					})
 					.SetCancel(names[1])
 					.Cancel(() => {
-						string newName = $"gate_{WorldWindow.region.acronym}_{names[2]}.txt";
+						string newName = $"gate_{region.acronym}_{names[2]}.txt";
 						CopyRoom(path, PathUtil.Combine(path, $"../{newName}"))?.data.tags = ["GATE"];
 					})
 			);
@@ -1315,22 +1357,32 @@ public static class WorldWindow {
 		}
 	}
 
-	private static Room HandleStandardFile(string path, string filename, string acronym) {
-		if (acronym.Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase) || WorldWindow.region.exportPath.IsNullOrEmpty()) {
+	private static Room HandleStandardFile(string path, string filename, string acronym, bool isGateFile = false) {
+		if ((acronym.Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase) &! acronym.IsNullOrEmpty()) || region.exportPath.IsNullOrEmpty()) {
 			return CreateAndAddRoom(path, filename);
 		}
 		else {
 			PopupManager.Add(
-				new ConfirmPopup($"Copy room to {WorldWindow.region.acronym}-rooms?")
+				new ConfirmPopup($"Room {filename} isn't located inside {region.acronym}.\nCopy room to {region.acronym}-rooms?")
 					.SetCancel("Just Add")
 					.Cancel(() => {
-						CreateAndAddRoom(path, filename);
+						CreateAndAddRoom(path, filename, importFromOutside: true);
 					})
 					.SetOkay("Yes")
 					.Okay(() => {
 						string filename = Path.GetFileName(path);
-						string newName = $"{WorldWindow.region.acronym}{filename[filename.IndexOf('_')..]}.txt";
-						CopyRoom(path, PathUtil.Combine(path, $"../{newName}"))?.data.tags = ["GATE"];
+						string newName = $"{region.acronym}{filename[filename.IndexOf('_')..]}";
+						string toPath = PathUtil.Combine(region.roomsPath, $"../{region.acronym}-rooms/{newName}");
+						if (File.Exists(toPath)) {				
+							PopupManager.Add(new ConfirmPopup($"File {newName}already exists in\n{toPath[..Math.Max(0, toPath.IndexOfReverse('\\'))].Split("StreamingAssets")[^1]}\nOverwrite existing file?")
+							.SetOkay("Overwrite")
+							.SetCancel("Cancel")
+							.Okay(() => {
+								CopyRoom(path, toPath, true);
+							}));
+						}
+						else
+							CopyRoom(path, toPath)?.data.tags = isGateFile ? ["GATE"] : [];
 					})
 			);
 		}
