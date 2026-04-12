@@ -1134,7 +1134,9 @@ public static class WorldWindow {
 		string fromRoom = Path.GetFileNameWithoutExtension(fromFile.Name);
 		string toRoom = Path.GetFileNameWithoutExtension(toFile.Name);
 
+		string oldFile = "";
 		if(forceOverwrite) {
+			oldFile = File.ReadAllText(toFilePath);
 			File.Delete(toFilePath);
 		}
 		File.Copy(fromFilePath, toFilePath);
@@ -1154,41 +1156,27 @@ public static class WorldWindow {
 				}
 			}
 		}
-		RoomAndConnectionChange change = new RoomAndConnectionChange(true);
-		change.AddRoom(room);
-		History.Apply(change);
-		if(roomToDelete != null) {
-			roomToDelete.replaced = true;
-			List<Connection> connectionsToRemove = [];
-			foreach(Connection connection in roomToDelete.connections) {
-				room.connections.Add(connection);
-				connectionsToRemove.Add(connection);
-				if (connection.roomA == roomToDelete) connection.roomA = room;
-				if (connection.roomB == roomToDelete) connection.roomB = room;
+		if(roomToDelete == null) {
+			RoomAndConnectionChange change = new RoomAndConnectionChange(true);
+			change.AddRoom(room);
+			History.Apply(change);
+
+			for (int i = 0; i < room.data.cameras.Count; i++) {
+				string imageSuffix = $"_{i + 1}.png";
+				string imagePath = fromRoom + imageSuffix;
+
+				string? sourceImage = PathUtil.FindFile(fromFile.DirectoryName!, imagePath);
+
+				if (sourceImage != null) {
+					string destImage = Path.Combine(toFile.DirectoryName!, toRoom + imageSuffix);
+					if(forceOverwrite) File.Delete(destImage);
+					File.Copy(sourceImage, destImage);
+				}
 			}
-			foreach(Connection connectionToRemove in connectionsToRemove) {
-				roomToDelete.connections.Remove(connectionToRemove);
-			}
-			foreach (Vector2i denPos in roomToDelete.denShortcutEntrances) {
-				int id = roomToDelete.GetDenId(denPos);
-				if(room.HasDen(id))
-					room.dens[id] = roomToDelete.GetDen(id);
-			}
-			room.DevPosition = roomToDelete.DevPosition;
-			room.CanonPosition = roomToDelete.CanonPosition;
 		}
-
-		for (int i = 0; i < room.data.cameras.Count; i++) {
-			string imageSuffix = $"_{i + 1}.png";
-			string imagePath = fromRoom + imageSuffix;
-
-			string? sourceImage = PathUtil.FindFile(fromFile.DirectoryName!, imagePath);
-
-			if (sourceImage != null) {
-				string destImage = Path.Combine(toFile.DirectoryName!, toRoom + imageSuffix);
-				if(forceOverwrite) File.Delete(destImage);
-				File.Copy(sourceImage, destImage);
-			}
+		else {
+			RoomReplacementChange change = new RoomReplacementChange(room, roomToDelete, toFilePath, fromFilePath, oldFile);
+			History.Apply(change);
 		}
 		return room;
 	}
