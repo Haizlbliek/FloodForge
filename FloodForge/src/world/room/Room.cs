@@ -20,6 +20,7 @@ public class Room {
 	public const uint FLAG_ROCK = 262144;
 	public const uint FLAG_SPEAR = 524288;
 
+	public bool pathOutsideRoomsFolder = false;
 	public string path;
 	public string name;
 	public TimelineType TimelineType;
@@ -56,7 +57,8 @@ public class Room {
 
 	public bool Visible => WorldWindow.VisibleLayers[this.data.layer];
 
-	public Room(string path, string name) {
+	public Room(string path, string name, bool pathOutsideRoomsFolder = false) {
+		this.pathOutsideRoomsFolder = pathOutsideRoomsFolder;
 		this.path = path;
 		this.name = name;
 		this.TimelineType = TimelineType.All;
