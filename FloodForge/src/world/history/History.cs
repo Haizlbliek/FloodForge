@@ -16,6 +16,7 @@ public static class History {
 	/// Make sure to use <c>StopCollectingChanges</c> in order to avoid nullifying all changes of types <c>collectingTypes</c>.
 	/// </summary>
 	public static void StartCollectingChanges(List<Type> collectingTypes) {
+		if(Collectingchanges) throw new ("Cannot start new collection while collection is in progress!");
 		collectedChanges = [];
 		Collectingchanges = true;
 		typesToCollect = collectingTypes;
