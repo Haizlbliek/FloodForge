@@ -1366,7 +1366,8 @@ public static class WorldWindow {
 					.SetOkay("Yes")
 					.Okay(() => {
 						string filename = Path.GetFileName(path);
-						string newName = $"{region.acronym}{filename[filename.IndexOf('_')..]}";
+						if(!filename.Contains('_')) filename = '_' + filename;
+						string newName = $"{region.acronym}{filename[Math.Max(0, filename.IndexOf('_'))..]}";
 						string toPath = PathUtil.Combine(region.roomsPath, $"../{region.acronym}-rooms/{newName}");
 						if (File.Exists(toPath)) {				
 							PopupManager.Add(new ConfirmPopup($"File {newName}already exists in\n{toPath[..Math.Max(0, toPath.IndexOfReverse('\\'))].Split("StreamingAssets")[^1]}\nOverwrite existing file?")
