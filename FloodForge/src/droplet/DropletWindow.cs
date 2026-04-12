@@ -1731,7 +1731,7 @@ public static class DropletWindow {
 				new Button("Show Position", b => {
 					showMousePosition = !showMousePosition;
 					b.text = showMousePosition ? "Hide Position" : "Show Position";
-				}, () => {
+				}, button => {
 					return currentTab == EditorTab.Geometry;
 				}),
 				new Button("Resize", b => {
