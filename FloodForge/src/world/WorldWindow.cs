@@ -800,8 +800,6 @@ public static class WorldWindow {
 
 		Program.gl.Enable(EnableCap.Blend);
 		foreach (Room room in WorldWindow.region.rooms) {
-			if (room.replaced)
-				continue;
 			if (!room.data.merge)
 				continue;
 			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
@@ -831,8 +829,6 @@ public static class WorldWindow {
 				room.MoveUpdate();
 			}
 
-			if (room.replaced)
-				continue;
 			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
 				continue;
 
