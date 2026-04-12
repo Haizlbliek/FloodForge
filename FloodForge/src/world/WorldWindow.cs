@@ -1451,7 +1451,7 @@ public static class WorldWindow {
 							.Multiple()
 							.Hint("xx_a01.txt")
 					);
-				}, () => {
+				}, button => {
 					return WorldWindow.ValidRegionLoaded;
 				},
 				"You must create or import a region\nbefore adding rooms."),
@@ -1472,7 +1472,7 @@ public static class WorldWindow {
 					else{
 						PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(ExportButton));
 					}
-				}, () => {
+				}, button => {
 					return WorldWindow.ValidRegionLoaded && WorldWindow.ExportFinished;
 				},
 				"You must create or import a region\nbefore exporting."),
@@ -1490,11 +1490,11 @@ public static class WorldWindow {
 						ColorType = RoomColors.None;
 						button.text = "No Colors";
 					}
-				}, () => { return WorldWindow.ValidRegionLoaded; }),
+				}, button => { return WorldWindow.ValidRegionLoaded; }),
 
-				new LayerButton(0, () => { return WorldWindow.ValidRegionLoaded; }),
-				new LayerButton(1, () => { return WorldWindow.ValidRegionLoaded; }),
-				new LayerButton(2, () => { return WorldWindow.ValidRegionLoaded; }),
+				new LayerButton(0, button => { return WorldWindow.ValidRegionLoaded; }),
+				new LayerButton(1, button => { return WorldWindow.ValidRegionLoaded; }),
+				new LayerButton(2, button => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Timeline", button => {
 					PopupManager.Add(new TimelinePopup(
@@ -1518,7 +1518,7 @@ public static class WorldWindow {
 							else button.text = ">Timeline<";
 						},
 						ref UpdateVisibleTimelines));
-					}, () => {
+					}, button => {
 						return WorldWindow.ValidRegionLoaded;
 					}
 				),
@@ -1526,12 +1526,12 @@ public static class WorldWindow {
 				new Button("Dev Items: Hidden", button => {
 					VisibleDevItems = !VisibleDevItems;
 					button.text = VisibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden";
-				}, () => { return WorldWindow.ValidRegionLoaded; }),
+				}, button => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Creatures: Shown", button => {
 					VisibleCreatures = !VisibleCreatures;
 					button.text = VisibleCreatures ? "Creatures: Shown" : "Creatures: Hidden";
-				}, () => { return WorldWindow.ValidRegionLoaded; }),
+				}, button => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Refresh Region", button => {
 					string? path = PathUtil.FindFile(WorldWindow.region.exportPath, $"world_{WorldWindow.region.acronym}.txt");
@@ -1541,7 +1541,7 @@ public static class WorldWindow {
 					}
 
 					WorldParser.ImportWorldFile(path);
-				}, () => { return WorldWindow.ValidRegionLoaded; },
+				}, button => { return WorldWindow.ValidRegionLoaded; },
 				"You must create or import a region\nbefore refreshing."),
 
 				new Button("Canon", button => {
@@ -1558,13 +1558,13 @@ public static class WorldWindow {
 						button.text = "Canon";
 					}
 					MoveUpdate();
-				}, () => { return WorldWindow.ValidRegionLoaded; }),
+				}, button => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Connect: Path", button => {
 					changeConnectBehaviour = !changeConnectBehaviour;
 					button.text = changeConnectBehaviour ? "Connect: Path" : "Connect: Default";
 					MoveUpdate();
-				}, () => { return WorldWindow.ValidRegionLoaded; }),
+				}, button => { return WorldWindow.ValidRegionLoaded; }),
 
 				new AlignedButton("Mass Render", true, button => {
 					confirmRenderPopup = new ConfirmPopup("Render " + oldSelection.Count + " rooms?" + (
@@ -1575,7 +1575,7 @@ public static class WorldWindow {
 							renderRoomsTask = Task.Run(MassRenderRooms);
 						});
 					PopupManager.Add(confirmRenderPopup);
-				}, () => { return oldSelection.Count != 0 && WorldWindow.ValidRegionLoaded; },
+				}, button => { return oldSelection.Count != 0 && ValidRegionLoaded; },
 				"Select at least one valid room\nto render.")
 			];
 		}
