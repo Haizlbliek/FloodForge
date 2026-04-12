@@ -792,6 +792,8 @@ public static class WorldWindow {
 
 		Program.gl.Enable(EnableCap.Blend);
 		foreach (Room room in WorldWindow.region.rooms) {
+			if (room.replaced)
+				continue;
 			if (!room.data.merge)
 				continue;
 			if (!VisibleLayers[room.data.layer])
@@ -821,6 +823,8 @@ public static class WorldWindow {
 				room.MoveUpdate();
 			}
 
+			if (room.replaced)
+				continue;
 			if (!VisibleLayers[room.data.layer])
 				continue;
 
@@ -1079,10 +1083,38 @@ public static class WorldWindow {
 			DevPosition = WorldWindow.cameraOffset
 		};
 		Settings.WarnMissingImages.value = initial;
-
+		Room? roomToDelete = null;
+		if (forceOverwrite) {
+			foreach (Room roomToCheck in region.rooms) {
+				if(roomToCheck.name == room.name) {
+					roomToDelete = roomToCheck;
+					break;
+				}
+			}
+		}
 		RoomAndConnectionChange change = new RoomAndConnectionChange(true);
 		change.AddRoom(room);
 		History.Apply(change);
+		if(roomToDelete != null) {
+			roomToDelete.replaced = true;
+			List<Connection> connectionsToRemove = [];
+			foreach(Connection connection in roomToDelete.connections) {
+				room.connections.Add(connection);
+				connectionsToRemove.Add(connection);
+				if (connection.roomA == roomToDelete) connection.roomA = room;
+				if (connection.roomB == roomToDelete) connection.roomB = room;
+			}
+			foreach(Connection connectionToRemove in connectionsToRemove) {
+				roomToDelete.connections.Remove(connectionToRemove);
+			}
+			foreach (Vector2i denPos in roomToDelete.denShortcutEntrances) {
+				int id = roomToDelete.GetDenId(denPos);
+				if(room.HasDen(id))
+					room.dens[id] = roomToDelete.GetDen(id);
+			}
+			room.DevPosition = roomToDelete.DevPosition;
+			room.CanonPosition = roomToDelete.CanonPosition;
+		}
 
 		for (int i = 0; i < room.data.cameras.Count; i++) {
 			string imageSuffix = $"_{i + 1}.png";
