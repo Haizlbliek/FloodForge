@@ -1589,7 +1589,7 @@ public static class WorldWindow {
 				this.layer = layer;
 			}
 
-			public LayerButton(int layer, Func<bool> contextCallback) : base((layer + 1).ToString(), b => { ((LayerButton) b).Click(); }, contextCallback) {
+			public LayerButton(int layer, Func<Button, bool> contextCallback) : base((layer + 1).ToString(), b => { ((LayerButton) b).Click(); }, contextCallback) {
 				this.layer = layer;
 			}
 
