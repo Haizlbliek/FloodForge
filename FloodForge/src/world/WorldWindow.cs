@@ -1136,7 +1136,12 @@ public static class WorldWindow {
 				HandleGateFile(path, filename);
 			}
 			else {
-				acronym = acronym[0..acronym.IndexOfReverse('-')];
+				if (acronym[Math.Max(acronym.IndexOfReverse('-'), 0)..] == "rooms")
+					acronym = acronym[0..acronym.IndexOfReverse('-')];
+				else if (filename.Split('_').Length > 0)
+					acronym = filename.Split('_')[0];
+				else
+					acronym = "";
 				Room newRoom = HandleStandardFile(path, filename, acronym);
 				if (newRoom != null) {
 					newRoom.CanonPosition.x += (pathCount - paths.Length / 2) * 15f;
