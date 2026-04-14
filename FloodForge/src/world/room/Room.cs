@@ -22,6 +22,7 @@ public class Room {
 	public const uint FLAG_SPEAR = 524288;
 
 	public bool pathOutsideRoomsFolder = false;
+	public string sourceFilePath;
 	public string path;
 	public string name;
 	public TimelineType TimelineType;
@@ -60,6 +61,7 @@ public class Room {
 
 	public Room(string path, string name, bool pathOutsideRoomsFolder = false) {
 		this.pathOutsideRoomsFolder = pathOutsideRoomsFolder;
+		this.sourceFilePath = path;
 		this.path = path;
 		this.name = name;
 		this.TimelineType = TimelineType.All;
