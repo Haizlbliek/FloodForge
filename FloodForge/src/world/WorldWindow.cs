@@ -1298,7 +1298,7 @@ public static class WorldWindow {
 		}
 	}
 
-	private static Room HandleStandardFile(string path, string filename, string acronym, bool isGateFile = false) {
+	private static Room HandleStandardFile(string path, string filename, string acronym, bool isGateFile = false, bool skipOverrideVerification = false) {
 		if (acronym[Math.Max(acronym.IndexOfReverse('-'), 0)..] == "rooms")
 			acronym = acronym[0..acronym.IndexOfReverse('-')];
 		else if (filename.Split('_').Length > 0)
@@ -1309,33 +1309,74 @@ public static class WorldWindow {
 			return CreateAndAddRoom(path, filename);
 		}
 		else {
-			PopupManager.Add(
-				new ConfirmPopup($"Room {filename} isn't located inside {region.acronym}.\nCopy room to {region.acronym}-rooms?")
-					.SetCancel("Just Add")
-					.Cancel(() => {
-						CreateAndAddRoom(path, filename, importFromOutside: true);
-					})
-					.SetOkay("Yes")
-					.Okay(() => {
-						string filename = Path.GetFileName(path);
-						if (!filename.Contains('_'))
-							filename = '_' + filename;
-						string newName = $"{region.acronym}{filename[Math.Max(0, filename.IndexOf('_'))..]}";
-						string toPath = PathUtil.Combine(region.roomsPath, $"../{region.acronym}-rooms/{newName}");
-						if (File.Exists(toPath)) {
-							PopupManager.Add(new ConfirmPopup($"File {newName}already exists in\n{toPath[..Math.Max(0, toPath.IndexOfReverse('\\'))].Split("StreamingAssets")[^1]}\nOverwrite existing file?")
-							.SetOkay("Overwrite")
-							.SetCancel("Cancel")
-							.Okay(() => {
-								CopyRoom(path, toPath, true);
-							}));
-						}
-						else
-							CopyRoom(path, toPath)?.data.tags = isGateFile ? ["GATE"] : [];
-					})
-			);
+			if (!skipOverrideVerification) {
+				PopupManager.Add(
+					new ConfirmPopup($"Room {filename} isn't located inside {region.acronym}.\nCopy room to {region.acronym}-rooms?")
+						.SetCancel("Just Add")
+						.Cancel(() => {
+							CreateAndAddRoom(path, filename, importFromOutside: true);
+						})
+						.SetOkay("Yes")
+						.Okay(DoCopyRoom)
+				);
+			}
+			else {
+				DoCopyRoom();
+			}
+			void DoCopyRoom() {
+				string filename = Path.GetFileName(path);
+				if (!filename.Contains('_'))
+					filename = '_' + filename;
+				string newName = $"{region.acronym}{filename[Math.Max(0, filename.IndexOf('_'))..]}";
+				string toPath = PathUtil.Combine(region.roomsPath, $"../{region.acronym}-rooms/{newName}");
+				if (File.Exists(toPath)) {
+					if(skipOverrideVerification)
+						CopyRoom(path, toPath, true);
+					else 
+						PopupManager.Add(new ConfirmPopup($"File {newName}already exists in\n{toPath[..Math.Max(0, toPath.IndexOfReverse('\\'))].Split("StreamingAssets")[^1]}\nOverwrite existing file?")
+						.SetOkay("Overwrite")
+						.SetCancel("Cancel")
+						.Okay(() => {
+							CopyRoom(path, toPath, true);
+					}));
+				}
+				else
+					CopyRoom(path, toPath)?.data.tags = isGateFile ? ["GATE"] : [];
+			}
 		}
 		return null!;
+	}
+
+	public static void SaveRoomImportPaths() {
+		string importPathsFilePath = Path.Combine("assets/roomimportpaths.txt");
+		Logger.Info("importPathsFilePath: " + importPathsFilePath);
+		List<string> originalFile = File.Exists(importPathsFilePath) ? File.ReadAllLines(importPathsFilePath).ToList() : [];
+		int lineIndexToUse = -1;
+		for (int lineIndex = 0; lineIndex < originalFile.Count; lineIndex++) {
+			if(string.Equals(originalFile[lineIndex].Split("<reg>", StringSplitOptions.TrimEntries)[0], region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
+				lineIndexToUse = lineIndex;
+				break;
+			}
+		}
+		Dictionary<string, string> values = [];
+		foreach(Room room in region.rooms) {
+			if (room is not OffscreenRoom) {
+				string path = Path.GetDirectoryName(room.sourceFilePath) ?? "";
+				if(!path.Contains(region.roomsPath)) {
+					values.Add(room.name, room.sourceFilePath);
+				}
+			}
+		}
+		string finalLine = region.acronym + "<reg>";
+		bool isFirst = true;
+		foreach (KeyValuePair<string, string> keyValuePair in values) {
+			if(!isFirst) finalLine += "<entry>";
+			finalLine += $"{keyValuePair.Key}<room>{keyValuePair.Value}";
+		}
+		if(lineIndexToUse != -1) originalFile[lineIndexToUse] = finalLine;
+		else originalFile.Add(finalLine);
+		File.WriteAllLines(importPathsFilePath, originalFile);
+		Logger.Info(File.ReadAllLines(importPathsFilePath));
 	}
 
 	public class WorldMenuItems : MenuItems {
@@ -1387,12 +1428,15 @@ public static class WorldWindow {
 			WorldExporter.ExportImageFile(image);
 
 			WorldExporter.ExportPropertiesFile(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "properties.txt"));
+			if(Settings.PreserveRoomImportPath) {
+				WorldWindow.SaveRoomImportPaths();
+			}
 			PopupManager.Add(new InfoPopup("Exported successfully!"));
 			WorldWindow.ExportFinished = true;
 		}
 
 		public WorldMenuItems() {
-			this.buttons = [
+			List<Button> buttons = [
 				new Button("New", button => {
 					PopupManager.Add(new AcronymPopup());
 				}),
@@ -1531,6 +1575,48 @@ public static class WorldWindow {
 				}, button => { return oldSelection.Count != 0 && ValidRegionLoaded; },
 				"Select at least one valid room\nto render.")
 			];
+
+			if (Settings.PreserveRoomImportPath) {
+				buttons.Add(new AlignedButton("Reimport", true, button => {
+					List<Room> validRooms = [];
+					WorldWindow.oldSelection.ForEach((room) => {
+						if(room is not OffscreenRoom && (room.pathOutsideRoomsFolder || (room.sourceFilePath != room.path)))
+							validRooms.Add(room);
+					});
+					if(validRooms.Count != 0){
+						PopupManager.Add(new ConfirmPopup($"Reimport {validRooms.Count} rooms?").Okay(() => {
+							Logger.Info("Reimporting rooms");
+							History.StartCollectingChanges([typeof(RoomReplacementChange), typeof(RoomAndConnectionChange)]);
+							
+							List<string> reimportedRooms = [];
+							foreach (Room room in validRooms) {
+								if(File.Exists(room.sourceFilePath)){
+									Logger.Info($"Reimporting {room.name}");
+									reimportedRooms.Add(room.name);
+									HandleStandardFile(room.sourceFilePath, Path.GetFileNameWithoutExtension(room.sourceFilePath), Path.GetFileNameWithoutExtension(PathUtil.Parent(room.sourceFilePath)), skipOverrideVerification: true);
+								}
+							}
+							History.Apply(History.GetCollectedMassChange());
+
+							selectedRooms.Clear();
+							foreach (Room room in region.rooms){
+								if(reimportedRooms.Contains(room.name)) selectedRooms.Add(room);
+							}
+						}));
+					}
+					else {
+						PopupManager.Add(new InfoPopup("Select at least one valid room\nto reimport"));
+					}
+				}, button => {
+					List<Room> validRooms = [];
+					WorldWindow.oldSelection.ForEach((room) => {
+						if(room is not OffscreenRoom && (room.pathOutsideRoomsFolder || (room.sourceFilePath != room.path)))
+							validRooms.Add(room);
+					});
+					return WorldWindow.ValidRegionLoaded && validRooms.Count != 0;
+				}, "Select at least one valid room\nto reimport"));
+			}
+			this.buttons = [.. buttons];
 		}
 
 		private class LayerButton : Button {
