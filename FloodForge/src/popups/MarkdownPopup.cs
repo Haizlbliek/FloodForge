@@ -187,7 +187,7 @@ public class MarkdownPopup : Popup {
 			result.Push(new MDStyledText(current));
 		}
 
-		return result.Where(x => x.text.Length > 0).Reverse().ToArray();
+		return [.. result.Where(x => x.text.Length > 0).Reverse()];
 	}
 
 	protected void Scroll(float x, float y) {

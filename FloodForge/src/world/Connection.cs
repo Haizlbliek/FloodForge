@@ -86,7 +86,7 @@ public class Connection {
 			}
 			directionA *= this.directionStrength;
 			directionB *= this.directionStrength;
-			
+
 			float overSegments = 1f / this.segments;
 			List<Vector2> bezierPoints = [];
 			Rect bounds = new(pointA, pointB);
@@ -102,9 +102,10 @@ public class Connection {
 					Math.Max(bounds.x1, point.x),
 					Math.Max(bounds.y1, point.y)
 				);
-				if(t==1) break;
+				if (t == 1)
+					break;
 			}
-			this.BezierPoints = bezierPoints.ToArray();
+			this.BezierPoints = [.. bezierPoints];
 			this.fittedAABB = bounds;
 		}
 		this.recalculateBezier = false;
@@ -112,7 +113,8 @@ public class Connection {
 
 	public bool Hovered {
 		get {
-			if (!this.AABB.Inside(WorldWindow.worldMouse)) return false;
+			if (!this.AABB.Inside(WorldWindow.worldMouse))
+				return false;
 
 			float lineDist = WorldWindow.SelectorScale / 4f;
 
@@ -177,10 +179,14 @@ public class Connection {
 		uvx *= 0.5f;
 		uvy *= 0.5f;
 
-		Immediate.TexCoord(0.5f - uvx, 0.5f + uvy); Immediate.Vertex(rect.x0, rect.y0);
-		Immediate.TexCoord(0.5f + uvx, 0.5f + uvy); Immediate.Vertex(rect.x1, rect.y0);
-		Immediate.TexCoord(0.5f + uvx, 0.5f - uvy); Immediate.Vertex(rect.x1, rect.y1);
-		Immediate.TexCoord(0.5f - uvx, 0.5f - uvy); Immediate.Vertex(rect.x0, rect.y1);
+		Immediate.TexCoord(0.5f - uvx, 0.5f + uvy);
+		Immediate.Vertex(rect.x0, rect.y0);
+		Immediate.TexCoord(0.5f + uvx, 0.5f + uvy);
+		Immediate.Vertex(rect.x1, rect.y0);
+		Immediate.TexCoord(0.5f + uvx, 0.5f - uvy);
+		Immediate.Vertex(rect.x1, rect.y1);
+		Immediate.TexCoord(0.5f - uvx, 0.5f - uvy);
+		Immediate.Vertex(rect.x0, rect.y1);
 
 		Immediate.End();
 		Immediate.UseTexture(0);
@@ -188,14 +194,15 @@ public class Connection {
 	}
 
 	public void Draw() {
-		if(this.BezierPoints == null || this.BezierPoints.Length == 0 || this.recalculateBezier) {
+		if (this.BezierPoints == null || this.BezierPoints.Length == 0 || this.recalculateBezier) {
 			this.RecalculateBezier();
 		}
-		if(WorldWindow.CullTest(this.fittedAABB)) {
+		if (WorldWindow.CullTest(this.fittedAABB)) {
 			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomA.TimelineType, this.roomA.Timelines);
 			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomB.TimelineType, this.roomB.Timelines);
 			float opacity = Settings.ConnectionOpacity;
-			if (!aVisible && !bVisible || opacity < 0.01f) return;
+			if (!aVisible && !bVisible || opacity < 0.01f)
+				return;
 			bool hovered = this.Hovered || Keys.Modifier(Keys.Modifiers.Shift);
 
 			bool roomConnectionHoverColor = aVisible && bVisible && hovered;
@@ -223,7 +230,7 @@ public class Connection {
 			if (!connectionColorA.Equals(connectionColorB)) {
 				blendColors = true;
 			}
-			if (!blendColors){
+			if (!blendColors) {
 				Immediate.Color(connectionColorA);
 			}
 
@@ -242,7 +249,7 @@ public class Connection {
 				Vector2 lastPoint = this.BezierPoints![0];
 				int curveLength = this.BezierPoints.Length;
 				for (int i = 1; i < curveLength; i++) {
-					float curveProgress = i / (float)curveLength;
+					float curveProgress = i / (float) curveLength;
 					if (blendColors) {
 						Immediate.Color(Color.Lerp(connectionColorA, connectionColorB, curveProgress));
 					}
@@ -254,8 +261,10 @@ public class Connection {
 
 			Program.gl.Disable(EnableCap.Blend);
 
-			if (!aVisible || !bVisible) return;
-			if (this.timelines.Count == 0 || this.timelineType == TimelineType.All) return;
+			if (!aVisible || !bVisible)
+				return;
+			if (this.timelines.Count == 0 || this.timelineType == TimelineType.All)
+				return;
 
 			if (this.timelineType == TimelineType.Except) {
 				Immediate.Color(1f, 0f, 0f);
@@ -271,7 +280,8 @@ public class Connection {
 			HashSet<string>.Enumerator it = this.timelines.GetEnumerator();
 			for (int y = 0; y < height; y++) {
 				for (int x = 0; x < width; x++) {
-					if (!it.MoveNext()) break;
+					if (!it.MoveNext())
+						break;
 
 					float ox = (width * -0.5f + x + 0.5f) * size * 2.2f;
 					float oy = (height * -0.5f + y + 0.5f) * size * 2.2f;

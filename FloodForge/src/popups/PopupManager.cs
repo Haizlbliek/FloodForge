@@ -84,7 +84,7 @@ public static class PopupManager {
 		Mouse.Disabled = interactingPopup != null;
 	}
 
-	public static Popup Add(Popup popup) {
+	public static T Add<T>(T popup) where T : Popup {
 		toAdd.Add(popup);
 		if (Main.AprilFools) Sfx.Play($"assets/objects/new.wav");
 		return popup;
