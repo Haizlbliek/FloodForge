@@ -29,8 +29,6 @@ public class Room {
 	public ConditionalPopup? conditionalPopup;
 	public Vector2 CanonPosition;
 	public Vector2 DevPosition;
-	public Vector2 CanonVel;
-	public Vector2 DevVel;
 	public int width;
 	public int height;
 	public bool valid;

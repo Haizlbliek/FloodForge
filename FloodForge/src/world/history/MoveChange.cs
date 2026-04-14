@@ -30,18 +30,10 @@ public class MoveChange : MultipleRoomChange {
 	}
 
 	protected void Move(float multiplier) {
-		if (Main.AprilFools) {
-			for (int i = 0; i < this.rooms.Count; i++) {
-				this.rooms[i].DevVel += this.devOffsets[i] * multiplier;
-				this.rooms[i].CanonVel += this.canonOffsets[i] * multiplier;
-			}
-		}
-		else {
-			for (int i = 0; i < this.rooms.Count; i++) {
-				this.rooms[i].DevPosition += this.devOffsets[i] * multiplier;
-				this.rooms[i].CanonPosition += this.canonOffsets[i] * multiplier;
-				this.rooms[i].MoveUpdate();
-			}
+		for (int i = 0; i < this.rooms.Count; i++) {
+			this.rooms[i].DevPosition += this.devOffsets[i] * multiplier;
+			this.rooms[i].CanonPosition += this.canonOffsets[i] * multiplier;
+			this.rooms[i].MoveUpdate();
 		}
 	}
 

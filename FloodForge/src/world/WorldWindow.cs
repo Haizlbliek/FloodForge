@@ -313,8 +313,6 @@ public static class WorldWindow {
 						holdingStart = worldMouse;
 						roomPossibleSelect = room;
 						selectingState = SelectingState.PendingDrag;
-						if (!isOriginal && Main.AprilFools)
-							Sfx.Play($"assets/objects/click{new Random().Next(1, 3)}.wav");
 					}
 				}
 
@@ -746,58 +744,6 @@ public static class WorldWindow {
 		}
 	}
 
-	private static void ResolveCollision(ref Vector2 pos1, ref Vector2 vel1, float w1, float h1, ref Vector2 pos2, ref Vector2 vel2, float w2, float h2) {
-		float halfW1 = w1 / 2f, halfH1 = h1 / 2f;
-		float halfW2 = w2 / 2f, halfH2 = h2 / 2f;
-
-		Vector2 center1 = new Vector2(pos1.x + halfW1, pos1.y - halfH1);
-		Vector2 center2 = new Vector2(pos2.x + halfW2, pos2.y - halfH2);
-
-		float diffX = center1.x - center2.x;
-		float diffY = center1.y - center2.y;
-
-		float minDistanceX = halfW1 + halfW2;
-		float minDistanceY = halfH1 + halfH2;
-
-		float overlapX = minDistanceX - Math.Abs(diffX);
-		float overlapY = minDistanceY - Math.Abs(diffY);
-
-		if (overlapX > 0 && overlapY > 0) {
-			if (overlapX < overlapY) {
-				float dir = diffX > 0 ? 1 : -1;
-
-				pos1.x += overlapX * 0.5f * dir;
-				pos2.x -= overlapX * 0.5f * dir;
-
-				float relativeVelX = vel1.x - vel2.x;
-				if (relativeVelX * dir < 0) {
-					float v1Next = vel2.x * 0.8f;
-					float v2Next = vel1.x * 0.8f;
-					vel1.x = v1Next;
-					vel2.x = v2Next;
-				}
-			}
-			else {
-				float dir = diffY > 0 ? 1 : -1;
-
-				pos1.y += overlapY * 0.5f * dir;
-				pos2.y -= overlapY * 0.5f * dir;
-
-				float relativeVelY = vel1.y - vel2.y;
-				if (relativeVelY * dir < 0) {
-					float v1Next = vel2.y * 0.8f;
-					float v2Next = vel1.y * 0.8f;
-					vel1.y = v1Next;
-					vel2.y = v2Next;
-				}
-			}
-
-			if (Math.Abs(vel1.Length + vel2.Length) > 5f) {
-				Sfx.Play($"assets/objects/bump{Random.Shared.Next(1, 6)}.wav");
-			}
-		}
-	}
-
 	private static void DrawEditor() {
 		if (WorldWindow.region == null)
 			return;
@@ -828,19 +774,6 @@ public static class WorldWindow {
 		Profiler.MarkPoint("rooms", 2, true);
 		foreach (Room room in WorldWindow.region.rooms) {
 			Profiler.MarkPoint("rooms", 1, true);
-			if (Main.AprilFools) {
-				room.CanonPosition += room.CanonVel * 0.1f;
-				room.DevPosition += room.DevVel * 0.1f;
-				room.CanonVel *= 0.95f;
-				room.DevVel *= 0.95f;
-				foreach (Room room2 in WorldWindow.region.rooms) {
-					if (room == room2)
-						continue;
-					ResolveCollision(ref room.DevPosition, ref room.DevVel, room.width, room.height, ref room2.DevPosition, ref room2.DevVel, room2.width, room2.height);
-					ResolveCollision(ref room.CanonPosition, ref room.CanonVel, room.width, room.height, ref room2.CanonPosition, ref room2.CanonVel, room2.width, room2.height);
-				}
-				room.MoveUpdate();
-			}
 
 			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
 				continue;
@@ -1456,8 +1389,6 @@ public static class WorldWindow {
 			WorldExporter.ExportPropertiesFile(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "properties.txt"));
 			PopupManager.Add(new InfoPopup("Exported successfully!"));
 			WorldWindow.ExportFinished = true;
-			if (Main.AprilFools)
-				Sfx.Play("assets/objects/yay.wav");
 		}
 
 		public WorldMenuItems() {
