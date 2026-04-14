@@ -93,7 +93,7 @@ public static class Immediate {
 		Cstm.gl.BufferData(GLEnum.ArrayBuffer, (nuint)(MAX_VERTICES * sizeof(VertexData)), null, GLEnum.StreamDraw);
 
 		Cstm.gl.BindBuffer(GLEnum.ElementArrayBuffer, DrawState.idxBuffer);
-		Cstm.gl.BufferData(GLEnum.ElementArrayBuffer, (nuint)(MAX_INDICES * sizeof(uint)), null, GLEnum.StreamDraw);
+		Cstm.gl.BufferData(GLEnum.ElementArrayBuffer, MAX_INDICES * sizeof(uint), null, GLEnum.StreamDraw);
 		Cstm.gl.VertexAttribPointer(0, 3, GLEnum.Float, false, (uint)sizeof(VertexData), 0);
 		Cstm.gl.EnableVertexAttribArray(0);
 		Cstm.gl.VertexAttribPointer(1, 2, GLEnum.Float, false, (uint)sizeof(VertexData), (void*)(3 * sizeof(float)));
@@ -225,7 +225,7 @@ void main() {
 		Cstm.gl.BindBuffer(GLEnum.ElementArrayBuffer, DrawState.idxBuffer);
 		unsafe {
 			fixed (uint* indices = DrawState.batchIndices) {
-				Cstm.gl.BufferSubData(GLEnum.ElementArrayBuffer, 0, (nuint)(DrawState.indexCount * sizeof(uint)), indices);
+				Cstm.gl.BufferSubData(GLEnum.ElementArrayBuffer, 0, DrawState.indexCount * sizeof(uint), indices);
 			}
 		}
 

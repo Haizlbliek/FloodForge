@@ -21,7 +21,7 @@ public static class WorldWindow {
 	public static bool VisibleCreatures { get; private set; } = true;
 	public static RoomPosition PositionType { get; private set; } = RoomPosition.Canon;
 	public static RoomColors ColorType { get; private set; } = RoomColors.None;
-	public static readonly bool[] VisibleLayers = [ true, true, true ];
+	public static readonly bool[] VisibleLayers = [true, true, true];
 
 	public static TimelineType VisibleTimelineType;
 	public static HashSet<string> VisibleTimelines = [];
@@ -138,7 +138,7 @@ public static class WorldWindow {
 		float zoom = MathF.Pow(1.25f, scrollY);
 		if (MathF.Abs(zoom - 1f) > 0.1f)
 			highlightRoom = null;
-		if(float.IsNaN(cameraOffset.x) || float.IsNaN(cameraOffset.y)) { // find a way to maintain position when tabbing out and into fullscreen
+		if (float.IsNaN(cameraOffset.x) || float.IsNaN(cameraOffset.y)) { // find a way to maintain position when tabbing out and into fullscreen
 			cameraOffset = Vector2.Zero;
 			cameraPanTo = Vector2.Zero;
 			cameraPanStart = Vector2.Zero;
@@ -199,8 +199,7 @@ public static class WorldWindow {
 			for (uint i = 0; i < room.roomExits.Count; i++) {
 				Vector2 spot = new();
 				float sqrDist = 0;
-				if(room.roomExitPaths[room.roomExits[(int)i]].endType == Room.RoomPathEndType.shortcutEntrance)
-				{
+				if (room.roomExitPaths[room.roomExits[(int) i]].endType == Room.RoomPathEndType.shortcutEntrance) {
 					spot = room.GetShortcutEntranceWorldPoint(i); // if the roomPath has a shortcutExit, first check that
 					sqrDist = (worldMouse - spot).SqrLength;
 					if (sqrDist < maxSqrDist) {
@@ -222,7 +221,7 @@ public static class WorldWindow {
 			for (uint i = 0; i < room.allShortcutEntrancePoints.Count; i++) {
 				Vector2 spot = new();
 				float sqrDist = 0;
-				(Room.RoomConnection connection, bool matchesWithRoomExitPath) = room.shortcutEntrancePaths[room.allShortcutEntrancePoints[(int)i]];
+				(Room.RoomConnection connection, bool matchesWithRoomExitPath) = room.shortcutEntrancePaths[room.allShortcutEntrancePoints[(int) i]];
 				if (!matchesWithRoomExitPath && connection.endType == Room.RoomPathEndType.roomExit) {
 					spot = room.RoomPositionToWorldPosition(connection.path.StartPosition);
 					sqrDist = (worldMouse - spot).SqrLength;
@@ -230,7 +229,7 @@ public static class WorldWindow {
 						maxSqrDist = sqrDist;
 						hoveringRoom = room;
 						hoveringConnection = room.GetRoomExitIDFromShortcut(i);
-						hoveringShortcutEntrance = (int)i;
+						hoveringShortcutEntrance = (int) i;
 					}
 				}
 			}
@@ -245,7 +244,7 @@ public static class WorldWindow {
 					return;
 				}
 
-				if(hoveringRoom.Visible) {
+				if (hoveringRoom.Visible) {
 					ConnectionStart = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
 					ConnectionEnd = ConnectionStart;
 					CurrentConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
@@ -299,7 +298,8 @@ public static class WorldWindow {
 	}
 
 	private static void UpdateControls() {
-		if (Mouse.Disabled) return;
+		if (Mouse.Disabled)
+			return;
 
 		bool isOriginal = Settings.OriginalControls;
 
@@ -313,19 +313,21 @@ public static class WorldWindow {
 						holdingStart = worldMouse;
 						roomPossibleSelect = room;
 						selectingState = SelectingState.PendingDrag;
-						if (!isOriginal && Main.AprilFools) Sfx.Play($"assets/objects/click{new Random().Next(1, 3)}.wav");
+						if (!isOriginal && Main.AprilFools)
+							Sfx.Play($"assets/objects/click{new Random().Next(1, 3)}.wav");
 					}
 				}
 
 				if (selectingState == SelectingState.None) {
 					bool isPanning = isOriginal && !Keys.Modifier(Keys.Modifiers.Shift);
-	
+
 					selectingState = isPanning ? SelectingState.Panning : SelectingState.Selecting;
 					selectionStart = isPanning ? Mouse.Pos : worldMouse;
 					selectionEnd = selectionStart;
 
 					bool isAdditive = (!isOriginal && Keys.Modifier(Keys.Modifiers.Shift)) || Keys.Modifier(Keys.Modifiers.Control);
-					if (!isAdditive && !isPanning) selectedRooms.Clear();
+					if (!isAdditive && !isPanning)
+						selectedRooms.Clear();
 				}
 			}
 			else {
@@ -338,8 +340,9 @@ public static class WorldWindow {
 					ApplyMovement();
 				}
 
-				if (selectingState == SelectingState.Selecting) selectionEnd = worldMouse;
-	
+				if (selectingState == SelectingState.Selecting)
+					selectionEnd = worldMouse;
+
 				if (selectingState == SelectingState.Panning) {
 					selectionEnd = Mouse.Pos;
 					cameraPanTo += (selectionStart - selectionEnd) * cameraScale;
@@ -351,13 +354,15 @@ public static class WorldWindow {
 			if (selectingState == SelectingState.PendingDrag && roomPossibleSelect != null) {
 				HandleSelectionLogic(roomPossibleSelect);
 				if (roomSnap) {
-					foreach (Room room in selectedRooms) room.Position = room.Position.Rounded();
+					foreach (Room room in selectedRooms)
+						room.Position = room.Position.Rounded();
 				}
 			}
 
 			if (selectingState == SelectingState.Selecting) {
 				foreach (Room room in region.rooms) {
-					if (room.Intersects(selectionStart, selectionEnd)) if(room.Visible) selectedRooms.Add(room);
+					if (room.Intersects(selectionStart, selectionEnd) && room.Visible)
+						selectedRooms.Add(room);
 				}
 			}
 
@@ -373,8 +378,10 @@ public static class WorldWindow {
 
 		bool isAdditive = Keys.Modifier(Keys.Modifiers.Shift) || Keys.Modifier(Keys.Modifiers.Control);
 		if (isAdditive) {
-			if (!selectedRooms.Remove(room)) selectedRooms.Add(room);
-		} else {
+			if (!selectedRooms.Remove(room))
+				selectedRooms.Add(room);
+		}
+		else {
 			if (!selectedRooms.Contains(room)) {
 				selectedRooms.Clear();
 				selectedRooms.Add(room);
@@ -383,29 +390,34 @@ public static class WorldWindow {
 	}
 
 	private static void ApplyMovement() {
-		if (holdingStart == null) return;
+		if (holdingStart == null)
+			return;
 
 		MoveChange change = new MoveChange();
 		Vector2 offset = worldMouse - (Vector2) holdingStart;
-		if (roomSnap) offset.Round();
+		if (roomSnap)
+			offset.Round();
 
 		foreach (Room room in selectedRooms) {
 			Vector2 newPos = room.Position;
-			if (roomSnap) newPos.Round();
+			if (roomSnap)
+				newPos.Round();
 			newPos += offset;
 
 			Vector2 diff = newPos - room.Position;
 			Vector2 dev = Vector2.Zero, canon = Vector2.Zero;
 
 			bool moveBoth = Keys.Modifier(Keys.Modifiers.Alt) || PositionType == RoomPosition.Both;
-	
+
 			if (PositionType == RoomPosition.Canon) {
 				canon = diff;
-				if (moveBoth) dev = canon - room.DevPosition + room.CanonPosition;
+				if (moveBoth)
+					dev = canon - room.DevPosition + room.CanonPosition;
 			}
 			else {
 				dev = diff;
-				if (moveBoth) canon = dev - room.CanonPosition + room.DevPosition;
+				if (moveBoth)
+					canon = dev - room.CanonPosition + room.DevPosition;
 			}
 			room.MoveUpdate();
 			change.AddRoom(room, dev, canon);
@@ -448,7 +460,7 @@ public static class WorldWindow {
 			}
 			selectedRooms.Clear();
 		}
-		if(room != null) {
+		if (room != null) {
 			change.AddRoom(room);
 			region.connections.Where(c => c.roomA == room || c.roomB == room)
 				.ForEach(change.AddConnection);
@@ -575,11 +587,11 @@ public static class WorldWindow {
 		if (Keys.JustPressed(Key.D)) {
 			Connection? connection = HoveringConnection;
 			if (connection != null) {
-				connection.conditionalPopup = PopupManager.Add(new ConditionalPopup(connection)) as ConditionalPopup;
+				connection.conditionalPopup = PopupManager.Add(new ConditionalPopup(connection));
 			}
 			else if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
-				ConditionalPopup? conditionalPopup = PopupManager.Add(new ConditionalPopup(rooms)) as ConditionalPopup;
-				rooms.ForEach((room) => {room.conditionalPopup = conditionalPopup;});
+				ConditionalPopup? conditionalPopup = PopupManager.Add(new ConditionalPopup(rooms));
+				rooms.ForEach((room) => { room.conditionalPopup = conditionalPopup; });
 			}
 		}
 
@@ -643,7 +655,7 @@ public static class WorldWindow {
 	private static void UpdateMain() {
 		if (WorldWindow.region == null)
 			return;
-			
+
 		UpdateCamera();
 		UI.Update();
 
@@ -779,7 +791,7 @@ public static class WorldWindow {
 					vel2.y = v2Next;
 				}
 			}
-	
+
 			if (Math.Abs(vel1.Length + vel2.Length) > 5f) {
 				Sfx.Play($"assets/objects/bump{Random.Shared.Next(1, 6)}.wav");
 			}
@@ -789,7 +801,7 @@ public static class WorldWindow {
 	private static void DrawEditor() {
 		if (WorldWindow.region == null)
 			return;
-			
+
 		camBound = new Rect(cameraOffset - Main.screenBounds * WorldWindow.cameraScale, cameraOffset + Main.screenBounds * WorldWindow.cameraScale);
 		Profiler.Debug.AddProfilerMessage($"camScale: {WorldWindow.cameraScale}; camPos: x={WorldWindow.cameraOffset.x},y={WorldWindow.cameraOffset.y};");
 
@@ -822,7 +834,8 @@ public static class WorldWindow {
 				room.CanonVel *= 0.95f;
 				room.DevVel *= 0.95f;
 				foreach (Room room2 in WorldWindow.region.rooms) {
-					if (room == room2) continue;
+					if (room == room2)
+						continue;
 					ResolveCollision(ref room.DevPosition, ref room.DevVel, room.width, room.height, ref room2.DevPosition, ref room2.DevVel, room2.width, room2.height);
 					ResolveCollision(ref room.CanonPosition, ref room.CanonVel, room.width, room.height, ref room2.CanonPosition, ref room2.CanonVel, room2.width, room2.height);
 				}
@@ -832,7 +845,7 @@ public static class WorldWindow {
 			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
 				continue;
 
-			if(WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
+			if (WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
 				if (!room.data.merge) {
 					if (PositionType == RoomPosition.Both) {
 						room.DrawBlack(RoomPosition.Canon);
@@ -879,7 +892,7 @@ public static class WorldWindow {
 
 		foreach (Connection connection in WorldWindow.region.connections) {
 			Rect connectionAABB = connection.fittedAABB;
-			if(Settings.DEBUGVisibleConnectionBounds) {
+			if (Settings.DEBUGVisibleConnectionBounds) {
 				Immediate.Color(Color.Cyan);
 				UI.StrokeRect(connectionAABB);
 			}
@@ -952,7 +965,7 @@ public static class WorldWindow {
 			}
 			else {
 				debugText.Add($"Name: {hoveringRoom.name}");
-				if(hoveringRoom.pathOutsideRoomsFolder)
+				if (hoveringRoom.pathOutsideRoomsFolder)
 					debugText.Add($" > Room imported from outside {region.acronym}-rooms");
 				debugText.Add($"Tags: {string.Join(" ", hoveringRoom.data.tags)}");
 				debugText.Add($"Size: {hoveringRoom.width}x{hoveringRoom.height}");
@@ -963,52 +976,57 @@ public static class WorldWindow {
 					List<string> connectionStringList = [];
 					string connectionList = "";
 					for (uint index = 0; index < hoveringRoom.roomExits.Count; index++) {
-						if(hoveringRoom.AnyConnectionConnectedTo(index)) {
+						if (hoveringRoom.AnyConnectionConnectedTo(index)) {
 							foreach (Connection connection in hoveringRoom.connections) {
 								string finalString = "";
 								bool canHaveArrows = false;
-								if(connection.roomA.name != hoveringRoom.name && connection.roomBExitID == index) {
+								if (connection.roomA.name != hoveringRoom.name && connection.roomBExitID == index) {
 									finalString += connection.roomA.name;
-									encounteredConnections.Add(connection.roomA.name);	
+									encounteredConnections.Add(connection.roomA.name);
 									canHaveArrows = true;
 								}
-								else if(connection.roomB.name != hoveringRoom.name && connection.roomAExitID == index) {
+								else if (connection.roomB.name != hoveringRoom.name && connection.roomAExitID == index) {
 									finalString += connection.roomB.name;
 									encounteredConnections.Add(connection.roomB.name);
 									canHaveArrows = true;
 								}
-								if(connection == hoveringConnection && canHaveArrows) finalString = $">{finalString}<";
+								if (connection == hoveringConnection && canHaveArrows)
+									finalString = $">{finalString}<";
 								connectionList += finalString;
 							}
 						}
 						else {
 							connectionList += "DISCONNECTED";
 						}
-						if(index + 1 < hoveringRoom.roomExits.Count)
+						if (index + 1 < hoveringRoom.roomExits.Count)
 							connectionList += ", ";
-						if(connectionList.Length > 75) {
+						if (connectionList.Length > 75) {
 							connectionStringList.Add(connectionList);
 							connectionList = "";
-						};
+						}
+						;
 					}
-					if(connectionList != "") connectionStringList.Add(connectionList);
+					if (connectionList != "")
+						connectionStringList.Add(connectionList);
 					debugText.Add($"Connections: {hoveringRoom.roomExitPaths.Count}{(hoveringRoom.roomExitPaths.Count > 0 ? " : " + (connectionStringList.Count > 0 ? connectionStringList[0] : "") : "")}");
-					if (connectionStringList.Count > 1) foreach (string line in connectionStringList[1..]) {
+					if (connectionStringList.Count > 1)
+					foreach (string line in connectionStringList[1..]) {
 						debugText.Add(line);
 					}
 					List<string> duplicateConnections = [];
 					string duplicateString = "";
 					for (int index = 0; index < encounteredConnections.Count; index++) {
-						for(int index2 = index + 1; index2 < encounteredConnections.Count; index2++) {
-							if(!duplicateConnections.Contains(encounteredConnections[index]) && encounteredConnections[index] == encounteredConnections[index2]) {
+						for (int index2 = index + 1; index2 < encounteredConnections.Count; index2++) {
+							if (!duplicateConnections.Contains(encounteredConnections[index]) && encounteredConnections[index] == encounteredConnections[index2]) {
 								duplicateConnections.Add(encounteredConnections[index]);
 								duplicateString += (duplicateString.Length > 0 ? ", " : "") + encounteredConnections[index];
 								continue;
 							}
 						}
 					}
-					
-					if(duplicateConnections.Count > 0) debugText.Add($" > This room has duplicate connections: {duplicateString}");
+
+					if (duplicateConnections.Count > 0)
+						debugText.Add($" > This room has duplicate connections: {duplicateString}");
 				}
 				// END CONNECTION DEBUG
 				debugText.Add($"Subregion: {(hoveringRoom.data.subregion == -1 ? "<<NONE>>" : region.subregions[hoveringRoom.data.subregion])}");
@@ -1076,7 +1094,7 @@ public static class WorldWindow {
 	public static void Draw() {
 		if ((renderRoomsTask == null || renderRoomsTask.IsCompleted) && confirmRenderPopup == null) {
 			oldSelection.Clear();
-			oldSelection = [..selectedRooms];
+			oldSelection = [.. selectedRooms];
 		}
 		if (Keys.Modifier(Keys.Modifiers.Alt)) {
 			if (Keys.JustPressed(Key.S)) {
@@ -1118,7 +1136,7 @@ public static class WorldWindow {
 	}
 
 	private static Room? CopyRoom(string fromFilePath, string toFilePath, bool forceOverwrite = false) {
-		if (File.Exists(toFilePath) &! forceOverwrite) {
+		if (File.Exists(toFilePath) & !forceOverwrite) {
 			return null!;
 		}
 
@@ -1128,7 +1146,7 @@ public static class WorldWindow {
 		string toRoom = Path.GetFileNameWithoutExtension(toFile.Name);
 
 		string oldFile = "";
-		if(forceOverwrite) {
+		if (forceOverwrite) {
 			oldFile = File.ReadAllText(toFilePath);
 			File.Delete(toFilePath);
 		}
@@ -1143,13 +1161,13 @@ public static class WorldWindow {
 		Room? roomToDelete = null;
 		if (forceOverwrite) {
 			foreach (Room roomToCheck in region.rooms) {
-				if(roomToCheck.name == room.name) {
+				if (roomToCheck.name == room.name) {
 					roomToDelete = roomToCheck;
 					break;
 				}
 			}
 		}
-		if(roomToDelete == null) {
+		if (roomToDelete == null) {
 			RoomAndConnectionChange change = new RoomAndConnectionChange(true);
 			change.AddRoom(room);
 			History.Apply(change);
@@ -1162,7 +1180,8 @@ public static class WorldWindow {
 
 				if (sourceImage != null) {
 					string destImage = Path.Combine(toFile.DirectoryName!, toRoom + imageSuffix);
-					if(forceOverwrite) File.Delete(destImage);
+					if (forceOverwrite)
+						File.Delete(destImage);
 					File.Copy(sourceImage, destImage);
 				}
 			}
@@ -1186,9 +1205,9 @@ public static class WorldWindow {
 	}
 
 	private static void MoveUpdate() {
-		if (region == null) return;
-		foreach (Room room in region.rooms)
-		{
+		if (region == null)
+			return;
+		foreach (Room room in region.rooms) {
 			room.MoveUpdate();
 		}
 	}
@@ -1197,12 +1216,14 @@ public static class WorldWindow {
 		return bounds.x0 < camBound.x1 && bounds.x1 > camBound.x0 && bounds.y0 < camBound.y1 && bounds.y1 > camBound.y0;
 	}
 
-	public static bool CheckVisibleTimeline (TimelineType timelineType, HashSet<string> timelines) {
-		if(VisibleTimelineType == TimelineType.All) return true;
-		if (timelineType == TimelineType.All && VisibleTimelineType != TimelineType.Only) return true;
-		if(VisibleTimelineType == TimelineType.Except) {
+	public static bool CheckVisibleTimeline(TimelineType timelineType, HashSet<string> timelines) {
+		if (VisibleTimelineType == TimelineType.All)
+			return true;
+		if (timelineType == TimelineType.All && VisibleTimelineType != TimelineType.Only)
+			return true;
+		if (VisibleTimelineType == TimelineType.Except) {
 			if (timelineType == TimelineType.Only) {
-				foreach(string timeline in timelines) {
+				foreach (string timeline in timelines) {
 					if (!VisibleTimelines.Contains(timeline)) { return true; }
 				}
 			}
@@ -1210,8 +1231,9 @@ public static class WorldWindow {
 				return true; // should really technically only return true if timelines does not exclude literally every slugcat that isn't excepted by world.
 			}
 		}
-		else if(VisibleTimelineType == TimelineType.Only) {
-			if (timelineType == TimelineType.All && VisibleTimelines.Count != 0) return true;
+		else if (VisibleTimelineType == TimelineType.Only) {
+			if (timelineType == TimelineType.All && VisibleTimelines.Count != 0)
+				return true;
 			if (timelineType == TimelineType.Only) {
 				foreach (string timeline in timelines) {
 					if (VisibleTimelines.Contains(timeline)) { return true; }
@@ -1230,7 +1252,8 @@ public static class WorldWindow {
 		if (paths.Length == 0)
 			return;
 
-		if(paths.Length > 1) History.StartCollectingChanges([typeof(RoomAndConnectionChange), typeof(RoomReplacementChange)]);
+		if (paths.Length > 1)
+			History.StartCollectingChanges([typeof(RoomAndConnectionChange), typeof(RoomReplacementChange)]);
 		int pathCount = 0;
 		foreach (string path in paths) {
 			if (!path.EndsWith(".txt")) {
@@ -1253,9 +1276,9 @@ public static class WorldWindow {
 				}
 			}
 		}
-		if(paths.Length > 1) {
+		if (paths.Length > 1) {
 			Change[] collectedChanges = History.StopCollectingChanges();
-			if(collectedChanges.Length != 0) {
+			if (collectedChanges.Length != 0) {
 				MassChange change = new MassChange(collectedChanges);
 				History.Apply(change);
 			}
@@ -1325,7 +1348,7 @@ public static class WorldWindow {
 				}
 				Logger.Info($"Finished mass-render.\nSelection: {totalCount}\nSucceeded: {successCount}/{finished}");
 				renderStatusPopup.Close();
-				if(successCount == finished) {
+				if (successCount == finished) {
 					PopupManager.Add(new ConfirmPopup($"Finished mass-render.\n {successCount}/{finished} succeeded.").SetOkay("Copy path").SetCancel("Continue").Okay(() => { ClipboardService.SetText(WorldWindow.region.roomsPath); }));
 				}
 				else {
@@ -1333,7 +1356,7 @@ public static class WorldWindow {
 					foreach ((string roomName, string message) in messages) {
 						reportString += $"{roomName} - {message}\n";
 					}
-					if(messages.Count == 0) {
+					if (messages.Count == 0) {
 						reportString += $"No detected errors!";
 					}
 					PopupManager.Add(new ConfirmPopup(reportString + "View log.txt for more info."));
@@ -1349,7 +1372,7 @@ public static class WorldWindow {
 			acronym = filename.Split('_')[0];
 		else
 			acronym = "";
-		if ((acronym.Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase) &! acronym.IsNullOrEmpty()) || region.exportPath.IsNullOrEmpty()) {
+		if ((acronym.Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase) & !acronym.IsNullOrEmpty()) || region.exportPath.IsNullOrEmpty()) {
 			return CreateAndAddRoom(path, filename);
 		}
 		else {
@@ -1362,10 +1385,11 @@ public static class WorldWindow {
 					.SetOkay("Yes")
 					.Okay(() => {
 						string filename = Path.GetFileName(path);
-						if(!filename.Contains('_')) filename = '_' + filename;
+						if (!filename.Contains('_'))
+							filename = '_' + filename;
 						string newName = $"{region.acronym}{filename[Math.Max(0, filename.IndexOf('_'))..]}";
 						string toPath = PathUtil.Combine(region.roomsPath, $"../{region.acronym}-rooms/{newName}");
-						if (File.Exists(toPath)) {				
+						if (File.Exists(toPath)) {
 							PopupManager.Add(new ConfirmPopup($"File {newName}already exists in\n{toPath[..Math.Max(0, toPath.IndexOfReverse('\\'))].Split("StreamingAssets")[^1]}\nOverwrite existing file?")
 							.SetOkay("Overwrite")
 							.SetCancel("Cancel")
@@ -1401,7 +1425,8 @@ public static class WorldWindow {
 			else {
 				PopupManager.Add(
 					new FilesystemPopup((pathStrings) => {
-						if (pathStrings == null || pathStrings.Length == 0) return;
+						if (pathStrings == null || pathStrings.Length == 0)
+							return;
 
 						string selectedPath = pathStrings[0];
 						WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory(selectedPath, WorldWindow.region.acronym);
@@ -1431,7 +1456,8 @@ public static class WorldWindow {
 			WorldExporter.ExportPropertiesFile(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "properties.txt"));
 			PopupManager.Add(new InfoPopup("Exported successfully!"));
 			WorldWindow.ExportFinished = true;
-			if (Main.AprilFools) Sfx.Play("assets/objects/yay.wav");
+			if (Main.AprilFools)
+				Sfx.Play("assets/objects/yay.wav");
 		}
 
 		public WorldMenuItems() {
@@ -1494,7 +1520,7 @@ public static class WorldWindow {
 
 				new Button("Timeline", button => {
 					PopupManager.Add(new TimelinePopup(
-						WorldWindow.VisibleTimelineType, 
+						WorldWindow.VisibleTimelineType,
 						WorldWindow.VisibleTimelines,
 						(TimelineType) => {
 							WorldWindow.VisibleTimelineType = TimelineType;
