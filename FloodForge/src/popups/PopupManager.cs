@@ -56,7 +56,6 @@ public static class PopupManager {
 
 			if (popup.InteractBounds().Inside(Mouse.X, Mouse.Y) || popup == interactingPopup) {
 				if (Mouse.JustLeft && popup.CanDrag(Mouse.X, Mouse.Y)) {
-					if (Main.AprilFools) Sfx.Play($"assets/objects/click{new Random().Next(1, 3)}.wav");
 					holdingPopup = popup;
 					holdingStart = Mouse.Pos;
 				}
@@ -86,7 +85,6 @@ public static class PopupManager {
 
 	public static T Add<T>(T popup) where T : Popup {
 		toAdd.Add(popup);
-		if (Main.AprilFools) Sfx.Play($"assets/objects/new.wav");
 		return popup;
 	}
 

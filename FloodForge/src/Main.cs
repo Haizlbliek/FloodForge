@@ -86,7 +86,6 @@ public static class Main {
 		else {
 			PopupManager.Add(new SplashArtPopup());
 		}
-		if (Main.AprilFools) Sfx.Play($"assets/objects/open.wav");
 	}
 
 	public static void Cleanup() {
