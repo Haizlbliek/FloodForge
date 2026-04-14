@@ -9,6 +9,7 @@ public class Connection {
 
 	public HashSet<string> timelines = [];
 	public TimelineType timelineType = TimelineType.All;
+	public ConditionalPopup? conditionalPopup;
 
 	protected int segments;
 	protected float directionStrength;
@@ -191,8 +192,8 @@ public class Connection {
 			this.RecalculateBezier();
 		}
 		if(WorldWindow.CullTest(this.fittedAABB)) {
-			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer];
-			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer];
+			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomA.TimelineType, this.roomA.Timelines);
+			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomB.TimelineType, this.roomB.Timelines);
 			float opacity = Settings.ConnectionOpacity;
 			if (!aVisible && !bVisible || opacity < 0.01f) return;
 			bool hovered = this.Hovered || Keys.Modifier(Keys.Modifiers.Shift);

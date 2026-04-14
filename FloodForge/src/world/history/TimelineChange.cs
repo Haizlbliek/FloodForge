@@ -22,13 +22,16 @@ public class TimelineChange : MultipleRoomChange {
 	private void Insert() {
 		if (this.connection != null) {
 			this.connection.timelines.Add(this.timeline);
+			this.connection.conditionalPopup?.InvokeOnTimelineChange(this.connection.timelineType, this.connection.timelines);
 		}
 		else if (this.lineage != null) {
 			this.lineage.timelines.Add(this.timeline);
+			this.lineage.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timelineType, this.lineage.timelines);
 		}
 		else {
 			foreach (var room in this.rooms) {
 				room.Timelines.Add(this.timeline);
+				room.conditionalPopup?.InvokeOnTimelineChange(room.TimelineType, room.Timelines);
 			}
 		}
 	}
@@ -36,13 +39,16 @@ public class TimelineChange : MultipleRoomChange {
 	private void Erase() {
 		if (this.connection != null) {
 			this.connection.timelines.Remove(this.timeline);
+			this.connection.conditionalPopup?.InvokeOnTimelineChange(this.connection.timelineType, this.connection.timelines);
 		}
 		else if (this.lineage != null) {
 			this.lineage.timelines.Remove(this.timeline);
+			this.lineage.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timelineType, this.lineage.timelines);
 		}
 		else {
 			foreach (var room in this.rooms) {
 				room.Timelines.Remove(this.timeline);
+				room.conditionalPopup?.InvokeOnTimelineChange(room.TimelineType, room.Timelines);
 			}
 		}
 	}

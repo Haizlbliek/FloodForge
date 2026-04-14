@@ -183,11 +183,11 @@ public static class WorldParser {
 	}
 
 	private struct ConnectionToAdd {
-		public Room roomA; // actual reference to room A
-		public uint roomAExitID; // old: reference to shortcut entrance; goal: reference to roomexit
-		public Room? roomB = null; // actual reference to room B
-		public string roomBName = ""; // name of room B
-		public uint? roomBExitID = null; // old: reference to shortcut entrance; goal: reference to roomexit
+		public Room roomA;
+		public uint roomAExitID;
+		public Room? roomB = null;
+		public string roomBName = "";
+		public uint? roomBExitID = null;
 
 		public ConnectionToAdd(Room roomA, uint connectionA, string roomBName) {
 			this.roomA = roomA;
@@ -247,6 +247,10 @@ public static class WorldParser {
 
 		uint connectionId = 0;
 		foreach (string connection in connections) { // go through every room-connection
+			if (connection.IsNullOrEmpty())
+			{
+				continue;
+			}
 			if (connection.ToLowerInvariant() == "disconnected") {
 				connectionId++;
 				continue;
@@ -447,7 +451,8 @@ public static class WorldParser {
 				if (!ParseWorldCreatureNormal(splits, room, timelineType, timelines)) return false;
 			}
 		}
-		catch (Exception) {
+		catch (Exception e) {
+			Logger.Warn(e);
 			return false;
 		}
 
@@ -708,6 +713,7 @@ public static class WorldParser {
 			else if (parseState == WorldParseState.Creatures) {
 				if (!ParseWorldCreature(line)) {
 					Logger.Warn("Invalid world creature " + line);
+					WorldWindow.invalidCreaturesEncountered = true;
 					continue;
 				}
 			}

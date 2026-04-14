@@ -1,3 +1,4 @@
+using FloodForge.Popups;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;
@@ -20,10 +21,12 @@ public class Room {
 	public const uint FLAG_ROCK = 262144;
 	public const uint FLAG_SPEAR = 524288;
 
+	public bool pathOutsideRoomsFolder = false;
 	public string path;
 	public string name;
 	public TimelineType TimelineType;
 	public HashSet<string> Timelines = [];
+	public ConditionalPopup? conditionalPopup;
 	public Vector2 CanonPosition;
 	public Vector2 DevPosition;
 	public Vector2 CanonVel;
@@ -40,6 +43,7 @@ public class Room {
 	public Dictionary<Vector2i, RoomConnection> roomExitPaths = [];
 	public Dictionary<Vector2i, (RoomConnection, bool matchesWithRoomExitPath)> shortcutEntrancePaths = [];
 	public List<Vector2i> denShortcutEntrances = [];
+	public int nonDenExitCount = 0;
 	public List<Den> dens = [];
 	public List<GarbageWormDen> garbageWormDens = [];
 	public int hoveredDen = -1; // LATER: Remove / improve
@@ -52,11 +56,12 @@ public class Room {
 	// then, this could also be added to connections so that a room that connects to the same room multiple times isn't allowed to exist without feedback
 
 	private int specialExitCount = 0;
-	public int GarbageWormDenIndex => this.specialExitCount + this.allShortcutEntrancePoints.Count + this.denShortcutEntrances.Count;
+	public int GarbageWormDenIndex => this.specialExitCount + this.nonDenExitCount + this.denShortcutEntrances.Count;
 
-	public bool Visible => WorldWindow.VisibleLayers[this.data.layer];
+	public bool Visible => WorldWindow.VisibleLayers[this.data.layer] && WorldWindow.CheckVisibleTimeline(this.TimelineType, this.Timelines);
 
-	public Room(string path, string name) {
+	public Room(string path, string name, bool pathOutsideRoomsFolder = false) {
+		this.pathOutsideRoomsFolder = pathOutsideRoomsFolder;
 		this.path = path;
 		this.name = name;
 		this.TimelineType = TimelineType.All;
@@ -70,15 +75,31 @@ public class Room {
 		this.data = new RoomData();
 		this.visuals = new RoomVisuals(this);
 
-		this.LoadGeometry();
-		this.LoadSettings();
-		this.visuals.Refresh();
-		this.GenerateMesh();
-		this.CheckImages();
+		try {
+			this.LoadGeometry();
+			this.LoadSettings();
+			this.visuals.Refresh();
+			this.GenerateMesh();
+			this.CheckImages();
+		}
+		catch (Exception e) {
+			Logger.Error($"Failed to load {this.name}!\n{e}");
+			try { 
+				this.SetToInvalidRoom();
+				PopupManager.Add(new InfoPopup($"Failed to load {this.name}!")); 
+			} catch {}
+		}
+	}
+
+	public void SetToInvalidRoom() {
+		this.valid = false;
+		this.width = 72;
+		this.height = 43;
+		this.geometry = new uint[this.width * this.height];
 	}
 
 	public bool HasDen(int id) {
-		return this.HasDen01(id - this.allShortcutEntrancePoints.Count) || id == this.GarbageWormDenIndex;
+		return this.HasDen01(id - this.nonDenExitCount) || id == this.GarbageWormDenIndex;
 	}
 
 	public bool HasDen01(int id) {
@@ -86,11 +107,11 @@ public class Room {
 	}
 
 	public Den GetDen(int id) {
-		return this.GetDen01(id - this.allShortcutEntrancePoints.Count);
+		return this.GetDen01(id - this.nonDenExitCount);
 	}
 
 	public int GetDenId(Vector2i pos) {
-		return this.denShortcutEntrances.IndexOf(pos) + this.allShortcutEntrancePoints.Count;
+		return this.denShortcutEntrances.IndexOf(pos) + this.nonDenExitCount;
 	}
 
 	public int GetDenId01(Vector2i pos) {
@@ -141,16 +162,18 @@ public class Room {
 	protected virtual void LoadGeometry() {
 		if (!File.Exists(this.path)) {
 			Logger.Warn($"Failed to load '{this.name}'. File '{this.path}' doesn't exist");
-			this.width = 72;
-			this.height = 43;
-			this.geometry = new uint[this.width * this.height];
-			this.valid = false;
+			this.SetToInvalidRoom();
 			return;
 		}
 
 		string[] lines = File.ReadAllLines(this.path);
 
 		string[] levelData = lines[1].Split('|');
+		if(levelData.Length <= 0) {
+			Logger.Warn($"Failed to load '{this.name}'. File contains no leveldata.");
+			this.SetToInvalidRoom();
+			return;
+		}
 		this.width = int.Parse(levelData[0][..levelData[0].IndexOf('*')]);
 		this.height = int.Parse(levelData[0][(levelData[0].IndexOf('*') + 1)..]);
 		this.geometry = new uint[this.width * this.height];
@@ -389,11 +412,23 @@ public class Room {
 
 	public class RoomPath {
 		public Vector2i[] Path;
-		public Vector2i StartPosition => this.Path[0];
-		public Vector2i EndPosition => this.Path[^1];
-		public Vector2i StartDirection => (this.Path[1] - this.Path[0]) * new Vector2i(-1, 1);
+		public Vector2i StartPosition {
+			get {
+				return this.Path?.Length > 0 ? this.Path[0] : Vector2i.Zero;
+			}
+		}
+		public Vector2i EndPosition {
+			get {
+				return this.Path?.Length > 1 ? this.Path[^1] : this.StartPosition;
+			}
+		}
+		public Vector2i StartDirection {
+			get {
+				return this.Path.Length > 1 ? (this.Path[1] - this.Path[0]) * new Vector2i(-1, 1) : Vector2i.Zero;
+			}
+		}
 		public bool isDeadEnd = false;
-		public Vector2i EndDirection => this.isDeadEnd ? Vector2i.Zero : (this.Path[^1] - this.Path[^2]);
+		public Vector2i EndDirection => (this.isDeadEnd || this.Path.Length <= 1) ? Vector2i.Zero : (this.Path[^1] - this.Path[^2]);
 		public RoomPath(Room room, Vector2i startPosition) {
 			Vector2i forwardDirection = Vector2i.Zero;
 			Vector2i currentPosition = startPosition;
@@ -449,6 +484,7 @@ public class Room {
 				}
 
 				if (!hasDirection) break;
+				if (runs + 1 == 10000) hasDirection = false;
 			}
 			this.Path = pathTaken.ToArray();
 			this.isDeadEnd = !hasDirection;
@@ -457,7 +493,6 @@ public class Room {
 	
 	void CheckShortcutEntrancePoints() {
 		this.allShortcutEntrancePoints.Clear();
-		// string logstring = $"CheckShortcutEntrancePoints for {this.name}";
 		for (int y = 0; y < this.height; y++) {
 			for (int x = 0; x < this.width; x++) {
 				if ((this.GetTile(x, y) & FLAG_SHORTCUT) > 0) {
@@ -466,12 +501,12 @@ public class Room {
 					int index = 0;
 					for (int y2 = y - 1; y2 < y + 2; y2++) {
 						for(int x2 = x - 1; x2 < x + 2; x2++) {
-							int result = ((this.GetTile(x2, y2)&15) == 1) ? 1 : 0;
-							result += ((this.GetTile(x2, y2)&FLAG_SHORTCUT) > 0) ? 2 : 0;
-							result += ((this.GetTile(x2, y2)&FLAG_ROOM_EXIT) > 0) ? 4 : 0;
-							result += ((this.GetTile(x2, y2)&FLAG_DEN) > 0) ? 8 : 0;
-							result += ((this.GetTile(x2, y2)&FLAG_SCAVENGER_DEN) > 0) ? 16 : 0;
-							result += ((this.GetTile(x2, y2)&FLAG_WACK_A_MOLE_HOLE) > 0) ? 32 : 0;
+							int result = ((this.GetTile(x2, y2)&15) == 1) ? 1 : 0;					//  1 == solid
+							result += ((this.GetTile(x2, y2)&FLAG_SHORTCUT) > 0) ? 2 : 0;			//  2 == shortcut
+							result += ((this.GetTile(x2, y2)&FLAG_ROOM_EXIT) > 0) ? 4 : 0;			//  4 == roomexit
+							result += ((this.GetTile(x2, y2)&FLAG_DEN) > 0) ? 8 : 0;				//  8 == den
+							result += ((this.GetTile(x2, y2)&FLAG_SCAVENGER_DEN) > 0) ? 16 : 0;		// 16 == scav
+							result += ((this.GetTile(x2, y2)&FLAG_WACK_A_MOLE_HOLE) > 0) ? 32 : 0;	// 32 == wack-a-mole-hole
 							tiles[index] = result;
 							index++;
 						}
@@ -485,44 +520,50 @@ public class Room {
 						// check if all corners are solid
 						if((tiles[0] & 1) == 0 || (tiles[2] & 1) == 0 || (tiles[6] & 1) == 0 || (tiles[8] & 1) == 0) airGaps = 99;
 
-						// check if only one of the sides is air
-						if((tiles[1] & 2) > 0) directionCount++; if((tiles[1] & 1) == 0) airGaps++;
-						if((tiles[3] & 2) > 0) directionCount++; if((tiles[3] & 1) == 0) airGaps++;
-						if((tiles[5] & 2) > 0) directionCount++; if((tiles[5] & 1) == 0) airGaps++;
-						if((tiles[7] & 2) > 0) directionCount++; if((tiles[7] & 1) == 0) airGaps++;
-
-						bool IsValidShortcutEntrance = directionCount == 1 && airGaps == 1;
-
-						if(IsValidShortcutEntrance) {
+						int dirFlags = 0;
+						int airFlags = 0;
+						if((tiles[1] & 62) > 0) {
+							directionCount++; 
+							dirFlags |= 1; }
+						if((tiles[1] & 1) == 0) {
+							airGaps++;
+						 	airFlags |= 8; }
+						if((tiles[3] & 62) > 0) {
+							directionCount++; 
+							dirFlags |= 2; }
+						if((tiles[3] & 1) == 0) {
+							airGaps++;
+						 	airFlags |= 4; }
+						if((tiles[5] & 62) > 0) {
+							directionCount++; 
+							dirFlags |= 4; }
+						if((tiles[5] & 1) == 0) {
+							airGaps++;
+						 	airFlags |= 2; }
+						if((tiles[7] & 62) > 0) {
+							directionCount++; 
+							dirFlags |= 8; }
+						if((tiles[7] & 1) == 0) {
+							airGaps++;
+						 	airFlags |= 1; }
+						
+						// check:
+						// - that only one of the sides is air,
+						// - that only one of the sides has direction
+						// - that the shortcut's direction and the airgap's direction are correct
+						// (correct as in opposite, which is why the bit assignments are opposite)
+						if((directionCount == 1) && (airGaps == 1) && (airFlags == dirFlags)) {
 							this.allShortcutEntrancePoints.Add(new Vector2i(x, y));
 						}
-						/*if(this.name == "TR_2intopipe") {
-							string[] str = new string[9];
-							for (int i = 0; i < 9; i++) {
-								int tile = tiles[i];
-								string value = ((tile & 32) > 0) ? "1" : "0";
-								value += ((tile & 16) > 0) ? "1" : "0";
-								value += ((tile & 8) > 0) ? "1" : "0";
-								value += ((tile & 4) > 0) ? "1" : "0";
-								value += ((tile & 2) > 0) ? "1" : "0";
-								value += ((tile & 1) > 0) ? "1" : "0";
-								str[i] = value;
-							}
-							Logger.Info($"tile {x}, {y}:\n{str[0]} - {str[1]} - {str[2]}\n{str[3]} - {str[4]} - {str[5]}\n{str[6]} - {str[7]} - {str[8]}\ndirectionCount: {directionCount};\nairGaps: {airGaps};\nIsValidShortcutEntrance:{IsValidShortcutEntrance}");
-						}*/
 					}
 				}
 			}
 		}
-		// logstring += "\nallShortcutEntrancePoints:";
-		// foreach(Vector2i position in this.allShortcutEntrancePoints) {
-		// 	logstring += $"\n{position.x}; {position.y}";
-		// }
-		// Logger.Info(logstring);
 	}
 
 	protected void EnsureConnections() {
 		this.specialExitCount = 0;
+		this.nonDenExitCount = 0;
 		this.roomExits.Clear();
 		this.roomExitPaths.Clear();
 		this.shortcutEntrancePaths.Clear();
@@ -566,9 +607,6 @@ public class Room {
 			if(startType == RoomPathEndType.roomExit) {
 				this.roomExitPaths.Add(this.allRoomExitPoints[i].Item2, new RoomConnection(roomExitPath, startType, endType));
 			}
-			else if(startType == RoomPathEndType.den && endType == RoomPathEndType.shortcutEntrance) {
-				this.denShortcutEntrances.Add(roomExitPath.EndPosition);
-			}
 		}
 
 		for (int i = 0; i < this.allShortcutEntrancePoints.Count; i++) {
@@ -592,6 +630,12 @@ public class Room {
 				}
 			}
 			this.shortcutEntrancePaths.Add(this.allShortcutEntrancePoints[i], (new RoomConnection(shortcutPath, startType, endType), hasMatchingRoomExit));
+			if(endType == RoomPathEndType.den) {
+				this.denShortcutEntrances.Add(shortcutPath.StartPosition);
+			}
+			else if(endType == RoomPathEndType.roomExit) {
+				this.nonDenExitCount++;
+			}
 		}
 
 		// Side Exits
@@ -1439,12 +1483,17 @@ public class Room {
 		bool drawnDen = false;
 
 		float selectorScale = WorldWindow.SelectorScale;
+		int drawnCreatures = 0;
 		for (int i = 0; i < den.creatures.Count; i++) {
 			DenCreature creature = den.creatures[i];
-			if (creature.type.IsNullOrEmpty() && creature.lineageTo == null) continue;
+			if (creature.type.IsNullOrEmpty() && creature.lineageTo == null) {
+				drawnCreatures++;
+				continue;
+			}
+			if (creature is DenLineage denLineage && !WorldWindow.CheckVisibleTimeline(denLineage.timelineType, denLineage.timelines)) continue;
 
 			float scale = selectorScale;
-			float rectX = x + i * scale - (den.creatures.Count - 1f) * 0.5f * scale;
+			float rectX = x + drawnCreatures * scale - (den.creatures.Count - 1f) * 0.5f * scale;
 			float rectY = y;
 
 			if (hovered) scale *= 1.5f;
@@ -1474,6 +1523,7 @@ public class Room {
 					}
 				}
 			}
+			drawnCreatures++;
 		}
 		if (!drawnDen && (!denEmpty || denEmpty && WorldWindow.cameraScale < 400f || roomHovered)) {
 			Immediate.Color(Themes.RoomShortcutDen);
