@@ -105,7 +105,10 @@ public class Font {
 		float croppedTextWidth = 0f;
 		for (int i = fromRight ? input.Length - 1 : 0; fromRight ? i >= 0 : i < input.Length; i += fromRight ? -1 : 1) {
 			char textChar = input[i];
-			Character fontChar = UI.font.characters[textChar];
+			Character fontChar = UI.font.characters.Values.FirstOrDefault();
+			if (UI.font.characters.TryGetValue(textChar, out Character result))
+				fontChar = result;
+
 			if (croppedTextWidth + fontChar.xAdvance >= totalSpaceInLine) {
 				break;
 			}

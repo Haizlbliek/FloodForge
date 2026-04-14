@@ -225,6 +225,7 @@ public static class Profiler {
 		// ofc, there'd also be a way to tell this profiler not to hide the debuginformation in the bottom left, since that's more generally useful
 		static List<string> profilerMessagesLeft = [];
 		static List<string> profilerMessagesRight = [];
+		static List<(string, int)> logMessages = [];
 		public static void DrawProfilerMessages() {
 			Immediate.Color(Color.White);
 			int i = 0;
@@ -241,6 +242,23 @@ public static class Profiler {
 					i++;
 				}
 			}
+			i = 0;
+			if(logMessages.Count > 45) {
+				logMessages.RemoveRange(0, logMessages.Count - 45);
+			}
+			foreach((string message, int severity) in logMessages.AsEnumerable().Reverse()) {
+				Immediate.Color(severity switch {
+					0 => Color.Grey,
+					1 => Color.White,
+					2 => Color.Yellow,
+					3 => Color.Red,
+					_ => Color.White
+				});
+				foreach (string line in message.Split("\n").Reverse()) {
+					UI.font.Write(line, Main.screenBounds.x - UI.font.Measure(line, 0.025f).x, -Main.screenBounds.y + 0.1f + (i * 0.03f), 0.025f);
+					i++;
+				}
+			}
 			profilerMessagesLeft = [];
 			profilerMessagesRight = [];
 		}
@@ -248,6 +266,10 @@ public static class Profiler {
 			if (Profiler.enableProfiler) {
 				if(onRight) profilerMessagesRight.Add(message); else profilerMessagesLeft.Add(message);
 			}
+		}
+
+		public static void AddLogMessage(string message, int severity) {
+			logMessages.Add((message, severity));
 		}
 	}
 }

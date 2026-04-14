@@ -19,7 +19,7 @@ public abstract class MenuItems {
 
 		foreach (Button button in this.buttons) {
 			if (button.hasContextCheckCallback) {
-				button.buttonEnabled = button.contextCheckCallback();
+				button.buttonEnabled = button.contextCheckCallback(button);
 			}
 			if (button.buttonEnabled || Settings.DisabledButtonsMode.value != Settings.STDisabledButtonsMode.Hide ) {
 				bool onRight = (button is AlignedButton alignedButton) && alignedButton.alignment;
@@ -35,7 +35,7 @@ public abstract class MenuItems {
 						PopupManager.Add(new InfoPopup(button.disabledInteractMessage));
 					}
 				}
-				if(onRight) rightX -= width - 0.01f;
+				if(onRight) rightX -= width + 0.01f;
 				else leftX += width + 0.01f;
 			}
 		}
@@ -47,7 +47,7 @@ public abstract class MenuItems {
 			this.alignment = alignment;
 		}
 		
-		public AlignedButton(string text, bool alignment, Action<Button> callback, Func<bool> contextCheckCallback, string disabledInteractMessage = "") : base (text, callback, contextCheckCallback, disabledInteractMessage) {
+		public AlignedButton(string text, bool alignment, Action<Button> callback, Func<Button, bool> contextCheckCallback, string disabledInteractMessage = "") : base (text, callback, contextCheckCallback, disabledInteractMessage) {
 			this.alignment = alignment;
 		}
 	}
@@ -56,7 +56,7 @@ public abstract class MenuItems {
 		public string text;
 		public Action<Button> onclick;
 		public bool hasContextCheckCallback = false;
-		public Func<bool> contextCheckCallback;
+		public Func<Button, bool> contextCheckCallback;
 		public bool buttonEnabled = true;
 		public string disabledInteractMessage;
 		public virtual bool Dark => false;
@@ -64,12 +64,12 @@ public abstract class MenuItems {
 		public Button(string text, Action<Button> callback) {
 			this.text = text;
 			this.onclick = callback;
-			this.contextCheckCallback = new Func<bool>(() => { return true; });
+			this.contextCheckCallback = new Func<Button, bool>(button => { return true; });
 			this.hasContextCheckCallback = false;
 			this.disabledInteractMessage = "";
 		}
 
-		public Button (string text, Action<Button> callback, Func<bool> contextCheckCallback, string disabledInteractMessage = "") : this(text, callback) {
+		public Button (string text, Action<Button> callback, Func<Button, bool> contextCheckCallback, string disabledInteractMessage = "") : this(text, callback) {
 			this.hasContextCheckCallback = true;
 			this.contextCheckCallback = contextCheckCallback;
 			this.disabledInteractMessage =disabledInteractMessage;

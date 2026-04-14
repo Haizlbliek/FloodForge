@@ -414,7 +414,7 @@ public static class WorldExporter {
 								writer.Write($"0-{CreatureTextures.ExportName(creature.type)}");
 							}
 							else {
-								writer.Write($"{i + room.allShortcutEntrancePoints.Count}-{CreatureTextures.ExportName(creature.type)}");
+								writer.Write($"{i + room.nonDenExitCount}-{CreatureTextures.ExportName(creature.type)}");
 							}
 							ExportCreatureTags(creature, writer);
 							if (creature.count > 1)
@@ -461,7 +461,7 @@ public static class WorldExporter {
 							writer.Write("0 : ");
 						}
 						else {
-							writer.Write($"{i + room.allShortcutEntrancePoints.Count} : ");
+							writer.Write($"{i + room.nonDenExitCount} : ");
 						}
 
 						DenCreature current = creature;
