@@ -1523,8 +1523,9 @@ public static class WorldWindow {
 					confirmRenderPopup = new ConfirmPopup("Render " + oldSelection.Count + " rooms?" + (
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
-						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" : ""
-						)).Okay(() => {
+						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" : 
+						"\nAll existing images will be overwritten!")
+						).Okay(() => {
 							renderRoomsTask = Task.Run(MassRenderRooms);
 						});
 					PopupManager.Add(confirmRenderPopup);
