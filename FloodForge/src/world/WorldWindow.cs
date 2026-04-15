@@ -1524,7 +1524,7 @@ public static class WorldWindow {
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" : 
-						"\nAll existing images will be overwritten!")
+						"\n<s:1>This will overwrite all existing images!")
 						).Okay(() => {
 							renderRoomsTask = Task.Run(MassRenderRooms);
 						});

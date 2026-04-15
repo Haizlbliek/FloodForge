@@ -34,6 +34,8 @@ PopupHeader            | Popup header
 Button                 | Button background
 ButtonDisabled         | Button background when disabled
 Text                   | Text
+TextWarn               | Text used to warn
+TextError              | Text used to display an error
 TextDisabled           | Text when disabled (Usually in a button)
 TextHighlight          | Text when focused/hovered
 SelectionBorder        | Selection area border & room border when selected
