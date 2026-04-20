@@ -305,6 +305,10 @@ public abstract class Popup {
 	}
 
 	public virtual void Close() {
+		if (this.mouseCursorSet || this.hadMouseCursorSet) {
+			Main.mouse?.Cursor.StandardCursor = StandardCursor.Default;
+			this.hadMouseCursorSet = false;
+		}
 		PopupManager.Remove(this);
 		this.slatedForDeletion = true;
 	}
