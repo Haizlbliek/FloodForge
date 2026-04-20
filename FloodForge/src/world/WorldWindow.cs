@@ -1025,7 +1025,7 @@ public static class WorldWindow {
 	}
 
 	public static void Draw() {
-		if ((renderRoomsTask == null || renderRoomsTask.IsCompleted) && confirmRenderPopup == null) {
+		if ((renderRoomsTask == null || renderRoomsTask.Status != TaskStatus.Running) && PopupManager.Windows.Count == 0) {
 			oldSelection.Clear();
 			oldSelection = [.. selectedRooms];
 		}
