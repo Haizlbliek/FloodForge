@@ -1,8 +1,10 @@
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using FloodForge.Droplet;
 using FloodForge.Popups;
 using Silk.NET.Input;
+using StbImageWriteSharp;
 using Stride.Core;
 using Stride.Core.Extensions;
 using TextCopy;
@@ -879,6 +881,40 @@ public static class WorldWindow {
 		debugText.Add($"Rooms: {region.rooms.Count}");
 		debugText.Add($"Screens: {screenCount}");
 		debugText.Add($"Connections: {region.connections.Count}");
+		if(selectedRooms.Count != 0) {
+			List<string> totalDebug = [];
+			string debug = "";
+			foreach (Room room in selectedRooms) {
+				debug += room.name + "; ";
+				if(debug.Length > 75) {
+					totalDebug.Add(debug);
+					debug = "";
+				}
+			}
+			if(debug != "") 
+				totalDebug.Add(debug);
+			debugText.Add($"Selection: {selectedRooms.Count} : {(totalDebug.Count >= 0 ? totalDebug[0] : "")}");
+			for (int j = 1; j < totalDebug.Count; j++) {
+				debugText.Add(totalDebug[j]);
+			}
+		}
+		if(oldSelection.Count != 0 &! oldSelection.SequenceEqual(selectedRooms)) {
+			List<string> totalDebug = [];
+			string debug = "";
+			foreach (Room room in oldSelection) {
+				debug += room.name + "; ";
+				if(debug.Length > 75) {
+					totalDebug.Add(debug);
+					debug = "";
+				}
+			}
+			if(debug != "") 
+				totalDebug.Add(debug);
+			debugText.Add($"oldSelection: {oldSelection.Count} : {(totalDebug.Count >= 0 ? totalDebug[0] : "")}");
+			for (int j = 1; j < totalDebug.Count; j++) {
+				debugText.Add(totalDebug[j]);
+			}
+		}
 
 		if (hoveringConnection != null) {
 			debugText.Add("");
@@ -1025,7 +1061,7 @@ public static class WorldWindow {
 	}
 
 	public static void Draw() {
-		if ((renderRoomsTask == null || renderRoomsTask.IsCompleted) && confirmRenderPopup == null) {
+		if ((renderRoomsTask == null || renderRoomsTask.Status != TaskStatus.Running) && PopupManager.Windows.Count == 0) {
 			oldSelection.Clear();
 			oldSelection = [.. selectedRooms];
 		}
@@ -1242,58 +1278,160 @@ public static class WorldWindow {
 	}
 
 	static Task? renderRoomsTask;
-	public static InfoPopup? renderStatusPopup;
+	static bool awaitingCancelConfirmation;
+	static bool cancelRender = false;
+	public static CancellablePopup? renderStatusPopup;
 	public static ConfirmPopup? confirmRenderPopup;
-	private static async Task MassRenderRooms() {
-		{
-			List<Room> rooms = [];
-			foreach (Room room in oldSelection) {
-				if (room is not OffscreenRoom) {
-					rooms.Add(room);
-				}
-			}
-			if (rooms.Count <= 0) {
-				PopupManager.Add(new InfoPopup("Select at least one valid room!"));
-			}
-			else {
-				Logger.Info("Mass-rendering rooms!");
-				renderStatusPopup = new InfoPopup("Rendering rooms\n_/_\ninit");
-				PopupManager.Add(renderStatusPopup);
+	private const int CameraTextureWidth = 1400;
+	private const int CameraTextureHeight = 800; // make this not be in two places (WorldWindow && DropletWindow)
+	private static void CancelRender(CancellablePopup cancellablePopup) {
+		if (!WorldWindow.awaitingCancelConfirmation) {
+			WorldWindow.awaitingCancelConfirmation = true;
+			PopupManager.Add(new ConfirmPopup("Really cancel render?").SetButtons("Yes", "No")
+			.Okay(() => {
+				WorldWindow.cancelRender = true;
+				WorldWindow.awaitingCancelConfirmation = false;
+				})
+			.Cancel(() => {	
+			WorldWindow.cancelRender = false;
+			WorldWindow.awaitingCancelConfirmation = false;
+			}));
+		}
+	}
 
-				int successCount = 0;
-				int finished = 0;
-				int totalCount = rooms.Count;
-				List<(string, string)> messages = [];
-				string errorMessage = "";
-				foreach (Room room in rooms) {
-					renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nloading");
-					await Task.Run(() => DropletWindow.LoadRoom(room));
-					renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nrendering");
-					errorMessage = "";
-					if (await Task.Run(() => DropletWindow.Render(out errorMessage))) {
-						successCount++;
-					}
-					else {
-						Logger.Warn($"Error while rendering {room.name} - message: {errorMessage}");
-						messages.Add((room.name, errorMessage));
-					}
-					finished++;
-				}
-				Logger.Info($"Finished mass-render.\nSelection: {totalCount}\nSucceeded: {successCount}/{finished}");
-				renderStatusPopup.Close();
-				if (successCount == finished) {
-					PopupManager.Add(new ConfirmPopup($"Finished mass-render.\n {successCount}/{finished} succeeded.").SetOkay("Copy path").SetCancel("Continue").Okay(() => { ClipboardService.SetText(WorldWindow.region.roomsPath); }));
+	private static async Task<bool> CheckRenderCancel() {
+		while (WorldWindow.awaitingCancelConfirmation) {
+			Thread.Sleep(100);
+		}
+		if (WorldWindow.cancelRender) {
+			WorldWindow.cancelRender = false;
+			return true;
+		}
+		return false;
+	}
+
+	private static async Task<bool> TryCancelRender(string messageOnCancel = "") {
+		if (await CheckRenderCancel()) {
+			Logger.Info("Cancelling render with message: " + messageOnCancel);
+			renderStatusPopup?.Close();
+			if (!messageOnCancel.IsNullOrEmpty()) PopupManager.Add(new InfoPopup(messageOnCancel));
+			return true;
+		}
+		return false;
+	}
+
+	private static async Task MassRenderRooms() {
+		WorldWindow.cancelRender = false;
+		WorldWindow.awaitingCancelConfirmation = false;
+		List<Room> rooms = [];
+		foreach (Room room in oldSelection) {
+			if (room is not OffscreenRoom) {
+				rooms.Add(room);
+			}
+		}
+		if (rooms.Count <= 0) {
+			PopupManager.Add(new InfoPopup("Select at least one valid room!"));
+		}
+		else {
+			Logger.Info("Mass-rendering rooms!");
+			renderStatusPopup = new CancellablePopup("Rendering rooms\n_/_\ninit").Cancel(CancelRender).CloseOnCancel(false); // Add cancel button to the popup
+			PopupManager.Add(renderStatusPopup);
+
+			int successCount = 0;
+			int finished = 0;
+			int totalCount = rooms.Count;
+			List<(string, string)> messages = [];
+			string errorMessage = "";
+			List<(string name, string path, byte[] image)[]> renderedRooms = [];
+			if (await TryCancelRender("Render cancelled.\nNo changes made.")) return;
+
+			foreach (Room room in rooms) {
+				if (await TryCancelRender($"Render cancelled at\n{finished}/{totalCount} rendered.\nNo changes made.")) return;
+				renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nloading");
+				await Task.Run(() => DropletWindow.LoadRoom(room));
+				renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nrendering");
+				errorMessage = "";
+				(string name, string path, byte[] image)[] images = []; // possibly: make this tuple contain the exportpath so it doesn't need to be recalculated every time?
+				if (await Task.Run(() => DropletWindow.Render(out errorMessage, out images))) {
+					successCount++;
+					renderedRooms.Add(images);
 				}
 				else {
-					string reportString = $"Finished mass-render.\n {successCount}/{finished} succeeded.\nDetected errors:\n";
+					Logger.Warn($"Error while rendering {room.name} - message: {errorMessage}");
+					messages.Add((room.name, errorMessage));
+				}
+				finished++;
+			}
+			if (await TryCancelRender($"Render cancelled at\n{finished}/{totalCount} rendered.\nNo changes made.")) return;
+
+			for (int i = 0; i < renderedRooms.Count; i++) {
+				if (await TryCancelRender($"Render cancelled at\n{i}/{renderedRooms.Count} backups made.\nNo files overwritten.")) return;
+				renderStatusPopup.UpdateText($"Creating backups\n{i+1}/{renderedRooms.Count}");
+				foreach((string name, string path, byte[] image) in renderedRooms[i]) {
+					FloodForge.Backup.File(path);
+				}
+			}
+			renderStatusPopup.UpdateText($"Creating backups\ndone");
+			if (await TryCancelRender($"Render cancelled.\nBackups made.\nNo files overwritten.")) return;
+			renderStatusPopup.UpdateText($"Updating Images\n0/{renderedRooms.Count}");
+			List<(string path, byte[] image)> overwrittenImages = [];
+
+			for (int i = 0; i < renderedRooms.Count; i++) {
+				int imagesCopied = 0;
+				for (int j = 0; j < renderedRooms[i].Length; j++) {
+					try {
+						if (await TryCancelRender()) {
+							InfoPopup cancelPopup = PopupManager.Add(new InfoPopup(""));
+							for (int k = 0; k < overwrittenImages.Count; k++) {
+								cancelPopup.UpdateText($"Reverting files\n{k}/{overwrittenImages.Count - 1}");
+								if(overwrittenImages[k].image.Length != 0)
+									File.WriteAllBytes(overwrittenImages[k].path, overwrittenImages[k].image);
+								else {
+									FloodForge.Backup.File(overwrittenImages[k].path);
+									File.Delete(overwrittenImages[k].path);
+								}
+							}
+							cancelPopup.UpdateText("Render cancelled.\nBackups made.\nOverwritten files reverted.");
+							return;
+						}
+						(string name, string path, byte[] image) = renderedRooms[i][j];
+						renderStatusPopup.UpdateText($"Updating Images\n{i+1}/{renderedRooms.Count}\n{imagesCopied}/{renderedRooms[i].Length}");
+						byte[] oldImg = [];
+						if(File.Exists(path)) oldImg = File.ReadAllBytes(path);
+						overwrittenImages.Add((path, oldImg));
+
+						using Stream stream = File.OpenWrite(path); // Make this a History Change, so it's CTRL+Z-able
+						ImageWriter writer = new ImageWriter();
+						writer.WritePng(image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
+						Logger.Info($"Screen {name} exported");
+						imagesCopied++;
+					}
+					catch (Exception ex) {
+						messages.Add((renderedRooms[i][j].name, ex.Message));
+						Logger.Error("Exporting screen failed: " + ex);
+					}
+				}
+				if (imagesCopied < renderedRooms[i].Length - 1)
+					successCount--;
+			}
+			renderStatusPopup.Close();
+			Logger.Info($"Finished mass-render.\nSelection: {totalCount}\nSucceeded: {successCount}/{finished}");
+			if (successCount == finished) {
+				PopupManager.Add(new ConfirmPopup($"Finished mass-render.\n {successCount}/{finished} succeeded.").SetOkay("Copy path").SetCancel("Continue").Okay(() => { ClipboardService.SetText(WorldWindow.region.roomsPath); }));
+			}
+			else {
+				string reportString = $"Finished mass-render.\n {successCount}/{finished} succeeded.";
+				
+				if (messages.Count == 0) {
+					reportString += $"\nNo detected errors!";
+				}
+				else {
+					reportString += "\nDetected errors:\n";
 					foreach ((string roomName, string message) in messages) {
 						reportString += $"{roomName} - {message}\n";
-					}
-					if (messages.Count == 0) {
-						reportString += $"No detected errors!";
-					}
-					PopupManager.Add(new ConfirmPopup(reportString + "View log.txt for more info."));
+					}	
 				}
+				PopupManager.Add(new ConfirmPopup(reportString + "View log.txt for more info."));
 			}
 		}
 	}
@@ -1567,8 +1705,9 @@ public static class WorldWindow {
 					confirmRenderPopup = new ConfirmPopup("Render " + oldSelection.Count + " rooms?" + (
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
-						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" : ""
-						)).Okay(() => {
+						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" : 
+						"\n<s:1>This will overwrite all existing images!")
+						).Okay(() => {
 							renderRoomsTask = Task.Run(MassRenderRooms);
 						});
 					PopupManager.Add(confirmRenderPopup);

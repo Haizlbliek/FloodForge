@@ -18,6 +18,8 @@ public static class Themes {
 	public static readonly ThemeColor Button = Register("Button", new Color(0.2f, 0.2f, 0.2f));
 	public static readonly ThemeColor ButtonDisabled = Register("ButtonDisabled", new Color(1f, 1f, 1f));
 	public static readonly ThemeColor Text = Register("Text", new Color(0.5f, 0.5f, 0.5f));
+	public static readonly ThemeColor TextWarn = Register("TextWarn", new Color(1f, 1f, 0.0f));
+	public static readonly ThemeColor TextError = Register("TextError", new Color(1f, 0.0f, 0.0f));
 	public static readonly ThemeColor TextDisabled = Register("TextDisabled", new Color(0f, 1f, 1f));
 	public static readonly ThemeColor TextHighlight = Register("TextHighlight", new Color(0.3f, 0.3f, 0.3f));
 	public static readonly ThemeColor SelectionBorder = Register("SelectionBorder", new Color(0.3f, 0.3f, 0.3f));
