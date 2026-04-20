@@ -67,22 +67,11 @@ public class ConfirmPopup : Popup {
 		base.Draw();
 
 		if (this.minimized) return;
-
-		// REVIEW - implement these colors in all popup texts
+		
 		for (int idx = 0; idx < this.question.Length; idx++) {
 			string lineToWrite = this.question[idx];
 			float y = this.bounds.y1 - 0.08f - 0.05f * idx;
-			int severity = 0;
-			if (lineToWrite != "" && lineToWrite.StartsWith("<s:")) {
-				severity = int.Parse(lineToWrite[Math.Min(lineToWrite.Length, lineToWrite.IndexOf(':') + 1)..lineToWrite.IndexOf('>')]);
-				lineToWrite = lineToWrite[Math.Min(lineToWrite.IndexOf('>') + 1, lineToWrite.Length)..];
-			}
-			Immediate.Color(severity switch {
-				1 => Themes.TextWarn,
-				2 => Themes.TextError,
-				_ => Themes.Text
-			});
-			UI.font.Write(lineToWrite, this.bounds.CenterX, y, 0.04f, Font.Align.TopCenter | Font.Align.MiddleLeft);
+			WriteText(lineToWrite, this.bounds.CenterX, y, 0.04f, Font.Align.TopCenter | Font.Align.MiddleLeft);
 		}
 
 		if (UI.TextButton(this.cancel, this.swap ? right : left)) {
