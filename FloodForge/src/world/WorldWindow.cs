@@ -455,7 +455,7 @@ public static class WorldWindow {
 					continue;
 
 				change.AddRoom(room1);
-				region.connections.Where(c => c.roomA == room1 || c.roomB == room1)
+				region.connections.Where(c => c.roomA == room1 &! selectedRooms.Contains(c.roomB) || (c.roomB == room1 &! selectedRooms.Contains(c.roomA)))
 					.ForEach(change.AddConnection);
 			}
 			selectedRooms.Clear();
