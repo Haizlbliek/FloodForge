@@ -1097,11 +1097,15 @@ public class Room {
 		}
 	}
 
+	// IDEA - add MeshRenderReference object containing setup code for easier modifications
+	protected Mesh waterMesh = new();
+	protected MeshRenderable? waterRenderable;
 	protected Mesh roomMesh = new();
 	protected MeshRenderable? roomRenderable;
 	List<Vector2i> allShortcutEntrances = [];
 
 	protected unsafe virtual void GenerateMesh() {
+		this.waterMesh.Clear();
 		this.roomMesh.Clear();
 		this.allShortcutEntrances.Clear();
 
@@ -1117,12 +1121,16 @@ public class Room {
 				float x2 = (x0 + x1) * 0.5f;
 				float y2 = (y0 + y1) * 0.5f;
 
+				bool addWater = (this.height - (y + 1)) <= this.data.waterHeight;
+				bool isTopOfwater = (this.height - (y + 1)) == this.data.waterHeight;
+
 				if (type == 4) {
 					this.allShortcutEntrances.Add(new(x, y));
 					this.roomMesh.AddQuad(x2, y2, Themes.RoomShortcutEntrance);
 				}
 				else if (type != 1) { // draws air if the tile isn't fully solid.
 					Themes.ThemeColor air = ((tile & FLAG_BACKGROUND_SOLID) > 0) ? Themes.RoomLayer2Solid : Themes.RoomAir;
+					Themes.ThemeColor water = Themes.RoomWater;
 
 					if (type == 2) {
 						uint direction = (tile >> 10) & 3;
@@ -1132,6 +1140,23 @@ public class Room {
 								new Vertex(x0, y1, air),
 								new Vertex(x1, y0, air)
 							);
+							if(addWater) {
+								if (isTopOfwater) {
+									this.waterMesh.AddQuad(
+										new Vertex(x1, y1, water),
+										new Vertex(x0, y1, water),
+										new Vertex(x2, y2, water),
+										new Vertex(x1, y2, water)
+									);
+								}
+								else {
+									this.waterMesh.AddTriangle(
+										new Vertex(x1, y1, water),
+										new Vertex(x0, y1, water),
+										new Vertex(x1, y0, water)
+									);
+								}
+							}
 						}
 						else if (direction == 1) {
 							this.roomMesh.AddTriangle(
@@ -1139,6 +1164,22 @@ public class Room {
 								new Vertex(x0, y0, air),
 								new Vertex(x1, y1, air)
 							);
+							if(addWater) {
+								if (isTopOfwater) {
+									this.waterMesh.AddTriangle(
+										new Vertex(x1, y2, water),
+										new Vertex(x2, y2, water),
+										new Vertex(x1, y1, water)
+									);
+								}
+								else {
+									this.waterMesh.AddTriangle(
+										new Vertex(x1, y0, water),
+										new Vertex(x0, y0, water),
+										new Vertex(x1, y1, water)
+									);
+								}
+							}
 						}
 						else if (direction == 2) {
 							this.roomMesh.AddTriangle(
@@ -1146,6 +1187,23 @@ public class Room {
 								new Vertex(x1, y1, air),
 								new Vertex(x0, y0, air)
 							);
+							if(addWater) {
+								if (isTopOfwater) {
+									this.waterMesh.AddQuad(
+										new Vertex(x0, y1, water),
+										new Vertex(x1, y1, water),
+										new Vertex(x2, y2, water),
+										new Vertex(x0, y2, water)
+									);
+								}
+								else {
+									this.waterMesh.AddTriangle(
+										new Vertex(x0, y1, water),
+										new Vertex(x1, y1, water),
+										new Vertex(x0, y0, water)
+									);
+								}
+							}
 						}
 						else if (direction == 3) {
 							this.roomMesh.AddTriangle(
@@ -1153,10 +1211,37 @@ public class Room {
 								new Vertex(x1, y0, air),
 								new Vertex(x0, y1, air)
 							);
+							if(addWater) {
+								if (isTopOfwater) {
+									this.waterMesh.AddTriangle(
+										new Vertex(x0, y2, water),
+										new Vertex(x2, y2, water),
+										new Vertex(x0, y1, water)
+									);
+								}
+									else {
+									this.waterMesh.AddTriangle(
+										new Vertex(x0, y0, water),
+										new Vertex(x1, y0, water),
+										new Vertex(x0, y1, water)
+									);
+								}
+							}
 						}
 					}
 					else {
 						this.roomMesh.AddQuad(x2, y2, air); // possibility for greedy meshing, since right now every tile of air now gets its own quad.
+						if(addWater && type != 3) {
+							if (isTopOfwater)
+								this.waterMesh.AddQuad(
+									new Vertex(x0, y1, water),
+									new Vertex(x1, y1, water),
+									new Vertex(x1, y2, water),
+									new Vertex(x0, y2, water)
+								);
+							else
+								this.waterMesh.AddQuad(x2, y2, water);
+						}
 					}
 				}
 
@@ -1167,6 +1252,14 @@ public class Room {
 						new Vertex(x1, y2, Themes.RoomPlatform),
 						new Vertex(x0, y2, Themes.RoomPlatform)
 					);
+					if(addWater) {	
+						this.waterMesh.AddQuad(
+							new Vertex(x0, y1, Themes.RoomWater),
+							new Vertex(x1, y1, Themes.RoomWater),
+							new Vertex(x1, y2, Themes.RoomWater),
+							new Vertex(x0, y2, Themes.RoomWater)
+						);
+					}
 				}
 
 				if ((tile & FLAG_VERTICAL_POLE) > 0) {
@@ -1329,6 +1422,10 @@ public class Room {
 				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2))
 			], [ "projection", "model", "tintColor", "tintStrength" ]);	
 
+		this.waterRenderable = new(this.waterMesh, Preload.RoomShader, [
+				new (0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
+				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2))
+			], [ "projection", "model", "tintColor", "tintStrength" ]);	
 	}
 
 	public virtual void DrawBlack(WorldWindow.RoomPosition positionType) {
@@ -1356,7 +1453,7 @@ public class Room {
 		Program.gl.Disable(EnableCap.Blend);
 	}
 
-	public unsafe virtual void Draw(WorldWindow.RoomPosition positionType) {
+	public virtual void Draw(WorldWindow.RoomPosition positionType) {
 		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
 		}
@@ -1377,10 +1474,6 @@ public class Room {
 		}
 
 		Program.gl.Enable(EnableCap.Blend);
-		if (this.data.waterHeight != -1 && !this.data.waterInFront) {
-			this.DrawWater(position);
-		}
-
 		Color tint = this.GetTintColor();
 		if (WorldWindow.highlightRoom != null && WorldWindow.highlightRoom != this) {
 			tint *= 0.25f;
@@ -1404,7 +1497,17 @@ public class Room {
 		}
 
 		if (this.data.waterHeight != -1 && this.data.waterInFront) {
-			this.DrawWater(position);
+			if (!this.data.waterInFront && this.waterRenderable != null) {
+				Color color = Themes.RoomWater;
+				this.waterRenderable.PreDraw();
+				this.waterRenderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
+				this.waterRenderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(position.x, position.y, 0f)]);
+				this.waterRenderable.Uniform4("tintColor", color.r, color.g, color.b, color.a);
+				this.waterRenderable.Uniform1("tintStrength", 0f);
+				this.waterRenderable.DoDraw();
+			}
+			else
+				this.DrawWater(position);
 		}
 		if (WorldWindow.VisibleDevItems && this.visuals.hasTerrain && this.visuals.terrain.Count >= 2) {
 			Immediate.Color(0f, 1f, 0f);
