@@ -4,7 +4,7 @@ using Stride.Core.Extensions;
 namespace FloodForge.World;
 
 // TODO: Fix room water behind level rendering
-public class Room {
+public class Room : WorldDraggable { // change Room and ReferenceImage to derive from WorldDraggable
 	public const uint FLAG_VERTICAL_POLE = 16;
 	public const uint FLAG_HORIZONTAL_POLE = 32;
 	public const uint FLAG_ROOM_EXIT = 64;
@@ -57,7 +57,9 @@ public class Room {
 	private int specialExitCount = 0;
 	public int GarbageWormDenIndex => this.specialExitCount + this.nonDenExitCount + this.denShortcutEntrances.Count;
 
-	public bool Visible => WorldWindow.VisibleLayers[this.data.layer] && WorldWindow.CheckVisibleTimeline(this.TimelineType, this.Timelines);
+	public override bool IsVisible() {
+		return WorldWindow.VisibleLayers[this.data.layer] && WorldWindow.CheckVisibleTimeline(this.TimelineType, this.Timelines);
+	}
 
 	public Room(string path, string name, bool pathOutsideRoomsFolder = false) {
 		this.pathOutsideRoomsFolder = pathOutsideRoomsFolder;
@@ -872,18 +874,16 @@ public class Room {
 	}
 	#endregion
 
-	public Vector2 Position {
-		get {
-			return WorldWindow.PositionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
-		}
+	public override Vector2 GetPosition() {
+		return WorldWindow.PositionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
+	}
 
-		set {
-			if (WorldWindow.PositionType == WorldWindow.RoomPosition.Canon) {
-				this.CanonPosition = value;
-			}
-			else {
-				this.DevPosition = value;
-			}
+	public override void SetPosition(Vector2 value) {
+		if (WorldWindow.PositionType == WorldWindow.RoomPosition.Canon) {
+			this.CanonPosition = value;
+		}
+		else {
+			this.DevPosition = value;
 		}
 	}
 
@@ -1627,7 +1627,7 @@ public class Room {
 
 			if (WorldWindow.VisibleCreatures) {
 				for (int i = 0; i < this.denShortcutEntrances.Count; i++) {
-					this.DrawDen(this.dens[i], position.x + this.denShortcutEntrances[i].x, position.y - this.denShortcutEntrances[i].y, i == this.hoveredDen, WorldWindow.HoveringRoom == this);
+					this.DrawDen(this.dens[i], position.x + this.denShortcutEntrances[i].x, position.y - this.denShortcutEntrances[i].y, i == this.hoveredDen, WorldWindow.HoveringDraggable == this);
 				}
 			}
 		}
