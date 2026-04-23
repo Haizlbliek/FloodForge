@@ -995,6 +995,87 @@ public class Room {
 		}
 	}
 
+	protected class MeshRenderable {
+		public Mesh mesh;
+		protected uint _vao = 0;
+		protected uint _vbo = 0;
+		protected uint _ebo = 0;
+		protected Dictionary<string, int> shaderVariableLocations = [];
+		protected Shader shaderToUse;
+
+		public unsafe MeshRenderable(Mesh mesh, Shader shaderToUse, VertexAttributeInformation[]? vertexAttributeInformation = null, string[]? shaderVariableLocations = null) {
+			this.mesh = mesh;
+			if (this._vao == 0) {
+				this._vao = Program.gl.GenVertexArray();
+				this._vbo = Program.gl.GenBuffer();
+				this._ebo = Program.gl.GenBuffer();
+			}
+
+			Span<Vertex> vertices = CollectionsMarshal.AsSpan(this.mesh.vertices);
+			Span<uint> indices = CollectionsMarshal.AsSpan(this.mesh.indices);
+
+			Program.gl.BindVertexArray(this._vao);
+
+			Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
+			fixed (Vertex* ptr = vertices) {
+				Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertices.Length * sizeof(Vertex)), ptr, BufferUsageARB.StaticDraw);
+			}
+
+			Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, this._ebo);
+			fixed (uint* ptr = indices) {
+				Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (indices.Length * sizeof(uint)), ptr, BufferUsageARB.StaticDraw);
+			}
+			
+			if(vertexAttributeInformation != null) {
+				foreach (VertexAttributeInformation item in vertexAttributeInformation) {
+					Program.gl.VertexAttribPointer(item.index, item.size, item.type, item.normalised, item.stride, item.pointer);
+					Program.gl.EnableVertexAttribArray(item.index);
+				}
+			}
+			
+			this.shaderToUse = shaderToUse;
+			Program.gl.UseProgram(shaderToUse);
+			if(shaderVariableLocations != null) {
+				foreach (string name in shaderVariableLocations) {
+					this.shaderVariableLocations.Add(name, Program.gl.GetUniformLocation(shaderToUse, name));
+				}
+			}
+			Program.gl.UseProgram(0);
+
+			Program.gl.BindVertexArray(0);
+			Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+			Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+		}
+
+		public void UniformMatrix4(string name, bool transpose, ReadOnlySpan<float> value)
+			=> Program.gl.UniformMatrix4(this.shaderVariableLocations[name], transpose, value);
+		public void Uniform4(string name, float x, float y, float z, float w)
+			=> Program.gl.Uniform4(this.shaderVariableLocations[name], x, y, z, w);
+		public void Uniform1(string name, float val)
+			=> Program.gl.Uniform1(this.shaderVariableLocations[name], val);
+
+		public void PreDraw() {
+			Program.gl.BindVertexArray(this._vao);
+			Program.gl.UseProgram(Preload.RoomShader);
+		}
+
+		public unsafe void DoDraw() {
+			Program.gl.DrawElements(PrimitiveType.Triangles, (uint) this.mesh.indices.Count, DrawElementsType.UnsignedInt, (void*) 0);
+
+			Program.gl.BindVertexArray(0);
+			Program.gl.UseProgram(0);
+		}
+
+		public unsafe struct VertexAttributeInformation (uint index, int size, VertexAttribPointerType type, bool normalised, uint stride, void* pointer){
+			public uint index = index;
+			public int size = size;
+			public VertexAttribPointerType type = type;
+			public bool normalised = normalised;
+			public uint stride = stride;
+			public void* pointer = pointer;
+		}
+	}
+
 	protected readonly struct Vertex {
 		public readonly float x, y;
 		public readonly float r, g, b, a;
@@ -1018,14 +1099,15 @@ public class Room {
 		}
 	}
 
+	// IDEA - add MeshRenderReference object containing setup code for easier modifications
+	protected Mesh waterMesh = new();
+	protected MeshRenderable? waterRenderable;
 	protected Mesh roomMesh = new();
-	protected uint _vao = 0;
-	protected uint _vbo = 0;
-	protected uint _ebo = 0;
-	protected int _projLoc, _modelLoc, _tintLoc, _tintStrengthLoc;
+	protected MeshRenderable? roomRenderable;
 	List<Vector2i> allShortcutEntrances = [];
 
 	protected unsafe virtual void GenerateMesh() {
+		this.waterMesh.Clear();
 		this.roomMesh.Clear();
 		this.allShortcutEntrances.Clear();
 
@@ -1041,12 +1123,16 @@ public class Room {
 				float x2 = (x0 + x1) * 0.5f;
 				float y2 = (y0 + y1) * 0.5f;
 
+				bool addWater = (this.height - (y + 1)) <= this.data.waterHeight;
+				bool isTopOfwater = (this.height - (y + 1)) == this.data.waterHeight;
+
 				if (type == 4) {
 					this.allShortcutEntrances.Add(new(x, y));
 					this.roomMesh.AddQuad(x2, y2, Themes.RoomShortcutEntrance);
 				}
 				else if (type != 1) { // draws air if the tile isn't fully solid.
 					Themes.ThemeColor air = ((tile & FLAG_BACKGROUND_SOLID) > 0) ? Themes.RoomLayer2Solid : Themes.RoomAir;
+					Themes.ThemeColor water = Themes.RoomWater;
 
 					if (type == 2) {
 						uint direction = (tile >> 10) & 3;
@@ -1056,6 +1142,23 @@ public class Room {
 								new Vertex(x0, y1, air),
 								new Vertex(x1, y0, air)
 							);
+							if(addWater) {
+								if (isTopOfwater) {
+									this.waterMesh.AddQuad(
+										new Vertex(x1, y1, water),
+										new Vertex(x0, y1, water),
+										new Vertex(x2, y2, water),
+										new Vertex(x1, y2, water)
+									);
+								}
+								else {
+									this.waterMesh.AddTriangle(
+										new Vertex(x1, y1, water),
+										new Vertex(x0, y1, water),
+										new Vertex(x1, y0, water)
+									);
+								}
+							}
 						}
 						else if (direction == 1) {
 							this.roomMesh.AddTriangle(
@@ -1063,6 +1166,22 @@ public class Room {
 								new Vertex(x0, y0, air),
 								new Vertex(x1, y1, air)
 							);
+							if(addWater) {
+								if (isTopOfwater) {
+									this.waterMesh.AddTriangle(
+										new Vertex(x1, y2, water),
+										new Vertex(x2, y2, water),
+										new Vertex(x1, y1, water)
+									);
+								}
+								else {
+									this.waterMesh.AddTriangle(
+										new Vertex(x1, y0, water),
+										new Vertex(x0, y0, water),
+										new Vertex(x1, y1, water)
+									);
+								}
+							}
 						}
 						else if (direction == 2) {
 							this.roomMesh.AddTriangle(
@@ -1070,6 +1189,23 @@ public class Room {
 								new Vertex(x1, y1, air),
 								new Vertex(x0, y0, air)
 							);
+							if(addWater) {
+								if (isTopOfwater) {
+									this.waterMesh.AddQuad(
+										new Vertex(x0, y1, water),
+										new Vertex(x1, y1, water),
+										new Vertex(x2, y2, water),
+										new Vertex(x0, y2, water)
+									);
+								}
+								else {
+									this.waterMesh.AddTriangle(
+										new Vertex(x0, y1, water),
+										new Vertex(x1, y1, water),
+										new Vertex(x0, y0, water)
+									);
+								}
+							}
 						}
 						else if (direction == 3) {
 							this.roomMesh.AddTriangle(
@@ -1077,10 +1213,37 @@ public class Room {
 								new Vertex(x1, y0, air),
 								new Vertex(x0, y1, air)
 							);
+							if(addWater) {
+								if (isTopOfwater) {
+									this.waterMesh.AddTriangle(
+										new Vertex(x0, y2, water),
+										new Vertex(x2, y2, water),
+										new Vertex(x0, y1, water)
+									);
+								}
+									else {
+									this.waterMesh.AddTriangle(
+										new Vertex(x0, y0, water),
+										new Vertex(x1, y0, water),
+										new Vertex(x0, y1, water)
+									);
+								}
+							}
 						}
 					}
 					else {
 						this.roomMesh.AddQuad(x2, y2, air); // possibility for greedy meshing, since right now every tile of air now gets its own quad.
+						if(addWater && type != 3) {
+							if (isTopOfwater)
+								this.waterMesh.AddQuad(
+									new Vertex(x0, y1, water),
+									new Vertex(x1, y1, water),
+									new Vertex(x1, y2, water),
+									new Vertex(x0, y2, water)
+								);
+							else
+								this.waterMesh.AddQuad(x2, y2, water);
+						}
 					}
 				}
 
@@ -1091,6 +1254,14 @@ public class Room {
 						new Vertex(x1, y2, Themes.RoomPlatform),
 						new Vertex(x0, y2, Themes.RoomPlatform)
 					);
+					if(addWater) {	
+						this.waterMesh.AddQuad(
+							new Vertex(x0, y1, Themes.RoomWater),
+							new Vertex(x1, y1, Themes.RoomWater),
+							new Vertex(x1, y2, Themes.RoomWater),
+							new Vertex(x0, y2, Themes.RoomWater)
+						);
+					}
 				}
 
 				if ((tile & FLAG_VERTICAL_POLE) > 0) {
@@ -1248,43 +1419,15 @@ public class Room {
 			}
 		}
 
-		if (this._vao == 0) {
-			this._vao = Program.gl.GenVertexArray();
-			this._vbo = Program.gl.GenBuffer();
-			this._ebo = Program.gl.GenBuffer();
-		}
+		this.roomRenderable = new(this.roomMesh, Preload.RoomShader, [
+				new (0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
+				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2))
+			], [ "projection", "model", "tintColor", "tintStrength" ]);	
 
-		Span<Vertex> vertices = CollectionsMarshal.AsSpan(this.roomMesh.vertices);
-		Span<uint> indices = CollectionsMarshal.AsSpan(this.roomMesh.indices);
-
-		Program.gl.BindVertexArray(this._vao);
-
-		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
-		fixed (Vertex* ptr = vertices) {
-			Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertices.Length * sizeof(Vertex)), ptr, BufferUsageARB.StaticDraw);
-		}
-
-		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, this._ebo);
-		fixed (uint* ptr = indices) {
-			Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (indices.Length * sizeof(uint)), ptr, BufferUsageARB.StaticDraw);
-		}
-
-		Program.gl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0);
-		Program.gl.EnableVertexAttribArray(0);
-
-		Program.gl.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2));
-		Program.gl.EnableVertexAttribArray(1);
-
-		Program.gl.UseProgram(Preload.RoomShader);
-		this._projLoc = Program.gl.GetUniformLocation(Preload.RoomShader, "projection");
-		this._modelLoc = Program.gl.GetUniformLocation(Preload.RoomShader, "model");
-		this._tintLoc = Program.gl.GetUniformLocation(Preload.RoomShader, "tintColor");
-		this._tintStrengthLoc = Program.gl.GetUniformLocation(Preload.RoomShader, "tintStrength");
-		Program.gl.UseProgram(0);
-
-		Program.gl.BindVertexArray(0);
-		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
-		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+		this.waterRenderable = new(this.waterMesh, Preload.RoomShader, [
+				new (0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
+				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2))
+			], [ "projection", "model", "tintColor", "tintStrength" ]);	
 	}
 
 	public virtual void DrawBlack(WorldWindow.RoomPosition positionType) {
@@ -1312,7 +1455,7 @@ public class Room {
 		Program.gl.Disable(EnableCap.Blend);
 	}
 
-	public unsafe virtual void Draw(WorldWindow.RoomPosition positionType) {
+	public virtual void Draw(WorldWindow.RoomPosition positionType) {
 		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
 		}
@@ -1333,38 +1476,40 @@ public class Room {
 		}
 
 		Program.gl.Enable(EnableCap.Blend);
-		if (this.data.waterHeight != -1 && !this.data.waterInFront) {
-			this.DrawWater(position);
-		}
-
 		Color tint = this.GetTintColor();
 		if (WorldWindow.highlightRoom != null && WorldWindow.highlightRoom != this) {
 			tint *= 0.25f;
 		}
-
-		Program.gl.BindVertexArray(this._vao);
-		Program.gl.UseProgram(Preload.RoomShader);
-
-		Vector2 matrixPos = WorldWindow.cameraOffset;
-		Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
-		Program.gl.UniformMatrix4(this._projLoc, false, [.. Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
-		Program.gl.UniformMatrix4(this._modelLoc, false, [.. Matrix4X4.CreateTranslation(position.x, position.y, 0f)]);
 
 		float alpha = this.data.hidden ? 0.5f : tint.a;
 		if (positionType != WorldWindow.PositionType) {
 			alpha *= 0.5f;
 		}
 
-		Program.gl.Uniform4(this._tintLoc, tint.r, tint.g, tint.b, alpha);
-		Program.gl.Uniform1(this._tintStrengthLoc, Settings.RoomTintStrength);
+		Vector2 matrixPos = WorldWindow.cameraOffset;
+		Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
 
-		Program.gl.DrawElements(PrimitiveType.Triangles, (uint) this.roomMesh.indices.Count, DrawElementsType.UnsignedInt, (void*) 0);
-
-		Program.gl.BindVertexArray(0);
-		Program.gl.UseProgram(0);
+		if (this.roomRenderable != null){
+			this.roomRenderable.PreDraw();
+			this.roomRenderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
+			this.roomRenderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(position.x, position.y, 0f)]);
+			this.roomRenderable.Uniform4("tintColor", tint.r, tint.g, tint.b, alpha);
+			this.roomRenderable.Uniform1("tintStrength", Settings.RoomTintStrength);
+			this.roomRenderable.DoDraw();
+		}
 
 		if (this.data.waterHeight != -1 && this.data.waterInFront) {
-			this.DrawWater(position);
+			if (!this.data.waterInFront && this.waterRenderable != null) {
+				Color color = Themes.RoomWater;
+				this.waterRenderable.PreDraw();
+				this.waterRenderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
+				this.waterRenderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(position.x, position.y, 0f)]);
+				this.waterRenderable.Uniform4("tintColor", color.r, color.g, color.b, color.a);
+				this.waterRenderable.Uniform1("tintStrength", 0f);
+				this.waterRenderable.DoDraw();
+			}
+			else
+				this.DrawWater(position);
 		}
 		if (WorldWindow.VisibleDevItems && this.visuals.hasTerrain && this.visuals.terrain.Count >= 2) {
 			Immediate.Color(0f, 1f, 0f);
