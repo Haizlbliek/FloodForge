@@ -49,7 +49,6 @@ public static class WorldWindow {
 	public static Vector2 worldMouse;
 
 	public static HashSet<Room> selectedRooms = []; // REVIEW - HashSet?
-	public static HashSet<Room> oldSelection = [];
 	public static Room? roomPossibleSelect = null;
 	private static SelectingState selectingState = SelectingState.None;
 	public static Vector2 selectionStart;
@@ -306,7 +305,7 @@ public static class WorldWindow {
 		bool isOriginal = Settings.OriginalControls;
 
 		if (Mouse.Left) {
-			if (!Mouse.LastLeft) {
+			if (!Mouse.LastLeft &! menuItems.menuBarRect.Inside(Mouse.Pos)) {
 				if (selectingState == SelectingState.None) {
 					Room? room = HoveringRoom;
 
@@ -898,23 +897,6 @@ public static class WorldWindow {
 				debugText.Add(totalDebug[j]);
 			}
 		}
-		if(oldSelection.Count != 0 &! oldSelection.SequenceEqual(selectedRooms)) {
-			List<string> totalDebug = [];
-			string debug = "";
-			foreach (Room room in oldSelection) {
-				debug += room.name + "; ";
-				if(debug.Length > 75) {
-					totalDebug.Add(debug);
-					debug = "";
-				}
-			}
-			if(debug != "") 
-				totalDebug.Add(debug);
-			debugText.Add($"oldSelection: {oldSelection.Count} : {(totalDebug.Count >= 0 ? totalDebug[0] : "")}");
-			for (int j = 1; j < totalDebug.Count; j++) {
-				debugText.Add(totalDebug[j]);
-			}
-		}
 
 		if (hoveringConnection != null) {
 			debugText.Add("");
@@ -1061,10 +1043,6 @@ public static class WorldWindow {
 	}
 
 	public static void Draw() {
-		if ((renderRoomsTask == null || renderRoomsTask.Status != TaskStatus.Running) && PopupManager.Windows.Count == 0) {
-			oldSelection.Clear();
-			oldSelection = [.. selectedRooms];
-		}
 		if (Keys.Modifier(Keys.Modifiers.Alt)) {
 			if (Keys.JustPressed(Key.S)) {
 				PopupManager.Add(new SplashArtPopup());
@@ -1324,7 +1302,7 @@ public static class WorldWindow {
 		WorldWindow.cancelRender = false;
 		WorldWindow.awaitingCancelConfirmation = false;
 		List<Room> rooms = [];
-		foreach (Room room in oldSelection) {
+		foreach (Room room in selectedRooms) {
 			if (room is not OffscreenRoom) {
 				rooms.Add(room);
 			}
@@ -1702,7 +1680,7 @@ public static class WorldWindow {
 				}, button => { return WorldWindow.ValidRegionLoaded; }),
 
 				new AlignedButton("Mass Render", true, button => {
-					confirmRenderPopup = new ConfirmPopup("Render " + oldSelection.Count + " rooms?" + (
+					confirmRenderPopup = new ConfirmPopup("Render " + selectedRooms.Count + " rooms?" + (
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" : 
@@ -1711,7 +1689,7 @@ public static class WorldWindow {
 							renderRoomsTask = Task.Run(MassRenderRooms);
 						});
 					PopupManager.Add(confirmRenderPopup);
-				}, button => { return oldSelection.Count != 0 && ValidRegionLoaded; },
+				}, button => { return selectedRooms.Count != 0 && ValidRegionLoaded; },
 				"Select at least one valid room\nto render.")
 			];
 
