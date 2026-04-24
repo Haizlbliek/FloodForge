@@ -1632,7 +1632,7 @@ public static class WorldWindow {
 							WorldWindow.VisibleTimelineType = TimelineType;
 							UpdateVisibleTimelines?.Invoke(WorldWindow.VisibleTimelineType, WorldWindow.VisibleTimelines);
 							if(VisibleTimelineType == TimelineType.All) button.text = "Timeline";
-							else if(VisibleTimelineType == TimelineType.Only) button.text = "<Timeline>";
+							else if(VisibleTimelineType == TimelineType.Only) button.text = (VisibleTimelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
 							else button.text = ">Timeline<";
 						},
 						(selected, timeline) => {
@@ -1642,7 +1642,7 @@ public static class WorldWindow {
 								WorldWindow.VisibleTimelines.Add(timeline);
 							UpdateVisibleTimelines?.Invoke(WorldWindow.VisibleTimelineType, WorldWindow.VisibleTimelines);
 							if(VisibleTimelineType == TimelineType.All) button.text = "Timeline";
-							else if(VisibleTimelineType == TimelineType.Only) button.text = "<Timeline>";
+							else if(VisibleTimelineType == TimelineType.Only) button.text = (VisibleTimelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
 							else button.text = ">Timeline<";
 						},
 						ref UpdateVisibleTimelines));

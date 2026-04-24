@@ -346,8 +346,8 @@ public static class UI {
 		Immediate.Color(mods.disabled ? Themes.ButtonDisabled : Themes.Button);
 		ButtonFillRect(rect);
 
-		Immediate.Color(mods.textColor ?? (mods.disabled ? Themes.TextDisabled : (mods.selected ? Themes.TextHighlight : Themes.Text)));
-		UI.font.Write(text, rect.CenterX, rect.CenterY, 0.03f, Font.Align.MiddleCenter);
+		Color neutralColor = mods.textColor ?? (mods.disabled ? Themes.TextDisabled : (mods.selected ? Themes.TextHighlight : Themes.Text));
+		UI.font.WriteFormatted(text, rect.CenterX, rect.CenterY, 0.03f, Font.Align.MiddleCenter, neutralColor);
 
 		Immediate.Color(mods.disabled ? Themes.Border : ((highlight || mods.selected) ? Themes.BorderHighlight : Themes.Border));
 		ButtonStrokeRect(rect);
