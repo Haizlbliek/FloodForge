@@ -879,33 +879,6 @@ public static class WorldParser {
 		Logger.Info("Searching for display name");
 		WorldWindow.region.displayName = GetRegionDisplayname(worldPath);
 
-		if (Settings.PreserveRoomImportPath) {
-			Logger.Info("Retrieving persistent import paths");// probably not searching from root
-			if(File.Exists(Path.Combine("assets/roomimportpaths.txt"))) {
-				string[] lines = File.ReadAllLines(Path.Combine("assets/roomimportpaths.txt"));
-				string dataLine = "";
-				foreach(string line in lines) {
-					string[] split = line.Split("<reg>", StringSplitOptions.TrimEntries);
-					if (split[0].Equals(WorldWindow.region.acronym, StringComparison.InvariantCultureIgnoreCase)) {
-						dataLine = split[1];
-						break;
-					}
-				}
-				if(dataLine != "") {
-					Logger.Info($"Found persistent import path data for {WorldWindow.region.acronym}!");
-					foreach(string entry in dataLine.Split("<entry>", StringSplitOptions.TrimEntries)) { // these separators are probably excessive, but I really want to
-						string[] splitEntry = entry.Split("<room>", StringSplitOptions.TrimEntries);	 // avoid the possibility of legal paths being unrecognised.
-						foreach(Room room in WorldWindow.region.rooms) {
-							if(room.name.Equals(splitEntry[0], StringComparison.InvariantCultureIgnoreCase)) {
-								room.sourceFilePath = splitEntry[1];
-							}
-						}
-					}
-				}
-				Logger.Info($"No persistent import path data found for {WorldWindow.region.acronym}.");
-			}
-		}
-
 		Logger.Info("World file imported");
 
 		return true;
