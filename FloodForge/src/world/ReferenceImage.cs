@@ -25,7 +25,7 @@ public class ReferenceImage : WorldDraggable {
         }
         this.imagePath = path;
         this.image = Texture.Load(path, TextureWrapMode.ClampToBorder);
-        this.Scale = 100f / this.image.width;
+        this.Scale = 300f / this.image.width;
     }
 
     public void UpdateBounds() {

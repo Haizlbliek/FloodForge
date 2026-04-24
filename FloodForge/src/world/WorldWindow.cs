@@ -509,7 +509,7 @@ public static class WorldWindow {
 		
 		if (Mouse.Right &! Mouse.LastRight) {
 			if(HoveringDraggable is ReferenceImage image) {
-				PopupManager.Add(new SettingsPopup(image.Scale, 0.01f, 2f, (scale) => {
+				PopupManager.Add(new SettingsPopup(image.Scale, 0.001f, 5f, (scale) => {
 					image.Scale = scale;
 				}));
 			}
