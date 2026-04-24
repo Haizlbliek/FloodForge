@@ -268,21 +268,6 @@ public abstract class Popup {
 		this.mouseCursorSet = false;
 	}
 
-	// REVIEW - move to UI.Font or related class for consistency?
-	public static void WriteText(string lineToWrite, float x, float y, float size, Font.Align align) {
-		int severity = 0;
-		if (lineToWrite != "" && lineToWrite.StartsWith("<s:")) {
-			severity = int.Parse(lineToWrite[Math.Min(lineToWrite.Length, lineToWrite.IndexOf(':') + 1)..lineToWrite.IndexOf('>')]);
-			lineToWrite = lineToWrite[Math.Min(lineToWrite.IndexOf('>') + 1, lineToWrite.Length)..];
-		}
-		Immediate.Color(severity switch {
-			1 => Themes.TextWarn,
-			2 => Themes.TextError,
-			_ => Themes.Text
-		});
-		UI.font.Write(lineToWrite, x, y, size, align);
-	}
-
 	public virtual Rect InteractBounds() => this.minimized ? new Rect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1) : this.bounds;
 
 	public virtual void UpdateScaleControls(Rect bounds) {
