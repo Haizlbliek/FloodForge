@@ -22,7 +22,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 	public const uint FLAG_SPEAR = 524288;
 
 	public bool pathOutsideRoomsFolder = false;
-	public string sourceFilePath;
 	public string path;
 	public string name;
 	public TimelineType TimelineType;
@@ -63,7 +62,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 
 	public Room(string path, string name, bool pathOutsideRoomsFolder = false) {
 		this.pathOutsideRoomsFolder = pathOutsideRoomsFolder;
-		this.sourceFilePath = path;
 		this.path = path;
 		this.name = name;
 		this.TimelineType = TimelineType.All;
@@ -1235,6 +1233,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			}
 		}
 
+		// REVIEW - generate and greedy-mesh Water separately?
 		foreach (KeyValuePair<Vector2i, uint> greedyTile in greedyTiles) {
 			byte tileType = (byte)(greedyTile.Value & 15);
 			uint height = (greedyTile.Value & HeightMask) >> 4;
