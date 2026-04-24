@@ -46,7 +46,7 @@ public class CancellablePopup : Popup {
 		for (int idx = 0; idx < this.text.Length; idx++) {
 			string lineToWrite = this.text[idx];
 			float y = this.bounds.y1 - 0.08f - 0.05f * idx;
-			WriteText(lineToWrite, this.bounds.CenterX, y, 0.04f, Font.Align.TopCenter | Font.Align.MiddleLeft);
+			UI.font.WriteFormatted(lineToWrite, this.bounds.CenterX, y, 0.04f, Font.Align.TopCenter | Font.Align.MiddleLeft);
 		}
 
 		if (!this.hideButton && UI.TextButton(this.cancel, buttonRect)) {
