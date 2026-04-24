@@ -48,8 +48,16 @@ public static class WorldWindow {
 	public static float SelectorScale { get; private set; } = 1f;
 	public static Vector2 worldMouse;
 
-	public static List<WorldDraggable> selectedDraggables = [];
-	public static HashSet<Room> selectedRooms = []; // REVIEW - HashSet?
+	public static HashSet<WorldDraggable> selectedDraggables = [];
+	public static HashSet<Room> selectedRooms {
+		get {
+			HashSet<Room> rooms = [];
+			foreach (WorldDraggable draggable in selectedDraggables)
+				if (draggable is Room room and not OffscreenRoom)
+					rooms.Add(room);
+			return rooms;
+		}
+	}
 	public static WorldDraggable? draggablePossibleSelect = null;
 	private static SelectingState selectingState = SelectingState.None;
 	public static Vector2 selectionStart;
@@ -1360,12 +1368,7 @@ public static class WorldWindow {
 	private static async Task MassRenderRooms() {
 		WorldWindow.cancelRender = false;
 		WorldWindow.awaitingCancelConfirmation = false;
-		List<Room> rooms = [];
-		foreach (Room room in selectedRooms) {
-			if (room is not OffscreenRoom) {
-				rooms.Add(room);
-			}
-		}
+		HashSet<Room> rooms = selectedRooms;
 		if (rooms.Count <= 0) {
 			PopupManager.Add(new InfoPopup("Select at least one valid room!"));
 		}
