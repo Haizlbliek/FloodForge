@@ -1705,8 +1705,11 @@ public static class WorldWindow {
 
 				new Button("Add Reference", button => {
 					PopupManager.Add(new FilesystemPopup((pathstring) => {
-						if(pathstring.Length != 0)
-							referenceImages.Add(new(pathstring.First()));
+						if(pathstring.Length != 0) {
+							ReferenceImage newImage = new(pathstring.First()) { Position = cameraOffset };
+							referenceImages.Add(newImage);
+							selectedDraggables.Add(newImage);
+						}
 					}));
 				}, button => {
 					return WorldWindow.ValidRegionLoaded;
