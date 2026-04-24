@@ -12,7 +12,7 @@ public class SettingsPopup : Popup {
         this.minScale = minValue;
         this.maxScale = maxValue;
         this.callback = callback;
-        this.bounds = new Rect(-0.5f, -0.1f, 0.5f, 0.1f);
+        this.bounds = new Rect(-0.3f, -0.1f, 0.3f, 0.1f);
     }
 
     public SettingsPopup UpdateWhileDragging (bool update) {
