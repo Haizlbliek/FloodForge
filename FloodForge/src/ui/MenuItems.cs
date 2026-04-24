@@ -24,7 +24,8 @@ public abstract class MenuItems {
 			}
 			if (button.buttonEnabled || Settings.DisabledButtonsMode.value != Settings.STDisabledButtonsMode.Hide ) {
 				bool onRight = (button is AlignedButton alignedButton) && alignedButton.alignment;
-				float width = UI.font.Measure(button.text, 0.03f).x + 0.02f;
+				Font.ParseSeverity(button.text, out string trimmedLine);
+				float width = UI.font.Measure(trimmedLine, 0.03f).x + 0.02f;
 				UI.TextButtonMods mods = new UI.TextButtonMods();
 				if (button.Dark || (!button.buttonEnabled && Settings.DisabledButtonsMode.value == Settings.STDisabledButtonsMode.Grey)) {
 					mods.textColor = Themes.TextDisabled;
