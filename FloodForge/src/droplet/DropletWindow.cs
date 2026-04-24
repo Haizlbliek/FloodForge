@@ -1648,24 +1648,33 @@ public static class DropletWindow {
 		File.WriteAllText(fileName, project.ToString());
 
 		if (!Settings.RainedPath.value.IsNullOrEmpty() && File.Exists(Settings.RainedPath)) {
+			Process[] rainedProcesses = Process.GetProcessesByName("Rained");
+			string debug = "";
+			foreach (Process process in rainedProcesses) {
+				debug += $"{process.ProcessName} - {process.Id}\n";
+			}
+			Logger.Info("Running Rained-Processes:\n" + debug);
+			if(rainedProcesses.Length == 0) {
 			PopupManager.Add(new ConfirmPopup("Open in Rained?").Okay(() => {
-				// TODO: Don't open a new exe when Rained is already running
+					ProcessStartInfo startInfo = new ProcessStartInfo {
+						FileName = Settings.RainedPath,
+						UseShellExecute = false,
+						CreateNoWindow = false,
+						WorkingDirectory = Path.GetDirectoryName(Settings.RainedPath),
+						Arguments = $"\"{fileName}\""
+					};
 
-				ProcessStartInfo startInfo = new ProcessStartInfo {
-					FileName = Settings.RainedPath,
-					UseShellExecute = false,
-					CreateNoWindow = false,
-					WorkingDirectory = Path.GetDirectoryName(Settings.RainedPath),
-					Arguments = $"\"{fileName}\""
-				};
-
-				try {
-					Process.Start(startInfo);
+					try {
+						Process.Start(startInfo);
+					}
+					catch (Exception ex) {
+						Logger.Error($"Error launching Rained: {ex.Message}");
+					}
 				}
-				catch (Exception ex) {
-					Logger.Error($"Error launching Rained: {ex.Message}");
-				}
-			}));
+			));}
+			else {
+				PopupManager.Add(new InfoPopup("Rained is already running!")); // REVIEW - should it even show this popup at all?
+			};
 		}
 	}
 

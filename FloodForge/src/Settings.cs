@@ -17,6 +17,7 @@ public static class Settings {
 	public static Setting<bool> WarnMissingImages = Setting.Of("WarnMissingImages", false);
 	public static Setting<bool> HideTutorial = Setting.Of("HideTutorial", false);
 	public static Setting<bool> KeepFilesystemPath = Setting.Of("KeepFilesystemPath", false);
+	public static Setting<bool> PreserveRoomImportPath = Setting.Of("PreserveRoomImportPath", false);
 	public static Setting<bool> UpdateWorldFiles = Setting.Of("UpdateWorldFiles", true);
 	public static Setting<Color> NoSubregionColor = Setting.Of("NoSubregionColor", Color.White);
 	public static Setting<float> RoomTintStrength = Setting.Of("RoomTintStrength", 0.5f);

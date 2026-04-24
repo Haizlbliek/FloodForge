@@ -1,26 +1,21 @@
 namespace FloodForge.World;
 
-public class MoveChange : MultipleRoomChange {
+public class MoveChange : MultipleDraggableChange {
 	protected readonly List<Vector2> devOffsets = [];
 	protected readonly List<Vector2> canonOffsets = [];
 
-	[Obsolete("Use AddRoom(Room, Vector2, Vector2) instead")]
-	public new void AddRoom(Room room) {
-		throw new NotSupportedException("Use AddRoom(Room, Vector2, Vector2) instead");
-	}
-
-	public virtual void AddRoom(Room room, Vector2 devOffset, Vector2 canonOffset) {
-		base.AddRoom(room);
+	public virtual void AddDraggable(WorldDraggable draggable, Vector2 devOffset, Vector2 canonOffset) {
+		base.AddDraggable(draggable);
 		this.devOffsets.Add(devOffset);
 		this.canonOffsets.Add(canonOffset);
 	}
 
 	public void Merge(MoveChange other) {
-		for (int i = 0; i < other.rooms.Count; i++) {
-			int j = this.rooms.IndexOf(other.rooms[i]);
+		for (int i = 0; i < other.draggables.Count; i++) {
+			int j = this.draggables.IndexOf(other.draggables[i]);
 
 			if (j == -1) {
-				this.AddRoom(other.rooms[i], other.devOffsets[i], other.canonOffsets[i]);
+				this.AddDraggable(other.draggables[i], other.devOffsets[i], other.canonOffsets[i]);
 			}
 			else {
 				this.devOffsets[j] += other.devOffsets[i];
@@ -30,10 +25,15 @@ public class MoveChange : MultipleRoomChange {
 	}
 
 	protected void Move(float multiplier) {
-		for (int i = 0; i < this.rooms.Count; i++) {
-			this.rooms[i].DevPosition += this.devOffsets[i] * multiplier;
-			this.rooms[i].CanonPosition += this.canonOffsets[i] * multiplier;
-			this.rooms[i].MoveUpdate();
+		for (int i = 0; i < this.draggables.Count; i++) {
+			if(this.draggables[i] is Room room) {
+				room.DevPosition += this.devOffsets[i] * multiplier;
+				room.CanonPosition += this.canonOffsets[i] * multiplier;
+				room.MoveUpdate();
+			}
+			else {
+				this.draggables[i].Position += this.devOffsets[i] * multiplier;
+			}
 		}
 	}
 
