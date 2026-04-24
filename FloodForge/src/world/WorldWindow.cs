@@ -584,6 +584,8 @@ public static class WorldWindow {
 
 			for (int i = region.rooms.Count - 1; i >= 0; i--) {
 				Room room = region.rooms[i];
+				if (!room.Visible)
+					continue;
 				Vector2 roomMouse = worldMouse - room.Position;
 				Vector2 shortcutPosition;
 
@@ -663,7 +665,7 @@ public static class WorldWindow {
 			for (int i = region.rooms.Count - 1; i >= 0; i--) {
 				Room room = region.rooms[i];
 				room.hoveredDen = -1;
-				if (found)
+				if (found || !room.Visible)
 					continue;
 				Vector2 roomMouse = worldMouse - room.Position;
 				Vector2 shortcutPosition;
@@ -1049,6 +1051,8 @@ public static class WorldWindow {
 
 			for (int r = region.rooms.Count - 1; r >= 0; r--) {
 				Room room = region.rooms[r];
+				if(!room.Visible)
+					continue;
 				Vector2 roomMouse = worldMouse - room.Position;
 				Vector2 shortcutPosition;
 
