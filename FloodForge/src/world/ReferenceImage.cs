@@ -34,9 +34,6 @@ public class ReferenceImage : WorldDraggable {
     }
 
     public void Draw() {
-        if (Keys.JustPressed(Silk.NET.Input.Key.P)) {
-            (this.TopLeft.y, this.BottomRight.y) = (this.BottomRight.y, this.TopLeft.y);
-        }
         if (this.Visible) {
             UI.CenteredTexture(this.image, this.Position.x, this.Position.y, this.Width * 2);
 
