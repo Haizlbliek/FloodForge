@@ -31,10 +31,11 @@ Mini Scut>MiniScutigera
 Mini Scuti>MiniScutigera
 Mini Scutigera>MiniScutigera
 Mini Leviathan>MiniLeviathan
-MiniBlackLeech>MiniLeech
-Mini Black Leech>MiniLeech
-Mini BlackLeech>MiniLeech
-MiniBlack Leech>MiniLeech
+MiniLeech>MiniBlackLeech
+Mini Leech>MiniBlackLeech
+Mini Black Leech>MiniBlackLeech
+Mini BlackLeech>MiniBlackLeech
+MiniBlack Leech>MiniBlackLeech
 MiniFlyingLeviathan>MiniFlyingBigEel
 MiniFlyingLev>MiniFlyingBigEel
 Mini Flying Leviathan>MiniFlyingBigEel
