@@ -130,7 +130,8 @@ public static class WorldWindow {
 	}
 
 	public static void Reset() {
-		if (!keepReferenceImages) referenceImages.Clear();
+		if (!keepReferenceImages)
+			referenceImages.Clear();
 		keepReferenceImages = false;
 		selectedDraggables.Clear();
 		draggablePossibleSelect = null;
@@ -321,7 +322,7 @@ public static class WorldWindow {
 		bool isOriginal = Settings.OriginalControls;
 
 		if (Mouse.Left) {
-			if (!Mouse.LastLeft &! menuItems.menuBarRect.Inside(Mouse.Pos)) { // if just started pressing left
+			if (!Mouse.LastLeft && !menuItems.menuBarRect.Inside(Mouse.Pos)) { // if just started pressing left
 				if (selectingState == SelectingState.None) { // if we weren't selecting anything before
 					WorldDraggable? draggable = HoveringDraggable; // get hovering room -> WorldDraggable
 
@@ -367,7 +368,7 @@ public static class WorldWindow {
 			}
 		}
 		else { // if we AREN'T pressing left currently
-			// if we're pending a drag and we have a possible room to select -> it was a click
+			   // if we're pending a drag and we have a possible room to select -> it was a click
 			if (selectingState == SelectingState.PendingDrag && draggablePossibleSelect != null) {
 				HandleSelectionLogic(draggablePossibleSelect); // change the selectedRooms list depending on shift/ctrl
 				if (roomSnap) {
@@ -394,7 +395,7 @@ public static class WorldWindow {
 	}
 
 	private static void HandleSelectionLogic(WorldDraggable draggable) {
-		if(draggable is Room room) {
+		if (draggable is Room room) {
 			region.rooms.Remove(room); // reorder the room to be on top (idk if i like this way of doing it)
 			region.rooms.Add(room);
 		}
@@ -491,7 +492,7 @@ public static class WorldWindow {
 							continue;
 
 						change.AddRoom(room1);
-						region.connections.Where(c => c.roomA == room1 &! selectedDraggables.Contains(c.roomB) || (c.roomB == room1 &! selectedDraggables.Contains(c.roomA)))
+						region.connections.Where(c => c.roomA == room1 && !selectedDraggables.Contains(c.roomB) || (c.roomB == room1 && !selectedDraggables.Contains(c.roomA)))
 							.ForEach(change.AddConnection);
 					}
 					selectedDraggables.Clear();
@@ -509,7 +510,7 @@ public static class WorldWindow {
 				PopupManager.Add(new ConfirmPopup("Delete reference?").SetOkay("Delete").SetCancel("Keep").Okay(() => {
 					referenceImages.Remove(image); // make this undo-able
 				}));
-			}		
+			}
 		}
 	}
 
@@ -517,9 +518,9 @@ public static class WorldWindow {
 		if (Keys.JustPressed(Key.F3)) {
 			EnableProfilerScreen = !EnableProfilerScreen;
 		}
-		
-		if (Mouse.Right &! Mouse.LastRight) {
-			if(HoveringDraggable is ReferenceImage image) {
+
+		if (Mouse.Right && !Mouse.LastRight) {
+			if (HoveringDraggable is ReferenceImage image) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.FloatSettingContainer("Scale", image.Scale, 0.001f, 5f, (scale) => {
 						image.Scale = scale;
@@ -949,7 +950,7 @@ public static class WorldWindow {
 		debugText.Add($"Rooms: {region.rooms.Count}");
 		debugText.Add($"Screens: {screenCount}");
 		debugText.Add($"Connections: {region.connections.Count}");
-		if(selectedDraggables.Count != 0) {
+		if (selectedDraggables.Count != 0) {
 			List<string> totalDebug = [];
 			string debug = "";
 			foreach (WorldDraggable worldDraggable in selectedDraggables) {
@@ -959,12 +960,12 @@ public static class WorldWindow {
 				else {
 					debug += worldDraggable.GetType().ToString() + "; ";
 				}
-				if(debug.Length > 75) {
+				if (debug.Length > 75) {
 					totalDebug.Add(debug);
 					debug = "";
 				}
 			}
-			if(debug != "") 
+			if (debug != "")
 				totalDebug.Add(debug);
 			debugText.Add($"Selection: {selectedDraggables.Count} : {(totalDebug.Count >= 0 ? totalDebug[0] : "")}");
 			for (int j = 1; j < totalDebug.Count; j++) {
@@ -1036,9 +1037,9 @@ public static class WorldWindow {
 							connectionStringList.Add(connectionList);
 						debugText.Add($"Connections: {room.roomExitPaths.Count}{(room.roomExitPaths.Count > 0 ? " : " + (connectionStringList.Count > 0 ? connectionStringList[0] : "") : "")}");
 						if (connectionStringList.Count > 1)
-						foreach (string line in connectionStringList[1..]) {
-							debugText.Add(line);
-						}
+							foreach (string line in connectionStringList[1..]) {
+								debugText.Add(line);
+							}
 						List<string> duplicateConnections = [];
 						string duplicateString = "";
 						for (int index = 0; index < encounteredConnections.Count; index++) {
@@ -1070,7 +1071,7 @@ public static class WorldWindow {
 
 			for (int r = region.rooms.Count - 1; r >= 0; r--) {
 				Room room = region.rooms[r];
-				if(!room.Visible)
+				if (!room.Visible)
 					continue;
 				Vector2 roomMouse = worldMouse - room.Position;
 				Vector2 shortcutPosition;
@@ -1347,10 +1348,10 @@ public static class WorldWindow {
 			.Okay(() => {
 				WorldWindow.cancelRender = true;
 				WorldWindow.awaitingCancelConfirmation = false;
-				})
-			.Cancel(() => {	
-			WorldWindow.cancelRender = false;
-			WorldWindow.awaitingCancelConfirmation = false;
+			})
+			.Cancel(() => {
+				WorldWindow.cancelRender = false;
+				WorldWindow.awaitingCancelConfirmation = false;
 			}));
 		}
 	}
@@ -1370,7 +1371,8 @@ public static class WorldWindow {
 		if (await CheckRenderCancel()) {
 			Logger.Info("Cancelling render with message: " + messageOnCancel);
 			renderStatusPopup?.Close();
-			if (!messageOnCancel.IsNullOrEmpty()) PopupManager.Add(new InfoPopup(messageOnCancel));
+			if (!messageOnCancel.IsNullOrEmpty())
+				PopupManager.Add(new InfoPopup(messageOnCancel));
 			return true;
 		}
 		return false;
@@ -1394,10 +1396,12 @@ public static class WorldWindow {
 			List<(string, string)> messages = [];
 			string errorMessage = "";
 			List<(string name, string path, byte[] image)[]> renderedRooms = [];
-			if (await TryCancelRender("Render cancelled.\nNo changes made.")) return;
+			if (await TryCancelRender("Render cancelled.\nNo changes made."))
+				return;
 
 			foreach (Room room in rooms) {
-				if (await TryCancelRender($"Render cancelled at\n{finished}/{totalCount} rendered.\nNo changes made.")) return;
+				if (await TryCancelRender($"Render cancelled at\n{finished}/{totalCount} rendered.\nNo changes made."))
+					return;
 				renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nloading");
 				await Task.Run(() => DropletWindow.LoadRoom(room));
 				renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nrendering");
@@ -1413,17 +1417,20 @@ public static class WorldWindow {
 				}
 				finished++;
 			}
-			if (await TryCancelRender($"Render cancelled at\n{finished}/{totalCount} rendered.\nNo changes made.")) return;
+			if (await TryCancelRender($"Render cancelled at\n{finished}/{totalCount} rendered.\nNo changes made."))
+				return;
 
 			for (int i = 0; i < renderedRooms.Count; i++) {
-				if (await TryCancelRender($"Render cancelled at\n{i}/{renderedRooms.Count} backups made.\nNo files overwritten.")) return;
-				renderStatusPopup.UpdateText($"Creating backups\n{i+1}/{renderedRooms.Count}");
-				foreach((string name, string path, byte[] image) in renderedRooms[i]) {
+				if (await TryCancelRender($"Render cancelled at\n{i}/{renderedRooms.Count} backups made.\nNo files overwritten."))
+					return;
+				renderStatusPopup.UpdateText($"Creating backups\n{i + 1}/{renderedRooms.Count}");
+				foreach ((string name, string path, byte[] image) in renderedRooms[i]) {
 					FloodForge.Backup.File(path);
 				}
 			}
 			renderStatusPopup.UpdateText($"Creating backups\ndone");
-			if (await TryCancelRender($"Render cancelled.\nBackups made.\nNo files overwritten.")) return;
+			if (await TryCancelRender($"Render cancelled.\nBackups made.\nNo files overwritten."))
+				return;
 			renderStatusPopup.UpdateText($"Updating Images\n0/{renderedRooms.Count}");
 			List<(string path, byte[] image)> overwrittenImages = [];
 
@@ -1435,7 +1442,7 @@ public static class WorldWindow {
 							InfoPopup cancelPopup = PopupManager.Add(new InfoPopup(""));
 							for (int k = 0; k < overwrittenImages.Count; k++) {
 								cancelPopup.UpdateText($"Reverting files\n{k}/{overwrittenImages.Count - 1}");
-								if(overwrittenImages[k].image.Length != 0)
+								if (overwrittenImages[k].image.Length != 0)
 									File.WriteAllBytes(overwrittenImages[k].path, overwrittenImages[k].image);
 								else {
 									FloodForge.Backup.File(overwrittenImages[k].path);
@@ -1446,9 +1453,10 @@ public static class WorldWindow {
 							return;
 						}
 						(string name, string path, byte[] image) = renderedRooms[i][j];
-						renderStatusPopup.UpdateText($"Updating Images\n{i+1}/{renderedRooms.Count}\n{imagesCopied}/{renderedRooms[i].Length}");
+						renderStatusPopup.UpdateText($"Updating Images\n{i + 1}/{renderedRooms.Count}\n{imagesCopied}/{renderedRooms[i].Length}");
 						byte[] oldImg = [];
-						if(File.Exists(path)) oldImg = File.ReadAllBytes(path);
+						if (File.Exists(path))
+							oldImg = File.ReadAllBytes(path);
 						overwrittenImages.Add((path, oldImg));
 
 						using Stream stream = File.OpenWrite(path); // Make this a History Change, so it's CTRL+Z-able
@@ -1472,7 +1480,7 @@ public static class WorldWindow {
 			}
 			else {
 				string reportString = $"Finished mass-render.\n {successCount}/{finished} succeeded.";
-				
+
 				if (messages.Count == 0) {
 					reportString += $"\nNo detected errors!";
 				}
@@ -1480,7 +1488,7 @@ public static class WorldWindow {
 					reportString += "\nDetected errors:\n";
 					foreach ((string roomName, string message) in messages) {
 						reportString += $"{roomName} - {message}\n";
-					}	
+					}
 				}
 				PopupManager.Add(new ConfirmPopup(reportString + "View log.txt for more info."));
 			}
@@ -1712,7 +1720,7 @@ public static class WorldWindow {
 					confirmRenderPopup = new ConfirmPopup("Render " + selectedRooms.Count + " rooms?" + (
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
-						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" : 
+						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" :
 						"\n<s:1>This will overwrite all existing images!")
 						).Okay(() => {
 							renderRoomsTask = Task.Run(MassRenderRooms);
