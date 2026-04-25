@@ -87,6 +87,10 @@ public static class PopupManager {
 		toAdd.Add(popup);
 		return popup;
 	}
+	
+	public static InfoPopup Add(string text) {
+		return Add(new InfoPopup(text));
+	}
 
 	public static void Remove(Popup popup) {
 		trash.Add(popup);

@@ -78,6 +78,30 @@ public class Font {
 		this.Write(text, x, y, textSize, Align.None);
 	}
 
+	public void WriteFormatted(string lineToWrite, float x, float y, float size, Align align) {
+		this.WriteFormatted(lineToWrite, x, y, size, align, Themes.Text);
+	}
+
+	public static int ParseSeverity(string line, out string trimmedLine) {
+		trimmedLine = line;
+		if (line != "" && line.StartsWith("<s:")) {
+			trimmedLine = line[Math.Min(line.IndexOf('>') + 1, line.Length)..];
+			return int.Parse(line[Math.Min(line.Length, line.IndexOf(':') + 1)..line.IndexOf('>')]);
+		}
+		return 0;
+	}
+	
+	// REVIEW - lerp the neutralcolor to the Warn and Error colors instead of brute setting them, so that neutralColor still has an effect?
+	public void WriteFormatted(string lineToWrite, float x, float y, float size, Align align, Color neutralColor) {
+		int severity = ParseSeverity(lineToWrite, out string trimmedLine);
+		Immediate.Color(severity switch {
+			1 => Themes.TextWarn,
+			2 => Themes.TextError,
+			_ => neutralColor
+		});
+		this.Write(trimmedLine, x, y, size, align);
+	}
+
 	public Vector2 Measure(string text, float textSize) {
 		float scale = textSize / this.baseSize;
 		float width = 0;

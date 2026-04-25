@@ -208,8 +208,8 @@ public class CreateRoomPopup : Popup {
 			this.Close();
 
 			Room room = new Room(Path.Join(WorldWindow.region.roomsPath, $"{name}.txt"), name) {
-				CanonPosition = WorldWindow.placingRoomPos - (Vector2) WorldWindow.placingRoomSize * 0.5f,
-				DevPosition = WorldWindow.placingRoomPos - (Vector2) WorldWindow.placingRoomSize * 0.5f
+				CanonPosition = WorldWindow.placingRoomPos - (Vector2) WorldWindow.placingRoomSize * 0.5f * Vector2.NegY,
+				DevPosition = WorldWindow.placingRoomPos - (Vector2) WorldWindow.placingRoomSize * 0.5f * Vector2.NegY
 			};
 			WorldWindow.region.rooms.Add(room);
 			Main.mode = Main.Mode.Droplet;

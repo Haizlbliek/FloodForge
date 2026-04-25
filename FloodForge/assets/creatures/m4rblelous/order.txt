@@ -15,7 +15,9 @@ HunterSeeker
 Jelly
 KillerPillar
 MiniBigEel
+MiniBlackLeech
 MiniFlyingBigEel
+MiniScutigera
 MoleSalamander
 NoodleEater
 Polliwog

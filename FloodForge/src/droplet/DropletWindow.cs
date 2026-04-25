@@ -1365,42 +1365,104 @@ public static class DropletWindow {
 		data[index + 2] = b;
 	}
 
-	private static bool RenderCamera(RoomData.Camera camera, string roomFolderPath, string newImageName) { // NOTE - Shortcutdots don't seem to line up properly
+	// NOTE - Shortcutdots don't seem to line up properly - this may be a result of cangles
+	private static byte[] RenderCamera(RoomData.Camera camera) {
 		byte[] image = new byte[CameraTextureWidth * CameraTextureHeight * 3];
-		bool SwitchRenderProcess = true;
 
-		if(SwitchRenderProcess) {
-			for(int i = 0; i < image.Length; i++) {
-				image[i] = 255;
-			}
+		for(int i = 0; i < image.Length; i++) {
+			image[i] = 255;
+		}
 
-			int firstTilePositionX = Mathf.FloorToInt(camera.position.x / 20) - 1;
-			float TopLeftOffsetX = firstTilePositionX * 20 - camera.position.x;
-			int firstTilePositionY = Mathf.FloorToInt(camera.position.y / 20) - 1;
-			float TopLeftOffsetY = firstTilePositionY * 20 - camera.position.y;
-			int lastTilePositionX = Mathf.CeilToInt((camera.position.x + CameraTextureWidth) / 20);
-			int lastTilePositionY = Mathf.CeilToInt((camera.position.y + CameraTextureHeight) / 20);
+		int firstTilePositionX = Mathf.FloorToInt(camera.position.x / 20) - 1;
+		float TopLeftOffsetX = firstTilePositionX * 20 - camera.position.x;
+		int firstTilePositionY = Mathf.FloorToInt(camera.position.y / 20) - 1;
+		float TopLeftOffsetY = firstTilePositionY * 20 - camera.position.y;
+		int lastTilePositionX = Mathf.CeilToInt((camera.position.x + CameraTextureWidth) / 20);
+		int lastTilePositionY = Mathf.CeilToInt((camera.position.y + CameraTextureHeight) / 20);
 
-			for(int y = firstTilePositionY; y <= lastTilePositionY; y++) {
-				for(int x = firstTilePositionX; x <= lastTilePositionX; x++) {
-					uint tileType = Room.GetTile(x, y);
-					float offsetX = camera.position.x;// - (TopLeftOffsetX % 20);
-					float offsetY = camera.position.y;//  (TopLeftOffsetY % 20);
-					int pixelOffsetX = Mathf.FloorToInt(offsetX);
-					int pixelOffsetY = Mathf.FloorToInt(offsetY);
+		for(int y = firstTilePositionY; y <= lastTilePositionY; y++) {
+			for(int x = firstTilePositionX; x <= lastTilePositionX; x++) {
+				uint tileType = Room.GetTile(x, y);
+				float offsetX = camera.position.x;// - (TopLeftOffsetX % 20);
+				float offsetY = camera.position.y;//  (TopLeftOffsetY % 20);
+				int pixelOffsetX = Mathf.FloorToInt(offsetX);
+				int pixelOffsetY = Mathf.FloorToInt(offsetY);
 
-					if ((tileType % 16) == 1) {
-						for (int tileY = 0; tileY < 20; tileY++) {
+				if ((tileType % 16) == 1) {
+					for (int tileY = 0; tileY < 20; tileY++) {
+						int pixelYPos = y * 20 - pixelOffsetY + tileY;
+						for (int tileX = 0; tileX < 20; tileX++) {
+							int pixelXPos = x * 20 - pixelOffsetX + tileX;
+
+							if(pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+								int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+								if (tileX == 0 || tileY == 0) {
+									SetPixel(image, index, 151, 0, 0);
+								}
+								else if (tileX == 19 || tileY == 19) {
+									SetPixel(image, index, 91, 0, 0);
+								}
+								else {
+									SetPixel(image, index, 121, 0, 0);
+								}
+							}
+						}
+					}
+				}
+				else if ((tileType % 16) == 4) {
+					for (int tileY = 0; tileY < 20; tileY++) {
+						int pixelYPos = y * 20 - pixelOffsetY + tileY;
+						for (int tileX = 0; tileX < 20; tileX++) {
+							int pixelXPos = x * 20 - pixelOffsetX + tileX;
+
+							if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+								int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+								if (tileX == 0 || tileY == 0) {
+									SetPixel(image, index, 155, 0, 0);
+								}
+								else if (tileX == 19 || tileY == 19) {
+									SetPixel(image, index, 95, 0, 0);
+								}
+								else if (tileX < 8 || tileX > 12 || tileY < 8 || tileY > 12) {
+									SetPixel(image, index, 125, 0, 0);
+								}
+							}
+						}
+					}
+				}
+				else if((tileType & 512) > 0) {
+					for (int tileY = 0; tileY < 20; tileY++) {
+						int pixelYPos = y * 20 - pixelOffsetY + tileY;
+						for (int tileX = 0; tileX < 20; tileX++) {
+							int pixelXPos = x * 20 - pixelOffsetX + tileX;
+
+							if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+								int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+								if (tileX == 0 || tileY == 0) {
+									SetPixel(image, index, 161, 0, 0);
+								}
+								else if (tileX == 19 || tileY == 19) {
+									SetPixel(image, index, 101, 0, 0);
+								}
+								else {
+									SetPixel(image, index, 131, 0, 0);
+								}
+							}
+						}
+					}
+				}
+				if ((tileType % 16) == 2) {
+					for (int tileY = 0; tileY < 20; tileY++) {
+						for (int tileX = 0; tileX < 20; tileX++) {
 							int pixelYPos = y * 20 - pixelOffsetY + tileY;
-							for (int tileX = 0; tileX < 20; tileX++) {
-								int pixelXPos = x * 20 - pixelOffsetX + tileX;
-
-								if(pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
-									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
-									if (tileX == 0 || tileY == 0) {
+							int pixelXPos = x * 20 - pixelOffsetX + tileX;
+							if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+								int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+								if (ValidSlopePos(tileType, tileX, tileY)) {
+									if (!ValidSlopePos(tileType, tileX, tileY - 1) || !ValidSlopePos(tileType, tileX - 1, tileY)) {
 										SetPixel(image, index, 151, 0, 0);
 									}
-									else if (tileX == 19 || tileY == 19) {
+									else if (!ValidSlopePos(tileType, tileX, tileY + 1) || !ValidSlopePos(tileType, tileX + 1, tileY)) {
 										SetPixel(image, index, 91, 0, 0);
 									}
 									else {
@@ -1410,151 +1472,71 @@ public static class DropletWindow {
 							}
 						}
 					}
-					else if ((tileType % 16) == 4) {
-						for (int tileY = 0; tileY < 20; tileY++) {
+				}
+				if ((tileType & 128) > 0 && (tileType % 16) != 4) {
+					bool isBackgroundShortcut = (tileType & 512) > 0 && (tileType % 16) != 1;
+					for (int tileY = 8; tileY < 12; tileY++) {
+						for (int tileX = 8; tileX < 12; tileX++) {
 							int pixelYPos = y * 20 - pixelOffsetY + tileY;
-							for (int tileX = 0; tileX < 20; tileX++) {
-								int pixelXPos = x * 20 - pixelOffsetX + tileX;
+							int pixelXPos = x * 20 - pixelOffsetX + tileX;
 
-								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
-									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
-									if (tileX == 0 || tileY == 0) {
-										SetPixel(image, index, 155, 0, 0);
-									}
-									else if (tileX == 19 || tileY == 19) {
-										SetPixel(image, index, 95, 0, 0);
-									}
-									else if (tileX < 8 || tileX > 12 || tileY < 8 || tileY > 12) {
-										SetPixel(image, index, 125, 0, 0);
-									}
+							if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+								int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+								if (!isBackgroundShortcut) {
+									SetPixel(image, index, 31, 8, 0);
+								}
+								else {
+									SetPixel(image, index, 51, 8, 0);
 								}
 							}
 						}
 					}
-					else if((tileType & 512) > 0) {
-						for (int tileY = 0; tileY < 20; tileY++) {
-							int pixelYPos = y * 20 - pixelOffsetY + tileY;
-							for (int tileX = 0; tileX < 20; tileX++) {
-								int pixelXPos = x * 20 - pixelOffsetX + tileX;
+				}
+				if ((tileType & 16) > 0) {
+					for (int tileY = 0; tileY < 20; tileY++) {
+						int pixelYPos = y * 20 - pixelOffsetY + tileY;
+						for (int tileX = 8; tileX < 12; tileX++) {
+							int pixelXPos = x * 20 - pixelOffsetX + tileX;
 
-								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
-									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
-									if (tileX == 0 || tileY == 0) {
-										SetPixel(image, index, 161, 0, 0);
-									}
-									else if (tileX == 19 || tileY == 19) {
-										SetPixel(image, index, 101, 0, 0);
-									}
-									else {
-										SetPixel(image, index, 131, 0, 0);
-									}
-								}
+							if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+								int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+								SetPixel(image, index, 95, 0, 0);
 							}
 						}
 					}
-					if ((tileType % 16) == 2) {
-						for (int tileY = 0; tileY < 20; tileY++) {
-							for (int tileX = 0; tileX < 20; tileX++) {
-								int pixelYPos = y * 20 - pixelOffsetY + tileY;
-								int pixelXPos = x * 20 - pixelOffsetX + tileX;
-								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
-									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
-									if (ValidSlopePos(tileType, tileX, tileY)) {
-										if (!ValidSlopePos(tileType, tileX, tileY - 1) || !ValidSlopePos(tileType, tileX - 1, tileY)) {
-											SetPixel(image, index, 151, 0, 0);
-										}
-										else if (!ValidSlopePos(tileType, tileX, tileY + 1) || !ValidSlopePos(tileType, tileX + 1, tileY)) {
-											SetPixel(image, index, 91, 0, 0);
-										}
-										else {
-											SetPixel(image, index, 121, 0, 0);
-										}
-									}
-								}
+				}
+				if ((tileType & 32) > 0) {
+					for (int tileY = 8; tileY < 12; tileY++) {
+						int pixelYPos = y * 20 - pixelOffsetY + tileY;
+						for (int tileX = 0; tileX < 20; tileX++) {
+							int pixelXPos = x * 20 - pixelOffsetX + tileX;
+
+							if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+								int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+								SetPixel(image, index, 95, 0, 0);
 							}
 						}
 					}
-					if ((tileType & 128) > 0 && (tileType % 16) != 4) {
-						bool isBackgroundShortcut = (tileType & 512) > 0 && (tileType % 16) != 1;
-						for (int tileY = 8; tileY < 12; tileY++) {
-							for (int tileX = 8; tileX < 12; tileX++) {
-								int pixelYPos = y * 20 - pixelOffsetY + tileY;
-								int pixelXPos = x * 20 - pixelOffsetX + tileX;
+				}
+				if ((tileType % 16) == 3) {
+					for (int tileY = 0; tileY < 10; tileY++) {
+						int pixelYPos = y * 20 - pixelOffsetY + tileY;
+						for (int tileX = 0; tileX < 20; tileX++) {
+							int pixelXPos = x * 20 - pixelOffsetX + tileX;
 
-								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
-									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
-									if (!isBackgroundShortcut) {
-										SetPixel(image, index, 31, 8, 0);
-									}
-									else {
-										SetPixel(image, index, 51, 8, 0);
-									}
-								}
-							}
-						}
-					}
-					if ((tileType & 16) > 0) {
-						for (int tileY = 0; tileY < 20; tileY++) {
-							int pixelYPos = y * 20 - pixelOffsetY + tileY;
-							for (int tileX = 8; tileX < 12; tileX++) {
-								int pixelXPos = x * 20 - pixelOffsetX + tileX;
-
-								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
-									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
-									SetPixel(image, index, 95, 0, 0);
-								}
-							}
-						}
-					}
-					if ((tileType & 32) > 0) {
-						for (int tileY = 8; tileY < 12; tileY++) {
-							int pixelYPos = y * 20 - pixelOffsetY + tileY;
-							for (int tileX = 0; tileX < 20; tileX++) {
-								int pixelXPos = x * 20 - pixelOffsetX + tileX;
-
-								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
-									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
-									SetPixel(image, index, 95, 0, 0);
-								}
-							}
-						}
-					}
-					if ((tileType % 16) == 3) {
-						for (int tileY = 0; tileY < 10; tileY++) {
-							int pixelYPos = y * 20 - pixelOffsetY + tileY;
-							for (int tileX = 0; tileX < 20; tileX++) {
-								int pixelXPos = x * 20 - pixelOffsetX + tileX;
-
-								if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
-									int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
-									SetPixel(image, index, 95, 0, 0);
-								}
+							if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+								int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
+								SetPixel(image, index, 95, 0, 0);
 							}
 						}
 					}
 				}
 			}
 		}
-		string? outputPath = PathUtil.FindFile(roomFolderPath, newImageName);
-		if (outputPath == null || outputPath == "") {
-			outputPath = Path.Combine(roomFolderPath, newImageName);
-		}
-		FloodForge.Backup.File(outputPath);
-
-		try {
-			using Stream stream = File.OpenWrite(outputPath);
-			ImageWriter writer = new ImageWriter();
-			writer.WritePng(image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
-			Logger.Info("Screen exported");
-			return true;
-		}
-		catch (Exception ex) {
-			Logger.Error("Exporting screen failed: " + ex.Message);
-			return false;
-		}
+		return image;
 	}
 
-	public static bool Render(out string errorMessage) {
+	public static bool Render(out string errorMessage, out (string, string, byte[])[] images) {
 		ExportGeometry();
 		bool success = true;
 		errorMessage = "";
@@ -1567,12 +1549,14 @@ public static class DropletWindow {
 			errorMessage += "No cameras in room!\n";
 			success = false;
 		}
+		List<(string, string, byte[])> renderedRooms = [];
 		for (int i = 0; i < Room.data.cameras.Count; i++) {
-			Logger.Info(PathUtil.FindFile(WorldWindow.region.roomsPath, $"{Room.name}_{i + 1}.png")!);
+			string imageName = $"{Room.name}_{i + 1}";
+			string outputPath = Path.Combine(WorldWindow.region.roomsPath, $"{imageName}.png");
+			Logger.Info(outputPath.Split("Rain World")[^1]);
 			if(WorldWindow.renderStatusPopup != null) WorldWindow.renderStatusPopup?.UpdateText(updateBaseText + " " + (i + 1) + "/" + Room.data.cameras.Count);
 			try {
-				if (!RenderCamera(Room.data.cameras[i], WorldWindow.region.roomsPath, $"{Room.name}_{i + 1}.png"))
-					success = false;
+				renderedRooms.Add(new (imageName, outputPath, RenderCamera(Room.data.cameras[i])));
 			}
 			catch (Exception e) {
 				success = false;
@@ -1580,6 +1564,7 @@ public static class DropletWindow {
 				break;
 			}
 		}
+		images = [..renderedRooms];
 		return success;
 	}
 
@@ -1663,24 +1648,33 @@ public static class DropletWindow {
 		File.WriteAllText(fileName, project.ToString());
 
 		if (!Settings.RainedPath.value.IsNullOrEmpty() && File.Exists(Settings.RainedPath)) {
+			Process[] rainedProcesses = Process.GetProcessesByName("Rained");
+			string debug = "";
+			foreach (Process process in rainedProcesses) {
+				debug += $"{process.ProcessName} - {process.Id}\n";
+			}
+			Logger.Info("Running Rained-Processes:\n" + debug);
+			if(rainedProcesses.Length == 0) {
 			PopupManager.Add(new ConfirmPopup("Open in Rained?").Okay(() => {
-				// TODO: Don't open a new exe when Rained is already running
+					ProcessStartInfo startInfo = new ProcessStartInfo {
+						FileName = Settings.RainedPath,
+						UseShellExecute = false,
+						CreateNoWindow = false,
+						WorkingDirectory = Path.GetDirectoryName(Settings.RainedPath),
+						Arguments = $"\"{fileName}\""
+					};
 
-				ProcessStartInfo startInfo = new ProcessStartInfo {
-					FileName = Settings.RainedPath,
-					UseShellExecute = false,
-					CreateNoWindow = false,
-					WorkingDirectory = Path.GetDirectoryName(Settings.RainedPath),
-					Arguments = $"\"{fileName}\""
-				};
-
-				try {
-					Process.Start(startInfo);
+					try {
+						Process.Start(startInfo);
+					}
+					catch (Exception ex) {
+						Logger.Error($"Error launching Rained: {ex.Message}");
+					}
 				}
-				catch (Exception ex) {
-					Logger.Error($"Error launching Rained: {ex.Message}");
-				}
-			}));
+			));}
+			else {
+				PopupManager.Add(new InfoPopup("Rained is already running!")); // REVIEW - should it even show this popup at all?
+			};
 		}
 	}
 
@@ -1731,12 +1725,33 @@ public static class DropletWindow {
 					PopupManager.Add(new InfoPopup("Exported successfully"));
 				}),
 				new Button("Render", b => {
-					if(Render(out string message)){
-						PopupManager.Add(new InfoPopup("Rendered successfully"));
+					bool success = true;
+					if(Render(out string message, out (string name, string outputPath, byte[] image)[] images)){
+						for(int i = 0; i < images.Length; i++){
+							FloodForge.Backup.File(images[i].outputPath);
+
+							try {
+								using Stream stream = File.OpenWrite(images[i].outputPath);
+								ImageWriter writer = new ImageWriter();
+								writer.WritePng(images[i].image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
+								Logger.Info("Screen exported");
+								success = true;
+							}
+							catch (Exception ex) {
+								Logger.Error("Exporting screen failed: " + ex.Message);
+								message = ex.Message;
+								success = false;
+							}
+						}
 					}
 					else{
-						PopupManager.Add(new InfoPopup($"Render failed!\nMessage: \n{message}View log.txt for more information."));
+						success = false;
 					}
+					if(success){
+						PopupManager.Add(new InfoPopup("Rendered successfully"));
+					}
+					else
+						PopupManager.Add(new InfoPopup($"Render failed!\nMessage: \n{message}View log.txt for more information."));
 				}),
 				new Button("Export Leditor Project", b => {
 					PopupManager.Add(

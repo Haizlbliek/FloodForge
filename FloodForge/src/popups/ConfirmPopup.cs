@@ -67,12 +67,11 @@ public class ConfirmPopup : Popup {
 		base.Draw();
 
 		if (this.minimized) return;
-
-		Immediate.Color(Themes.Text);
-
+		
 		for (int idx = 0; idx < this.question.Length; idx++) {
+			string lineToWrite = this.question[idx];
 			float y = this.bounds.y1 - 0.08f - 0.05f * idx;
-			UI.font.Write(this.question[idx], this.bounds.CenterX, y, 0.04f, Font.Align.TopCenter | Font.Align.MiddleLeft);
+			UI.font.WriteFormatted(lineToWrite, this.bounds.CenterX, y, 0.04f, Font.Align.TopCenter | Font.Align.MiddleLeft);
 		}
 
 		if (UI.TextButton(this.cancel, this.swap ? right : left)) {
