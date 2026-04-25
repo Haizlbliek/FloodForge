@@ -4,7 +4,7 @@ using Stride.Core.Extensions;
 namespace FloodForge.World;
 
 // TODO: Fix room water behind level rendering
-public class Room {
+public class Room : WorldDraggable { // change Room and ReferenceImage to derive from WorldDraggable
 	public const uint FLAG_VERTICAL_POLE = 16;
 	public const uint FLAG_HORIZONTAL_POLE = 32;
 	public const uint FLAG_ROOM_EXIT = 64;
@@ -56,7 +56,9 @@ public class Room {
 	private int specialExitCount = 0;
 	public int GarbageWormDenIndex => this.specialExitCount + this.nonDenExitCount + this.denShortcutEntrances.Count;
 
-	public bool Visible => WorldWindow.VisibleLayers[this.data.layer] && WorldWindow.CheckVisibleTimeline(this.TimelineType, this.Timelines);
+	public override bool IsVisible() {
+		return WorldWindow.VisibleLayers[this.data.layer] && WorldWindow.CheckVisibleTimeline(this.TimelineType, this.Timelines);
+	}
 
 	public Room(string path, string name, bool pathOutsideRoomsFolder = false) {
 		this.pathOutsideRoomsFolder = pathOutsideRoomsFolder;
@@ -870,18 +872,16 @@ public class Room {
 	}
 	#endregion
 
-	public Vector2 Position {
-		get {
-			return WorldWindow.PositionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
-		}
+	public override Vector2 GetPosition() {
+		return WorldWindow.PositionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
+	}
 
-		set {
-			if (WorldWindow.PositionType == WorldWindow.RoomPosition.Canon) {
-				this.CanonPosition = value;
-			}
-			else {
-				this.DevPosition = value;
-			}
+	public override void SetPosition(Vector2 value) {
+		if (WorldWindow.PositionType == WorldWindow.RoomPosition.Canon) {
+			this.CanonPosition = value;
+		}
+		else {
+			this.DevPosition = value;
 		}
 	}
 
@@ -993,6 +993,87 @@ public class Room {
 		}
 	}
 
+	protected class MeshRenderable {
+		public Mesh mesh;
+		protected uint _vao = 0;
+		protected uint _vbo = 0;
+		protected uint _ebo = 0;
+		protected Dictionary<string, int> shaderVariableLocations = [];
+		protected Shader shaderToUse;
+
+		public unsafe MeshRenderable(Mesh mesh, Shader shaderToUse, VertexAttributeInformation[]? vertexAttributeInformation = null, string[]? shaderVariableLocations = null) {
+			this.mesh = mesh;
+			if (this._vao == 0) {
+				this._vao = Program.gl.GenVertexArray();
+				this._vbo = Program.gl.GenBuffer();
+				this._ebo = Program.gl.GenBuffer();
+			}
+
+			Span<Vertex> vertices = CollectionsMarshal.AsSpan(this.mesh.vertices);
+			Span<uint> indices = CollectionsMarshal.AsSpan(this.mesh.indices);
+
+			Program.gl.BindVertexArray(this._vao);
+
+			Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
+			fixed (Vertex* ptr = vertices) {
+				Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertices.Length * sizeof(Vertex)), ptr, BufferUsageARB.StaticDraw);
+			}
+
+			Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, this._ebo);
+			fixed (uint* ptr = indices) {
+				Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (indices.Length * sizeof(uint)), ptr, BufferUsageARB.StaticDraw);
+			}
+			
+			if(vertexAttributeInformation != null) {
+				foreach (VertexAttributeInformation item in vertexAttributeInformation) {
+					Program.gl.VertexAttribPointer(item.index, item.size, item.type, item.normalised, item.stride, item.pointer);
+					Program.gl.EnableVertexAttribArray(item.index);
+				}
+			}
+			
+			this.shaderToUse = shaderToUse;
+			Program.gl.UseProgram(shaderToUse);
+			if(shaderVariableLocations != null) {
+				foreach (string name in shaderVariableLocations) {
+					this.shaderVariableLocations.Add(name, Program.gl.GetUniformLocation(shaderToUse, name));
+				}
+			}
+			Program.gl.UseProgram(0);
+
+			Program.gl.BindVertexArray(0);
+			Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+			Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+		}
+
+		public void UniformMatrix4(string name, bool transpose, ReadOnlySpan<float> value)
+			=> Program.gl.UniformMatrix4(this.shaderVariableLocations[name], transpose, value);
+		public void Uniform4(string name, float x, float y, float z, float w)
+			=> Program.gl.Uniform4(this.shaderVariableLocations[name], x, y, z, w);
+		public void Uniform1(string name, float val)
+			=> Program.gl.Uniform1(this.shaderVariableLocations[name], val);
+
+		public void PreDraw() {
+			Program.gl.BindVertexArray(this._vao);
+			Program.gl.UseProgram(Preload.RoomShader);
+		}
+
+		public unsafe void DoDraw() {
+			Program.gl.DrawElements(PrimitiveType.Triangles, (uint) this.mesh.indices.Count, DrawElementsType.UnsignedInt, (void*) 0);
+
+			Program.gl.BindVertexArray(0);
+			Program.gl.UseProgram(0);
+		}
+
+		public unsafe struct VertexAttributeInformation (uint index, int size, VertexAttribPointerType type, bool normalised, uint stride, void* pointer){
+			public uint index = index;
+			public int size = size;
+			public VertexAttribPointerType type = type;
+			public bool normalised = normalised;
+			public uint stride = stride;
+			public void* pointer = pointer;
+		}
+	}
+
 	protected readonly struct Vertex {
 		public readonly float x, y;
 		public readonly float r, g, b, a;
@@ -1016,92 +1097,314 @@ public class Room {
 		}
 	}
 
+	// IDEA - add MeshRenderReference object containing setup code for easier modifications
+	protected Mesh waterMesh = new();
+	protected MeshRenderable? waterRenderable;
 	protected Mesh roomMesh = new();
-	protected uint _vao = 0;
-	protected uint _vbo = 0;
-	protected uint _ebo = 0;
-	protected int _projLoc, _modelLoc, _tintLoc, _tintStrengthLoc;
+	protected MeshRenderable? roomRenderable;
 	List<Vector2i> allShortcutEntrances = [];
 
+	protected static uint TwelveBitLimit = 4095;
+	protected static uint HeightMask = 65520;
+	protected static uint WidthMask = 268369920;
+
 	protected unsafe virtual void GenerateMesh() {
+		this.waterMesh.Clear();
 		this.roomMesh.Clear();
 		this.allShortcutEntrances.Clear();
+
+		List<byte> roomMeshTiles = [];
+		// 0000 = nothing
+		// 0001 = solid
+		// 0010 = shortcutentrance - NOTE! though shortcutentrances and slopes aren't exactly greedy-meshable, they - unlike poles - cannot share any tile.
+		// x100 = slope 0 - top, left - NOTE! for generating meshes, keep in mind that this describes the solid slope, not the air slope, which is the part that is meshed.
+		// x101 = slope 1 - bottom, left
+		// x110 = slope 2 - top, right
+		// x111 = slope 3 - bottom, right
+		// 1xxx = layer 2 solid
+		List<byte> overlappingTiles = [];	// poles, shortcutdots, platforms; in general harder to greedy-mesh. In fact, let's just not.
+		// 0000 = nothing
+		// 0001 = shortcutdot
+		// 0010 = pole H
+		// 0100 = pole V
+		// 1000 = platform
+		Dictionary<Vector2i, uint> greedyTiles = [];
+		// greedyTile
+		// contains: startX, startY, width, height, type
+		// Dictionary<Vector2i, uint> greedyTiles
+		// Vector2i = startX and startY
+		// uint = ____xxxxxxxxxxxxyyyyyyyyyyyyzzzz
+		// x = width = (uint & 268369920) >> 16
+		// y = height = (uint & 65520) >> 4
+		// z = type = uint & 15
 
 		for (int x = 0; x < this.width; x++) {
 			for (int y = 0; y < this.height; y++) {
 				uint tile = this.GetTile(x, y);
 				uint type = tile & 15;
 
-				float x0 = x;
-				float y0 = -y;
-				float x1 = x + 1;
-				float y1 = -y - 1;
-				float x2 = (x0 + x1) * 0.5f;
-				float y2 = (y0 + y1) * 0.5f;
-
-				if (type == 4) {
-					this.allShortcutEntrances.Add(new(x, y));
-					this.roomMesh.AddQuad(x2, y2, Themes.RoomShortcutEntrance);
+				if (type == 1)
+					roomMeshTiles.Add(1); // add x0001 ==> type = solid
+				else if (type == 4) {
+					roomMeshTiles.Add(2); // add x0010 ==> type = shortcutentrance;
+					this.allShortcutEntrances.Add(new (x, y));
 				}
-				else if (type != 1) { // draws air if the tile isn't fully solid.
-					Themes.ThemeColor air = ((tile & FLAG_BACKGROUND_SOLID) > 0) ? Themes.RoomLayer2Solid : Themes.RoomAir;
+				else {
+					byte bgSolidFlag = (byte)((tile & FLAG_BACKGROUND_SOLID) > 0 ? 8 : 0); // flag x?xxx true if bgsolid
 
 					if (type == 2) {
 						uint direction = (tile >> 10) & 3;
-						if (direction == 0) {
-							this.roomMesh.AddTriangle(
-								new Vertex(x1, y1, air),
-								new Vertex(x0, y1, air),
-								new Vertex(x1, y0, air)
-							);
-						}
-						else if (direction == 1) {
-							this.roomMesh.AddTriangle(
-								new Vertex(x1, y0, air),
-								new Vertex(x0, y0, air),
-								new Vertex(x1, y1, air)
-							);
-						}
-						else if (direction == 2) {
-							this.roomMesh.AddTriangle(
-								new Vertex(x0, y1, air),
-								new Vertex(x1, y1, air),
-								new Vertex(x0, y0, air)
-							);
-						}
-						else if (direction == 3) {
-							this.roomMesh.AddTriangle(
-								new Vertex(x0, y0, air),
-								new Vertex(x1, y0, air),
-								new Vertex(x0, y1, air)
-							);
-						}
+						if (direction == 0)
+							roomMeshTiles.Add((byte)(4 | bgSolidFlag)); // add x?100 ==> type = slope 0
+						else if (direction == 1)
+							roomMeshTiles.Add((byte)(5 | bgSolidFlag)); // add x?101 ==> type = slope 1
+						else if (direction == 2)
+							roomMeshTiles.Add((byte)(6 | bgSolidFlag)); // add x?110 ==> type = slope 2
+						else if (direction == 3)
+							roomMeshTiles.Add((byte)(7 | bgSolidFlag));// add x?111 ==> type = slope 3
 					}
-					else {
-						this.roomMesh.AddQuad(x2, y2, air); // possibility for greedy meshing, since right now every tile of air now gets its own quad.
+					else
+						roomMeshTiles.Add(bgSolidFlag); // add x?000 ==> type =? bgsolid
+				}
+
+				byte overlappingTileVal = 0;
+				if ((tile & FLAG_SHORTCUT) > 0 && tile != 4)
+					overlappingTileVal |= 1; // 0001 = shortcutdot
+				if (type != 1) {
+					if ((tile & FLAG_HORIZONTAL_POLE) > 0)
+						overlappingTileVal |= 2; // 0010 = pole H
+					if ((tile & FLAG_VERTICAL_POLE) > 0)
+						overlappingTileVal |= 4; // 0100 = pole V
+					if (type == 3)
+						overlappingTileVal |= 8; // 1000 = platform
+				}
+				overlappingTiles.Add(overlappingTileVal);
+			}
+		}
+
+		for (int y = 0; y < this.height; y++) {
+			for (int x = 0; x < this.width;) {
+				// first: get tiletype
+				Vector2i key = new (x, y);
+				int indexer = x * this.height + y;
+				byte tileType = roomMeshTiles[indexer];
+				// then: look rightwards
+				uint stripWidth = 1;
+				x++;
+				indexer += this.height;
+				for (;x <= this.width; x++, indexer += this.height) {
+					// until a nonmatching tiletype is encountered OR y >= this.height OR stripHeight >= 4095 (12-bit limit)
+					if (indexer >= roomMeshTiles.Count) indexer = roomMeshTiles.Count - 1;
+					if(x == this.width || stripWidth >= TwelveBitLimit || roomMeshTiles[indexer] != tileType) {
+						// then: if not solid, add to greedyTiles
+						if(tileType != 1) {
+							uint data = tileType;
+							data |= stripWidth << 16;
+							greedyTiles.Add(key, data);
+						}
+						break;
 					}
+					else
+						stripWidth++;
 				}
+				// new loop starts from the end point of the previous one OR, if x reaches the cap, from the start of the next line, therefore no tiles are missed.
+			}
+		}
 
-				if (type == 3) {
-					this.roomMesh.AddQuad(
-						new Vertex(x0, y0, Themes.RoomPlatform),
-						new Vertex(x1, y0, Themes.RoomPlatform),
-						new Vertex(x1, y2, Themes.RoomPlatform),
-						new Vertex(x0, y2, Themes.RoomPlatform)
-					);
+		for (int x = 0; x < this.width; x++) {
+			for (int y = 0; y < this.height; y++) {
+				Vector2i key = new (x, y);
+				if(greedyTiles.TryGetValue(key, out uint data)) {
+					byte tileType = (byte)(data & 15);
+					uint height = 1;
+					uint width = (data & WidthMask) >> 16;
+					for (int y1 = y + 1; y1 < this.height; y1++) {
+						if(height < TwelveBitLimit && greedyTiles.TryGetValue(new (x, y1), out uint compareData)
+							&& (byte)(compareData & 15) == tileType && ((compareData & WidthMask) >> 16) == width) {
+							greedyTiles.Remove(new (x, y1));
+							height++;
+						}
+						else
+							break;
+					}
+					data |= height << 4;
+					greedyTiles[key] = data;
 				}
+			}
+		}
 
-				if ((tile & FLAG_VERTICAL_POLE) > 0) {
-					this.roomMesh.AddQuad(x2, y2, new Vector2(0.25f, 1f), Themes.RoomPole);
+		// REVIEW - generate and greedy-mesh Water separately?
+		foreach (KeyValuePair<Vector2i, uint> greedyTile in greedyTiles) {
+			byte tileType = (byte)(greedyTile.Value & 15);
+			uint height = (greedyTile.Value & HeightMask) >> 4;
+			uint width = (greedyTile.Value & WidthMask) >> 16;
+			int x = greedyTile.Key.x;
+			int y = greedyTile.Key.y;
+			float x0 = x;// + 0.1f;
+			float y0 = -y;// - 0.1f;
+			float x1 = x + width;// - 0.1f;
+			float y1 = -y - height;// + 0.1f;
+
+			int waterY = this.data.waterHeight - this.height;
+			float waterY0 = waterY + 0.5f;
+			bool addWater =  y1 <= waterY && this.data.waterHeight != -1;
+			bool isTopOfwater = y0 >= waterY0;
+
+			Color? color = tileType switch {
+				0 => Themes.RoomAir,
+				2 => Themes.RoomShortcutEntrance,
+				8 => Themes.RoomLayer2Solid,
+				_ => null
+			};
+			if(color != null) { // if air, background or shortcutentrance, draw quad in the right color
+				this.roomMesh.AddQuad(
+					new Vertex(x0, y0, color.Value),
+					new Vertex(x1, y0, color.Value),
+					new Vertex(x1, y1, color.Value),
+					new Vertex(x0, y1, color.Value)
+				);
+				if (addWater) {
+					if (isTopOfwater)
+						this.waterMesh.AddQuad(
+							new Vertex(x0, waterY0, Themes.RoomWater),
+							new Vertex(x1, waterY0, Themes.RoomWater),
+							new Vertex(x1, y1, Themes.RoomWater),
+							new Vertex(x0, y1, Themes.RoomWater)
+						);
+					else
+						this.waterMesh.AddQuad(
+							new Vertex(x0, y0, Themes.RoomWater),
+							new Vertex(x1, y0, Themes.RoomWater),
+							new Vertex(x1, y1, Themes.RoomWater),
+							new Vertex(x0, y1, Themes.RoomWater)
+						);
 				}
-
-				if ((tile & FLAG_HORIZONTAL_POLE) > 0) {
-					this.roomMesh.AddQuad(x2, y2, new Vector2(1f, 0.25f), Themes.RoomPole);
+			}
+			else { // otherwise, it's a slope
+				float x2 = x + 0.5f;
+				float y2 = -y - 0.5f;
+				color = (tileType & 8) > 0 ? Themes.RoomLayer2Solid : Themes.RoomAir;
+				switch (tileType & 3) {
+					case 0:
+						this.roomMesh.AddTriangle(
+							new Vertex(x1, y1, color.Value),
+							new Vertex(x0, y1, color.Value),
+							new Vertex(x1, y0, color.Value)
+						);
+						if (addWater) {
+							if (isTopOfwater)
+								this.waterMesh.AddQuad(
+									new Vertex(x1, y1, Themes.RoomWater),
+									new Vertex(x0, y1, Themes.RoomWater),
+									new Vertex(x2, y2, Themes.RoomWater),
+									new Vertex(x1, y2, Themes.RoomWater)
+								);
+							else 
+								this.waterMesh.AddTriangle(
+									new Vertex(x1, y1, Themes.RoomWater),
+									new Vertex(x0, y1, Themes.RoomWater),
+									new Vertex(x1, y0, Themes.RoomWater)
+								);
+						}
+					break;
+					case 1:
+						this.roomMesh.AddTriangle(
+							new Vertex(x1, y0, color.Value),
+							new Vertex(x0, y0, color.Value),
+							new Vertex(x1, y1, color.Value)
+						);
+						if(addWater) {
+							if (isTopOfwater)
+								this.waterMesh.AddTriangle(
+									new Vertex(x1, y2, Themes.RoomWater),
+									new Vertex(x2, y2, Themes.RoomWater),
+									new Vertex(x1, y1, Themes.RoomWater)
+								);
+							else
+								this.waterMesh.AddTriangle(
+									new Vertex(x1, y0, Themes.RoomWater),
+									new Vertex(x0, y0, Themes.RoomWater),
+									new Vertex(x1, y1, Themes.RoomWater)
+								);
+						}
+					break;
+					case 2:
+						this.roomMesh.AddTriangle(
+							new Vertex(x0, y1, color.Value),
+							new Vertex(x1, y1, color.Value),
+							new Vertex(x0, y0, color.Value)
+						);
+						if(addWater) {
+							if (isTopOfwater)
+								this.waterMesh.AddQuad(
+									new Vertex(x0, y1, Themes.RoomWater),
+									new Vertex(x1, y1, Themes.RoomWater),
+									new Vertex(x2, y2, Themes.RoomWater),
+									new Vertex(x0, y2, Themes.RoomWater)
+								);
+							else
+								this.waterMesh.AddTriangle(
+									new Vertex(x0, y1, Themes.RoomWater),
+									new Vertex(x1, y1, Themes.RoomWater),
+									new Vertex(x0, y0, Themes.RoomWater)
+								);
+						}
+					break;
+					case 3:
+						this.roomMesh.AddTriangle(
+							new Vertex(x0, y0, color.Value),
+							new Vertex(x1, y0, color.Value),
+							new Vertex(x0, y1, color.Value)
+						);
+						if(addWater) {
+							if (isTopOfwater)
+								this.waterMesh.AddTriangle(
+									new Vertex(x0, y2, Themes.RoomWater),
+									new Vertex(x2, y2, Themes.RoomWater),
+									new Vertex(x0, y1, Themes.RoomWater)
+								);
+							else
+								this.waterMesh.AddTriangle(
+									new Vertex(x0, y0, Themes.RoomWater),
+									new Vertex(x1, y0, Themes.RoomWater),
+									new Vertex(x0, y1, Themes.RoomWater)
+								);
+						}
+					break;
 				}
+			}
+		}
+		for (int x = 0; x < this.width; x++) {
+			for (int y = 0; y < this.height; y++) {
+				int idx = x * this.height + y;
+				if(idx >= overlappingTiles.Count) break;
+				if(overlappingTiles[idx] != 0) {
+					byte type = overlappingTiles[idx];
 
-				if ((tile & FLAG_SHORTCUT) > 0 && tile != 4) {
-					// NOTE - Might add outlining RoomSolid if it looks weird
-					this.roomMesh.AddQuad(x2, y2, 0.1875f, Themes.RoomShortcutDot);
+					float x0 = x;
+					float y0 = -y;
+					float x1 = x + 1;
+					float y1 = -y - 1;
+					float x2 = (x0 + x1) * 0.5f;
+					float y2 = (y0 + y1) * 0.5f;
+
+					if ((type & 1) > 0) {
+						this.roomMesh.AddQuad(x2, y2, 0.1875f, Themes.RoomShortcutDot);
+					}
+					if ((type & 2) > 0) {
+						this.roomMesh.AddQuad(x2, y2, new Vector2(1f, 0.25f), Themes.RoomPole);
+					}
+					if ((type & 4) > 0) {
+						this.roomMesh.AddQuad(x2, y2, new Vector2(0.25f, 1f), Themes.RoomPole);
+					}
+					if ((type & 8) > 0) {
+						this.roomMesh.AddQuad(
+							new Vertex(x0, y0, Themes.RoomPlatform),
+							new Vertex(x1, y0, Themes.RoomPlatform),
+							new Vertex(x1, y2, Themes.RoomPlatform),
+							new Vertex(x0, y2, Themes.RoomPlatform)
+						);
+					}
 				}
 			}
 		}
@@ -1246,43 +1549,15 @@ public class Room {
 			}
 		}
 
-		if (this._vao == 0) {
-			this._vao = Program.gl.GenVertexArray();
-			this._vbo = Program.gl.GenBuffer();
-			this._ebo = Program.gl.GenBuffer();
-		}
+		this.roomRenderable = new(this.roomMesh, Preload.RoomShader, [
+				new (0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
+				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2))
+			], [ "projection", "model", "tintColor", "tintStrength" ]);
 
-		Span<Vertex> vertices = CollectionsMarshal.AsSpan(this.roomMesh.vertices);
-		Span<uint> indices = CollectionsMarshal.AsSpan(this.roomMesh.indices);
-
-		Program.gl.BindVertexArray(this._vao);
-
-		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, this._vbo);
-		fixed (Vertex* ptr = vertices) {
-			Program.gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint) (vertices.Length * sizeof(Vertex)), ptr, BufferUsageARB.StaticDraw);
-		}
-
-		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, this._ebo);
-		fixed (uint* ptr = indices) {
-			Program.gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint) (indices.Length * sizeof(uint)), ptr, BufferUsageARB.StaticDraw);
-		}
-
-		Program.gl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0);
-		Program.gl.EnableVertexAttribArray(0);
-
-		Program.gl.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2));
-		Program.gl.EnableVertexAttribArray(1);
-
-		Program.gl.UseProgram(Preload.RoomShader);
-		this._projLoc = Program.gl.GetUniformLocation(Preload.RoomShader, "projection");
-		this._modelLoc = Program.gl.GetUniformLocation(Preload.RoomShader, "model");
-		this._tintLoc = Program.gl.GetUniformLocation(Preload.RoomShader, "tintColor");
-		this._tintStrengthLoc = Program.gl.GetUniformLocation(Preload.RoomShader, "tintStrength");
-		Program.gl.UseProgram(0);
-
-		Program.gl.BindVertexArray(0);
-		Program.gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
-		Program.gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+		this.waterRenderable = new(this.waterMesh, Preload.RoomShader, [
+				new (0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
+				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2))
+			], [ "projection", "model", "tintColor", "tintStrength" ]);
 	}
 
 	public virtual void DrawBlack(WorldWindow.RoomPosition positionType) {
@@ -1310,7 +1585,7 @@ public class Room {
 		Program.gl.Disable(EnableCap.Blend);
 	}
 
-	public unsafe virtual void Draw(WorldWindow.RoomPosition positionType) {
+	public virtual void Draw(WorldWindow.RoomPosition positionType) {
 		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
 		}
@@ -1331,38 +1606,40 @@ public class Room {
 		}
 
 		Program.gl.Enable(EnableCap.Blend);
-		if (this.data.waterHeight != -1 && !this.data.waterInFront) {
-			this.DrawWater(position);
-		}
-
 		Color tint = this.GetTintColor();
 		if (WorldWindow.highlightRoom != null && WorldWindow.highlightRoom != this) {
 			tint *= 0.25f;
 		}
-
-		Program.gl.BindVertexArray(this._vao);
-		Program.gl.UseProgram(Preload.RoomShader);
-
-		Vector2 matrixPos = WorldWindow.cameraOffset;
-		Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
-		Program.gl.UniformMatrix4(this._projLoc, false, [.. Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
-		Program.gl.UniformMatrix4(this._modelLoc, false, [.. Matrix4X4.CreateTranslation(position.x, position.y, 0f)]);
 
 		float alpha = this.data.hidden ? 0.5f : tint.a;
 		if (positionType != WorldWindow.PositionType) {
 			alpha *= 0.5f;
 		}
 
-		Program.gl.Uniform4(this._tintLoc, tint.r, tint.g, tint.b, alpha);
-		Program.gl.Uniform1(this._tintStrengthLoc, Settings.RoomTintStrength);
+		Vector2 matrixPos = WorldWindow.cameraOffset;
+		Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
 
-		Program.gl.DrawElements(PrimitiveType.Triangles, (uint) this.roomMesh.indices.Count, DrawElementsType.UnsignedInt, (void*) 0);
+		if (this.roomRenderable != null){
+			this.roomRenderable.PreDraw();
+			this.roomRenderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
+			this.roomRenderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(position.x, position.y, 0f)]);
+			this.roomRenderable.Uniform4("tintColor", tint.r, tint.g, tint.b, alpha);
+			this.roomRenderable.Uniform1("tintStrength", Settings.RoomTintStrength);
+			this.roomRenderable.DoDraw();
+		}
 
-		Program.gl.BindVertexArray(0);
-		Program.gl.UseProgram(0);
-
-		if (this.data.waterHeight != -1 && this.data.waterInFront) {
-			this.DrawWater(position);
+		if (this.data.waterHeight != -1) {
+			if (!this.data.waterInFront && this.waterRenderable != null) {
+				Color color = Themes.RoomWater;
+				this.waterRenderable.PreDraw();
+				this.waterRenderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
+				this.waterRenderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(position.x, position.y, 0f)]);
+				this.waterRenderable.Uniform4("tintColor", color.r, color.g, color.b, color.a);
+				this.waterRenderable.Uniform1("tintStrength", 0f);
+				this.waterRenderable.DoDraw();
+			}
+			else
+				this.DrawWater(position);
 		}
 		if (WorldWindow.VisibleDevItems && this.visuals.hasTerrain && this.visuals.terrain.Count >= 2) {
 			Immediate.Color(0f, 1f, 0f);
@@ -1480,7 +1757,7 @@ public class Room {
 
 			if (WorldWindow.VisibleCreatures) {
 				for (int i = 0; i < this.denShortcutEntrances.Count; i++) {
-					this.DrawDen(this.dens[i], position.x + this.denShortcutEntrances[i].x, position.y - this.denShortcutEntrances[i].y, i == this.hoveredDen, WorldWindow.HoveringRoom == this);
+					this.DrawDen(this.dens[i], position.x + this.denShortcutEntrances[i].x, position.y - this.denShortcutEntrances[i].y, i == this.hoveredDen, WorldWindow.HoveringDraggable == this);
 				}
 			}
 		}
