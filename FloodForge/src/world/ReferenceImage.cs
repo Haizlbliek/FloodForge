@@ -16,6 +16,10 @@ public class ReferenceImage : WorldDraggable {
             this.UpdateBounds();
         }
     }
+    public bool lockImage = false;
+	public override bool IsDraggable() {
+		return this.Visible &! this.lockImage;
+	}
     public Vector2 TopLeft;
     public Vector2 BottomRight;
 

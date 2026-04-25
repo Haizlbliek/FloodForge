@@ -5,6 +5,11 @@ public class WorldDraggable {
     public virtual bool IsVisible() {
         return true;
     }
+    public bool Draggable => this.IsDraggable();
+    public virtual bool IsDraggable() { 
+        return this.Visible;
+    }
+        
     protected Vector2 position;
     public Vector2 Position {
         get {

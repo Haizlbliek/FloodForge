@@ -325,7 +325,7 @@ public static class WorldWindow {
 				if (selectingState == SelectingState.None) { // if we weren't selecting anything before
 					WorldDraggable? draggable = HoveringDraggable; // get hovering room -> WorldDraggable
 
-					if (draggable != null && draggable.Visible) { // if there's a hovering room (WorldDraggable)
+					if (draggable != null && draggable.Draggable) { // if there's a hovering room (WorldDraggable)
 						holdingDraggable = draggable; // start holding said room (WorldDraggable)
 						holdingStart = worldMouse; // set the hold's start point
 						draggablePossibleSelect = draggable; // we might end up wanting to select this room (WorldDraggable)
@@ -378,11 +378,11 @@ public static class WorldWindow {
 
 			if (selectingState == SelectingState.Selecting) { // if we were creating a selectionbox and just released
 				foreach (Room room in region.rooms) { // check what rooms are in the box and add them to the selectedrooms
-					if (room.Intersects(selectionStart, selectionEnd) && room.Visible)
+					if (room.Intersects(selectionStart, selectionEnd) && room.Draggable)
 						selectedDraggables.Add(room);
 				}
 				foreach (ReferenceImage image in referenceImages) {
-					if (image.Intersects(selectionStart, selectionEnd) && image.Visible)
+					if (image.Intersects(selectionStart, selectionEnd) && image.Draggable)
 						selectedDraggables.Add(image);
 				}
 			}
@@ -522,8 +522,14 @@ public static class WorldWindow {
 			if(HoveringDraggable is ReferenceImage image) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.FloatSettingContainer("Scale", image.Scale, 0.001f, 5f, (scale) => {
-					image.Scale = scale;
-				})
+						image.Scale = scale;
+					}),
+					new SettingsPopup.BoolSettingContainer("Locked", image.lockImage, (locked) => {
+						image.lockImage = locked;
+						if (image.lockImage) {
+							selectedDraggables.Remove(image);
+						}
+					})
 				]));
 			}
 		}
