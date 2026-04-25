@@ -4,15 +4,16 @@ namespace FloodForge;
 
 public abstract class MenuItems {
 	protected Button[] buttons = [];
+	public Rect menuBarRect;
 
 	public void Draw() {
-		Rect rect = new Rect(-Main.screenBounds.x, Main.screenBounds.y, Main.screenBounds.x, Main.screenBounds.y - 0.06f);
+		this.menuBarRect = new Rect(-Main.screenBounds.x, Main.screenBounds.y, Main.screenBounds.x, Main.screenBounds.y - 0.06f);
 
 		Immediate.Color(Themes.Popup);
-		UI.FillRect(rect);
+		UI.FillRect(this.menuBarRect);
 
 		Immediate.Color(Themes.Border);
-		UI.Line(rect.x0, rect.y0, rect.x1, rect.y0);
+		UI.Line(this.menuBarRect.x0, this.menuBarRect.y0, this.menuBarRect.x1, this.menuBarRect.y0);
 
 		float leftX = -Main.screenBounds.x + 0.01f;
 		float rightX = Main.screenBounds.x - 0.01f;
@@ -23,7 +24,8 @@ public abstract class MenuItems {
 			}
 			if (button.buttonEnabled || Settings.DisabledButtonsMode.value != Settings.STDisabledButtonsMode.Hide ) {
 				bool onRight = (button is AlignedButton alignedButton) && alignedButton.alignment;
-				float width = UI.font.Measure(button.text, 0.03f).x + 0.02f;
+				Font.ParseSeverity(button.text, out string trimmedLine);
+				float width = UI.font.Measure(trimmedLine, 0.03f).x + 0.02f;
 				UI.TextButtonMods mods = new UI.TextButtonMods();
 				if (button.Dark || (!button.buttonEnabled && Settings.DisabledButtonsMode.value == Settings.STDisabledButtonsMode.Grey)) {
 					mods.textColor = Themes.TextDisabled;

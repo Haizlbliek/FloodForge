@@ -184,7 +184,7 @@ public class FilesystemPopup : Popup {
 
 
 
-	public override void Accept() {
+	public override void Accept() { // REVIEW - check if floodforge even has permission to enter a folder
 		previousDirectories[this.directoryIndex] = this.currentPath;
 
 		if (this.newDirectory != null) {

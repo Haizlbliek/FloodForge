@@ -27,7 +27,7 @@ R - Open room in Droplet
 F - Search for room
 Alt+T - Open Tutorial
 Alt+S - Open Splash
-Right-click - Reset popup size
+Right click - Open reference image settings; Reset popup size
 
 
 ### 
@@ -91,6 +91,17 @@ or by pressing `...` in a den lineage, the conditionals popup opens
 `EXCLUSIVE` -> This room is  *exclusive*  to selected slugcats
 `HIDE` -> *Hide*  this room on selected slugcats
 
+**World View**
+- Pressing the `Timeline` button in the top bar shows a similar menu.
+This decides what conditionals are shown.
+`ALL` -> Shows *all* conditionals
+`ONLY` -> Shows *only* the conditionals visible to the selected slugcats.
+`EXCEPT` -> Shows all conditionals *except* those
+limited to `ONLY` the selected slugcats.
+> **More clarification:**
+> `ALL` will never hide any rooms.
+> `ONLY` will *hide all rooms* if no slugcat is selected.
+> `EXCEPT` will only hide conditionals set to `ONLY`.
 
 ### 
 ### Creating a room
@@ -126,6 +137,33 @@ Rooms are positioned according to the selected mode.
 Hold ALT to display the room's other position, shown at half transparency.
 Moving a room affects only the active mode.
 In order to move both positions, hold ALT while dragging.
+
+### 
+## Default vs Path connections
+Floodforge can visualise connections in two ways: *Default* and *Path.*
+- **Default**: Same as the in-game map. Connections go from the
+entrance of one shortcut to the entrance of the other.
+- **Path**: Connections start at the end of a shortcut's path, 
+usually a little distance from the shortcut's entrance.
+In a way this better visualises the 'actual' geometry of a connection.
+
+- This does not affect the in-game map.
+It only serves to reduce visual clutter while in Floodforge.
+
+###
+## Adding Reference images
+When making a region, you may have made a rough (or very polished) plan.
+FloodForge allows you to use such an image as reference.
+To add a new reference image:
+
+1. `Add Reference`
+2. Navigate to the relevant image
+3. `Open`
+
+The reference image will behave similarly to rooms, but is *not* exported
+and is *not* preserved when loading another region or closing Floodforge.
+To resize the image, right click it and drag the `Scale` slider.
+To delete the image, similarly to a room, select or hover over it and press `X`.
 
 ### 
 ## Adding custom creatures
