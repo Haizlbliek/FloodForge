@@ -883,10 +883,13 @@ public static class WorldWindow {
 
 		if (placingRoom) {
 			Immediate.Color(1f, 1f, 1f, 0.5f);
-			UI.FillRect(new Rect(
+			Rect roomRect = new Rect(
 				placingRoomPos.x - placingRoomSize.x * 0.5f, placingRoomPos.y - placingRoomSize.y * 0.5f,
 				placingRoomPos.x + placingRoomSize.x * 0.5f, placingRoomPos.y + placingRoomSize.y * 0.5f
-			));
+			);
+			UI.FillRect(roomRect);
+			Immediate.Color(Themes.Background);
+			UI.StrokeRect(roomRect);
 		}
 		Program.gl.Disable(EnableCap.Blend);
 
