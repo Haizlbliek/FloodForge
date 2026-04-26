@@ -32,14 +32,45 @@ public static class PersistentData {
             if (isRegion) {
                 string[] splitLine = line.Split("</a>");
                 if(splitLine[0] == "REFIMAGE") {
-                    string[] properties = splitLine[1].Split("</b>");
-                    string[] position = properties[1].Split(';');
-					ReferenceImage newImage = new ReferenceImage(properties[0]) {
-						Position = new Vector2(float.Parse(position[0]), float.Parse(position[1])),
-						Scale = float.Parse(properties[2]),
-						lockImage = properties[3] == "1"
-					};
-                    WorldWindow.referenceImages.Add(newImage);
+                    string path = "";
+                    Vector2 pos = Vector2.Zero;
+                    float scale = 1f;
+                    float brightness = 1f;
+                    bool lockImage = false;
+                    bool drawUnderGrid = true;
+                    foreach (string property in splitLine[1].Split("</b>")) {
+                        string[] splitProperty = property.Split("</c>");
+                        switch (splitProperty[0]) {
+                            case "path":
+                                path = splitProperty[1];
+                            break;
+                            case "pos":
+                                string[] vector = splitProperty[1].Split(';');
+                                pos = new Vector2(float.Parse(vector[0]), float.Parse(vector[1]));
+                            break;
+                            case "scale":
+                                scale = float.Parse(splitProperty[1]);
+                            break;
+                            case "brightness":
+                                brightness = float.Parse(splitProperty[1]);
+                            break;
+                            case "lock":
+                                lockImage = splitProperty[1] == "1";
+                            break;
+                            case "under":
+                                drawUnderGrid = splitProperty[1] == "1";
+                            break;
+                        }
+                    }
+                    if (!path.IsNullOrEmpty()) {
+                        WorldWindow.referenceImages.Add(new (path) {
+                            Position = pos,
+                            Scale = scale,
+                            brightness = brightness,
+                            lockImage = lockImage,
+                            drawUnderGrid = drawUnderGrid
+                        });
+                    }
 				}
             }
         }
@@ -64,11 +95,13 @@ public static class PersistentData {
         if(WorldWindow.referenceImages.Count != 0) {
             newFile.Add($"REGION</a>{acronym}");
             foreach (ReferenceImage image in WorldWindow.referenceImages) {
-                string imagePath = image.imagePath;
-                Vector2 imagePosition = image.Position;
-                float imageScale = image.Scale;
-                bool lockImage = image.lockImage;
-                newFile.Add($"REFIMAGE</a>{imagePath}</b>{imagePosition.x};{imagePosition.y}</b>{imageScale}</b>{(lockImage?"1":"0")}");
+                newFile.Add($"REFIMAGE</a>"
+                + $"path</c>{image.imagePath}</b>"
+                + $"pos</c>{image.Position.x};{image.Position.y}</b>"
+                + $"scale</c>{image.Scale}</b>"
+                + $"lock</c>{(image.lockImage?"1":"0")}</b>"
+                + $"under</c>{(image.drawUnderGrid?"1":"0")}</b>"
+                + $"brightness</c>{image.brightness}");
             }
             newFile.Add($"ENDREGION");
         }
