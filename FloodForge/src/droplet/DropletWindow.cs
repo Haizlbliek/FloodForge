@@ -1155,18 +1155,24 @@ public static class DropletWindow {
 		Backup();
 		Room.visuals.terrainNeedsRefresh = true;
 		Room.visuals.waterNeedsRefresh = true;
-		if (Settings.DropletKeepRelativePosition) {
-			cameraOffset = targetCameraPan = WorldWindow.cameraOffset - room.Position;
-			targetCameraScale = cameraScale = WorldWindow.cameraScale;
-		}
-		else {
-			cameraOffset = targetCameraPan = new Vector2(Room.width * 0.5f, -Room.height * 0.5f);
-			targetCameraScale = cameraScale = 40f;
+		if (Main.mode == Mode.Droplet) {
+			if (Settings.DropletKeepRelativePosition) {
+				cameraOffset = targetCameraPan = WorldWindow.cameraOffset - room.Position;
+				targetCameraScale = cameraScale = WorldWindow.cameraScale;
+			}
+			else {
+				cameraOffset = targetCameraPan = new Vector2(Room.width * 0.5f, -Room.height * 0.5f);
+				targetCameraScale = cameraScale = 40f;
+			}
 		}
 	}
 
 	private static void ExportGeometry() {
 		string geoPath = PathUtil.FindFile(WorldWindow.region.roomsPath, Room.name + ".txt")!;
+		if (geoPath.IsNullOrEmpty() || Room.name.StartsWith("GATE")) {
+			Logger.Info($"{(geoPath.IsNullOrEmpty() ? "geoPath null; " : "")}{(Room.name.StartsWith("GATE") ? "gate; " : "")}Trying to use path: {Room.path.Split("Rain World")[^1]}");
+			geoPath = Room.path;
+		}
 		FloodForge.Backup.File(geoPath);
 
 		StringBuilder geo = new StringBuilder();
@@ -1545,9 +1551,16 @@ public static class DropletWindow {
 	}
 
 	public static bool Render(out string errorMessage, out (string, string, byte[])[] images) {
-		ExportGeometry();
 		bool success = true;
 		errorMessage = "";
+		try {
+			ExportGeometry();
+		}
+		catch (Exception e) {
+			Logger.Error(e);
+			errorMessage += e.Message + "\n";
+			success = false;
+		}
 		string updateBaseText = "";
 		if (WorldWindow.renderStatusPopup != null) {
 			updateBaseText = WorldWindow.renderStatusPopup.GetText();
@@ -1729,30 +1742,44 @@ public static class DropletWindow {
 		public DropletMenuItems() {
 			this.buttons = [
 				new Button("Export Geometry", b => {
-					ExportGeometry();
-					PopupManager.Add(new InfoPopup("Exported successfully"));
+					try {
+						ExportGeometry();
+						PopupManager.Add(new InfoPopup("Exported successfully"));
+					}
+					catch (Exception e){
+						Logger.Error(e);
+						PopupManager.Add(new InfoPopup($"Error:\n{e.Message}"));
+					}
 				}),
 				new Button("Render", b => {
 					bool success = true;
-					if (Render(out string message, out (string name, string outputPath, byte[] image)[] images)){
-						for(int i = 0; i < images.Length; i++){
-							FloodForge.Backup.File(images[i].outputPath);
+					string message = "";
+					try {
+						if (Render(out message, out (string name, string outputPath, byte[] image)[] images)){
+							for(int i = 0; i < images.Length; i++){
+								FloodForge.Backup.File(images[i].outputPath);
 
-							try {
-								using Stream stream = File.OpenWrite(images[i].outputPath);
-								ImageWriter writer = new ImageWriter();
-								writer.WritePng(images[i].image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
-								Logger.Info("Screen exported");
-								success = true;
-							}
-							catch (Exception ex) {
-								Logger.Error("Exporting screen failed: " + ex.Message);
-								message = ex.Message;
-								success = false;
+								try {
+									using Stream stream = File.OpenWrite(images[i].outputPath);
+									ImageWriter writer = new ImageWriter();
+									writer.WritePng(images[i].image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
+									Logger.Info("Screen exported");
+									success = true;
+								}
+								catch (Exception ex) {
+									Logger.Error("Exporting screen failed: " + ex.Message);
+									message = ex.Message;
+									success = false;
+								}
 							}
 						}
+						else{
+							success = false;
+						}
 					}
-					else{
+					catch (Exception e) {
+						message += e.Message + "\n";
+						Logger.Error(e);
 						success = false;
 					}
 					if (success){
