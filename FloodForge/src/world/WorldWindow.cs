@@ -63,7 +63,6 @@ public static class WorldWindow {
 	public static Vector2 selectionStart;
 	public static Vector2 selectionEnd;
 
-	public static bool keepReferenceImages = false;
 	public static List<ReferenceImage> referenceImages = [];
 
 	private static bool roomSnap;
@@ -127,12 +126,11 @@ public static class WorldWindow {
 		CreatureTextures.Initialize();
 		ConditionalTimelineTextures.Initialize();
 		RecentFiles.Initialize();
+		PersistentData.Initialize();
 	}
 
 	public static void Reset() {
-		if (!keepReferenceImages)
-			referenceImages.Clear();
-		keepReferenceImages = false;
+		referenceImages.Clear();
 		selectedDraggables.Clear();
 		draggablePossibleSelect = null;
 		selectingState = SelectingState.None;
@@ -1584,6 +1582,8 @@ public static class WorldWindow {
 			WorldExporter.ExportImageFile(image);
 
 			WorldExporter.ExportPropertiesFile(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "properties.txt"));
+
+			PersistentData.StorePersistentData();
 			PopupManager.Add(new InfoPopup("Exported successfully!"));
 			WorldWindow.ExportFinished = true;
 		}
@@ -1689,7 +1689,6 @@ public static class WorldWindow {
 						PopupManager.Add(new InfoPopup("Could not find world_xx.txt file!"));
 						return;
 					}
-					keepReferenceImages = true;
 					WorldParser.ImportWorldFile(path);
 				}, button => { return WorldWindow.ValidRegionLoaded; },
 				"You must create or import a region\nbefore refreshing."),
