@@ -1094,8 +1094,19 @@ public static class WorldWindow {
 			}
 		}
 
+		float maxWidth = 0f;
+		debugText.ForEach(val => {
+			maxWidth = Math.Max(UI.font.Measure(val, 0.03f).x, maxWidth);
+		});
+		Program.gl.Enable(EnableCap.Blend);
+		Immediate.Color(Themes.Background);
+		Immediate.Alpha(0.25f);
+		UI.FillRect(-Main.screenBounds.x, -Main.screenBounds.y + debugText.Count * 0.04f + 0.01f, -Main.screenBounds.x + maxWidth + 0.01f, -Main.screenBounds.y);
+		Immediate.Alpha(1f);
+		Program.gl.Disable(EnableCap.Blend);
+
 		int i = 1;
-		Immediate.Color(0f, 0f, 0f);
+		Immediate.Color(0f, 0f, 0f, 1f);
 		foreach (string line in debugText.AsEnumerable().Reverse()) {
 			float yPos = -Main.screenBounds.y + (i * 0.04f);
 			UI.font.Write(line, -Main.screenBounds.x + 0f, yPos - 0.003f, 0.03f);
