@@ -31,7 +31,7 @@ public class CreateRoomPopup : Popup {
 	}
 
 	public CreateRoomPopup() {
-		WorldWindow.placingRoomSize = new Vector2i(48, 35);
+		WorldWindow.roomPlacementVisualiser.size = new Vector2i(48, 35);
 	}
 
 	public override void Draw() {
@@ -139,23 +139,23 @@ public class CreateRoomPopup : Popup {
 
 
 		if (widthResponse.submitted) {
-			WorldWindow.placingRoomSize.x = int.Parse(this.Width.value);
-			this.ScreenWidth.value = ((WorldWindow.placingRoomSize.x + 4) / 52.0f).ToString($"F{this.ScreenWidth.floatDecimalCount}");
+			WorldWindow.roomPlacementVisualiser.size.x = int.Parse(this.Width.value);
+			this.ScreenWidth.value = ((WorldWindow.roomPlacementVisualiser.size.x + 4) / 52.0f).ToString($"F{this.ScreenWidth.floatDecimalCount}");
 		}
 
 		if (heightResponse.submitted) {
-			WorldWindow.placingRoomSize.y = int.Parse(this.Height.value);
-			this.ScreenHeight.value = ((WorldWindow.placingRoomSize.y + 5) / 40.0f).ToString($"F{this.ScreenHeight.floatDecimalCount}");
+			WorldWindow.roomPlacementVisualiser.size.y = int.Parse(this.Height.value);
+			this.ScreenHeight.value = ((WorldWindow.roomPlacementVisualiser.size.y + 5) / 40.0f).ToString($"F{this.ScreenHeight.floatDecimalCount}");
 		}
 
 		if (screenWidthResponse.submitted) {
-			WorldWindow.placingRoomSize.x = (int) (float.Parse(this.ScreenWidth.value) * 52f - 4f);
-			this.Width.value = WorldWindow.placingRoomSize.x.ToString();
+			WorldWindow.roomPlacementVisualiser.size.x = (int) (float.Parse(this.ScreenWidth.value) * 52f - 4f);
+			this.Width.value = WorldWindow.roomPlacementVisualiser.size.x.ToString();
 		}
 
 		if (screenHeightResponse.submitted) {
-			WorldWindow.placingRoomSize.y = (int) (float.Parse(this.ScreenHeight.value) * 40f - 5f);
-			this.Height.value = WorldWindow.placingRoomSize.y.ToString();
+			WorldWindow.roomPlacementVisualiser.size.y = (int) (float.Parse(this.ScreenHeight.value) * 40f - 5f);
+			this.Height.value = WorldWindow.roomPlacementVisualiser.size.y.ToString();
 		}
 
 		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.5f, 0.05f, 0.75f, 0.25f))) {
@@ -166,7 +166,7 @@ public class CreateRoomPopup : Popup {
 			this.ScreenHeight.value = "1.000";
 			this.fillLayer1 = true;
 			this.fillLayer2 = true;
-			WorldWindow.placingRoomSize = new Vector2i(48, 35);
+			WorldWindow.roomPlacementVisualiser.size = new Vector2i(48, 35);
 		}
 
 		bool canCreate = true;
@@ -208,8 +208,8 @@ public class CreateRoomPopup : Popup {
 			this.Close();
 
 			Room room = new Room(Path.Join(WorldWindow.region.roomsPath, $"{name}.txt"), name) {
-				CanonPosition = WorldWindow.placingRoomPos - (Vector2) WorldWindow.placingRoomSize * 0.5f * Vector2.NegY,
-				DevPosition = WorldWindow.placingRoomPos - (Vector2) WorldWindow.placingRoomSize * 0.5f * Vector2.NegY
+				CanonPosition = WorldWindow.roomPlacementVisualiser.Position,
+				DevPosition = WorldWindow.roomPlacementVisualiser.Position
 			};
 			WorldWindow.region.rooms.Add(room);
 			Main.mode = Main.Mode.Droplet;
