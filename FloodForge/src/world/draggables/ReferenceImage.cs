@@ -5,6 +5,7 @@ public class ReferenceImage : WorldDraggable {
 	public Texture image;
 	public float Height => this.image.height * this.scale;
 	public float Width => this.image.width * this.scale;
+	public float brightness = 1f;
 	protected float scale;
 	public float Scale {
 		get {
@@ -16,6 +17,7 @@ public class ReferenceImage : WorldDraggable {
 		}
 	}
 	public bool lockImage = false;
+	public bool drawUnderGrid = true;
 	public override bool IsDraggable() {
 		return this.Visible & !this.lockImage;
 	}
@@ -43,6 +45,14 @@ public class ReferenceImage : WorldDraggable {
 			if (WorldWindow.selectedDraggables.Contains(this)) {
 				Immediate.Color(Themes.RoomBorderHighlight);
 				UI.StrokeRect(new Rect(this.Position + this.TopLeft, this.Position + this.BottomRight));
+			}
+			if(this.brightness != 1f) {
+				Program.gl.Enable(EnableCap.Blend);
+				Immediate.Color(Themes.Background);
+				Immediate.Alpha(1f - this.brightness);
+				UI.FillRect(this.Position.x - this.Width, this.Position.y + this.Height, this.position.x + this.Width, this.Position.y - this.Height);
+				Program.gl.Disable(EnableCap.Blend);
+				Immediate.Alpha(1f);
 			}
 		}
 	}
