@@ -23,6 +23,7 @@ public static class Settings {
 	public static Setting<STDisabledButtonsMode> DisabledButtonsMode = Setting.Of("DisabledButtonsMode", STDisabledButtonsMode.Grey);
 	public static Setting<STForceExportCasing> ForceExportCasing = Setting.Of("ForceExportCasing", STForceExportCasing.None);
 	public static Setting<STDropletGridVisibility> DropletGridVisibility = Setting.Of("DropletGridVisibility", STDropletGridVisibility.Air);
+	public static Setting<bool> DropletKeepRelativePosition = Setting.Of("DropletKeepRelativePosition", true);
 	public static Setting<float> ConnectionOpacity = Setting.Of("ConnectionOpacity", 1f);
 	public static SubregionColorsSetting SubregionColors = new SubregionColorsSetting("SubregionColors", [ Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Cyan, Color.Magenta, new Color(1f, 0.5f, 0f), new Color(0.5f, 0.5f, 0.5f), new Color(0.5f, 0f, 1f), new Color(1f, 0.5f, 1f) ]);
 	public static Setting<bool> DisableAprilFoolsUpdates = Setting.Of("DisableAprilFoolsUpdates", false);

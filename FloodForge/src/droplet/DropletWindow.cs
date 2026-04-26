@@ -1155,6 +1155,14 @@ public static class DropletWindow {
 		Backup();
 		Room.visuals.terrainNeedsRefresh = true;
 		Room.visuals.waterNeedsRefresh = true;
+		if (Settings.DropletKeepRelativePosition) {
+			cameraOffset = targetCameraPan = WorldWindow.cameraOffset - room.Position;
+			targetCameraScale = cameraScale = WorldWindow.cameraScale;
+		}
+		else {
+			cameraOffset = new Vector2(Room.width * 0.5f,Room.height * 0.5f);
+			targetCameraScale = 40f;
+		}
 	}
 
 	private static void ExportGeometry() {
@@ -1394,7 +1402,7 @@ public static class DropletWindow {
 						for (int tileX = 0; tileX < 20; tileX++) {
 							int pixelXPos = x * 20 - pixelOffsetX + tileX;
 
-							if(pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
+							if (pixelXPos >= 0 && pixelXPos < CameraTextureWidth && pixelYPos >= 0 && pixelYPos < CameraTextureHeight) {
 								int index = (pixelXPos + pixelYPos * CameraTextureWidth) * 3;
 								if (tileX == 0 || tileY == 0) {
 									SetPixel(image, index, 151, 0, 0);
@@ -1430,7 +1438,7 @@ public static class DropletWindow {
 						}
 					}
 				}
-				else if((tileType & 512) > 0) {
+				else if ((tileType & 512) > 0) {
 					for (int tileY = 0; tileY < 20; tileY++) {
 						int pixelYPos = y * 20 - pixelOffsetY + tileY;
 						for (int tileX = 0; tileX < 20; tileX++) {
@@ -1545,7 +1553,7 @@ public static class DropletWindow {
 			updateBaseText = WorldWindow.renderStatusPopup.GetText();
 		}
 
-		if(Room.data.cameras.Count <= 0) {
+		if (Room.data.cameras.Count <= 0) {
 			errorMessage += "No cameras in room!\n";
 			success = false;
 		}
@@ -1554,7 +1562,7 @@ public static class DropletWindow {
 			string imageName = $"{Room.name}_{i + 1}";
 			string outputPath = Path.Combine(WorldWindow.region.roomsPath, $"{imageName}.png");
 			Logger.Info(outputPath.Split("Rain World")[^1]);
-			if(WorldWindow.renderStatusPopup != null) WorldWindow.renderStatusPopup?.UpdateText(updateBaseText + " " + (i + 1) + "/" + Room.data.cameras.Count);
+			if (WorldWindow.renderStatusPopup != null) WorldWindow.renderStatusPopup?.UpdateText(updateBaseText + " " + (i + 1) + "/" + Room.data.cameras.Count);
 			try {
 				renderedRooms.Add(new (imageName, outputPath, RenderCamera(Room.data.cameras[i])));
 			}
@@ -1654,7 +1662,7 @@ public static class DropletWindow {
 				debug += $"{process.ProcessName} - {process.Id}\n";
 			}
 			Logger.Info("Running Rained-Processes:\n" + debug);
-			if(rainedProcesses.Length == 0) {
+			if (rainedProcesses.Length == 0) {
 			PopupManager.Add(new ConfirmPopup("Open in Rained?").Okay(() => {
 					ProcessStartInfo startInfo = new ProcessStartInfo {
 						FileName = Settings.RainedPath,
@@ -1726,7 +1734,7 @@ public static class DropletWindow {
 				}),
 				new Button("Render", b => {
 					bool success = true;
-					if(Render(out string message, out (string name, string outputPath, byte[] image)[] images)){
+					if (Render(out string message, out (string name, string outputPath, byte[] image)[] images)){
 						for(int i = 0; i < images.Length; i++){
 							FloodForge.Backup.File(images[i].outputPath);
 
@@ -1747,7 +1755,7 @@ public static class DropletWindow {
 					else{
 						success = false;
 					}
-					if(success){
+					if (success){
 						PopupManager.Add(new InfoPopup("Rendered successfully"));
 					}
 					else
@@ -1778,6 +1786,10 @@ public static class DropletWindow {
 				new Button("Exit Droplet", b =>{
 					PopupManager.Add(new ConfirmPopup("Exit Droplet?\nUnsaved changes will be lost").Okay(() => {
 						mode = Mode.World;
+						if (Settings.DropletKeepRelativePosition) {
+							WorldWindow.cameraOffset = Room.Position + cameraOffset;
+							WorldWindow.cameraScale = cameraScale;
+						}
 						DropletWindow.Reset();
 					}));
 				}),
