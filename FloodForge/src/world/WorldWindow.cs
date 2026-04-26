@@ -67,8 +67,7 @@ public static class WorldWindow {
 
 	private static bool roomSnap;
 	public static bool placingRoom = false;
-	public static Vector2 placingRoomPos;
-	public static Vector2i placingRoomSize;
+	public static RoomPlacementVisualiser roomPlacementVisualiser = new();
 
 	public static WorldDraggable? holdingDraggable = null;
 	public static Vector2? holdingStart = null;
@@ -98,9 +97,10 @@ public static class WorldWindow {
 		Panning,
 	}
 
+	// REVIEW - find a way to make this more flexible - a list of all draggables?
 	public static Room? HoveringRoom => region.rooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
 	public static ReferenceImage? HoveringReferenceImage => referenceImages.LastOrDefault(i => i.Visible && i.Inside(worldMouse));
-	public static WorldDraggable? HoveringDraggable => (HoveringRoom != null) ? HoveringRoom : HoveringReferenceImage;
+	public static WorldDraggable? HoveringDraggable => (placingRoom && roomPlacementVisualiser.Inside(worldMouse)) ? roomPlacementVisualiser : (HoveringRoom != null) ? HoveringRoom : HoveringReferenceImage;
 
 	public static Connection? HoveringConnection => region.connections?.LastOrDefault(c => {
 		return c.roomA.Visible && c.roomB.Visible && c.Hovered;
@@ -666,7 +666,7 @@ public static class WorldWindow {
 				if (HoveringDraggable == null || HoveringDraggable is not Room room || HoveringDraggable is OffscreenRoom) {
 					PopupManager.Add(new CreateRoomPopup());
 					placingRoom = true;
-					placingRoomPos = worldMouse;
+					roomPlacementVisualiser.Position = worldMouse - ((Vector2)roomPlacementVisualiser.size * 0.5f * Vector2.NegY);
 				}
 				else {
 					Main.mode = Main.Mode.Droplet;
@@ -881,14 +881,7 @@ public static class WorldWindow {
 		Profiler.MarkPoint("DrawRooms");
 
 		if (placingRoom) {
-			Immediate.Color(1f, 1f, 1f, 0.5f);
-			Rect roomRect = new Rect(
-				placingRoomPos.x - placingRoomSize.x * 0.5f, placingRoomPos.y - placingRoomSize.y * 0.5f,
-				placingRoomPos.x + placingRoomSize.x * 0.5f, placingRoomPos.y + placingRoomSize.y * 0.5f
-			);
-			UI.FillRect(roomRect);
-			Immediate.Color(Themes.Background);
-			UI.StrokeRect(roomRect);
+			roomPlacementVisualiser.Draw();
 		}
 		Program.gl.Disable(EnableCap.Blend);
 
@@ -981,8 +974,8 @@ public static class WorldWindow {
 		}
 
 		if (hoveringDraggable != null) {
-			debugText.Add("");
 			if (hoveringDraggable is Room room) {
+				debugText.Add("");
 				debugText.Add("    Room:");
 				if (!room.valid) {
 					debugText.Add($"INVALID - Check {region.acronym}-rooms");
