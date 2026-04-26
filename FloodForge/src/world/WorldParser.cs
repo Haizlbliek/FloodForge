@@ -879,6 +879,9 @@ public static class WorldParser {
 		Logger.Info("Searching for display name");
 		WorldWindow.region.displayName = GetRegionDisplayname(worldPath);
 
+		Logger.Info("Retrieving persistent data");
+		PersistentData.GetPersistentData(WorldWindow.region.acronym);
+
 		Logger.Info("World file imported");
 
 		return true;

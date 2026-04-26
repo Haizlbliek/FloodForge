@@ -5,7 +5,7 @@ public class ReferenceImage : WorldDraggable {
 	public Texture image;
 	public float Height => this.image.height * this.scale;
 	public float Width => this.image.width * this.scale;
-	public float scale;
+	protected float scale;
 	public float Scale {
 		get {
 			return this.scale;
