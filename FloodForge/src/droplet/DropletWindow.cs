@@ -1160,8 +1160,8 @@ public static class DropletWindow {
 			targetCameraScale = cameraScale = WorldWindow.cameraScale;
 		}
 		else {
-			cameraOffset = new Vector2(Room.width * 0.5f,Room.height * 0.5f);
-			targetCameraScale = 40f;
+			cameraOffset = targetCameraPan = new Vector2(Room.width * 0.5f, -Room.height * 0.5f);
+			targetCameraScale = cameraScale = 40f;
 		}
 	}
 
@@ -1788,7 +1788,7 @@ public static class DropletWindow {
 						mode = Mode.World;
 						if (Settings.DropletKeepRelativePosition) {
 							WorldWindow.cameraOffset = Room.Position + cameraOffset;
-							WorldWindow.cameraScale = cameraScale;
+							WorldWindow.cameraScale = targetCameraScale;
 						}
 						DropletWindow.Reset();
 					}));
