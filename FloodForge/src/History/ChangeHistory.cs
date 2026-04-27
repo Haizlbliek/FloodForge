@@ -5,10 +5,15 @@ public class ChangeHistory {
 	private readonly Stack<Change> redos = [];
 
 	public Change? Last => this.undos.Count == 0 ? null : this.undos.Peek();
+	private readonly bool RedoChangeOnApply = true;
 
 	private bool Collectingchanges = false;
 	private List<Change> collectedChanges = [];
 	private List<Type> typesToCollect = [];
+
+	public ChangeHistory(bool RedoChangeOnApply = true) {
+		this.RedoChangeOnApply = RedoChangeOnApply;
+	}
 	
 	/// <summary>
 	/// Start collecting changes of types <c>collectingTypes</c> instead of applying them directly.
@@ -43,7 +48,7 @@ public class ChangeHistory {
 
 	public void Apply(Change change) {
 		if (!this.Collectingchanges || (this.typesToCollect.Count != 0 && !this.typesToCollect.Contains(change.GetType()))) {
-			change.Redo();
+			if(this.RedoChangeOnApply) change.Redo();
 
 			this.redos.Clear();
 			this.undos.Push(change);
