@@ -46,8 +46,10 @@ public class ChangeHistory {
 		return new MassChange(this.StopCollectingChanges());
 	}
 
-	public void GetAndApplyCollectedMassChange() {
-		this.Apply(this.GetCollectedMassChange());
+	public void GetAndApplyCollectedMassChange(bool dropIfEmpty = false) {
+		MassChange collectedChange = this.GetCollectedMassChange();
+		if(collectedChange.GetCount() > 0 || !dropIfEmpty)
+			this.Apply(collectedChange);
 	}
 
 	public void Apply(Change change) {
