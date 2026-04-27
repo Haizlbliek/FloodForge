@@ -21,8 +21,7 @@ public class ReferenceImage : WorldDraggable {
 	public override bool IsDraggable() {
 		return this.Visible & !this.lockImage;
 	}
-	public Vector2 TopLeft;
-	public Vector2 BottomRight;
+	public Rect imageBounds;
 
 	public ReferenceImage(string path) {
 		if (!Path.Exists(path)) {
@@ -34,8 +33,7 @@ public class ReferenceImage : WorldDraggable {
 	}
 
 	public void UpdateBounds() {
-		this.TopLeft = new Vector2(-this.Width, +this.Height);
-		this.BottomRight = new Vector2(+this.Width, -this.Height);
+		this.imageBounds = new Rect(this.Position.x - this.Width, this.Position.y + this.Height, this.position.x + this.Width, this.Position.y - this.Height);
 	}
 
 	public void Draw() {
@@ -44,13 +42,13 @@ public class ReferenceImage : WorldDraggable {
 
 			if (WorldWindow.selectedDraggables.Contains(this)) {
 				Immediate.Color(Themes.RoomBorderHighlight);
-				UI.StrokeRect(new Rect(this.Position + this.TopLeft, this.Position + this.BottomRight));
+				UI.StrokeRect(this.imageBounds);
 			}
 			if(this.brightness != 1f) {
 				Program.gl.Enable(EnableCap.Blend);
 				Immediate.Color(Themes.Background);
 				Immediate.Alpha(1f - this.brightness);
-				UI.FillRect(this.Position.x - this.Width, this.Position.y + this.Height, this.position.x + this.Width, this.Position.y - this.Height);
+				UI.FillRect(this.imageBounds);
 				Program.gl.Disable(EnableCap.Blend);
 				Immediate.Alpha(1f);
 			}
@@ -58,13 +56,13 @@ public class ReferenceImage : WorldDraggable {
 	}
 
 	public bool Inside(Vector2 pos) {
-		return pos.x >= this.Position.x + this.TopLeft.x && pos.y >= this.Position.y + this.BottomRight.y && pos.x < this.Position.x + this.BottomRight.x && pos.y <= this.Position.y + this.TopLeft.y;
+		return pos.x >= this.imageBounds.x0 && pos.y >= this.imageBounds.y0 && pos.x < this.imageBounds.x1 && pos.y <= this.imageBounds.y1;
 	}
 
 	public bool Intersects(Vector2 from, Vector2 to) {
 		Vector2 cornerMin = Vector2.Min(from, to);
 		Vector2 cornerMax = Vector2.Max(from, to);
 
-		return cornerMax.x >= this.Position.x + this.TopLeft.x && cornerMax.y >= this.Position.y + this.BottomRight.y && cornerMin.x < this.Position.x + this.BottomRight.x && cornerMin.y <= this.Position.y + this.TopLeft.y;
+		return cornerMax.x >=  this.imageBounds.x0 && cornerMax.y >= this.imageBounds.y0 && cornerMin.x < this.imageBounds.x1 && cornerMin.y <= this.imageBounds.y1;
 	}
 }
