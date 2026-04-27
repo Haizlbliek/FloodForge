@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using FloodForge.History;
 using FloodForge.Popups;
 using FloodForge.World;
 using Silk.NET.GLFW;
@@ -12,6 +13,7 @@ namespace FloodForge.Droplet;
 
 public static class DropletWindow {
 	private static readonly DropletMenuItems menuItems = new DropletMenuItems();
+	private static readonly ChangeHistory dropletHistory = new(RedoChangeOnApply: false);
 
 	private static Texture GeometryTexture = null!;
 	private static bool showObjects;
@@ -302,12 +304,14 @@ public static class DropletWindow {
 	private static void ApplyTool(int x, int y, bool right) {
 		if (x < 0 || y < 0 || x >= Room.width || y >= Room.height) return;
 
+		int geometryIndex = x * Room.height + y;
+		uint oldValue = Room.geometry[geometryIndex];
 		if (selectedTool == GeometryTool.Wall) {
-			Room.geometry[x * Room.height + y] = right ? 0u : 1u;
+			Room.geometry[geometryIndex] = right ? 0u : 1u;
 		}
 		else if (selectedTool == GeometryTool.Slope) {
 			if (right) {
-				Room.geometry[x * Room.height + y] = 0u;
+				Room.geometry[geometryIndex] = 0u;
 			}
 			else {
 				int bits = 0;
@@ -328,11 +332,11 @@ public static class DropletWindow {
 				else if (bits == 2 + 8) type = 3;
 
 				if (type != 4) {
-					Room.geometry[x * Room.height + y] = 2 + 1024 * type;
+					Room.geometry[geometryIndex] = 2 + 1024 * type;
 				}
 			}
 		}
-		else if (selectedTool == GeometryTool.Platform) Room.geometry[x * Room.height + y] = right ? 0u : 3u;
+		else if (selectedTool == GeometryTool.Platform) Room.geometry[geometryIndex] = right ? 0u : 3u;
 		else if (selectedTool == GeometryTool.VerticalPole) SetFlag(x, y, 16, right);
 		else if (selectedTool == GeometryTool.HorizontalPole) SetFlag(x, y, 32, right);
 		else if (selectedTool == GeometryTool.BackgroundWall) SetFlag(x, y, 512, right);
@@ -347,17 +351,17 @@ public static class DropletWindow {
 		else if (selectedTool == GeometryTool.Spear) SetFlag(x, y, 524288, right);
 		else if (selectedTool == GeometryTool.Shortcut) {
 			if (!right) {
-				Room.geometry[x * Room.height + y] |= 128;
+				Room.geometry[geometryIndex] |= 128;
 				VerifyShortcut(x, y);
 				VerifyShortcut(x - 1, y);
 				VerifyShortcut(x + 1, y);
 				VerifyShortcut(x, y - 1);
 				VerifyShortcut(x, y + 1);
 			}
-			else if ((Room.geometry[x * Room.height + y] & 128) > 0) {
-				Room.geometry[x * Room.height + y] &= ~(64u | 128u | 256u | 4096u | 8192u);
-				if ((Room.geometry[x * Room.height + y] % 16) == 4) {
-					Room.geometry[x * Room.height + y] = (Room.geometry[x * Room.height + y] & ~15u) | 1;
+			else if ((Room.geometry[geometryIndex] & 128) > 0) {
+				Room.geometry[geometryIndex] &= ~(64u | 128u | 256u | 4096u | 8192u);
+				if ((Room.geometry[geometryIndex] % 16) == 4) {
+					Room.geometry[geometryIndex] = (Room.geometry[geometryIndex] & ~15u) | 1;
 				}
 
 				VerifyShortcut(x - 1, y);
@@ -366,10 +370,16 @@ public static class DropletWindow {
 				VerifyShortcut(x, y + 1);
 			}
 		}
+		uint newValue = Room.geometry[geometryIndex];
+		if (newValue != oldValue) dropletHistory.Apply(new TileChange(new (x, y), oldValue, newValue));
 	}
 
-	private static int rectDrawing = -1;
 	private static Vector2i rectStart;
+	private static int drawingState = -1;
+	// -1 == no drawing
+	// 0 == creating rectangle mouseL
+	// 1 == creating rectangle mouseR
+	// 2 == drawing stroke
 	private static void UpdateGeometryTab() {
 		if (!(Mouse.Left || Mouse.Right)) {
 			int tool = (int)selectedTool;
@@ -399,18 +409,34 @@ public static class DropletWindow {
 		}
 
 		if (!blockMouse) {
-			if (rectDrawing != -1) {
-				if ((rectDrawing == 0 && !Mouse.Left) || (rectDrawing == 1 && !Mouse.Right)) {
+			if (drawingState == 0 || drawingState == 1) { // if we are making a rectangle
+				if ((drawingState == 0 && !Mouse.Left) || (drawingState == 1 && !Mouse.Right)) { // if we are done with dragging the rectangle
+					dropletHistory.StartCollectingChanges([typeof(TileChange)]);
 					for (int x = Math.Min(rectStart.x, mouseTile.x); x <= Math.Max(rectStart.x, mouseTile.x); x++) {
 						for (int y = Math.Min(rectStart.y, mouseTile.y); y <= Math.Max(rectStart.y, mouseTile.y); y++) {
-							ApplyTool(x, y, rectDrawing == 1);
+							ApplyTool(x, y, drawingState == 1);
 						}
 					}
-					rectDrawing = -1;
+					dropletHistory.GetAndApplyCollectedMassChange();
+					drawingState = -1; // then, return to original state
 				}
 			}
-			else if (Keys.Modifier(Keys.Modifiers.Shift) && (Mouse.Left || Mouse.Right)) {
-				rectDrawing = Mouse.Left ? 0 : 1;
+			else if (drawingState == 2) { // if we are drawing a stroke
+				if (!(Mouse.Left || Mouse.Right) || Keys.Modifier(Keys.Modifiers.Shift)) { // and are ending said stroke
+					dropletHistory.GetAndApplyCollectedMassChange();
+					drawingState = -1;
+				}
+				else if ((Mouse.Left || Mouse.Right) && (lastMouseTile != mouseTile)) {
+					List<Vector2i> drawLine = LevelUtils.Line(lastMouseTile.x, lastMouseTile.y, mouseTile.x, mouseTile.y);
+					foreach (Vector2i point in drawLine) {
+						if (Room.Inside(point)) {
+							ApplyTool(point.x, point.y, Mouse.Right);
+						}
+					}
+				}
+			}
+			else if (Keys.Modifier(Keys.Modifiers.Shift) && (Mouse.Left || Mouse.Right)) { // if we aren't already making a rectangle but are holding shift & mouse,
+				drawingState = Mouse.Left ? 0 : 1; // start making a rectangle
 				rectStart = mouseTile;
 			}
 			else if (selectedTool == GeometryTool.Wall && Keys.Pressed(Key.Q) && (Mouse.Left || Mouse.Right) && Room.Inside(mouseTile)) {
@@ -445,22 +471,18 @@ public static class DropletWindow {
 					}
 				}
 			}
-			else if ((Mouse.Left || Mouse.Right) && (lastMouseTile != mouseTile)) {
-				List<Vector2i> drawLine = LevelUtils.Line(lastMouseTile.x, lastMouseTile.y, mouseTile.x, mouseTile.y);
-				foreach (Vector2i point in drawLine) {
-					if (Room.Inside(point)) {
-						ApplyTool(point.x, point.y, Mouse.Right);
-					}
-				}
-			}
 			else if (Mouse.JustLeft || Mouse.JustRight) {
+				if (drawingState == -1) {
+					dropletHistory.StartCollectingChanges([typeof(TileChange)]);
+					drawingState = 2;
+				}
 				if (Room.Inside(mouseTile)) {
 					ApplyTool(mouseTile.x, mouseTile.y, Mouse.Right);
 				}
 			}
 
 			Immediate.Color(Themes.RoomBorderHighlight);
-			if (rectDrawing != -1) {
+			if (drawingState == 0 || drawingState == 1) {
 				int sx = Math.Min(rectStart.x, mouseTile.x);
 				int sy = Math.Min(rectStart.y, mouseTile.y);
 				int ex = Math.Max(rectStart.x, mouseTile.x);
@@ -698,6 +720,17 @@ public static class DropletWindow {
 				PopupManager.Add(new MarkdownPopup("docs/TutorialDroplet.md"));
 				return;
 			}
+		}
+		if (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.Z)) {
+			if (Keys.Modifier(Keys.Modifiers.Shift)) {
+				dropletHistory.Redo();
+			}
+			else {
+				dropletHistory.Undo();
+			}
+		}
+		if (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.Y)) {
+			dropletHistory.Redo();
 		}
 
 		hoverText = "";
@@ -1119,6 +1152,7 @@ public static class DropletWindow {
 	}
 
 	public static void Reset() {
+		dropletHistory.Clear();
 		if (backupGeometry == null) return;
 
 		if (Room.width != backupWidth || Room.height != backupHeight) {
@@ -1145,6 +1179,7 @@ public static class DropletWindow {
 	}
 
 	public static void LoadRoom(Room room) {
+		dropletHistory.Clear();
 		Room = room;
 
 		if (!File.Exists(Room.path)) {
