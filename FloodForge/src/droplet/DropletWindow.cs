@@ -13,7 +13,7 @@ namespace FloodForge.Droplet;
 
 public static class DropletWindow {
 	private static readonly DropletMenuItems menuItems = new DropletMenuItems();
-	private static readonly ChangeHistory dropletHistory = new(RedoChangeOnApply: false);
+	public static readonly ChangeHistory dropletHistory = new(RedoChangeOnApply: false);
 
 	private static Texture GeometryTexture = null!;
 	private static bool showObjects;

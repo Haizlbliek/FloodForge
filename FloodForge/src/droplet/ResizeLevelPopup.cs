@@ -1,3 +1,4 @@
+using FloodForge.History;
 using FloodForge.Popups;
 
 namespace FloodForge.Droplet;
@@ -177,12 +178,17 @@ public class ResizeLevelPopup : Popup {
 
 			UI.ButtonResponse response = UI.TextButton("Resize room", Rect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.41f, 0.3f, 0.05f), new UI.TextButtonMods { disabled = widthResponse.focused || heightResponse.focused || screenWidthResponse.focused || screenHeightResponse.focused });
 			if (response.clicked) {
+				Vector2i oldSize = new (DropletWindow.Room.width, DropletWindow.Room.height);
+				uint[] oldGeo = DropletWindow.Room.geometry;
 				DropletWindow.ResizeRoom(int.Parse(this.Width.value), int.Parse(this.Height.value), this.stretchRoom);
+				Vector2i newSize = new (DropletWindow.Room.width, DropletWindow.Room.height);
+				uint[] newGeo = DropletWindow.Room.geometry;
+				DropletWindow.dropletHistory.Apply(new ResizeChange(oldGeo, newGeo, oldSize, newSize));
 				this.Close();
 			}
 
 			Immediate.Color(Themes.Text);
-			UI.font.Write("(No undo!)", this.bounds.x0 + 0.32f, this.bounds.y1 - 0.41f + 0.05f / 2f, 0.03f, Font.Align.MiddleLeft);
+			UI.font.Write("(No undo after exit!)", this.bounds.x0 + 0.32f, this.bounds.y1 - 0.41f + 0.05f / 2f, 0.03f, Font.Align.MiddleLeft);
 		}
 		catch (Exception) {
 			Immediate.Color(Themes.Popup);
