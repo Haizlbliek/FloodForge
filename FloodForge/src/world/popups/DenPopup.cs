@@ -1,4 +1,5 @@
 using FloodForge.Popups;
+using FloodForge.History;
 using Silk.NET.Input;
 using Stride.Core.Extensions;
 
@@ -119,7 +120,7 @@ public class DenPopup : Popup {
 		}
 
 		CheckTags(newCreature);
-		History.Apply(new CreatureDataChange(creature, newCreature.type, newCreature.count, newCreature.tags));
+		WorldWindow.worldHistory.Apply(new CreatureDataChange(creature, newCreature.type, newCreature.count, newCreature.tags));
 	}
 
 	protected static void ToggleTag(DenCreature creature, CreatureTags.Tag creatureTag) {
@@ -131,7 +132,7 @@ public class DenPopup : Popup {
 			newCreature.tags.Add(DenCreature.CreateFrom(creatureTag));
 		}
 		CheckTags(newCreature);
-		History.Apply(new CreatureDataChange(creature, newCreature.type, newCreature.count, newCreature.tags));
+		WorldWindow.worldHistory.Apply(new CreatureDataChange(creature, newCreature.type, newCreature.count, newCreature.tags));
 	}
 
 	public DenPopup(Den den) {
@@ -141,7 +142,7 @@ public class DenPopup : Popup {
 		Main.KeyPress += this.KeyPress;
 		this.selectedCreature = 0;
 		if (this.den.creatures.Count == 0) {
-			History.Apply(new LineageChange(this.den));
+			WorldWindow.worldHistory.Apply(new LineageChange(this.den));
 		}
 		this.selectedLineage = this.den.creatures[0];
 		this.selectedLineageChance = null;
@@ -318,7 +319,7 @@ public class DenPopup : Popup {
 			UVRect.FromSize(this.bounds.x0 + 0.06f, this.bounds.y1 - 0.19f, 0.04f, 0.04f).UV(0.0f, 0.0f, 0.25f, 0.25f),
 			new UI.TextureButtonMods { disabled = this.den.creatures.Count == 0, textureColor = this.den.creatures.Count == 0 ? Color.Grey : Color.White }
 		)) {
-			History.Apply(new LineageChange(this.den, this.selectedCreature));
+			WorldWindow.worldHistory.Apply(new LineageChange(this.den, this.selectedCreature));
 
 			this.selectedCreature--;
 			if (this.selectedCreature < 0) {
@@ -333,7 +334,7 @@ public class DenPopup : Popup {
 		if (UI.TextureButton(
 			UVRect.FromSize(this.bounds.x0 + 0.11f, this.bounds.y1 - 0.19f, 0.04f, 0.04f).UV(0.25f, 0.5f, 0.5f, 0.75f)
 		)) {
-			History.Apply(new LineageChange(this.den));
+			WorldWindow.worldHistory.Apply(new LineageChange(this.den));
 
 			this.selectedCreature = this.den.creatures.Count - 1;
 			this.selectedLineage = this.den.creatures[this.selectedCreature];
@@ -411,20 +412,20 @@ public class DenPopup : Popup {
 			)) {
 				if (lastCreature == null) {
 					if (creature.lineageTo == null) {
-						History.Apply(new CreatureDataChange(creature, "", 0, []));
+						WorldWindow.worldHistory.Apply(new CreatureDataChange(creature, "", 0, []));
 					}
 					else {
 						if (this.selectedLineage == creature.lineageTo) {
 							this.selectedLineage = creature;
 						}
-						History.Apply(new CreatureDeleteChange(creature, lastCreature));
+						WorldWindow.worldHistory.Apply(new CreatureDeleteChange(creature, lastCreature));
 					}
 				}
 				else {
 					if (this.selectedLineage == creature) {
 						this.selectedLineage = lastCreature;
 					}
-					History.Apply(new CreatureDeleteChange(creature, lastCreature));
+					WorldWindow.worldHistory.Apply(new CreatureDeleteChange(creature, lastCreature));
 				}
 			}
 
@@ -439,7 +440,7 @@ public class DenPopup : Popup {
 		if (UI.TextureButton(
 			UVRect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.19f - this.scrollLineages - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize).UV(0.25f, 0.5f, 0.5f, 0.75f)
 		)) {
-			History.Apply(new CreatureLineageChange(creature));
+			WorldWindow.worldHistory.Apply(new CreatureLineageChange(creature));
 			this.selectedLineage = creature.lineageTo;
 		}
 
@@ -618,7 +619,7 @@ public class DenPopup : Popup {
 	protected void SubmitChance() {
 		if (this.selectedLineageChance == null) return;
 
-		History.Apply(new CreatureLineageChange(this.selectedLineageChance, Mathf.Clamp(this.editingLineageChance, 0f, 1f)));
+		WorldWindow.worldHistory.Apply(new CreatureLineageChange(this.selectedLineageChance, Mathf.Clamp(this.editingLineageChance, 0f, 1f)));
 		this.selectedLineageChance = null;
 	}
 

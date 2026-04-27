@@ -1,4 +1,5 @@
 using FloodForge.Popups;
+using FloodForge.History;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;
@@ -114,7 +115,7 @@ public class RoomAttractivenessPopup : Popup {
 	protected void SetAllTo(RoomAttractiveness attr, string creature) {
 		AttractivenessChange change = new AttractivenessChange(attr, creature);
 		this.rooms.ForEach(change.AddRoom);
-		History.Apply(change);
+		WorldWindow.worldHistory.Apply(change);
 	}
 
 	protected void ClampScroll() {

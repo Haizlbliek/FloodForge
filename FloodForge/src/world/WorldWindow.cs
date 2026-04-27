@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FloodForge.Droplet;
 using FloodForge.Popups;
+using FloodForge.History;
 using Silk.NET.Input;
 using StbImageWriteSharp;
 using Stride.Core;
@@ -82,6 +83,8 @@ public static class WorldWindow {
 	private static ConnectionState connectionState;
 
 	public static bool EnableProfilerScreen = false;
+
+	public static ChangeHistory worldHistory = new ();
 
 	private enum ConnectionState {
 		None,
@@ -301,7 +304,7 @@ public static class WorldWindow {
 				if (CurrentConnectionValid) {
 					RoomAndConnectionChange change = new RoomAndConnectionChange(true);
 					change.AddConnection(CurrentConnection);
-					History.Apply(change);
+					worldHistory.Apply(change);
 				}
 
 				CurrentConnection = null;
@@ -457,12 +460,12 @@ public static class WorldWindow {
 
 		holdingStart += offset;
 		// if we're still dragging and there is a previous moveChange to add to, add the current change to that last change
-		if (continueDrag && History.Last is MoveChange moveChange) {
+		if (continueDrag && worldHistory.Last is MoveChange moveChange) {
 			change.Redo();
 			moveChange.Merge(change);
 		}
 		else { // else, apply the change
-			History.Apply(change);
+			worldHistory.Apply(change);
 			continueDrag = true;
 		}
 	}
@@ -472,7 +475,7 @@ public static class WorldWindow {
 		if (connection != null) {
 			RoomAndConnectionChange change1 = new RoomAndConnectionChange(false);
 			change1.AddConnection(connection);
-			History.Apply(change1);
+			worldHistory.Apply(change1);
 			return;
 		}
 
@@ -501,7 +504,7 @@ public static class WorldWindow {
 						.ForEach(change.AddConnection);
 				}
 
-				History.Apply(change);
+				worldHistory.Apply(change);
 				return;
 			}
 			else if (draggable is ReferenceImage image) {
@@ -545,7 +548,7 @@ public static class WorldWindow {
 
 		if (Keys.JustPressed(Key.I)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
-				History.Apply(new MoveToBackChange(rooms));
+				worldHistory.Apply(new MoveToBackChange(rooms));
 			}
 		}
 
@@ -576,7 +579,7 @@ public static class WorldWindow {
 
 				GeneralRoomChange<int> change = new GeneralRoomChange<int>(r => r.data.layer, (r, i) => r.data.layer = i);
 				rooms.ForEach(r => change.AddRoom(r, minimumLayer));
-				History.Apply(change);
+				worldHistory.Apply(change);
 			}
 		}
 
@@ -586,7 +589,7 @@ public static class WorldWindow {
 
 				GeneralRoomChange<bool> change = new GeneralRoomChange<bool>(r => r.data.merge, (r, i) => r.data.merge = i);
 				rooms.ForEach(r => change.AddRoom(r, setMerge));
-				History.Apply(change);
+				worldHistory.Apply(change);
 			}
 		}
 
@@ -596,7 +599,7 @@ public static class WorldWindow {
 
 				GeneralRoomChange<bool> change = new GeneralRoomChange<bool>(r => r.data.hidden, (r, i) => r.data.hidden = i);
 				rooms.ForEach(r => change.AddRoom(r, setHidden));
-				History.Apply(change);
+				worldHistory.Apply(change);
 			}
 		}
 
@@ -731,14 +734,14 @@ public static class WorldWindow {
 		if (renderRoomsTask == null || renderRoomsTask.IsCompleted) {
 			if (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.Z)) {
 				if (Keys.Modifier(Keys.Modifiers.Shift)) {
-					History.Redo();
+					worldHistory.Redo();
 				}
 				else {
-					History.Undo();
+					worldHistory.Undo();
 				}
 			}
 			if (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.Y)) {
-				History.Redo();
+				worldHistory.Redo();
 			}
 
 			roomSnap = !Keys.Modifier(Keys.Modifiers.Alt);
@@ -1204,7 +1207,7 @@ public static class WorldWindow {
 		if (roomToDelete == null) {
 			RoomAndConnectionChange change = new RoomAndConnectionChange(true);
 			change.AddRoom(room);
-			History.Apply(change);
+			worldHistory.Apply(change);
 
 			for (int i = 0; i < room.data.cameras.Count; i++) {
 				string imageSuffix = $"_{i + 1}.png";
@@ -1222,7 +1225,7 @@ public static class WorldWindow {
 		}
 		else {
 			RoomReplacementChange change = new RoomReplacementChange(room, roomToDelete, toFilePath, fromFilePath, oldFile);
-			History.Apply(change);
+			worldHistory.Apply(change);
 		}
 		return room;
 	}
@@ -1234,7 +1237,7 @@ public static class WorldWindow {
 			room.data.tags = [tag];
 		room.CanonPosition = room.DevPosition = WorldWindow.cameraOffset;
 		change.AddRoom(room);
-		History.Apply(change);
+		worldHistory.Apply(change);
 		return room;
 	}
 
@@ -1287,7 +1290,7 @@ public static class WorldWindow {
 			return;
 
 		if (paths.Length > 1)
-			History.StartCollectingChanges([typeof(RoomAndConnectionChange), typeof(RoomReplacementChange)]);
+			worldHistory.StartCollectingChanges([typeof(RoomAndConnectionChange), typeof(RoomReplacementChange)]);
 		int pathCount = 0;
 		foreach (string path in paths) {
 			if (!path.EndsWith(".txt")) {
@@ -1311,10 +1314,10 @@ public static class WorldWindow {
 			}
 		}
 		if (paths.Length > 1) {
-			Change[] collectedChanges = History.StopCollectingChanges();
+			Change[] collectedChanges = worldHistory.StopCollectingChanges();
 			if (collectedChanges.Length != 0) {
 				MassChange change = new MassChange(collectedChanges);
-				History.Apply(change);
+				worldHistory.Apply(change);
 			}
 		}
 	}

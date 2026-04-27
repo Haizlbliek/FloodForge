@@ -1,4 +1,5 @@
 using FloodForge.Popups;
+using FloodForge.History;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;
@@ -20,7 +21,7 @@ public class ConditionalPopup : TimelinePopup {
 			if (this.lineage != null) change.AddLineage(this.lineage);
 			this.rooms?.ForEach(change.AddRoom);
 
-			History.Apply(change);
+			WorldWindow.worldHistory.Apply(change);
 		}
 	}
 
@@ -33,7 +34,7 @@ public class ConditionalPopup : TimelinePopup {
 		if (this.connection != null) change.AddConnection(this.connection);
 		if (this.lineage != null) change.AddLineage(this.lineage);
 		this.rooms?.ForEach(change.AddRoom);
-		History.Apply(change);
+		WorldWindow.worldHistory.Apply(change);
 	}
 	
 	public void InvokeOnTimelineChange(TimelineType timelineType, HashSet<string> timelines) {

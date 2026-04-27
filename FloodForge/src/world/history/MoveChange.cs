@@ -1,4 +1,6 @@
-namespace FloodForge.World;
+using FloodForge.World;
+
+namespace FloodForge.History;
 
 public class MoveChange : MultipleDraggableChange {
 	protected readonly List<Vector2> devOffsets = [];

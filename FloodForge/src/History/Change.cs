@@ -1,4 +1,4 @@
-namespace FloodForge.World;
+namespace FloodForge.History;
 
 public abstract class Change {
 	public abstract void Undo();

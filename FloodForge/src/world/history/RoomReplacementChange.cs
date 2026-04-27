@@ -1,6 +1,7 @@
 using Stride.Core;
+using FloodForge.World;
 
-namespace FloodForge.World;
+namespace FloodForge.History;
 
 public class RoomReplacementChange : Change {
 	protected readonly RoomAndConnectionChange newRoomCreateChange;

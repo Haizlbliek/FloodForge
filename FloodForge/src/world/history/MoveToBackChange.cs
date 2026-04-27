@@ -1,4 +1,6 @@
-namespace FloodForge.World;
+using FloodForge.World;
+
+namespace FloodForge.History;
 
 public class MoveToBackChange : Change {
 	protected List<(Room room, int index)> originalStates;

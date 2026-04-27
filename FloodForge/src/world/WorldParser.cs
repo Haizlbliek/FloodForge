@@ -792,7 +792,7 @@ public static class WorldParser {
 	}
 
 	public static bool ImportWorldFile(string worldPath) {
-		History.Clear();
+		WorldWindow.worldHistory.Clear();
 		RecentFiles.AddPath(worldPath);
 		roomAttractiveness.Clear();
 		WorldWindow.Reset();

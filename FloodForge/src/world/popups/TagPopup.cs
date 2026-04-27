@@ -1,4 +1,5 @@
 using FloodForge.Popups;
+using FloodForge.History;
 using Silk.NET.GLFW;
 
 // using Silk.NET.SDL;
@@ -46,7 +47,7 @@ public class TagPopup : Popup {
 		TagChange change = new TagChange();
 		HashSet<string> tags = tag.IsNullOrEmpty() ? [] : [ tag ];
 		this.rooms.Where(r => r is not OffscreenRoom).ForEach(r => change.AddRoom(r, tags));
-		History.Apply(change);
+		WorldWindow.worldHistory.Apply(change);
 	}
 
 	protected void ToggleTag(string tag) {
@@ -58,7 +59,7 @@ public class TagPopup : Popup {
 			tags.Toggle(tag);
 			change.AddRoom(room, tags);
 		}
-		History.Apply(change);
+		WorldWindow.worldHistory.Apply(change);
 	}
 
 	protected void DrawTagButton(string tag, string tagId, float y) {

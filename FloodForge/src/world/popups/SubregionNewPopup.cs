@@ -1,3 +1,4 @@
+using FloodForge.History;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;
@@ -28,13 +29,13 @@ public class SubregionNewPopup : AcronymPopup {
 			int subregionIndex = WorldWindow.region.subregions.Count;
 			SubregionChange change = new SubregionChange(subregion);
 			this.rooms.ForEach(r => change.AddRoom(r, subregionIndex));
-			History.Apply(change);
+			WorldWindow.worldHistory.Apply(change);
 		}
 		else {
 			if (WorldWindow.region.subregions.Contains(subregion)) return;
 
 			SubregionChange change = new SubregionChange((int) this.editIndex, subregion);
-			History.Apply(change);
+			WorldWindow.worldHistory.Apply(change);
 		}
 	}
 }

@@ -1,4 +1,6 @@
-namespace FloodForge.World;
+using FloodForge.World;
+
+namespace FloodForge.History;
 
 public abstract class MultipleRoomChange : Change {
 	protected readonly List<Room> rooms = [];
