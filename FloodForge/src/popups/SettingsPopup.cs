@@ -17,6 +17,9 @@ public class SettingsPopup : Popup {
 
 	public override void Draw() {
 		base.Draw();
+
+		if (this.minimized) return;
+
 		this.usableBounds = new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y1 - 0.05f);
 		float yVal = this.usableBounds.y1 - (this.settingSpacing + this.settingHeight) * 0.5f;
 		foreach (SettingContainer container in this.settingContainers) {
