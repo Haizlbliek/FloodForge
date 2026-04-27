@@ -33,9 +33,9 @@ public class RoomAttractivenessPopup : Popup {
 	public override void Draw() {
 		base.Draw();
 
-		if (this.minimized) return;
+		if (this.collapsed) return;
 
-		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
+		Immediate.Color(this.isHovered ? Themes.BorderHighlight : Themes.Border);
 		UI.Line(this.bounds.x0 + 0.6f, this.bounds.y0, this.bounds.x0 + 0.6f, this.bounds.y1);
 
 		this.scroll += (this.targetScroll - this.scroll) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
@@ -100,7 +100,7 @@ public class RoomAttractivenessPopup : Popup {
 			}
 		}
 
-		if (!hover.IsNullOrEmpty() && this.hovered) {
+		if (!hover.IsNullOrEmpty() && this.isHovered) {
 			float width = UI.font.Measure(hover, 0.04f).x + 0.02f;
 			Rect rect = Rect.FromSize(Mouse.X, Mouse.Y, width, 0.06f);
 			Immediate.Color(Themes.Popup);
@@ -138,7 +138,7 @@ public class RoomAttractivenessPopup : Popup {
 	}
 
 	protected void Scroll(float deltaX, float deltaY) {
-		if (!this.hovered || this.minimized) return;
+		if (!this.isHovered || this.collapsed) return;
 
 		this.targetScroll += deltaY * 0.06f;
 		this.ClampScroll();

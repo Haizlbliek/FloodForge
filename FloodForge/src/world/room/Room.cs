@@ -628,7 +628,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			if (this.allRoomExitPoints[i].Item1 == RoomExitType.Room)
 				this.roomExits.Add(this.allRoomExitPoints[i].Item2);
 
-			RoomPath roomExitPath = new(this, this.allRoomExitPoints[i].Item2);
+			RoomPath roomExitPath = new RoomPath(this, this.allRoomExitPoints[i].Item2);
 
 			uint Tile = this.GetTile(roomExitPath.StartPosition);
 
@@ -661,7 +661,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		}
 
 		for (int i = 0; i < this.allShortcutEntrancePoints.Count; i++) {
-			RoomPath shortcutPath = new(this, this.allShortcutEntrancePoints[i]);
+			RoomPath shortcutPath = new RoomPath(this, this.allShortcutEntrancePoints[i]);
 
 			RoomPathEndType startType = RoomPathEndType.shortcutEntrance;
 
@@ -1098,11 +1098,11 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 	}
 
 	// IDEA - add MeshRenderReference object containing setup code for easier modifications
-	protected Mesh waterMesh = new();
+	protected Mesh waterMesh = new Mesh();
 	protected MeshRenderable? waterRenderable;
-	protected Mesh roomMesh = new();
+	protected Mesh roomMesh = new Mesh();
 	protected MeshRenderable? roomRenderable;
-	List<Vector2i> allShortcutEntrances = [];
+	readonly List<Vector2i> allShortcutEntrances = [];
 
 	protected static uint TwelveBitLimit = 4095;
 	protected static uint HeightMask = 65520;
@@ -1185,7 +1185,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		for (int y = 0; y < this.height; y++) {
 			for (int x = 0; x < this.width;) {
 				// first: get tiletype
-				Vector2i key = new (x, y);
+				Vector2i key = new Vector2i(x, y);
 				int indexer = x * this.height + y;
 				byte tileType = roomMeshTiles[indexer];
 				// then: look rightwards
@@ -1213,7 +1213,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 
 		for (int x = 0; x < this.width; x++) {
 			for (int y = 0; y < this.height; y++) {
-				Vector2i key = new (x, y);
+				Vector2i key = new Vector2i(x, y);
 				if(greedyTiles.TryGetValue(key, out uint data)) {
 					byte tileType = (byte)(data & 15);
 					uint height = 1;
@@ -1549,12 +1549,12 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			}
 		}
 
-		this.roomRenderable = new(this.roomMesh, Preload.RoomShader, [
+		this.roomRenderable = new MeshRenderable(this.roomMesh, Preload.RoomShader, [
 				new (0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
 				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2))
 			], [ "projection", "model", "tintColor", "tintStrength" ]);
 
-		this.waterRenderable = new(this.waterMesh, Preload.RoomShader, [
+		this.waterRenderable = new MeshRenderable(this.waterMesh, Preload.RoomShader, [
 				new (0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
 				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2))
 			], [ "projection", "model", "tintColor", "tintStrength" ]);
@@ -1701,7 +1701,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 				// Draws shortcutpath if either the associated exit or connection is hovered over.
 				bool shouldBeHighlighted = (i == this.hoveredRoomExit || connectionFound && this.connections[getConnectionIndex].Hovered) && this.hoveredShortcutEntrance == -1;
 				if (shouldBeHighlighted || Keys.Modifier(Keys.Modifiers.Shift)) {
-					if (this.roomExitPaths.TryGetValue(this.roomExits[i], out var result)) {
+					if (this.roomExitPaths.TryGetValue(this.roomExits[i], out RoomConnection result)) {
 						this.DrawRoomPath(result, i == this.hoveredRoomExit, shouldBeHighlighted);
 					}
 				}
@@ -1710,12 +1710,12 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			if (Settings.DEBUGVisibleShortcutEntranceData) {
 				foreach ((RoomConnection connection, bool isMatchedWithRoomExit) in this.shortcutEntrancePaths.Values) {
 					Immediate.Color(isMatchedWithRoomExit ? Color.Black : connection.endType switch {
-						RoomPathEndType.deadend => new(1, 0, 0),
-						RoomPathEndType.shortcutEntrance => new(1, 1, 1),
-						RoomPathEndType.den => new(1, 1, 0),
-						RoomPathEndType.scavengerDen => new(0, 1, 0),
-						RoomPathEndType.roomExit => new(0.5f, 0.5f, 1),
-						RoomPathEndType.wackAMoleHole => new(0.2f, 0.4f, 0.6f),
+						RoomPathEndType.deadend => new Color(1, 0, 0),
+						RoomPathEndType.shortcutEntrance => new Color(1, 1, 1),
+						RoomPathEndType.den => new Color(1, 1, 0),
+						RoomPathEndType.scavengerDen => new Color(0, 1, 0),
+						RoomPathEndType.roomExit => new Color(0.5f, 0.5f, 1),
+						RoomPathEndType.wackAMoleHole => new Color(0.2f, 0.4f, 0.6f),
 						_ => Color.Black
 					});
 					UI.StrokeCircle(this.RoomPositionToWorldPosition(connection.path.StartPosition), isMatchedWithRoomExit ? 0.25f : 2f, 8);
@@ -1893,9 +1893,9 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 						return value;
 					}
 					else {
-						return Settings.SubregionColors.value.Length == 0
+						return Settings.SubregionColors.Value.Length == 0
 							? Settings.NoSubregionColor
-							: Settings.SubregionColors.value[this.data.subregion % Settings.SubregionColors.value.Length];
+							: Settings.SubregionColors.Value[this.data.subregion % Settings.SubregionColors.Value.Length];
 					}
 				}
 			}

@@ -3,58 +3,58 @@ using Silk.NET.Input;
 namespace FloodForge.Popups;
 
 public abstract class Popup {
+	protected virtual bool Resizable => true;
+
 	protected bool cursorOverButton = false;
-	protected bool hovered = false;
-	protected bool coyoteHover = false;
-	protected bool minimized = false;
+	protected bool isHovered = false;
+	protected bool hoverRetained = false;
+	protected bool collapsed = false;
 	protected bool slatedForDeletion = false;
 	protected UVRect closeButton;
-	protected UVRect minimizeButton;
+	protected UVRect collapseButton;
 	protected Rect bounds;
-	protected Rect minimumBounds;
-	protected Rect initBounds;
-	protected bool initBoundsSet = false;
-	protected bool resizeable = true;
+	protected Rect collapseBounds;
+	protected Rect? initialBounds;
 
 	protected Rect scaleControlIncluder;
 	protected Rect scaleControlExcluder;
 	protected float scaleControlInnerMargin = 0.02f;
 	protected float scaleControlOuterMargin = 0.02f;
-	protected RectPosition mouseEdge;
+	protected ResizeHandlePosition resizeAnchor;
 	protected bool resizingWindow = false;
-	protected Vector2 pivotPoint;
-	protected Vector2i pivotDir;
-	protected Vector2 currentMousePos;
-	protected Rect newBounds;
+	protected Vector2 resizeAnchorPoint;
+	protected Vector2i resizeDirection;
+	protected Vector2 currentMousePosition;
+	protected Rect resizePreviewBounds;
 
-	protected bool mouseCursorSet = false;
-	protected bool hadMouseCursorSet = false;
+	protected bool cursorOverrideActive = false;
+	protected bool lastCursorOverrideActive = false;
 
 	public bool Resizing => this.resizingWindow;
 
 	public Popup() {
 		this.bounds = new Rect(-0.5f, -0.5f, 0.5f, 0.5f);
-		this.minimumBounds = new Rect(-0.1f, -0.1f, 0.1f, 0.1f);
+		this.collapseBounds = new Rect(-0.1f, -0.1f, 0.1f, 0.1f);
 		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).UV(0f, 0f, 0.25f, 0.25f);
-		this.minimizeButton = new UVRect(this.bounds.x1 - 0.1f, this.bounds.y1 - 0.05f, this.bounds.x1 - 0.05f, this.bounds.y1).UV(0f, 0.5f, 0.25f, 0.75f);
+		this.collapseButton = new UVRect(this.bounds.x1 - 0.1f, this.bounds.y1 - 0.05f, this.bounds.x1 - 0.05f, this.bounds.y1).UV(0f, 0.5f, 0.25f, 0.75f);
 		this.UpdateScaleControls(this.bounds);
 	}
 
 	private void UpdateResizing() {
 		this.UpdateScaleControls(this.bounds);
-		this.hovered = this.InteractBounds().Inside(Mouse.X, Mouse.Y);
-		if (this.hovered == true) {
-			this.coyoteHover = true;
+		this.isHovered = this.InteractBounds().Inside(Mouse.X, Mouse.Y);
+		if (this.isHovered == true) {
+			this.hoverRetained = true;
 		}
 		bool isOutsideExcludor = !this.scaleControlExcluder.Inside(Mouse.X, Mouse.Y);
 		bool isInsideIncluder = this.scaleControlIncluder.Inside(Mouse.X, Mouse.Y);
-		if (this.CanDrag(Mouse.X, Mouse.Y)) {
+		if (this.IsDragArea(Mouse.X, Mouse.Y)) {
 			return;
 		}
 
-		if (!this.minimized && !this.cursorOverButton && !this.resizingWindow) {
+		if (!this.collapsed && !this.cursorOverButton && !this.resizingWindow) {
 			Immediate.Color(Themes.Layer2Color);
-			if (this.coyoteHover && isOutsideExcludor) {
+			if (this.hoverRetained && isOutsideExcludor) {
 				if (isInsideIncluder) {
 					if (Settings.DEBUGVisiblePopupVisuals)
 						UI.FillRect(this.scaleControlExcluder.x0, this.scaleControlExcluder.y0, this.scaleControlExcluder.x1, this.scaleControlExcluder.y1);
@@ -73,56 +73,56 @@ public abstract class Popup {
 								if (Settings.DEBUGVisiblePopupVisuals)
 									UI.StrokeRect(currRect);
 
-								this.mouseEdge = (RectPosition) (x + y * 3);
-								switch (this.mouseEdge) {
-									case RectPosition.Center:
+								this.resizeAnchor = (ResizeHandlePosition) (x + y * 3);
+								switch (this.resizeAnchor) {
+									case ResizeHandlePosition.Center:
 										Main.mouse?.Cursor.StandardCursor = StandardCursor.ResizeAll;
-										this.mouseCursorSet = true;
+										this.cursorOverrideActive = true;
 										break;
-									case RectPosition.UpMid:
-									case RectPosition.DownMid:
+									case ResizeHandlePosition.UpMid:
+									case ResizeHandlePosition.DownMid:
 										Main.mouse?.Cursor.StandardCursor = StandardCursor.VResize;
-										this.mouseCursorSet = true;
+										this.cursorOverrideActive = true;
 										break;
-									case RectPosition.MidLeft:
-									case RectPosition.MidRight:
+									case ResizeHandlePosition.MidLeft:
+									case ResizeHandlePosition.MidRight:
 										Main.mouse?.Cursor.StandardCursor = StandardCursor.HResize;
-										this.mouseCursorSet = true;
+										this.cursorOverrideActive = true;
 										break;
-									case RectPosition.UpLeft:
-									case RectPosition.DownRight:
+									case ResizeHandlePosition.UpLeft:
+									case ResizeHandlePosition.DownRight:
 										Main.mouse?.Cursor.StandardCursor = StandardCursor.NeswResize;
-										this.mouseCursorSet = true;
+										this.cursorOverrideActive = true;
 										break;
-									case RectPosition.UpRight:
-									case RectPosition.DownLeft:
+									case ResizeHandlePosition.UpRight:
+									case ResizeHandlePosition.DownLeft:
 										Main.mouse?.Cursor.StandardCursor = StandardCursor.NwseResize;
-										this.mouseCursorSet = true;
+										this.cursorOverrideActive = true;
 										break;
 								}
 
 								if (Mouse.JustLeft) {
 									this.resizingWindow = true;
-									this.pivotPoint = this.mouseEdge switch {
-										RectPosition.UpLeft => new(this.bounds.x1, this.bounds.y1),
-										RectPosition.UpMid => new(this.bounds.CenterX, this.bounds.y1),
-										RectPosition.UpRight => new(this.bounds.x0, this.bounds.y1),
-										RectPosition.MidLeft => new(this.bounds.x1, this.bounds.CenterY),
-										RectPosition.Center => new(this.bounds.CenterX, this.bounds.CenterY),
-										RectPosition.MidRight => new(this.bounds.x0, this.bounds.CenterY),
-										RectPosition.DownLeft => new(this.bounds.x1, this.bounds.y0),
-										RectPosition.DownMid => new(this.bounds.CenterX, this.bounds.y0),
-										RectPosition.DownRight => new(this.bounds.x0, this.bounds.y0),
-										_ => new(0, 0)
+									this.resizeAnchorPoint = this.resizeAnchor switch {
+										ResizeHandlePosition.UpLeft => new Vector2(this.bounds.x1, this.bounds.y1),
+										ResizeHandlePosition.UpMid => new Vector2(this.bounds.CenterX, this.bounds.y1),
+										ResizeHandlePosition.UpRight => new Vector2(this.bounds.x0, this.bounds.y1),
+										ResizeHandlePosition.MidLeft => new Vector2(this.bounds.x1, this.bounds.CenterY),
+										ResizeHandlePosition.Center => new Vector2(this.bounds.CenterX, this.bounds.CenterY),
+										ResizeHandlePosition.MidRight => new Vector2(this.bounds.x0, this.bounds.CenterY),
+										ResizeHandlePosition.DownLeft => new Vector2(this.bounds.x1, this.bounds.y0),
+										ResizeHandlePosition.DownMid => new Vector2(this.bounds.CenterX, this.bounds.y0),
+										ResizeHandlePosition.DownRight => new Vector2(this.bounds.x0, this.bounds.y0),
+										_ => new Vector2(0, 0)
 									};
-									this.pivotDir = new Vector2i(float.Sign((Mouse.Pos - this.pivotPoint).x), float.Sign((Mouse.Pos - this.pivotPoint).y));
+									this.resizeDirection = new Vector2i(float.Sign((Mouse.Pos - this.resizeAnchorPoint).x), float.Sign((Mouse.Pos - this.resizeAnchorPoint).y));
 								}
 							}
 						}
 					}
 				}
 				else {
-					this.coyoteHover = false;
+					this.hoverRetained = false;
 				}
 			}
 			else {
@@ -130,32 +130,31 @@ public abstract class Popup {
 					UI.StrokeRect(this.scaleControlExcluder.x0, this.scaleControlExcluder.y0, this.scaleControlExcluder.x1, this.scaleControlExcluder.y1);
 			}
 			if (Mouse.JustRight) {
-				if (this.initBoundsSet)
-					this.ResizePopup(this.initBounds);
+				if (this.initialBounds != null)
+					this.ResizePopup(this.initialBounds.Value);
 			}
 		}
 		else if (this.resizingWindow) {
-			this.mouseCursorSet = true;
-			if (!this.initBoundsSet) {
-				this.initBounds = this.bounds;
-				this.minimumBounds = this.bounds;
-				this.initBoundsSet = true;
+			this.cursorOverrideActive = true;
+			if (this.initialBounds == null) {
+				this.initialBounds = this.bounds;
+				this.collapseBounds = this.bounds;
 			}
 			if (Mouse.JustRight) {
 				this.resizingWindow = false;
-				this.ResizePopup(this.initBounds);
+				this.ResizePopup(this.initialBounds.Value);
 			}
 			if (!Mouse.Left) {
 				this.resizingWindow = false;
-				this.ResizePopup(this.newBounds);
+				this.ResizePopup(this.resizePreviewBounds);
 			}
 			else {
-				this.currentMousePos = Mouse.Pos;
+				this.currentMousePosition = Mouse.Pos;
 				Rect originalBounds = this.bounds;
 				bool lockXScale = false;
 				bool lockYScale = false;
-				if (int.IsOddInteger((int) this.mouseEdge)) {
-					if (this.mouseEdge == (RectPosition) 1 || this.mouseEdge == (RectPosition) 7) {
+				if (int.IsOddInteger((int) this.resizeAnchor)) {
+					if (this.resizeAnchor == (ResizeHandlePosition) 1 || this.resizeAnchor == (ResizeHandlePosition) 7) {
 						lockXScale = true;
 					}
 					else {
@@ -163,55 +162,55 @@ public abstract class Popup {
 					}
 				}
 				Vector2 PointB = new Vector2(
-					this.currentMousePos.x,
-					this.currentMousePos.y);
+					this.currentMousePosition.x,
+					this.currentMousePosition.y);
 
 				// All of this can probably be improved in terms of legibility.
 				// I feel like a lot of this is expecting cases that cannot exist.
-				float newX0 = lockXScale || this.pivotDir.x > 0 ? originalBounds.x0 : Math.Min(PointB.x, this.pivotPoint.x);
-				float newX1 = lockXScale || this.pivotDir.x < 0 ? originalBounds.x1 : Math.Max(PointB.x, this.pivotPoint.x);
-				float newY0 = lockYScale || this.pivotDir.y > 0 ? originalBounds.y0 : Math.Min(PointB.y, this.pivotPoint.y);
-				float newY1 = lockYScale || this.pivotDir.y < 0 ? originalBounds.y1 : Math.Max(PointB.y, this.pivotPoint.y);
+				float newX0 = lockXScale || this.resizeDirection.x > 0 ? originalBounds.x0 : Math.Min(PointB.x, this.resizeAnchorPoint.x);
+				float newX1 = lockXScale || this.resizeDirection.x < 0 ? originalBounds.x1 : Math.Max(PointB.x, this.resizeAnchorPoint.x);
+				float newY0 = lockYScale || this.resizeDirection.y > 0 ? originalBounds.y0 : Math.Min(PointB.y, this.resizeAnchorPoint.y);
+				float newY1 = lockYScale || this.resizeDirection.y < 0 ? originalBounds.y1 : Math.Max(PointB.y, this.resizeAnchorPoint.y);
 				if (!lockXScale) {
-					if (this.pivotDir.x > 0)
-						newX1 = Math.Max(this.pivotPoint.x + (this.minimumBounds.x1 - this.minimumBounds.x0), newX1);
+					if (this.resizeDirection.x > 0)
+						newX1 = Math.Max(this.resizeAnchorPoint.x + (this.collapseBounds.x1 - this.collapseBounds.x0), newX1);
 					else
-						newX0 = Math.Min(this.pivotPoint.x - (this.minimumBounds.x1 - this.minimumBounds.x0), newX0);
+						newX0 = Math.Min(this.resizeAnchorPoint.x - (this.collapseBounds.x1 - this.collapseBounds.x0), newX0);
 				}
 				if (!lockYScale) {
-					if (this.pivotDir.y > 0)
-						newY1 = Math.Max(this.pivotPoint.y + (this.minimumBounds.y1 - this.minimumBounds.y0), newY1);
+					if (this.resizeDirection.y > 0)
+						newY1 = Math.Max(this.resizeAnchorPoint.y + (this.collapseBounds.y1 - this.collapseBounds.y0), newY1);
 					else
-						newY0 = Math.Min(this.pivotPoint.y - (this.minimumBounds.y1 - this.minimumBounds.y0), newY0);
+						newY0 = Math.Min(this.resizeAnchorPoint.y - (this.collapseBounds.y1 - this.collapseBounds.y0), newY0);
 				}
 
-				this.newBounds = new(newX0, newY0, newX1, newY1);
+				this.resizePreviewBounds = new Rect(newX0, newY0, newX1, newY1);
 				if (Settings.DEBUGVisiblePopupVisuals) {
 					Immediate.Color(Themes.BorderHighlight);
 					UI.StrokeRect(originalBounds);
-					UI.StrokeCircle(new(originalBounds.x0, originalBounds.y0), 0.02f, 8);
+					UI.StrokeCircle(new Vector2(originalBounds.x0, originalBounds.y0), 0.02f, 8);
 					Immediate.Color(Themes.Layer2Color);
 					UI.StrokeCircle(PointB, 0.02f, 8);
-					UI.StrokeCircle(this.pivotPoint + (Vector2) this.pivotDir * 0.1f, 0.02f, 8);
+					UI.StrokeCircle(this.resizeAnchorPoint + (Vector2) this.resizeDirection * 0.1f, 0.02f, 8);
 					Immediate.Color(Themes.Layer1Color);
-					UI.StrokeCircle(this.currentMousePos, 0.02f, 8);
+					UI.StrokeCircle(this.currentMousePosition, 0.02f, 8);
 					Immediate.Color(Themes.Layer0Color);
-					UI.StrokeCircle(this.pivotPoint, 0.02f, 8);
+					UI.StrokeCircle(this.resizeAnchorPoint, 0.02f, 8);
 					Immediate.Color(Themes.RoomAir);
-					UI.StrokeCircle(new(newX0, newY0), 0.02f, 8);
+					UI.StrokeCircle(new Vector2(newX0, newY0), 0.02f, 8);
 				}
 				Immediate.Color(Themes.BorderHighlight);
-				UI.StrokeRect(this.newBounds);
+				UI.StrokeRect(this.resizePreviewBounds);
 			}
 		}
 	}
 
 	public virtual void Draw() {
-		if (this.closeButton.Inside(Mouse.Pos) || this.minimizeButton.Inside(Mouse.Pos)) {
+		if (this.closeButton.Inside(Mouse.Pos) || this.collapseButton.Inside(Mouse.Pos)) {
 			this.cursorOverButton = true;
 		}
 
-		if (!this.minimized) {
+		if (!this.collapsed) {
 			Immediate.Color(Themes.Popup);
 			UI.ButtonFillRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
 		}
@@ -224,51 +223,55 @@ public abstract class Popup {
 			this.Close();
 		}
 
-		this.minimizeButton = new UVRect(this.bounds.x1 - 0.1f, this.bounds.y1 - 0.05f, this.bounds.x1 - 0.05f, this.bounds.y1);
-		if (this.minimized) {
-			this.minimizeButton.UV(0.25f, 0.5f, 0.5f, 0.75f);
+		this.collapseButton = new UVRect(this.bounds.x1 - 0.1f, this.bounds.y1 - 0.05f, this.bounds.x1 - 0.05f, this.bounds.y1);
+		if (this.collapsed) {
+			this.collapseButton.UV(0.25f, 0.5f, 0.5f, 0.75f);
 		}
 		else {
-			this.minimizeButton.UV(0f, 0.5f, 0.25f, 0.75f);
+			this.collapseButton.UV(0f, 0.5f, 0.25f, 0.75f);
 		}
 
-		if (UI.TextureButton(this.minimizeButton)) {
-			this.minimized = !this.minimized;
+		if (UI.TextureButton(this.collapseButton)) {
+			this.collapsed = !this.collapsed;
 		}
 
-		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
-		if (this.minimized) {
+		Immediate.Color(this.isHovered ? Themes.BorderHighlight : Themes.Border);
+		if (this.collapsed) {
 			UI.ButtonStrokeRect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
 		}
 		else {
 			UI.ButtonStrokeRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
 		}
 
-		if (this.CanDrag(Mouse.X, Mouse.Y)) {
+		if (this.IsDragArea(Mouse.X, Mouse.Y)) {
 			Main.mouse?.Cursor.StandardCursor = StandardCursor.ResizeAll;
-			this.mouseCursorSet = true;
+			this.cursorOverrideActive = true;
 		}
 
-		if (this.resizeable) {
+		if (this.Resizable) {
 			this.UpdateResizing();
 		}
-		else if (this.initBoundsSet) {
-			this.ResizePopup(this.initBounds);
+		else if (this.initialBounds != null) {
+			this.ResizePopup(this.initialBounds.Value);
 		}
 
 		this.cursorOverButton = false;
 	}
 
 	public void FinishDraw() {
-		if (!this.mouseCursorSet && this.hadMouseCursorSet) {
-			Main.mouse?.Cursor.StandardCursor = StandardCursor.Default;
-			this.hadMouseCursorSet = false;
+		if (this.slatedForDeletion) {
+			this.cursorOverrideActive = false;
 		}
-		this.hadMouseCursorSet = this.mouseCursorSet;
-		this.mouseCursorSet = false;
+
+		if (!this.cursorOverrideActive && this.lastCursorOverrideActive) {
+			Main.mouse?.Cursor.StandardCursor = StandardCursor.Default;
+			this.lastCursorOverrideActive = false;
+		}
+		this.lastCursorOverrideActive = this.cursorOverrideActive;
+		this.cursorOverrideActive = false;
 	}
 
-	public virtual Rect InteractBounds() => this.minimized ? new Rect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1) : this.bounds;
+	public virtual Rect InteractBounds() => this.collapsed ? new Rect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1) : this.bounds;
 
 	public virtual void UpdateScaleControls(Rect bounds) {
 		this.scaleControlExcluder = new Rect(
@@ -276,13 +279,13 @@ public abstract class Popup {
 			bounds.y0 + this.scaleControlInnerMargin,
 			bounds.x1 - this.scaleControlInnerMargin,
 			bounds.y1 - this.scaleControlInnerMargin
-			);
+		);
 		this.scaleControlIncluder = new Rect(
 			bounds.x0 - this.scaleControlOuterMargin,
 			bounds.y0 - this.scaleControlOuterMargin,
 			bounds.x1 + this.scaleControlOuterMargin,
 			bounds.y1 + this.scaleControlOuterMargin * 2
-			);
+		);
 	}
 
 	public virtual void ResizePopup(Rect newRect) {
@@ -290,9 +293,9 @@ public abstract class Popup {
 	}
 
 	public virtual void Close() {
-		if (this.mouseCursorSet || this.hadMouseCursorSet) {
+		if (this.cursorOverrideActive || this.lastCursorOverrideActive) {
 			Main.mouse?.Cursor.StandardCursor = StandardCursor.Default;
-			this.hadMouseCursorSet = false;
+			this.lastCursorOverrideActive = false;
 		}
 		PopupManager.Remove(this);
 		this.slatedForDeletion = true;
@@ -301,7 +304,7 @@ public abstract class Popup {
 	public virtual void Accept() => this.Close();
 	public virtual void Reject() => this.Close();
 
-	public virtual bool CanDrag(float mouseX, float mouseY) {
+	public virtual bool IsDragArea(float mouseX, float mouseY) {
 		if (this.resizingWindow)
 			return false;
 		if (mouseX <= this.bounds.x1 - 0.1f && mouseX >= this.bounds.x0 && mouseY <= this.bounds.y1 && mouseY >= this.bounds.y1 - 0.05f) return true;
@@ -309,11 +312,11 @@ public abstract class Popup {
 		return false;
 	}
 
-	public void Offset(Vector2 offset) {
+	public void Translate(Vector2 offset) {
 		this.bounds += offset;
 	}
 
-	public enum RectPosition {
+	public enum ResizeHandlePosition {
 		UpLeft,
 		UpMid,
 		UpRight,

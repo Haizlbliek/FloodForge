@@ -190,16 +190,9 @@ void main() {
 	}
 
 	public static void Cleanup() {
-		Span<uint> vao = [DrawState.vertexArray];
-		Cstm.gl.DeleteVertexArrays(vao);
-
-		Span<uint> buffers = [DrawState.vtxBuffer, DrawState.idxBuffer];
-		Cstm.gl.DeleteBuffers(buffers);
-
-		Span<uint> texture = [DrawState.placeholderTexture];
-		Cstm.gl.DeleteTextures(texture);
-
-		Span<uint> program = [DrawState.gpuProgram];
+		Cstm.gl.DeleteVertexArray(DrawState.vertexArray);
+		Cstm.gl.DeleteBuffers([DrawState.vtxBuffer, DrawState.idxBuffer]);
+		Cstm.gl.DeleteTexture(DrawState.placeholderTexture);
 		Cstm.gl.DeleteProgram(DrawState.gpuProgram);
 
 		DrawState.vertexArray = 0;

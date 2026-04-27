@@ -35,13 +35,13 @@ public class CancellablePopup : Popup {
 
 	public override void Draw() {
 		Rect buttonRect = new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y0 + 0.06f);
-		if (!this.minimized && buttonRect.Inside(Mouse.Pos) & !this.hideButton) {
+		if (!this.collapsed && buttonRect.Inside(Mouse.Pos) & !this.hideButton) {
 			this.cursorOverButton = true;
 		}
 
 		base.Draw();
 
-		if (this.minimized)
+		if (this.collapsed)
 			return;
 
 		for (int idx = 0; idx < this.text.Length; idx++) {

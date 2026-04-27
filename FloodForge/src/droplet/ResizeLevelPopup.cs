@@ -8,7 +8,7 @@ public class ResizeLevelPopup : Popup {
 	protected UI.TextInputEditable Height = new UI.TextInputEditable(UI.TextInputEditable.Type.UnsignedInteger, "35");
 	protected UI.TextInputEditable ScreenWidth = new UI.TextInputEditable(UI.TextInputEditable.Type.UnsignedFloat, "1.000", 3);
 	protected UI.TextInputEditable ScreenHeight = new UI.TextInputEditable(UI.TextInputEditable.Type.UnsignedFloat, "1.000", 3);
-	protected Vector2i resizeAnchor = new Vector2i(0, 0);
+	protected Vector2i resizeLevelAnchor = new Vector2i(0, 0);
 	protected bool stretchRoom = false;
 
 	public ResizeLevelPopup() {
@@ -36,7 +36,7 @@ public class ResizeLevelPopup : Popup {
 	public override void Draw() {
 		base.Draw();
 
-		if (this.minimized) return;
+		if (this.collapsed) return;
 
 		try {
 			DropletWindow.showResize = !this.slatedForDeletion;
@@ -109,25 +109,25 @@ public class ResizeLevelPopup : Popup {
 			if (widthResponse.submitted) {
 				DropletWindow.resizeSize.x = int.Parse(this.Width.value);
 				this.ScreenWidth.SetValue((DropletWindow.resizeSize.x + 4) / 52.0f);
-				this.SetResizeOffset(this.resizeAnchor, this.stretchRoom);
+				this.SetResizeOffset(this.resizeLevelAnchor, this.stretchRoom);
 			}
 
 			if (heightResponse.submitted) {
 				DropletWindow.resizeSize.y = int.Parse(this.Height.value);
 				this.ScreenHeight.SetValue((DropletWindow.resizeSize.y + 5) / 40.0f);
-				this.SetResizeOffset(this.resizeAnchor, this.stretchRoom);
+				this.SetResizeOffset(this.resizeLevelAnchor, this.stretchRoom);
 			}
 
 			if (screenWidthResponse.submitted) {
 				DropletWindow.resizeSize.x = (int) (float.Parse(this.ScreenWidth.value) * 52f - 4f);
 				this.Width.SetValue(DropletWindow.resizeSize.x);
-				this.SetResizeOffset(this.resizeAnchor, this.stretchRoom);
+				this.SetResizeOffset(this.resizeLevelAnchor, this.stretchRoom);
 			}
 
 			if (screenHeightResponse.submitted) {
 				DropletWindow.resizeSize.y = (int) (float.Parse(this.ScreenHeight.value) * 40f - 5f);
 				this.Height.SetValue(DropletWindow.resizeSize.y);
-				this.SetResizeOffset(this.resizeAnchor, this.stretchRoom);
+				this.SetResizeOffset(this.resizeLevelAnchor, this.stretchRoom);
 			}
 
 			if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.11f, 0.04f, 0.04f).UV(0.5f, 0f, 0.75f, 0.25f))) {
@@ -135,36 +135,36 @@ public class ResizeLevelPopup : Popup {
 				this.Height.SetValue(DropletWindow.Room.height);
 				this.ScreenWidth.SetValue((DropletWindow.Room.width + 4) / 52f);
 				this.ScreenHeight.SetValue((DropletWindow.Room.height + 5) / 40f);
-				this.resizeAnchor = Vector2i.Zero;
+				this.resizeLevelAnchor = Vector2i.Zero;
 				this.stretchRoom = false;
 			}
 
 			for (int x = -1; x <= 1; x++) {
 				for (int yp = -1; yp <= 1; yp++) {
 					UVRect rect = UVRect.FromSize(this.bounds.x1 - 0.17f + x * 0.08f, this.bounds.y1 - 0.27f - yp * 0.08f, 0.07f, 0.07f);
-					int diff = Math.Abs(x - this.resizeAnchor.x) + Math.Abs(yp - this.resizeAnchor.y);
+					int diff = Math.Abs(x - this.resizeLevelAnchor.x) + Math.Abs(yp - this.resizeLevelAnchor.y);
 					if (diff >= 2 || this.stretchRoom) {
 						rect.UV(0.0f, 0.0f, 0.0f, 0.0f);
 					}
 					else if (diff == 0) {
 						rect.UV(0.5f, 0.25f, 0.75f, 0.5f);
 					}
-					else if (x < this.resizeAnchor.x) {
+					else if (x < this.resizeLevelAnchor.x) {
 						rect.UV(0.5f, 0.5f, 0.75f, 0.75f);
 					}
-					else if (x > this.resizeAnchor.x) {
+					else if (x > this.resizeLevelAnchor.x) {
 						rect.UV(0.75f, 0.5f, 1.0f, 0.75f);
 					}
-					else if (yp < this.resizeAnchor.y) {
+					else if (yp < this.resizeLevelAnchor.y) {
 						rect.UV(0.75f, 0.75f, 1.0f, 1.0f);
 					}
-					else if (yp > this.resizeAnchor.y) {
+					else if (yp > this.resizeLevelAnchor.y) {
 						rect.UV(0.5f, 0.75f, 0.75f, 1.0f);
 					}
-					if (UI.TextureButton(rect, new UI.TextureButtonMods() { selected = x == this.resizeAnchor.x && yp == this.resizeAnchor.y, disabled = this.stretchRoom })) {
-						this.resizeAnchor.x = x;
-						this.resizeAnchor.y = yp;
-						this.SetResizeOffset(this.resizeAnchor, this.stretchRoom);
+					if (UI.TextureButton(rect, new UI.TextureButtonMods() { selected = x == this.resizeLevelAnchor.x && yp == this.resizeLevelAnchor.y, disabled = this.stretchRoom })) {
+						this.resizeLevelAnchor.x = x;
+						this.resizeLevelAnchor.y = yp;
+						this.SetResizeOffset(this.resizeLevelAnchor, this.stretchRoom);
 					}
 				}
 			}
@@ -173,15 +173,15 @@ public class ResizeLevelPopup : Popup {
 			UI.font.Write("Stretch room", this.bounds.x1 - 0.29f, this.bounds.y1 - 0.37f, 0.03f);
 			if (UI.CheckBox(Rect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.41f, 0.05f, 0.05f), ref this.stretchRoom)) {
 				DropletWindow.resizeSize = new Vector2i(int.Parse(this.Width.value), int.Parse(this.Height.value));
-				this.SetResizeOffset(this.resizeAnchor, this.stretchRoom);
+				this.SetResizeOffset(this.resizeLevelAnchor, this.stretchRoom);
 			}
 
 			UI.ButtonResponse response = UI.TextButton("Resize room", Rect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.41f, 0.3f, 0.05f), new UI.TextButtonMods { disabled = widthResponse.focused || heightResponse.focused || screenWidthResponse.focused || screenHeightResponse.focused });
 			if (response.clicked) {
-				Vector2i oldSize = new (DropletWindow.Room.width, DropletWindow.Room.height);
+				Vector2i oldSize = new Vector2i(DropletWindow.Room.width, DropletWindow.Room.height);
 				uint[] oldGeo = DropletWindow.Room.geometry;
 				DropletWindow.ResizeRoom(int.Parse(this.Width.value), int.Parse(this.Height.value), this.stretchRoom);
-				Vector2i newSize = new (DropletWindow.Room.width, DropletWindow.Room.height);
+				Vector2i newSize = new Vector2i(DropletWindow.Room.width, DropletWindow.Room.height);
 				uint[] newGeo = DropletWindow.Room.geometry;
 				DropletWindow.dropletHistory.Apply(new ResizeChange(oldGeo, newGeo, oldSize, newSize));
 				this.Close();

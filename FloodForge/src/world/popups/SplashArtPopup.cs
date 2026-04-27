@@ -100,7 +100,7 @@ public class SplashArtPopup : Popup {
 				JsonArray? assets = node["assets"]?.AsArray();
 				string? downloadUrl = null;
 				if (assets != null) {
-					foreach (var asset in assets) {
+					foreach (JsonNode? asset in assets) {
 						if (asset?["name"]?.ToString().Equals(targetFileName, StringComparison.InvariantCultureIgnoreCase) ?? false) {
 							downloadUrl = asset["browser_download_url"]?.ToString();
 							string? digest = asset["digest"]?.ToString();

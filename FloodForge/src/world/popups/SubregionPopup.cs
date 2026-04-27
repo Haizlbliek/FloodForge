@@ -17,7 +17,7 @@ public class SubregionPopup : Popup {
 	}
 
 	protected void Scroll(float deltaX, float deltaY) {
-		if (!this.hovered || this.minimized) return;
+		if (!this.isHovered || this.collapsed) return;
 
 		this.targetScroll += deltaY * 0.1f;
 		this.ClampScroll();
@@ -101,7 +101,7 @@ public class SubregionPopup : Popup {
 		}
 
 		if (idx >= -1) {
-			Color[] colors = Settings.SubregionColors.value;
+			Color[] colors = Settings.SubregionColors.Value;
 			Color subregionColor = Settings.NoSubregionColor;
 			if (colors.Length != 0 && idx != -1) {
 				subregionColor = colors[idx % colors.Length];
@@ -127,7 +127,7 @@ public class SubregionPopup : Popup {
 
 	public override void Draw() {
 		base.Draw();
-		if (this.minimized) return;
+		if (this.collapsed) return;
 
 		this.scroll += (this.targetScroll - this.scroll) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 

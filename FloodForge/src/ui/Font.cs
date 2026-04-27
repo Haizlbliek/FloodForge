@@ -116,7 +116,7 @@ public class Font {
 				continue;
 			}
 
-			if (!this.characters.TryGetValue(c, out var ch)) continue;
+			if (!this.characters.TryGetValue(c, out Character ch)) continue;
 			currentLineWidth += ch.xAdvance * scale * this.separationScale;
 		}
 	
@@ -170,7 +170,7 @@ public class Font {
 				continue;
 			}
 
-			if (!this.characters.TryGetValue(c, out var ch)) continue;
+			if (!this.characters.TryGetValue(c, out Character ch)) continue;
 
 			float x = cursorX + (ch.xOffset * scale);
 			float y = cursorY - (ch.yOffset * scale);

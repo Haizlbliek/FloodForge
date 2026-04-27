@@ -21,7 +21,7 @@ public class ChangeHistory {
 	/// Make sure to use <c>StopCollectingChanges</c> in order to avoid nullifying all changes of types <c>collectingTypes</c>.
 	/// </summary>
 	public void StartCollectingChanges(List<Type> collectingTypes) {
-		if(this.Collectingchanges) throw new ("Cannot start new collection while collection is in progress!");
+		if(this.Collectingchanges) throw new Exception("Cannot start new collection while collection is in progress!");
 		this.collectedChanges = [];
 		this.Collectingchanges = true;
 		this.typesToCollect = collectingTypes;

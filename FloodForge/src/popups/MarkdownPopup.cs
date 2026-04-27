@@ -191,7 +191,7 @@ public class MarkdownPopup : Popup {
 	}
 
 	protected void Scroll(float x, float y) {
-		if (!this.hovered || this.minimized) return;
+		if (!this.isHovered || this.collapsed) return;
 
 		this.targetScroll -= y * 0.1f;
 		this.ClampScroll();
@@ -210,7 +210,7 @@ public class MarkdownPopup : Popup {
 	public override void Draw() {
 		base.Draw();
 
-		if (this.minimized) return;
+		if (this.collapsed) return;
 
 		float padding = 0.01f;
 		int width = Program.window.FramebufferSize.X;

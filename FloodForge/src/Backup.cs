@@ -15,11 +15,10 @@ public static class Backup {
 		string ext = Path.GetExtension(filePath);
 
 		// Delete old backups
-		var matchingFiles = Directory.GetFiles(BackupDir)
+		List<FileInfo> matchingFiles = [.. Directory.GetFiles(BackupDir)
 			.Select(f => new FileInfo(f))
 			.Where(f => f.Name.StartsWith(stem + "-") && f.Name.EndsWith(ext))
-			.OrderBy(f => f.LastWriteTime)
-			.ToList();
+			.OrderBy(f => f.LastWriteTime)];
 
 		while (matchingFiles.Count >= 5) {
 			matchingFiles[0].Delete();

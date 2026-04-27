@@ -6,10 +6,10 @@ public static class Profiler {
 	static Stack<(Stopwatch contextSegment, ProfilerContext context)> contextStack = [];
 	static ProfilerContext rootContext = null!;
 	public static ProfilerContext finalContext = null!;
-	static Stopwatch segmentStopwatch = new();
-	static Stopwatch sumStopwatch = new();
+	static Stopwatch segmentStopwatch = new Stopwatch();
+	static Stopwatch sumStopwatch = new Stopwatch();
 	static Dictionary<string, (ProfilerSum, Stopwatch)> AllSumStopwatches = [];
-	static float[] FPSHistory = new float[100];
+	static readonly float[] FPSHistory = new float[100];
 	static int currentIndex = 0;
 	static int FPSHistoryFillLevel = 0;
 	public static bool enableProfiler = false;
@@ -101,7 +101,7 @@ public static class Profiler {
 		if (sumContext) {
 			switch (navigateContext) {
 				case 2:
-					AllSumStopwatches.Add(key, (new ProfilerSum(key), new()));
+					AllSumStopwatches.Add(key, (new ProfilerSum(key), new Stopwatch()));
 					contextStack.Peek().context.AddItem(AllSumStopwatches[key].Item1);
 					break;
 				case 1:
@@ -173,7 +173,7 @@ public static class Profiler {
 
 	public class ProfilerContext : ProfilerItem {
 		public TimeSpan startSegmentSpan;
-		List<ProfilerItem> itemsInContext;
+		readonly List<ProfilerItem> itemsInContext;
 		public ProfilerContext(string name, TimeSpan segment) : base(name, TimeSpan.Zero, TimeSpan.Zero) {
 			this.startSegmentSpan = segment;
 			this.itemsInContext = [];
@@ -225,7 +225,7 @@ public static class Profiler {
 		// ofc, there'd also be a way to tell this profiler not to hide the debuginformation in the bottom left, since that's more generally useful
 		static List<string> profilerMessagesLeft = [];
 		static List<string> profilerMessagesRight = [];
-		static List<(string, int)> logMessages = [];
+		static readonly List<(string, int)> logMessages = [];
 		public static void DrawProfilerMessages() {
 			Immediate.Color(Color.White);
 			int i = 0;

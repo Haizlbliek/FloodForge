@@ -12,17 +12,17 @@ public class MoveToBackChange : Change {
 	}
 
 	public override void Undo() {
-		foreach (var (room, _) in this.originalStates) {
+		foreach ((Room? room, int _) in this.originalStates) {
 			WorldWindow.region.rooms.Remove(room);
 		}
 
-		foreach (var (room, index) in this.originalStates) {
+		foreach ((Room? room, int index) in this.originalStates) {
 			WorldWindow.region.rooms.Insert(index, room);
 		}
 	}
 
 	public override void Redo() {
-		foreach (var (room, _) in this.originalStates) {
+		foreach ((Room? room, int _) in this.originalStates) {
 			WorldWindow.region.rooms.Remove(room);
 		}
 

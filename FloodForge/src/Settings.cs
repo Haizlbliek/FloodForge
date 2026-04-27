@@ -142,15 +142,15 @@ public static class Settings {
 	}
 
 	public class SubregionColorsSetting : Setting {
-		public Color[] value { get; private set; }
+		public Color[] Value { get; private set; }
 
 		public SubregionColorsSetting(string id, Color[] colors) : base(id) {
-			this.value = colors;
+			this.Value = colors;
 		}
 
 		public override void Set(string value) {
 			string[] values = value.Split(',');
-			this.value = [.. values.Select(value => Color.Parse(value.Trim(), null))];
+			this.Value = [.. values.Select(value => Color.Parse(value.Trim(), null))];
 		}
 	}
 }

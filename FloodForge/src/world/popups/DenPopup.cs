@@ -212,7 +212,7 @@ public class DenPopup : Popup {
 		UI.font.Write("Tags:", mainX + 0.6f + 0.125f, this.bounds.y1 - 0.07f, 0.035f, Font.Align.TopCenter);
 		Program.gl.Enable(EnableCap.ScissorTest);
 
-		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
+		Immediate.Color(this.isHovered ? Themes.BorderHighlight : Themes.Border);
 		UI.Line(mainX + 0.6f, this.bounds.y0, mainX + 0.6f, this.bounds.y1);
 
 		if (creature == null) return;
@@ -283,7 +283,7 @@ public class DenPopup : Popup {
 		UI.font.Write("Lineages:", this.bounds.x0 + 0.11f, this.bounds.y1 - 0.07f, 0.035f, Font.Align.TopCenter);
 		Program.gl.Enable(EnableCap.ScissorTest);
 
-		Immediate.Color(this.hovered ? Themes.BorderHighlight : Themes.Border);
+		Immediate.Color(this.isHovered ? Themes.BorderHighlight : Themes.Border);
 		UI.Line(this.bounds.x0 + 0.22f, this.bounds.y0, this.bounds.x0 + 0.22f, this.bounds.y1);
 
 		float dotsCenterX = this.bounds.x0 + 0.11f - (this.den.creatures.Count - 1) * 0.015f;
@@ -474,14 +474,14 @@ public class DenPopup : Popup {
 		DenCreature? creature = this.selectedLineage;
 		bool unknown = creature != null && !CreatureTextures.Known(creature.type);
 
-		this.minimumBounds.x1 = this.minimumBounds.x0 + 0.6f + 0.3f + 0.22f;
-		if (this.bounds.x1 - this.bounds.x0 < this.minimumBounds.x1 - this.minimumBounds.x0) {
-			this.bounds.x1 = this.bounds.x0 + this.minimumBounds.x1 - this.minimumBounds.x0;
+		this.collapseBounds.x1 = this.collapseBounds.x0 + 0.6f + 0.3f + 0.22f;
+		if (this.bounds.x1 - this.bounds.x0 < this.collapseBounds.x1 - this.collapseBounds.x0) {
+			this.bounds.x1 = this.bounds.x0 + this.collapseBounds.x1 - this.collapseBounds.x0;
 		}
 
 		base.Draw();
 
-		if (this.minimized) return;
+		if (this.collapsed) return;
 
 		this.scrollLineages += (this.scrollLineagesTo - this.scrollLineages) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 		this.scrollCreatures += (this.scrollCreaturesTo - this.scrollCreatures) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
@@ -519,7 +519,7 @@ public class DenPopup : Popup {
 		// 	}
 		// }
 
-		if (!this.hoverText.IsNullOrEmpty() && this.hovered) {
+		if (!this.hoverText.IsNullOrEmpty() && this.isHovered) {
 			float width = UI.font.Measure(this.hoverText, 0.04f).x + 0.02f;
 			Rect rect = Rect.FromSize(Mouse.X, Mouse.Y, width, 0.06f);
 			Immediate.Color(Themes.Popup);
@@ -601,7 +601,7 @@ public class DenPopup : Popup {
 	}
 
 	protected void Scroll(float deltaX, float deltaY) {
-		if (!this.hovered || this.minimized) return;
+		if (!this.isHovered || this.collapsed) return;
 
 		if (this.mouseSection == 0) {
 			this.scrollLineagesTo += deltaY * 0.06f;
@@ -624,7 +624,7 @@ public class DenPopup : Popup {
 	}
 
 	protected void KeyPress(Key key) {
-		if (this.minimized || !this.hovered) return;
+		if (this.collapsed || !this.isHovered) return;
 		if (this.selectedLineageChance == null) return;
 
 		int chance = Mathf.FloorToInt(this.editingLineageChance * 100f);
