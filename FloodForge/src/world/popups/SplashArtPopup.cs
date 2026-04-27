@@ -91,7 +91,12 @@ public class SplashArtPopup : Popup {
 			}
 
 			if (this.updateStatus == UpdateStatus.Available) {
-				string targetFileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "FloodForge-Windows.zip" : "FloodForge-Linux.zip";
+				string osPart = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Windows" : "Linux";
+				string archPart = "";
+				if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64) {
+					archPart = "-arm64";
+				}
+				string targetFileName = $"FloodForge-{osPart}{archPart}.zip";
 				JsonArray? assets = node["assets"]?.AsArray();
 				string? downloadUrl = null;
 				if (assets != null) {

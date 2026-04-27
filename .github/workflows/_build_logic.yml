@@ -53,12 +53,20 @@ jobs:
 
       - name: Zip (Linux)
         if: matrix.os == 'ubuntu-latest'
-        run: cd publish-temp && zip -r ../FloodForge-linux-${{ matrix.arch }}.zip .
+        run: |
+          if [ "${{ matrix.arch }}" = "x64" ]; then
+            ZIP_NAME="FloodForge-Linux.zip"
+          else
+            ZIP_NAME="FloodForge-Linux-${{ matrix.arch }}.zip"
+          fi
+          cd publish-temp && zip -r ../$ZIP_NAME .
 
       - name: Zip (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
-        run: 7z a -tzip FloodForge-windows-${{ matrix.arch }}.zip .\publish-temp\*
+        run: |
+          $zipName = if ("${{ matrix.arch }}" -eq "x64") { "FloodForge-Windows.zip" } else { "FloodForge-Windows-${{ matrix.arch }}.zip" }
+          7z a -tzip $zipName .\publish-temp\*
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
