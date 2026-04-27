@@ -1049,6 +1049,8 @@ public static class DropletWindow {
 			}
 			else if (Room.data.waterHeight == -1) {
 				Room.data.waterHeight = Room.height / 2;
+				Room.visuals.waterNeedsRefresh =true;
+				Room.visuals.Refresh();
 			}
 
 			Immediate.Color(Color.White);
