@@ -46,6 +46,10 @@ public class ChangeHistory {
 		return new MassChange(this.StopCollectingChanges());
 	}
 
+	public void GetAndApplyCollectedMassChange() {
+		this.Apply(this.GetCollectedMassChange());
+	}
+
 	public void Apply(Change change) {
 		if (!this.Collectingchanges || (this.typesToCollect.Count != 0 && !this.typesToCollect.Contains(change.GetType()))) {
 			if(this.RedoChangeOnApply) change.Redo();
