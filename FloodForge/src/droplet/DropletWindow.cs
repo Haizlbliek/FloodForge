@@ -211,9 +211,14 @@ public static class DropletWindow {
 			trashCanState = 0;
 
 			if (!blockMouse && Keys.Pressed(Key.W) && Room.data.waterHeight != -1) {
+				int oldHeight = Room.data.waterHeight;
 				Room.data.waterHeight = Room.height - mouseTile.y - 1;
 				if (Room.data.waterHeight < 0) Room.data.waterHeight = 0;
 				Room.visuals.waterNeedsRefresh = true;
+				dropletHistory.Apply(new VariableChange<int>(oldHeight, Room.data.waterHeight, h => {
+					Room.data.waterHeight = h;
+					Room.visuals.waterNeedsRefresh = true;
+				}));
 			}
 		}
 
@@ -1040,9 +1045,17 @@ public static class DropletWindow {
 		else if (currentTab == EditorTab.Details) {
 			bool hasWater = Room.data.waterHeight != -1;
 
-			UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - 0.06f, 0.05f, 0.05f), ref Room.data.enclosedRoom);
-			UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - 0.12f, 0.05f, 0.05f), ref hasWater);
-			UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - 0.18f, 0.05f, 0.05f), ref Room.data.waterInFront);
+			if (UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - 0.06f, 0.05f, 0.05f), ref Room.data.enclosedRoom)) 
+				dropletHistory.Apply(new VariableChange<bool>(!Room.data.enclosedRoom, Room.data.enclosedRoom, b => Room.data.enclosedRoom = b));
+
+			if (UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - 0.12f, 0.05f, 0.05f), ref hasWater))
+				dropletHistory.Apply(new VariableChange<int>(Room.data.waterHeight, hasWater ? Room.height / 2 : -1, h => {
+					Room.data.waterHeight = h;
+					Room.visuals.waterNeedsRefresh = true;
+				}));
+
+			if (UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - 0.18f, 0.05f, 0.05f), ref Room.data.waterInFront))
+				dropletHistory.Apply(new VariableChange<bool>(!Room.data.waterInFront, Room.data.waterInFront, b => Room.data.waterInFront = b));
 
 			if (!hasWater) {
 				Room.data.waterHeight = -1;
