@@ -17,4 +17,8 @@ public class MassChange : Change {
 			change.Undo();
 		}
 	}
+
+	public int GetCount() {
+		return this.changes.Length;
+	}
 }
