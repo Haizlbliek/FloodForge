@@ -16,6 +16,10 @@ public class ReferenceImage : WorldDraggable {
 			this.UpdateBounds();
 		}
 	}
+	public override void SetPosition(Vector2 value) {
+		base.SetPosition(value);
+		this.UpdateBounds();
+	}
 	public bool lockImage = false;
 	public bool drawUnderGrid = true;
 	public override bool IsDraggable() {
