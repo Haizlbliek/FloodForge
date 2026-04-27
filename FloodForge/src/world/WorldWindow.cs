@@ -518,16 +518,22 @@ public static class WorldWindow {
 		}
 
 		if (Mouse.Right && !Mouse.LastRight) {
-			if (HoveringDraggable is ReferenceImage image) {
+			if (HoveringConnection == null && HoveringDraggable is ReferenceImage image) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.FloatSettingContainer("Scale", image.Scale, 0.001f, 5f, (scale) => {
 						image.Scale = scale;
+					}),
+					new SettingsPopup.FloatSettingContainer("Brightness", image.brightness, 0.01f, 1f, (brightness) => {
+						image.brightness = brightness;
 					}),
 					new SettingsPopup.BoolSettingContainer("Locked", image.lockImage, (locked) => {
 						image.lockImage = locked;
 						if (image.lockImage) {
 							selectedDraggables.Remove(image);
 						}
+					}),
+					new SettingsPopup.BoolSettingContainer("Under Grid", image.drawUnderGrid, (under) => {
+						image.drawUnderGrid = under;
 					})
 				]));
 			}
@@ -815,12 +821,12 @@ public static class WorldWindow {
 
 		Immediate.LoadIdentity();
 		Immediate.Ortho(cameraOffset.x, cameraOffset.y, cameraScale * Main.screenBounds.x, cameraScale * Main.screenBounds.y);
+		foreach (ReferenceImage image in referenceImages)
+			if(image.drawUnderGrid) image.Draw();
 		DrawGrid();
+		foreach (ReferenceImage image in referenceImages)
+			if(!image.drawUnderGrid) image.Draw();
 		Profiler.MarkPoint("DrawGrid");
-
-		foreach (ReferenceImage image in referenceImages) {
-			image.Draw();
-		}
 
 		Program.gl.Enable(EnableCap.Blend);
 		foreach (Room room in WorldWindow.region.rooms) {
