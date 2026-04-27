@@ -21,7 +21,7 @@ public class TagPopup : Popup {
 	}
 
 	protected void Scroll(float deltaX, float deltaY) {
-		if (!this.hovered || this.minimized) return;
+		if (!this.isHovered || this.collapsed) return;
 
 		this.targetScroll += deltaY * 0.1f;
 		this.ClampScroll();
@@ -79,7 +79,7 @@ public class TagPopup : Popup {
 
 	public override void Draw() {
 		base.Draw();
-		if (this.minimized) return;
+		if (this.collapsed) return;
 
 		this.scroll += (this.targetScroll - this.scroll) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 

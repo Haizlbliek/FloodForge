@@ -55,7 +55,7 @@ public static class PopupManager {
 			Popup popup = Windows[i];
 
 			if (popup.InteractBounds().Inside(Mouse.X, Mouse.Y) || popup == interactingPopup) {
-				if (Mouse.JustLeft && popup.CanDrag(Mouse.X, Mouse.Y)) {
+				if (Mouse.JustLeft && popup.IsDragArea(Mouse.X, Mouse.Y)) {
 					holdingPopup = popup;
 					holdingStart = Mouse.Pos;
 				}
@@ -67,7 +67,7 @@ public static class PopupManager {
 
 		if (holdingPopup != null) {
 			if (Mouse.Left) {
-				holdingPopup.Offset(Mouse.Pos - holdingStart);
+				holdingPopup.Translate(Mouse.Pos - holdingStart);
 				holdingStart = Mouse.Pos;
 			}
 			else {

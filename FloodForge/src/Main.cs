@@ -30,7 +30,7 @@ public static class Main {
 		string sessionId = Guid.NewGuid().ToString();
 		string sessionPath = $"{sessionId}.lock";
 		bool crashed = false;
-		foreach (var file in Directory.GetFiles(".", "*.lock")) {
+		foreach (string file in Directory.GetFiles(".", "*.lock")) {
 			try {
 				using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) {
 					crashed = true;
@@ -70,7 +70,7 @@ public static class Main {
 
 		input = Program.window.CreateInput();
 		for (int i = 0; i < input.Keyboards.Count; i++) {
-			var keyboard = input.Keyboards[i];
+			IKeyboard keyboard = input.Keyboards[i];
 			keyboard.KeyDown += KeyDown;
 			keyboard.KeyUp += KeyUp;
 		}

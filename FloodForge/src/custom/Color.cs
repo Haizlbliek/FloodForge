@@ -9,8 +9,8 @@ public struct Color : IParsable<Color> {
 	public float b;
 	public float a = 1f;
 
-	public float Average => (this.r + this.g + this.b) / 3f;
-	public float Grayscale => 0.299f * this.r + 0.587f * this.g + 0.114f * this.b;
+	public readonly float Average => (this.r + this.g + this.b) / 3f;
+	public readonly float Grayscale => 0.299f * this.r + 0.587f * this.g + 0.114f * this.b;
 
 	public Color(float r, float g, float b, float a = 1.0f) {
 		this.r = r;

@@ -15,7 +15,7 @@ public class Connection {
 	protected float directionStrength;
 
 	public Rect fittedAABB;
-	public Rect paddedAABB {
+	public Rect PaddedAABB {
 		get {
 			float padding = WorldWindow.SelectorScale / 4f;
 			return new Rect(
@@ -53,7 +53,7 @@ public class Connection {
 	// Not perfect, but it works
 	public Rect AABB {
 		get {
-			return this.paddedAABB;
+			return this.PaddedAABB;
 		}
 	}
 
@@ -89,14 +89,14 @@ public class Connection {
 
 			float overSegments = 1f / this.segments;
 			List<Vector2> bezierPoints = [];
-			Rect bounds = new(pointA, pointB);
+			Rect bounds = new Rect(pointA, pointB);
 
 			bezierPoints.Add(pointA);
 			for (float t = overSegments; t < 1 + overSegments; t += overSegments) {
 				t = Mathf.Clamp01(t);
 				Vector2 point = MathUtil.BezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
 				bezierPoints.Add(point);
-				bounds = new(
+				bounds = new Rect(
 					Math.Min(bounds.x0, point.x),
 					Math.Min(bounds.y0, point.y),
 					Math.Max(bounds.x1, point.x),

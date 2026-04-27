@@ -1,7 +1,10 @@
 [*.cs]
 
 csharp_style_prefer_primary_constructors = false
-csharp_style_implicit_object_creation_when_type_is_apparent = false
+csharp_style_implicit_object_creation_when_type_is_apparent = false:warning
+csharp_style_var_when_type_is_apparent = false:warning
+csharp_style_var_elsewhere = false:warning
+csharp_style_var_for_built_in_types = false:warning
 csharp_new_line_before_open_brace = none
 csharp_new_line_before_open_brace_types = false
 csharp_new_line_before_open_brace_methods = false
@@ -38,3 +41,8 @@ indent_style = tab
 indent_size = 4
 tab_width = 4
 end_of_line = lf
+
+[*.yml]
+indent_size = 2
+indent_style = space
+tab_width = 2

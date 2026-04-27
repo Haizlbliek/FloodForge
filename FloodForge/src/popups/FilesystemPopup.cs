@@ -153,7 +153,7 @@ public class FilesystemPopup : Popup {
 	}
 
 	protected void Scroll(float x, float y) {
-		if (!this.hovered || this.minimized) return;
+		if (!this.isHovered || this.collapsed) return;
 
 		this.targetScroll += y * 0.06f;
 		this.ClampScroll();
@@ -273,7 +273,7 @@ public class FilesystemPopup : Popup {
 	public override void Draw() {
 		base.Draw();
 
-		if (this.minimized) return;
+		if (this.collapsed) return;
 
 		this.scroll += (this.targetScroll - this.scroll) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 		this.frame++;

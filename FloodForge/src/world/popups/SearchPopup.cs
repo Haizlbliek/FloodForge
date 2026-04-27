@@ -28,7 +28,7 @@ public class SearchPopup : Popup {
 
 	public override void Draw() {
 		base.Draw();
-		if (this.minimized)
+		if (this.collapsed)
 			return;
 
 		float centerX = this.bounds.CenterX;

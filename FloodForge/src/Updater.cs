@@ -22,16 +22,16 @@ public static class Updater {
 		string zipFilePath = Path.Combine(tempFolder, "downloaded.zip");
 		string extractPath = Path.Combine(tempFolder, "extracted_files");
 
-		using (var response = await _client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead)) {
+		using (HttpResponseMessage response = await _client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead)) {
 			response.EnsureSuccessStatusCode();
 
-			using var contentStream = await response.Content.ReadAsStreamAsync();
-			using var fileStream = new FileStream(zipFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+			using Stream contentStream = await response.Content.ReadAsStreamAsync();
+			using FileStream fileStream = new FileStream(zipFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
 			await contentStream.CopyToAsync(fileStream);
 		}
 
 		string actualChecksum;
-		using (var stream = File.OpenRead(zipFilePath)) {
+		using (FileStream stream = File.OpenRead(zipFilePath)) {
 			byte[] hashBytes = await SHA256.HashDataAsync(stream);
 			actualChecksum = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
 		}

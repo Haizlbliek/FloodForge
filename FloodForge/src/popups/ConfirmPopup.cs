@@ -66,7 +66,7 @@ public class ConfirmPopup : Popup {
 
 		base.Draw();
 
-		if (this.minimized) return;
+		if (this.collapsed) return;
 		
 		for (int idx = 0; idx < this.question.Length; idx++) {
 			string lineToWrite = this.question[idx];

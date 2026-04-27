@@ -26,7 +26,7 @@ public class ColorEditPopup : Popup {
 			this.cursorOverButton = true;
 
 		base.Draw();
-		if (this.minimized) return;
+		if (this.collapsed) return;
 		
 		if (this.callback.Target == null)
 			this.Close();
@@ -110,7 +110,7 @@ public class ColorEditPopup : Popup {
 		bool sliderHover = this.sliderRect.Inside(Mouse.Pos);
 		if (sliderHover) {
 			Main.mouse?.Cursor.StandardCursor = Silk.NET.Input.StandardCursor.VResize;
-			this.mouseCursorSet = true;
+			this.cursorOverrideActive = true;
 		}
 
 		if (Mouse.JustLeft && !Mouse.Disabled && sliderHover) {

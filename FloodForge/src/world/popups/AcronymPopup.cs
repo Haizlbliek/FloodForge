@@ -32,7 +32,7 @@ public class AcronymPopup : Popup {
 
 	public override void Draw() {
 		base.Draw();
-		if (this.minimized) return;
+		if (this.collapsed) return;
 
 		float centerX = this.bounds.CenterX;
 

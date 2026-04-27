@@ -46,11 +46,11 @@ public static class Sfx {
 	}
 
 	public static unsafe void Cleanup() {
-		foreach (var source in ActiveSources) {
+		foreach (uint source in ActiveSources) {
 			_al.SourceStop(source);
 			_al.DeleteSource(source);
 		}
-		foreach (var buffer in BufferCache.Values) {
+		foreach (uint buffer in BufferCache.Values) {
 			_al.DeleteBuffer(buffer);
 		}
 
@@ -60,8 +60,8 @@ public static class Sfx {
 	}
 
 	private static unsafe uint LoadWav(string path) {
-		using var stream = File.OpenRead(path);
-		using var reader = new BinaryReader(stream);
+		using FileStream stream = File.OpenRead(path);
+		using BinaryReader reader = new BinaryReader(stream);
 
 		reader.ReadBytes(12);
 		reader.ReadBytes(4);
@@ -77,7 +77,7 @@ public static class Sfx {
 		int dataSize = reader.ReadInt32();
 		byte[] data = reader.ReadBytes(dataSize);
 
-		var format = (channels, bitsPerSample) switch {
+		BufferFormat format = (channels, bitsPerSample) switch {
 			(1, 8) => BufferFormat.Mono8,
 			(1, 16) => BufferFormat.Mono16,
 			(2, 8) => BufferFormat.Stereo8,

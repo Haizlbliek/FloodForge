@@ -18,12 +18,12 @@ public class SettingsPopup : Popup {
 	public override void Draw() {
 		base.Draw();
 
-		if (this.minimized) return;
+		if (this.collapsed) return;
 
 		this.usableBounds = new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y1 - 0.05f);
 		float yVal = this.usableBounds.y1 - (this.settingSpacing + this.settingHeight) * 0.5f;
 		foreach (SettingContainer container in this.settingContainers) {
-			Rect bounds = new(this.usableBounds.x0, yVal - this.settingHeight, this.usableBounds.x1, yVal);
+			Rect bounds = new Rect(this.usableBounds.x0, yVal - this.settingHeight, this.usableBounds.x1, yVal);
 			container.Draw(bounds);
 			yVal -= this.settingHeight + this.settingSpacing;
 		}

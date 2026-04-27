@@ -49,7 +49,7 @@ public class TimelinePopup : Popup {
 	public override void Draw() {
 		base.Draw();
 
-		if (this.minimized)
+		if (this.collapsed)
 			return;
 
 		float centerX = this.bounds.CenterX;
@@ -102,7 +102,7 @@ public class TimelinePopup : Popup {
 			}
 		}
 
-		if (!string.IsNullOrEmpty(hover) && this.hovered) {
+		if (!string.IsNullOrEmpty(hover) && this.isHovered) {
 			float width = UI.font.Measure(hover, 0.04f).x + 0.02f;
 			Rect rect = Rect.FromSize(Mouse.X, Mouse.Y, width, 0.06f);
 			Immediate.Color(Themes.Popup);

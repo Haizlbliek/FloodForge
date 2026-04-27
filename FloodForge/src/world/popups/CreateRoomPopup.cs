@@ -36,7 +36,7 @@ public class CreateRoomPopup : Popup {
 
 	public override void Draw() {
 		base.Draw();
-		if (this.minimized) return;
+		if (this.collapsed) return;
 
 		float y = this.bounds.y1 - 0.05f;
 

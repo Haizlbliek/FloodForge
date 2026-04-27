@@ -50,7 +50,7 @@ public static class WorldWindow {
 	public static Vector2 worldMouse;
 
 	public static HashSet<WorldDraggable> selectedDraggables = [];
-	public static HashSet<Room> selectedRooms {
+	public static HashSet<Room> SelectedRooms {
 		get {
 			HashSet<Room> rooms = [];
 			foreach (WorldDraggable draggable in selectedDraggables)
@@ -68,7 +68,7 @@ public static class WorldWindow {
 
 	private static bool roomSnap;
 	public static bool placingRoom = false;
-	public static RoomPlacementVisualiser roomPlacementVisualiser = new();
+	public static RoomPlacementVisualiser roomPlacementVisualiser = new RoomPlacementVisualiser();
 
 	public static WorldDraggable? holdingDraggable = null;
 	public static Vector2? holdingStart = null;
@@ -84,7 +84,7 @@ public static class WorldWindow {
 
 	public static bool EnableProfilerScreen = false;
 
-	public static ChangeHistory worldHistory = new ();
+	public static ChangeHistory worldHistory = new ChangeHistory();
 
 	private enum ConnectionState {
 		None,
@@ -111,8 +111,8 @@ public static class WorldWindow {
 
 	public static bool HoveringOrSelectedRooms(out HashSet<Room> rooms) {
 		rooms = [];
-		if (selectedRooms.Count >= 1) {
-			rooms = [.. selectedRooms];
+		if (SelectedRooms.Count >= 1) {
+			rooms = [.. SelectedRooms];
 			return true;
 		}
 		else {
@@ -216,7 +216,7 @@ public static class WorldWindow {
 				continue;
 
 			for (uint i = 0; i < room.roomExits.Count; i++) {
-				Vector2 spot = new();
+				Vector2 spot = new Vector2();
 				float sqrDist = 0;
 				if (room.roomExitPaths[room.roomExits[(int) i]].endType == Room.RoomPathEndType.shortcutEntrance) {
 					spot = room.GetShortcutEntranceWorldPoint(i); // if the roomPath has a shortcutExit, first check that
@@ -238,7 +238,7 @@ public static class WorldWindow {
 				}
 			}
 			for (uint i = 0; i < room.allShortcutEntrancePoints.Count; i++) {
-				Vector2 spot = new();
+				Vector2 spot = new Vector2();
 				float sqrDist = 0;
 				(Room.RoomConnection connection, bool matchesWithRoomExitPath) = room.shortcutEntrancePaths[room.allShortcutEntrancePoints[(int) i]];
 				if (!matchesWithRoomExitPath && connection.endType == Room.RoomPathEndType.roomExit) {
@@ -488,12 +488,12 @@ public static class WorldWindow {
 				RoomAndConnectionChange change = new RoomAndConnectionChange(false);
 
 				if (selectedDraggables.Count != 0) {
-					foreach (Room room1 in selectedDraggables) {
-						if (room1 is OffscreenRoom)
+					foreach (WorldDraggable room1 in selectedDraggables) {
+						if (room1 is OffscreenRoom || room1 is not Room room2)
 							continue;
 
-						change.AddRoom(room1);
-						region.connections.Where(c => c.roomA == room1 && !selectedDraggables.Contains(c.roomB) || (c.roomB == room1 && !selectedDraggables.Contains(c.roomA)))
+						change.AddRoom(room2);
+						region.connections.Where(c => c.roomA == room2 && !selectedDraggables.Contains(c.roomB) || (c.roomB == room2 && !selectedDraggables.Contains(c.roomA)))
 							.ForEach(change.AddConnection);
 					}
 					selectedDraggables.Clear();
@@ -1392,7 +1392,7 @@ public static class WorldWindow {
 	private static async Task MassRenderRooms() {
 		WorldWindow.cancelRender = false;
 		WorldWindow.awaitingCancelConfirmation = false;
-		HashSet<Room> rooms = selectedRooms;
+		HashSet<Room> rooms = SelectedRooms;
 		if (rooms.Count <= 0) {
 			PopupManager.Add(new InfoPopup("Select at least one valid room!"));
 		}
@@ -1729,7 +1729,7 @@ public static class WorldWindow {
 				}, button => { return WorldWindow.ValidRegionLoaded; }),
 
 				new AlignedButton("Mass Render", true, button => {
-					confirmRenderPopup = new ConfirmPopup("Render " + selectedRooms.Count + " rooms?" + (
+					confirmRenderPopup = new ConfirmPopup("Render " + SelectedRooms.Count + " rooms?" + (
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
 						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" :
@@ -1738,13 +1738,13 @@ public static class WorldWindow {
 							renderRoomsTask = Task.Run(MassRenderRooms);
 						});
 					PopupManager.Add(confirmRenderPopup);
-				}, button => { return selectedRooms.Count != 0 && ValidRegionLoaded; },
+				}, button => { return SelectedRooms.Count != 0 && ValidRegionLoaded; },
 				"Select at least one valid room\nto render."),
 
 				new Button("Add Reference", button => {
 					PopupManager.Add(new FilesystemPopup((pathstring) => {
 						if(pathstring.Length != 0) {
-							ReferenceImage newImage = new(pathstring.First()) { Position = cameraOffset };
+							ReferenceImage newImage = new ReferenceImage(pathstring.First()) { Position = cameraOffset };
 							referenceImages.Add(newImage);
 							selectedDraggables.Add(newImage);
 						}

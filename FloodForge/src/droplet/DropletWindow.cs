@@ -13,7 +13,7 @@ namespace FloodForge.Droplet;
 
 public static class DropletWindow {
 	private static readonly DropletMenuItems menuItems = new DropletMenuItems();
-	public static readonly ChangeHistory dropletHistory = new(RedoChangeOnApply: false);
+	public static readonly ChangeHistory dropletHistory = new ChangeHistory(RedoChangeOnApply: false);
 
 	private static Texture GeometryTexture = null!;
 	private static bool showObjects;
@@ -1376,7 +1376,7 @@ public static class DropletWindow {
 					int start = po.IndexOf('<');
 					int next = po.IndexOf('>', start);
 					int end = po.IndexOf('>', next + 1);
-					string last = po.Substring(end + 2);
+					string last = po[(end + 2)..];
 					string[] splits = last.Split('~');
 
 					if (po.StartsWith("TerrainHandle>")) {
@@ -1481,17 +1481,15 @@ public static class DropletWindow {
 		}
 
 		int firstTilePositionX = Mathf.FloorToInt(camera.position.x / 20) - 1;
-		float TopLeftOffsetX = firstTilePositionX * 20 - camera.position.x;
 		int firstTilePositionY = Mathf.FloorToInt(camera.position.y / 20) - 1;
-		float TopLeftOffsetY = firstTilePositionY * 20 - camera.position.y;
 		int lastTilePositionX = Mathf.CeilToInt((camera.position.x + CameraTextureWidth) / 20);
 		int lastTilePositionY = Mathf.CeilToInt((camera.position.y + CameraTextureHeight) / 20);
 
 		for(int y = firstTilePositionY; y <= lastTilePositionY; y++) {
 			for(int x = firstTilePositionX; x <= lastTilePositionX; x++) {
 				uint tileType = Room.GetTile(x, y);
-				float offsetX = camera.position.x;// - (TopLeftOffsetX % 20);
-				float offsetY = camera.position.y;//  (TopLeftOffsetY % 20);
+				float offsetX = camera.position.x;
+				float offsetY = camera.position.y;
 				int pixelOffsetX = Mathf.FloorToInt(offsetX);
 				int pixelOffsetY = Mathf.FloorToInt(offsetY);
 

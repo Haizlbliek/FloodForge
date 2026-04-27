@@ -31,7 +31,7 @@ public class TimelineChange : MultipleRoomChange {
 			this.lineage.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timelineType, this.lineage.timelines);
 		}
 		else {
-			foreach (var room in this.rooms) {
+			foreach (Room room in this.rooms) {
 				room.Timelines.Add(this.timeline);
 				room.conditionalPopup?.InvokeOnTimelineChange(room.TimelineType, room.Timelines);
 			}
@@ -48,7 +48,7 @@ public class TimelineChange : MultipleRoomChange {
 			this.lineage.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timelineType, this.lineage.timelines);
 		}
 		else {
-			foreach (var room in this.rooms) {
+			foreach (Room room in this.rooms) {
 				room.Timelines.Remove(this.timeline);
 				room.conditionalPopup?.InvokeOnTimelineChange(room.TimelineType, room.Timelines);
 			}

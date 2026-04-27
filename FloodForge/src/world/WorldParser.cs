@@ -166,7 +166,7 @@ public static class WorldParser {
 			}
 		}
 
-		foreach (var pair in extraRoomData) {
+		foreach (KeyValuePair<string, (bool hidden, bool merge)> pair in extraRoomData) {
 			Room room = WorldWindow.region.rooms.First(x => x.name.Equals(pair.Key, StringComparison.InvariantCultureIgnoreCase));
 			room.data.hidden = pair.Value.hidden;
 			room.data.merge = pair.Value.merge;
@@ -869,7 +869,7 @@ public static class WorldParser {
 		foreach (Room room in WorldWindow.region.rooms) {
 			if (room is OffscreenRoom) continue;
 
-			foreach (var attr in roomAttractiveness) {
+			foreach ((string, Dictionary<string, RoomAttractiveness>) attr in roomAttractiveness) {
 				if (!attr.Item1.Equals(room.name, StringComparison.InvariantCultureIgnoreCase)) continue;
 
 				room.data.attractiveness = attr.Item2;

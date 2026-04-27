@@ -688,7 +688,7 @@ public static class WorldExporter {
 			ExportRoomAttr(writer, RoomNameCasing(room.name), room.data.attractiveness);
 		}
 
-		foreach (var item in WorldWindow.region.overrideSubregionColors) {
+		foreach (KeyValuePair<int, Color> item in WorldWindow.region.overrideSubregionColors) {
 			writer.WriteLine($"//FloodForge|SubregionColorOverride|{item.Key}|{item.Value}");
 		}
 	}
