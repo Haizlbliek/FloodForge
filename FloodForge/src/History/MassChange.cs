@@ -13,7 +13,7 @@ public class MassChange : Change {
 	}
 
 	public override void Undo() {
-		foreach (Change change in this.changes) {
+		foreach (Change change in this.changes.Reverse()) {
 			change.Undo();
 		}
 	}
