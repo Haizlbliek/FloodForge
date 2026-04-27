@@ -382,12 +382,14 @@ public static class DropletWindow {
 		if (newValue != oldValue) dropletHistory.Apply(new TileChange(new (x, y), oldValue, newValue));
 	}
 
-	private static Vector2i rectStart;
+	private static Vector2i drawStart;
 	private static int drawingState = -1;
 	// -1 == no drawing
 	// 0 == creating rectangle mouseL
 	// 1 == creating rectangle mouseR
 	// 2 == drawing stroke
+	// 3 == drawing line L
+	// 4 == drawing line R
 	private static void UpdateGeometryTab() {
 		if (!(Mouse.Left || Mouse.Right)) {
 			int tool = (int)selectedTool;
@@ -420,18 +422,31 @@ public static class DropletWindow {
 			if (drawingState == 0 || drawingState == 1) { // if we are making a rectangle
 				if ((drawingState == 0 && !Mouse.Left) || (drawingState == 1 && !Mouse.Right)) { // if we are done with dragging the rectangle
 					dropletHistory.StartCollectingChanges([typeof(TileChange)]);
-					for (int x = Math.Min(rectStart.x, mouseTile.x); x <= Math.Max(rectStart.x, mouseTile.x); x++) {
-						for (int y = Math.Min(rectStart.y, mouseTile.y); y <= Math.Max(rectStart.y, mouseTile.y); y++) {
+					for (int x = Math.Min(drawStart.x, mouseTile.x); x <= Math.Max(drawStart.x, mouseTile.x); x++) {
+						for (int y = Math.Min(drawStart.y, mouseTile.y); y <= Math.Max(drawStart.y, mouseTile.y); y++) {
 							ApplyTool(x, y, drawingState == 1);
 						}
 					}
-					dropletHistory.GetAndApplyCollectedMassChange();
+					dropletHistory.GetAndApplyCollectedMassChange(true);
+					drawingState = -1; // then, return to original state
+				}
+			}
+			else if (drawingState == 3 || drawingState == 4) {
+				if ((drawingState == 3 && !Mouse.Left) || (drawingState == 4 && !Mouse.Right)) {
+					dropletHistory.StartCollectingChanges([typeof(TileChange)]);
+					List <Vector2i> drawLine = LevelUtils.Line(drawStart.x, drawStart.y, mouseTile.x, mouseTile.y);
+					foreach (Vector2i point in drawLine) {
+						if (Room.Inside(point)) {
+							ApplyTool(point.x, point.y, drawingState == 4);
+						}
+					}
+					dropletHistory.GetAndApplyCollectedMassChange(true);
 					drawingState = -1; // then, return to original state
 				}
 			}
 			else if (drawingState == 2) { // if we are drawing a stroke
-				if (!(Mouse.Left || Mouse.Right) || Keys.Modifier(Keys.Modifiers.Shift)) { // and are ending said stroke
-					dropletHistory.GetAndApplyCollectedMassChange();
+				if (!(Mouse.Left || Mouse.Right) || Keys.Modifier(Keys.Modifiers.Shift) || Keys.Modifier(Keys.Modifiers.Control)) { // and are ending said stroke
+					dropletHistory.GetAndApplyCollectedMassChange(true);
 					drawingState = -1;
 				}
 				else if ((Mouse.Left || Mouse.Right) && (lastMouseTile != mouseTile)) {
@@ -445,7 +460,11 @@ public static class DropletWindow {
 			}
 			else if (Keys.Modifier(Keys.Modifiers.Shift) && (Mouse.Left || Mouse.Right)) { // if we aren't already making a rectangle but are holding shift & mouse,
 				drawingState = Mouse.Left ? 0 : 1; // start making a rectangle
-				rectStart = mouseTile;
+				drawStart = mouseTile;
+			}
+			else if (Keys.Modifier(Keys.Modifiers.Control) && (Mouse.Left || Mouse.Right)) {
+				drawingState = Mouse.Left ? 3 : 4;
+				drawStart = mouseTile;
 			}
 			else if (selectedTool == GeometryTool.Wall && Keys.Pressed(Key.Q) && (Mouse.JustLeft || Mouse.JustRight) && Room.Inside(mouseTile)) {
 				Stack<Vector2i> items = new Stack<Vector2i>();
@@ -481,7 +500,7 @@ public static class DropletWindow {
 						items.Push(new Vector2i(tile.x, tile.y + 1));
 					}
 				}
-				dropletHistory.GetAndApplyCollectedMassChange();
+				dropletHistory.GetAndApplyCollectedMassChange(true);
 			}
 			else if (Mouse.JustLeft || Mouse.JustRight) {
 				if (drawingState == -1) {
@@ -495,11 +514,21 @@ public static class DropletWindow {
 
 			Immediate.Color(Themes.RoomBorderHighlight);
 			if (drawingState == 0 || drawingState == 1) {
-				int sx = Math.Min(rectStart.x, mouseTile.x);
-				int sy = Math.Min(rectStart.y, mouseTile.y);
-				int ex = Math.Max(rectStart.x, mouseTile.x);
-				int ey = Math.Max(rectStart.y, mouseTile.y);
+				int sx = Math.Min(drawStart.x, mouseTile.x);
+				int sy = Math.Min(drawStart.y, mouseTile.y);
+				int ex = Math.Max(drawStart.x, mouseTile.x);
+				int ey = Math.Max(drawStart.y, mouseTile.y);
 				UI.StrokeRect(new Rect(roomRect.x0 + sx, roomRect.y1 - sy, roomRect.x0 + ex + 1, roomRect.y1 - ey - 1));
+			}
+			else if (drawingState == 3 || drawingState == 4) {
+				Program.gl.Enable(EnableCap.Blend);
+				Immediate.Alpha(0.5f);
+				List <Vector2i> drawLine = LevelUtils.Line(drawStart.x, drawStart.y, mouseTile.x, mouseTile.y);
+				foreach (Vector2i point in drawLine) {
+					UI.FillRect(Rect.FromSize(roomRect.x0 + point.x, roomRect.y1 - point.y - 1, 1f, 1f));
+				}
+				Immediate.Alpha(1f);
+				Program.gl.Disable(EnableCap.Blend);
 			}
 			else {
 				UI.StrokeRect(Rect.FromSize(roomRect.x0 + mouseTile.x, roomRect.y1 - mouseTile.y - 1, 1f, 1f));
