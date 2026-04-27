@@ -1,4 +1,5 @@
 using FloodForge.Popups;
+using FloodForge.History;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;
@@ -79,7 +80,7 @@ public class SubregionPopup : Popup {
 						}
 					}
 
-					History.Apply(change);
+					WorldWindow.worldHistory.Apply(change);
 				}
 				else {
 					bool canRemove = !WorldWindow.region.rooms.Any(r => r.data.subregion == idx);
@@ -90,7 +91,7 @@ public class SubregionPopup : Popup {
 						WorldWindow.region.rooms.Where(r => r.data.subregion == idx)
 							.ForEach(r => change.AddRoom(r, r.data.subregion - 1));
 
-						History.Apply(change);
+						WorldWindow.worldHistory.Apply(change);
 					}
 					else {
 						PopupManager.Add(new InfoPopup("Cannot remove subregion if assigned to rooms\n(Hold shift to force)"));
@@ -110,15 +111,15 @@ public class SubregionPopup : Popup {
 			UVRect buttonUv = new UVRect(0.395f + centerX, y - 0.05f, 0.445f + centerX, y).UV(exists ? 0.75f : 0.5f, 0.25f, exists ? 1f : 0.75f, 0.5f);
 			if (UI.TextureButton(buttonUv, new UI.TextureButtonMods { textureColor = subregionColor })) {
 				if (!exists) {
-					History.Apply(new OverrideSubregionColorChange(idx, subregionColor));
+					WorldWindow.worldHistory.Apply(new OverrideSubregionColorChange(idx, subregionColor));
 				}
 				PopupManager.Add(new ColorEditPopup(WorldWindow.region.overrideSubregionColors[idx], (col) => {
-					History.Apply(new OverrideSubregionColorChange(idx, WorldWindow.region.overrideSubregionColors[idx], col));
+					WorldWindow.worldHistory.Apply(new OverrideSubregionColorChange(idx, WorldWindow.region.overrideSubregionColors[idx], col));
 				}));
 			}
 			if (exists) {
 				if (UI.TextureButton(UVRect.FromSize(0.455f + centerX, y - 0.04f, 0.03f, 0.03f).UV(0.5f, 0.25f, 0.75f, 0f))) {
-					History.Apply(new OverrideSubregionColorChange(idx));
+					WorldWindow.worldHistory.Apply(new OverrideSubregionColorChange(idx));
 				}
 			}
 		}
@@ -165,6 +166,6 @@ public class SubregionPopup : Popup {
 	protected void SetSubregion(int subregion) {
 		GeneralRoomChange<int> change = new GeneralRoomChange<int>(r => r.data.subregion, (r, i) => r.data.subregion = i);
 		this.rooms.ForEach(r => change.AddRoom(r, subregion));
-		History.Apply(change);
+		WorldWindow.worldHistory.Apply(change);
 	}
 }

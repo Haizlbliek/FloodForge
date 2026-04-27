@@ -1,4 +1,6 @@
-namespace FloodForge.World;
+using FloodForge.World;
+
+namespace FloodForge.History;
 
 public abstract class MultipleDraggableChange : Change {
 	protected readonly List<WorldDraggable> draggables = [];

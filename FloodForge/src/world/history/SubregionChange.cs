@@ -1,4 +1,6 @@
-namespace FloodForge.World;
+using FloodForge.World;
+
+namespace FloodForge.History;
 
 public class SubregionChange : GeneralRoomChange<int> {
 	protected Type type;

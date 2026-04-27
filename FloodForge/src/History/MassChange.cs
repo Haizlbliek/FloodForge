@@ -1,4 +1,4 @@
-namespace FloodForge.World;
+namespace FloodForge.History;
 
 public class MassChange : Change {
 	readonly Change[] changes;
