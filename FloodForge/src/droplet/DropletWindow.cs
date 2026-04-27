@@ -1080,15 +1080,21 @@ public static class DropletWindow {
 			UI.Line(sidebar.x0, barY, sidebar.x1, sidebar.y1 - 0.2f);
 
 			if (UI.TextButton("Add TerrainHandle", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.06f, 0.39f, 0.05f))) {
-				Room.data.objects.Add(new TerrainHandleObject());
+				DevObject newObject = new TerrainHandleObject();
+				Room.data.objects.Add(newObject);
 				Room.visuals.terrainNeedsRefresh = true;
+				dropletHistory.Apply(new ObjectAddChange(Room, newObject, true));
 			}
 			if (UI.TextButton("Add MudPit", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.12f, 0.39f, 0.05f))) {
-				Room.data.objects.Add(new MudPitObject());
+				DevObject newObject = new MudPitObject();
+				Room.data.objects.Add(newObject);
+				dropletHistory.Apply(new ObjectAddChange(Room, newObject, true));
 			}
 			if (UI.TextButton("Add AirPocket", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.18f, 0.39f, 0.05f))) {
-				Room.data.objects.Add(new AirPocketObject());
+				DevObject newObject = new AirPocketObject();
+				Room.data.objects.Add(newObject);
 				Room.visuals.waterNeedsRefresh = true;
+				dropletHistory.Apply(new ObjectAddChange(Room, newObject, true));
 			}
 
 			if (trashCanState > 0) {
