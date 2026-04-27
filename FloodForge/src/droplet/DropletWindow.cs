@@ -214,11 +214,14 @@ public static class DropletWindow {
 				int oldHeight = Room.data.waterHeight;
 				Room.data.waterHeight = Room.height - mouseTile.y - 1;
 				if (Room.data.waterHeight < 0) Room.data.waterHeight = 0;
-				Room.visuals.waterNeedsRefresh = true;
-				dropletHistory.Apply(new VariableChange<int>(oldHeight, Room.data.waterHeight, h => {
-					Room.data.waterHeight = h;
+				if (Room.data.waterHeight != oldHeight) {
 					Room.visuals.waterNeedsRefresh = true;
-				}));
+					dropletHistory.Apply(new VariableChange<int>(oldHeight, Room.data.waterHeight, h => {
+						Room.data.waterHeight = h;
+						Room.visuals.waterNeedsRefresh = true;
+						Room.visuals.Refresh();
+					}));
+				}
 			}
 		}
 
@@ -1052,6 +1055,7 @@ public static class DropletWindow {
 				dropletHistory.Apply(new VariableChange<int>(Room.data.waterHeight, hasWater ? Room.height / 2 : -1, h => {
 					Room.data.waterHeight = h;
 					Room.visuals.waterNeedsRefresh = true;
+					Room.visuals.Refresh();
 				}));
 
 			if (UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - 0.18f, 0.05f, 0.05f), ref Room.data.waterInFront))
