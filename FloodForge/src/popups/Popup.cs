@@ -13,7 +13,7 @@ public abstract class Popup {
 	protected UVRect closeButton;
 	protected UVRect collapseButton;
 	protected Rect bounds;
-	protected Rect collapseBounds;
+	protected Rect minimumResizeBounds;
 	protected Rect? initialBounds;
 
 	protected Rect scaleControlIncluder;
@@ -34,7 +34,7 @@ public abstract class Popup {
 
 	public Popup() {
 		this.bounds = new Rect(-0.5f, -0.5f, 0.5f, 0.5f);
-		this.collapseBounds = new Rect(-0.1f, -0.1f, 0.1f, 0.1f);
+		this.minimumResizeBounds = new Rect(-0.1f, -0.1f, 0.1f, 0.1f);
 		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).UV(0f, 0f, 0.25f, 0.25f);
 		this.collapseButton = new UVRect(this.bounds.x1 - 0.1f, this.bounds.y1 - 0.05f, this.bounds.x1 - 0.05f, this.bounds.y1).UV(0f, 0.5f, 0.25f, 0.75f);
 		this.UpdateScaleControls(this.bounds);
@@ -138,7 +138,7 @@ public abstract class Popup {
 			this.cursorOverrideActive = true;
 			if (this.initialBounds == null) {
 				this.initialBounds = this.bounds;
-				this.collapseBounds = this.bounds;
+				this.minimumResizeBounds = this.bounds;
 			}
 			if (Mouse.JustRight) {
 				this.resizingWindow = false;
@@ -173,15 +173,15 @@ public abstract class Popup {
 				float newY1 = lockYScale || this.resizeDirection.y < 0 ? originalBounds.y1 : Math.Max(PointB.y, this.resizeAnchorPoint.y);
 				if (!lockXScale) {
 					if (this.resizeDirection.x > 0)
-						newX1 = Math.Max(this.resizeAnchorPoint.x + (this.collapseBounds.x1 - this.collapseBounds.x0), newX1);
+						newX1 = Math.Max(this.resizeAnchorPoint.x + (this.minimumResizeBounds.x1 - this.minimumResizeBounds.x0), newX1);
 					else
-						newX0 = Math.Min(this.resizeAnchorPoint.x - (this.collapseBounds.x1 - this.collapseBounds.x0), newX0);
+						newX0 = Math.Min(this.resizeAnchorPoint.x - (this.minimumResizeBounds.x1 - this.minimumResizeBounds.x0), newX0);
 				}
 				if (!lockYScale) {
 					if (this.resizeDirection.y > 0)
-						newY1 = Math.Max(this.resizeAnchorPoint.y + (this.collapseBounds.y1 - this.collapseBounds.y0), newY1);
+						newY1 = Math.Max(this.resizeAnchorPoint.y + (this.minimumResizeBounds.y1 - this.minimumResizeBounds.y0), newY1);
 					else
-						newY0 = Math.Min(this.resizeAnchorPoint.y - (this.collapseBounds.y1 - this.collapseBounds.y0), newY0);
+						newY0 = Math.Min(this.resizeAnchorPoint.y - (this.minimumResizeBounds.y1 - this.minimumResizeBounds.y0), newY0);
 				}
 
 				this.resizePreviewBounds = new Rect(newX0, newY0, newX1, newY1);

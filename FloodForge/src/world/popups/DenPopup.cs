@@ -474,9 +474,9 @@ public class DenPopup : Popup {
 		DenCreature? creature = this.selectedLineage;
 		bool unknown = creature != null && !CreatureTextures.Known(creature.type);
 
-		this.collapseBounds.x1 = this.collapseBounds.x0 + 0.6f + 0.3f + 0.22f;
-		if (this.bounds.x1 - this.bounds.x0 < this.collapseBounds.x1 - this.collapseBounds.x0) {
-			this.bounds.x1 = this.bounds.x0 + this.collapseBounds.x1 - this.collapseBounds.x0;
+		this.minimumResizeBounds.x1 = this.minimumResizeBounds.x0 + 0.6f + 0.3f + 0.22f;
+		if (this.bounds.x1 - this.bounds.x0 < this.minimumResizeBounds.x1 - this.minimumResizeBounds.x0) {
+			this.bounds.x1 = this.bounds.x0 + this.minimumResizeBounds.x1 - this.minimumResizeBounds.x0;
 		}
 
 		base.Draw();
