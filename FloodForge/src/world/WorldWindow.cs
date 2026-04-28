@@ -922,6 +922,13 @@ public static class WorldWindow {
 		foreach (DenLineage lineage in den.creatures) {
 			DenCreature creature = lineage;
 			string line = "";
+			if (lineage.timelineType != TimelineType.All) {
+				string timelines = "";
+				foreach (string timeline in lineage.timelines) {
+					timelines += (timelines != "" ? ",": "") + timeline;
+				}
+				line += $"({(lineage.timelineType == TimelineType.Except ? "X-" : "") + timelines}) - ";
+			}
 			line += $"{CreatureTextures.ExportName(creature.type)} x {creature.count}";
 			while (creature.lineageTo != null) {
 				creature = creature.lineageTo;
