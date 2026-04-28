@@ -1087,13 +1087,19 @@ public static class WorldWindow {
 					}
 				}
 				else {
-					for (int j = 0; j < room.denShortcutEntrances.Count; j++) {
-						Vector2i shortcut = room.denShortcutEntrances[j];
-						shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
-						if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-							DebugDen(room.GetDen01(j), room, ref debugText);
-							debuggedDen = true;
-							break;
+					if (room.hoveredDen != -1) {
+						DebugDen(room.GetDen01(room.hoveredDen), room, ref debugText);
+						debuggedDen = true;
+					}
+					else {
+						for (int j = 0; j < room.denShortcutEntrances.Count; j++) {
+							Vector2i shortcut = room.denShortcutEntrances[j];
+							shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
+							if ((roomMouse - shortcutPosition).Length < SelectorScale) {
+								DebugDen(room.GetDen01(j), room, ref debugText);
+								debuggedDen = true;
+								break;
+							}
 						}
 					}
 				}
