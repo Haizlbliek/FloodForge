@@ -322,7 +322,7 @@ public static class WorldWindow {
 
 		bool isOriginal = Settings.OriginalControls;
 		
-		if (Mouse.Right && !Mouse.LastRight) {
+		if (Mouse.Right && !Mouse.LastRight && connectionState != ConnectionState.Connection) {
 			if (HoveringConnection == null && HoveringDraggable is ReferenceImage image) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.FloatSettingContainer("Scale", image.Scale, 0.001f, 5f, (scale) => {
