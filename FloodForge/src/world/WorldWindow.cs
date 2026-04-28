@@ -321,6 +321,28 @@ public static class WorldWindow {
 			return;
 
 		bool isOriginal = Settings.OriginalControls;
+		
+		if (Mouse.Right && !Mouse.LastRight) {
+			if (HoveringConnection == null && HoveringDraggable is ReferenceImage image) {
+				PopupManager.Add(new SettingsPopup([
+					new SettingsPopup.FloatSettingContainer("Scale", image.Scale, 0.001f, 5f, (scale) => {
+						image.Scale = scale;
+					}),
+					new SettingsPopup.FloatSettingContainer("Brightness", image.brightness, 0.01f, 1f, (brightness) => {
+						image.brightness = brightness;
+					}),
+					new SettingsPopup.BoolSettingContainer("Locked", image.lockImage, (locked) => {
+						image.lockImage = locked;
+						if (image.lockImage) {
+							selectedDraggables.Remove(image);
+						}
+					}),
+					new SettingsPopup.BoolSettingContainer("Under Grid", image.drawUnderGrid, (under) => {
+						image.drawUnderGrid = under;
+					})
+				]));
+			}
+		}
 
 		if (Mouse.Left) {
 			if (!Mouse.LastLeft && !menuItems.menuBarRect.Inside(Mouse.Pos)) { // if just started pressing left
@@ -518,28 +540,6 @@ public static class WorldWindow {
 	private static void UpdateKeybinds() {
 		if (Keys.JustPressed(Key.F3)) {
 			EnableProfilerScreen = !EnableProfilerScreen;
-		}
-
-		if (Mouse.Right && !Mouse.LastRight) {
-			if (HoveringConnection == null && HoveringDraggable is ReferenceImage image) {
-				PopupManager.Add(new SettingsPopup([
-					new SettingsPopup.FloatSettingContainer("Scale", image.Scale, 0.001f, 5f, (scale) => {
-						image.Scale = scale;
-					}),
-					new SettingsPopup.FloatSettingContainer("Brightness", image.brightness, 0.01f, 1f, (brightness) => {
-						image.brightness = brightness;
-					}),
-					new SettingsPopup.BoolSettingContainer("Locked", image.lockImage, (locked) => {
-						image.lockImage = locked;
-						if (image.lockImage) {
-							selectedDraggables.Remove(image);
-						}
-					}),
-					new SettingsPopup.BoolSettingContainer("Under Grid", image.drawUnderGrid, (under) => {
-						image.drawUnderGrid = under;
-					})
-				]));
-			}
 		}
 
 		if (Keys.JustPressed(Key.F)) {
