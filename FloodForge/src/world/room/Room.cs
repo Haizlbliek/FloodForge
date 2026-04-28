@@ -1824,8 +1824,9 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 
 		float selectorScale = WorldWindow.SelectorScale;
 		int drawnCreatures = 0;
-		for (int i = 0; i < den.creatures.Count; i++) {
-			DenCreature creature = den.creatures[i];
+		List<DenLineage> visibleLineages = den.creatures.FindAll(d => WorldWindow.CheckVisibleTimeline(d.timelineType, d.timelines));
+		for (int i = 0; i < visibleLineages.Count; i++) {
+			DenCreature creature = visibleLineages[i];
 			if (creature.type.IsNullOrEmpty() && creature.lineageTo == null) {
 				drawnCreatures++;
 				continue;
@@ -1834,7 +1835,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 				continue;
 
 			float scale = selectorScale;
-			float rectX = x + drawnCreatures * scale - (den.creatures.Count - 1f) * 0.5f * scale;
+			float rectX = x + drawnCreatures * scale - (visibleLineages.Count - 1f) * 0.5f * scale;
 			float rectY = y;
 
 			if (hovered)
