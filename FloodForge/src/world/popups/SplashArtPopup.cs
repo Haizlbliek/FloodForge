@@ -212,7 +212,8 @@ public class SplashArtPopup : Popup {
 
 				if (Mouse.JustLeft) {
 					this.Close();
-					WorldParser.ImportWorldFile(RecentFiles.recents[i]);
+					if (!WorldParser.ImportWorldFile(RecentFiles.recents[i]))
+						PopupManager.Add(new InfoPopup("Importing world failed!\nView log.txt for more info."));
 					return;
 				}
 			}

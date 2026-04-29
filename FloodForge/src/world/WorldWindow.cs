@@ -1636,7 +1636,8 @@ public static class WorldWindow {
 					PopupManager.Add(new FilesystemPopup(selection => {
 						if (selection.Length == 0) return;
 
-						WorldParser.ImportWorldFile(selection[0]);
+						if (!WorldParser.ImportWorldFile(selection[0]))
+							PopupManager.Add(new InfoPopup("Importing world failed!\nView log.txt for more info."));
 					}, 0).Filter(Regexs.WorldFileRegex()).Hint("world_xx.txt"));
 				}),
 
@@ -1715,7 +1716,8 @@ public static class WorldWindow {
 						PopupManager.Add(new InfoPopup("Could not find world_xx.txt file!"));
 						return;
 					}
-					WorldParser.ImportWorldFile(path);
+					if (!WorldParser.ImportWorldFile(path))
+						PopupManager.Add(new InfoPopup("Importing world failed!\nView log.txt for more info."));
 				}, button => { return WorldWindow.ValidRegionLoaded; },
 				"You must create or import a region\nbefore refreshing."),
 

@@ -792,6 +792,10 @@ public static class WorldParser {
 	}
 
 	public static bool ImportWorldFile(string worldPath) {
+		if (!File.Exists(worldPath)) {
+			Logger.Error("Cannot find world_XX.txt");
+			return false;
+		}
 		WorldWindow.worldHistory.Clear();
 		RecentFiles.AddPath(worldPath);
 		roomAttractiveness.Clear();
