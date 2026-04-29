@@ -60,18 +60,11 @@ public class SettingsPopup : Popup {
 		}
 	}
 
-	public class FloatSettingContainer : SettingContainer {
-		protected UI.SliderFloatEditable valueSlider = new UI.SliderFloatEditable(0.05f, 1);
-		protected float value;
+	public class FloatSettingContainer (string name, float initialValue, float minimum, float maximum, Action<float> callback) : SettingContainer (name) {
+		protected UI.SliderFloatEditable valueSlider = new UI.SliderFloatEditable(minimum, maximum);
+		protected float value = initialValue;
 		protected bool updateWhileDragging = true;
-		protected Action<float> callback;
-
-		public FloatSettingContainer(string name, float initialValue, float minimum, float maximum, Action<float> callback) : base(name) {
-			this.value = initialValue;
-			this.valueSlider.min = minimum;
-			this.valueSlider.max = maximum;
-			this.callback = callback;
-		}
+		protected Action<float> callback = callback;
 
 		public FloatSettingContainer UpdateWhileDragging(bool updateWhileDragging) {
 			this.updateWhileDragging = updateWhileDragging;
@@ -89,6 +82,27 @@ public class SettingsPopup : Popup {
 			UI.font.Write($"{this.value}", x, slider.sliderPos.y, 0.03f, swap ? Font.Align.MiddleRight : Font.Align.MiddleLeft);
 			if (slider.submitted || (slider.dragging && this.updateWhileDragging)) {
 				this.callback(this.value);
+			}
+		}
+	}
+
+	public class ButtonSettingContainer : SettingContainer {
+		readonly Action onClickCallback;
+		Func<bool>? contextCheckCallback;
+		public ButtonSettingContainer(string name, Action onClickCallback) : base (name) {
+			this.onClickCallback = onClickCallback;
+		}
+
+		public ButtonSettingContainer SetContextCheck(Func<bool> contextCheckCallback) {
+			this.contextCheckCallback = contextCheckCallback;
+			return this;
+		}
+
+		public override void Draw(Rect bounds) {
+			bool enabled = this.contextCheckCallback == null || this.contextCheckCallback();
+			Immediate.Color(enabled ? Themes.Text : Themes.TextDisabled);
+			if (UI.TextButton(this.settingName, bounds) && enabled) {
+				this.onClickCallback();
 			}
 		}
 	}
