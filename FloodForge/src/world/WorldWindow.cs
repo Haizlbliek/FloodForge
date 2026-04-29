@@ -1622,7 +1622,13 @@ public static class WorldWindow {
 		public WorldMenuItems() {
 			this.buttons = [
 				new Button("New", button => {
-					PopupManager.Add(new AcronymPopup());
+					PopupManager.Add(new AcronymPopup((acronym) => {
+							WorldWindow.Reset();
+							WorldWindow.region.offscreenDen = new OffscreenRoom("offscreenden" + acronym.ToLowerInvariant(), "OffscreenDen" + acronym.ToUpperInvariant());
+							WorldWindow.region.rooms.Add(WorldWindow.region.offscreenDen);
+							WorldWindow.region.acronym = acronym;
+						})
+					);
 				}),
 
 				new Button("Add Room", button => {

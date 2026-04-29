@@ -9,9 +9,11 @@ public class AcronymPopup : Popup {
 	protected virtual string BanLetters => "_/\\ ";
 
 	protected UI.TextInputEditable Acronym;
+	protected Action<string> onSubmitCallback;
 
-	public AcronymPopup() {
+	public AcronymPopup(Action<string> onSubmitCallback) {
 		this.bounds = new Rect(-0.25f, -0.08f, 0.25f, 0.25f);
+		this.onSubmitCallback = onSubmitCallback;
 		this.Acronym = new UI.TextInputEditable(UI.TextInputEditable.Type.Text, "") { bannedLetters = this.BanLetters };
 		this.Acronym.GrabFocus();
 	}
@@ -56,10 +58,7 @@ public class AcronymPopup : Popup {
 	}
 
 	protected virtual void Submit(string acronym) {
-		WorldWindow.Reset();
-		WorldWindow.region.offscreenDen = new OffscreenRoom("offscreenden" + acronym.ToLowerInvariant(), "OffscreenDen" + acronym.ToUpperInvariant());
-		WorldWindow.region.rooms.Add(WorldWindow.region.offscreenDen);
-		WorldWindow.region.acronym = acronym;
+		this.onSubmitCallback(acronym);
 		this.Close();
 	}
 }
