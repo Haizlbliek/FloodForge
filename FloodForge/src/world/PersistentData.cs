@@ -108,4 +108,20 @@ public static class PersistentData {
 
         File.WriteAllLines(persistentDataPath, newFile);
     }
+
+    public static void RemovePersistentData(string acronym) {
+        string[] file = [];
+        if (File.Exists(persistentDataPath))
+            file = File.ReadAllLines(persistentDataPath);
+        bool isRegion = false;
+        List<string> newFile = [];
+        foreach (string line in file) {
+            if (line.StartsWith("REGION") && line.Split("</a>")[^1] == acronym)
+                isRegion = true;
+            if (!isRegion && line != "") newFile.Add(line);
+            if (line.StartsWith("ENDREGION"))
+                isRegion = false;
+        }
+        File.WriteAllLines(persistentDataPath, newFile);
+    }
 }
