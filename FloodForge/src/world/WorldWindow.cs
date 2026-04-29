@@ -351,11 +351,13 @@ public static class WorldWindow {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.ButtonSettingContainer("Change Acronym", () => {
 						PopupManager.Add(new AcronymPopup((acronym) => {
-							PopupManager.Add(new ConfirmPopup($"Change Acronym to {acronym}?").SetButtons("Yes", "No").Okay(() => {
-								PopupManager.Add(new ConfirmPopup($"Copy or Replace existing files?").SetButtons("<s:1>Replace", "Copy").Okay(() => {
-									AcronymChanger.ChangeAcronym(acronym, true);
+							string checkPath = WorldWindow.region.roomsPath[..(WorldWindow.region.roomsPath.IndexOfReverse('\\') + 1)] + acronym + $"\\world_{acronym}.txt";
+							bool fileExists = File.Exists(checkPath);
+							PopupManager.Add(new ConfirmPopup(fileExists ? $"world_{acronym}.txt already exists\nin this folder.\nOverwrite?" : $"Change Acronym to {acronym}?").SetButtons(fileExists ? "Overwrite" : "Yes", "Cancel").Okay(() => {
+								PopupManager.Add(new ConfirmPopup($"Keep or Replace source files?").SetButtons("<s:1>Replace", "Keep").Okay(() => {
+									AcronymChanger.ChangeAcronym(acronym, true, fileExists);
 								}).Cancel(() => {
-									AcronymChanger.ChangeAcronym(acronym, false);
+									AcronymChanger.ChangeAcronym(acronym, false, fileExists);
 								}).Title("Change Acronym"));
 							}).Title("Change Acronym"));
 						}).Title("Change Acronym"));

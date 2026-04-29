@@ -5,14 +5,20 @@ using FloodForge.Popups;
 namespace FloodForge.World;
 
 public static class AcronymChanger {
-	public static void ChangeAcronym(string newAcronym, bool replaceExistingFiles) {
+	public static void ChangeAcronym(string newAcronym, bool deleteSourceFiles, bool deleteExistingFiles) {
 		string oldAcronym = WorldWindow.region.acronym;
-		Logger.Info($"Initiation acronymChange - {oldAcronym} -> {newAcronym} ; {(replaceExistingFiles ? "replace" : "copy")}");
+		Logger.Info($"Initiation acronymChange - {oldAcronym} -> {newAcronym} ; {(deleteSourceFiles ? "replace" : "copy")}");
 		Logger.Info("getting new paths");
 		string newExportPath = WorldWindow.region.roomsPath[..(WorldWindow.region.roomsPath.IndexOfReverse('\\') + 1)] + newAcronym;
 		string newRoomsPath = newExportPath + "-rooms";
 		Logger.Info("newExportPath = " + newExportPath);
 		Logger.Info("newRoomsPath = " + newRoomsPath);
+
+        if (deleteExistingFiles) {
+            Logger.Info("Deleting existing files.");
+            if (Directory.Exists(newExportPath)) Directory.Delete(newExportPath, true);
+            if (Directory.Exists(newRoomsPath)) Directory.Delete(newRoomsPath, true);
+        }
 
 		List<(string from, string to)> roomFilesToTransfer = [];
 		Dictionary<string, string> nameConversions = [];
@@ -356,7 +362,7 @@ public static class AcronymChanger {
 				}
 				else {
 					Logger.Info($" - applying file");
-					File.Copy(currentPath, currentPath.Replace(from, to));
+					File.Copy(currentPath, currentPath.Replace(from, to), true);
 				}
 			}
 		}
@@ -392,7 +398,7 @@ public static class AcronymChanger {
 			}
 		}
 
-		if (replaceExistingFiles) {
+		if (deleteSourceFiles) {
 			Logger.Info($"BACKING UP FILES!");
 			Directory.GetFileSystemEntries(WorldWindow.region.roomsPath, "", searchOption: SearchOption.AllDirectories).ForEach(f => FloodForge.Backup.File(f));
 			Directory.GetFileSystemEntries(WorldWindow.region.exportPath, "", searchOption: SearchOption.AllDirectories).ForEach(f => FloodForge.Backup.File(f));
@@ -413,10 +419,10 @@ public static class AcronymChanger {
 		Logger.Info($"Updating PersistentData");
 		PersistentData.GetPersistentData(oldAcronym);
 		PersistentData.StorePersistentData(newAcronym);
-		if (replaceExistingFiles) {
+		if (deleteSourceFiles) {
 			PersistentData.RemovePersistentData(oldAcronym);
 		}
 
-		PopupManager.Add(new InfoPopup("Acronym successfully changed.\n" + (replaceExistingFiles ? "Original region deleted.\n" : "All files copied.\n") + "<s:1>Note - Modify and Regions.txt files are unchanged." + (encounteredAtypicalFiles ? "\n<s:1>Note - non-typical file contents are unchanged" : "")));
+		PopupManager.Add(new InfoPopup("Acronym successfully changed.\n" + (deleteSourceFiles ? "Original region deleted.\n" : "All files copied.\n") + "<s:1>Note - Modify and Regions.txt files are unchanged." + (encounteredAtypicalFiles ? "\n<s:1>Note - non-typical file contents are unchanged" : "")));
 	}
 }
