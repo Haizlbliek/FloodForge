@@ -18,26 +18,7 @@ public static class AcronymChanger {
 		Dictionary<string, string> nameConversions = [];
 		List<(string from, string to)> roomsSubDirectoriesToTransfer = [];
 		Logger.Info($"Analysing {oldAcronym}-rooms");
-		string[] roomsOriginalFiles = Directory.Exists(WorldWindow.region.roomsPath) ? Directory.GetFileSystemEntries(WorldWindow.region.roomsPath) : [];
-		Logger.Info("originalFiles:");
-		foreach (string file in roomsOriginalFiles) {
-			Logger.Info(" - " + file[(WorldWindow.region.roomsPath.Length + 1)..]);
-		}
 
-		bool encounteredAtypicalFiles = false;
-
-		// REVIEW - this bit could probably work just as well without iterating through the original files every time we look at a room.
-		// It would probably be a lot more efficient to just check for each file if it starts with the region acronym.
-		// I don't even know why I'm doing it like this, but for now I guess it'll stay this way?
-		// The other option would be to first change the name of each room, and then go through each file with a similar procedure,
-		// only with handling of atypical file names and directories.
-		// then again, that'd be doing almost the same thing - iterating through the files for each room
-		
-		// REVIEW - different implementation idea of this bit:
-		// - go through WorldWindow.region.rooms, create the conversions dictionary
-		// - go through the files and simply replace all that start with the old acronym before an '_'
-
-		List<string> nonCheckedRoomsFiles = [..roomsOriginalFiles];
 		foreach (Room room in WorldWindow.region.rooms) {
 			string oldName = room.name;
 			string newName = oldName;
@@ -76,47 +57,37 @@ public static class AcronymChanger {
 				else {
 					Logger.Info($"Same Path: {room.path}");
 				}
-				Logger.Info($"Checking originalFiles");
-				List<string> checkedFiles = [];
-				foreach (string path in nonCheckedRoomsFiles) {
-					int pathFinalBackslash = path.IndexOfReverse('\\');
-					string fileName = path[(pathFinalBackslash + 1)..];
-					Logger.Info($" - checking file {fileName}");
-					if (fileName.StartsWith(oldName, StringComparison.InvariantCultureIgnoreCase)) {
-						Logger.Info($" -> starts with {oldName}");
-						(string from, string to) replacer = (path, newRoomsPath + '\\' + newName + fileName[oldName.Length..]);
-						roomFilesToTransfer.Add(replacer);
-						Logger.Info($" <- added");
-						checkedFiles.Add(path);
-					}
-				}
-				foreach (string checkedFile in checkedFiles) {
-					nonCheckedRoomsFiles.Remove(checkedFile);
-				}
-			}
-		}
+            }
+        }
 
-		Logger.Info($"nonCheckedFiles:");
-		if (nonCheckedRoomsFiles.Count != 0)
-			encounteredAtypicalFiles = true;
-		foreach (string nonCheckedFile in nonCheckedRoomsFiles) {
-			int pathFinalBackslash = nonCheckedFile.IndexOfReverse('\\');
-			string fileName = nonCheckedFile[(pathFinalBackslash + 1)..];
-			Logger.Info($" - Checking entry {fileName}");
-			if (Directory.Exists(nonCheckedFile)) {
-				roomsSubDirectoriesToTransfer.Add((nonCheckedFile, nonCheckedFile.Replace(WorldWindow.region.roomsPath, newRoomsPath, StringComparison.InvariantCultureIgnoreCase)));
-				Logger.Info($" <- directory added");
-			}
-			else {
-				string newName = fileName;
-				if (newName.StartsWith(oldAcronym, StringComparison.InvariantCultureIgnoreCase)) {
-					newName = newAcronym + newName[oldAcronym.Length..];
-					Logger.Info($" - newName {newName}");
-				}
-				roomFilesToTransfer.Add((nonCheckedFile, newRoomsPath + '\\' + newName));
-				Logger.Info($" <- added");
-			}
-		}
+		string[] roomsOriginalFiles = Directory.Exists(WorldWindow.region.roomsPath) ? Directory.GetFileSystemEntries(WorldWindow.region.roomsPath) : [];
+
+		bool encounteredAtypicalFiles = false;
+
+        Logger.Info($"Checking originalFiles");
+        foreach (string path in roomsOriginalFiles) {
+            int pathFinalBackslash = path.IndexOfReverse('\\');
+            string fileName = path[(pathFinalBackslash + 1)..];
+            Logger.Info($" - checking file {fileName}");
+            string[] splitFileName = fileName.Split('_');
+            if (splitFileName[0] == oldAcronym) {
+                Logger.Info($" -> starts with {oldAcronym}");
+                string newName = newAcronym + fileName[splitFileName[0].Length..];
+                roomFilesToTransfer.Add((path, newRoomsPath + '\\' + newName));
+                Logger.Info($" <- added");
+            }
+            else {
+                encounteredAtypicalFiles = true;
+                if (Directory.Exists(path)) {
+                    roomsSubDirectoriesToTransfer.Add((path, path.Replace(WorldWindow.region.roomsPath, newRoomsPath, StringComparison.InvariantCultureIgnoreCase)));
+                    Logger.Info($" <- directory added");
+                }
+                else {
+                    roomFilesToTransfer.Add((path, newRoomsPath + '\\' + fileName));
+                    Logger.Info($" <- added");
+                }
+            }
+        }        
 
 		Logger.Info($"Analysing {oldAcronym}");
 		string[] worldOriginalFiles = Directory.Exists(WorldWindow.region.exportPath) ? Directory.GetFileSystemEntries(WorldWindow.region.exportPath) : [];
