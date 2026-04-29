@@ -220,7 +220,7 @@ public abstract class Popup {
 		UI.ButtonFillRect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
 		if(this.popupTitle != "") {
 			Immediate.Color(this.collapsed ? Themes.TextDisabled : Themes.Text);
-			UI.font.Write(this.popupTitle, this.bounds.x0 + 0.01f, this.bounds.y1 - 0.025f, 0.03f, Font.Align.MiddleLeft);
+			UI.font.WriteFormatted(this.popupTitle, this.bounds.x0 + 0.01f, this.bounds.y1 - 0.025f, 0.03f, Font.Align.MiddleLeft);
 		}
 
 		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).UV(0f, 0f, 0.25f, 0.25f);

@@ -35,7 +35,7 @@ public class InfoPopup : Popup {
 		Immediate.Color(Themes.Text);
 
 		for (int idx = 0; idx < this.text.Length; idx++) {
-			float y = -((idx - this.text.Length * 0.5f) * 0.05f) - 0.04f + this.bounds.CenterY;
+			float y = -((idx - this.text.Length * 0.5f) * 0.05f) - 0.02f + this.bounds.CenterY;
 			UI.font.WriteFormatted(this.text[idx], this.bounds.CenterX, y, 0.04f, Font.Align.TopCenter);
 		}
 	}
