@@ -322,8 +322,8 @@ public static class WorldWindow {
 
 		bool isOriginal = Settings.OriginalControls;
 		
-		if (Mouse.Right && !Mouse.LastRight && connectionState != ConnectionState.Connection) {
-			if (HoveringConnection == null && HoveringDraggable is ReferenceImage image) {
+		if (Mouse.Right && !Mouse.LastRight && connectionState != ConnectionState.Connection && HoveringConnection == null) {
+			if (HoveringDraggable is ReferenceImage image) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.FloatSettingContainer("Scale", image.Scale, 0.001f, 5f, (scale) => {
 						image.Scale = scale;
@@ -339,8 +339,13 @@ public static class WorldWindow {
 					}),
 					new SettingsPopup.BoolSettingContainer("Under Grid", image.drawUnderGrid, (under) => {
 						image.drawUnderGrid = under;
+					}),
+					new SettingsPopup.ButtonSettingContainer("Delete Reference", () => {
+						PopupManager.Add(new ConfirmPopup("Delete reference?").SetOkay("Delete").SetCancel("Keep").Okay(() => {
+							referenceImages.Remove(image); // make this undo-able
+						}));
 					})
-				]));
+				]).Translate(Mouse.Pos, true).Title("Reference Settings"));
 			}
 		}
 
