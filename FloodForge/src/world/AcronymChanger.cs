@@ -8,11 +8,11 @@ public static class AcronymChanger {
 	public static void ChangeAcronym(string newAcronym, bool deleteSourceFiles, bool deleteExistingFiles) {
 		string oldAcronym = WorldWindow.region.acronym;
 		Logger.Info($"Initiation acronymChange - {oldAcronym} -> {newAcronym} ; {(deleteSourceFiles ? "replace" : "copy")}");
-		Logger.Info("getting new paths");
+		//Logger.Info("getting new paths");
 		string newExportPath = WorldWindow.region.roomsPath[..(WorldWindow.region.roomsPath.IndexOfReverse('\\') + 1)] + newAcronym;
 		string newRoomsPath = newExportPath + "-rooms";
-		Logger.Info("newExportPath = " + newExportPath);
-		Logger.Info("newRoomsPath = " + newRoomsPath);
+		//Logger.Info("newExportPath = " + newExportPath);
+		//Logger.Info("newRoomsPath = " + newRoomsPath);
 
         if (deleteExistingFiles) {
             Logger.Info("Deleting existing files.");
@@ -28,11 +28,11 @@ public static class AcronymChanger {
 		foreach (Room room in WorldWindow.region.rooms) {
 			string oldName = room.name;
 			string newName = oldName;
-			Logger.Info($"checking room {oldName}");
+			//Logger.Info($"checking room {oldName}");
 			string[] splitName = oldName.Split('_');
 			if (splitName[0].Equals(oldAcronym, StringComparison.InvariantCultureIgnoreCase)) {
 				newName = newAcronym + oldName[oldName.IndexOf('_')..];
-				Logger.Info($"regular -> {newName}");
+				//Logger.Info($"regular -> {newName}");
 			}
 			else if (splitName[0].Equals("GATE", StringComparison.InvariantCultureIgnoreCase)) {
 				newName = "GATE_";
@@ -40,14 +40,14 @@ public static class AcronymChanger {
 					newName += $"{newAcronym}_{splitName[2]}";
 				else if (splitName[2].Equals(oldAcronym, StringComparison.InvariantCultureIgnoreCase))
 					newName += $"{splitName[1]}_{newAcronym}";
-				Logger.Info($"GATE -> {newName}");
+				//Logger.Info($"GATE -> {newName}");
 			}
 			else if (splitName[0].Equals("OffscreenDen" + oldAcronym, StringComparison.InvariantCultureIgnoreCase)) {
 				newName = "OffscreenDen" + newAcronym;
-				Logger.Info($"OffscreenDen -> {newName}");
+				//Logger.Info($"OffscreenDen -> {newName}");
 			}
 			else {
-				Logger.Info($"UNKNOWN -> {newName}");
+				//Logger.Info($"UNKNOWN -> {newName}");
 			}
 			room.name = newName;
 			nameConversions.Add(oldName, newName);
@@ -58,10 +58,10 @@ public static class AcronymChanger {
 					if (roomPath.Equals(WorldWindow.region.roomsPath, StringComparison.InvariantCultureIgnoreCase))
 						roomPath = newRoomsPath;
 					room.path = roomPath + '\\' + newName;
-					Logger.Info($"new Path: {room.path}");
+					//Logger.Info($"new Path: {room.path}");
 				}
 				else {
-					Logger.Info($"Same Path: {room.path}");
+					//Logger.Info($"Same Path: {room.path}");
 				}
             }
         }
@@ -70,27 +70,27 @@ public static class AcronymChanger {
 
 		bool encounteredAtypicalFiles = false;
 
-        Logger.Info($"Checking originalFiles");
+        //Logger.Info($"Checking originalFiles");
         foreach (string path in roomsOriginalFiles) {
             int pathFinalBackslash = path.IndexOfReverse('\\');
             string fileName = path[(pathFinalBackslash + 1)..];
-            Logger.Info($" - checking file {fileName}");
+            //Logger.Info($" - checking file {fileName}");
             string[] splitFileName = fileName.Split('_');
             if (splitFileName[0] == oldAcronym) {
-                Logger.Info($" -> starts with {oldAcronym}");
+                //Logger.Info($" -> starts with {oldAcronym}");
                 string newName = newAcronym + fileName[splitFileName[0].Length..];
                 roomFilesToTransfer.Add((path, newRoomsPath + '\\' + newName));
-                Logger.Info($" <- added");
+                //Logger.Info($" <- added");
             }
             else {
                 encounteredAtypicalFiles = true;
                 if (Directory.Exists(path)) {
                     roomsSubDirectoriesToTransfer.Add((path, path.Replace(WorldWindow.region.roomsPath, newRoomsPath, StringComparison.InvariantCultureIgnoreCase)));
-                    Logger.Info($" <- directory added");
+                    //Logger.Info($" <- directory added");
                 }
                 else {
                     roomFilesToTransfer.Add((path, newRoomsPath + '\\' + fileName));
-                    Logger.Info($" <- added");
+                    //Logger.Info($" <- added");
                 }
             }
         }        
@@ -100,40 +100,40 @@ public static class AcronymChanger {
 		List<(string from, string to, int type)> worldFilesToTransfer = [];
 		List<(string from, string to)> worldSubDirectoriesToTransfer = [];
 		foreach (string file in worldOriginalFiles) {
-			Logger.Info($"Checking file {file}");
+			//Logger.Info($"Checking file {file}");
 			if (file.Equals(WorldWindow.region.exportPath + '\\' + "properties.txt", StringComparison.InvariantCultureIgnoreCase)) {
 				worldFilesToTransfer.Add((file, newExportPath + '\\' + "properties.txt", 0));
-				Logger.Info($" <- add 0");
+				//Logger.Info($" <- add 0");
 			}
 			else if (file == (WorldWindow.region.exportPath + '\\' + "map_" + oldAcronym + ".txt")) {
 				worldFilesToTransfer.Add((file, newExportPath + '\\' + "map_" + newAcronym + ".txt", 1));
-				Logger.Info($" <- add 1");
+				//Logger.Info($" <- add 1");
 			}
 			else if (file == (WorldWindow.region.exportPath + '\\' + "map_image_" + oldAcronym + ".txt")) {
 				worldFilesToTransfer.Add((file, newExportPath + '\\' + "map_image_" + newAcronym + ".txt", 2));
-				Logger.Info($" <- add 2");
+				//Logger.Info($" <- add 2");
 			}
 			else if (file == (WorldWindow.region.exportPath + '\\' + "map_" + oldAcronym + ".png")) {
 				worldFilesToTransfer.Add((file, newExportPath + '\\' + "map_" + newAcronym + ".png", 3));
-				Logger.Info($" <- add 3");
+				//Logger.Info($" <- add 3");
 			}
 			else if (file == (WorldWindow.region.exportPath + '\\' + "world_" + oldAcronym + ".txt")) {
 				worldFilesToTransfer.Add((file, newExportPath + '\\' + "world_" + newAcronym + ".txt", 4));
-				Logger.Info($" <- add 4");
+				//Logger.Info($" <- add 4");
 			}
 			else if (file == (WorldWindow.region.exportPath + '\\' + "displayname.txt")) {
 				worldFilesToTransfer.Add((file, newExportPath + '\\' + "displayname.txt", 5));
-				Logger.Info($" <- add 5");
+				//Logger.Info($" <- add 5");
 			}
 			else {
 				encounteredAtypicalFiles = true;
 				if (Directory.Exists(file)) {
 					worldSubDirectoriesToTransfer.Add((file, file.Replace(WorldWindow.region.exportPath, newExportPath)));
-					Logger.Info($" <- add directory");
+					//Logger.Info($" <- add directory");
 				}
 				else {
 					worldFilesToTransfer.Add((file, file.Replace(WorldWindow.region.exportPath, newExportPath), -1));
-					Logger.Info($" <- add -1");
+					//Logger.Info($" <- add -1");
 				}
 			}
 		}
@@ -143,7 +143,7 @@ public static class AcronymChanger {
 
 		Logger.Info($"! Applying files in worldFilesToTransfer");
 		foreach ((string from, string to, int type) in worldFilesToTransfer) {
-			Logger.Info($"- type: {type}");
+			//Logger.Info($"- type: {type}");
 			switch (type) {
 				case 0:
 					// properties.txt
@@ -156,14 +156,14 @@ public static class AcronymChanger {
 								if (nameConversions.TryGetValue(splitLine[1].Trim(), out string? newName)) {
 									string newLine = "Room_Attr: " + newName + ':' + splitLine[2];
 									newPropertiesFile.Add(newLine);
-									Logger.Info($"- converted line {line} to {"Room_Attr: " + newName + ':' + splitLine[2]}");
+									//Logger.Info($"- converted line {line} to {"Room_Attr: " + newName + ':' + splitLine[2]}");
 									continue;
 								}
 							}
 						}
 						newPropertiesFile.Add(line);
 					}
-					Logger.Info($" <- Writing new file to {to}");
+					//Logger.Info($" <- Writing new file to {to}");
 					File.WriteAllLines(to, newPropertiesFile);
 				break;
 				case 1:
@@ -193,21 +193,21 @@ public static class AcronymChanger {
 								newData += (newData != "" ? "," : "") + item;
 							}
 							newMapAcronymFile.Add("Connection: " + newData);
-							Logger.Info($"- converted line {line} to {"Connection: " + newData}");
+							//Logger.Info($"- converted line {line} to {"Connection: " + newData}");
 						}
 						else {
 							string[] item = line.Split(':');
 							if (item.Length > 1) {
 								if(nameConversions.TryGetValue(item[0], out string? newName)) {
 									newMapAcronymFile.Add(newName + ':' + item[1]);
-									Logger.Info($"- converted line {line} to {newName + item[1]}");
+									//Logger.Info($"- converted line {line} to {newName + item[1]}");
 									continue;
 								}
 							}
 						}
 						newMapAcronymFile.Add(line);
 					}
-					Logger.Info($" <- Writing new file to {to}");
+					//Logger.Info($" <- Writing new file to {to}");
 					File.WriteAllLines(to, newMapAcronymFile);
 				break;
 				case 2:
@@ -218,12 +218,12 @@ public static class AcronymChanger {
 						string[] splitLine = line.Split(':');
 						if (nameConversions.TryGetValue(splitLine[0], out string? newName)) {
 							newMapImageAcronymFile.Add(newName + ':' + splitLine[1]);
-							Logger.Info($"- converted line {line} to {newName + ':' + splitLine[1]}");
+							//Logger.Info($"- converted line {line} to {newName + ':' + splitLine[1]}");
 							continue;
 						}
 						newMapImageAcronymFile.Add(line);
 					}
-					Logger.Info($" <- Writing new file to {to}");
+					//Logger.Info($" <- Writing new file to {to}");
 					File.WriteAllLines(to, newMapImageAcronymFile);
 				break;
 				case 4:
@@ -266,7 +266,7 @@ public static class AcronymChanger {
 									newLine += part;
 								}
 								newWorldAcronymFile.Add(newLine);
-								Logger.Info($"- converted line {line} to {newLine}");
+								//Logger.Info($"- converted line {line} to {newLine}");
 								continue;
 							}
 							else if (rooms) {
@@ -298,7 +298,7 @@ public static class AcronymChanger {
 									}
 								}
 								newWorldAcronymFile.Add(newLine);
-								Logger.Info($"- converted line {line} to {newLine}");
+								//Logger.Info($"- converted line {line} to {newLine}");
 								continue;
 							}
 							else if (creatures) {
@@ -325,20 +325,20 @@ public static class AcronymChanger {
 									newLine = line;
 								}
 								newWorldAcronymFile.Add(newLine);
-								Logger.Info($"- converted line {line} to {newLine}");
+								//Logger.Info($"- converted line {line} to {newLine}");
 								continue;
 							}
 						}
 						newWorldAcronymFile.Add(line);
 					}
-					Logger.Info($" <- Writing new file to {to}");
+					//Logger.Info($" <- Writing new file to {to}");
 					File.WriteAllLines(to, newWorldAcronymFile);
 				break;
 				case 3:
 				case 5:
 				default:
 					// map_XX.png, displayname.txt, misc
-					Logger.Info($" <- Copying file to {to}");
+					//Logger.Info($" <- Copying file to {to}");
 					File.Copy(from, to, true);
 				break;
 			}
@@ -351,7 +351,7 @@ public static class AcronymChanger {
 			while (pathsToExplore.Count > 0) {
 				string currentPath = pathsToExplore.Pop();
 				if (Directory.Exists(currentPath)) {
-					Logger.Info($" - creating directory");
+					//Logger.Info($" - creating directory");
 					Directory.CreateDirectory(currentPath.Replace(from, to));
 					foreach (string subPath in Directory.EnumerateFiles(currentPath)) {
 						pathsToExplore.Push(subPath);
@@ -361,7 +361,7 @@ public static class AcronymChanger {
 					}
 				}
 				else {
-					Logger.Info($" - applying file");
+					//Logger.Info($" - applying file");
 					File.Copy(currentPath, currentPath.Replace(from, to), true);
 				}
 			}
@@ -382,7 +382,7 @@ public static class AcronymChanger {
 			while (pathsToExplore.Count > 0) {
 				string currentPath = pathsToExplore.Pop();
 				if (Directory.Exists(currentPath)) {
-					Logger.Info($" - creating directory");
+					//Logger.Info($" - creating directory");
 					Directory.CreateDirectory(currentPath.Replace(from, to));
 					foreach (string subPath in Directory.EnumerateFiles(currentPath)) {
 						pathsToExplore.Push(subPath);
@@ -392,7 +392,7 @@ public static class AcronymChanger {
 					}
 				}
 				else {
-					Logger.Info($" - applying file");
+					//Logger.Info($" - applying file");
 					File.Copy(currentPath, currentPath.Replace(from, to));
 				}
 			}
@@ -402,11 +402,11 @@ public static class AcronymChanger {
 			Logger.Info($"BACKING UP FILES!");
 			Directory.GetFileSystemEntries(WorldWindow.region.roomsPath, "", searchOption: SearchOption.AllDirectories).ForEach(f => FloodForge.Backup.File(f));
 			Directory.GetFileSystemEntries(WorldWindow.region.exportPath, "", searchOption: SearchOption.AllDirectories).ForEach(f => FloodForge.Backup.File(f));
-			Logger.Info($"FINISHED BACKING UP FILES!");
+			//Logger.Info($"FINISHED BACKING UP FILES!");
 			Logger.Info($"! DELETING ORIGINAL FILES");
 			Directory.Delete(WorldWindow.region.exportPath, true);
 			Directory.Delete(WorldWindow.region.roomsPath, true);
-			Logger.Info($"! FINISHED DELETING ORIGINAL FILES");
+			//Logger.Info($"! FINISHED DELETING ORIGINAL FILES");
 		}
 
 		Logger.Info($"Setting new paths");
@@ -423,6 +423,7 @@ public static class AcronymChanger {
 			PersistentData.RemovePersistentData(oldAcronym);
 		}
 
+		Logger.Info($"AcronymChange complete.");
 		PopupManager.Add(new InfoPopup("Acronym successfully changed.\n" + (deleteSourceFiles ? "Original region deleted.\n" : "All files copied.\n") + "<s:1>Note - Modify and Regions.txt files are unchanged." + (encounteredAtypicalFiles ? "\n<s:1>Note - non-typical file contents are unchanged" : "")));
 	}
 }
