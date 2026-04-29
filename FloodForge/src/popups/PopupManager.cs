@@ -97,4 +97,6 @@ public static class PopupManager {
 	}
 
 	public static bool Has<T>() where T : Popup => Windows.Any(x => x is T);
+
+	public static bool HasTitle<T>(string title) where T : Popup => Windows.Any(x => x is T && x.popupTitle == title);
 }

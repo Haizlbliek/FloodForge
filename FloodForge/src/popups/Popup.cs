@@ -4,6 +4,7 @@ namespace FloodForge.Popups;
 
 public abstract class Popup {
 	protected virtual bool Resizable => true;
+	public string popupTitle = "";
 
 	protected bool cursorOverButton = false;
 	protected bool isHovered = false;
@@ -217,6 +218,10 @@ public abstract class Popup {
 
 		Immediate.Color(Themes.PopupHeader);
 		UI.ButtonFillRect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
+		if(this.popupTitle != "") {
+			Immediate.Color(this.collapsed ? Themes.TextDisabled : Themes.Text);
+			UI.font.Write(this.popupTitle, this.bounds.x0 + 0.01f, this.bounds.y1 - 0.025f, 0.03f, Font.Align.MiddleLeft);
+		}
 
 		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).UV(0f, 0f, 0.25f, 0.25f);
 		if (UI.TextureButton(this.closeButton)) {
@@ -312,8 +317,14 @@ public abstract class Popup {
 		return false;
 	}
 
-	public void Translate(Vector2 offset) {
-		this.bounds += offset;
+	public Popup Title(string title) {
+		this.popupTitle = title;
+		return this;
+	}
+
+	public Popup Translate(Vector2 offset, bool topLeftCorner = false) {
+		this.bounds += offset + (topLeftCorner ? new Vector2 (this.bounds.CenterX - this.bounds.x0, this.bounds.CenterY - this.bounds.y1) : Vector2.Zero);
+		return this;
 	}
 
 	public enum ResizeHandlePosition {
