@@ -195,8 +195,12 @@ public class SplashArtPopup : Popup {
 			if (i >= RecentFiles.recents.Count) break;
 
 			string recent = RecentFiles.recentNames[i];
+			string acronym = "";
 			if (recent.IsNullOrEmpty()) {
 				recent = Path.GetFileNameWithoutExtension(RecentFiles.recents[i]);
+			}
+			else {
+				acronym = Path.GetFileNameWithoutExtension(RecentFiles.recents[i])["world_".Length..];
 			}
 
 			float y = -0.33f - i * 0.04f;
@@ -214,7 +218,7 @@ public class SplashArtPopup : Popup {
 			}
 
 			Immediate.Color(1f, 1f, 1f);
-			UI.font.Write(recent, -0.88f, y, 0.03f, Font.Align.MiddleLeft);
+			UI.font.Write(recent + (acronym != "" ? $" ({acronym})" : ""), -0.88f, y, 0.03f, Font.Align.MiddleLeft);
 		}
 
 		Immediate.Color(1f, 1f, 1f);
