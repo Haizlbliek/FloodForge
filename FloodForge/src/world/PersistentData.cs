@@ -31,7 +31,7 @@ public static class PersistentData {
             
             if (isRegion) {
                 string[] splitLine = line.Split("</a>");
-                if(splitLine[0] == "REFIMAGE") {
+                if (splitLine[0] == "REFIMAGE") {
                     string path = "";
                     Vector2 pos = Vector2.Zero;
                     float scale = 1f;
@@ -76,23 +76,21 @@ public static class PersistentData {
         }
     }
 
-    public static void StorePersistentData() {
-        string acronym = WorldWindow.region.acronym;
-
+    public static void StorePersistentData(string acronym) {
         string[] file = [];
-        if(File.Exists(persistentDataPath))
+        if (File.Exists(persistentDataPath))
             file = File.ReadAllLines(persistentDataPath);
         bool isRegion = false;
         List<string> newFile = [];
         foreach (string line in file) {
             if (line.StartsWith("REGION") && line.Split("</a>")[^1] == acronym)
                 isRegion = true;
-            if(!isRegion && line != "") newFile.Add(line);
+            if (!isRegion && line != "") newFile.Add(line);
             if (line.StartsWith("ENDREGION"))
                 isRegion = false;
         }
 
-        if(WorldWindow.referenceImages.Count != 0) {
+        if (WorldWindow.referenceImages.Count != 0) {
             newFile.Add($"REGION</a>{acronym}");
             foreach (ReferenceImage image in WorldWindow.referenceImages) {
                 newFile.Add($"REFIMAGE</a>"

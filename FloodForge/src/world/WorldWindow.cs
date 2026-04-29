@@ -1609,7 +1609,7 @@ public static class WorldWindow {
 
 			WorldExporter.ExportPropertiesFile(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "properties.txt"));
 
-			PersistentData.StorePersistentData();
+			PersistentData.StorePersistentData(WorldWindow.region.acronym);
 			PopupManager.Add(new InfoPopup("Exported successfully!"));
 			WorldWindow.ExportFinished = true;
 		}
