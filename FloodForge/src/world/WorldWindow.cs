@@ -77,10 +77,12 @@ public static class WorldWindow {
 	public static Room? highlightRoom;
 
 	public static Connection? CurrentConnection;
+	public static Vector2? ConnectionStartClickPosition;
 	public static Vector2? ConnectionStart;
 	public static Vector2? ConnectionEnd;
 	public static bool CurrentConnectionValid;
 	private static ConnectionState connectionState;
+	private static ConnectionState lastConnectionState;
 
 	public static bool EnableProfilerScreen = false;
 
@@ -89,6 +91,7 @@ public static class WorldWindow {
 	private enum ConnectionState {
 		None,
 		NoConnection,
+		PendingConnection,
 		Connection
 	}
 
@@ -209,7 +212,7 @@ public static class WorldWindow {
 		Room? hoveringRoom = null;
 		uint hoveringConnection = 0;
 		int hoveringShortcutEntrance = -1;
-		float maxSqrDist = SelectorScale * SelectorScale;
+		float maxSqrDist = (float)Math.Pow(SelectorScale / (cameraScale / 100), 2);
 		foreach (Room room in WorldWindow.region.rooms) {
 			room.hoveredRoomExit = -1;
 			if (!WorldWindow.VisibleLayers[room.data.layer])
@@ -255,7 +258,8 @@ public static class WorldWindow {
 		}
 		hoveringRoom?.hoveredRoomExit = (int) hoveringConnection;
 		hoveringRoom?.hoveredShortcutEntrance = hoveringShortcutEntrance;
-
+		
+		lastConnectionState = connectionState;
 		if (Input.Connection) {
 			if (connectionState == ConnectionState.None) {
 				if (hoveringRoom == null) {
@@ -265,9 +269,17 @@ public static class WorldWindow {
 
 				if (hoveringRoom.Visible) {
 					ConnectionStart = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
+					ConnectionStartClickPosition = worldMouse;
 					ConnectionEnd = ConnectionStart;
 					CurrentConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
-					connectionState = ConnectionState.Connection;
+					connectionState = ConnectionState.PendingConnection;
+				}
+			}
+			else if (connectionState == ConnectionState.PendingConnection) {
+				if (CurrentConnection != null) {
+					if (ConnectionStartClickPosition != null && (Vector2.Distance(ConnectionStartClickPosition.Value, worldMouse) > 1f)) {
+						connectionState = ConnectionState.Connection;
+					}
 				}
 			}
 			else if (connectionState == ConnectionState.Connection && CurrentConnection != null) {
@@ -322,7 +334,7 @@ public static class WorldWindow {
 
 		bool isOriginal = Settings.OriginalControls;
 		
-		if (Mouse.Right && !Mouse.LastRight && connectionState != ConnectionState.Connection && HoveringConnection == null) {
+		if ((Mouse.Right && !Mouse.LastRight && (connectionState == ConnectionState.None || connectionState == ConnectionState.NoConnection)) || (!Mouse.Right && Mouse.LastRight && lastConnectionState == ConnectionState.PendingConnection)) {
 			if (HoveringDraggable is ReferenceImage image) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.FloatSettingContainer("Scale", image.Scale, 0.001f, 5f, (scale) => {
