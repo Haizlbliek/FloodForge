@@ -64,10 +64,16 @@ public class SettingsPopup : Popup {
 		protected UI.SliderFloatEditable valueSlider = new UI.SliderFloatEditable(minimum, maximum);
 		protected float value = initialValue;
 		protected bool updateWhileDragging = true;
+		protected bool updateWhileUnchanged = false;
 		protected Action<float> callback = callback;
 
-		public FloatSettingContainer UpdateWhileDragging(bool updateWhileDragging) {
+		public FloatSettingContainer UpdateWhileDragging(bool updateWhileDragging = true) {
 			this.updateWhileDragging = updateWhileDragging;
+			return this;
+		}
+		
+		public FloatSettingContainer UpdateWhileUnchanged(bool updateWhileSame = true) {
+			this.updateWhileUnchanged = updateWhileSame;
 			return this;
 		}
 
@@ -75,12 +81,13 @@ public class SettingsPopup : Popup {
 			base.Draw(bounds);
 			float textWidth = UI.font.Measure(this.settingName, 0.03f).x;
 			UVRect rect = new UVRect(bounds.x0 + textWidth + 0.02f, bounds.y1, bounds.x1, bounds.y0);
+			float previousValue = this.value;
 			UI.SliderResponse slider = UI.Slider(Rect.FromSize(rect.x0, rect.y0 + 0.02f, rect.x1 - rect.x0 - 0.04f, rect.y1 - rect.y0 - 0.04f), this.valueSlider, ref this.value, new UI.SliderMods() { disabled = false });
 			Immediate.Color(Themes.Text);
 			bool swap = slider.sliderPos.x > rect.x1 + 0.1f;
 			float x = slider.sliderPos.x + (swap ? -0.01f : 0.01f);
 			UI.font.Write($"{this.value}", x, slider.sliderPos.y, 0.03f, swap ? Font.Align.MiddleRight : Font.Align.MiddleLeft);
-			if (slider.submitted || (slider.dragging && this.updateWhileDragging)) {
+			if ((slider.submitted &! slider.dragging) || (slider.dragging && this.updateWhileDragging && (this.value != previousValue || this.updateWhileUnchanged))) {
 				this.callback(this.value);
 			}
 		}
