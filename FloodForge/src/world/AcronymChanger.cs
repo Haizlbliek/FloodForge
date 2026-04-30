@@ -4,8 +4,12 @@ using FloodForge.Popups;
 
 namespace FloodForge.World;
 
-public static class AcronymChanger {
-	public static void ChangeAcronym(string newAcronym, bool deleteSourceFiles, bool deleteExistingFiles) {
+public static class NameChanger {
+	public static void ChangeRoomName(Room room, string newName) {
+		
+	}
+	
+	public static void ChangeRegionAcronym(string newAcronym, bool deleteSourceFiles, bool deleteExistingFiles) {
 		string oldAcronym = WorldWindow.region.acronym;
 		Logger.Info($"Initiation acronymChange - {oldAcronym} -> {newAcronym} ; {(deleteSourceFiles ? "replace" : "copy")}");
 		//Logger.Info("getting new paths");

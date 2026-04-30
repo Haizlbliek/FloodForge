@@ -367,9 +367,9 @@ public static class WorldWindow {
 							bool fileExists = File.Exists(checkPath);
 							PopupManager.Add(new ConfirmPopup(fileExists ? $"world_{acronym}.txt already exists\nin this folder.\nOverwrite?" : $"Change Acronym to {acronym}?").SetButtons(fileExists ? "Overwrite" : "Yes", "Cancel").Okay(() => {
 								PopupManager.Add(new ConfirmPopup($"Keep or Replace source files?").SetButtons("<s:1>Replace", "Keep").Okay(() => {
-									AcronymChanger.ChangeAcronym(acronym, true, fileExists);
+									NameChanger.ChangeRegionAcronym(acronym, true, fileExists);
 								}).Cancel(() => {
-									AcronymChanger.ChangeAcronym(acronym, false, fileExists);
+									NameChanger.ChangeRegionAcronym(acronym, false, fileExists);
 								}).Title("Change Acronym"));
 							}).Title("Change Acronym"));
 						}).Title("Change Acronym"));
