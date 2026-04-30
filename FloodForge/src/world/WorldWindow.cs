@@ -335,23 +335,57 @@ public static class WorldWindow {
 		bool isOriginal = Settings.OriginalControls;
 		
 		if ((Mouse.Right && !Mouse.LastRight && (connectionState == ConnectionState.None || connectionState == ConnectionState.NoConnection)) || (!Mouse.Right && Mouse.LastRight && lastConnectionState == ConnectionState.PendingConnection)) {
-			if (HoveringDraggable is ReferenceImage image) {
+			if (HoveringDraggable is Room room and not OffscreenRoom && !PopupManager.HasTitle<SettingsPopup>($"Room Settings - {room.name}")) {
 				PopupManager.Add(new SettingsPopup([
-					new SettingsPopup.FloatSettingContainer("Scale", image.Scale, 0.001f, 5f, (scale) => {
-						image.Scale = scale;
+					new SettingsPopup.BoolSettingContainer("Enclosed Room", room.data.enclosedRoom, b => {
+						worldHistory.Apply(new VariableChange<bool>(room.data.enclosedRoom, b, bRedo => room.data.enclosedRoom = bRedo));
 					}),
-					new SettingsPopup.FloatSettingContainer("Brightness", image.brightness, 0.01f, 1f, (brightness) => {
-						image.brightness = brightness;
+					new SettingsPopup.IntSliderSettingContainer("Water Height", room.data.waterHeight, -2, room.height, h => 
+						worldHistory.Apply(new VariableChange<int>(room.data.waterHeight, h, hRedo => {
+							room.data.waterHeight = hRedo;
+							room.RegenerateGeometry(); // REVIEW - make this only refresh water
+						}))
+					).UpdateWhileDragging(false),
+					new SettingsPopup.BoolSettingContainer("Water In Front", room.data.waterInFront, b => {
+						worldHistory.Apply(new VariableChange<bool>(room.data.waterInFront, b, bRedo => room.data.waterInFront = bRedo));
 					}),
-					new SettingsPopup.BoolSettingContainer("Locked", image.lockImage, (locked) => {
-						image.lockImage = locked;
-						if (image.lockImage) {
-							selectedDraggables.Remove(image);
-						}
-					}),
-					new SettingsPopup.BoolSettingContainer("Under Grid", image.drawUnderGrid, (under) => {
-						image.drawUnderGrid = under;
-					}),
+					new SettingsPopup.ButtonSettingContainer("Render Room", () => {
+						PopupManager.Add(new ConfirmPopup($"Render Room {room}?\nThis will overwrite existing images.")).SetOkay("Render").Okay(() => {
+							DropletWindow.LoadRoom(room);
+							if (DropletWindow.Render(out string errorMessage, out (string name, string path, byte[] image)[] images)) {
+								foreach ((string name, string path, byte[] image) in images) {
+									FloodForge.Backup.File(path);
+
+									using Stream stream = File.OpenWrite(path);
+									ImageWriter writer = new ImageWriter();
+									writer.WritePng(image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
+								}
+								PopupManager.Add(new InfoPopup($"Render complete.\nBackups made."));
+							}
+							else {
+								PopupManager.Add(new InfoPopup($"Error while rendering {room.name}\n{errorMessage}\nview log.txt for more info"));
+							}
+						});
+					})
+				]).Translate(Mouse.Pos, true).Title($"Room Settings - {room.name}"));
+			}
+			else if (HoveringDraggable is ReferenceImage image) {
+				PopupManager.Add(new SettingsPopup([
+					new SettingsPopup.FloatSliderSettingContainer("Scale", image.Scale, 0.001f, 5f, scale => 
+						worldHistory.Apply(new VariableChange<float>(image.Scale, scale, scaleRedo => image.Scale = scaleRedo))),
+					new SettingsPopup.FloatSliderSettingContainer("Brightness", image.brightness, 0.01f, 1f, brightness => 
+						worldHistory.Apply(new VariableChange<float>(image.brightness, brightness, brightnessRedo => image.brightness = brightnessRedo))),
+					new SettingsPopup.BoolSettingContainer("Locked", image.lockImage, locked => 
+						worldHistory.Apply(new VariableChange<bool>(image.lockImage, locked, lockedRedo => {
+							image.lockImage = lockedRedo;
+							if (image.lockImage) {
+								selectedDraggables.Remove(image);
+							}
+					}))),
+					new SettingsPopup.BoolSettingContainer("Under Grid", image.drawUnderGrid, under => 
+						worldHistory.Apply(new VariableChange<bool>(image.drawUnderGrid, under, underRedo => {
+							image.drawUnderGrid = under;
+					}))),
 					new SettingsPopup.ButtonSettingContainer("Delete Reference", () => {
 						PopupManager.Add(new ConfirmPopup("Delete reference?").SetOkay("Delete").SetCancel("Keep").Okay(() => {
 							referenceImages.Remove(image); // make this undo-able
