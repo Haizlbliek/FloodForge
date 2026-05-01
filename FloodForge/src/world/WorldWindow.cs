@@ -406,7 +406,7 @@ public static class WorldWindow {
 							referenceImages.Remove(image); // make this undo-able
 						}));
 					})
-				]).Translate(Mouse.Pos, true).Title("Reference Settings"));
+				]).Translate(Mouse.Pos, true).Title("Settings - Reference"));
 			}
 			else if (HoveringDraggable == null &! PopupManager.HasTitle<SettingsPopup>("World Settings")) {
 				PopupManager.Add(new SettingsPopup([
@@ -423,7 +423,7 @@ public static class WorldWindow {
 							}).Title("Change Acronym"));
 						}).Title("Change Acronym"));
 					})
-				]).Translate(Mouse.Pos, true).Title("World Settings"));
+				]).Translate(Mouse.Pos, true).Title("Settings - World"));
 			}
 		}
 
