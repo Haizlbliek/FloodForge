@@ -3,7 +3,7 @@ namespace FloodForge.Popups;
 public class SettingsPopup : Popup {
 	public SettingContainer[] settingContainers;
 	protected float settingHeight = 0.04f;
-	protected float settingSpacing = 0.06f;
+	protected float settingSpacing = 0.03f;
 	protected Rect usableBounds;
 	public SettingsPopup(SettingContainer[] settings) {
 		this.settingContainers = settings;
@@ -20,8 +20,8 @@ public class SettingsPopup : Popup {
 
 		if (this.collapsed) return;
 
-		this.usableBounds = new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y1 - 0.05f);
-		float yVal = this.usableBounds.y1 - (this.settingSpacing + this.settingHeight) * 0.5f;
+		this.usableBounds = new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y1 - 0.05f - 0.01f);
+		float yVal = this.usableBounds.y1 - this.settingSpacing * 0.5f;
 		foreach (SettingContainer container in this.settingContainers) {
 			Rect bounds = new Rect(this.usableBounds.x0, yVal - this.settingHeight, this.usableBounds.x1, yVal);
 			container.Draw(bounds);
