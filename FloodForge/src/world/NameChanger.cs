@@ -5,10 +5,39 @@ using FloodForge.Popups;
 namespace FloodForge.World;
 
 public static class NameChanger {
-	public static void ChangeRoomName(Room room, string newName) {
-		
+	public static bool ChangeRoomName(Room room, string newName) {
+		Logger.Info($"New name: {newName}");
+		string oldName = room.name;
+		if (oldName == newName) {
+			return false;
+		}
+		room.name = newName;
+		List<(string, string)> filesToCopy = [];
+		foreach (string path in Directory.GetFiles(WorldWindow.region.roomsPath)) {
+			int finalbackslashIndex = path.IndexOfReverse('\\');
+			string fileExtension = Path.GetExtension(path);
+			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path);
+			if (fileNameWithoutExtension == oldName) {
+				filesToCopy.Add((path, path[..(finalbackslashIndex + 1)] + newName + fileExtension));
+			}
+			else {
+				int finalUnderscoreIndex = fileNameWithoutExtension.IndexOfReverse('_');
+				if (finalUnderscoreIndex != -1) {
+					if (fileNameWithoutExtension[..finalUnderscoreIndex] == oldName) {
+						filesToCopy.Add((path, path[..(finalbackslashIndex + 1)] + newName + fileNameWithoutExtension[finalUnderscoreIndex..] + fileExtension));
+					}
+				}
+			}
+		}
+		foreach ((string from, string to) in filesToCopy) {
+			FloodForge.Backup.File(from);
+		}
+		foreach ((string from, string to) in filesToCopy) {
+			File.Copy(from, to, true);
+		}
+		return true;
 	}
-	
+
 	public static void ChangeRegionAcronym(string newAcronym, bool deleteSourceFiles, bool deleteExistingFiles) {
 		string oldAcronym = WorldWindow.region.acronym;
 		Logger.Info($"Initiation acronymChange - {oldAcronym} -> {newAcronym} ; {(deleteSourceFiles ? "replace" : "copy")}");
