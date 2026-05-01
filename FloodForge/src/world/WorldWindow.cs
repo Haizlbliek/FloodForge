@@ -366,8 +366,23 @@ public static class WorldWindow {
 								PopupManager.Add(new InfoPopup($"Error while rendering {room.name}\n{errorMessage}\nview log.txt for more info"));
 							}
 						});
+					}),
+					new SettingsPopup.ButtonSettingContainer("Rename Room", () => {
+						if (room.data.tags.Contains("GATE") || room.name.StartsWith("GATE")){
+							PopupManager.Add(new InfoPopup("Cannot rename GATE rooms!"));
+						}
+						else {
+							PopupManager.Add(new RenameRoomPopup(room, name => {
+								if (NameChanger.ChangeRoomName(room, name)){
+									PopupManager.Add(new InfoPopup($"Room successfully renamed to\n{name}"));
+								}
+								else {
+									PopupManager.Add(new InfoPopup($"Problem encountered."));
+								}
+							}).Translate(Mouse.Pos, true).Title("Rename Room"));
+						}
 					})
-				]).Translate(Mouse.Pos, true).Title($"Room Settings - {room.name}"));
+				]).Translate(Mouse.Pos, true).Title($"Settings - {room.name}"));
 			}
 			else if (HoveringDraggable is ReferenceImage image) {
 				PopupManager.Add(new SettingsPopup([
