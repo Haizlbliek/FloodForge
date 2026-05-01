@@ -466,12 +466,15 @@ public static class DropletWindow {
 				drawingState = Mouse.Left ? 3 : 4;
 				drawStart = mouseTile;
 			}
-			else if (selectedTool == GeometryTool.Wall && Keys.Pressed(Key.Q) && (Mouse.JustLeft || Mouse.JustRight) && Room.Inside(mouseTile)) {
+			else if ((selectedTool == GeometryTool.Wall || selectedTool == GeometryTool.BackgroundWall) && Keys.Pressed(Key.Q) && (Mouse.JustLeft || Mouse.JustRight) && Room.Inside(mouseTile)) {
 				Stack<Vector2i> items = new Stack<Vector2i>();
 				HashSet<Vector2i> visited = [];
 
-				uint setTo = Mouse.JustLeft ? 1u : 0u;
-				uint geoType = Room.GetTile(mouseTile.x, mouseTile.y) % 16;
+				bool wall = selectedTool == GeometryTool.Wall;
+				uint setTo = Mouse.JustLeft ? (wall ? 1u : 512u) : 0u;
+				uint tileData = Room.GetTile(mouseTile.x, mouseTile.y);
+				uint geoType = tileData % 16;
+				bool geoBackground = (tileData & 512) > 0;
 
 				dropletHistory.StartCollectingChanges([typeof(TileChange)]);
 				if (geoType == 1 || geoType == 0) {
@@ -486,12 +489,13 @@ public static class DropletWindow {
 
 						uint geo = Room.GetTile(tile);
 						uint currentType = geo % 16;
+						bool currentBackground = (geo & 512) > 0;
 
-						if (currentType != 1 && currentType != 0) continue;
-						if (currentType == 1 != solid) continue;
+						if (currentType != 1 && currentType != 0 && (!currentBackground | wall) && (currentType != 3 || wall)) continue;
+						if (currentType == 1 != solid || currentBackground != geoBackground) continue;
 
 						uint oldValue = Room.geometry[tile.x * Room.height + tile.y];
-						Room.geometry[tile.x * Room.height + tile.y] = (byte)((geo & ~15) | setTo);
+						Room.geometry[tile.x * Room.height + tile.y] = (geo & ~((!wall) ? 512u : 15u)) | setTo;
 						dropletHistory.Apply(new TileChange(tile, oldValue, Room.geometry[tile.x * Room.height + tile.y]));
 
 						items.Push(new Vector2i(tile.x - 1, tile.y));
