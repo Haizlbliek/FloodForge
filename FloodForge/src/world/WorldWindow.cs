@@ -384,6 +384,13 @@ public static class WorldWindow {
 					})
 				]).Translate(Mouse.Pos, true).Title($"Settings - {room.name}"));
 			}
+			else if (HoveringConnection != null) {
+				PopupManager.Add(new SettingsPopup([
+					new SettingsPopup.ButtonSettingContainer("Delete Connection", 
+						() => DeleteConnection(HoveringConnection)
+					)
+				]).Translate(Mouse.Pos, true).Title("Settings - Connection"));
+			}
 			else if (HoveringDraggable is ReferenceImage image) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.FloatSliderSettingContainer("Scale", image.Scale, 0.001f, 5f, scale => 
@@ -575,12 +582,16 @@ public static class WorldWindow {
 		}
 	}
 
+	private static void DeleteConnection(Connection connection) {
+		RoomAndConnectionChange change1 = new RoomAndConnectionChange(false);
+		change1.AddConnection(connection);
+		worldHistory.Apply(change1);
+	}
+
 	private static void KeybindDelete() {
 		Connection? connection = region.connections.FirstOrDefault(c => c.roomA.Visible && c.roomB.Visible && c.Hovered);
 		if (connection != null) {
-			RoomAndConnectionChange change1 = new RoomAndConnectionChange(false);
-			change1.AddConnection(connection);
-			worldHistory.Apply(change1);
+			DeleteConnection(connection);
 			return;
 		}
 
