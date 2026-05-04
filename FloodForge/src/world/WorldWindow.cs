@@ -294,8 +294,10 @@ public static class WorldWindow {
 					}
 					else {
 						foreach (Connection other in CurrentConnection.roomB.connections) {
-							if (other.roomA == CurrentConnection.roomB && other.roomAExitID == CurrentConnection.roomBExitID &&
-								other.roomB == CurrentConnection.roomA && other.roomBExitID == CurrentConnection.roomAExitID
+							if ((other.roomA == CurrentConnection.roomB && other.roomAExitID == CurrentConnection.roomBExitID &&
+								other.roomB == CurrentConnection.roomA && other.roomBExitID == CurrentConnection.roomAExitID) ||
+								(other.roomA == CurrentConnection.roomA && other.roomAExitID == CurrentConnection.roomAExitID &&
+								other.roomB == CurrentConnection.roomB && other.roomBExitID == CurrentConnection.roomBExitID)
 							) {
 								CurrentConnectionValid = false;
 								break;
