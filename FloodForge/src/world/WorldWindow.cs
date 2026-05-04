@@ -273,6 +273,7 @@ public static class WorldWindow {
 					ConnectionEnd = ConnectionStart;
 					CurrentConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
 					connectionState = ConnectionState.PendingConnection;
+					CurrentConnectionValid = false;
 				}
 			}
 			else if (connectionState == ConnectionState.PendingConnection) {
