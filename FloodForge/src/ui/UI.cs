@@ -444,7 +444,7 @@ public static class UI {
 		Immediate.Color((!mods.disabled && (highlight || selected)) ? Themes.BorderHighlight : Themes.Border);
 		ButtonStrokeRect(rect);
 
-		if (highlight && Mouse.JustLeft && !mods.disabled) {
+		if (highlight && Mouse.JustLeft && !mods.disabled && !submitted) {
 			if (selected) {
 				UI.UpdateTextInput(editable);
 				UI.CurrentEditable = null;
@@ -695,6 +695,16 @@ public static class UI {
 	public static void Delete(Editable editable) {
 		if (CurrentEditable == editable) {
 			CurrentEditable = null;
+		}
+	}
+
+	public static void Unfocus(Editable? editable = null) {
+		editable ??= UI.CurrentEditable;
+
+		if (editable != null) {
+			if (editable is TextInputEditable textInput) UpdateTextInput(textInput);
+			editable.submitted = true;
+			Delete(editable);
 		}
 	}
 
