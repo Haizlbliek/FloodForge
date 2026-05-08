@@ -27,7 +27,8 @@ public static class UI {
 	}
 
 	public static void KeyPress(Key key) {
-		if (CurrentEditable is not TextInputEditable editable) return;
+		if (CurrentEditable is not TextInputEditable editable)
+			return;
 		if (key == Key.Enter) {
 			editable.submitted = true;
 			UpdateTextInput(editable);
@@ -45,58 +46,73 @@ public static class UI {
 			selectTime = 0;
 		}
 
+		if (key == Key.V && Keys.Modifier(Keys.Modifiers.Control)) {
+			string text = Clipboard.Content;
+
+			string filteredText = "";
+			foreach (char c in text) {
+				if (IsCharAllowed(editable, c)) {
+					filteredText += c;
+				}
+			}
+
+			editable.value = $"{editable.value[..selectIndex]}{filteredText}{editable.value[selectIndex..]}";
+			selectIndex += filteredText.Length;
+			return;
+		}
+
 		char write = (char) 0;
-		if (editable.type == TextInputEditable.Type.Text) {
-			if ((int) key >= 33 && (int) key <= 126) {
-				write = Keys.ParseCharacter(
-					(char) key,
-					Keys.Modifier(Keys.Modifiers.Shift),
-					false
-				);
-			}
-
-			if (key == Key.Space) {
-				write = ' ';
-			}
-
-			if (write != 0 && editable.bannedLetters.Contains(write)) {
-				write = (char) 0;
-			}
-		}
-		else {
-			if (editable.type == TextInputEditable.Type.SignedFloat || editable.type == TextInputEditable.Type.SignedInteger) {
-				if (key == Key.Minus) {
-					write = '-';
-				}
-			}
-
-			if (editable.type == TextInputEditable.Type.SignedFloat || editable.type == TextInputEditable.Type.UnsignedFloat) {
-				if (key == Key.Period) {
-					write = '.';
-				}
-			}
-
-			if (key >= Key.Number0 && key <= Key.Number9) {
-				write = (char) key;
-			}
-		}
 
 		if (key == Key.Backspace) {
 			write = (char) 1;
 		}
+		else if (editable.type == TextInputEditable.Type.Text) {
+			if ((int) key >= 33 && (int) key <= 126) {
+				write = Keys.ParseCharacter((char) key, Keys.Modifier(Keys.Modifiers.Shift), false);
+			}
+			else if (key == Key.Space) {
+				write = ' ';
+			}
+		}
+		else {
+			if (key == Key.Minus)
+				write = '-';
+			else if (key == Key.Period)
+				write = '.';
+			else if (key >= Key.Number0 && key <= Key.Number9)
+				write = (char) key;
+		}
 
-		if (write == 0) return;
+		if (write > 1 && !IsCharAllowed(editable, write)) {
+			write = (char) 0;
+		}
+
+		if (write == 0)
+			return;
+
 		if (write == 1) {
 			selectTime = 0;
 			if (selectIndex != 0) {
 				editable.value = $"{editable.value[..(selectIndex - 1)]}{editable.value[selectIndex..]}";
 				selectIndex--;
 			}
-
 			return;
 		}
+
 		editable.value = $"{editable.value[..selectIndex]}{write}{editable.value[selectIndex..]}";
 		selectIndex++;
+	}
+
+	private static bool IsCharAllowed(TextInputEditable editable, char c) {
+		if (editable.type == TextInputEditable.Type.Text) {
+			return !editable.bannedLetters.Contains(c);
+		}
+
+		bool isDigit = c >= '0' && c <= '9';
+		bool isMinus = c == '-' && (editable.type == TextInputEditable.Type.SignedFloat || editable.type == TextInputEditable.Type.SignedInteger);
+		bool isDot = c == '.' && (editable.type == TextInputEditable.Type.SignedFloat || editable.type == TextInputEditable.Type.UnsignedFloat);
+
+		return isDigit || isMinus || isDot;
 	}
 
 	public static void FillRect(float x0, float y0, float x1, float y1) {
@@ -114,10 +130,14 @@ public static class UI {
 
 	public static void FillRect(UVRect rect) {
 		Immediate.Begin(Immediate.PrimitiveType.QUADS);
-		Immediate.TexCoord(rect.uv0.x, rect.uv0.y); Immediate.Vertex(rect.x0, rect.y1);
-		Immediate.TexCoord(rect.uv1.x, rect.uv1.y); Immediate.Vertex(rect.x1, rect.y1);
-		Immediate.TexCoord(rect.uv2.x, rect.uv2.y); Immediate.Vertex(rect.x1, rect.y0);
-		Immediate.TexCoord(rect.uv3.x, rect.uv3.y); Immediate.Vertex(rect.x0, rect.y0);
+		Immediate.TexCoord(rect.uv0.x, rect.uv0.y);
+		Immediate.Vertex(rect.x0, rect.y1);
+		Immediate.TexCoord(rect.uv1.x, rect.uv1.y);
+		Immediate.Vertex(rect.x1, rect.y1);
+		Immediate.TexCoord(rect.uv2.x, rect.uv2.y);
+		Immediate.Vertex(rect.x1, rect.y0);
+		Immediate.TexCoord(rect.uv3.x, rect.uv3.y);
+		Immediate.Vertex(rect.x0, rect.y0);
 		Immediate.End();
 	}
 
@@ -138,7 +158,7 @@ public static class UI {
 		Immediate.Begin(type);
 
 		int segments = 8;
-		float step = (float)Math.PI * 0.5f / segments;
+		float step = (float) Math.PI * 0.5f / segments;
 
 		// Top-Right Corner
 		for (int i = 0; i <= segments; i++) {
@@ -530,10 +550,14 @@ public static class UI {
 
 		float centerX = x + 0.5f;
 		float centerY = y - 0.5f;
-		Immediate.TexCoord(0.5f - uvx, 0.5f + uvy); Immediate.Vertex(centerX - scale * 0.5f, centerY - scale * 0.5f);
-		Immediate.TexCoord(0.5f + uvx, 0.5f + uvy); Immediate.Vertex(centerX + scale * 0.5f, centerY - scale * 0.5f);
-		Immediate.TexCoord(0.5f + uvx, 0.5f - uvy); Immediate.Vertex(centerX + scale * 0.5f, centerY + scale * 0.5f);
-		Immediate.TexCoord(0.5f - uvx, 0.5f - uvy); Immediate.Vertex(centerX - scale * 0.5f, centerY + scale * 0.5f);
+		Immediate.TexCoord(0.5f - uvx, 0.5f + uvy);
+		Immediate.Vertex(centerX - scale * 0.5f, centerY - scale * 0.5f);
+		Immediate.TexCoord(0.5f + uvx, 0.5f + uvy);
+		Immediate.Vertex(centerX + scale * 0.5f, centerY - scale * 0.5f);
+		Immediate.TexCoord(0.5f + uvx, 0.5f - uvy);
+		Immediate.Vertex(centerX + scale * 0.5f, centerY + scale * 0.5f);
+		Immediate.TexCoord(0.5f - uvx, 0.5f - uvy);
+		Immediate.Vertex(centerX - scale * 0.5f, centerY + scale * 0.5f);
 
 		Immediate.End();
 		Immediate.UseTexture(0);
@@ -700,7 +724,8 @@ public static class UI {
 		}
 
 		public void Submit() {
-			if (UI.CurrentEditable != this) return;
+			if (UI.CurrentEditable != this)
+				return;
 
 			UI.UpdateTextInput(this);
 			UI.Delete(this);
