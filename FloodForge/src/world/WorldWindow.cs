@@ -818,8 +818,13 @@ public static class WorldWindow {
 					roomPlacementVisualiser.Position = worldMouse - ((Vector2)roomPlacementVisualiser.size * 0.5f * Vector2.NegY);
 				}
 				else {
-					Main.mode = Main.Mode.Droplet;
-					DropletWindow.LoadRoom(room);
+					if (room.valid) {
+						Main.mode = Main.Mode.Droplet;
+						DropletWindow.LoadRoom(room);
+					}
+					else {
+						PopupManager.Add(new InfoPopup($"Unable to open {room.name}\nInvalid room!"));
+					}
 				}
 			}
 		}
