@@ -1120,12 +1120,20 @@ public static class WorldWindow {
 		}
 
 		if (hoveringConnection != null) {
+			bool specifyTimelines = hoveringConnection.timelineType != TimelineType.All || hoveringConnection.roomA.TimelineType != TimelineType.All || hoveringConnection.roomB.TimelineType != TimelineType.All;
 			debugText.Add("");
 			debugText.Add("    Connection:");
 			debugText.Add($"Room A: {hoveringConnection.roomA.name}");
 			debugText.Add($"Connection A: {hoveringConnection.roomAExitID}");
 			debugText.Add($"Room B: {hoveringConnection.roomB.name}");
 			debugText.Add($"Connection B: {hoveringConnection.roomBExitID}");
+			if (specifyTimelines) {
+				debugText.Add("");
+				debugText.Add("    Connection Timelines:");
+				debugText.Add($"Connection: {TimelineToText(hoveringConnection.timelineType, hoveringConnection.timelines)}");
+				debugText.Add($"Room A: {TimelineToText(hoveringConnection.roomA.TimelineType, hoveringConnection.roomA.Timelines)}");
+				debugText.Add($"Room B: {TimelineToText(hoveringConnection.roomB.TimelineType, hoveringConnection.roomB.Timelines)}");
+			}
 		}
 
 		if (hoveringDraggable != null) {
@@ -1142,6 +1150,8 @@ public static class WorldWindow {
 						debugText.Add($" > Room imported from outside {region.acronym}-rooms");
 					debugText.Add($"Tags: {string.Join(" ", room.data.tags)}");
 					debugText.Add($"Size: {room.width}x{room.height}");
+					if(room.TimelineType != TimelineType.All)
+						debugText.Add($"Timeline: {TimelineToText(room.TimelineType, room.Timelines)}");
 					debugText.Add($"Dens: {room.dens.Count}");
 					// CONNECTION DEBUG
 					{
@@ -1163,6 +1173,9 @@ public static class WorldWindow {
 										finalString += connection.roomB.name;
 										encounteredConnections.Add(connection.roomB.name);
 										canHaveArrows = true;
+									}
+									if (connection.timelineType != TimelineType.All) {
+										finalString = $"({TimelineToText(connection.timelineType, connection.timelines)}){finalString}";
 									}
 									if (connection == hoveringConnection && canHaveArrows)
 										finalString = $">{finalString}<";
@@ -1405,6 +1418,21 @@ public static class WorldWindow {
 
 	public static bool CullTest(Rect bounds) {
 		return bounds.x0 < camBound.x1 && bounds.x1 > camBound.x0 && bounds.y0 < camBound.y1 && bounds.y1 > camBound.y0;
+	}
+
+	public static string TimelineToText(TimelineType type, HashSet<string> timelines) {
+		if (type == TimelineType.All) {
+			return "ALL";
+		}
+		else {
+			string timelineText = "";
+			foreach (string timeline in timelines) {
+				timelineText += (timelineText != "" ? "," : "") + timeline;
+			}
+			if (type == TimelineType.Except)
+				timelineText = "X-" + timelineText;
+			return timelineText;
+		}
 	}
 
 	public static bool CheckVisibleTimeline(TimelineType timelineType, HashSet<string> timelines) {
