@@ -1133,6 +1133,8 @@ public static class WorldWindow {
 				debugText.Add($"Connection: {TimelineToText(hoveringConnection.timelineType, hoveringConnection.timelines)}");
 				debugText.Add($"Room A: {TimelineToText(hoveringConnection.roomA.TimelineType, hoveringConnection.roomA.Timelines)}");
 				debugText.Add($"Room B: {TimelineToText(hoveringConnection.roomB.TimelineType, hoveringConnection.roomB.Timelines)}");
+				(TimelineType type, HashSet<string> timelines) = hoveringConnection.EffectiveConnectionTimeline;
+				debugText.Add($"Effective Timeline: {TimelineToText(type, timelines)}");
 			}
 		}
 
@@ -1174,13 +1176,16 @@ public static class WorldWindow {
 										encounteredConnections.Add(connection.roomB.name);
 										canHaveArrows = true;
 									}
-									if (connection.timelineType != TimelineType.All) {
-										finalString = $"({TimelineToText(connection.timelineType, connection.timelines)}){finalString}";
+									if (finalString != "") {
+										(TimelineType type, HashSet<string> timelines) = connection.EffectiveConnectionTimeline;
+										if (type != TimelineType.All) {
+											finalString = $"({TimelineToText(type, timelines)}){finalString}";
+										}
+										if (connection == hoveringConnection && canHaveArrows)
+											finalString = $">{finalString}<";
+										connectionList += (alreadyFoundConnectionForExit ? "/" : "") + finalString;
+										alreadyFoundConnectionForExit = true;
 									}
-									if (connection == hoveringConnection && canHaveArrows)
-										finalString = $">{finalString}<";
-									connectionList += (alreadyFoundConnectionForExit && (finalString != "") ? "/" : "") + finalString;
-									alreadyFoundConnectionForExit |= finalString != "";
 								}
 							}
 							else {
