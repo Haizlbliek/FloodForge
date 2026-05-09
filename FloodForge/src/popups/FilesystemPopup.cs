@@ -237,7 +237,7 @@ public class FilesystemPopup : Popup {
 		if (this.newDirectory == null) return;
 
 		if (key == Key.V && Keys.Modifier(Keys.Modifiers.Control)) {
-			this.newDirectory += Clipboard.Get().Replace("\\", "").Replace("/", "").Replace(".", "");
+			this.newDirectory += Clipboard.Content.Replace("\\", "").Replace("/", "").Replace(".", "");
 			this.frame = 0;
 			return;
 		}

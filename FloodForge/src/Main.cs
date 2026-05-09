@@ -143,6 +143,10 @@ public static class Main {
 			Mouse.Update(mouse, GlobalMouse.x, GlobalMouse.y);
 		}
 
+		if (Mouse.JustLeft) {
+			UI.Unfocus();
+		}
+
 		PopupManager.Block();
 
 		Program.gl.StencilMask(0xFF);
