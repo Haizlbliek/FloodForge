@@ -271,27 +271,26 @@ public class Connection {
 			if (this.timelines.Count == 0 || this.timelineType == TimelineType.All)
 				return;
 
-			if (this.timelineType == TimelineType.Except) {
-				Immediate.Color(1f, 0f, 0f);
-				float xSize = 0.035f * WorldWindow.SelectorScale;
-				UI.Line(this.BezierCenter.x - xSize, this.BezierCenter.y - xSize, this.BezierCenter.x + xSize, this.BezierCenter.y + xSize, 0.25f * WorldWindow.SelectorScale);
-				UI.Line(this.BezierCenter.x + xSize, this.BezierCenter.y - xSize, this.BezierCenter.x - xSize, this.BezierCenter.y + xSize, 0.25f * WorldWindow.SelectorScale);
-			}
+			float size = WorldWindow.SelectorScale;
+			int squareSize = Mathf.CeilToInt(Mathf.Sqrt(this.timelines.Count));
 
-			float size = 0.03125f * WorldWindow.SelectorScale;
-			int width = Math.Max(Mathf.RoundToInt(MathF.Log2(this.timelines.Count)), 1);
-			int height = Math.Max(Mathf.CeilToInt(this.timelines.Count / width), 1);
-
-			HashSet<string>.Enumerator it = this.timelines.GetEnumerator();
-			for (int y = 0; y < height; y++) {
-				for (int x = 0; x < width; x++) {
-					if (!it.MoveNext())
+			HashSet<string>.Enumerator timelineEnumerator = this.timelines.GetEnumerator();
+			for (int y = 0; y < squareSize; y++) {
+				for (int x = 0; x < squareSize; x++) {
+					if (!timelineEnumerator.MoveNext())
 						break;
+					
+					UI.CenteredTexture(ConditionalTimelineTextures.GetTexture(timelineEnumerator.Current), this.fittedAABB.x0 + (x * size) + size / 2, this.fittedAABB.y1 - (y * size) - size / 2, WorldWindow.SelectorScale);
 
-					float ox = (width * -0.5f + x + 0.5f) * size * 2.2f;
-					float oy = (height * -0.5f + y + 0.5f) * size * 2.2f;
-					Rect rect = Rect.FromSize(this.BezierCenter.x - size - ox, this.BezierCenter.y - size - oy, size * 2f, size * 2f);
-					this.DrawTexturedRect(ConditionalTimelineTextures.GetTexture(it.Current), rect);
+					if (this.timelineType == TimelineType.Except) {
+						Immediate.Color(1f, 0f, 0f);
+						float x0 = this.fittedAABB.x0 + ((x + 0.1f) * size) + 0.5f;
+						float x1 = this.fittedAABB.x0 + ((x + 0.9f) * size) + 0.5f;
+						float y0 = this.fittedAABB.y1 - ((y + 0.1f) * size) - 0.5f;
+						float y1 = this.fittedAABB.y1 - ((y + 0.9f) * size) - 0.5f;
+						UI.Line(x0, y0, x1, y1, WorldWindow.SelectorScale * 3f);
+						UI.Line(x0, y1, x1, y0, WorldWindow.SelectorScale * 3f);
+					}
 				}
 			}
 		}
