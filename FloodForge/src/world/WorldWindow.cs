@@ -1150,6 +1150,7 @@ public static class WorldWindow {
 						string connectionList = "";
 						for (uint index = 0; index < room.roomExits.Count; index++) {
 							if (room.AnyConnectionConnectedTo(index)) {
+								bool alreadyFoundConnectionForExit = false;
 								foreach (Connection connection in room.connections) {
 									string finalString = "";
 									bool canHaveArrows = false;
@@ -1165,7 +1166,8 @@ public static class WorldWindow {
 									}
 									if (connection == hoveringConnection && canHaveArrows)
 										finalString = $">{finalString}<";
-									connectionList += finalString;
+									connectionList += (alreadyFoundConnectionForExit && (finalString != "") ? "/" : "") + finalString;
+									alreadyFoundConnectionForExit |= finalString != "";
 								}
 							}
 							else {
