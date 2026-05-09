@@ -303,6 +303,14 @@ public static class WorldWindow {
 								CurrentConnectionValid = false;
 								break;
 							}
+							else if ((other.roomA == CurrentConnection.roomA && other.roomAExitID == CurrentConnection.roomAExitID) ||
+									(other.roomA == CurrentConnection.roomB && other.roomAExitID == CurrentConnection.roomBExitID) ||
+									(other.roomB == CurrentConnection.roomA && other.roomBExitID == CurrentConnection.roomAExitID) ||
+									(other.roomB == CurrentConnection.roomB && other.roomBExitID == CurrentConnection.roomBExitID)
+							) {
+								// an exit point is shared
+								// REVIEW - check for timelines here and set to invalid?
+							}
 						}
 					}
 				}
@@ -318,6 +326,41 @@ public static class WorldWindow {
 			if (CurrentConnection != null) {
 				if (CurrentConnectionValid) {
 					RoomAndConnectionChange change = new RoomAndConnectionChange(true);
+					{ // check for duplicate connections 
+						// NOTE - DOES NOT TAKE TIMELINES INTO ACCOUNT
+						bool foundDuplicate = false;
+						bool foundOccupiedExit = false;
+						List<Connection> connections = CurrentConnection.roomA.connections;
+						connections.AddRange(CurrentConnection.roomB.connections);
+
+						//Logger.Info("STARTING CONNECTION CHECK!");
+						foreach (Connection connection in connections) {
+							//Logger.Info("-start-");
+							//Logger.Info($"connection: roomA = {connection.roomA.name}; roomB = {connection.roomB.name};\nCurrentConnection: roomA = {CurrentConnection.roomA.name}; roomB = {CurrentConnection.roomB.name};");
+							foundDuplicate |= connection.roomA == CurrentConnection.roomA && connection.roomB == CurrentConnection.roomB;
+							foundDuplicate |= connection.roomB == CurrentConnection.roomA && connection.roomA == CurrentConnection.roomB;
+							//Logger.Info($"foundDuplicate: {foundDuplicate}");
+							
+							//Logger.Info($"connection: roomAExitID = {connection.roomAExitID}; roomBExitID = {connection.roomBExitID}\nCurrentConnection: roomAExitID = {CurrentConnection.roomAExitID}; roomBExitID = {CurrentConnection.roomBExitID}");
+							foundOccupiedExit |= connection.roomA == CurrentConnection.roomA && connection.roomAExitID == CurrentConnection.roomAExitID;
+							foundOccupiedExit |= connection.roomB == CurrentConnection.roomB && connection.roomBExitID == CurrentConnection.roomBExitID;
+							foundOccupiedExit |= connection.roomA == CurrentConnection.roomB && connection.roomAExitID == CurrentConnection.roomBExitID;
+							foundOccupiedExit |= connection.roomB == CurrentConnection.roomA && connection.roomBExitID == CurrentConnection.roomAExitID;
+							//Logger.Info($"foundOccupiedExit: {foundOccupiedExit}");
+
+							//Logger.Info("-end-");
+							if (foundDuplicate && foundOccupiedExit)
+								break;
+						}
+						if (foundDuplicate || foundOccupiedExit) {
+							string message = "<s:1>Invalid Connection!";
+							if (foundDuplicate)
+								message += "\n-Double connection to room";
+							if (foundOccupiedExit)
+								message += "\n-Exit point already occupied";
+							PopupManager.Add(new InfoPopup(message));
+						}
+					}
 					change.AddConnection(CurrentConnection);
 					worldHistory.Apply(change);
 				}
