@@ -81,6 +81,7 @@ public static class WorldWindow {
 	public static Vector2? ConnectionStart;
 	public static Vector2? ConnectionEnd;
 	public static bool CurrentConnectionValid;
+	public static bool CurrentConnectionWarn;
 	private static ConnectionState connectionState;
 	private static ConnectionState lastConnectionState;
 
@@ -274,6 +275,7 @@ public static class WorldWindow {
 					NewConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
 					connectionState = ConnectionState.PendingConnection;
 					CurrentConnectionValid = false;
+					CurrentConnectionWarn = false;
 				}
 			}
 			else if (connectionState == ConnectionState.PendingConnection) {
@@ -289,6 +291,7 @@ public static class WorldWindow {
 					NewConnection.roomB = hoveringRoom;
 					NewConnection.roomBExitID = hoveringConnection;
 					CurrentConnectionValid = true;
+					CurrentConnectionWarn = false;
 
 					if (NewConnection.roomA == NewConnection.roomB) {
 						CurrentConnectionValid = false;
@@ -303,13 +306,18 @@ public static class WorldWindow {
 								CurrentConnectionValid = false;
 								break;
 							}
-							else if ((other.roomA == NewConnection.roomA && other.roomAExitID == NewConnection.roomAExitID) ||
-									(other.roomA == NewConnection.roomB && other.roomAExitID == NewConnection.roomBExitID) ||
-									(other.roomB == NewConnection.roomA && other.roomBExitID == NewConnection.roomAExitID) ||
-									(other.roomB == NewConnection.roomB && other.roomBExitID == NewConnection.roomBExitID)
-							) {
-								// an exit point is shared
-								// REVIEW - check for timelines here and set to invalid?
+							else {
+								(TimelineType otherType, HashSet<string> otherLines) = other.EffectiveConnectionTimeline;
+								(TimelineType currentType, HashSet<string> currentLines) = NewConnection.EffectiveConnectionTimeline;
+								if (WorldWindow.CheckTimelineHasOverlap(currentType, currentLines, otherType, otherLines)) {
+									if ((other.roomA == NewConnection.roomA && other.roomAExitID == NewConnection.roomAExitID) ||
+										(other.roomA == NewConnection.roomB && other.roomAExitID == NewConnection.roomBExitID) ||
+										(other.roomB == NewConnection.roomA && other.roomBExitID == NewConnection.roomAExitID) ||
+										(other.roomB == NewConnection.roomB && other.roomBExitID == NewConnection.roomBExitID)
+									) {
+										CurrentConnectionWarn = true;
+									}
+								}
 							}
 						}
 					}
@@ -319,6 +327,7 @@ public static class WorldWindow {
 					NewConnection.roomB = null!;
 					NewConnection.roomBExitID = 0;
 					CurrentConnectionValid = false;
+					CurrentConnectionWarn = false;
 				}
 			}
 		}
@@ -946,7 +955,8 @@ public static class WorldWindow {
 		if (ConnectionStart == null || ConnectionEnd == null || NewConnection == null)
 			return;
 
-		Immediate.Color(CurrentConnectionValid ? Themes.RoomConnectionHover : Themes.RoomConnectionInvalid);
+		// REVIEW - add separate theme color for warning
+		Immediate.Color(CurrentConnectionValid ? (CurrentConnectionWarn ? Themes.TextWarn : Themes.RoomConnectionHover) : Themes.RoomConnectionInvalid);
 
 		int segments = Mathf.RoundToInt((ConnectionStart - ConnectionEnd).Value.Length / 2f);
 		segments = Math.Clamp(segments, 4, 100);
