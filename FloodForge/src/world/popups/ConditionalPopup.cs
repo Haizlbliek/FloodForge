@@ -25,6 +25,7 @@ public class ConditionalPopup : TimelinePopup {
 		}
 	}
 
+	// REVIEW - check if a timeline change makes sense - for example, a connection set to "X-Red" while it connects to a room with timeline "Red" doesn't make sense
 	public void TimelineChangeCallback(TimelineType timelineType) {
 		this.ConditionalTimelineType = timelineType;
 	}
@@ -40,6 +41,7 @@ public class ConditionalPopup : TimelinePopup {
 	public void InvokeOnTimelineChange(TimelineType timelineType, HashSet<string> timelines) {
 		UpdateOnTimelineChange?.Invoke(timelineType, timelines);
 	}
+
 	public event Action<TimelineType, HashSet<string>>? UpdateOnTimelineChange;
 
 	private ConditionalPopup(Connection? connection = null, IEnumerable<Room>? rooms = null, DenLineage? lineage = null) : base(TimelineType.All, [], (_)=>{}, (_,_)=>{}) {

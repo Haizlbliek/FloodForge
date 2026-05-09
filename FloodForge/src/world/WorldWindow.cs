@@ -76,7 +76,7 @@ public static class WorldWindow {
 	public static bool continueDrag = false;
 	public static Room? highlightRoom;
 
-	public static Connection? CurrentConnection;
+	public static Connection? NewConnection;
 	public static Vector2? ConnectionStartClickPosition;
 	public static Vector2? ConnectionStart;
 	public static Vector2? ConnectionEnd;
@@ -271,42 +271,42 @@ public static class WorldWindow {
 					ConnectionStart = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
 					ConnectionStartClickPosition = worldMouse;
 					ConnectionEnd = ConnectionStart;
-					CurrentConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
+					NewConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
 					connectionState = ConnectionState.PendingConnection;
 					CurrentConnectionValid = false;
 				}
 			}
 			else if (connectionState == ConnectionState.PendingConnection) {
-				if (CurrentConnection != null) {
+				if (NewConnection != null) {
 					if (ConnectionStartClickPosition != null && (Vector2.Distance(ConnectionStartClickPosition.Value, worldMouse) > 1f)) {
 						connectionState = ConnectionState.Connection;
 					}
 				}
 			}
-			else if (connectionState == ConnectionState.Connection && CurrentConnection != null) {
+			else if (connectionState == ConnectionState.Connection && NewConnection != null) {
 				if (hoveringRoom != null && hoveringRoom.Visible) {
 					ConnectionEnd = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
-					CurrentConnection.roomB = hoveringRoom;
-					CurrentConnection.roomBExitID = hoveringConnection;
+					NewConnection.roomB = hoveringRoom;
+					NewConnection.roomBExitID = hoveringConnection;
 					CurrentConnectionValid = true;
 
-					if (CurrentConnection.roomA == CurrentConnection.roomB) {
+					if (NewConnection.roomA == NewConnection.roomB) {
 						CurrentConnectionValid = false;
 					}
 					else {
-						foreach (Connection other in CurrentConnection.roomB.connections) {
-							if ((other.roomA == CurrentConnection.roomB && other.roomAExitID == CurrentConnection.roomBExitID &&
-								other.roomB == CurrentConnection.roomA && other.roomBExitID == CurrentConnection.roomAExitID) ||
-								(other.roomA == CurrentConnection.roomA && other.roomAExitID == CurrentConnection.roomAExitID &&
-								other.roomB == CurrentConnection.roomB && other.roomBExitID == CurrentConnection.roomBExitID)
+						foreach (Connection other in NewConnection.roomB.connections) {
+							if ((other.roomA == NewConnection.roomB && other.roomAExitID == NewConnection.roomBExitID &&
+								other.roomB == NewConnection.roomA && other.roomBExitID == NewConnection.roomAExitID) ||
+								(other.roomA == NewConnection.roomA && other.roomAExitID == NewConnection.roomAExitID &&
+								other.roomB == NewConnection.roomB && other.roomBExitID == NewConnection.roomBExitID)
 							) {
 								CurrentConnectionValid = false;
 								break;
 							}
-							else if ((other.roomA == CurrentConnection.roomA && other.roomAExitID == CurrentConnection.roomAExitID) ||
-									(other.roomA == CurrentConnection.roomB && other.roomAExitID == CurrentConnection.roomBExitID) ||
-									(other.roomB == CurrentConnection.roomA && other.roomBExitID == CurrentConnection.roomAExitID) ||
-									(other.roomB == CurrentConnection.roomB && other.roomBExitID == CurrentConnection.roomBExitID)
+							else if ((other.roomA == NewConnection.roomA && other.roomAExitID == NewConnection.roomAExitID) ||
+									(other.roomA == NewConnection.roomB && other.roomAExitID == NewConnection.roomBExitID) ||
+									(other.roomB == NewConnection.roomA && other.roomBExitID == NewConnection.roomAExitID) ||
+									(other.roomB == NewConnection.roomB && other.roomBExitID == NewConnection.roomBExitID)
 							) {
 								// an exit point is shared
 								// REVIEW - check for timelines here and set to invalid?
@@ -316,36 +316,35 @@ public static class WorldWindow {
 				}
 				else {
 					ConnectionEnd = worldMouse;
-					CurrentConnection.roomB = null!;
-					CurrentConnection.roomBExitID = 0;
+					NewConnection.roomB = null!;
+					NewConnection.roomBExitID = 0;
 					CurrentConnectionValid = false;
 				}
 			}
 		}
 		else {
-			if (CurrentConnection != null) {
+			if (NewConnection != null) {
 				if (CurrentConnectionValid) {
 					RoomAndConnectionChange change = new RoomAndConnectionChange(true);
 					{ // check for duplicate connections 
 						// NOTE - DOES NOT TAKE TIMELINES INTO ACCOUNT
 						bool foundDuplicate = false;
 						bool foundOccupiedExit = false;
-						List<Connection> connections = [..CurrentConnection.roomA.connections];
-						connections.AddRange(CurrentConnection.roomB.connections);
+						List<Connection> connections = [..NewConnection.roomA.connections];
+						connections.AddRange(NewConnection.roomB.connections);
 
 						//Logger.Info("STARTING CONNECTION CHECK!");
 						foreach (Connection connection in connections) {
-							//Logger.Info("-start-");
-							//Logger.Info($"connection: roomA = {connection.roomA.name}; roomB = {connection.roomB.name};\nCurrentConnection: roomA = {CurrentConnection.roomA.name}; roomB = {CurrentConnection.roomB.name};");
-							foundDuplicate |= connection.roomA == CurrentConnection.roomA && connection.roomB == CurrentConnection.roomB;
-							foundDuplicate |= connection.roomB == CurrentConnection.roomA && connection.roomA == CurrentConnection.roomB;
+							//Logger.Info($"connection: roomA = {connection.roomA.name}; roomB = {connection.roomB.name};\nNewConnection: roomA = {NewConnection.roomA.name}; roomB = {NewConnection.roomB.name};");
+							foundDuplicate |= connection.roomA == NewConnection.roomA && connection.roomB == NewConnection.roomB;
+							foundDuplicate |= connection.roomB == NewConnection.roomA && connection.roomA == NewConnection.roomB;
 							//Logger.Info($"foundDuplicate: {foundDuplicate}");
 							
-							//Logger.Info($"connection: roomAExitID = {connection.roomAExitID}; roomBExitID = {connection.roomBExitID}\nCurrentConnection: roomAExitID = {CurrentConnection.roomAExitID}; roomBExitID = {CurrentConnection.roomBExitID}");
-							foundOccupiedExit |= connection.roomA == CurrentConnection.roomA && connection.roomAExitID == CurrentConnection.roomAExitID;
-							foundOccupiedExit |= connection.roomB == CurrentConnection.roomB && connection.roomBExitID == CurrentConnection.roomBExitID;
-							foundOccupiedExit |= connection.roomA == CurrentConnection.roomB && connection.roomAExitID == CurrentConnection.roomBExitID;
-							foundOccupiedExit |= connection.roomB == CurrentConnection.roomA && connection.roomBExitID == CurrentConnection.roomAExitID;
+							//Logger.Info($"connection: roomAExitID = {connection.roomAExitID}; roomBExitID = {connection.roomBExitID}\nNewConnection: roomAExitID = {NewConnection.roomAExitID}; roomBExitID = {NewConnection.roomBExitID}");
+							foundOccupiedExit |= connection.roomA == NewConnection.roomA && connection.roomAExitID == NewConnection.roomAExitID;
+							foundOccupiedExit |= connection.roomB == NewConnection.roomB && connection.roomBExitID == NewConnection.roomBExitID;
+							foundOccupiedExit |= connection.roomA == NewConnection.roomB && connection.roomAExitID == NewConnection.roomBExitID;
+							foundOccupiedExit |= connection.roomB == NewConnection.roomA && connection.roomBExitID == NewConnection.roomAExitID;
 							//Logger.Info($"foundOccupiedExit: {foundOccupiedExit}");
 
 							//Logger.Info("-end-");
@@ -361,11 +360,11 @@ public static class WorldWindow {
 							PopupManager.Add(new InfoPopup(message));
 						}
 					}
-					change.AddConnection(CurrentConnection);
+					change.AddConnection(NewConnection);
 					worldHistory.Apply(change);
 				}
 
-				CurrentConnection = null;
+				NewConnection = null;
 			}
 
 			ConnectionStart = null;
@@ -918,7 +917,7 @@ public static class WorldWindow {
 	}
 
 	private static void DrawCurrentConnection() {
-		if (ConnectionStart == null || ConnectionEnd == null || CurrentConnection == null)
+		if (ConnectionStart == null || ConnectionEnd == null || NewConnection == null)
 			return;
 
 		Immediate.Color(CurrentConnectionValid ? Themes.RoomConnectionHover : Themes.RoomConnectionInvalid);
@@ -933,8 +932,8 @@ public static class WorldWindow {
 			UI.Line(ConnectionStart.Value, ConnectionEnd.Value, cameraScale / 4f);
 		}
 		else {
-			Vector2 directionA = CurrentConnection.roomA.GetConnectionConnectDirection(CurrentConnection.roomAExitID);
-			Vector2 directionB = CurrentConnection.roomB?.GetConnectionConnectDirection(CurrentConnection.roomBExitID) ?? Vector2.Zero;
+			Vector2 directionA = NewConnection.roomA.GetConnectionConnectDirection(NewConnection.roomAExitID);
+			Vector2 directionB = NewConnection.roomB?.GetConnectionConnectDirection(NewConnection.roomBExitID) ?? Vector2.Zero;
 
 			if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
 				directionStrength *= 0.3333f;
