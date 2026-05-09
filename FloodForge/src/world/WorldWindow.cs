@@ -1551,6 +1551,7 @@ public static class WorldWindow {
 		WorldWindow.cancelRender = false;
 		WorldWindow.awaitingCancelConfirmation = false;
 		HashSet<Room> rooms = SelectedRooms;
+		rooms.ForEach(r => { if (!r.valid) rooms.Remove(r); } );
 		if (rooms.Count <= 0) {
 			PopupManager.Add(new InfoPopup("Select at least one valid room!"));
 		}
