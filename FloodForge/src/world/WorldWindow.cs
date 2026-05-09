@@ -1160,7 +1160,10 @@ public static class WorldWindow {
 				debugText.Add($"Room A: {TimelineToText(hoveringConnection.roomA.TimelineType, hoveringConnection.roomA.Timelines)}");
 				debugText.Add($"Room B: {TimelineToText(hoveringConnection.roomB.TimelineType, hoveringConnection.roomB.Timelines)}");
 				(TimelineType type, HashSet<string> timelines) = hoveringConnection.EffectiveConnectionTimeline;
-				debugText.Add($"Effective Timeline: {TimelineToText(type, timelines)}");
+				string timelineToTextText = TimelineToText(type, timelines);
+				debugText.Add($"Effective Timeline: {(timelineToTextText == "" ? "NONE" : timelineToTextText)}");
+				if (timelineToTextText == "" && hoveringConnection.timelines.Count != 0)
+					debugText.Add($" > Connection timeline conflicts with room(s)");
 			}
 		}
 
@@ -1205,7 +1208,8 @@ public static class WorldWindow {
 									if (finalString != "") {
 										(TimelineType type, HashSet<string> timelines) = connection.EffectiveConnectionTimeline;
 										if (type != TimelineType.All) {
-											finalString = $"({TimelineToText(type, timelines)}){finalString}";
+											string timelineText = TimelineToText(type, timelines);
+											finalString = $"({(timelineText != "" ? timelineText : "NONE")}){finalString}";
 										}
 										if (connection == hoveringConnection && canHaveArrows)
 											finalString = $">{finalString}<";
