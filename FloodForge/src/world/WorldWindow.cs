@@ -1435,6 +1435,50 @@ public static class WorldWindow {
 		}
 	}
 
+	public static bool CheckTimelineHasOverlap(TimelineType timelineTypeA, HashSet<string> timelinesA, TimelineType timelineTypeB, HashSet<string> timelinesB) {
+		if (timelineTypeA == TimelineType.All || timelineTypeB == TimelineType.All)
+			return true;
+		switch (timelineTypeA) {
+			case TimelineType.Except:
+				switch (timelineTypeB) {
+					case TimelineType.Except:
+						// theoretically this should return false if timelinesB excludes every scug not excluded by timelinesA
+						// but that does not take custom scugs into account, so there's always a possible overlap
+						return true;
+					case TimelineType.Only:
+						// if any timelinesB isn't excluded by timelinesA they can overlap
+						foreach (string timeline in timelinesB) {
+							if (!timelinesA.Contains(timeline)) {
+								return true;
+							}
+						}
+						return false;
+				}
+			break;
+			case TimelineType.Only:
+				switch (timelineTypeB) {
+					case TimelineType.Except:
+						// if any timelinesA isn't excluded by timelinesB they can overlap
+						foreach (string timeline in timelinesA) {
+							if (!timelinesB.Contains(timeline)) {
+								return true;
+							}
+						}
+						return false;
+					case TimelineType.Only:
+						// if timelinesA includes any timelinesB they can overlap
+						foreach (string timeline in timelinesA) {
+							if (timelinesB.Contains(timeline)) {
+								return true;
+							}
+						}
+						return false;
+				}
+			break;
+		}
+		return false;
+	}
+
 	public static (TimelineType, HashSet<string>) AndTimelines((TimelineType type, HashSet<string> lines) a, (TimelineType type, HashSet<string> lines) b) {
 		if (a.type == TimelineType.All)
 			return b;
