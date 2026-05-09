@@ -216,8 +216,10 @@ public class Connection {
 			bool blendColors = false;
 
 			if (roomConnectionHoverColor) {
-				connectionColorA = Themes.RoomConnectionHover;
-				connectionColorB = Themes.RoomConnectionHover;
+				(TimelineType type, HashSet<string> timelines) = this.EffectiveConnectionTimeline;
+				bool warnConflictingTimelines = type == TimelineType.Only && timelines.Count == 0;
+				connectionColorA = warnConflictingTimelines ? Themes.TextWarn : Themes.RoomConnectionHover;
+				connectionColorB = warnConflictingTimelines ? Themes.TextWarn : Themes.RoomConnectionHover;
 			}
 			else {
 				connectionColorA = Themes.RoomConnection;
