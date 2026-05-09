@@ -329,6 +329,7 @@ public static class WorldWindow {
 					{ // check for duplicate connections
 						bool foundDuplicate = false;
 						bool foundOccupiedExit = false;
+						bool overlapCanBeSolved = true;
 						List<Connection> connections = [..NewConnection.roomA.connections];
 						connections.AddRange(NewConnection.roomB.connections);
 
@@ -354,6 +355,8 @@ public static class WorldWindow {
 							//Logger.Info($"RESULTING hasOverlap: {hasOverlap}");
 							//Logger.Info("END CHECK TIMELINES");
 							if (hasOverlap) {
+								if (connectionEffectiveType == TimelineType.All)
+									overlapCanBeSolved = false;
 								//Logger.Info("CHECK CONNECTION");
 								//Logger.Info($"connection: roomA = {connection.roomA.name}; roomB = {connection.roomB.name};\nNewConnection: roomA = {NewConnection.roomA.name}; roomB = {NewConnection.roomB.name};");
 								foundDuplicate |= connection.roomA == NewConnection.roomA && connection.roomB == NewConnection.roomB;
@@ -378,6 +381,8 @@ public static class WorldWindow {
 								message += "\n-Double connection to room";
 							if (foundOccupiedExit)
 								message += "\n-Exit point already occupied";
+							if (overlapCanBeSolved)
+								message += "\nNote: can be solved with timelines";
 							PopupManager.Add(new InfoPopup(message));
 						}
 					}
