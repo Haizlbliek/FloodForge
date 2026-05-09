@@ -24,8 +24,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 	public bool pathOutsideRoomsFolder = false;
 	public string path;
 	public string name;
-	public TimelineType TimelineType;
-	public HashSet<string> Timelines = [];
+	public Timeline timeline;
 	public ConditionalPopup? conditionalPopup;
 	public Vector2 CanonPosition;
 	public Vector2 DevPosition;
@@ -57,14 +56,14 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 	public int GarbageWormDenIndex => this.specialExitCount + this.nonDenExitCount + this.denShortcutEntrances.Count;
 
 	public override bool IsVisible() {
-		return WorldWindow.VisibleLayers[this.data.layer] && WorldWindow.CheckVisibleTimeline(this.TimelineType, this.Timelines);
+		return WorldWindow.VisibleLayers[this.data.layer] && WorldWindow.CheckVisibleTimeline(this.timeline);
 	}
 
 	public Room(string path, string name, bool pathOutsideRoomsFolder = false) {
 		this.pathOutsideRoomsFolder = pathOutsideRoomsFolder;
 		this.path = path;
 		this.name = name;
-		this.TimelineType = TimelineType.All;
+		this.timeline = new ();
 
 		this.CanonPosition = Vector2.Zero;
 		this.DevPosition = Vector2.Zero;
@@ -1762,16 +1761,16 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			}
 		}
 
-		if (this.TimelineType != TimelineType.All) {
+		if (this.timeline.timelineType != TimelineType.All) {
 			int i = 0;
-			foreach (string timeline in this.Timelines) {
+			foreach (string timeline in this.timeline.timelines) {
 				UI.CenteredTexture(ConditionalTimelineTextures.GetTexture(timeline), (float) (position.x + (i * WorldWindow.SelectorScale) + 1.5f), (float) (position.y - 1.5f), WorldWindow.SelectorScale);
 				i++;
 			}
 
-			if (this.Timelines.Count > 0 && this.TimelineType == TimelineType.Except) {
+			if (this.timeline.timelines.Count > 0 && this.timeline.timelineType == TimelineType.Except) {
 				Immediate.Color(1f, 0f, 0f);
-				UI.Line(position.x + 2f - WorldWindow.SelectorScale * 0.5f, position.y - 2f, position.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.Timelines.Count - 1) * WorldWindow.SelectorScale, position.y - 2f, WorldWindow.SelectorScale * 4f);
+				UI.Line(position.x + 2f - WorldWindow.SelectorScale * 0.5f, position.y - 2f, position.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.timeline.timelines.Count - 1) * WorldWindow.SelectorScale, position.y - 2f, WorldWindow.SelectorScale * 4f);
 			}
 		}
 
@@ -1824,14 +1823,14 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 
 		float selectorScale = WorldWindow.SelectorScale;
 		int drawnCreatures = 0;
-		List<DenLineage> visibleLineages = den.creatures.FindAll(d => WorldWindow.CheckVisibleTimeline(d.timelineType, d.timelines));
+		List<DenLineage> visibleLineages = den.creatures.FindAll(d => WorldWindow.CheckVisibleTimeline(d.timeline));
 		for (int i = 0; i < visibleLineages.Count; i++) {
 			DenCreature creature = visibleLineages[i];
 			if (creature.type.IsNullOrEmpty() && creature.lineageTo == null) {
 				drawnCreatures++;
 				continue;
 			}
-			if (creature is DenLineage denLineage && !WorldWindow.CheckVisibleTimeline(denLineage.timelineType, denLineage.timelines))
+			if (creature is DenLineage denLineage && !WorldWindow.CheckVisibleTimeline(denLineage.timeline))
 				continue;
 
 			float scale = selectorScale;

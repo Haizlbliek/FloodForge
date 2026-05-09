@@ -137,13 +137,13 @@ public static class WorldExporter {
 		if (otherRoom == null || connectionId == -1)
 			return;
 
-		foreach (string timeline in connection.timelines) {
+		foreach (string timeline in connection.timeline.timelines) {
 			if (!state.ContainsKey(timeline)) {
 				state[timeline] = [.. defaultState];
 				timelines.Add(timeline);
 			}
 
-			if (connection.timelineType == TimelineType.Only) {
+			if (connection.timeline.timelineType == TimelineType.Only) {
 				writer.Write($"{timeline} : {RoomNameCasing(room.name)} : ");
 
 				if (state[timeline][connectionId].first == "DISCONNECTED") {
@@ -163,7 +163,7 @@ public static class WorldExporter {
 					state[timeline][connectionId] = (RoomNameCasing(otherRoom.name), true);
 				}
 			}
-			else if (connection.timelineType == TimelineType.Except) {
+			else if (connection.timeline.timelineType == TimelineType.Except) {
 				foreach (string otherTimeline in timelines) {
 					if (otherTimeline == timeline)
 						continue;
@@ -272,7 +272,7 @@ public static class WorldExporter {
 					defaultState.Add(("DISCONNECTED", false));
 				}
 				foreach (Connection connection in room.connections) {
-					if (connection.timelineType != TimelineType.All)
+					if (connection.timeline.timelineType != TimelineType.All)
 						continue;
 
 					if (connection.roomA == room) {
@@ -284,14 +284,14 @@ public static class WorldExporter {
 				}
 
 				foreach (Connection connection in room.connections) {
-					if (connection.timelineType != TimelineType.Except || connection.timelines.Count == 0)
+					if (connection.timeline.timelineType != TimelineType.Except || connection.timeline.timelines.Count == 0)
 						continue;
 
 					ParseConditionalLinkConnection(writer, room, connection, timelines, state, defaultState);
 				}
 
 				foreach (Connection connection in room.connections) {
-					if (connection.timelineType != TimelineType.Only || connection.timelines.Count == 0)
+					if (connection.timeline.timelineType != TimelineType.Only || connection.timeline.timelines.Count == 0)
 						continue;
 
 					ParseConditionalLinkConnection(writer, room, connection, timelines, state, defaultState);
@@ -299,12 +299,12 @@ public static class WorldExporter {
 
 				roomDefaultStates[RoomNameCasing(room.name)] = defaultState;
 
-				if (room.TimelineType == TimelineType.All || room.Timelines.Count == 0) {
+				if (room.timeline.timelineType == TimelineType.All || room.timeline.timelines.Count == 0) {
 					continue;
 				}
 
 				bool first = true;
-				foreach (string timeline in room.Timelines) {
+				foreach (string timeline in room.timeline.timelines) {
 					if (!first)
 						writer.Write(",");
 					first = false;
@@ -312,7 +312,7 @@ public static class WorldExporter {
 				}
 
 				writer.Write(" : ");
-				writer.Write((room.TimelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
+				writer.Write((room.timeline.timelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
 				writer.WriteLine($" : {RoomNameCasing(room.name)}");
 			}
 			writer.WriteLine("END CONDITIONAL LINKS");
@@ -381,13 +381,13 @@ public static class WorldExporter {
 							}
 						}
 
-						if (mainCreature.timelineType != TimelineType.All) {
+						if (mainCreature.timeline.timelineType != TimelineType.All) {
 							writer.Write("(");
-							if (mainCreature.timelineType == TimelineType.Except) {
+							if (mainCreature.timeline.timelineType == TimelineType.Except) {
 								writer.Write("X-");
 							}
 							bool first2 = true;
-							foreach (string timeline in mainCreature.timelines) {
+							foreach (string timeline in mainCreature.timeline.timelines) {
 								if (!first2)
 									writer.Write(",");
 								first2 = false;
@@ -433,13 +433,13 @@ public static class WorldExporter {
 						if (creature.lineageTo == null)
 							continue;
 
-						if (lineage.timelineType != TimelineType.All && lineage.timelines.Count > 0) {
+						if (lineage.timeline.timelineType != TimelineType.All && lineage.timeline.timelines.Count > 0) {
 							writer.Write("(");
-							if (lineage.timelineType == TimelineType.Except) {
+							if (lineage.timeline.timelineType == TimelineType.Except) {
 								writer.Write("X-");
 							}
 							bool first = true;
-							foreach (string timeline in lineage.timelines) {
+							foreach (string timeline in lineage.timeline.timelines) {
 								if (!first)
 									writer.Write(",");
 								first = false;

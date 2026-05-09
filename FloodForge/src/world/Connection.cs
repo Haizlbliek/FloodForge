@@ -7,11 +7,10 @@ public class Connection {
 	public uint roomAExitID;
 	public uint roomBExitID;
 
-	public HashSet<string> timelines = [];
-	public TimelineType timelineType = TimelineType.All;
-	public (TimelineType, HashSet<string>) EffectiveConnectionTimeline {
+	public Timeline timeline;
+	public Timeline EffectiveConnectionTimeline {
 		get {
-			return WorldWindow.AndTimelines(WorldWindow.AndTimelines((this.roomA.TimelineType, this.roomA.Timelines), (this.roomB.TimelineType, this.roomB.Timelines)), (this.timelineType, this.timelines));
+			return WorldWindow.AndTimelines(WorldWindow.AndTimelines(this.roomA.timeline, this.roomB.timeline), this.timeline);
 		}
 	}
 	public ConditionalPopup? conditionalPopup;
@@ -37,6 +36,7 @@ public class Connection {
 		this.roomB = roomB;
 		this.roomAExitID = connectionA;
 		this.roomBExitID = connectionB;
+		this.timeline = new();
 	}
 
 	public Connection(Room roomA, uint connectionA, Room roomB, uint connectionB) {
@@ -44,13 +44,14 @@ public class Connection {
 		this.roomB = roomB;
 		this.roomAExitID = connectionA;
 		this.roomBExitID = connectionB;
+		this.timeline = new();
 	}
 
 	public bool AllowsTimeline(string timeline) {
-		return this.timelineType switch {
+		return this.timeline.timelineType switch {
 			TimelineType.All => true,
-			TimelineType.Only => this.timelines.Contains(timeline),
-			TimelineType.Except => !this.timelines.Contains(timeline),
+			TimelineType.Only => this.timeline.timelines.Contains(timeline),
+			TimelineType.Except => !this.timeline.timelines.Contains(timeline),
 			_ => false,
 		};
 	}
@@ -203,8 +204,8 @@ public class Connection {
 			this.RecalculateBezier();
 		}
 		if (WorldWindow.CullTest(this.fittedAABB)) {
-			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomA.TimelineType, this.roomA.Timelines);
-			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomB.TimelineType, this.roomB.Timelines);
+			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomA.timeline);
+			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomB.timeline);
 			float opacity = Settings.ConnectionOpacity;
 			if (!aVisible && !bVisible || opacity < 0.01f)
 				return;
@@ -216,8 +217,8 @@ public class Connection {
 			bool blendColors = false;
 
 			if (roomConnectionHoverColor) {
-				(TimelineType type, HashSet<string> timelines) = this.EffectiveConnectionTimeline;
-				bool warnConflictingTimelines = type == TimelineType.Only && timelines.Count == 0;
+				Timeline timeline = this.EffectiveConnectionTimeline;
+				bool warnConflictingTimelines = timeline.timelineType == TimelineType.Only && timeline.timelines.Count == 0;
 				connectionColorA = warnConflictingTimelines ? Themes.TextWarn : Themes.RoomConnectionHover;
 				connectionColorB = warnConflictingTimelines ? Themes.TextWarn : Themes.RoomConnectionHover;
 			}
@@ -270,13 +271,13 @@ public class Connection {
 
 			if (!aVisible || !bVisible)
 				return;
-			if (this.timelines.Count == 0 || this.timelineType == TimelineType.All)
+			if (this.timeline.timelines.Count == 0 || this.timeline.timelineType == TimelineType.All)
 				return;
 
 			float size = WorldWindow.SelectorScale;
-			int squareSize = Mathf.CeilToInt(Mathf.Sqrt(this.timelines.Count));
+			int squareSize = Mathf.CeilToInt(Mathf.Sqrt(this.timeline.timelines.Count));
 
-			HashSet<string>.Enumerator timelineEnumerator = this.timelines.GetEnumerator();
+			HashSet<string>.Enumerator timelineEnumerator = this.timeline.timelines.GetEnumerator();
 			for (int y = 0; y < squareSize; y++) {
 				for (int x = 0; x < squareSize; x++) {
 					if (!timelineEnumerator.MoveNext())
@@ -284,7 +285,7 @@ public class Connection {
 					
 					UI.CenteredTexture(ConditionalTimelineTextures.GetTexture(timelineEnumerator.Current), this.fittedAABB.x0 + (x * size) + size / 2, this.fittedAABB.y1 - (y * size) - size / 2, WorldWindow.SelectorScale);
 
-					if (this.timelineType == TimelineType.Except) {
+					if (this.timeline.timelineType == TimelineType.Except) {
 						Immediate.Color(1f, 0f, 0f);
 						float x0 = this.fittedAABB.x0 + ((x + 0.1f) * size) + 0.5f;
 						float x1 = this.fittedAABB.x0 + ((x + 0.9f) * size) + 0.5f;

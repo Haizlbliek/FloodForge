@@ -202,8 +202,7 @@ public static class WorldParser {
 		public Room? roomB = null;
 		public string roomBName = "";
 		public uint? roomBExitID = null;
-		public HashSet<string> timelines = [];
-		public TimelineType timelineType;
+		public Timeline timeline = new();
 
 		public ConditionalConnection(Room roomA, uint connectionA, string roomBName) {
 			this.roomA = roomA;
@@ -324,8 +323,7 @@ public static class WorldParser {
 
 		Den den = room.GetDen(denId);
 		DenLineage lineage = new DenLineage("", 0) {
-			timelineType = timelineType,
-			timelines = timelines
+			timeline = new (timelineType, timelines)
 		};
 		den.creatures.Add(lineage);
 
@@ -390,8 +388,7 @@ public static class WorldParser {
 
 			Den den = room.GetDen(denId);
 			DenLineage lineage = new DenLineage(CreatureTextures.Parse(creature), 1) {
-				timelineType = timelineType,
-				timelines = timelines
+				timeline = new (timelineType, timelines)
 			};
 			den.creatures.Add(lineage);
 
@@ -483,24 +480,24 @@ public static class WorldParser {
 			string mod = parts[1].ToLowerInvariant();
 
 			if (mod == "exclusiveroom") {
-				if (room2.TimelineType == TimelineType.Except) {
+				if (room2.timeline.timelineType == TimelineType.Except) {
 					Logger.Warn($"Skipping line due to invalid EXCLUSIVEROOM {roomName2}");
 					Logger.Warn($"> {link}");
 					return false;
 				}
 
-				room2.TimelineType = TimelineType.Only;
-				timelines.ForEach(x => room2.Timelines.Add(x));
+				room2.timeline.timelineType = TimelineType.Only;
+				timelines.ForEach(x => room2.timeline.timelines.Add(x));
 			}
 			else if (mod == "hideroom") {
-				if (room2.TimelineType == TimelineType.Only) {
+				if (room2.timeline.timelineType == TimelineType.Only) {
 					Logger.Warn($"Skipping line due to invalid HIDEROOM {roomName2}");
 					Logger.Warn($"> {link}");
 					return false;
 				}
 
-				room2.TimelineType = TimelineType.Except;
-				timelines.ForEach(x => room2.Timelines.Add(x));
+				room2.timeline.timelineType = TimelineType.Except;
+				timelines.ForEach(x => room2.timeline.timelines.Add(x));
 			}
 
 			return true;
@@ -538,12 +535,12 @@ public static class WorldParser {
 				return false;
 			}
 
-			if (connection.timelineType == TimelineType.Only) {
-				timelines.ForEach(x => connection.timelines.Remove(x));
+			if (connection.timeline.timelineType == TimelineType.Only) {
+				timelines.ForEach(x => connection.timeline.timelines.Remove(x));
 			}
 			else {
-				connection.timelineType = TimelineType.Except;
-				timelines.ForEach(x => connection.timelines.Add(x));
+				connection.timeline.timelineType = TimelineType.Except;
+				timelines.ForEach(x => connection.timeline.timelines.Add(x));
 			}
 			return true;
 		}
@@ -576,23 +573,23 @@ public static class WorldParser {
 			else {
 				connectionId = (int) ((connection.roomA == room) ? connection.roomAExitID : connection.roomBExitID);
 
-				if (connection.timelineType == TimelineType.Only) {
-					timelines.ForEach(x => connection.timelines.Remove(x));
+				if (connection.timeline.timelineType == TimelineType.Only) {
+					timelines.ForEach(x => connection.timeline.timelines.Remove(x));
 				}
 				else {
-					connection.timelineType = TimelineType.Except;
-					timelines.ForEach(x => connection.timelines.Add(x));
+					connection.timeline.timelineType = TimelineType.Except;
+					timelines.ForEach(x => connection.timeline.timelines.Add(x));
 				}
 			}
 		}
 
 		if (connection != null) {
-			if (connection.timelineType == TimelineType.Except) {
-				timelines.ForEach(x => connection.timelines.Remove(x));
+			if (connection.timeline.timelineType == TimelineType.Except) {
+				timelines.ForEach(x => connection.timeline.timelines.Remove(x));
 			}
 			else {
-				connection.timelineType = TimelineType.Only;
-				timelines.ForEach(x => connection.timelines.Add(x));
+				connection.timeline.timelineType = TimelineType.Only;
+				timelines.ForEach(x => connection.timeline.timelines.Add(x));
 			}
 
 			return true;
@@ -622,8 +619,7 @@ public static class WorldParser {
 			roomBName = toConnection,
 			roomB = null,
 			roomBExitID = null,
-			timelines = [.. timelines],
-			timelineType = TimelineType.Only
+			timeline = new Timeline (TimelineType.Only, [..timelines])
 		});
 
 		return true;
@@ -772,8 +768,7 @@ public static class WorldParser {
 			}
 
 			Connection connection = new Connection(connectionData.roomA, connectionData.roomAExitID, connectionData.roomB, connectionData.roomBExitID.Value) {
-				timelines = connectionData.timelines,
-				timelineType = connectionData.timelineType
+				timeline = connectionData.timeline
 			};
 			WorldWindow.region.connections.Add(connection);
 			connectionData.roomA.Connect(connection);

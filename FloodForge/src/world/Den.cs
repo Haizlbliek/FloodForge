@@ -98,18 +98,17 @@ public class DenCreature {
 }
 
 public class DenLineage : DenCreature {
-	public TimelineType timelineType = TimelineType.All;
-	public HashSet<string> timelines = [];
+	public Timeline timeline = new ();
 	public ConditionalPopup? conditionalPopup;
 
 	public DenLineage(string type, int count) : base(type, count) {
 	}
 
 	public bool TimelinesMatch(DenLineage other) {
-		if (this.timelineType != other.timelineType) return false;
-		if (this.timelineType == TimelineType.All) return true;
+		if (this.timeline.timelineType != other.timeline.timelineType) return false;
+		if (this.timeline.timelineType == TimelineType.All) return true;
 
-		return this.timelines.SetEquals(other.timelines);
+		return this.timeline.timelines.SetEquals(other.timeline.timelines);
 	}
 }
 

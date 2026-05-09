@@ -26,8 +26,7 @@ public static class WorldWindow {
 	public static RoomColors ColorType { get; private set; } = RoomColors.None;
 	public static readonly bool[] VisibleLayers = [true, true, true];
 
-	public static TimelineType VisibleTimelineType;
-	public static HashSet<string> VisibleTimelines = [];
+	public static Timeline VisibleTimeline = new();
 
 	// REVIEW: Auto-mode? Which basically chooses whichever looks better for any given connection?
 	// (I.E. choose the one that's closest, but preferably one that does not invert (for example, CC_S01))
@@ -307,9 +306,9 @@ public static class WorldWindow {
 								break;
 							}
 							else {
-								(TimelineType otherType, HashSet<string> otherLines) = other.EffectiveConnectionTimeline;
-								(TimelineType currentType, HashSet<string> currentLines) = NewConnection.EffectiveConnectionTimeline;
-								if (WorldWindow.CheckTimelineHasOverlap(currentType, currentLines, otherType, otherLines)) {
+								Timeline otherTimeline = other.EffectiveConnectionTimeline;
+								Timeline currentTimeline = NewConnection.EffectiveConnectionTimeline;
+								if (WorldWindow.CheckTimelineHasOverlap(otherTimeline, currentTimeline)) {
 									if ((other.roomA == NewConnection.roomA && other.roomAExitID == NewConnection.roomAExitID) ||
 										(other.roomA == NewConnection.roomB && other.roomAExitID == NewConnection.roomBExitID) ||
 										(other.roomB == NewConnection.roomA && other.roomBExitID == NewConnection.roomAExitID) ||
@@ -351,20 +350,20 @@ public static class WorldWindow {
 							//$"connection: {TimelineToText(connection.timelineType, connection.timelines)}\n" + 
 							//$"roomA ({connection.roomA.name}): {TimelineToText(connection.roomA.TimelineType, connection.roomA.Timelines)}\n" + 
 							//$"roomB ({connection.roomB.name}): {TimelineToText(connection.roomB.TimelineType, connection.roomB.Timelines)}");
-							(TimelineType connectionEffectiveType, HashSet<string> connectionEffectiveLines) = connection.EffectiveConnectionTimeline;
+							Timeline connectionEffectiveTimeline = connection.EffectiveConnectionTimeline;
 							//Logger.Info("connectionEffectiveTimeline: " + TimelineToText(connectionEffectiveType, connectionEffectiveLines));
 
 							//Logger.Info("NewConnection timelines:\n" + 
 							//$"connection: {TimelineToText(NewConnection.timelineType, NewConnection.timelines)}\n" + 
 							//$"roomA ({NewConnection.roomA.name}): {TimelineToText(NewConnection.roomA.TimelineType, NewConnection.roomA.Timelines)}\n" + 
 							//$"roomB ({NewConnection.roomB.name}): {TimelineToText(NewConnection.roomB.TimelineType, NewConnection.roomB.Timelines)}");
-							(TimelineType newConnectionEffectiveType, HashSet<string> newConnectionEffectiveLines) = NewConnection.EffectiveConnectionTimeline;
+							Timeline newConnectionEffectiveTimeline = NewConnection.EffectiveConnectionTimeline;
 							//Logger.Info("newConnectionEffectiveTimeline: " + TimelineToText(newConnectionEffectiveType, newConnectionEffectiveLines));
-							bool hasOverlap = CheckTimelineHasOverlap(connectionEffectiveType, connectionEffectiveLines, newConnectionEffectiveType, newConnectionEffectiveLines);
+							bool hasOverlap = CheckTimelineHasOverlap(connectionEffectiveTimeline, newConnectionEffectiveTimeline);
 							//Logger.Info($"RESULTING hasOverlap: {hasOverlap}");
 							//Logger.Info("END CHECK TIMELINES");
 							if (hasOverlap) {
-								if (connectionEffectiveType == TimelineType.All)
+								if (connectionEffectiveTimeline.timelineType == TimelineType.All)
 									overlapCanBeSolved = false;
 								//Logger.Info("CHECK CONNECTION");
 								//Logger.Info($"connection: roomA = {connection.roomA.name}; roomB = {connection.roomB.name};\nNewConnection: roomA = {NewConnection.roomA.name}; roomB = {NewConnection.roomB.name};");
@@ -1010,7 +1009,7 @@ public static class WorldWindow {
 		foreach (Room room in WorldWindow.region.rooms) {
 			if (!room.data.merge)
 				continue;
-			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
+			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.timeline))
 				continue;
 
 			if (PositionType == RoomPosition.Both) {
@@ -1025,7 +1024,7 @@ public static class WorldWindow {
 		foreach (Room room in WorldWindow.region.rooms) {
 			Profiler.MarkPoint("rooms", 1, true);
 
-			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
+			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.timeline))
 				continue;
 
 			if (WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
@@ -1097,12 +1096,12 @@ public static class WorldWindow {
 		foreach (DenLineage lineage in den.creatures) {
 			DenCreature creature = lineage;
 			string line = "";
-			if (lineage.timelineType != TimelineType.All) {
+			if (lineage.timeline.timelineType != TimelineType.All) {
 				string timelines = "";
-				foreach (string timeline in lineage.timelines) {
+				foreach (string timeline in lineage.timeline.timelines) {
 					timelines += (timelines != "" ? ",": "") + timeline;
 				}
-				line += $"({(lineage.timelineType == TimelineType.Except ? "X-" : "") + timelines}) - ";
+				line += $"({(lineage.timeline.timelineType == TimelineType.Except ? "X-" : "") + timelines}) - ";
 			}
 			line += $"{CreatureTextures.ExportName(creature.type)} x {creature.count}";
 			while (creature.lineageTo != null) {
@@ -1156,7 +1155,7 @@ public static class WorldWindow {
 		}
 
 		if (hoveringConnection != null) {
-			bool specifyTimelines = hoveringConnection.timelineType != TimelineType.All || hoveringConnection.roomA.TimelineType != TimelineType.All || hoveringConnection.roomB.TimelineType != TimelineType.All;
+			bool specifyTimelines = hoveringConnection.timeline.timelineType != TimelineType.All || hoveringConnection.roomA.timeline.timelineType != TimelineType.All || hoveringConnection.roomB.timeline.timelineType != TimelineType.All;
 			debugText.Add("");
 			debugText.Add("    Connection:");
 			debugText.Add($"Room A: {hoveringConnection.roomA.name}");
@@ -1166,13 +1165,12 @@ public static class WorldWindow {
 			if (specifyTimelines) {
 				debugText.Add("");
 				debugText.Add("    Connection Timelines:");
-				debugText.Add($"Connection: {TimelineToText(hoveringConnection.timelineType, hoveringConnection.timelines)}");
-				debugText.Add($"Room A: {TimelineToText(hoveringConnection.roomA.TimelineType, hoveringConnection.roomA.Timelines)}");
-				debugText.Add($"Room B: {TimelineToText(hoveringConnection.roomB.TimelineType, hoveringConnection.roomB.Timelines)}");
-				(TimelineType type, HashSet<string> timelines) = hoveringConnection.EffectiveConnectionTimeline;
-				string timelineToTextText = TimelineToText(type, timelines);
+				debugText.Add($"Connection: {TimelineToText(hoveringConnection.timeline)}");
+				debugText.Add($"Room A: {TimelineToText(hoveringConnection.roomA.timeline)}");
+				debugText.Add($"Room B: {TimelineToText(hoveringConnection.roomB.timeline)}");
+				string timelineToTextText = TimelineToText(hoveringConnection.EffectiveConnectionTimeline);
 				debugText.Add($"Effective Timeline: {(timelineToTextText == "" ? "NONE" : timelineToTextText)}");
-				if (timelineToTextText == "" && hoveringConnection.timelines.Count != 0)
+				if (timelineToTextText == "" && hoveringConnection.timeline.timelines.Count != 0)
 					debugText.Add($" > Connection timeline conflicts with room(s)");
 			}
 		}
@@ -1191,8 +1189,8 @@ public static class WorldWindow {
 						debugText.Add($" > Room imported from outside {region.acronym}-rooms");
 					debugText.Add($"Tags: {string.Join(" ", room.data.tags)}");
 					debugText.Add($"Size: {room.width}x{room.height}");
-					if(room.TimelineType != TimelineType.All)
-						debugText.Add($"Timeline: {TimelineToText(room.TimelineType, room.Timelines)}");
+					if(room.timeline.timelineType != TimelineType.All)
+						debugText.Add($"Timeline: {TimelineToText(room.timeline)}");
 					debugText.Add($"Dens: {room.dens.Count}");
 					// CONNECTION DEBUG
 					{
@@ -1216,9 +1214,9 @@ public static class WorldWindow {
 										canHaveArrows = true;
 									}
 									if (finalString != "") {
-										(TimelineType type, HashSet<string> timelines) = connection.EffectiveConnectionTimeline;
-										if (type != TimelineType.All) {
-											string timelineText = TimelineToText(type, timelines);
+										Timeline effectiveTimeline = connection.EffectiveConnectionTimeline;
+										if (effectiveTimeline.timelineType != TimelineType.All) {
+											string timelineText = TimelineToText(effectiveTimeline);
 											finalString = $"({(timelineText != "" ? timelineText : "NONE")}){finalString}";
 										}
 										if (connection == hoveringConnection && canHaveArrows)
@@ -1465,35 +1463,35 @@ public static class WorldWindow {
 		return bounds.x0 < camBound.x1 && bounds.x1 > camBound.x0 && bounds.y0 < camBound.y1 && bounds.y1 > camBound.y0;
 	}
 
-	public static string TimelineToText(TimelineType type, HashSet<string> timelines) {
-		if (type == TimelineType.All) {
+	public static string TimelineToText(Timeline timeline) {
+		if (timeline.timelineType == TimelineType.All) {
 			return "ALL";
 		}
 		else {
 			string timelineText = "";
-			foreach (string timeline in timelines) {
-				timelineText += (timelineText != "" ? "," : "") + timeline;
+			foreach (string timelineEntry in timeline.timelines) {
+				timelineText += (timelineText != "" ? "," : "") + timelineEntry;
 			}
-			if (type == TimelineType.Except)
+			if (timeline.timelineType == TimelineType.Except)
 				timelineText = "X-" + timelineText;
 			return timelineText;
 		}
 	}
 
-	public static bool CheckTimelineHasOverlap(TimelineType timelineTypeA, HashSet<string> timelinesA, TimelineType timelineTypeB, HashSet<string> timelinesB) {
-		if (timelineTypeA == TimelineType.All || timelineTypeB == TimelineType.All)
+	public static bool CheckTimelineHasOverlap(Timeline timelineA, Timeline timelineB) {
+		if (timelineA.timelineType == TimelineType.All || timelineB.timelineType == TimelineType.All)
 			return true;
-		switch (timelineTypeA) {
+		switch (timelineA.timelineType) {
 			case TimelineType.Except:
-				switch (timelineTypeB) {
+				switch (timelineB.timelineType) {
 					case TimelineType.Except:
-						// theoretically this should return false if timelinesB excludes every scug not excluded by timelinesA
+						// theoretically this should return false if timelineB.timelines excludes every scug not excluded by timelineA.timelines
 						// but that does not take custom scugs into account, so there's always a possible overlap
 						return true;
 					case TimelineType.Only:
-						// if any timelinesB isn't excluded by timelinesA they can overlap
-						foreach (string timeline in timelinesB) {
-							if (!timelinesA.Contains(timeline)) {
+						// if any timelineB.timelines isn't excluded by timelineA.timelines they can overlap
+						foreach (string timeline in timelineB.timelines) {
+							if (!timelineA.timelines.Contains(timeline)) {
 								return true;
 							}
 						}
@@ -1501,19 +1499,19 @@ public static class WorldWindow {
 				}
 			break;
 			case TimelineType.Only:
-				switch (timelineTypeB) {
+				switch (timelineB.timelineType) {
 					case TimelineType.Except:
-						// if any timelinesA isn't excluded by timelinesB they can overlap
-						foreach (string timeline in timelinesA) {
-							if (!timelinesB.Contains(timeline)) {
+						// if any timelineA.timelines isn't excluded by timelineB.timelines they can overlap
+						foreach (string timeline in timelineA.timelines) {
+							if (!timelineB.timelines.Contains(timeline)) {
 								return true;
 							}
 						}
 						return false;
 					case TimelineType.Only:
-						// if timelinesA includes any timelinesB they can overlap
-						foreach (string timeline in timelinesA) {
-							if (timelinesB.Contains(timeline)) {
+						// if timelineA.timelines includes any timelineB.timelines they can overlap
+						foreach (string timeline in timelineA.timelines) {
+							if (timelineB.timelines.Contains(timeline)) {
 								return true;
 							}
 						}
@@ -1524,40 +1522,40 @@ public static class WorldWindow {
 		return false;
 	}
 
-	public static (TimelineType, HashSet<string>) AndTimelines((TimelineType type, HashSet<string> lines) a, (TimelineType type, HashSet<string> lines) b) {
-		if (a.type == TimelineType.All)
+	public static Timeline AndTimelines(Timeline a, Timeline b) {
+		if (a.timelineType == TimelineType.All)
 			return b;
-		if (b.type == TimelineType.All)
+		if (b.timelineType == TimelineType.All)
 			return a;
-		if (a.type == TimelineType.Only) {
-			if (b.type == TimelineType.Only) {
-				(TimelineType type, HashSet<string> lines) newTimeline = (TimelineType.Only, []);
-				foreach (string line in b.lines) {
-					if (a.lines.Contains(line))
-						newTimeline.lines.Add(line);
+		if (a.timelineType == TimelineType.Only) {
+			if (b.timelineType == TimelineType.Only) {
+				Timeline newTimeline = new(TimelineType.Only, []);
+				foreach (string line in b.timelines) {
+					if (a.timelines.Contains(line))
+						newTimeline.timelines.Add(line);
 				}
 				return newTimeline;
 			}
-			if (b.type == TimelineType.Except) {
-				(TimelineType type, HashSet<string> lines) newTimeline = (TimelineType.Only, [..a.lines]);
-				foreach (string line in b.lines) {
-					newTimeline.lines.Remove(line);
+			if (b.timelineType == TimelineType.Except) {
+				Timeline newTimeline = new(TimelineType.Only, [..a.timelines]);
+				foreach (string line in b.timelines) {
+					newTimeline.timelines.Remove(line);
 				}
 				return newTimeline;
 			}
 		}
-		if (a.type == TimelineType.Except) {
-			if (b.type == TimelineType.Only) {
-				(TimelineType type, HashSet<string> lines) newTimeline = (TimelineType.Only, [..b.lines]);
-				foreach (string line in a.lines) {
-					newTimeline.lines.Remove(line);
+		if (a.timelineType == TimelineType.Except) {
+			if (b.timelineType == TimelineType.Only) {
+				Timeline newTimeline = new(TimelineType.Only, [..b.timelines]);
+				foreach (string line in a.timelines) {
+					newTimeline.timelines.Remove(line);
 				}
 				return newTimeline;
 			}
-			if (b.type == TimelineType.Except) {
-				(TimelineType type, HashSet<string> lines) newTimeline = (TimelineType.Except, [..a.lines]);
-				foreach (string line in b.lines) {
-					newTimeline.lines.Add(line);
+			if (b.timelineType == TimelineType.Except) {
+				Timeline newTimeline = new(TimelineType.Except, [..a.timelines]);
+				foreach (string line in b.timelines) {
+					newTimeline.timelines.Add(line);
 				}
 				return newTimeline;
 			}
@@ -1565,32 +1563,32 @@ public static class WorldWindow {
 		return a;
 	}
 
-	public static bool CheckVisibleTimeline(TimelineType timelineType, HashSet<string> timelines) {
-		if (VisibleTimelineType == TimelineType.All)
+	public static bool CheckVisibleTimeline(Timeline timeline) {
+		if (VisibleTimeline.timelineType == TimelineType.All)
 			return true;
-		if (timelineType == TimelineType.All && VisibleTimelineType != TimelineType.Only)
+		if (timeline.timelineType == TimelineType.All && VisibleTimeline.timelineType != TimelineType.Only)
 			return true;
-		if (VisibleTimelineType == TimelineType.Except) {
-			if (timelineType == TimelineType.Only) {
-				foreach (string timeline in timelines) {
-					if (!VisibleTimelines.Contains(timeline)) { return true; }
+		if (VisibleTimeline.timelineType == TimelineType.Except) {
+			if (timeline.timelineType == TimelineType.Only) {
+				foreach (string timelineEntry in timeline.timelines) {
+					if (!VisibleTimeline.timelines.Contains(timelineEntry)) { return true; }
 				}
 			}
-			else if (timelineType == TimelineType.Except) {
+			else if (timeline.timelineType == TimelineType.Except) {
 				return true; // should really technically only return true if timelines does not exclude literally every slugcat that isn't excepted by world.
 			}
 		}
-		else if (VisibleTimelineType == TimelineType.Only) {
-			if (timelineType == TimelineType.All && VisibleTimelines.Count != 0)
+		else if (VisibleTimeline.timelineType == TimelineType.Only) {
+			if (timeline.timelineType == TimelineType.All && VisibleTimeline.timelines.Count != 0)
 				return true;
-			if (timelineType == TimelineType.Only) {
-				foreach (string timeline in timelines) {
-					if (VisibleTimelines.Contains(timeline)) { return true; }
+			if (timeline.timelineType == TimelineType.Only) {
+				foreach (string timelineEntry in timeline.timelines) {
+					if (VisibleTimeline.timelines.Contains(timelineEntry)) { return true; }
 				}
 			}
-			else if (timelineType == TimelineType.Except) {
-				foreach (string timeline in VisibleTimelines) {
-					if (!timelines.Contains(timeline)) { return true; }
+			else if (timeline.timelineType == TimelineType.Except) {
+				foreach (string timelineEntry in VisibleTimeline.timelines) {
+					if (!timeline.timelines.Contains(timelineEntry)) { return true; }
 				}
 			}
 		}
@@ -1859,7 +1857,7 @@ public static class WorldWindow {
 	}
 
 	public class WorldMenuItems : MenuItems {
-		private static event Action<TimelineType, HashSet<string>>? UpdateVisibleTimelines;
+		private static event Action<Timeline>? UpdateVisibleTimeline;
 		private static void ExportButton() {
 			string lastExportDirectory = WorldWindow.region.exportPath;
 
@@ -1980,26 +1978,25 @@ public static class WorldWindow {
 
 				new Button("Timeline", button => {
 					PopupManager.Add(new TimelinePopup(
-						WorldWindow.VisibleTimelineType,
-						WorldWindow.VisibleTimelines,
+						WorldWindow.VisibleTimeline,
 						(TimelineType) => {
-							WorldWindow.VisibleTimelineType = TimelineType;
-							UpdateVisibleTimelines?.Invoke(WorldWindow.VisibleTimelineType, WorldWindow.VisibleTimelines);
-							if(VisibleTimelineType == TimelineType.All) button.text = "Timeline";
-							else if(VisibleTimelineType == TimelineType.Only) button.text = (VisibleTimelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
+							WorldWindow.VisibleTimeline.timelineType = TimelineType;
+							UpdateVisibleTimeline?.Invoke(WorldWindow.VisibleTimeline);
+							if(VisibleTimeline.timelineType == TimelineType.All) button.text = "Timeline";
+							else if(VisibleTimeline.timelineType == TimelineType.Only) button.text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
 							else button.text = ">Timeline<";
 						},
 						(selected, timeline) => {
 							if(selected)
-								WorldWindow.VisibleTimelines.Remove(timeline);
+								WorldWindow.VisibleTimeline.timelines.Remove(timeline);
 							else
-								WorldWindow.VisibleTimelines.Add(timeline);
-							UpdateVisibleTimelines?.Invoke(WorldWindow.VisibleTimelineType, WorldWindow.VisibleTimelines);
-							if(VisibleTimelineType == TimelineType.All) button.text = "Timeline";
-							else if(VisibleTimelineType == TimelineType.Only) button.text = (VisibleTimelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
+								WorldWindow.VisibleTimeline.timelines.Add(timeline);
+							UpdateVisibleTimeline?.Invoke(WorldWindow.VisibleTimeline);
+							if(VisibleTimeline.timelineType == TimelineType.All) button.text = "Timeline";
+							else if(VisibleTimeline.timelineType == TimelineType.Only) button.text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
 							else button.text = ">Timeline<";
 						},
-						ref UpdateVisibleTimelines));
+						ref UpdateVisibleTimeline));
 					}, button => {
 						return WorldWindow.ValidRegionLoaded;
 					}
