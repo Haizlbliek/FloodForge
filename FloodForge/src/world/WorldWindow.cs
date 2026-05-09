@@ -1435,6 +1435,47 @@ public static class WorldWindow {
 		}
 	}
 
+	public static (TimelineType, HashSet<string>) AndTimelines((TimelineType type, HashSet<string> lines) a, (TimelineType type, HashSet<string> lines) b) {
+		if (a.type == TimelineType.All)
+			return b;
+		if (b.type == TimelineType.All)
+			return a;
+		if (a.type == TimelineType.Only) {
+			if (b.type == TimelineType.Only) {
+				(TimelineType type, HashSet<string> lines) newTimeline = (TimelineType.Only, []);
+				foreach (string line in b.lines) {
+					if (a.lines.Contains(line))
+						newTimeline.lines.Add(line);
+				}
+				return newTimeline;
+			}
+			if (b.type == TimelineType.Except) {
+				(TimelineType type, HashSet<string> lines) newTimeline = (TimelineType.Only, [..a.lines]);
+				foreach (string line in b.lines) {
+					newTimeline.lines.Remove(line);
+				}
+				return newTimeline;
+			}
+		}
+		if (a.type == TimelineType.Except) {
+			if (b.type == TimelineType.Only) {
+				(TimelineType type, HashSet<string> lines) newTimeline = (TimelineType.Only, [..b.lines]);
+				foreach (string line in a.lines) {
+					newTimeline.lines.Remove(line);
+				}
+				return newTimeline;
+			}
+			if (b.type == TimelineType.Except) {
+				(TimelineType type, HashSet<string> lines) newTimeline = (TimelineType.Except, [..a.lines]);
+				foreach (string line in b.lines) {
+					newTimeline.lines.Add(line);
+				}
+				return newTimeline;
+			}
+		}
+		return a;
+	}
+
 	public static bool CheckVisibleTimeline(TimelineType timelineType, HashSet<string> timelines) {
 		if (VisibleTimelineType == TimelineType.All)
 			return true;

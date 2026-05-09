@@ -9,6 +9,11 @@ public class Connection {
 
 	public HashSet<string> timelines = [];
 	public TimelineType timelineType = TimelineType.All;
+	public (TimelineType, HashSet<string>) EffectiveConnectionTimeline {
+		get {
+			return WorldWindow.AndTimelines(WorldWindow.AndTimelines((this.roomA.TimelineType, this.roomA.Timelines), (this.roomB.TimelineType, this.roomB.Timelines)), (this.timelineType, this.timelines));
+		}
+	}
 	public ConditionalPopup? conditionalPopup;
 
 	protected int segments;
