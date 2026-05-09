@@ -330,7 +330,7 @@ public static class WorldWindow {
 						// NOTE - DOES NOT TAKE TIMELINES INTO ACCOUNT
 						bool foundDuplicate = false;
 						bool foundOccupiedExit = false;
-						List<Connection> connections = CurrentConnection.roomA.connections;
+						List<Connection> connections = [..CurrentConnection.roomA.connections];
 						connections.AddRange(CurrentConnection.roomB.connections);
 
 						//Logger.Info("STARTING CONNECTION CHECK!");
