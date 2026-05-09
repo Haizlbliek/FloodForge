@@ -1765,13 +1765,13 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		if (this.TimelineType != TimelineType.All) {
 			int i = 0;
 			foreach (string timeline in this.Timelines) {
-				UI.CenteredTexture(ConditionalTimelineTextures.GetTexture(timeline), (float) (position.x + i * 4f + 1.5f), (float) (position.y - 1.5f), WorldWindow.SelectorScale);
+				UI.CenteredTexture(ConditionalTimelineTextures.GetTexture(timeline), (float) (position.x + (i * WorldWindow.SelectorScale) + 1.5f), (float) (position.y - 1.5f), WorldWindow.SelectorScale);
 				i++;
 			}
 
 			if (this.Timelines.Count > 0 && this.TimelineType == TimelineType.Except) {
 				Immediate.Color(1f, 0f, 0f);
-				UI.Line(position.x + 2f - WorldWindow.SelectorScale * 0.5f, position.y - 2f, position.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.Timelines.Count - 1) * 4f, position.y - 2f, WorldWindow.SelectorScale * 4f);
+				UI.Line(position.x + 2f - WorldWindow.SelectorScale * 0.5f, position.y - 2f, position.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.Timelines.Count - 1) * WorldWindow.SelectorScale, position.y - 2f, WorldWindow.SelectorScale * 4f);
 			}
 		}
 
