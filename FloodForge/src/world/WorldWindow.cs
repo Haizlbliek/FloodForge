@@ -326,8 +326,7 @@ public static class WorldWindow {
 			if (NewConnection != null) {
 				if (CurrentConnectionValid) {
 					RoomAndConnectionChange change = new RoomAndConnectionChange(true);
-					{ // check for duplicate connections 
-						// NOTE - DOES NOT TAKE TIMELINES INTO ACCOUNT
+					{ // check for duplicate connections
 						bool foundDuplicate = false;
 						bool foundOccupiedExit = false;
 						List<Connection> connections = [..NewConnection.roomA.connections];
@@ -335,21 +334,43 @@ public static class WorldWindow {
 
 						//Logger.Info("STARTING CONNECTION CHECK!");
 						foreach (Connection connection in connections) {
-							//Logger.Info($"connection: roomA = {connection.roomA.name}; roomB = {connection.roomB.name};\nNewConnection: roomA = {NewConnection.roomA.name}; roomB = {NewConnection.roomB.name};");
-							foundDuplicate |= connection.roomA == NewConnection.roomA && connection.roomB == NewConnection.roomB;
-							foundDuplicate |= connection.roomB == NewConnection.roomA && connection.roomA == NewConnection.roomB;
-							//Logger.Info($"foundDuplicate: {foundDuplicate}");
-							
-							//Logger.Info($"connection: roomAExitID = {connection.roomAExitID}; roomBExitID = {connection.roomBExitID}\nNewConnection: roomAExitID = {NewConnection.roomAExitID}; roomBExitID = {NewConnection.roomBExitID}");
-							foundOccupiedExit |= connection.roomA == NewConnection.roomA && connection.roomAExitID == NewConnection.roomAExitID;
-							foundOccupiedExit |= connection.roomB == NewConnection.roomB && connection.roomBExitID == NewConnection.roomBExitID;
-							foundOccupiedExit |= connection.roomA == NewConnection.roomB && connection.roomAExitID == NewConnection.roomBExitID;
-							foundOccupiedExit |= connection.roomB == NewConnection.roomA && connection.roomBExitID == NewConnection.roomAExitID;
-							//Logger.Info($"foundOccupiedExit: {foundOccupiedExit}");
+							//Logger.Info("-start-");
+							//Logger.Info("CHECK TIMELINES");
 
-							//Logger.Info("-end-");
-							if (foundDuplicate && foundOccupiedExit)
-								break;
+							//Logger.Info("connection timelines:\n" + 
+							//$"connection: {TimelineToText(connection.timelineType, connection.timelines)}\n" + 
+							//$"roomA ({connection.roomA.name}): {TimelineToText(connection.roomA.TimelineType, connection.roomA.Timelines)}\n" + 
+							//$"roomB ({connection.roomB.name}): {TimelineToText(connection.roomB.TimelineType, connection.roomB.Timelines)}");
+							(TimelineType connectionEffectiveType, HashSet<string> connectionEffectiveLines) = connection.EffectiveConnectionTimeline;
+							//Logger.Info("connectionEffectiveTimeline: " + TimelineToText(connectionEffectiveType, connectionEffectiveLines));
+
+							//Logger.Info("NewConnection timelines:\n" + 
+							//$"connection: {TimelineToText(NewConnection.timelineType, NewConnection.timelines)}\n" + 
+							//$"roomA ({NewConnection.roomA.name}): {TimelineToText(NewConnection.roomA.TimelineType, NewConnection.roomA.Timelines)}\n" + 
+							//$"roomB ({NewConnection.roomB.name}): {TimelineToText(NewConnection.roomB.TimelineType, NewConnection.roomB.Timelines)}");
+							(TimelineType newConnectionEffectiveType, HashSet<string> newConnectionEffectiveLines) = NewConnection.EffectiveConnectionTimeline;
+							//Logger.Info("newConnectionEffectiveTimeline: " + TimelineToText(newConnectionEffectiveType, newConnectionEffectiveLines));
+							bool hasOverlap = CheckTimelineHasOverlap(connectionEffectiveType, connectionEffectiveLines, newConnectionEffectiveType, newConnectionEffectiveLines);
+							//Logger.Info($"RESULTING hasOverlap: {hasOverlap}");
+							//Logger.Info("END CHECK TIMELINES");
+							if (hasOverlap) {
+								//Logger.Info("CHECK CONNECTION");
+								//Logger.Info($"connection: roomA = {connection.roomA.name}; roomB = {connection.roomB.name};\nNewConnection: roomA = {NewConnection.roomA.name}; roomB = {NewConnection.roomB.name};");
+								foundDuplicate |= connection.roomA == NewConnection.roomA && connection.roomB == NewConnection.roomB;
+								foundDuplicate |= connection.roomB == NewConnection.roomA && connection.roomA == NewConnection.roomB;
+								//Logger.Info($"foundDuplicate: {foundDuplicate}");
+								
+								//Logger.Info($"connection: roomAExitID = {connection.roomAExitID}; roomBExitID = {connection.roomBExitID}\nNewConnection: roomAExitID = {NewConnection.roomAExitID}; roomBExitID = {NewConnection.roomBExitID}");
+								foundOccupiedExit |= connection.roomA == NewConnection.roomA && connection.roomAExitID == NewConnection.roomAExitID;
+								foundOccupiedExit |= connection.roomB == NewConnection.roomB && connection.roomBExitID == NewConnection.roomBExitID;
+								foundOccupiedExit |= connection.roomA == NewConnection.roomB && connection.roomAExitID == NewConnection.roomBExitID;
+								foundOccupiedExit |= connection.roomB == NewConnection.roomA && connection.roomBExitID == NewConnection.roomAExitID;
+								//Logger.Info($"foundOccupiedExit: {foundOccupiedExit}");
+
+								//Logger.Info("-end-");
+								if (foundDuplicate && foundOccupiedExit)
+									break;
+							}
 						}
 						if (foundDuplicate || foundOccupiedExit) {
 							string message = "<s:1>Invalid Connection!";
