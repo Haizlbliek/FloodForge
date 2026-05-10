@@ -24,7 +24,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 	public bool pathOutsideRoomsFolder = false;
 	public string path;
 	public string name;
-	public Timeline timeline;
+	public Timeline timeline = new();
 	public ConditionalPopup? conditionalPopup;
 	public Vector2 CanonPosition;
 	public Vector2 DevPosition;
@@ -63,7 +63,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		this.pathOutsideRoomsFolder = pathOutsideRoomsFolder;
 		this.path = path;
 		this.name = name;
-		this.timeline = new ();
 
 		this.CanonPosition = Vector2.Zero;
 		this.DevPosition = Vector2.Zero;
