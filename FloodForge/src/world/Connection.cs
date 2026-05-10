@@ -13,6 +13,11 @@ public class Connection {
 			return this.timeline.And(this.roomA.timeline.And(this.roomB.timeline));
 		}
 	}
+	public bool ConnectionVisible {
+		get {
+			return this.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
+		}
+	}
 	public ConditionalPopup? conditionalPopup;
 
 	protected int segments;
@@ -211,7 +216,8 @@ public class Connection {
 				return;
 			bool hovered = this.Hovered || Keys.Modifier(Keys.Modifiers.Shift);
 
-			bool roomConnectionHoverColor = aVisible && bVisible && hovered;
+			bool fadeMiddle = aVisible && bVisible && !this.ConnectionVisible;
+			bool roomConnectionHoverColor = (!fadeMiddle) && aVisible && bVisible && hovered;
 			Color connectionColorA;
 			Color connectionColorB;
 			bool blendColors = false;
@@ -244,14 +250,17 @@ public class Connection {
 
 			float alphaA = aVisible ? opacity : 0f;
 			float alphaB = bVisible ? opacity : 0f;
-			if (opacity <= 0.999f || aVisible != bVisible) {
+			if (opacity <= 0.999f || aVisible != bVisible || fadeMiddle) {
 				Program.gl.Enable(EnableCap.Blend);
 			}
 
 			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 				Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
 				Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
-				this.DrawCustomLine(pointA.x, pointA.y, pointB.x, pointB.y, alphaA, alphaB);
+				Vector2 pointMiddle = (pointA + pointB) / 2;
+				float alphaMiddle = fadeMiddle ? 0f : (alphaA + alphaB) / 2;
+				this.DrawCustomLine(pointA.x, pointA.y, pointMiddle.x, pointMiddle.y, alphaA, alphaMiddle);
+				this.DrawCustomLine(pointMiddle.x, pointMiddle.y, pointB.x, pointB.y, alphaMiddle, alphaB);
 			}
 			else {
 				Vector2 lastPoint = this.BezierPoints![0];
@@ -262,14 +271,21 @@ public class Connection {
 						Immediate.Color(Color.Lerp(connectionColorA, connectionColorB, curveProgress));
 					}
 					Vector2 point = this.BezierPoints[i];
-					this.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, Mathf.Lerp(alphaA, alphaB, curveProgress - (1f / curveLength)), Mathf.Lerp(alphaA, alphaB, curveProgress));
+					float lastCurveProgress = curveProgress - (1f / curveLength);
+					float lerpedAlphaA = Mathf.Lerp(alphaA, alphaB, lastCurveProgress);
+					float lerpedAlphaB = Mathf.Lerp(alphaA, alphaB, curveProgress);
+					if (fadeMiddle) {
+						lerpedAlphaA = Math.Max(0f, float.CopySign(Mathf.Lerp(lerpedAlphaA, 0, lastCurveProgress * 2), lerpedAlphaA) * 2 - 1);
+						lerpedAlphaB = Math.Max(0f, float.CopySign(Mathf.Lerp(lerpedAlphaB, 0, curveProgress * 2), lerpedAlphaB) * 2 - 1);
+					}
+					this.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, lerpedAlphaA, lerpedAlphaB);
 					lastPoint = point;
 				}
 			}
 
 			Program.gl.Disable(EnableCap.Blend);
 
-			if (!aVisible || !bVisible)
+			if (!aVisible || !bVisible || !this.ConnectionVisible)
 				return;
 			if (this.timeline.timelines.Count == 0 || this.timeline.timelineType == TimelineType.All)
 				return;
