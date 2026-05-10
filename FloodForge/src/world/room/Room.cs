@@ -56,7 +56,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 	public int GarbageWormDenIndex => this.specialExitCount + this.nonDenExitCount + this.denShortcutEntrances.Count;
 
 	public override bool IsVisible() {
-		return WorldWindow.VisibleLayers[this.data.layer] && WorldWindow.CheckVisibleTimeline(this.timeline);
+		return WorldWindow.VisibleLayers[this.data.layer] && this.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
 	}
 
 	public Room(string path, string name, bool pathOutsideRoomsFolder = false) {
@@ -1823,14 +1823,14 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 
 		float selectorScale = WorldWindow.SelectorScale;
 		int drawnCreatures = 0;
-		List<DenLineage> visibleLineages = den.creatures.FindAll(d => WorldWindow.CheckVisibleTimeline(d.timeline));
+		List<DenLineage> visibleLineages = den.creatures.FindAll(d => d.timeline.OverlapsWith(WorldWindow.VisibleTimeline));
 		for (int i = 0; i < visibleLineages.Count; i++) {
 			DenCreature creature = visibleLineages[i];
 			if (creature.type.IsNullOrEmpty() && creature.lineageTo == null) {
 				drawnCreatures++;
 				continue;
 			}
-			if (creature is DenLineage denLineage && !WorldWindow.CheckVisibleTimeline(denLineage.timeline))
+			if (creature is DenLineage denLineage && !denLineage.timeline.OverlapsWith(WorldWindow.VisibleTimeline))
 				continue;
 
 			float scale = selectorScale;

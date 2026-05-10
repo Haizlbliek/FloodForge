@@ -103,13 +103,6 @@ public class DenLineage : DenCreature {
 
 	public DenLineage(string type, int count) : base(type, count) {
 	}
-
-	public bool TimelinesMatch(DenLineage other) {
-		if (this.timeline.timelineType != other.timeline.timelineType) return false;
-		if (this.timeline.timelineType == TimelineType.All) return true;
-
-		return this.timeline.timelines.SetEquals(other.timeline.timelines);
-	}
 }
 
 public class Den {
@@ -119,16 +112,8 @@ public class Den {
 public class GarbageWormDen {
 	public string type = "";
 	public int count;
-	public HashSet<string> timelines = [];
-	public TimelineType timelineType = TimelineType.All;
+	public Timeline timeline = new();
 
 	public GarbageWormDen() {
-	}
-
-	public bool TimelinesMatch(GarbageWormDen other) {
-		if (this.timelineType != other.timelineType) return false;
-		if (this.timelineType == TimelineType.All) return true;
-
-		return this.timelines.SetEquals(other.timelines);
 	}
 }

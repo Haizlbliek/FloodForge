@@ -375,7 +375,7 @@ public static class WorldExporter {
 							if (otherCreature == null)
 								continue;
 
-							if (mainCreature.TimelinesMatch(otherCreature)) {
+							if (mainCreature.timeline.Match(otherCreature.timeline)) {
 								sameTimelineCreatures.Add(otherCreature);
 								nonLineageCreatures[k] = null;
 							}
@@ -383,16 +383,7 @@ public static class WorldExporter {
 
 						if (mainCreature.timeline.timelineType != TimelineType.All) {
 							writer.Write("(");
-							if (mainCreature.timeline.timelineType == TimelineType.Except) {
-								writer.Write("X-");
-							}
-							bool first2 = true;
-							foreach (string timeline in mainCreature.timeline.timelines) {
-								if (!first2)
-									writer.Write(",");
-								first2 = false;
-								writer.Write(timeline);
-							}
+							writer.Write(mainCreature.timeline.ToString());
 							writer.Write(")");
 						}
 
@@ -435,16 +426,7 @@ public static class WorldExporter {
 
 						if (lineage.timeline.timelineType != TimelineType.All && lineage.timeline.timelines.Count > 0) {
 							writer.Write("(");
-							if (lineage.timeline.timelineType == TimelineType.Except) {
-								writer.Write("X-");
-							}
-							bool first = true;
-							foreach (string timeline in lineage.timeline.timelines) {
-								if (!first)
-									writer.Write(",");
-								first = false;
-								writer.Write(timeline);
-							}
+							writer.Write(lineage.timeline);
 							writer.Write(")");
 						}
 
@@ -485,18 +467,9 @@ public static class WorldExporter {
 					continue;
 
 				foreach (GarbageWormDen worm in room.garbageWormDens) {
-					if (worm.timelineType != TimelineType.All) {
+					if (worm.timeline.timelineType != TimelineType.All) {
 						writer.Write("(");
-						if (worm.timelineType == TimelineType.Except) {
-							writer.Write("X-");
-						}
-						bool first = true;
-						foreach (string timeline in worm.timelines) {
-							if (!first)
-								writer.Write(",");
-							first = false;
-							writer.Write(timeline);
-						}
+						writer.Write(worm.timeline);
 						writer.Write(")");
 					}
 

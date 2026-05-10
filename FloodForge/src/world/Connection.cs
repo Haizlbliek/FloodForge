@@ -10,7 +10,7 @@ public class Connection {
 	public Timeline timeline;
 	public Timeline EffectiveConnectionTimeline {
 		get {
-			return WorldWindow.AndTimelines(WorldWindow.AndTimelines(this.roomA.timeline, this.roomB.timeline), this.timeline);
+			return this.timeline.And(this.roomA.timeline.And(this.roomB.timeline));
 		}
 	}
 	public ConditionalPopup? conditionalPopup;
@@ -204,8 +204,8 @@ public class Connection {
 			this.RecalculateBezier();
 		}
 		if (WorldWindow.CullTest(this.fittedAABB)) {
-			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomA.timeline);
-			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomB.timeline);
+			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && this.roomA.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
+			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && this.roomB.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
 			float opacity = Settings.ConnectionOpacity;
 			if (!aVisible && !bVisible || opacity < 0.01f)
 				return;

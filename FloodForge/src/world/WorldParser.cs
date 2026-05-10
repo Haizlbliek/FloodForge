@@ -308,7 +308,7 @@ public static class WorldParser {
 		return new DenCreature.Tag(CreatureTags.GetOrCreate(tag));
 	}
 
-	private static bool ParseWorldCreatureLineage(string[] splits, Room room, TimelineType timelineType, HashSet<string> timelines) {
+	private static bool ParseWorldCreatureLineage(string[] splits, Room room, Timeline timeline) {
 		int denId = int.Parse(splits[2]);
 
 		if (room is OffscreenRoom offscreenRoom) {
@@ -323,7 +323,7 @@ public static class WorldParser {
 
 		Den den = room.GetDen(denId);
 		DenLineage lineage = new DenLineage("", 0) {
-			timeline = new (timelineType, timelines)
+			timeline = timeline
 		};
 		den.creatures.Add(lineage);
 
@@ -359,7 +359,7 @@ public static class WorldParser {
 		return true;
 	}
 
-	private static bool ParseWorldCreatureNormal(string[] splits, Room room, TimelineType timelineType, HashSet<string> timelines) {
+	private static bool ParseWorldCreatureNormal(string[] splits, Room room, Timeline timeline) {
 		foreach (string creatureInDen in Regex.Split(splits[1], @",(?![^{]*})").Select(s => s.Trim())) {
 			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
 			int denId = int.Parse(sections[0], NumberStyles.Any, CultureInfo.InvariantCulture);
@@ -373,9 +373,8 @@ public static class WorldParser {
 			if (denId == room.GarbageWormDenIndex) {
 				GarbageWormDen worm = new GarbageWormDen() {
 					type = CreatureTextures.Parse(creature),
-					timelineType = timelineType,
-					timelines = timelines,
-					count = sections.Length < 3 ? 1 : int.Parse(sections[2]),
+					timeline = timeline,
+					count = sections.Length < 3 ? 1 : int.Parse(sections[2])
 				};
 				room.garbageWormDens.Add(worm);
 				continue;
@@ -388,7 +387,7 @@ public static class WorldParser {
 
 			Den den = room.GetDen(denId);
 			DenLineage lineage = new DenLineage(CreatureTextures.Parse(creature), 1) {
-				timeline = new (timelineType, timelines)
+				timeline = timeline
 			};
 			den.creatures.Add(lineage);
 
@@ -414,20 +413,19 @@ public static class WorldParser {
 	private static bool ParseWorldCreature(string line) {
 		try {
 			string[] splits = line.Split(" : ", StringSplitOptions.TrimEntries);
-			TimelineType timelineType = TimelineType.All;
-			HashSet<string> timelines = [];
+			Timeline timeline = new();
 
 			if (splits[0][0] == '(') {
 				string v = splits[0][1..splits[0].IndexOf(')')];
 				splits[0] = splits[0][(splits[0].IndexOf(')') + 1)..].Trim();
 				if (v.StartsWith("x-", StringComparison.InvariantCultureIgnoreCase)) {
-					timelineType = TimelineType.Except;
+					timeline.timelineType = TimelineType.Except;
 					v = v[2..];
 				}
 				else {
-					timelineType = TimelineType.Only;
+					timeline.timelineType = TimelineType.Only;
 				}
-				timelines = [.. v.Split(',')];
+				timeline.timelines = [.. v.Split(',')];
 			}
 
 			bool lineage = splits[0].Equals("lineage", StringComparison.InvariantCultureIgnoreCase);
@@ -442,10 +440,10 @@ public static class WorldParser {
 			}
 
 			if (lineage) {
-				if (!ParseWorldCreatureLineage(splits, room, timelineType, timelines)) return false;
+				if (!ParseWorldCreatureLineage(splits, room, timeline)) return false;
 			}
 			else {
-				if (!ParseWorldCreatureNormal(splits, room, timelineType, timelines)) return false;
+				if (!ParseWorldCreatureNormal(splits, room, timeline)) return false;
 			}
 		}
 		catch (Exception e) {
@@ -456,6 +454,7 @@ public static class WorldParser {
 		return true;
 	}
 
+	// REVIEW - Does not parse correctly
 	private static bool ParseWorldConditionalLink(string link, ref List<ConditionalConnection> conditionalConnectionsToAdd) {
 		string[] parts = link.Split(':', StringSplitOptions.TrimEntries);
 		if (parts.Length < 3 || parts.Length > 4) {
