@@ -74,40 +74,38 @@ public class Shader {
 	public unsafe void SetUniform(string name, Matrix4x4 value, bool transpose = true) => Custom.gl.UniformMatrix4(this.GetUniformLocation(name), 1, transpose, (float*)&value);
 
 
-	private static string PreprocessSource(string filePath, bool isRoot = true) {
+	private static string PreprocessSource(string filePath, List<string> fileMap, bool isRoot = true) {
+		if (!fileMap.Contains(filePath)) fileMap.Add(filePath);
+		int fileIndex = fileMap.IndexOf(filePath);
+
 		string[] lines = File.ReadAllLines(filePath);
 		string? directory = Path.GetDirectoryName(filePath);
-		string escapedPath = filePath.Replace("\\", "\\\\");
 		List<string> processedLines = [];
 		int startIndex = 0;
 
 		if (isRoot) {
-			foreach ((string? line, int i) in lines.Select((l, i) => (l, i))) {
+			foreach ((string line, int i) in lines.Select((l, i) => (l, i))) {
 				if (Regex.IsMatch(line, @"^\s*#version")) {
 					processedLines.Add(line);
-					processedLines.Add($"#line {i + 2} \"{escapedPath}\"");
+					processedLines.Add($"#line {i + 2} {fileIndex}");
 					startIndex = i + 1;
 					break;
 				}
 			}
-		}
-		else {
-			processedLines.Add($"#line 1 \"{escapedPath}\"");
+		} else {
+			processedLines.Add($"#line 1 {fileIndex}");
 		}
 
 		for (int i = startIndex; i < lines.Length; i++) {
 			Match match = Regex.Match(lines[i], @"^\s*#include\s+""(.+)""\s*$");
 			if (match.Success) {
 				string includePath = Path.Combine(directory ?? "", match.Groups[1].Value);
-				if (!File.Exists(includePath))
-					includePath = Path.GetFullPath(match.Groups[1].Value);
-				if (!File.Exists(includePath))
-					throw new FileNotFoundException($"Include not found: {match.Groups[1].Value}");
+				if (!File.Exists(includePath)) includePath = Path.GetFullPath(match.Groups[1].Value);
+				if (!File.Exists(includePath)) throw new FileNotFoundException($"Include not found: {match.Groups[1].Value}");
 
-				processedLines.Add(PreprocessSource(includePath, false));
-				processedLines.Add($"#line {i + 2} \"{escapedPath}\"");
-			}
-			else {
+				processedLines.Add(PreprocessSource(includePath, fileMap, false));
+				processedLines.Add($"#line {i + 2} {fileIndex}");
+			} else {
 				processedLines.Add(lines[i]);
 			}
 		}
@@ -115,15 +113,32 @@ public class Shader {
 	}
 
 	private static uint CompileShader(string path, ShaderType type) {
+		List<string> fileMap = [];
+		string source = PreprocessSource(path, fileMap);
+		
 		uint shader = Custom.gl.CreateShader(type);
-		Custom.gl.ShaderSource(shader, PreprocessSource(path));
+		Custom.gl.ShaderSource(shader, source);
 		Custom.gl.CompileShader(shader);
 
 		Custom.gl.GetShader(shader, ShaderParameterName.CompileStatus, out int status);
-		if (status != (int) GLEnum.True) {
-			throw new Exception($"Error compiling {type} at {path}:\n{Custom.gl.GetShaderInfoLog(shader)}");
+		if (status != (int)GLEnum.True) {
+			string rawLog = Custom.gl.GetShaderInfoLog(shader);
+			string formattedLog = FormatShaderLog(rawLog, fileMap);
+			throw new Exception($"Error compiling {type} at {path}:\n{formattedLog}");
 		}
 		return shader;
+	}
+
+	private static string FormatShaderLog(string log, List<string> fileMap) {
+		return Regex.Replace(log, @"(\d+)\((\d+)\)|(\d+):(\d+)", m => {
+			int fileIdx = int.Parse(m.Groups[1].Success ? m.Groups[1].Value : m.Groups[3].Value);
+			string lineNum = m.Groups[2].Success ? m.Groups[2].Value : m.Groups[4].Value;
+
+			if (fileIdx >= 0 && fileIdx < fileMap.Count) {
+				return $"{fileMap[fileIdx]}:{lineNum}";
+			}
+			return m.Value;
+		});
 	}
 
 	public static Shader Load(string path, ShaderType type) {
