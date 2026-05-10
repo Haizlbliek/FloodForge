@@ -254,9 +254,9 @@ public class Connection {
 				Program.gl.Enable(EnableCap.Blend);
 			}
 
+			Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
+			Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
 			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-				Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
-				Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
 				Vector2 pointMiddle = (pointA + pointB) / 2;
 				float alphaMiddle = fadeMiddle ? 0f : (alphaA + alphaB) / 2;
 				this.DrawCustomLine(pointA.x, pointA.y, pointMiddle.x, pointMiddle.y, alphaA, alphaMiddle);
@@ -290,23 +290,36 @@ public class Connection {
 			if (this.timeline.timelines.Count == 0 || this.timeline.timelineType == TimelineType.All)
 				return;
 
-			float size = WorldWindow.SelectorScale;
-			int squareSize = Mathf.CeilToInt(Mathf.Sqrt(this.timeline.timelines.Count));
+			float size = WorldWindow.SelectorScale * (this.Hovered ? 1.5f : 1f);
+			int squareWidth = Mathf.CeilToInt(Mathf.Sqrt(this.timeline.timelines.Count));
+			int squareHeight = 0;
+			while (squareHeight * squareWidth < this.timeline.timelines.Count) {
+				squareHeight++;
+			}
+
+			Vector2 pointDirAB = (pointB - pointA).Normalized;
+			Vector2 pointDirBA = pointDirAB * -1;
+			float dotA = Vector2.Dot(pointDirAB, this.roomA.GetConnectionConnectDirection(this.roomAExitID));
+			float dotB = Vector2.Dot(pointDirBA, this.roomB.GetConnectionConnectDirection(this.roomBExitID));
+			bool onLeft = dotB > dotA ? (pointB.x < pointA.x) : (pointA.x < pointB.x);
+			bool onTop = dotB > dotA ? (pointB.y > pointA.y) : (pointA.y > pointB.y);
+			float offsetX0 = (onLeft ? this.fittedAABB.x0 : (this.fittedAABB.x1 - (squareWidth * size))) - 0.5f;
+			float offsetY1 = (onTop ? this.fittedAABB.y1 : (this.fittedAABB.y0 + (squareHeight * size))) + 0.5f;
 
 			HashSet<string>.Enumerator timelineEnumerator = this.timeline.timelines.GetEnumerator();
-			for (int y = 0; y < squareSize; y++) {
-				for (int x = 0; x < squareSize; x++) {
+			for (int y = 0; y < squareHeight; y++) {
+				for (int x = 0; x < squareWidth; x++) {
 					if (!timelineEnumerator.MoveNext())
 						break;
 					
-					UI.CenteredTexture(ConditionalTimelineTextures.GetTexture(timelineEnumerator.Current), this.fittedAABB.x0 + (x * size) + size / 2, this.fittedAABB.y1 - (y * size) - size / 2, WorldWindow.SelectorScale);
+					UI.CenteredTexture(ConditionalTimelineTextures.GetTexture(timelineEnumerator.Current), offsetX0 + (x * size) + size / 2, offsetY1 - (y * size) - size / 2, size);
 
 					if (this.timeline.timelineType == TimelineType.Except) {
 						Immediate.Color(1f, 0f, 0f);
-						float x0 = this.fittedAABB.x0 + ((x + 0.1f) * size) + 0.5f;
-						float x1 = this.fittedAABB.x0 + ((x + 0.9f) * size) + 0.5f;
-						float y0 = this.fittedAABB.y1 - ((y + 0.1f) * size) - 0.5f;
-						float y1 = this.fittedAABB.y1 - ((y + 0.9f) * size) - 0.5f;
+						float x0 = offsetX0 + 0.5f + ((x + 0.1f) * size);
+						float x1 = offsetX0 + 0.5f + ((x + 0.9f) * size);
+						float y0 = offsetY1 - 0.5f - ((y + 0.1f) * size);
+						float y1 = offsetY1 - 0.5f - ((y + 0.9f) * size);
 						UI.Line(x0, y0, x1, y1, WorldWindow.SelectorScale * 3f);
 						UI.Line(x0, y1, x1, y0, WorldWindow.SelectorScale * 3f);
 					}
