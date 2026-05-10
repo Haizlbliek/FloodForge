@@ -7,6 +7,7 @@ namespace FloodForge.World;
 
 public static class WorldParser {
 	private static readonly List<(string, Dictionary<string, RoomAttractiveness>)> roomAttractiveness = [];
+	private static Dictionary<string, (Vector2, Vector2, int, string)> additionalRoomMapPositions = [];
 
 	public static RoomAttractiveness ParseRoomAttractiveness(string value) {
 		return value switch {
@@ -239,6 +240,23 @@ public static class WorldParser {
 				}
 
 				room = new Room(filePath, roomName);
+			}
+
+			// REVIEW - this does not take into account the difference in image scales (for example, map_lm.png vs map_lm-artificer.png) which causes offsets for arti's rooms
+			if (additionalRoomMapPositions.TryGetValue(roomName, out (Vector2, Vector2, int, string) result)) {
+				room.CanonPosition = result.Item1 - new Vector2(room.width * 0.5f, room.height * -0.5f);
+				room.DevPosition = result.Item2 - new Vector2(room.width * 0.5f, room.height * -0.5f);
+				room.data.layer = result.Item3;
+				if (!result.Item4.IsNullOrEmpty()) {
+					int idx = WorldWindow.region.subregions.IndexOf(result.Item4);
+					if (idx != -1) {
+						room.data.subregion = idx;
+					}
+					else {
+						room.data.subregion = WorldWindow.region.subregions.Count;
+						WorldWindow.region.subregions.Add(result.Item4);
+					}
+				}
 			}
 
 			WorldWindow.region.rooms.Add(room);
@@ -845,6 +863,33 @@ public static class WorldParser {
 		if (mapPath != null) {
 			Logger.Info("Loading map");
 			if (!ParseMap(mapPath)) return false;
+			
+			Logger.Info("Checking alternate maps");
+			string cutMapPath = mapPath[..mapPath.IndexOfReverse('.')];
+			foreach (string path in Directory.GetFiles(WorldWindow.region.exportPath)) {
+				if (path.StartsWith(cutMapPath) && path.EndsWith(".txt") && path != mapPath) {
+					Logger.Info($"found map: {Path.GetFileNameWithoutExtension(path)}");
+
+					foreach (string line in File.ReadAllLines(path)) {
+						if (line.IsNullOrEmpty()) continue;
+
+						if (!line.StartsWith("//") && !line.StartsWith("Connection: ") && !(line.StartsWith("SpawnMigrationStream: ") || line.StartsWith("SpawnMigrationStreamMidpoint: ") || line.StartsWith("Def_Mat: ") || line.StartsWith("R: ") || line.StartsWith("[REFERENCE]") || line.StartsWith("I: ") || line.StartsWith("[IMAGE]"))) {
+							string roomName = line[..line.IndexOf(':')];
+							
+							if (!additionalRoomMapPositions.ContainsKey(roomName)) {
+								string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", "").Trim())];
+								float canonX = float.Parse(data[0]) / 3f;
+								float canonY = float.Parse(data[1]) / 3f;
+								float devX = float.Parse(data[2]) / 3f;
+								float devY = float.Parse(data[3]) / 3f;
+								int layer = data[4].IsNullOrEmpty() ? 0 : int.Parse(data[4]);
+								string subregion = data[5];
+								additionalRoomMapPositions.Add(roomName, (new (canonX, canonY), new (devX, devY), layer, subregion));
+							}
+						}
+					}
+				}
+			}
 		}
 		else {
 			Logger.Info("Map file not found");
