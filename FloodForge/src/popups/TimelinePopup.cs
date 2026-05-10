@@ -9,27 +9,25 @@ public class TimelinePopup : Popup {
 
 	protected float scroll;
 
-	public TimelineType TimelineType;
-	public HashSet<string> Timelines = [];
+	protected Timeline timeline;
 
 	public Action<bool, string> onSelectionChangeCallback;
 	public Action<TimelineType> onTimelineTypeChangeCallback;
 
-	public TimelinePopup(TimelineType TimelineType, HashSet<string> Timelines, Action<TimelineType> onTimelineTypeChangeCallback, Action<bool, string> onSelectionChangeCallback, ref Action<TimelineType, HashSet<string>>? updateEvent)
-	 : this(TimelineType, Timelines, onTimelineTypeChangeCallback, onSelectionChangeCallback) {
+	public TimelinePopup(Timeline timeline, Action<TimelineType> onTimelineTypeChangeCallback, Action<bool, string> onSelectionChangeCallback, ref Action<Timeline>? updateEvent)
+	 : this(timeline, onTimelineTypeChangeCallback, onSelectionChangeCallback) {
 		updateEvent += this.UpdateTimeline;
 	}
 
-	public TimelinePopup(TimelineType TimelineType, HashSet<string> Timelines, Action<TimelineType> onTimelineTypeChangeCallback, Action<bool, string> onSelectionChangeCallback) {
+	public TimelinePopup(Timeline timeline, Action<TimelineType> onTimelineTypeChangeCallback, Action<bool, string> onSelectionChangeCallback) {
 		this.bounds = new Rect(-0.4f, -0.4f, 0.4f, 0.4f);
 		this.onSelectionChangeCallback = onSelectionChangeCallback;
 		this.onTimelineTypeChangeCallback = onTimelineTypeChangeCallback;
-		this.TimelineType = TimelineType;
-		this.Timelines = Timelines;
+		this.timeline = timeline;
 	}
 
 	protected void DrawButton(Rect rect, string text, TimelineType type) {
-		if (UI.TextButton(text, rect, new UI.TextButtonMods { selected = this.TimelineType == type })) {
+		if (UI.TextButton(text, rect, new UI.TextButtonMods { selected = this.timeline.timelineType == type })) {
 			this.onTimelineTypeChangeCallback.Invoke(type);
 		}
 	}
@@ -41,9 +39,9 @@ public class TimelinePopup : Popup {
 		this.DrawButton(Rect.FromSize(this.bounds.x1 * 0.6f + centerX * 0.4f - 0.1f, buttonY - 0.025f, 0.2f, 0.05f), "EXCEPT", TimelineType.Except);
 	}
 
-	public void UpdateTimeline(TimelineType type, HashSet<string> timelines) {
-		this.TimelineType = type;
-		this.Timelines = timelines;
+	public void UpdateTimeline(Timeline timeline) {
+		this.timeline.timelineType = timeline.timelineType;
+		this.timeline.timelines = timeline.timelines;
 	}
 
 	public override void Draw() {
@@ -59,10 +57,10 @@ public class TimelinePopup : Popup {
 		this.DrawButtons(centerX, buttonY);
 
 		// If the TimelineType is all, we don't care about specifics.
-		if (this.TimelineType != TimelineType.All) {
+		if (this.timeline.timelineType != TimelineType.All) {
 			// otherwise:
 			string timeline; // the currently hovered timeline
-			HashSet<string> timelines = this.Timelines ?? []; // get the current Timeline selection
+			HashSet<string> timelines = this.timeline.timelines ?? []; // get the current Timeline selection
 			List<string> unknowns = [.. timelines.Where(t => !ConditionalTimelineTextures.HasTimeline(t))]; // create list of all timelines for which no texture exists
 			int count = ConditionalTimelineTextures.timelines.Count + unknowns.Count; // total count
 

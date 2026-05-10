@@ -7,8 +7,17 @@ public class Connection {
 	public uint roomAExitID;
 	public uint roomBExitID;
 
-	public HashSet<string> timelines = [];
-	public TimelineType timelineType = TimelineType.All;
+	public Timeline timeline;
+	public Timeline EffectiveConnectionTimeline {
+		get {
+			return this.timeline.And(this.roomA.timeline.And(this.roomB.timeline));
+		}
+	}
+	public bool ConnectionVisible {
+		get {
+			return this.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
+		}
+	}
 	public ConditionalPopup? conditionalPopup;
 
 	protected int segments;
@@ -32,6 +41,7 @@ public class Connection {
 		this.roomB = roomB;
 		this.roomAExitID = connectionA;
 		this.roomBExitID = connectionB;
+		this.timeline = new();
 	}
 
 	public Connection(Room roomA, uint connectionA, Room roomB, uint connectionB) {
@@ -39,13 +49,14 @@ public class Connection {
 		this.roomB = roomB;
 		this.roomAExitID = connectionA;
 		this.roomBExitID = connectionB;
+		this.timeline = new();
 	}
 
 	public bool AllowsTimeline(string timeline) {
-		return this.timelineType switch {
+		return this.timeline.timelineType switch {
 			TimelineType.All => true,
-			TimelineType.Only => this.timelines.Contains(timeline),
-			TimelineType.Except => !this.timelines.Contains(timeline),
+			TimelineType.Only => this.timeline.timelines.Contains(timeline),
+			TimelineType.Except => !this.timeline.timelines.Contains(timeline),
 			_ => false,
 		};
 	}
@@ -198,21 +209,24 @@ public class Connection {
 			this.RecalculateBezier();
 		}
 		if (WorldWindow.CullTest(this.fittedAABB)) {
-			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomA.TimelineType, this.roomA.Timelines);
-			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && WorldWindow.CheckVisibleTimeline(this.roomB.TimelineType, this.roomB.Timelines);
+			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && this.roomA.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
+			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && this.roomB.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
 			float opacity = Settings.ConnectionOpacity;
 			if (!aVisible && !bVisible || opacity < 0.01f)
 				return;
 			bool hovered = this.Hovered || Keys.Modifier(Keys.Modifiers.Shift);
 
-			bool roomConnectionHoverColor = aVisible && bVisible && hovered;
+			bool fadeMiddle = aVisible && bVisible && !this.ConnectionVisible;
+			bool roomConnectionHoverColor = (!fadeMiddle) && aVisible && bVisible && hovered;
 			Color connectionColorA;
 			Color connectionColorB;
 			bool blendColors = false;
 
 			if (roomConnectionHoverColor) {
-				connectionColorA = Themes.RoomConnectionHover;
-				connectionColorB = Themes.RoomConnectionHover;
+				Timeline timeline = this.EffectiveConnectionTimeline;
+				bool warnConflictingTimelines = timeline.timelineType == TimelineType.Only && timeline.timelines.Count == 0;
+				connectionColorA = warnConflictingTimelines ? Themes.TextWarn : Themes.RoomConnectionHover;
+				connectionColorB = warnConflictingTimelines ? Themes.TextWarn : Themes.RoomConnectionHover;
 			}
 			else {
 				connectionColorA = Themes.RoomConnection;
@@ -236,14 +250,17 @@ public class Connection {
 
 			float alphaA = aVisible ? opacity : 0f;
 			float alphaB = bVisible ? opacity : 0f;
-			if (opacity <= 0.999f || aVisible != bVisible) {
+			if (opacity <= 0.999f || aVisible != bVisible || fadeMiddle) {
 				Program.gl.Enable(EnableCap.Blend);
 			}
 
+			Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
+			Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
 			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-				Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
-				Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
-				this.DrawCustomLine(pointA.x, pointA.y, pointB.x, pointB.y, alphaA, alphaB);
+				Vector2 pointMiddle = (pointA + pointB) / 2;
+				float alphaMiddle = fadeMiddle ? 0f : (alphaA + alphaB) / 2;
+				this.DrawCustomLine(pointA.x, pointA.y, pointMiddle.x, pointMiddle.y, alphaA, alphaMiddle);
+				this.DrawCustomLine(pointMiddle.x, pointMiddle.y, pointB.x, pointB.y, alphaMiddle, alphaB);
 			}
 			else {
 				Vector2 lastPoint = this.BezierPoints![0];
@@ -254,39 +271,58 @@ public class Connection {
 						Immediate.Color(Color.Lerp(connectionColorA, connectionColorB, curveProgress));
 					}
 					Vector2 point = this.BezierPoints[i];
-					this.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, Mathf.Lerp(alphaA, alphaB, curveProgress - (1f / curveLength)), Mathf.Lerp(alphaA, alphaB, curveProgress));
+					float lastCurveProgress = curveProgress - (1f / curveLength);
+					float lerpedAlphaA = Mathf.Lerp(alphaA, alphaB, lastCurveProgress);
+					float lerpedAlphaB = Mathf.Lerp(alphaA, alphaB, curveProgress);
+					if (fadeMiddle) {
+						lerpedAlphaA = Math.Max(0f, float.CopySign(Mathf.Lerp(lerpedAlphaA, 0, lastCurveProgress * 2), lerpedAlphaA) * 2 - 1);
+						lerpedAlphaB = Math.Max(0f, float.CopySign(Mathf.Lerp(lerpedAlphaB, 0, curveProgress * 2), lerpedAlphaB) * 2 - 1);
+					}
+					this.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, lerpedAlphaA, lerpedAlphaB);
 					lastPoint = point;
 				}
 			}
 
 			Program.gl.Disable(EnableCap.Blend);
 
-			if (!aVisible || !bVisible)
+			if (!aVisible || !bVisible || !this.ConnectionVisible)
 				return;
-			if (this.timelines.Count == 0 || this.timelineType == TimelineType.All)
+			if (this.timeline.timelines.Count == 0 || this.timeline.timelineType == TimelineType.All)
 				return;
 
-			if (this.timelineType == TimelineType.Except) {
-				Immediate.Color(1f, 0f, 0f);
-				float xSize = 0.035f * WorldWindow.SelectorScale;
-				UI.Line(this.BezierCenter.x - xSize, this.BezierCenter.y - xSize, this.BezierCenter.x + xSize, this.BezierCenter.y + xSize, 0.25f * WorldWindow.SelectorScale);
-				UI.Line(this.BezierCenter.x + xSize, this.BezierCenter.y - xSize, this.BezierCenter.x - xSize, this.BezierCenter.y + xSize, 0.25f * WorldWindow.SelectorScale);
+			float size = WorldWindow.SelectorScale * (this.Hovered ? 1.5f : 1f);
+			int squareWidth = Mathf.CeilToInt(Mathf.Sqrt(this.timeline.timelines.Count));
+			int squareHeight = 0;
+			while (squareHeight * squareWidth < this.timeline.timelines.Count) {
+				squareHeight++;
 			}
 
-			float size = 0.03125f * WorldWindow.SelectorScale;
-			int width = Math.Max(Mathf.RoundToInt(MathF.Log2(this.timelines.Count)), 1);
-			int height = Math.Max(Mathf.CeilToInt(this.timelines.Count / width), 1);
+			Vector2 pointDirAB = (pointB - pointA).Normalized;
+			Vector2 pointDirBA = pointDirAB * -1;
+			float dotA = Vector2.Dot(pointDirAB, this.roomA.GetConnectionConnectDirection(this.roomAExitID));
+			float dotB = Vector2.Dot(pointDirBA, this.roomB.GetConnectionConnectDirection(this.roomBExitID));
+			bool onLeft = dotB > dotA ? (pointB.x < pointA.x) : (pointA.x < pointB.x);
+			bool onTop = dotB > dotA ? (pointB.y > pointA.y) : (pointA.y > pointB.y);
+			float offsetX0 = (onLeft ? this.fittedAABB.x0 : (this.fittedAABB.x1 - (squareWidth * size))) - 0.5f;
+			float offsetY1 = (onTop ? this.fittedAABB.y1 : (this.fittedAABB.y0 + (squareHeight * size))) + 0.5f;
 
-			HashSet<string>.Enumerator it = this.timelines.GetEnumerator();
-			for (int y = 0; y < height; y++) {
-				for (int x = 0; x < width; x++) {
-					if (!it.MoveNext())
+			HashSet<string>.Enumerator timelineEnumerator = this.timeline.timelines.GetEnumerator();
+			for (int y = 0; y < squareHeight; y++) {
+				for (int x = 0; x < squareWidth; x++) {
+					if (!timelineEnumerator.MoveNext())
 						break;
+					
+					UI.CenteredTexture(ConditionalTimelineTextures.GetTexture(timelineEnumerator.Current), offsetX0 + (x * size) + size / 2, offsetY1 - (y * size) - size / 2, size);
 
-					float ox = (width * -0.5f + x + 0.5f) * size * 2.2f;
-					float oy = (height * -0.5f + y + 0.5f) * size * 2.2f;
-					Rect rect = Rect.FromSize(this.BezierCenter.x - size - ox, this.BezierCenter.y - size - oy, size * 2f, size * 2f);
-					this.DrawTexturedRect(ConditionalTimelineTextures.GetTexture(it.Current), rect);
+					if (this.timeline.timelineType == TimelineType.Except) {
+						Immediate.Color(1f, 0f, 0f);
+						float x0 = offsetX0 + 0.5f + ((x + 0.1f) * size);
+						float x1 = offsetX0 + 0.5f + ((x + 0.9f) * size);
+						float y0 = offsetY1 - 0.5f - ((y + 0.1f) * size);
+						float y1 = offsetY1 - 0.5f - ((y + 0.9f) * size);
+						UI.Line(x0, y0, x1, y1, WorldWindow.SelectorScale * 3f);
+						UI.Line(x0, y1, x1, y0, WorldWindow.SelectorScale * 3f);
+					}
 				}
 			}
 		}

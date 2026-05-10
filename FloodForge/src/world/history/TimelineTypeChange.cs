@@ -16,38 +16,38 @@ public class TimelineTypeChange : MultipleRoomChange {
 	public override void AddRoom(Room room) {
 		base.AddRoom(room);
 
-		this.undoValues.Add(room.TimelineType);
+		this.undoValues.Add(room.timeline.timelineType);
 	}
 
 	public void AddConnection(Connection connection) {
 		this.connection = connection;
-		this.undoValue = this.connection.timelineType;
+		this.undoValue = this.connection.timeline.timelineType;
 	}
 
 	public void AddLineage(DenLineage lineage) {
 		this.lineage = lineage;
-		this.undoValue = this.lineage.timelineType;
+		this.undoValue = this.lineage.timeline.timelineType;
 	}
 
 	public override void Undo() {
-		this.connection?.timelineType = this.undoValue;
-		this.connection?.conditionalPopup?.InvokeOnTimelineChange(this.connection.timelineType, this.connection.timelines);
-		this.lineage?.timelineType = this.undoValue;
-		this.lineage?.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timelineType, this.lineage.timelines);
+		this.connection?.timeline.timelineType = this.undoValue;
+		this.connection?.conditionalPopup?.InvokeOnTimelineChange(this.connection.timeline);
+		this.lineage?.timeline.timelineType = this.undoValue;
+		this.lineage?.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timeline);
 		for (int i = 0; i < this.rooms.Count; i++) {
-			this.rooms[i].TimelineType = this.undoValues[i];
-			this.rooms[i].conditionalPopup?.InvokeOnTimelineChange(this.rooms[i].TimelineType, this.rooms[i].Timelines);
+			this.rooms[i].timeline.timelineType = this.undoValues[i];
+			this.rooms[i].conditionalPopup?.InvokeOnTimelineChange(this.rooms[i].timeline);
 		}
 	}
 
 	public override void Redo() {
-		this.connection?.timelineType = this.redoValue;
-		this.connection?.conditionalPopup?.InvokeOnTimelineChange(this.connection.timelineType, this.connection.timelines);
-		this.lineage?.timelineType = this.redoValue;
-		this.lineage?.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timelineType, this.lineage.timelines);
+		this.connection?.timeline.timelineType = this.redoValue;
+		this.connection?.conditionalPopup?.InvokeOnTimelineChange(this.connection.timeline);
+		this.lineage?.timeline.timelineType = this.redoValue;
+		this.lineage?.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timeline);
 		foreach (Room room in this.rooms) {
-			room.TimelineType = this.redoValue;
-			room.conditionalPopup?.InvokeOnTimelineChange(room.TimelineType, room.Timelines);
+			room.timeline.timelineType = this.redoValue;
+			room.conditionalPopup?.InvokeOnTimelineChange(room.timeline);
 		}
 	}
 }

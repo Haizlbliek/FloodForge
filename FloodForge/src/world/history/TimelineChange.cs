@@ -2,6 +2,7 @@ using FloodForge.World;
 
 namespace FloodForge.History;
 
+// REVIEW - merge TimelineChange and TimelineTypeChange into one TimelineChange class
 public class TimelineChange : MultipleRoomChange {
 	protected bool add;
 	protected string timeline;
@@ -23,34 +24,34 @@ public class TimelineChange : MultipleRoomChange {
 
 	private void Insert() {
 		if (this.connection != null) {
-			this.connection.timelines.Add(this.timeline);
-			this.connection.conditionalPopup?.InvokeOnTimelineChange(this.connection.timelineType, this.connection.timelines);
+			this.connection.timeline.timelines.Add(this.timeline);
+			this.connection.conditionalPopup?.InvokeOnTimelineChange(this.connection.timeline);
 		}
 		else if (this.lineage != null) {
-			this.lineage.timelines.Add(this.timeline);
-			this.lineage.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timelineType, this.lineage.timelines);
+			this.lineage.timeline.timelines.Add(this.timeline);
+			this.lineage.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timeline);
 		}
 		else {
 			foreach (Room room in this.rooms) {
-				room.Timelines.Add(this.timeline);
-				room.conditionalPopup?.InvokeOnTimelineChange(room.TimelineType, room.Timelines);
+				room.timeline.timelines.Add(this.timeline);
+				room.conditionalPopup?.InvokeOnTimelineChange(room.timeline);
 			}
 		}
 	}
 
 	private void Erase() {
 		if (this.connection != null) {
-			this.connection.timelines.Remove(this.timeline);
-			this.connection.conditionalPopup?.InvokeOnTimelineChange(this.connection.timelineType, this.connection.timelines);
+			this.connection.timeline.timelines.Remove(this.timeline);
+			this.connection.conditionalPopup?.InvokeOnTimelineChange(this.connection.timeline);
 		}
 		else if (this.lineage != null) {
-			this.lineage.timelines.Remove(this.timeline);
-			this.lineage.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timelineType, this.lineage.timelines);
+			this.lineage.timeline.timelines.Remove(this.timeline);
+			this.lineage.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timeline);
 		}
 		else {
 			foreach (Room room in this.rooms) {
-				room.Timelines.Remove(this.timeline);
-				room.conditionalPopup?.InvokeOnTimelineChange(room.TimelineType, room.Timelines);
+				room.timeline.timelines.Remove(this.timeline);
+				room.conditionalPopup?.InvokeOnTimelineChange(room.timeline);
 			}
 		}
 	}

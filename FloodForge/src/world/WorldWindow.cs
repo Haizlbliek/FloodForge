@@ -26,8 +26,7 @@ public static class WorldWindow {
 	public static RoomColors ColorType { get; private set; } = RoomColors.None;
 	public static readonly bool[] VisibleLayers = [true, true, true];
 
-	public static TimelineType VisibleTimelineType;
-	public static HashSet<string> VisibleTimelines = [];
+	public static Timeline VisibleTimeline = new();
 
 	// REVIEW: Auto-mode? Which basically chooses whichever looks better for any given connection?
 	// (I.E. choose the one that's closest, but preferably one that does not invert (for example, CC_S01))
@@ -76,11 +75,12 @@ public static class WorldWindow {
 	public static bool continueDrag = false;
 	public static Room? highlightRoom;
 
-	public static Connection? CurrentConnection;
+	public static Connection? NewConnection;
 	public static Vector2? ConnectionStartClickPosition;
 	public static Vector2? ConnectionStart;
 	public static Vector2? ConnectionEnd;
 	public static bool CurrentConnectionValid;
+	public static bool CurrentConnectionWarn;
 	private static ConnectionState connectionState;
 	private static ConnectionState lastConnectionState;
 
@@ -109,7 +109,7 @@ public static class WorldWindow {
 	public static WorldDraggable? HoveringDraggable => (placingRoom && roomPlacementVisualiser.Inside(worldMouse)) ? roomPlacementVisualiser : (HoveringRoom != null) ? HoveringRoom : HoveringReferenceImage;
 
 	public static Connection? HoveringConnection => region.connections?.LastOrDefault(c => {
-		return c.roomA.Visible && c.roomB.Visible && c.Hovered;
+		return c.ConnectionVisible && c.roomA.Visible && c.roomB.Visible && c.Hovered;
 	});
 
 	public static bool HoveringOrSelectedRooms(out HashSet<Room> rooms) {
@@ -271,86 +271,117 @@ public static class WorldWindow {
 					ConnectionStart = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
 					ConnectionStartClickPosition = worldMouse;
 					ConnectionEnd = ConnectionStart;
-					CurrentConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
+					NewConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
 					connectionState = ConnectionState.PendingConnection;
 					CurrentConnectionValid = false;
+					CurrentConnectionWarn = false;
 				}
 			}
 			else if (connectionState == ConnectionState.PendingConnection) {
-				if (CurrentConnection != null) {
+				if (NewConnection != null) {
 					if (ConnectionStartClickPosition != null && (Vector2.Distance(ConnectionStartClickPosition.Value, worldMouse) > 1f)) {
 						connectionState = ConnectionState.Connection;
 					}
 				}
 			}
-			else if (connectionState == ConnectionState.Connection && CurrentConnection != null) {
+			else if (connectionState == ConnectionState.Connection && NewConnection != null) {
 				if (hoveringRoom != null && hoveringRoom.Visible) {
 					ConnectionEnd = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
-					CurrentConnection.roomB = hoveringRoom;
-					CurrentConnection.roomBExitID = hoveringConnection;
+					NewConnection.roomB = hoveringRoom;
+					NewConnection.roomBExitID = hoveringConnection;
 					CurrentConnectionValid = true;
+					CurrentConnectionWarn = false;
 
-					if (CurrentConnection.roomA == CurrentConnection.roomB) {
+					if (NewConnection.roomA == NewConnection.roomB) {
 						CurrentConnectionValid = false;
 					}
 					else {
-						foreach (Connection other in CurrentConnection.roomB.connections) {
-							if ((other.roomA == CurrentConnection.roomB && other.roomAExitID == CurrentConnection.roomBExitID &&
-								other.roomB == CurrentConnection.roomA && other.roomBExitID == CurrentConnection.roomAExitID) ||
-								(other.roomA == CurrentConnection.roomA && other.roomAExitID == CurrentConnection.roomAExitID &&
-								other.roomB == CurrentConnection.roomB && other.roomBExitID == CurrentConnection.roomBExitID)
+						foreach (Connection other in NewConnection.roomB.connections) {
+							if ((other.roomA == NewConnection.roomB && other.roomAExitID == NewConnection.roomBExitID &&
+								other.roomB == NewConnection.roomA && other.roomBExitID == NewConnection.roomAExitID) ||
+								(other.roomA == NewConnection.roomA && other.roomAExitID == NewConnection.roomAExitID &&
+								other.roomB == NewConnection.roomB && other.roomBExitID == NewConnection.roomBExitID)
 							) {
 								CurrentConnectionValid = false;
 								break;
 							}
-							else if ((other.roomA == CurrentConnection.roomA && other.roomAExitID == CurrentConnection.roomAExitID) ||
-									(other.roomA == CurrentConnection.roomB && other.roomAExitID == CurrentConnection.roomBExitID) ||
-									(other.roomB == CurrentConnection.roomA && other.roomBExitID == CurrentConnection.roomAExitID) ||
-									(other.roomB == CurrentConnection.roomB && other.roomBExitID == CurrentConnection.roomBExitID)
-							) {
-								// an exit point is shared
-								// REVIEW - check for timelines here and set to invalid?
+							else {
+								Timeline otherTimeline = other.EffectiveConnectionTimeline;
+								Timeline currentTimeline = NewConnection.EffectiveConnectionTimeline;
+								if (otherTimeline.OverlapsWith(currentTimeline)) {
+									if ((other.roomA == NewConnection.roomA && other.roomAExitID == NewConnection.roomAExitID) ||
+										(other.roomA == NewConnection.roomB && other.roomAExitID == NewConnection.roomBExitID) ||
+										(other.roomB == NewConnection.roomA && other.roomBExitID == NewConnection.roomAExitID) ||
+										(other.roomB == NewConnection.roomB && other.roomBExitID == NewConnection.roomBExitID)
+									) {
+										CurrentConnectionWarn = true;
+									}
+								}
 							}
 						}
 					}
 				}
 				else {
 					ConnectionEnd = worldMouse;
-					CurrentConnection.roomB = null!;
-					CurrentConnection.roomBExitID = 0;
+					NewConnection.roomB = null!;
+					NewConnection.roomBExitID = 0;
 					CurrentConnectionValid = false;
+					CurrentConnectionWarn = false;
 				}
 			}
 		}
 		else {
-			if (CurrentConnection != null) {
+			if (NewConnection != null) {
 				if (CurrentConnectionValid) {
 					RoomAndConnectionChange change = new RoomAndConnectionChange(true);
-					{ // check for duplicate connections 
-						// NOTE - DOES NOT TAKE TIMELINES INTO ACCOUNT
+					{ // check for duplicate connections
 						bool foundDuplicate = false;
 						bool foundOccupiedExit = false;
-						List<Connection> connections = CurrentConnection.roomA.connections;
-						connections.AddRange(CurrentConnection.roomB.connections);
+						bool overlapCanBeSolved = true;
+						List<Connection> connections = [..NewConnection.roomA.connections];
+						connections.AddRange(NewConnection.roomB.connections);
 
 						//Logger.Info("STARTING CONNECTION CHECK!");
 						foreach (Connection connection in connections) {
 							//Logger.Info("-start-");
-							//Logger.Info($"connection: roomA = {connection.roomA.name}; roomB = {connection.roomB.name};\nCurrentConnection: roomA = {CurrentConnection.roomA.name}; roomB = {CurrentConnection.roomB.name};");
-							foundDuplicate |= connection.roomA == CurrentConnection.roomA && connection.roomB == CurrentConnection.roomB;
-							foundDuplicate |= connection.roomB == CurrentConnection.roomA && connection.roomA == CurrentConnection.roomB;
-							//Logger.Info($"foundDuplicate: {foundDuplicate}");
-							
-							//Logger.Info($"connection: roomAExitID = {connection.roomAExitID}; roomBExitID = {connection.roomBExitID}\nCurrentConnection: roomAExitID = {CurrentConnection.roomAExitID}; roomBExitID = {CurrentConnection.roomBExitID}");
-							foundOccupiedExit |= connection.roomA == CurrentConnection.roomA && connection.roomAExitID == CurrentConnection.roomAExitID;
-							foundOccupiedExit |= connection.roomB == CurrentConnection.roomB && connection.roomBExitID == CurrentConnection.roomBExitID;
-							foundOccupiedExit |= connection.roomA == CurrentConnection.roomB && connection.roomAExitID == CurrentConnection.roomBExitID;
-							foundOccupiedExit |= connection.roomB == CurrentConnection.roomA && connection.roomBExitID == CurrentConnection.roomAExitID;
-							//Logger.Info($"foundOccupiedExit: {foundOccupiedExit}");
+							//Logger.Info("CHECK TIMELINES");
 
-							//Logger.Info("-end-");
-							if (foundDuplicate && foundOccupiedExit)
-								break;
+							//Logger.Info("connection timelines:\n" + 
+							//$"connection: {TimelineToText(connection.timelineType, connection.timelines)}\n" + 
+							//$"roomA ({connection.roomA.name}): {TimelineToText(connection.roomA.TimelineType, connection.roomA.Timelines)}\n" + 
+							//$"roomB ({connection.roomB.name}): {TimelineToText(connection.roomB.TimelineType, connection.roomB.Timelines)}");
+							Timeline connectionEffectiveTimeline = connection.EffectiveConnectionTimeline;
+							//Logger.Info("connectionEffectiveTimeline: " + TimelineToText(connectionEffectiveType, connectionEffectiveLines));
+
+							//Logger.Info("NewConnection timelines:\n" + 
+							//$"connection: {TimelineToText(NewConnection.timelineType, NewConnection.timelines)}\n" + 
+							//$"roomA ({NewConnection.roomA.name}): {TimelineToText(NewConnection.roomA.TimelineType, NewConnection.roomA.Timelines)}\n" + 
+							//$"roomB ({NewConnection.roomB.name}): {TimelineToText(NewConnection.roomB.TimelineType, NewConnection.roomB.Timelines)}");
+							Timeline newConnectionEffectiveTimeline = NewConnection.EffectiveConnectionTimeline;
+							//Logger.Info("newConnectionEffectiveTimeline: " + TimelineToText(newConnectionEffectiveType, newConnectionEffectiveLines));
+							bool hasOverlap = connectionEffectiveTimeline.OverlapsWith(newConnectionEffectiveTimeline);
+							//Logger.Info($"RESULTING hasOverlap: {hasOverlap}");
+							//Logger.Info("END CHECK TIMELINES");
+							if (hasOverlap) {
+								if (connectionEffectiveTimeline.timelineType == TimelineType.All)
+									overlapCanBeSolved = false;
+								//Logger.Info("CHECK CONNECTION");
+								//Logger.Info($"connection: roomA = {connection.roomA.name}; roomB = {connection.roomB.name};\nNewConnection: roomA = {NewConnection.roomA.name}; roomB = {NewConnection.roomB.name};");
+								foundDuplicate |= connection.roomA == NewConnection.roomA && connection.roomB == NewConnection.roomB;
+								foundDuplicate |= connection.roomB == NewConnection.roomA && connection.roomA == NewConnection.roomB;
+								//Logger.Info($"foundDuplicate: {foundDuplicate}");
+								
+								//Logger.Info($"connection: roomAExitID = {connection.roomAExitID}; roomBExitID = {connection.roomBExitID}\nNewConnection: roomAExitID = {NewConnection.roomAExitID}; roomBExitID = {NewConnection.roomBExitID}");
+								foundOccupiedExit |= connection.roomA == NewConnection.roomA && connection.roomAExitID == NewConnection.roomAExitID;
+								foundOccupiedExit |= connection.roomB == NewConnection.roomB && connection.roomBExitID == NewConnection.roomBExitID;
+								foundOccupiedExit |= connection.roomA == NewConnection.roomB && connection.roomAExitID == NewConnection.roomBExitID;
+								foundOccupiedExit |= connection.roomB == NewConnection.roomA && connection.roomBExitID == NewConnection.roomAExitID;
+								//Logger.Info($"foundOccupiedExit: {foundOccupiedExit}");
+
+								//Logger.Info("-end-");
+								if (foundDuplicate && foundOccupiedExit)
+									break;
+							}
 						}
 						if (foundDuplicate || foundOccupiedExit) {
 							string message = "<s:1>Invalid Connection!";
@@ -358,14 +389,16 @@ public static class WorldWindow {
 								message += "\n-Double connection to room";
 							if (foundOccupiedExit)
 								message += "\n-Exit point already occupied";
+							if (overlapCanBeSolved)
+								message += "\nNote: can be solved with timelines";
 							PopupManager.Add(new InfoPopup(message));
 						}
 					}
-					change.AddConnection(CurrentConnection);
+					change.AddConnection(NewConnection);
 					worldHistory.Apply(change);
 				}
 
-				CurrentConnection = null;
+				NewConnection = null;
 			}
 
 			ConnectionStart = null;
@@ -635,7 +668,7 @@ public static class WorldWindow {
 	}
 
 	private static void KeybindDelete() {
-		Connection? connection = region.connections.FirstOrDefault(c => c.roomA.Visible && c.roomB.Visible && c.Hovered);
+		Connection? connection = region.connections.FirstOrDefault(c => c.ConnectionVisible && c.roomA.Visible && c.roomB.Visible && c.Hovered);
 		if (connection != null) {
 			DeleteConnection(connection);
 			return;
@@ -923,10 +956,11 @@ public static class WorldWindow {
 	}
 
 	private static void DrawCurrentConnection() {
-		if (ConnectionStart == null || ConnectionEnd == null || CurrentConnection == null)
+		if (ConnectionStart == null || ConnectionEnd == null || NewConnection == null)
 			return;
 
-		Immediate.Color(CurrentConnectionValid ? Themes.RoomConnectionHover : Themes.RoomConnectionInvalid);
+		// REVIEW - add separate theme color for warning
+		Immediate.Color(CurrentConnectionValid ? (CurrentConnectionWarn ? Themes.TextWarn : Themes.RoomConnectionHover) : Themes.RoomConnectionInvalid);
 
 		int segments = Mathf.RoundToInt((ConnectionStart - ConnectionEnd).Value.Length / 2f);
 		segments = Math.Clamp(segments, 4, 100);
@@ -938,8 +972,8 @@ public static class WorldWindow {
 			UI.Line(ConnectionStart.Value, ConnectionEnd.Value, cameraScale / 4f);
 		}
 		else {
-			Vector2 directionA = CurrentConnection.roomA.GetConnectionConnectDirection(CurrentConnection.roomAExitID);
-			Vector2 directionB = CurrentConnection.roomB?.GetConnectionConnectDirection(CurrentConnection.roomBExitID) ?? Vector2.Zero;
+			Vector2 directionA = NewConnection.roomA.GetConnectionConnectDirection(NewConnection.roomAExitID);
+			Vector2 directionB = NewConnection.roomB?.GetConnectionConnectDirection(NewConnection.roomBExitID) ?? Vector2.Zero;
 
 			if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
 				directionStrength *= 0.3333f;
@@ -980,7 +1014,7 @@ public static class WorldWindow {
 		foreach (Room room in WorldWindow.region.rooms) {
 			if (!room.data.merge)
 				continue;
-			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
+			if (!VisibleLayers[room.data.layer] || !VisibleTimeline.OverlapsWith(room.timeline))
 				continue;
 
 			if (PositionType == RoomPosition.Both) {
@@ -995,7 +1029,7 @@ public static class WorldWindow {
 		foreach (Room room in WorldWindow.region.rooms) {
 			Profiler.MarkPoint("rooms", 1, true);
 
-			if (!VisibleLayers[room.data.layer] || !CheckVisibleTimeline(room.TimelineType, room.Timelines))
+			if (!VisibleLayers[room.data.layer] || !VisibleTimeline.OverlapsWith(room.timeline))
 				continue;
 
 			if (WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
@@ -1067,12 +1101,8 @@ public static class WorldWindow {
 		foreach (DenLineage lineage in den.creatures) {
 			DenCreature creature = lineage;
 			string line = "";
-			if (lineage.timelineType != TimelineType.All) {
-				string timelines = "";
-				foreach (string timeline in lineage.timelines) {
-					timelines += (timelines != "" ? ",": "") + timeline;
-				}
-				line += $"({(lineage.timelineType == TimelineType.Except ? "X-" : "") + timelines}) - ";
+			if (lineage.timeline.timelineType != TimelineType.All) {
+				line += $"({lineage.timeline}) - ";
 			}
 			line += $"{CreatureTextures.ExportName(creature.type)} x {creature.count}";
 			while (creature.lineageTo != null) {
@@ -1126,12 +1156,24 @@ public static class WorldWindow {
 		}
 
 		if (hoveringConnection != null) {
+			bool specifyTimelines = hoveringConnection.timeline.timelineType != TimelineType.All || hoveringConnection.roomA.timeline.timelineType != TimelineType.All || hoveringConnection.roomB.timeline.timelineType != TimelineType.All;
 			debugText.Add("");
 			debugText.Add("    Connection:");
 			debugText.Add($"Room A: {hoveringConnection.roomA.name}");
 			debugText.Add($"Connection A: {hoveringConnection.roomAExitID}");
 			debugText.Add($"Room B: {hoveringConnection.roomB.name}");
 			debugText.Add($"Connection B: {hoveringConnection.roomBExitID}");
+			if (specifyTimelines) {
+				debugText.Add("");
+				debugText.Add("    Connection Timelines:");
+				debugText.Add($"Connection: {hoveringConnection.timeline}");
+				debugText.Add($"Room A: {hoveringConnection.roomA.timeline}");
+				debugText.Add($"Room B: {hoveringConnection.roomB.timeline}");
+				string timelineToTextText = hoveringConnection.EffectiveConnectionTimeline.ToString();
+				debugText.Add($"Effective Timeline: {(timelineToTextText == "" ? "NONE" : timelineToTextText)}");
+				if (timelineToTextText == "" && hoveringConnection.timeline.timelines.Count != 0)
+					debugText.Add($" > Connection timeline conflicts with room(s)");
+			}
 		}
 
 		if (hoveringDraggable != null) {
@@ -1148,6 +1190,8 @@ public static class WorldWindow {
 						debugText.Add($" > Room imported from outside {region.acronym}-rooms");
 					debugText.Add($"Tags: {string.Join(" ", room.data.tags)}");
 					debugText.Add($"Size: {room.width}x{room.height}");
+					if(room.timeline.timelineType != TimelineType.All)
+						debugText.Add($"Timeline: {room.timeline}");
 					debugText.Add($"Dens: {room.dens.Count}");
 					// CONNECTION DEBUG
 					{
@@ -1156,6 +1200,7 @@ public static class WorldWindow {
 						string connectionList = "";
 						for (uint index = 0; index < room.roomExits.Count; index++) {
 							if (room.AnyConnectionConnectedTo(index)) {
+								bool alreadyFoundConnectionForExit = false;
 								foreach (Connection connection in room.connections) {
 									string finalString = "";
 									bool canHaveArrows = false;
@@ -1169,9 +1214,17 @@ public static class WorldWindow {
 										encounteredConnections.Add(connection.roomB.name);
 										canHaveArrows = true;
 									}
-									if (connection == hoveringConnection && canHaveArrows)
-										finalString = $">{finalString}<";
-									connectionList += finalString;
+									if (finalString != "") {
+										Timeline effectiveTimeline = connection.EffectiveConnectionTimeline;
+										if (effectiveTimeline.timelineType != TimelineType.All) {
+											string timelineText = effectiveTimeline.ToString();
+											finalString = $"({(timelineText != "" ? timelineText : "NONE")}){finalString}";
+										}
+										if (connection == hoveringConnection && canHaveArrows)
+											finalString = $">{finalString}<";
+										connectionList += (alreadyFoundConnectionForExit ? "/" : "") + finalString;
+										alreadyFoundConnectionForExit = true;
+									}
 								}
 							}
 							else {
@@ -1409,38 +1462,6 @@ public static class WorldWindow {
 
 	public static bool CullTest(Rect bounds) {
 		return bounds.x0 < camBound.x1 && bounds.x1 > camBound.x0 && bounds.y0 < camBound.y1 && bounds.y1 > camBound.y0;
-	}
-
-	public static bool CheckVisibleTimeline(TimelineType timelineType, HashSet<string> timelines) {
-		if (VisibleTimelineType == TimelineType.All)
-			return true;
-		if (timelineType == TimelineType.All && VisibleTimelineType != TimelineType.Only)
-			return true;
-		if (VisibleTimelineType == TimelineType.Except) {
-			if (timelineType == TimelineType.Only) {
-				foreach (string timeline in timelines) {
-					if (!VisibleTimelines.Contains(timeline)) { return true; }
-				}
-			}
-			else if (timelineType == TimelineType.Except) {
-				return true; // should really technically only return true if timelines does not exclude literally every slugcat that isn't excepted by world.
-			}
-		}
-		else if (VisibleTimelineType == TimelineType.Only) {
-			if (timelineType == TimelineType.All && VisibleTimelines.Count != 0)
-				return true;
-			if (timelineType == TimelineType.Only) {
-				foreach (string timeline in timelines) {
-					if (VisibleTimelines.Contains(timeline)) { return true; }
-				}
-			}
-			else if (timelineType == TimelineType.Except) {
-				foreach (string timeline in VisibleTimelines) {
-					if (!timelines.Contains(timeline)) { return true; }
-				}
-			}
-		}
-		return false;
 	}
 
 	private static void HandleRoomFilesSelected(string[] paths) {
@@ -1706,7 +1727,7 @@ public static class WorldWindow {
 	}
 
 	public class WorldMenuItems : MenuItems {
-		private static event Action<TimelineType, HashSet<string>>? UpdateVisibleTimelines;
+		private static event Action<Timeline>? UpdateVisibleTimeline;
 		private static void ExportButton() {
 			string lastExportDirectory = WorldWindow.region.exportPath;
 
@@ -1827,26 +1848,25 @@ public static class WorldWindow {
 
 				new Button("Timeline", button => {
 					PopupManager.Add(new TimelinePopup(
-						WorldWindow.VisibleTimelineType,
-						WorldWindow.VisibleTimelines,
+						WorldWindow.VisibleTimeline,
 						(TimelineType) => {
-							WorldWindow.VisibleTimelineType = TimelineType;
-							UpdateVisibleTimelines?.Invoke(WorldWindow.VisibleTimelineType, WorldWindow.VisibleTimelines);
-							if(VisibleTimelineType == TimelineType.All) button.text = "Timeline";
-							else if(VisibleTimelineType == TimelineType.Only) button.text = (VisibleTimelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
+							WorldWindow.VisibleTimeline.timelineType = TimelineType;
+							UpdateVisibleTimeline?.Invoke(WorldWindow.VisibleTimeline);
+							if(VisibleTimeline.timelineType == TimelineType.All) button.text = "Timeline";
+							else if(VisibleTimeline.timelineType == TimelineType.Only) button.text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
 							else button.text = ">Timeline<";
 						},
 						(selected, timeline) => {
 							if(selected)
-								WorldWindow.VisibleTimelines.Remove(timeline);
+								WorldWindow.VisibleTimeline.timelines.Remove(timeline);
 							else
-								WorldWindow.VisibleTimelines.Add(timeline);
-							UpdateVisibleTimelines?.Invoke(WorldWindow.VisibleTimelineType, WorldWindow.VisibleTimelines);
-							if(VisibleTimelineType == TimelineType.All) button.text = "Timeline";
-							else if(VisibleTimelineType == TimelineType.Only) button.text = (VisibleTimelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
+								WorldWindow.VisibleTimeline.timelines.Add(timeline);
+							UpdateVisibleTimeline?.Invoke(WorldWindow.VisibleTimeline);
+							if(VisibleTimeline.timelineType == TimelineType.All) button.text = "Timeline";
+							else if(VisibleTimeline.timelineType == TimelineType.Only) button.text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
 							else button.text = ">Timeline<";
 						},
-						ref UpdateVisibleTimelines));
+						ref UpdateVisibleTimeline));
 					}, button => {
 						return WorldWindow.ValidRegionLoaded;
 					}

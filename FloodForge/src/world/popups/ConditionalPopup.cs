@@ -11,7 +11,7 @@ public class ConditionalPopup : TimelinePopup {
 
 	protected TimelineType ConditionalTimelineType {
 		get {
-			return this.connection?.timelineType ?? this?.lineage?.timelineType ?? this.rooms!.First().TimelineType;
+			return this.connection?.timeline.timelineType ?? this?.lineage?.timeline.timelineType ?? this.rooms!.First().timeline.timelineType;
 		}
 
 		set {
@@ -25,6 +25,7 @@ public class ConditionalPopup : TimelinePopup {
 		}
 	}
 
+	// REVIEW - check if a timeline change makes sense - for example, a connection set to "X-Red" while it connects to a room with timeline "Red" doesn't make sense
 	public void TimelineChangeCallback(TimelineType timelineType) {
 		this.ConditionalTimelineType = timelineType;
 	}
@@ -37,18 +38,19 @@ public class ConditionalPopup : TimelinePopup {
 		WorldWindow.worldHistory.Apply(change);
 	}
 	
-	public void InvokeOnTimelineChange(TimelineType timelineType, HashSet<string> timelines) {
-		UpdateOnTimelineChange?.Invoke(timelineType, timelines);
+	public void InvokeOnTimelineChange(Timeline timeline) {
+		UpdateOnTimelineChange?.Invoke(timeline);
 	}
-	public event Action<TimelineType, HashSet<string>>? UpdateOnTimelineChange;
 
-	private ConditionalPopup(Connection? connection = null, IEnumerable<Room>? rooms = null, DenLineage? lineage = null) : base(TimelineType.All, [], (_)=>{}, (_,_)=>{}) {
-		this.Timelines = connection?.timelines ?? lineage?.timelines ?? rooms?.First()?.Timelines ?? [];
+	public event Action<Timeline>? UpdateOnTimelineChange;
+
+	private ConditionalPopup(Connection? connection = null, IEnumerable<Room>? rooms = null, DenLineage? lineage = null) : base(new (), (_)=>{}, (_,_)=>{}) {
+		this.timeline.timelines = connection?.timeline.timelines ?? lineage?.timeline.timelines ?? rooms?.First()?.timeline.timelines ?? [];
 		this.onTimelineTypeChangeCallback = this.TimelineChangeCallback;
 		this.onSelectionChangeCallback = this.SelectionChangeCallback;
 		this.bounds = new Rect(-0.4f, -0.4f, 0.4f, 0.4f);
 		this.UpdateOnTimelineChange += this.UpdateTimeline;
-		this.UpdateTimeline(connection?.timelineType ?? lineage?.timelineType ?? rooms!.First().TimelineType, this.Timelines);
+		this.UpdateTimeline(new (connection?.timeline.timelineType ?? lineage?.timeline.timelineType ?? rooms!.First().timeline.timelineType, this.timeline.timelines));
 	}
 
 	public ConditionalPopup(Connection connection) : this(connection, null, null) {
