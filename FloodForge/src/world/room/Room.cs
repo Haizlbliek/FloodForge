@@ -613,6 +613,12 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		List<(RoomExitType type, Vector2i position)> newList = [];
 		for (int y = 0; y < this.height; y++) {
 			for (int x = 0; x < this.width; x++) {
+				// REVIEW - DOES THIS DO WHAT I THINK IT DOES????
+				// Because I'm not sure what specialExitCount actually does,
+				// so I don't know if I've inadvertently messed something up by
+				// incrementing it here.
+				if ((this.GetTile(x, y) & FLAG_GARBAGE_WORM_HOLE) > 0)
+					this.specialExitCount++;
 				foreach ((RoomExitType _, Vector2i position) item in this.allRoomExitPoints) {
 					if (item.position == new Vector2i(x, y)) {
 						newList.Add(item);

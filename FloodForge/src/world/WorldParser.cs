@@ -370,7 +370,7 @@ public static class WorldParser {
 				offscreenDen.GetDen();
 			}
 
-			if (denId == room.GarbageWormDenIndex) {
+			if (denId >= room.nonDenExitCount + room.denShortcutEntrances.Count && denId < room.GarbageWormDenIndex) {
 				GarbageWormDen worm = new GarbageWormDen() {
 					type = CreatureTextures.Parse(creature),
 					timeline = timeline,
