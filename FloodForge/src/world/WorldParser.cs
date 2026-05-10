@@ -571,23 +571,15 @@ public static class WorldParser {
 			}
 			else {
 				connectionId = (int) ((connection.roomA == room) ? connection.roomAExitID : connection.roomBExitID);
-
-				if (connection.timeline.timelineType == TimelineType.Only) {
-					timelines.ForEach(x => connection.timeline.timelines.Remove(x));
-				}
-				else {
-					connection.timeline.timelineType = TimelineType.Except;
-					timelines.ForEach(x => connection.timeline.timelines.Add(x));
-				}
 			}
 		}
 
 		if (connection != null) {
-			if (connection.timeline.timelineType == TimelineType.Except) {
+			if (connection.timeline.timelineType == TimelineType.Only) {
 				timelines.ForEach(x => connection.timeline.timelines.Remove(x));
 			}
 			else {
-				connection.timeline.timelineType = TimelineType.Only;
+				connection.timeline.timelineType = TimelineType.Except;
 				timelines.ForEach(x => connection.timeline.timelines.Add(x));
 			}
 
