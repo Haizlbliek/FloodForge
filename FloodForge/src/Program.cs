@@ -10,6 +10,8 @@ public static class Program {
 	public static Vector2D<int> initialDisplayResolution = new Vector2D<int>(1280, 720);
 
 	public static void Main() {
+		if (File.Exists("crashlog.txt")) File.Delete("crashlog.txt");
+
 		try {
 			bool isArm64 = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
 
@@ -31,10 +33,7 @@ public static class Program {
 			window.Dispose();
 			FloodForge.Main.Cleanup();
 		} catch (Exception ex) {
-			if (File.Exists("crashlog.txt")) File.Delete("crashlog.txt");
-
-			string error = $"{ex.Message}\n{ex.StackTrace}";
-			File.WriteAllText("crashlog.txt", error, System.Text.Encoding.UTF8);
+			Logger.Error($"{ex.Message}\n{ex.StackTrace}");
 		}
 	}
 
