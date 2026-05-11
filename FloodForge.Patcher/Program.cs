@@ -13,20 +13,27 @@ if (File.Exists(logPath)) {
 }
 
 void LogError(Exception ex) {
-	string message = $"[{DateTime.Now}] ERROR: {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}{new string('-', 30)}{Environment.NewLine}";
+	string message = $"ERROR: {ex.Message}\n{ex.StackTrace}\n";
 	File.AppendAllText(logPath, message);
 }
 
+void Log(string message) {
+	File.AppendAllText(logPath, message + "\n");
+}
+
 try {
+	Log("Waiting for parent to close");
 	Process parent = Process.GetProcessById(parentPid);
 	parent.WaitForExit(5000);
 }
 catch {}
+Log("Patching");
 
 try {
 	foreach (string dirPath in Directory.GetDirectories(sourceFolder, "*", SearchOption.AllDirectories)) {
 		Directory.CreateDirectory(dirPath.Replace(sourceFolder, destinationFolder));
 	}
+	Log("Copied folders");
 
 	void CopyAll(string from) {
 		if (!Directory.Exists(from)) return;
@@ -121,8 +128,11 @@ try {
 		if (Path.GetFileName(newPath).Contains("FloodForge.Patcher")) continue;
 		File.Copy(newPath, newPath.Replace(sourceFolder, destinationFolder), true);
 	}
+	Log("Copied base files");
 
 	CopyBase(Path.Combine(sourceFolder, "docs"));
+	Log("Copied docs");
+
 	foreach (string newPath in Directory.GetFiles(Path.Combine(sourceFolder, "assets"), "*.*", SearchOption.TopDirectoryOnly)) {
 		if (Path.GetFileName(newPath) == "settings.cfg") {
 			string dest = newPath.Replace(sourceFolder, destinationFolder);
@@ -131,12 +141,22 @@ try {
 		}
 		File.Copy(newPath, newPath.Replace(sourceFolder, destinationFolder), true);
 	}
+	Log("Copied base assets");
+
 	CopyAll(Path.Combine(sourceFolder, "assets", "fonts"));
+	Log("Copied fonts");
+
 	CopyAll(Path.Combine(sourceFolder, "assets", "shaders"));
+	Log("Copied shaders");
+
 	CopyAll(Path.Combine(sourceFolder, "assets", "icons"));
+	Log("Copied icons");
+
 	CopyAllKeep(Path.Combine(sourceFolder, "assets", "themes"));
+	Log("Copied themes");
+
 	if (version == 1) {
-		Directory.CreateDirectory(Path.Combine(destinationFolder, "assets", "mods"));
+		Log("Reformatting creatures");
 		string sourceRoot = Path.Combine(destinationFolder, "assets", "creatures");
 		string targetBase = Path.Combine(destinationFolder, "assets", "mods");
 		foreach (string creatureDir in Directory.GetDirectories(sourceRoot)) {
@@ -149,12 +169,17 @@ try {
 		}
 		File.Copy(Path.Combine(destinationFolder, "assets", "creatures", "mods.txt"), Path.Combine(destinationFolder, "assets", "mods.txt"), true);
 		Directory.Move(sourceRoot, Path.Combine(destinationFolder, "assets", "~creatures"));
+		Log("Reformatted");
 	}
+
 	string mods = Path.Combine(sourceFolder, "assets", "mods");
 	foreach (string newPath in Directory.GetFiles(mods, "*.*", SearchOption.AllDirectories)) {
 		File.Copy(newPath, newPath.Replace(sourceFolder, destinationFolder), true);
 	}
+	Log("Copied mods");
+
 	if (version == 1) {
+		Log("Reformatting timelines");
 		string modsPath = Path.Combine(destinationFolder, "assets", "mods");
 		string oldTimelines = Path.Combine(destinationFolder, "assets", "timelines");
 		if (Directory.Exists(oldTimelines)) {
@@ -180,14 +205,18 @@ try {
 		}
 		Directory.Delete(Path.Combine(destinationFolder, "mods"));
 		Directory.Delete(Path.Combine(destinationFolder, "assets", "objects"), true);
+		Log("Reformatted");
 	}
 
+	Log("Launching");
 	string mainExec = OperatingSystem.IsWindows() ? "FloodForge.exe" : "FloodForge";
 	Process.Start(new ProcessStartInfo() {
 		FileName = Path.Combine(destinationFolder, mainExec),
 		Arguments = version == 1 ? $"--patcher=\"{sourceFolder}\"" : "",
 		WorkingDirectory = destinationFolder
 	});
+
+	Log("Complete!");
 }
 catch (Exception ex) {
 	LogError(ex);
