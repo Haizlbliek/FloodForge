@@ -136,6 +136,7 @@ if (version == 1) {
 		string creaturesPath = Path.Combine(modPath, "creatures");
 		CopyDirectory(creatureDir, creaturesPath);
 	}
+	File.Copy(Path.Combine(destinationFolder, "assets", "creatures", "mods.txt"), Path.Combine(destinationFolder, "assets", "mods.txt"));
 	Directory.Move(sourceRoot, Path.Combine(destinationFolder, "assets", "~creatures"));
 }
 string mods = Path.Combine(sourceFolder, "assets", "mods");
