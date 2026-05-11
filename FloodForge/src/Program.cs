@@ -9,8 +9,20 @@ public static class Program {
 
 	public static Vector2D<int> initialDisplayResolution = new Vector2D<int>(1280, 720);
 
-	public static void Main() {
+	public static void Main(string[] args) {
 		if (File.Exists("crashlog.txt")) File.Delete("crashlog.txt");
+
+		foreach (string arg in args) {
+			if (!arg.StartsWith("--patcher=")) continue;
+
+			string patcherFolderPath = arg[10..].TrimStart('"').TrimEnd('"');
+			string patcherName = OperatingSystem.IsWindows() ? "FloodForge.Patcher.exe" : "FloodForge.Patcher";
+			string patcherPath = PathUtil.Combine(patcherFolderPath, patcherName);
+			if (File.Exists(patcherPath)) {
+				File.Copy(patcherPath, patcherName, true);
+				File.Copy(patcherPath + ".pdb", patcherName + ".pdb", true);
+			}
+		}
 
 		try {
 			bool isArm64 = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
