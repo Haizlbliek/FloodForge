@@ -14,7 +14,6 @@ ScavSentinal>ScavengerSentinal
 Scav Sentinal>ScavengerSentinal
 Scavenger Sentinal>ScavengerSentinal
 RedHorrorCenti>RedHorror
-RedHorrorCenti>RedHorror
 RedHorrorCentipede>RedHorror
 Red Horror Centi>RedHorror
 Red Horror>RedHorror

@@ -27,7 +27,7 @@ public class DenPopup : Popup {
 	private DenCreature? selectedLineageChance;
 	private string hoverText = "";
 
-	private List<CreatureTags.Tag> editableTags = [];
+	private List<Mods.Tag> editableTags = [];
 	private readonly List<UI.Editable?> editables = [];
 
 	protected static void CheckTags(DenCreature? creature) {
@@ -55,7 +55,7 @@ public class DenPopup : Popup {
 		if (creature == null)
 			return;
 
-		this.editableTags = [..CreatureTags.Tags(creature.type)];
+		this.editableTags = [..Mods.Tags(creature.type)];
 
 		foreach (UI.Editable? editable in this.editables) {
 			if (editable == null)
@@ -65,28 +65,28 @@ public class DenPopup : Popup {
 		}
 		this.editables.Clear();
 
-		foreach (CreatureTags.Tag tag in this.editableTags) {
+		foreach (Mods.Tag tag in this.editableTags) {
 			DenCreature.Tag? creatureTag = creature.tags.FirstOrDefault(t => t.id == tag);
 
-			if (tag.displayType == CreatureTags.DisplayType.InputString) {
+			if (tag.displayType == Mods.DisplayType.InputString) {
 				this.editables.Add(new UI.TextInputEditable(UI.TextInputEditable.Type.Text, (creatureTag as DenCreature.StringTag)?.data ?? ""));
 			}
-			else if (tag.displayType == CreatureTags.DisplayType.InputUnsignedInteger) {
+			else if (tag.displayType == Mods.DisplayType.InputUnsignedInteger) {
 				this.editables.Add(new UI.TextInputEditable(UI.TextInputEditable.Type.UnsignedInteger, ((creatureTag as DenCreature.IntegerTag)?.data ?? 0).ToString()));
 			}
-			else if (tag.displayType == CreatureTags.DisplayType.InputSignedInteger) {
+			else if (tag.displayType == Mods.DisplayType.InputSignedInteger) {
 				this.editables.Add(new UI.TextInputEditable(UI.TextInputEditable.Type.SignedInteger, ((creatureTag as DenCreature.IntegerTag)?.data ?? 0).ToString()));
 			}
-			else if (tag.displayType == CreatureTags.DisplayType.InputUnsignedFloat) {
+			else if (tag.displayType == Mods.DisplayType.InputUnsignedFloat) {
 				this.editables.Add(new UI.TextInputEditable(UI.TextInputEditable.Type.UnsignedFloat, ((creatureTag as DenCreature.IntegerTag)?.data ?? 0).ToString()));
 			}
-			else if (tag.displayType == CreatureTags.DisplayType.InputSignedFloat) {
+			else if (tag.displayType == Mods.DisplayType.InputSignedFloat) {
 				this.editables.Add(new UI.TextInputEditable(UI.TextInputEditable.Type.SignedFloat, ((creatureTag as DenCreature.IntegerTag)?.data ?? 0).ToString()));
 			}
-			else if (tag.displayType is CreatureTags.DisplayType.FloatSlider floatSlider) {
+			else if (tag.displayType is Mods.DisplayType.FloatSlider floatSlider) {
 				this.editables.Add(new UI.SliderFloatEditable(floatSlider.min, floatSlider.max));
 			}
-			else if (tag.displayType is CreatureTags.DisplayType.IntSlider intSlider) {
+			else if (tag.displayType is Mods.DisplayType.IntSlider intSlider) {
 				this.editables.Add(new UI.SliderIntEditable(intSlider.min, intSlider.max));
 			}
 			else {
@@ -98,11 +98,11 @@ public class DenPopup : Popup {
 	protected static void SetCreature(DenCreature creature, string creatureType) {
 		DenCreature newCreature = new DenCreature(creature);
 
-		if (creatureType == CreatureTextures.CLEAR) {
+		if (creatureType == "CLEAR") {
 			newCreature.type = "";
 			newCreature.count = 0;
 		}
-		else if (newCreature.type == creatureType || creatureType == CreatureTextures.UNKNOWN) {
+		else if (newCreature.type == creatureType || creatureType == "UNKNOWN") {
 			if (Keys.Modifier(Keys.Modifiers.Shift)) {
 				newCreature.count--;
 				if (newCreature.count <= 0) {
@@ -123,7 +123,7 @@ public class DenPopup : Popup {
 		WorldWindow.worldHistory.Apply(new CreatureDataChange(creature, newCreature.type, newCreature.count, newCreature.tags));
 	}
 
-	protected static void ToggleTag(DenCreature creature, CreatureTags.Tag creatureTag) {
+	protected static void ToggleTag(DenCreature creature, Mods.Tag creatureTag) {
 		DenCreature newCreature = new DenCreature(creature);
 		if (newCreature.tags.Any(x => x.id == creatureTag)) {
 			newCreature.tags.Remove(newCreature.tags.First(x => x.id == creatureTag));
@@ -161,7 +161,7 @@ public class DenPopup : Popup {
 		if (this.selectedLineage == null) return;
 		if (creature == null) return;
 
-		int count = CreatureTextures.creatureOrder.Count;
+		int count = Mods.creatures.Count;
 		if (!unknown) count--;
 
 		float countX = 0f;
@@ -171,14 +171,14 @@ public class DenPopup : Popup {
 				int id = x + y * CreatureRows;
 				if (id >= count) break;
 
-				string type = CreatureTextures.creatureOrder[id];
-				bool selected = creature.type == type || (unknown && type == CreatureTextures.UNKNOWN);
+				string type = Mods.creatures[id];
+				bool selected = creature.type == type || (unknown && type == "UNKOWN") || (creature.type == "" && id == 0);
 				UVRect rect = UVRect.FromSize(
 					centerX + (x - 0.5f * CreatureRows) * (buttonSize + buttonPadding) + buttonPadding * 0.5f,
 					this.bounds.y1 - 0.1f - buttonPadding * 0.5f - (y + 1) * (buttonSize + buttonPadding) - this.scrollCreatures,
 					buttonSize, buttonSize
 				);
-				Texture texture = CreatureTextures.GetTexture(type);
+				Texture texture = Mods.GetCreatureTexture(type);
 				UI.CenteredUV(texture, ref rect);
 				UI.ButtonResponse response = UI.TextureButton(rect, new UI.TextureButtonMods { selected = selected, texture = texture, textureColor = selected ? Color.White : Color.Grey });
 
@@ -190,7 +190,7 @@ public class DenPopup : Popup {
 				}
 
 				if (response.hovered) {
-					this.hoverText = (unknown && type == CreatureTextures.UNKNOWN) ? creature.type : CreatureTextures.ExportName(type);
+					this.hoverText = (unknown && type == "UNKNOWN") ? creature.type : Mods.ExportCreatureName(type);
 				}
 
 				if (selected) {
@@ -218,7 +218,7 @@ public class DenPopup : Popup {
 		if (creature == null) return;
 
 		int y = 0;
-		foreach (CreatureTags.Tag tag in this.editableTags) {
+		foreach (Mods.Tag tag in this.editableTags) {
 			bool selected = creature.tags.Any(t => t.id == tag);
 			UVRect rect = UVRect.FromSize(
 				mainX + 0.6f + buttonPadding,
@@ -227,14 +227,14 @@ public class DenPopup : Popup {
 				buttonSize
 			);
 
-			UI.ButtonResponse response = UI.TextureButton(rect, new UI.TextureButtonMods { selected = selected, texture = CreatureTextures.GetTexture(tag.id, false), textureColor = selected ? Color.White : Color.Grey});
+			UI.ButtonResponse response = UI.TextureButton(rect, new UI.TextureButtonMods { selected = selected, texture = Mods.GetTagTexture(tag.id), textureColor = selected ? Color.White : Color.Grey});
 			if (response.clicked) {
 				ToggleTag(creature, tag);
 				this.UpdateEditables(creature);
 			}
 
 			if (response.hovered)
-				this.hoverText = tag.id;
+				this.hoverText = Mods.ExportTagName(tag.id);
 
 			UI.Editable? editable = this.editables[y];
 			DenCreature.Tag? creatureTag = creature.tags.FirstOrDefault(t => t.id == tag);
@@ -374,8 +374,8 @@ public class DenPopup : Popup {
 
 			UI.ButtonResponse response;
 
-			Texture texture = CreatureTextures.GetTexture(creature.type);
-			if (texture == CreatureTextures.UnknownCreature) {
+			Texture texture = Mods.GetCreatureTexture(creature.type);
+			if (texture == Mods.Unknown) {
 				response = UI.Button(new Rect(creatureRect), new UI.ButtonMods { selected = selected });
 			}
 			else {
@@ -472,7 +472,7 @@ public class DenPopup : Popup {
 		}
 
 		DenCreature? creature = this.selectedLineage;
-		bool unknown = creature != null && !CreatureTextures.Known(creature.type);
+		bool unknown = creature != null && !Mods.CreatureKnown(creature.type);
 
 		this.collapseBounds.x1 = this.collapseBounds.x0 + 0.6f + 0.3f + 0.22f;
 		if (this.bounds.x1 - this.bounds.x0 < this.collapseBounds.x1 - this.collapseBounds.x0) {
@@ -546,7 +546,7 @@ public class DenPopup : Popup {
 
 	protected void ClampScroll() {
 		{
-			int count = Mathf.CeilToInt(CreatureTextures.creatureOrder.Count / (float) CreatureRows) - 2;
+			int count = Mathf.CeilToInt(Mods.creatures.Count / (float) CreatureRows) - 2;
 			float size = count * (buttonSize + buttonPadding);
 			if (this.scrollCreaturesTo < -size) {
 				this.scrollCreaturesTo = -size;

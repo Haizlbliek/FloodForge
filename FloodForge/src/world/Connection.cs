@@ -286,7 +286,7 @@ public class Connection {
 					float ox = (width * -0.5f + x + 0.5f) * size * 2.2f;
 					float oy = (height * -0.5f + y + 0.5f) * size * 2.2f;
 					Rect rect = Rect.FromSize(this.BezierCenter.x - size - ox, this.BezierCenter.y - size - oy, size * 2f, size * 2f);
-					this.DrawTexturedRect(ConditionalTimelineTextures.GetTexture(it.Current), rect);
+					this.DrawTexturedRect(Mods.GetTimelineTexture(it.Current), rect);
 				}
 			}
 		}

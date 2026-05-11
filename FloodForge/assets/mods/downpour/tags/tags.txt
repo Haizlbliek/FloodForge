@@ -1,0 +1,11 @@
+[Voidsea]
+Toggle
+redlizard, redcentipede, bigspider, daddylonglegs, brotherlonglegs, terrorlonglegs, bigeel, cyanlizard
+
+[LavaSafe]
+Toggle
+*
+
+[TentacleImmune]
+Toggle
+*

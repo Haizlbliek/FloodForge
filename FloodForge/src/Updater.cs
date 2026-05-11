@@ -45,15 +45,25 @@ public static class Updater {
 
 		string currentDir = AppContext.BaseDirectory;
 		string patcherName = OperatingSystem.IsWindows() ? "FloodForge.Patcher.exe" : "FloodForge.Patcher";
-		string patcherPath = Path.Combine(extractPath, patcherName);
-		if (!File.Exists(patcherPath)) {
-			patcherPath = Path.Combine(currentDir, patcherName);
+
+		string newPatcherPath = Path.Combine(extractPath, patcherName);
+		string destinationPatcher = Path.Combine(currentDir, patcherName);
+
+		if (File.Exists(newPatcherPath)) {
+			try {
+				File.Copy(newPatcherPath, destinationPatcher, true);
+			}
+			catch (Exception ex) {
+				Logger.Error($"Failed to update patcher: {ex.Message}");
+			}
 		}
+
+		string patcherPath = destinationPatcher;
 
 		if (File.Exists(patcherPath)) {
 			Process.Start(new ProcessStartInfo {
 				FileName = patcherPath,
-				Arguments = $"\"{extractPath}\" \"{currentDir}\" \"{Process.GetCurrentProcess().Id}\"",
+				Arguments = $"\"{extractPath}\" \"{currentDir}\" \"{Process.GetCurrentProcess().Id}\" 2",
 				UseShellExecute = true
 			});
 

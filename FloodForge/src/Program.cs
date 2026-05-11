@@ -1,4 +1,5 @@
-﻿using Silk.NET.Windowing;
+﻿using System.Globalization;
+using Silk.NET.Windowing;
 
 namespace FloodForge;
 
@@ -8,8 +9,34 @@ public static class Program {
 	public static uint _anyVao;
 
 	public static Vector2D<int> initialDisplayResolution = new Vector2D<int>(1280, 720);
+	public static bool patcherUpdated = false;
 
-	public static void Main() {
+	public static void Main(string[] args) {
+		CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+		CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+		AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
+			Logger.Error(e.ExceptionObject);
+		};
+
+		if (File.Exists("crashlog.txt")) File.Delete("crashlog.txt");
+
+		foreach (string arg in args) {
+			if (!arg.StartsWith("--patcher=")) continue;
+
+			Logger.Info("Found patcher");
+
+			string patcherFolderPath = arg[10..].TrimStart('"').TrimEnd('"');
+			string patcherName = OperatingSystem.IsWindows() ? "FloodForge.Patcher.exe" : "FloodForge.Patcher";
+			string patcherPath = PathUtil.Combine(patcherFolderPath, patcherName);
+			if (File.Exists(patcherPath)) {
+				Logger.Info("Patcher path exists");
+				File.Copy(patcherPath, patcherName, true);
+				File.Copy(patcherPath + ".pdb", patcherName + ".pdb", true);
+				Logger.Info("Copied patcher");
+				patcherUpdated = true;
+			}
+		}
+
 		try {
 			bool isArm64 = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
 
@@ -31,10 +58,7 @@ public static class Program {
 			window.Dispose();
 			FloodForge.Main.Cleanup();
 		} catch (Exception ex) {
-			if (File.Exists("crashlog.txt")) File.Delete("crashlog.txt");
-
-			string error = $"{ex.Message}\n{ex.StackTrace}";
-			File.WriteAllText("crashlog.txt", error, System.Text.Encoding.UTF8);
+			Logger.Error($"{ex.Message}\n{ex.StackTrace}");
 		}
 	}
 
