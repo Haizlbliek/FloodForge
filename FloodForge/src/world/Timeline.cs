@@ -141,6 +141,48 @@ public class Timeline {
 		return false;
 	}
 
+	public bool OverlapsWith(string timeline) {
+		return this.OverlapsWith(TimelineType.Only, [timeline]);
+	}
+
+	public bool OverlapsWith(TimelineType timelineType, HashSet<string> timelines) {
+		if (this.timelineType == TimelineType.All || timelineType == TimelineType.All)
+			return true;
+		switch (this.timelineType) {
+			case TimelineType.Except:
+				switch (timelineType) {
+					case TimelineType.Except:
+						return true;
+					case TimelineType.Only:
+						foreach (string timelineEntry in timelines) {
+							if (!this.timelines.Contains(timelineEntry)) {
+								return true;
+							}
+						}
+						return false;
+				}
+			break;
+			case TimelineType.Only:
+				switch (timelineType) {
+					case TimelineType.Except:
+						foreach (string timelineEntry in this.timelines) {
+							if (!timelines.Contains(timelineEntry)) {
+								return true;
+							}
+						}
+						return false;
+					case TimelineType.Only:
+						foreach (string timelineEntry in this.timelines) {
+							if (timelines.Contains(timelineEntry)) {
+								return true;
+							}
+						}
+						return false;
+				}
+			break;
+		}
+		return false;
+	}
 }
 
 public enum TimelineType {
