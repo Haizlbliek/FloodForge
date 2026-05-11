@@ -62,10 +62,6 @@ public static class Main {
 		PopupManager.Initialize();
 		Sfx.Initialize();
 
-		if (Program.patcherUpdated) {
-			FloodForge.Popups.PopupManager.Add("FloodForge updated file structure\nPlease double check if mods are correct");
-		}
-
 		input = Program.window.CreateInput();
 		for (int i = 0; i < input.Keyboards.Count; i++) {
 			IKeyboard keyboard = input.Keyboards[i];
@@ -78,7 +74,10 @@ public static class Main {
 
 		UI.Initialize();
 
-		if (crashed) {
+		if (Program.patcherUpdated) {
+			FloodForge.Popups.PopupManager.Add("FloodForge updated file structure\nPlease double check if mods are correct");
+		}
+		else if (crashed) {
 			PopupManager.Add(new MarkdownPopup("docs/crash.md"));
 		}
 		else {
