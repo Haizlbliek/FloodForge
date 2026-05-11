@@ -275,6 +275,8 @@ public static class Mods {
 
 
 	public static Texture GetTimelineTexture(string timeline) {
+		timeline = timeline.ToLowerInvariant();
+
 		if (timelineTextures.TryGetValue(timeline, out Texture? tex)) {
 			return tex;
 		}

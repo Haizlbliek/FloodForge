@@ -7,7 +7,7 @@ string destinationFolder = args[1];
 int parentPid = int.Parse(args[2]);
 
 try {
-	var parent = Process.GetProcessById(parentPid);
+	Process parent = Process.GetProcessById(parentPid);
 	parent.WaitForExit(5000);
 }
 catch {}
@@ -49,21 +49,21 @@ void MergeConfigs(string sourceCfg, string destCfg) {
 		return;
 	}
 
-	var userSettings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-	foreach (var line in File.ReadAllLines(destCfg)) {
+	Dictionary<string, string> userSettings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+	foreach (string line in File.ReadAllLines(destCfg)) {
 		if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith('#')) continue;
-		var parts = line.Split('=', 2);
+		string[] parts = line.Split('=', 2);
 		if (parts.Length == 2) userSettings[parts[0].Trim()] = parts[1].Trim();
 	}
 
-	var newLines = File.ReadAllLines(sourceCfg);
-	var finalLines = new List<string>();
-	var handledUserKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+	string[] newLines = File.ReadAllLines(sourceCfg);
+	List<string> finalLines = new List<string>();
+	HashSet<string> handledUserKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-	foreach (var line in newLines) {
+	foreach (string line in newLines) {
 		string trimmed = line.Trim();
 		if (!trimmed.StartsWith('#') && trimmed.Contains('=')) {
-			var parts = trimmed.Split('=', 2);
+			string[] parts = trimmed.Split('=', 2);
 			string key = parts[0].Trim();
 
 			if (userSettings.TryGetValue(key, out string? val)) {
@@ -76,7 +76,7 @@ void MergeConfigs(string sourceCfg, string destCfg) {
 	}
 
 	bool headerAdded = false;
-	foreach (var kvp in userSettings) {
+	foreach (KeyValuePair<string, string> kvp in userSettings) {
 		if (!handledUserKeys.Contains(kvp.Key)) {
 			if (!headerAdded) {
 				finalLines.Add("");
@@ -123,3 +123,7 @@ Process.Start(new ProcessStartInfo() {
 	FileName = Path.Combine(destinationFolder, mainExec),
 	WorkingDirectory = destinationFolder
 });
+
+
+// TODO: Update patcher
+// TODO: Make patcher update
