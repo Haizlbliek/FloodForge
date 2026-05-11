@@ -136,7 +136,7 @@ if (version == 1) {
 		string creaturesPath = Path.Combine(modPath, "creatures");
 		CopyDirectory(creatureDir, creaturesPath);
 	}
-	File.Copy(Path.Combine(destinationFolder, "assets", "creatures", "mods.txt"), Path.Combine(destinationFolder, "assets", "mods.txt"));
+	File.Copy(Path.Combine(destinationFolder, "assets", "creatures", "mods.txt"), Path.Combine(destinationFolder, "assets", "mods.txt"), true);
 	Directory.Move(sourceRoot, Path.Combine(destinationFolder, "assets", "~creatures"));
 }
 string mods = Path.Combine(sourceFolder, "assets", "mods");
@@ -167,6 +167,7 @@ if (version == 1) {
 		}
 		Directory.Move(oldTimelines, Path.Combine(destinationFolder, "assets", "~timelines"));
 	}
+	Directory.Delete(Path.Combine(destinationFolder, "mods"));
 }
 
 string mainExec = OperatingSystem.IsWindows() ? "FloodForge.exe" : "FloodForge";
