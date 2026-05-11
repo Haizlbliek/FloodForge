@@ -37,7 +37,7 @@ public static class WorldParser {
 					int idx = state.IndexOf('-');
 					string creature = state[..idx];
 					string value = state[(idx+1)..];
-					creature = CreatureTextures.Parse(creature);
+					creature = Mods.ParseCreature(creature);
 					attractiveness[creature] = ParseRoomAttractiveness(value.ToLowerInvariant());
 				}
 				if (room.Equals("default", StringComparison.InvariantCultureIgnoreCase)) {
@@ -301,30 +301,31 @@ public static class WorldParser {
 		tags.ForEach(room.data.tags.Toggle);
 	}
 
+	// TODO: Handle dynamically
 	private static DenCreature.Tag ParseCreatureTag(string tag, string type) {
 		if (tag.StartsWith("Mean")) {
-			return new DenCreature.FloatTag(CreatureTags.Mean, float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+			return new DenCreature.FloatTag(Mods.tags["mean"], float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
 		}
 		else if (tag.StartsWith("Seed")) {
-			return new DenCreature.IntegerTag(CreatureTags.Seed, int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+			return new DenCreature.IntegerTag(Mods.tags["seed"], int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
 		}
 		else if (tag.StartsWith("RotType")) {
-			return new DenCreature.IntegerTag(CreatureTags.RotType, int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+			return new DenCreature.IntegerTag(Mods.tags["rottype"], int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
 		}
 
 		if (!tag.Contains(':')) {
 			try {
 				if (type == "polemimic") {
-					return new DenCreature.IntegerTag(CreatureTags.POLEMIMIC_LENGTH, int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+					return new DenCreature.IntegerTag(Mods.tags["polemimic_length"], int.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
 				}
 				else {
-					return new DenCreature.FloatTag(CreatureTags.CENTIPEDE_LENGTH, float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
+					return new DenCreature.FloatTag(Mods.tags["centipede_length"], float.Parse(tag[(tag.IndexOf(':') + 1)..], NumberStyles.Any, CultureInfo.InvariantCulture));
 				}
 			}
 			catch (FormatException) {}
 		}
 
-		return new DenCreature.Tag(CreatureTags.GetOrCreate(tag));
+		return new DenCreature.Tag(Mods.GetOrCreateTag(tag));
 	}
 
 	private static bool ParseWorldCreatureLineage(string[] splits, Room room, Timeline timeline) {
@@ -356,7 +357,7 @@ public static class WorldParser {
 			first = false;
 
 			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
-			creature.type = CreatureTextures.Parse(sections[0]);
+			creature.type = Mods.ParseCreature(sections[0]);
 			creature.count = 1;
 
 			for (int i = 1; i < sections.Length; i++) {
@@ -391,7 +392,7 @@ public static class WorldParser {
 
 			if (denId >= room.nonDenExitCount + room.denShortcutEntrances.Count && denId < room.GarbageWormDenIndex) {
 				GarbageWormDen worm = new GarbageWormDen() {
-					type = CreatureTextures.Parse(creature),
+					type = Mods.ParseCreature(creature),
 					timeline = timeline,
 					count = sections.Length < 3 ? 1 : int.Parse(sections[2])
 				};
@@ -405,7 +406,7 @@ public static class WorldParser {
 			}
 
 			Den den = room.GetDen(denId);
-			DenLineage lineage = new DenLineage(CreatureTextures.Parse(creature), 1) {
+			DenLineage lineage = new DenLineage(Mods.ParseCreature(creature), 1) {
 				timeline = timeline
 			};
 			den.creatures.Add(lineage);

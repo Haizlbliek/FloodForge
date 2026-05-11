@@ -312,7 +312,7 @@ public class Connection {
 					if (!timelineEnumerator.MoveNext())
 						break;
 					
-					UI.CenteredTexture(ConditionalTimelineTextures.GetTexture(timelineEnumerator.Current), offsetX0 + (x * size) + size / 2, offsetY1 - (y * size) - size / 2, size);
+					UI.CenteredTexture(Mods.GetTimelineTexture(timelineEnumerator.Current), offsetX0 + (x * size) + size / 2, offsetY1 - (y * size) - size / 2, size);
 
 					if (this.timeline.timelineType == TimelineType.Except) {
 						Immediate.Color(1f, 0f, 0f);

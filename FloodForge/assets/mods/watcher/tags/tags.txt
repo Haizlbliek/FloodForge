@@ -1,0 +1,17 @@
+[RotType]
+Integer
+0
+3
+#lizards
+
+[Ripple]
+Toggle
+*
+
+[Slayer]
+Toggle
+tardigrade
+
+[LeviathanWhale]
+Toggle
+skywhale

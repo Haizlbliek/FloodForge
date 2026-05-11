@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 public static class PathUtil {
 	public static string Combine(string a, string b) {
 		return Path.GetFullPath(Path.Combine(a, b));
@@ -17,13 +19,23 @@ public static class PathUtil {
 		return FindFile(parent, fileName) ?? Combine(parent, fileName);
 	}
 
-	public static string? FindDirectory(string parent, string fileName) {
-		string[] dirs = Directory.GetDirectories(parent, fileName, new EnumerationOptions() { MatchCasing = MatchCasing.CaseInsensitive, RecurseSubdirectories = false });
+	public static bool TryGetFile(string parent, string fileName, [NotNullWhen(true)] out string? path) {
+		path = FindFile(parent, fileName);
+		return path != null;
+	}
+
+	public static string? FindDirectory(string parent, string directoryName) {
+		string[] dirs = Directory.GetDirectories(parent, directoryName, new EnumerationOptions() { MatchCasing = MatchCasing.CaseInsensitive, RecurseSubdirectories = false });
 		if (dirs.Length == 0) return null;
 		return dirs[0];
 	}
 
-	public static string FindOrAssumeDirectory(string parent, string fileName) {
-		return FindDirectory(parent, fileName) ?? Combine(parent, fileName);
+	public static string FindOrAssumeDirectory(string parent, string directoryName) {
+		return FindDirectory(parent, directoryName) ?? Combine(parent, directoryName);
+	}
+
+	public static bool TryGetDirectory(string parent, string directoryName, [NotNullWhen(true)] out string? path) {
+		path = FindDirectory(parent, directoryName);
+		return path != null;
 	}
 }

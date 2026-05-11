@@ -25,7 +25,7 @@ public class SplashArtPopup : Popup {
 
 	public SplashArtPopup() {
 		this.bounds = new Rect(-1f, -1f, 1f, 1f);
-		this.splashArt = Texture.Load(Main.AprilFools ? "assets/objects/splash-corrupted.png" : "assets/splash.png");
+		this.splashArt = Texture.Load(Main.AprilFools ? "assets/splash-corrupted.png" : "assets/splash.png");
 		this.uiIcons = Texture.Load("assets/uiIcons.png");
 
 		this.version = new AppVersion(File.ReadAllText("assets/version.txt"));

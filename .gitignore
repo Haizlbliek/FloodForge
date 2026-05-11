@@ -4,6 +4,7 @@ worlds
 backups
 log.old.txt
 log.txt
+crashlog.txt
 *.lock
 
 FloodForge/assets/recents.txt

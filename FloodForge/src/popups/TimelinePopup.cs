@@ -61,8 +61,8 @@ public class TimelinePopup : Popup {
 			// otherwise:
 			string timeline; // the currently hovered timeline
 			HashSet<string> timelines = this.timeline.timelines ?? []; // get the current Timeline selection
-			List<string> unknowns = [.. timelines.Where(t => !ConditionalTimelineTextures.HasTimeline(t))]; // create list of all timelines for which no texture exists
-			int count = ConditionalTimelineTextures.timelines.Count + unknowns.Count; // total count
+			List<string> unknowns = [.. timelines.Where(t => !Mods.HasTimeline(t))]; // create list of all timelines for which no texture exists
+			int count = Mods.timelines.Count + unknowns.Count; // total count
 
 			// go through every square in the timeline popup per row and per column (probably not resize-proof)
 			for (int row = 0; row <= (count / TimelineColumns); row++) {
@@ -72,14 +72,14 @@ public class TimelinePopup : Popup {
 						break; // Make sure it doesn't try to check nonexistent timelinse
 
 					// if unknown (and as such without texture), get texturename from unknowns instead
-					bool unknown = id >= ConditionalTimelineTextures.timelines.Count;
-					timeline = unknown ? unknowns[id - ConditionalTimelineTextures.timelines.Count] : ConditionalTimelineTextures.timelines[id];
+					bool unknown = id >= Mods.timelines.Count;
+					timeline = unknown ? unknowns[id - Mods.timelines.Count] : Mods.timelines[id];
 
 					// Check if current button is already selected
 					bool selected = timelines.Contains(timeline);
 
 					// create button
-					Texture texture = ConditionalTimelineTextures.GetTexture(timeline);
+					Texture texture = Mods.GetTimelineTexture(timeline);
 					UVRect rect = UVRect.FromSize(
 						centerX + (column - 0.5f * TimelineColumns) * (buttonSize + buttonPadding) + buttonPadding * 0.5f,
 						this.bounds.y1 - 0.12f - buttonPadding * 0.5f - (row + 1) * (buttonSize + buttonPadding) - this.scroll,

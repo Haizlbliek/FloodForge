@@ -52,7 +52,7 @@ public class RoomAttractivenessPopup : Popup {
 		float clipTop = (this.bounds.y1 - 0.1f - buttonPadding + Main.screenBounds.y) * 0.5f * Program.window.FramebufferSize.Y;
 		Program.gl.Scissor(0, (int) clipBottom, (uint) Program.window.FramebufferSize.X, (uint) (clipTop - clipBottom));
 		UI.Clip(new Rect(float.NegativeInfinity, this.bounds.y0 + 0.01f + buttonPadding, float.PositiveInfinity, this.bounds.y1 - 0.1f));
-		int countA = CreatureTextures.creatures.Count - 2;
+		int countA = Mods.creatures.Count - 2;
 		Room? room = this.rooms.FirstOrDefault();
 
 		for (int y = 0; y <= (countA / CreatureRows); y++) {
@@ -60,11 +60,11 @@ public class RoomAttractivenessPopup : Popup {
 				int id = x + y * CreatureRows + 1;
 				if (id >= countA) break;
 
-				string type = CreatureTextures.creatures[id];
+				string type = Mods.creatures[id];
 				float rectX = centerX + (x - 0.5f * CreatureRows) * (buttonSize + buttonPadding) + buttonPadding * 0.5f;
 				float rectY = this.bounds.y1 - 0.1f - buttonPadding * 0.5f - (y + 1) * (buttonSize + buttonPadding) - this.scroll;
 				UVRect rect = UVRect.FromSize(rectX, rectY, buttonSize, buttonSize);
-				Texture texture = CreatureTextures.GetTexture(CreatureTextures.creatures[id]);
+				Texture texture = Mods.GetCreatureTexture(Mods.creatures[id]);
 				UI.CenteredUV(texture, ref rect);
 
 				UI.ButtonResponse response = UI.TextureButton(rect, new UI.TextureButtonMods { texture = texture });
@@ -119,7 +119,7 @@ public class RoomAttractivenessPopup : Popup {
 	}
 
 	protected void ClampScroll() {
-		int items = CreatureTextures.creatures.Count / CreatureRows - 1;
+		int items = Mods.creatures.Count / CreatureRows - 1;
 		float size = items * (buttonSize + buttonPadding);
 
 		if (this.targetScroll < -size) {

@@ -408,8 +408,8 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 							string[] splits2 = po.Split('>');
 							string key = splits2[0];
 
-							Texture texture = CreatureTextures.GetTexture($"room-{key}");
-							if (texture == CreatureTextures.UnknownCreature)
+							Texture texture = Mods.GetObjectTexture(key);
+							if (texture == Mods.Unknown)
 								continue;
 
 							GenericItemObject obj = new GenericItemObject(key, texture);
@@ -1769,7 +1769,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		if (this.timeline.timelineType != TimelineType.All) {
 			int i = 0;
 			foreach (string timeline in this.timeline.timelines) {
-				UI.CenteredTexture(ConditionalTimelineTextures.GetTexture(timeline), (float) (position.x + (i * WorldWindow.SelectorScale) + 1.5f), (float) (position.y - 1.5f), WorldWindow.SelectorScale);
+				UI.CenteredTexture(Mods.GetTimelineTexture(timeline), (float) (position.x + (i * WorldWindow.SelectorScale) + 1.5f), (float) (position.y - 1.5f), WorldWindow.SelectorScale);
 				i++;
 			}
 
@@ -1850,8 +1850,8 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			}
 			if (WorldWindow.cameraScale < 1000f || roomHovered) {
 				drawnDen = true;
-				if (!denEmpty) {
-					UI.CenteredTexture(CreatureTextures.GetTexture(creature.type), rectX, rectY, scale);
+				if (!denEmpty && !creature.type.IsNullOrEmpty()) {
+					UI.CenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
 				}
 				if (creature.lineageTo == null) {
 					Immediate.Color(Color.White);
@@ -1863,7 +1863,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 						creature = creature.lineageTo;
 						rectY -= selectorScale;
 						if (!creature.type.IsNullOrEmpty()) {
-							UI.CenteredTexture(CreatureTextures.GetTexture(creature.type), rectX, rectY, scale);
+							UI.CenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
 						}
 						Immediate.Color(Color.White);
 						UI.font.Write((int) (chance * 100f) + "%", rectX + 0.5f + scale * 0.25f, rectY + selectorScale - 0.4f - scale * 0.5f, 0.3f * scale, Font.Align.MiddleCenter);
