@@ -51,6 +51,28 @@ public static class WorldExporter {
 	public static void ExportMapFile() {
 		Logger.Info("Exporting map file");
 
+		Logger.Info("Getting timelines"); // REVIEW - consolidate the timeline gathering into one place. Who knows, maybe WorldWindow already does that lmao.
+		HashSet<string> timelinesInRegion = [];
+		foreach (Room room in WorldWindow.region.rooms) {
+			if(room.timeline.timelineType != TimelineType.All) {
+				foreach (string timelineEntry in room.timeline.timelines) {
+					timelinesInRegion.Add(timelineEntry);
+				}
+			}
+			foreach (Connection connection in room.connections) {
+				if (connection.timeline.timelineType != TimelineType.All) {
+					foreach (string timelineEntry in room.timeline.timelines) {
+						timelinesInRegion.Add(timelineEntry);
+					}
+				}
+			}
+		}
+		string timelinesLogger = "";
+		foreach (string timeline in timelinesInRegion) {
+			timelinesLogger += (timelinesLogger != "" ? ", " : "") + timeline;
+		}
+		Logger.Info("Final timelines: " + timelinesLogger);
+
 		string fileName = $"map_{WorldWindow.region.acronym}.txt";
 		string path = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, fileName);
 
@@ -58,6 +80,19 @@ public static class WorldExporter {
 
 		try {
 			using StreamWriter writer = new StreamWriter(path, false);
+			
+			Dictionary<string, StreamWriter> timelineMapWriters = [];
+			foreach (string timeline in timelinesInRegion) {
+				string timelineFileName = $"map_{WorldWindow.region.acronym}-{timeline}.txt";
+				try {
+					string timelinePath = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, timelineFileName);
+					StreamWriter timelineWriter = new StreamWriter(timelinePath, false);
+					timelineMapWriters.Add(timeline, timelineWriter);
+				}
+				catch (Exception) {
+					Logger.Info($"Error opening {timelineFileName}");
+				}
+			}
 			Logger.Info("- Rooms");
 			foreach (Room room in WorldWindow.region.rooms) {
 				Vector2 canonPosition = new Vector2(
@@ -77,8 +112,14 @@ public static class WorldExporter {
 				if (room.data.subregion > -1) {
 					line += WorldWindow.region.subregions[room.data.subregion];
 				}
-
-				writer.WriteLine(line);
+				
+				if (room.timeline.timelineType != TimelineType.Only)
+					writer.WriteLine(line);
+				foreach (KeyValuePair<string, StreamWriter> timelineMapWriter in timelineMapWriters) {
+					if (room.timeline.OverlapsWith(timelineMapWriter.Key)) {
+						timelineMapWriter.Value.WriteLine(line);
+					}
+				}
 			}
 
 			Logger.Info("- FloodForge Data");
@@ -91,7 +132,7 @@ public static class WorldExporter {
 					writer.Write("|hidden");
 				if (!room.data.merge)
 					writer.Write("|nomerge");
-				writer.WriteLine();
+				writer.WriteLine(); // floodforge notes can stay in one map file for ease of import.
 			}
 
 			Logger.Info("- Connections");
@@ -105,16 +146,27 @@ public static class WorldExporter {
 				connA = new Vector2i(connA.x, connection.roomA.height - connA.y - 1);
 				connB = new Vector2i(connB.x, connection.roomB.height - connB.y - 1);
 
-				writer.WriteLine($"Connection: " +
+				string line = $"Connection: " +
 					$"{RoomNameCasing(connection.roomA.name)}," +
 					$"{RoomNameCasing(connection.roomB.name)}," +
 					$"{connA.x},{connA.y}," +
 					$"{connB.x},{connB.y}," +
 					$"{(int) connection.roomA.GetShortcutEntranceDirectionInt(connection.roomAExitID)}," +
-					$"{(int) connection.roomB.GetShortcutEntranceDirectionInt(connection.roomBExitID)}");
+					$"{(int) connection.roomB.GetShortcutEntranceDirectionInt(connection.roomBExitID)}";
+				if (connection.timeline.timelineType != TimelineType.Only)
+					writer.WriteLine(line);
+				foreach (KeyValuePair<string, StreamWriter> timelineMapWriter in timelineMapWriters) {
+					if (connection.timeline.OverlapsWith(timelineMapWriter.Key)) {
+						timelineMapWriter.Value.WriteLine(line);
+					}
+				}
 			}
 
 			writer.Write(WorldWindow.region.extraMap);
+
+			foreach (StreamWriter timelineWriter in timelineMapWriters.Values) {
+				timelineWriter?.Dispose();
+			}
 		}
 		catch (Exception) {
 			Logger.Info($"Error opening {fileName}");
@@ -143,6 +195,7 @@ public static class WorldExporter {
 				timelines.Add(timeline);
 			}
 
+			// REVIEW - index is not exported correctly
 			if (connection.timeline.timelineType == TimelineType.Only) {
 				writer.Write($"{timeline} : {RoomNameCasing(room.name)} : ");
 
@@ -493,6 +546,28 @@ public static class WorldExporter {
 	public static void ExportImageFile(string outputPath) {
 		Logger.Info("Exporting image file");
 
+		Logger.Info("Getting timelines");
+		HashSet<string> timelinesInRegion = [];
+		foreach (Room room in WorldWindow.region.rooms) {
+			if(room.timeline.timelineType != TimelineType.All) {
+				foreach (string timelineEntry in room.timeline.timelines) {
+					timelinesInRegion.Add(timelineEntry);
+				}
+			}
+			foreach (Connection connection in room.connections) {
+				if (connection.timeline.timelineType != TimelineType.All) {
+					foreach (string timelineEntry in room.timeline.timelines) {
+						timelinesInRegion.Add(timelineEntry);
+					}
+				}
+			}
+		}
+		string timelinesLogger = "";
+		foreach (string timeline in timelinesInRegion) {
+			timelinesLogger += (timelinesLogger != "" ? ", " : "") + timeline;
+		}
+		Logger.Info("Final timelines: " + timelinesLogger);
+
 		string mapPath = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_image_{WorldWindow.region.acronym}.txt");
 		Backup.File(mapPath);
 
@@ -503,6 +578,20 @@ public static class WorldExporter {
 		}
 		catch (Exception) {
 			Logger.Info($"Error creating map_image_{WorldWindow.region.acronym}.txt");
+		}
+
+		Dictionary<string, StreamWriter?> timelineMapFiles = [];
+		foreach (string timeline in timelinesInRegion) {
+			string timelineMapPath = PathUtil.FindOrAssumeDirectory(WorldWindow.region.exportPath, $"map_image_{WorldWindow.region.acronym}-{timeline}.txt");
+			Backup.File(timelineMapPath);
+
+			try {
+				StreamWriter? timelineMapFile = new StreamWriter(timelineMapPath, false);
+				timelineMapFiles.Add(timeline, timelineMapFile);
+			}
+			catch (Exception) {
+				Logger.Info($"Error creating map_image_{WorldWindow.region.acronym}-{timeline}.txt");
+			}
 		}
 
 		Vector2 topLeft = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
@@ -529,6 +618,11 @@ public static class WorldExporter {
 
 		byte[] imageData = new byte[textureWidth * textureHeight * 3];
 
+		Dictionary<string, byte[]> timelineImageData = [];
+		foreach (string timeline in timelinesInRegion) {
+			timelineImageData.Add(timeline, new byte[textureWidth * textureHeight * 3]);
+		}
+
 		for (int y = 0; y < textureHeight; y++) {
 			for (int x = 0; x < textureWidth; x++) {
 				int i = (y * textureWidth + x) * 3;
@@ -536,11 +630,21 @@ public static class WorldExporter {
 					imageData[i] = 0;
 					imageData[i + 1] = 255;
 					imageData[i + 2] = 255;
+					foreach (byte[] image in timelineImageData.Values) {
+						image[i] = 0;
+						image[i + 1] = 255;
+						image[i + 2] = 255;
+					}
 				}
 				else {
 					imageData[i] = 0;
 					imageData[i + 1] = 255;
 					imageData[i + 2] = 0;
+					foreach (byte[] image in timelineImageData.Values) {
+						image[i] = 0;
+						image[i + 1] = 255;
+						image[i + 2] = 0;
+					}
 				}
 			}
 		}
@@ -557,7 +661,14 @@ public static class WorldExporter {
 			int layerXOffset = 10;
 			int layerYOffset = (2 - room.data.layer) * layerHeight + 10;
 
-			mapFile?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{roomPosition.y + layerYOffset},{room.width},{room.height}");
+			if (room.timeline.timelineType != TimelineType.Only) { // only rooms set to "only" don't appear in the default map
+				mapFile?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{roomPosition.y + layerYOffset - 0.5f},{room.width},{room.height}");
+			}
+			foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
+				if (room.timeline.OverlapsWith(timelineWriter.Key)) {
+					timelineWriter.Value?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{roomPosition.y + layerYOffset},{room.width},{room.height}");
+				}
+			}
 
 			for (int ox = 0; ox < room.width; ox++) {
 				for (int oy = 0; oy < room.height; oy++) {
@@ -600,24 +711,46 @@ public static class WorldExporter {
 					}
 
 					bool isBlack = r == 0 && g == 0 && b == 0;
-					bool pixelIsGreen = imageData[i] == 0 && imageData[i + 2] == 0;
 
-					if (!room.data.merge || !isBlack || pixelIsGreen) {
-						imageData[i] = r;
-						imageData[i + 1] = g;
-						imageData[i + 2] = b;
+					if (room.timeline.timelineType != TimelineType.Only) { // only rooms set to "only" don't appear in the default map
+						bool pixelIsGreen = imageData[i] == 0 && imageData[i + 2] == 0;
+						if (!room.data.merge || !isBlack || pixelIsGreen) {
+							imageData[i] = r;
+							imageData[i + 1] = g;
+							imageData[i + 2] = b;
+						}
+					}
+					foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
+						if (room.timeline.OverlapsWith(timelineWriter.Key)) {
+							bool pixelIsGreen = timelineImageData[timelineWriter.Key][i] == 0 && timelineImageData[timelineWriter.Key][i + 2] == 0;
+							if (!room.data.merge || !isBlack || pixelIsGreen) {
+								timelineImageData[timelineWriter.Key][i] = r;
+								timelineImageData[timelineWriter.Key][i + 1] = g;
+								timelineImageData[timelineWriter.Key][i + 2] = b;
+							}
+						}
 					}
 				}
 			}
 		}
 
 		mapFile?.Dispose();
+		foreach (StreamWriter? writer in timelineMapFiles.Values) {
+			writer?.Dispose();
+		}
 
 		Backup.File(outputPath);
 		try {
-			using Stream stream = File.OpenWrite(outputPath);
-			ImageWriter writer = new ImageWriter();
-			writer.WritePng(imageData, textureWidth, textureHeight, ColorComponents.RedGreenBlue, stream);
+			{ using Stream stream = File.OpenWrite(outputPath);
+				ImageWriter writer = new ImageWriter();
+				writer.WritePng(imageData, textureWidth, textureHeight, ColorComponents.RedGreenBlue, stream);
+			}
+			foreach (KeyValuePair<string, byte[]> item in timelineImageData) {
+				string image = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}-{item.Key}.png");
+				using Stream stream = File.OpenWrite(image);
+				ImageWriter writer = new ImageWriter();
+				writer.WritePng(item.Value, textureWidth, textureHeight, ColorComponents.RedGreenBlue, stream);
+			}
 			Logger.Info("Image file exported");
 		}
 		catch (Exception e) {
