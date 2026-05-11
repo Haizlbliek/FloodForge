@@ -168,6 +168,7 @@ if (version == 1) {
 		Directory.Move(oldTimelines, Path.Combine(destinationFolder, "assets", "~timelines"));
 	}
 	Directory.Delete(Path.Combine(destinationFolder, "mods"));
+	Directory.Delete(Path.Combine(destinationFolder, "assets", "objects"));
 }
 
 string mainExec = OperatingSystem.IsWindows() ? "FloodForge.exe" : "FloodForge";

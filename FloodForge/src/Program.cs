@@ -21,6 +21,7 @@ public static class Program {
 			if (File.Exists(patcherPath)) {
 				File.Copy(patcherPath, patcherName, true);
 				File.Copy(patcherPath + ".pdb", patcherName + ".pdb", true);
+				FloodForge.Popups.PopupManager.Add("FloodForge updated file structure\nPlease double check if mods are correct");
 			}
 		}
 
