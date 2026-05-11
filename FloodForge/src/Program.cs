@@ -9,6 +9,7 @@ public static class Program {
 	public static uint _anyVao;
 
 	public static Vector2D<int> initialDisplayResolution = new Vector2D<int>(1280, 720);
+	public static bool patcherUpdated = false;
 
 	public static void Main(string[] args) {
 		CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -32,7 +33,7 @@ public static class Program {
 				File.Copy(patcherPath, patcherName, true);
 				File.Copy(patcherPath + ".pdb", patcherName + ".pdb", true);
 				Logger.Info("Copied patcher");
-				FloodForge.Popups.PopupManager.Add("FloodForge updated file structure\nPlease double check if mods are correct");
+				patcherUpdated = true;
 			}
 		}
 
