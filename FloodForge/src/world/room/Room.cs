@@ -857,16 +857,16 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		if (i >= this.allShortcutEntrancePoints.Count) {
 			throw new Exception($"Invalid shortcut index {i} for {this.name}");
 		}
-		Vector2i connection = this.allShortcutEntrancePoints[(int) i];
+		Vector2i connection = this.GetShortcutEntranceDirection(i);
 
-		if (this.TileIsShortcut(connection.x - 1, connection.y))
-			return Direction.Left;
-		else if (this.TileIsShortcut(connection.x, connection.y + 1))
-			return Direction.Down;
-		else if (this.TileIsShortcut(connection.x + 1, connection.y))
+		if (connection.x <= 0 && connection.y == 0)
 			return Direction.Right;
-		else if (this.TileIsShortcut(connection.x, connection.y - 1))
+		if (connection.x >= 0 && connection.y == 0)
+			return Direction.Left;
+		if (connection.y >= 0)
 			return Direction.Up;
+		if (connection.y <= 0)
+			return Direction.Down;
 
 		return Direction.Unknown;
 	}
