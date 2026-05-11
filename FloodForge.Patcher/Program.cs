@@ -122,6 +122,7 @@ foreach (string newPath in Directory.GetFiles(Path.Combine(sourceFolder, "assets
 }
 CopyAll(Path.Combine(sourceFolder, "assets", "fonts"));
 CopyAll(Path.Combine(sourceFolder, "assets", "shaders"));
+CopyAll(Path.Combine(sourceFolder, "assets", "icons"));
 CopyAllKeep(Path.Combine(sourceFolder, "assets", "themes"));
 if (version == 1) {
 	Directory.CreateDirectory(Path.Combine(destinationFolder, "assets", "mods"));
