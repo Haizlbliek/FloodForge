@@ -41,12 +41,6 @@ public static class Main {
 		}
 		lockFile = new FileStream(sessionPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
 
-		CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
-		CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
-		AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
-			Logger.Error(e.ExceptionObject);
-		};
-
 		DateTime now = DateTime.Now;
 		Anniversary = now.Year == 2025 && now.Month == 11 && now.Day < 22;
 		AprilFools = now.Month == 4 && now.Day == 1;
