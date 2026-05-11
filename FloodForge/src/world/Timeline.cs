@@ -83,6 +83,20 @@ public class Timeline {
 		return new (this);
 	}
 
+	public Timeline Inverted() {
+		Timeline result = new ();
+		if (this.timelineType == TimelineType.All) {
+			result.timelines = [];
+			result.timelineType = TimelineType.Only;
+		}
+		else {
+			result.timelines = [..this.timelines];
+			result.timelineType = this.timelineType == TimelineType.Only ? TimelineType.Except : TimelineType.Only;
+		}
+		
+		return result;
+	}
+
 	public bool OverlapsWith(Timeline timeline) {
 		if (this.timelineType == TimelineType.All || timeline.timelineType == TimelineType.All)
 			return true;
