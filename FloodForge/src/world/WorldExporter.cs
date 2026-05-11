@@ -659,7 +659,7 @@ public static class WorldExporter {
 			);
 
 			int layerXOffset = 10;
-			int layerYOffset = (2 - room.data.layer) * layerHeight + 10;
+			int layerYOffset = (2 - room.data.layer) * layerHeight - 10;
 
 			if (room.timeline.timelineType != TimelineType.Only) { // only rooms set to "only" don't appear in the default map
 				mapFile?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{roomPosition.y + layerYOffset - 0.5f},{room.width},{room.height}");
