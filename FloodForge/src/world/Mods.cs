@@ -10,19 +10,19 @@ public static class Mods {
 	public static Texture Unknown { get; private set; } = null!;
 	public static Texture Warning { get; private set; } = null!;
 
-	public static readonly Dictionary<string, Texture> creatureTextures = [];
-	public static readonly List<string> creatures = [ "CLEAR" ];
+	private static readonly Dictionary<string, Texture> creatureTextures = [];
 	private static readonly Dictionary<string, string> creatureParseMap = [];
 	private static readonly Dictionary<string, string> creatureExportNames = [];
+	public static readonly List<string> creatures = [ "CLEAR" ];
 
-	public static readonly Dictionary<string, string> tagExportNames = [];
-	public static readonly Dictionary<string, Texture> tagTextures = [];
+	private static readonly Dictionary<string, string> tagExportNames = [];
+	private static readonly Dictionary<string, Texture> tagTextures = [];
 	public static readonly Dictionary<string, Tag> tags = [];
 
-	public static readonly Dictionary<string, Texture> timelineTextures = [];
+	private static readonly Dictionary<string, Texture> timelineTextures = [];
 	public static readonly List<string> timelines = [];
 
-	public static readonly Dictionary<string, Texture> objectTextures = [];
+	private static readonly Dictionary<string, Texture> objectTextures = [];
 
 	public static IEnumerable<Tag> Tags(string creature) => tags.Values.Where(t => t.Supports(creature));
 
@@ -296,6 +296,14 @@ public static class Mods {
 		}
 
 		return Unknown;
+	}
+
+	internal static string ExportTagName(string tag) {
+		if (tagExportNames.TryGetValue(tag, out string? o)) {
+			return o;
+		}
+
+		return tag;
 	}
 
 	public class DisplayType : IEquatable<DisplayType> {

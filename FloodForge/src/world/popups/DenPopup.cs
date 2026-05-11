@@ -234,7 +234,7 @@ public class DenPopup : Popup {
 			}
 
 			if (response.hovered)
-				this.hoverText = tag.id;
+				this.hoverText = Mods.ExportTagName(tag.id);
 
 			UI.Editable? editable = this.editables[y];
 			DenCreature.Tag? creatureTag = creature.tags.FirstOrDefault(t => t.id == tag);
