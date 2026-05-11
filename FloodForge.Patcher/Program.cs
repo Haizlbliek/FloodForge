@@ -189,7 +189,7 @@ try {
 
 			foreach (string timelineFile in Directory.GetFiles(oldTimelines, "*.*", SearchOption.TopDirectoryOnly)) {
 				string fileName = Path.GetFileName(timelineFile);
-				if (fileName.Equals("unknown", StringComparison.InvariantCultureIgnoreCase) || fileName.Equals("warning", StringComparison.InvariantCultureIgnoreCase)) {
+				if (fileName.Equals("unknown.png", StringComparison.InvariantCultureIgnoreCase) || fileName.Equals("warning.png", StringComparison.InvariantCultureIgnoreCase)) {
 					continue;
 				}
 				bool existsInAnyMod = false;
