@@ -222,27 +222,36 @@ public static class WorldExporter {
 			if (!first) writer.Write(",");
 			first = false;
 
-			if (tag.id == CreatureTags.Mean) {
-				writer.Write($"Mean:{((DenCreature.FloatTag) tag).data}");
-			}
-			else if (tag.id == CreatureTags.POLEMIMIC_LENGTH) {
-				writer.Write($"{((DenCreature.IntegerTag) tag).data}");
-			}
-			else if (tag.id == CreatureTags.CENTIPEDE_LENGTH) {
-				writer.Write($"{((DenCreature.FloatTag) tag).data}");
-			}
-			else if (tag.id == CreatureTags.Seed) {
-				writer.Write($"Seed:{((DenCreature.IntegerTag) tag).data}");
-			}
-			else if (tag.id == CreatureTags.RotType) {
-				writer.Write($"RotType:{((DenCreature.IntegerTag) tag).data}");
-			}
-			else if (tag.id == CreatureTags.NamedAttr) {
-				writer.Write($"NamedAttr:{((DenCreature.StringTag) tag).data}");
+			// TODO: Handle dynamically?
+			if (tag.id.displayType == Mods.DisplayType.None) {
+				writer.Write(tag.id.id);
 			}
 			else {
-				writer.Write($"{tag.id.id}");
+				string name = Mods.tagExportNames[tag.id.id];
+				if (tag.id == Mods.tags["polemimic_length"] || tag.id == Mods.tags["centipede_length"]) name = "Mean";
+				writer.Write($"{Mods.tagExportNames[tag.id.id]}:{(tag is DenCreature.IntegerTag intTag ? intTag.data : (tag is DenCreature.FloatTag floatTag ? floatTag.data : (tag is DenCreature.StringTag stringTag ? stringTag.data : "IDK LOL")))}");
 			}
+			// if (tag.id == CreatureTags.Mean) {
+			// 	writer.Write($"Mean:{((DenCreature.FloatTag) tag).data}");
+			// }
+			// else if (tag.id == CreatureTags.POLEMIMIC_LENGTH) {
+			// 	writer.Write($"{((DenCreature.IntegerTag) tag).data}");
+			// }
+			// else if (tag.id == CreatureTags.CENTIPEDE_LENGTH) {
+			// 	writer.Write($"{((DenCreature.FloatTag) tag).data}");
+			// }
+			// else if (tag.id == CreatureTags.Seed) {
+			// 	writer.Write($"Seed:{((DenCreature.IntegerTag) tag).data}");
+			// }
+			// else if (tag.id == CreatureTags.RotType) {
+			// 	writer.Write($"RotType:{((DenCreature.IntegerTag) tag).data}");
+			// }
+			// else if (tag.id == CreatureTags.NamedAttr) {
+			// 	writer.Write($"NamedAttr:{((DenCreature.StringTag) tag).data}");
+			// }
+			// else {
+			// 	writer.Write($"{tag.id.id}");
+			// }
 		}
 		writer.Write("}");
 	}
@@ -411,10 +420,10 @@ public static class WorldExporter {
 							first = false;
 
 							if (room == WorldWindow.region.offscreenDen) {
-								writer.Write($"0-{CreatureTextures.ExportName(creature.type)}");
+								writer.Write($"0-{Mods.ExportCreatureName(creature.type)}");
 							}
 							else {
-								writer.Write($"{i + room.nonDenExitCount}-{CreatureTextures.ExportName(creature.type)}");
+								writer.Write($"{i + room.nonDenExitCount}-{Mods.ExportCreatureName(creature.type)}");
 							}
 							ExportCreatureTags(creature, writer);
 							if (creature.count > 1)
@@ -466,7 +475,7 @@ public static class WorldExporter {
 
 						DenCreature current = creature;
 						while (current != null) {
-							writer.Write(string.IsNullOrEmpty(current.type) || current.count == 0 ? "NONE" : CreatureTextures.ExportName(current.type));
+							writer.Write(string.IsNullOrEmpty(current.type) || current.count == 0 ? "NONE" : Mods.ExportCreatureName(current.type));
 
 							ExportCreatureTags(current, writer);
 
@@ -500,7 +509,7 @@ public static class WorldExporter {
 						writer.Write(")");
 					}
 
-					writer.Write($"{RoomNameCasing(room.name)} : {room.GarbageWormDenIndex}-{CreatureTextures.ExportName(worm.type)}");
+					writer.Write($"{RoomNameCasing(room.name)} : {room.GarbageWormDenIndex}-{Mods.ExportCreatureName(worm.type)}");
 					if (worm.count > 1)
 						writer.Write($"-{worm.count}");
 					writer.WriteLine();
@@ -655,7 +664,7 @@ public static class WorldExporter {
 	private static void ExportRoomAttr(StreamWriter writer, string name, Dictionary<string, RoomAttractiveness> attrs) {
 		writer.Write($"Room_Attr: {name}: ");
 		foreach (KeyValuePair<string, RoomAttractiveness> attr in attrs) {
-			writer.Write(CreatureTextures.ExportName(attr.Key) + "-");
+			writer.Write(Mods.ExportCreatureName(attr.Key) + "-");
 			if (attr.Value != RoomAttractiveness.Default)
 				writer.Write(attr.Value.ToString());
 			writer.Write(",");

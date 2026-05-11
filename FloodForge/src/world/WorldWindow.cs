@@ -126,8 +126,9 @@ public static class WorldWindow {
 	}
 
 	public static void Initialize() {
-		CreatureTextures.Initialize();
-		ConditionalTimelineTextures.Initialize();
+		Mods.Initialize();
+		// CreatureTextures.Initialize();
+		// ConditionalTimelineTextures.Initialize();
 		RecentFiles.Initialize();
 		PersistentData.Initialize();
 	}
@@ -140,12 +141,7 @@ public static class WorldWindow {
 		region = new Region();
 	}
 
-	private static float r = new Random().NextSingle() * 18000f + 16000f;
 	private static void UpdateCamera() {
-		if (r <= 0f && Main.AprilFools) {
-			r = new Random().NextSingle() * 18000f + 16000f;
-			Sfx.Play("assets/objects/hum.wav");
-		}
 		bool isHoveringPopup = PopupManager.Windows.Any(x => x.InteractBounds().Inside(Mouse.Pos));
 
 		// LATER: Refactor into new UI system with ScrollArea
@@ -922,11 +918,11 @@ public static class WorldWindow {
 		foreach (DenLineage lineage in den.creatures) {
 			DenCreature creature = lineage;
 			string line = "";
-			line += $"{CreatureTextures.ExportName(creature.type)} x {creature.count}";
+			line += $"{Mods.ExportCreatureName(creature.type)} x {creature.count}";
 			while (creature.lineageTo != null) {
 				creature = creature.lineageTo;
 				line += $" --{Mathf.FloorToInt(creature.lineageChance * 100f)}%-> ";
-				line += $"{CreatureTextures.ExportName(creature.type)} x {creature.count}";
+				line += $"{Mods.ExportCreatureName(creature.type)} x {creature.count}";
 			}
 			debugText.Add(line);
 		}

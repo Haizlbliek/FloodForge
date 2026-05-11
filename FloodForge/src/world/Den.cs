@@ -28,20 +28,20 @@ public class DenCreature {
 		this.tags.Add(tag);
 	}
 
-	public static Tag CreateFrom(CreatureTags.Tag cTag) {
-		if (cTag.displayType == CreatureTags.DisplayType.InputSignedFloat || cTag.displayType == CreatureTags.DisplayType.InputUnsignedFloat) {
+	public static Tag CreateFrom(Mods.Tag cTag) {
+		if (cTag.displayType == Mods.DisplayType.InputSignedFloat || cTag.displayType == Mods.DisplayType.InputUnsignedFloat) {
 			return new FloatTag(cTag, 0f);
 		}
-		else if (cTag.displayType == CreatureTags.DisplayType.InputSignedInteger || cTag.displayType == CreatureTags.DisplayType.InputUnsignedInteger) {
+		else if (cTag.displayType == Mods.DisplayType.InputSignedInteger || cTag.displayType == Mods.DisplayType.InputUnsignedInteger) {
 			return new IntegerTag(cTag, 0);
 		}
-		else if (cTag.displayType == CreatureTags.DisplayType.InputString) {
+		else if (cTag.displayType == Mods.DisplayType.InputString) {
 			return new StringTag(cTag, "");
 		}
-		else if (cTag.displayType is CreatureTags.DisplayType.FloatSlider) {
+		else if (cTag.displayType is Mods.DisplayType.FloatSlider) {
 			return new FloatTag(cTag, 0f);
 		}
-		else if (cTag.displayType is CreatureTags.DisplayType.IntSlider) {
+		else if (cTag.displayType is Mods.DisplayType.IntSlider) {
 			return new IntegerTag(cTag, 0);
 		}
 
@@ -49,9 +49,9 @@ public class DenCreature {
 	}
 
 	public class Tag {
-		public readonly CreatureTags.Tag id;
+		public readonly Mods.Tag id;
 
-		public Tag(CreatureTags.Tag id) {
+		public Tag(Mods.Tag id) {
 			this.id = id;
 		}
 
@@ -63,7 +63,7 @@ public class DenCreature {
 	public class FloatTag : Tag {
 		public float data;
 
-		public FloatTag(CreatureTags.Tag id, float data) : base(id) {
+		public FloatTag(Mods.Tag id, float data) : base(id) {
 			this.data = data;
 		}
 
@@ -75,7 +75,7 @@ public class DenCreature {
 	public class IntegerTag : Tag {
 		public int data;
 
-		public IntegerTag(CreatureTags.Tag id, int data) : base(id) {
+		public IntegerTag(Mods.Tag id, int data) : base(id) {
 			this.data = data;
 		}
 
@@ -87,7 +87,7 @@ public class DenCreature {
 	public class StringTag : Tag {
 		public string data;
 
-		public StringTag(CreatureTags.Tag id, string data) : base(id) {
+		public StringTag(Mods.Tag id, string data) : base(id) {
 			this.data = data;
 		}
 
