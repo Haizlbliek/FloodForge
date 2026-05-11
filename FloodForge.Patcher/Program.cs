@@ -129,6 +129,9 @@ if (version == 1) {
 	string sourceRoot = Path.Combine(destinationFolder, "assets", "creatures");
 	string targetBase = Path.Combine(destinationFolder, "assets", "mods");
 	foreach (string creatureDir in Directory.GetDirectories(sourceRoot)) {
+		if (Path.GetFileName(creatureDir).Equals("room", StringComparison.InvariantCultureIgnoreCase)) continue;
+		if (Path.GetFileName(creatureDir).Equals("tags", StringComparison.InvariantCultureIgnoreCase)) continue;
+
 		string modPath = Path.Combine(targetBase, Path.GetFileName(creatureDir));
 		string creaturesPath = Path.Combine(modPath, "creatures");
 		CopyDirectory(creatureDir, creaturesPath);
