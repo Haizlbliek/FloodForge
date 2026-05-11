@@ -7,7 +7,6 @@ namespace FloodForge.World;
 
 public static class WorldParser {
 	private static readonly List<(string, Dictionary<string, RoomAttractiveness>)> roomAttractiveness = [];
-	private static Dictionary<string, (Vector2, Vector2, int, string)> additionalRoomMapPositions = [];
 
 	public static RoomAttractiveness ParseRoomAttractiveness(string value) {
 		return value switch {
@@ -70,6 +69,11 @@ public static class WorldParser {
 		string? roomName = line[..line.IndexOf(':')];
 		string roomPath = WorldWindow.region.roomsPath;
 
+		foreach (Room existingRoom in WorldWindow.region.rooms) {
+			if (existingRoom.name == roomName) // skip parsing the room if another map has already loaded this one
+				return true;
+		}
+
 		if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
 			roomPath = PathUtil.FindDirectory(PathUtil.Combine(roomPath, ".."), "gates") ?? "";
 			if (roomPath.IsNullOrEmpty()) {
@@ -130,40 +134,52 @@ public static class WorldParser {
 
 	public static bool ParseMap(string path) {
 		Dictionary<string, (bool hidden, bool merge)> extraRoomData = [];
+		List<string> allMaps = [path];
+		
+		Logger.Info("Looking for alternate maps");
+		string cutMapPath = path[..path.IndexOfReverse('.')];
+		foreach (string alternatePath in Directory.GetFiles(WorldWindow.region.exportPath)) {
+			if (alternatePath.StartsWith(cutMapPath) && alternatePath.EndsWith(".txt") && alternatePath != path) {
+				Logger.Info($"found alternate map: {Path.GetFileNameWithoutExtension(alternatePath)}");
+				allMaps.Add(alternatePath);
+			}
+		}
 
-		foreach (string line in File.ReadAllLines(path)) {
-			if (line.IsNullOrEmpty()) continue;
+		foreach (string mapPath in allMaps) {
+			foreach (string line in File.ReadAllLines(mapPath)) {
+				if (line.IsNullOrEmpty()) continue;
 
-			if (line.StartsWith("//FloodForge;")) {
-				string[] data = line[(line.IndexOf(';') + 1)..].Split('|');
-				if (data[0] == "ROOM") {
-					(bool hidden, bool merge) extra = (false, true);
+				if (line.StartsWith("//FloodForge;")) {
+					string[] data = line[(line.IndexOf(';') + 1)..].Split('|');
+					if (data[0] == "ROOM") {
+						(bool hidden, bool merge) extra = (false, true);
 
-					for (int i = 2; i < data.Length; i++) {
-						string key = data[i];
-						if (key == "hidden") {
-							extra.hidden = true;
+						for (int i = 2; i < data.Length; i++) {
+							string key = data[i];
+							if (key == "hidden") {
+								extra.hidden = true;
+							}
+							else if (key == "nomerge") {
+								extra.merge = false;
+							}
 						}
-						else if (key == "nomerge") {
-							extra.merge = false;
-						}
+		
+						extraRoomData[data[1]] = extra;
 					}
-	
-					extraRoomData[data[1]] = extra;
 				}
-			}
-			else if (line.StartsWith("//")) {
-				WorldWindow.region.extraMap += line + "\n";
-			}
-			else if (line.StartsWith("Connection: ")) {
-				// LATER
-			}
-			else if (line.StartsWith("SpawnMigrationStream: ") || line.StartsWith("SpawnMigrationStreamMidpoint: ") || line.StartsWith("Def_Mat: ") || line.StartsWith("R: ") || line.StartsWith("[REFERENCE]") || line.StartsWith("I: ") || line.StartsWith("[IMAGE]")) {
-				WorldWindow.region.extraMap += line + "\n";
-				// LATER
-			}
-			else {
-				if (!ParseMapRoom(line)) return false;
+				else if (line.StartsWith("//")) {
+					WorldWindow.region.extraMap += line + "\n";
+				}
+				else if (line.StartsWith("Connection: ")) {
+					// LATER
+				}
+				else if (line.StartsWith("SpawnMigrationStream: ") || line.StartsWith("SpawnMigrationStreamMidpoint: ") || line.StartsWith("Def_Mat: ") || line.StartsWith("R: ") || line.StartsWith("[REFERENCE]") || line.StartsWith("I: ") || line.StartsWith("[IMAGE]")) {
+					WorldWindow.region.extraMap += line + "\n";
+					// LATER
+				}
+				else {
+					if (!ParseMapRoom(line)) return false;
+				}
 			}
 		}
 
@@ -198,6 +214,7 @@ public static class WorldParser {
 	}
 
 	private struct ConditionalConnection {
+		public string originLine = ""; // this is only there for debug purposes
 		public Room roomA;
 		public uint roomAExitID;
 		public Room? roomB = null;
@@ -205,10 +222,11 @@ public static class WorldParser {
 		public uint? roomBExitID = null;
 		public Timeline timeline = new();
 
-		public ConditionalConnection(Room roomA, uint connectionA, string roomBName) {
+		public ConditionalConnection(Room roomA, uint connectionA, string roomBName, string originLine = "") {
 			this.roomA = roomA;
 			this.roomAExitID = connectionA;
 			this.roomBName = roomBName;
+			this.originLine = originLine;
 		}
 	}
 
@@ -240,23 +258,6 @@ public static class WorldParser {
 				}
 
 				room = new Room(filePath, roomName);
-			}
-
-			// REVIEW - this does not take into account the difference in image scales (for example, map_lm.png vs map_lm-artificer.png) which causes offsets for arti's rooms
-			if (additionalRoomMapPositions.TryGetValue(roomName, out (Vector2, Vector2, int, string) result)) {
-				room.CanonPosition = result.Item1 - new Vector2(room.width * 0.5f, room.height * -0.5f);
-				room.DevPosition = result.Item2 - new Vector2(room.width * 0.5f, room.height * -0.5f);
-				room.data.layer = result.Item3;
-				if (!result.Item4.IsNullOrEmpty()) {
-					int idx = WorldWindow.region.subregions.IndexOf(result.Item4);
-					if (idx != -1) {
-						room.data.subregion = idx;
-					}
-					else {
-						room.data.subregion = WorldWindow.region.subregions.Count;
-						WorldWindow.region.subregions.Add(result.Item4);
-					}
-				}
 			}
 
 			WorldWindow.region.rooms.Add(room);
@@ -486,6 +487,7 @@ public static class WorldParser {
 		// LATER: REPLACEROOM
 
 		if (parts.Length == 3) {
+			//Logger.Info($"    parts.Length == 3");
 			string roomName2 = parts[2];
 			Room? room2 = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName2, StringComparison.InvariantCultureIgnoreCase));
 			if (room2 == null) {
@@ -519,8 +521,10 @@ public static class WorldParser {
 
 			return true;
 		}
+		//Logger.Info($"    parts.Length == 4");
 
 		string roomName = parts[1];
+		//Logger.Info($"    roomName = {roomName}");
 		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 		if (room == null) {
 			Logger.Warn($"Skipping line due to missing room {roomName}");
@@ -529,9 +533,12 @@ public static class WorldParser {
 		}
 
 		string currentConnection = parts[2];
+		//Logger.Info($"    currentConnection = {currentConnection}");
 		int disconnectedId = -1;
 		bool isCurrentDisconnected = int.TryParse(currentConnection, NumberStyles.Any, CultureInfo.InvariantCulture, out disconnectedId);
+		//Logger.Info($"    isCurrentDisconnected = {isCurrentDisconnected}; disconnectedId = {disconnectedId}");
 		string toConnection = parts[3];
+		//Logger.Info($"    toConnection = {toConnection}");
 
 		if (currentConnection.Equals(toConnection, StringComparison.InvariantCultureIgnoreCase)) {
 			Logger.Warn("Skipping line due to no change");
@@ -539,13 +546,17 @@ public static class WorldParser {
 			return false;
 		}
 
+		//Logger.Info($"checking room {room.name} for connections");
 		Connection? connection = room.connections.FirstOrDefault(otherConnection => {
+			//Logger.Info($"otherConnection = {otherConnection.roomA.name}[{otherConnection.roomAExitID}] - {otherConnection.roomB.name}[{otherConnection.roomBExitID}]");
 			Room otherRoom = (otherConnection.roomA == room) ? otherConnection.roomB : otherConnection.roomA;
-
+			//Logger.Info($"    otherRoom = {otherRoom.name}; currentConnection = {currentConnection}");
 			return otherRoom.name.Equals(currentConnection, StringComparison.InvariantCultureIgnoreCase);
 		});
+		//Logger.Info($"connection = {(connection != null ? $"{connection.roomA.name}[{connection.roomAExitID}] - {connection.roomB.name}[{connection.roomBExitID}]" : "NULL")}");
 
 		if (toConnection.Equals("disconnected", StringComparison.InvariantCultureIgnoreCase)) {
+			//Logger.Info($"    toConnection == disconnected");
 			if (connection == null) {
 				Logger.Warn("Skipping line due to missing connection");
 				Logger.Warn($"> {link}");
@@ -559,10 +570,12 @@ public static class WorldParser {
 				connection.timeline.timelineType = TimelineType.Except;
 				timelines.ForEach(x => connection.timeline.timelines.Add(x));
 			}
+			//Logger.Info($"    updated connection timeline to {connection.timeline}");
 			return true;
 		}
 
 		int connectionId = -1;
+		//Logger.Info($"    isCurrentDisconnected == {isCurrentDisconnected}");
 		if (isCurrentDisconnected) {
 			string timeline = timelines[0]; // LATER: Figure out what this does and clean up
 			bool[] connected = new bool[room.roomExits.Count];
@@ -591,7 +604,9 @@ public static class WorldParser {
 				connectionId = (int) ((connection.roomA == room) ? connection.roomAExitID : connection.roomBExitID);
 			}
 		}
+		//Logger.Info($"    this: {room.name}[{connectionId}] > {toConnection}[?]");
 
+		//Logger.Info($"    connection = {(connection != null ? $"{connection.roomA.name}[{connection.roomAExitID}] - {connection.roomB.name}[{connection.roomBExitID}]" : "NULL")}");
 		if (connection != null) {
 			if (connection.timeline.timelineType == TimelineType.Only) {
 				timelines.ForEach(x => connection.timeline.timelines.Remove(x));
@@ -600,6 +615,10 @@ public static class WorldParser {
 				connection.timeline.timelineType = TimelineType.Except;
 				timelines.ForEach(x => connection.timeline.timelines.Add(x));
 			}
+			//Logger.Info($"    updated connection timeline to {connection.timeline}");
+			ConditionalConnection conditionalConnection = new (connection.roomA == room ? connection.roomA : connection.roomB, connection.roomA == room ? connection.roomAExitID : connection.roomBExitID, toConnection, link);
+			conditionalConnectionsToAdd.Add(conditionalConnection);
+			//Logger.Info($"added: {conditionalConnection.roomA.name}[{conditionalConnection.roomAExitID}] > {conditionalConnection.roomB?.name ?? conditionalConnection.roomBName}[{conditionalConnection}]");
 
 			return true;
 		}
@@ -610,17 +629,21 @@ public static class WorldParser {
 			return false;
 		}
 
+		//Logger.Info($"    Checking connectionData");
 		for (int i = 0; i < conditionalConnectionsToAdd.Count; i++) {
 			ConditionalConnection connectionData = conditionalConnectionsToAdd[i];
+			//Logger.Info($"{i}: {connectionData.roomA.name}[{connectionData.roomAExitID}] > {connectionData.roomB?.name ?? connectionData.roomBName}[{connectionData.roomBExitID}]");
 
 			if (connectionData.roomB == null && connectionData.roomA.name.Equals(toConnection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(room.name, StringComparison.InvariantCultureIgnoreCase)) {
 				conditionalConnectionsToAdd[i] = connectionData with {
 					roomB = room,
 					roomBExitID = (uint) connectionId
 				};
+				//Logger.Info("    Set roomB");
 				return true;
 			}
 		}
+		//Logger.Info("    roomB not set.");
 
 		conditionalConnectionsToAdd.Add(new ConditionalConnection() {
 			roomA = room,
@@ -628,7 +651,8 @@ public static class WorldParser {
 			roomBName = toConnection,
 			roomB = null,
 			roomBExitID = null,
-			timeline = new Timeline (TimelineType.Only, [..timelines])
+			timeline = new Timeline (TimelineType.Only, [..timelines]),
+			originLine = link
 		});
 
 		return true;
@@ -751,28 +775,30 @@ public static class WorldParser {
 		Logger.Info("Loading conditional links");
 
 		List<ConditionalConnection> conditionalConnectionsToAdd = [];
-			Logger.Info("Checking links");
+		//Logger.Info("Checking links");
 		foreach (string link in conditionalLinks) {
-			Logger.Info("Link: " + link);
+			//Logger.Info("Link: " + link);
+			//Logger.Info($"Parsing link {link}");
 			if (!ParseWorldConditionalLink(link, ref conditionalConnectionsToAdd)) return false;
+			//Logger.Info($"--Link Parsed--");
 		}
 
 		foreach (ConditionalConnection connectionData in conditionalConnectionsToAdd) {
 			if (connectionData.roomB == null) {
 				Logger.Warn("Conditional connection failed to load - missing other room");
-				Logger.Warn($"> {connectionData.roomA.name} {connectionData.roomAExitID} - {connectionData.roomBName}");
+				Logger.Warn($"Line: {connectionData.originLine}\n> {connectionData.roomA.name} {connectionData.roomAExitID} - {connectionData.roomBName}");
 				continue;
 			}
 
 			if (connectionData.roomBExitID == null) {
 				Logger.Warn("Conditional connection failed to load - missing other connection");
-				Logger.Warn($"> {connectionData.roomA.name} {connectionData.roomAExitID} - {connectionData.roomBName}");
+				Logger.Warn($"Line: {connectionData.originLine}\n> {connectionData.roomA.name} {connectionData.roomAExitID} - {connectionData.roomBName}");
 				continue;
 			}
 
 			if (!connectionData.roomA.ValidConnection(connectionData.roomAExitID) || !connectionData.roomB.ValidConnection(connectionData.roomBExitID.Value)) {
 				Logger.Warn("Conditional connection failed to load - invalid connection indices");
-				Logger.Warn($"> {connectionData.roomA.name} {connectionData.roomAExitID} - {connectionData.roomB.name} {connectionData.roomBExitID}");
+				Logger.Warn($"Line: {connectionData.originLine}\n> {connectionData.roomA.name} {connectionData.roomAExitID} - {connectionData.roomB.name} {connectionData.roomBExitID}");
 				continue;
 			}
 
@@ -863,33 +889,6 @@ public static class WorldParser {
 		if (mapPath != null) {
 			Logger.Info("Loading map");
 			if (!ParseMap(mapPath)) return false;
-			
-			Logger.Info("Checking alternate maps");
-			string cutMapPath = mapPath[..mapPath.IndexOfReverse('.')];
-			foreach (string path in Directory.GetFiles(WorldWindow.region.exportPath)) {
-				if (path.StartsWith(cutMapPath) && path.EndsWith(".txt") && path != mapPath) {
-					Logger.Info($"found map: {Path.GetFileNameWithoutExtension(path)}");
-
-					foreach (string line in File.ReadAllLines(path)) {
-						if (line.IsNullOrEmpty()) continue;
-
-						if (!line.StartsWith("//") && !line.StartsWith("Connection: ") && !(line.StartsWith("SpawnMigrationStream: ") || line.StartsWith("SpawnMigrationStreamMidpoint: ") || line.StartsWith("Def_Mat: ") || line.StartsWith("R: ") || line.StartsWith("[REFERENCE]") || line.StartsWith("I: ") || line.StartsWith("[IMAGE]"))) {
-							string roomName = line[..line.IndexOf(':')];
-							
-							if (!additionalRoomMapPositions.ContainsKey(roomName)) {
-								string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", "").Trim())];
-								float canonX = float.Parse(data[0]) / 3f;
-								float canonY = float.Parse(data[1]) / 3f;
-								float devX = float.Parse(data[2]) / 3f;
-								float devY = float.Parse(data[3]) / 3f;
-								int layer = data[4].IsNullOrEmpty() ? 0 : int.Parse(data[4]);
-								string subregion = data[5];
-								additionalRoomMapPositions.Add(roomName, (new (canonX, canonY), new (devX, devY), layer, subregion));
-							}
-						}
-					}
-				}
-			}
 		}
 		else {
 			Logger.Info("Map file not found");
