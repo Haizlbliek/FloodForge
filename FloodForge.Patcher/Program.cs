@@ -169,6 +169,7 @@ try {
 		}
 		File.Copy(Path.Combine(destinationFolder, "assets", "creatures", "mods.txt"), Path.Combine(destinationFolder, "assets", "mods.txt"), true);
 		Directory.Move(sourceRoot, Path.Combine(destinationFolder, "assets", "~creatures"));
+		File.AppendAllText(Path.Combine(destinationFolder, "assets", "~creatures", "README.txt"), "This is a backup folder of your creatures directory.\nIf everything looks correct in assets/mods/ then you can safely delete this folder.");
 		Log("Reformatted");
 	}
 
@@ -188,6 +189,9 @@ try {
 
 			foreach (string timelineFile in Directory.GetFiles(oldTimelines, "*.*", SearchOption.TopDirectoryOnly)) {
 				string fileName = Path.GetFileName(timelineFile);
+				if (fileName.Equals("unknown", StringComparison.InvariantCultureIgnoreCase) || fileName.Equals("warning", StringComparison.InvariantCultureIgnoreCase)) {
+					continue;
+				}
 				bool existsInAnyMod = false;
 
 				foreach (string modDir in Directory.GetDirectories(modsPath)) {
@@ -202,6 +206,7 @@ try {
 				}
 			}
 			Directory.Move(oldTimelines, Path.Combine(destinationFolder, "assets", "~timelines"));
+			File.AppendAllText(Path.Combine(destinationFolder, "assets", "~timelines", "README.txt"), "This is a backup folder of your timelines directory.\nIf everything looks correct in assets/mods/ then you can safely delete this folder.");
 		}
 		Directory.Delete(Path.Combine(destinationFolder, "mods"));
 		Directory.Delete(Path.Combine(destinationFolder, "assets", "objects"), true);
