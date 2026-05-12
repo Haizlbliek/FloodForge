@@ -178,90 +178,159 @@ public static class WorldExporter {
 		int connectionId;
 
 		if (connection.roomA == room) {
+			Logger.Info($"            roomA == {room.name}");
 			otherRoom = connection.roomB;
 			connectionId = (int) connection.roomAExitID;
 		}
 		else {
+			Logger.Info($"            roomA != {room.name}");
 			otherRoom = connection.roomA;
 			connectionId = (int) connection.roomBExitID;
 		}
+		Logger.Info($"            otherRoom = {otherRoom.name}");
 
 		if (otherRoom == null || connectionId == -1)
 			return;
 
+		Logger.Info($"            otherRoom != null");
 		foreach (string timeline in connection.timeline.timelines) {
+			Logger.Info($"            checking timeline {timeline}");
 			if (!state.ContainsKey(timeline)) {
+				Logger.Info($"            timeline not yet encountered, setting state[{timeline}] to defaultState");
 				state[timeline] = [.. defaultState];
 				timelines.Add(timeline);
 			}
+			Logger.Info($"            state[{timeline}]:");
+			foreach ((string first, bool second) in state[timeline]) {
+				Logger.Info($"                first = {first}; second = {second}");
+			}
 
-			// REVIEW - index is not exported correctly
 			if (connection.timeline.timelineType == TimelineType.Only) {
-				writer.Write($"{timeline} : {RoomNameCasing(room.name)} : ");
+				Logger.Info($"            connection is Only");
+				string line = $"{timeline} : {RoomNameCasing(room.name)} : ";
+				Logger.Info($"                line = {line}");
 
 				if (state[timeline][connectionId].first == "DISCONNECTED") {
+					Logger.Info($"            first == DISCONNECTED");
 					int disconnectedBefore = 0;
+					Logger.Info($"            initialised disconnectedBefore to 0");
+					Logger.Info($"            connectionId = {connectionId}");
 					for (int i = 0; i < connectionId; i++) {
-						if (state[timeline][i].first == "DISCONNECTED")
+						Logger.Info($"                state[{timeline}][{i}] - first = {state[timeline][i].first}; second = {state[timeline][i].second}");
+						if (defaultState[i].first == "DISCONNECTED") {
 							disconnectedBefore++;
+							Logger.Info($"                increment disconnectedBefore to {disconnectedBefore}");
+							continue;
+						}
+						Logger.Info($"                kept disconnectedBefore at {disconnectedBefore}");
 					}
-					writer.Write(disconnectedBefore + 1);
+					Logger.Info($"            finished with disconnectedBefore at {disconnectedBefore}");
+					line += (disconnectedBefore + 1).ToString();
 				}
 				else {
-					writer.Write(state[timeline][connectionId].first);
+					Logger.Info($"            {state[timeline][connectionId].first} != DISCONNECTED");
+					line += state[timeline][connectionId].first;
 				}
-				writer.WriteLine($" : {RoomNameCasing(otherRoom.name)}");
+				Logger.Info($"            line = {line}");
+				line += $" : {RoomNameCasing(otherRoom.name)}";
+				Logger.Info($"            final line = {line}");
+				writer.WriteLine(line);
 
 				if (RoomNameCasing(otherRoom.name) != state[timeline][connectionId].first) {
 					state[timeline][connectionId] = (RoomNameCasing(otherRoom.name), true);
 				}
 			}
 			else if (connection.timeline.timelineType == TimelineType.Except) {
+				Logger.Info($"            connection is Except");
+				Logger.Info($"            looking through otherTimelines");
 				foreach (string otherTimeline in timelines) {
-					if (otherTimeline == timeline)
+					Logger.Info($"                checking otherTime {otherTimeline}");
+					if (otherTimeline == timeline) {
+						Logger.Info($"                is this timeline, skip");
 						continue;
-					if (!state[otherTimeline][connectionId].second)
+					}
+					Logger.Info($"                otherState[{otherTimeline}][{connectionId}] - first = {state[otherTimeline][connectionId].first}; second = {state[otherTimeline][connectionId].second}");
+					if (!state[otherTimeline][connectionId].second) {
+						Logger.Info($"                second == false, skip");
 						continue;
+					}
 
-					writer.Write($"{otherTimeline} : {RoomNameCasing(room.name)} : ");
+					Logger.Info($"                second == true");
+					string line2 = $"{otherTimeline} : {RoomNameCasing(room.name)} : ";
+					Logger.Info($"                line2 = {line2}");
 					if (state[otherTimeline][connectionId].first == "DISCONNECTED") {
+						Logger.Info($"                first == DISCONNECTED");
 						int disconnectedBefore = 0;
+						Logger.Info($"                initialised disconnectedBefore to 0");
+						Logger.Info($"                connectionId = {connectionId}");
 						for (int i = 0; i < connectionId; i++) {
-							if (state[otherTimeline][i].first == "DISCONNECTED")
+							Logger.Info($"                    state[{otherTimeline}][{i}] - first = {state[otherTimeline][i].first}; second = {state[otherTimeline][i].second}");
+							if (state[otherTimeline][i].first == "DISCONNECTED") {
 								disconnectedBefore++;
+								Logger.Info($"                    increment disconnectedBefore to {disconnectedBefore}");
+								continue;
+							}
+							Logger.Info($"                    kept disconnectedBefore at {disconnectedBefore}");
 						}
-						writer.Write(disconnectedBefore + 1);
+						Logger.Info($"                finished with disconnectedBefore at {disconnectedBefore}");
+						line2 += (disconnectedBefore + 1).ToString();
 					}
 					else {
-						writer.Write(state[otherTimeline][connectionId].first);
+						Logger.Info($"                {state[otherTimeline][connectionId].first} != DISCONNECTED");
+						line2 += state[otherTimeline][connectionId].first;
 					}
-					writer.WriteLine($" : {RoomNameCasing(otherRoom.name)}");
+					Logger.Info($"                line2 = {line2}");
+					line2 += $" : {RoomNameCasing(otherRoom.name)}";
+					Logger.Info($"                final line2 = {line2}");
+					writer.WriteLine(line2);
 				}
 
-				writer.Write($"{timeline} : {RoomNameCasing(room.name)} : ");
+				Logger.Info($"            looking through this timeline");
+				string line = $"{timeline} : {RoomNameCasing(room.name)} : ";
+				Logger.Info($"            line = {line}");
+				Logger.Info($"            state[{timeline}][{connectionId}] - first = {state[timeline][connectionId].first}; second = {state[timeline][connectionId].second}");
 				if (state[timeline][connectionId].second) {
+					Logger.Info($"            second == true");
 					if (state[timeline][connectionId].first == "DISCONNECTED") {
+						Logger.Info($"            first == DISCONNECTED");
 						int disconnectedBefore = 0;
+						Logger.Info($"            initialised disconnectedBefore to 0");
+						Logger.Info($"            connectionId = {connectionId}");
 						for (int i = 0; i < connectionId; i++) {
-							if (state[timeline][i].first == "DISCONNECTED")
+							Logger.Info($"                state[{timeline}][{i}] - first = {state[timeline][i].first}; second = {state[timeline][i].second}");
+							if (state[timeline][i].first == "DISCONNECTED") {
 								disconnectedBefore++;
+								Logger.Info($"                increment disconnectedBefore to {disconnectedBefore}");
+								continue;
+							}
+							Logger.Info($"                kept disconnectedBefore at {disconnectedBefore}");
 						}
-						writer.Write(disconnectedBefore + 1);
+						line += (disconnectedBefore + 1).ToString();
 					}
 					else {
-						writer.Write(state[timeline][connectionId].first);
+						Logger.Info($"            {state[timeline][connectionId].first} != DISCONNECTED");
+						line += state[timeline][connectionId].first;
 					}
 				}
 				else {
-					writer.Write(RoomNameCasing(otherRoom.name));
+					Logger.Info($"            second == false");
+					line += RoomNameCasing(otherRoom.name);
 				}
-				writer.WriteLine($" : {defaultState[connectionId].first}");
+				Logger.Info($"            line = {line}");
+				line += $" : {defaultState[connectionId].first}";
+				Logger.Info($"            final line = {line}");
+				writer.WriteLine(line);
 
 				if (RoomNameCasing(otherRoom.name) != defaultState[connectionId].first) {
+					Logger.Info($"            {RoomNameCasing(otherRoom.name)} != {defaultState[connectionId].first}");
+					Logger.Info($"            changing defaultState[{connectionId}] - first = {defaultState[connectionId].first}; second = {defaultState[connectionId].second}");
 					defaultState[connectionId] = (RoomNameCasing(otherRoom.name), false);
+					Logger.Info($"            to - first = {defaultState[connectionId].first}; second = {defaultState[connectionId].second}");
 				}
 			}
+			Logger.Info($"            end checking timeline {timeline}");
 		}
+		Logger.Info($"            end parsing conditionalLink");
 	}
 
 	private static void ExportCreatureTags(DenCreature creature, StreamWriter writer) {
@@ -324,6 +393,7 @@ public static class WorldExporter {
 			Logger.Info("- Conditional Links");
 			writer.WriteLine("CONDITIONAL LINKS");
 			foreach (Room room in WorldWindow.region.rooms) {
+				Logger.Info($"    Parsing room {room.name}");
 				if (room is OffscreenRoom)
 					continue;
 
@@ -333,10 +403,13 @@ public static class WorldExporter {
 				for (int i = 0; i < room.roomExits.Count; i++) {
 					defaultState.Add(("DISCONNECTED", false));
 				}
+
+				Logger.Info($"    Parsing ALL-connections");
 				foreach (Connection connection in room.connections) {
 					if (connection.timeline.timelineType != TimelineType.All)
 						continue;
 
+					Logger.Info($"        Connection: {connection.roomA.name}[{connection.roomAExitID}]-{connection.roomB.name}[{connection.roomBExitID}]");
 					if (connection.roomA == room) {
 						defaultState[(int) connection.roomAExitID] = (RoomNameCasing(connection.roomB.name), false);
 					}
@@ -345,17 +418,26 @@ public static class WorldExporter {
 					}
 				}
 
+				Logger.Info($"    defaultState:");
+				foreach ((string first, bool second) item in defaultState) {
+					Logger.Info($"        first = {item.first}; second = {item.second}");
+				}
+
+				Logger.Info($"    Parsing EXCEPT-connections");
 				foreach (Connection connection in room.connections) {
 					if (connection.timeline.timelineType != TimelineType.Except || connection.timeline.timelines.Count == 0)
 						continue;
 
+					Logger.Info($"        Connection: ({connection.timeline}){connection.roomA.name}[{connection.roomAExitID}]-{connection.roomB.name}[{connection.roomBExitID}]");
 					ParseConditionalLinkConnection(writer, room, connection, timelines, state, defaultState);
 				}
 
+				Logger.Info($"    Parsing ONLY-connections");
 				foreach (Connection connection in room.connections) {
 					if (connection.timeline.timelineType != TimelineType.Only || connection.timeline.timelines.Count == 0)
 						continue;
 
+					Logger.Info($"        Connection: ({connection.timeline}){connection.roomA.name}[{connection.roomAExitID}]-{connection.roomB.name}[{connection.roomBExitID}]");
 					ParseConditionalLinkConnection(writer, room, connection, timelines, state, defaultState);
 				}
 
