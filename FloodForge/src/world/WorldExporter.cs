@@ -621,8 +621,8 @@ public static class WorldExporter {
 			bottomRight.y = Math.Max(bottomRight.y, bottom);
 		}
 
-		int layerHeight = (int) (bottomRight.y - topLeft.y) + 20;
-		int textureWidth = (int) (bottomRight.x - topLeft.x) + 20;
+		int layerHeight = Math.Max((int) (bottomRight.y - topLeft.y) + 20, 20);
+		int textureWidth = Math.Max((int) (bottomRight.x - topLeft.x) + 20, 20);
 		int textureHeight = layerHeight * 3;
 
 		byte[] imageData = new byte[textureWidth * textureHeight * 3];
