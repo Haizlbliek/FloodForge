@@ -195,14 +195,13 @@ public static class WorldExporter {
 				timelines.Add(timeline);
 			}
 
-			// REVIEW - index is not exported correctly
 			if (connection.timeline.timelineType == TimelineType.Only) {
 				writer.Write($"{timeline} : {RoomNameCasing(room.name)} : ");
 
 				if (state[timeline][connectionId].first == "DISCONNECTED") {
 					int disconnectedBefore = 0;
 					for (int i = 0; i < connectionId; i++) {
-						if (state[timeline][i].first == "DISCONNECTED")
+						if (defaultState[i].first == "DISCONNECTED")
 							disconnectedBefore++;
 					}
 					writer.Write(disconnectedBefore + 1);
@@ -218,10 +217,12 @@ public static class WorldExporter {
 			}
 			else if (connection.timeline.timelineType == TimelineType.Except) {
 				foreach (string otherTimeline in timelines) {
-					if (otherTimeline == timeline)
+					if (otherTimeline == timeline) {
 						continue;
-					if (!state[otherTimeline][connectionId].second)
+					}
+					if (!state[otherTimeline][connectionId].second) {
 						continue;
+					}
 
 					writer.Write($"{otherTimeline} : {RoomNameCasing(room.name)} : ");
 					if (state[otherTimeline][connectionId].first == "DISCONNECTED") {
@@ -333,6 +334,7 @@ public static class WorldExporter {
 				for (int i = 0; i < room.roomExits.Count; i++) {
 					defaultState.Add(("DISCONNECTED", false));
 				}
+
 				foreach (Connection connection in room.connections) {
 					if (connection.timeline.timelineType != TimelineType.All)
 						continue;
@@ -621,8 +623,8 @@ public static class WorldExporter {
 			bottomRight.y = Math.Max(bottomRight.y, bottom);
 		}
 
-		int layerHeight = (int) (bottomRight.y - topLeft.y) + 20;
-		int textureWidth = (int) (bottomRight.x - topLeft.x) + 20;
+		int layerHeight = Math.Max((int) (bottomRight.y - topLeft.y) + 20, 20);
+		int textureWidth = Math.Max((int) (bottomRight.x - topLeft.x) + 20, 20);
 		int textureHeight = layerHeight * 3;
 
 		byte[] imageData = new byte[textureWidth * textureHeight * 3];

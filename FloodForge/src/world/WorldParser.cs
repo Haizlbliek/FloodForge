@@ -777,10 +777,14 @@ public static class WorldParser {
 
 		List<ConditionalConnection> conditionalConnectionsToAdd = [];
 		//Logger.Info("Checking links");
+		bool success = true;
 		foreach (string link in conditionalLinks) {
 			//Logger.Info("Link: " + link);
 			//Logger.Info($"Parsing link {link}");
-			if (!ParseWorldConditionalLink(link, ref conditionalConnectionsToAdd)) return false;
+			if (!ParseWorldConditionalLink(link, ref conditionalConnectionsToAdd)) {
+				success = false;
+				Logger.Warn($"Parse failed on link {link}");
+			}
 			//Logger.Info($"--Link Parsed--");
 		}
 
@@ -813,7 +817,7 @@ public static class WorldParser {
 
 		Logger.Info("Loaded conditional links");
 
-		return true;
+		return success;
 	}
 
 	public static string GetRegionDisplayname(string worldPath) {
