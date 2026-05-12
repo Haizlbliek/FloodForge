@@ -33,6 +33,7 @@ public static class WorldWindow {
 	public static bool changeConnectBehaviour = true;
 
 	public static Region region = null!;
+	public static List<Connection> connectionsToBeRemoved = [];
 	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty());
 	public static bool invalidCreaturesEncountered = false;
 	public static bool ExportFinished = true;
@@ -1076,6 +1077,11 @@ public static class WorldWindow {
 				UI.StrokeRect(connectionAABB);
 			}
 			connection.Draw();
+		}
+		foreach (Connection connection in WorldWindow.connectionsToBeRemoved) {
+			connection.roomA.Disconnect(connection);
+			connection.roomB.Disconnect(connection);
+			region.connections.Remove(connection);
 		}
 
 		DrawCurrentConnection();

@@ -205,6 +205,11 @@ public class Connection {
 	}
 
 	public void Draw() {
+		if (this.roomAExitID >= this.roomA.roomExits.Count || this.roomBExitID >= this.roomB.roomExits.Count) {
+			Logger.Warn($"Connection {this.roomA.name}[{this.roomAExitID}] - {this.roomB.name}[{this.roomBExitID}] connects to invalid index! Deleting connection.");
+			WorldWindow.connectionsToBeRemoved.Add(this);
+			return;
+		}
 		if (this.BezierPoints == null || this.BezierPoints.Length == 0 || this.recalculateBezier) {
 			this.RecalculateBezier();
 		}
