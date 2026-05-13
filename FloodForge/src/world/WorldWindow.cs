@@ -209,7 +209,7 @@ public static class WorldWindow {
 		Room? hoveringRoom = null;
 		uint hoveringConnection = 0;
 		int hoveringShortcutEntrance = -1;
-		float maxSqrDist = (float)Math.Pow(SelectorScale / (cameraScale / 100), 2);
+		float maxSqrDist = MathF.Pow(SelectorScale / (cameraScale / 100), 2);
 		foreach (Room room in WorldWindow.region.rooms) {
 			room.hoveredRoomExit = -1;
 			if (!WorldWindow.VisibleLayers[room.data.layer])

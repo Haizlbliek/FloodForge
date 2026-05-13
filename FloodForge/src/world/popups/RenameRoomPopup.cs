@@ -5,16 +5,16 @@ namespace FloodForge.World;
 public class RenameRoomPopup : Popup {
 	protected bool init = true;
 	protected UI.TextInputEditable RoomName = new UI.TextInputEditable(UI.TextInputEditable.Type.Text, "");
-    protected Room roomToRename;
-    protected int screenCount;
+	protected Room roomToRename;
+	protected int screenCount;
 	protected string accept = "Accept";
 	protected string cancel = "Cancel";
-    protected Action<string> callback;
+	protected Action<string> callback;
 
 	protected static string GenerateRoomName(int screens) {
 		string prefix = "";
 		for (screens--; screens >= 0; screens = (screens / 26) - 1) {
-			prefix = (char)('A' + (screens % 26)) + prefix;
+			prefix = (char) ('A' + (screens % 26)) + prefix;
 		}
 
 		int i = 1;
@@ -26,9 +26,9 @@ public class RenameRoomPopup : Popup {
 	}
 
 	public RenameRoomPopup(Room room, Action<string> callback) {
-        this.callback = callback;
-        this.roomToRename = room;
-        this.screenCount = room.data.cameras.Count;
+		this.callback = callback;
+		this.roomToRename = room;
+		this.screenCount = room.data.cameras.Count;
 		this.bounds = new Rect(-0.4f, -0.15f, 0.4f, 0.15f);
 	}
 
@@ -41,7 +41,8 @@ public class RenameRoomPopup : Popup {
 
 		base.Draw();
 
-		if (this.collapsed) return;
+		if (this.collapsed)
+			return;
 
 		float y = this.bounds.y1 - 0.05f;
 
@@ -59,15 +60,15 @@ public class RenameRoomPopup : Popup {
 				this.RoomName.value = GenerateRoomName(this.screenCount);
 				this.RoomName.submitted = true;
 			}
-			catch (Exception) {}
-        }
+			catch (Exception) { }
+		}
 
 		if (UI.TextButton(this.cancel, left)) {
 			this.Reject();
 		}
 
 		if (UI.TextButton(this.accept, right)) {
-            this.callback($"{WorldWindow.region.acronym}_" + this.RoomName.value);
+			this.callback($"{WorldWindow.region.acronym}_" + this.RoomName.value);
 			this.Accept();
 		}
 	}

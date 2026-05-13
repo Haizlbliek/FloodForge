@@ -47,11 +47,13 @@ public static class NameChanger {
 		//Logger.Info("newExportPath = " + newExportPath);
 		//Logger.Info("newRoomsPath = " + newRoomsPath);
 
-        if (deleteExistingFiles) {
-            Logger.Info("Deleting existing files.");
-            if (Directory.Exists(newExportPath)) Directory.Delete(newExportPath, true);
-            if (Directory.Exists(newRoomsPath)) Directory.Delete(newRoomsPath, true);
-        }
+		if (deleteExistingFiles) {
+			Logger.Info("Deleting existing files.");
+			if (Directory.Exists(newExportPath))
+				Directory.Delete(newExportPath, true);
+			if (Directory.Exists(newRoomsPath))
+				Directory.Delete(newRoomsPath, true);
+		}
 
 		List<(string from, string to)> roomFilesToTransfer = [];
 		Dictionary<string, string> nameConversions = [];
@@ -96,37 +98,37 @@ public static class NameChanger {
 				else {
 					//Logger.Info($"Same Path: {room.path}");
 				}
-            }
-        }
+			}
+		}
 
 		string[] roomsOriginalFiles = Directory.Exists(WorldWindow.region.roomsPath) ? Directory.GetFileSystemEntries(WorldWindow.region.roomsPath) : [];
 
 		bool encounteredAtypicalFiles = false;
 
-        //Logger.Info($"Checking originalFiles");
-        foreach (string path in roomsOriginalFiles) {
-            int pathFinalBackslash = path.IndexOfReverse('\\');
-            string fileName = path[(pathFinalBackslash + 1)..];
-            //Logger.Info($" - checking file {fileName}");
-            string[] splitFileName = fileName.Split('_');
-            if (splitFileName[0] == oldAcronym) {
-                //Logger.Info($" -> starts with {oldAcronym}");
-                string newName = newAcronym + fileName[splitFileName[0].Length..];
-                roomFilesToTransfer.Add((path, newRoomsPath + '\\' + newName));
-                //Logger.Info($" <- added");
-            }
-            else {
-                encounteredAtypicalFiles = true;
-                if (Directory.Exists(path)) {
-                    roomsSubDirectoriesToTransfer.Add((path, path.Replace(WorldWindow.region.roomsPath, newRoomsPath, StringComparison.InvariantCultureIgnoreCase)));
-                    //Logger.Info($" <- directory added");
-                }
-                else {
-                    roomFilesToTransfer.Add((path, newRoomsPath + '\\' + fileName));
-                    //Logger.Info($" <- added");
-                }
-            }
-        }        
+		//Logger.Info($"Checking originalFiles");
+		foreach (string path in roomsOriginalFiles) {
+			int pathFinalBackslash = path.IndexOfReverse('\\');
+			string fileName = path[(pathFinalBackslash + 1)..];
+			//Logger.Info($" - checking file {fileName}");
+			string[] splitFileName = fileName.Split('_');
+			if (splitFileName[0] == oldAcronym) {
+				//Logger.Info($" -> starts with {oldAcronym}");
+				string newName = newAcronym + fileName[splitFileName[0].Length..];
+				roomFilesToTransfer.Add((path, newRoomsPath + '\\' + newName));
+				//Logger.Info($" <- added");
+			}
+			else {
+				encounteredAtypicalFiles = true;
+				if (Directory.Exists(path)) {
+					roomsSubDirectoriesToTransfer.Add((path, path.Replace(WorldWindow.region.roomsPath, newRoomsPath, StringComparison.InvariantCultureIgnoreCase)));
+					//Logger.Info($" <- directory added");
+				}
+				else {
+					roomFilesToTransfer.Add((path, newRoomsPath + '\\' + fileName));
+					//Logger.Info($" <- added");
+				}
+			}
+		}
 
 		Logger.Info($"Analysing {oldAcronym}");
 		string[] worldOriginalFiles = Directory.Exists(WorldWindow.region.exportPath) ? Directory.GetFileSystemEntries(WorldWindow.region.exportPath) : [];
@@ -185,7 +187,7 @@ public static class NameChanger {
 					foreach (string line in propertiesFile) {
 						if (line.StartsWith("Room_Attr: ")) {
 							string[] splitLine = line.Split(':');
-							if(splitLine.Length > 0) {
+							if (splitLine.Length > 0) {
 								if (nameConversions.TryGetValue(splitLine[1].Trim(), out string? newName)) {
 									string newLine = "Room_Attr: " + newName + ':' + splitLine[2];
 									newPropertiesFile.Add(newLine);
@@ -198,7 +200,7 @@ public static class NameChanger {
 					}
 					//Logger.Info($" <- Writing new file to {to}");
 					File.WriteAllLines(to, newPropertiesFile);
-				break;
+					break;
 				case 1:
 					// map_XX.txt
 					string[] mapRegionFile = File.ReadAllLines(from);
@@ -231,7 +233,7 @@ public static class NameChanger {
 						else {
 							string[] item = line.Split(':');
 							if (item.Length > 1) {
-								if(nameConversions.TryGetValue(item[0], out string? newName)) {
+								if (nameConversions.TryGetValue(item[0], out string? newName)) {
 									newMapAcronymFile.Add(newName + ':' + item[1]);
 									//Logger.Info($"- converted line {line} to {newName + item[1]}");
 									continue;
@@ -242,7 +244,7 @@ public static class NameChanger {
 					}
 					//Logger.Info($" <- Writing new file to {to}");
 					File.WriteAllLines(to, newMapAcronymFile);
-				break;
+					break;
 				case 2:
 					// map_image_XX.txt
 					string[] mapImageAcronymFile = File.ReadAllLines(from);
@@ -258,7 +260,7 @@ public static class NameChanger {
 					}
 					//Logger.Info($" <- Writing new file to {to}");
 					File.WriteAllLines(to, newMapImageAcronymFile);
-				break;
+					break;
 				case 4:
 					// world_XX.txt
 					string[] worldAcronymFile = File.ReadAllLines(from);
@@ -366,17 +368,17 @@ public static class NameChanger {
 					}
 					//Logger.Info($" <- Writing new file to {to}");
 					File.WriteAllLines(to, newWorldAcronymFile);
-				break;
+					break;
 				case 3:
 				case 5:
 				default:
 					// map_XX.png, displayname.txt, misc
 					//Logger.Info($" <- Copying file to {to}");
 					File.Copy(from, to, true);
-				break;
+					break;
 			}
 		}
-		
+
 		Logger.Info($"! Applying Directories in unmanagedWorldDirectories");
 		foreach ((string from, string to) in worldSubDirectoriesToTransfer) {
 			Stack<string> pathsToExplore = new();
@@ -407,7 +409,7 @@ public static class NameChanger {
 		foreach ((string from, string to) in roomFilesToTransfer) {
 			File.Copy(from, to);
 		}
-		
+
 		Logger.Info($"! Applying Directories in roomsSubDirectoriesToTransfer");
 		foreach ((string from, string to) in roomsSubDirectoriesToTransfer) {
 			Stack<string> pathsToExplore = new();
@@ -448,7 +450,7 @@ public static class NameChanger {
 		WorldWindow.region.acronym = newAcronym;
 		Logger.Info($"Setting new world as recent file.");
 		RecentFiles.AddPath(newExportPath + $"\\world_{newAcronym}.txt");
-		
+
 		Logger.Info($"Updating PersistentData");
 		PersistentData.GetPersistentData(oldAcronym);
 		PersistentData.StorePersistentData(newAcronym);

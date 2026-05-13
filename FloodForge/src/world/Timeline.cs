@@ -1,37 +1,39 @@
 namespace FloodForge.World;
 
 public class Timeline {
-    public TimelineType timelineType;
-    public HashSet<string> timelines;
+	public TimelineType timelineType;
+	public HashSet<string> timelines;
 
-    public Timeline() {
-        this.timelineType = TimelineType.All;
-        this.timelines = [];
-    }
+	public Timeline() {
+		this.timelineType = TimelineType.All;
+		this.timelines = [];
+	}
 
-    public Timeline(Timeline timeline) {
-        this.timelineType = timeline.timelineType;
-        this.timelines = timeline.timelines;
-    }
-    
-    public Timeline (TimelineType type, HashSet<string> timelines) {
-        this.timelineType = type;
-        this.timelines = timelines;
-    }
+	public Timeline(Timeline timeline) {
+		this.timelineType = timeline.timelineType;
+		this.timelines = timeline.timelines;
+	}
 
-    public bool Match (Timeline other) {
-        if (this.timelineType != other.timelineType) return false;
-        if (this.timelineType == TimelineType.All) return true;
+	public Timeline(TimelineType type, HashSet<string> timelines) {
+		this.timelineType = type;
+		this.timelines = timelines;
+	}
 
-        return this.timelines.SetEquals(other.timelines);
-    }
+	public bool Match(Timeline other) {
+		if (this.timelineType != other.timelineType)
+			return false;
+		if (this.timelineType == TimelineType.All)
+			return true;
+
+		return this.timelines.SetEquals(other.timelines);
+	}
 
 	public override string ToString() {
 		if (this.timelineType == TimelineType.All) {
 			return "ALL";
 		}
 		else {
-            bool first = true;
+			bool first = true;
 			string timelineText = "";
 			foreach (string timelineEntry in this.timelines) {
 				timelineText += (first ? "" : ",") + timelineEntry;
@@ -44,9 +46,9 @@ public class Timeline {
 
 	public Timeline And(Timeline timeline) {
 		if (this.timelineType == TimelineType.All)
-			return new (timeline);
+			return new(timeline);
 		if (timeline.timelineType == TimelineType.All)
-			return new (this);
+			return new(this);
 		if (this.timelineType == TimelineType.Only) {
 			if (timeline.timelineType == TimelineType.Only) {
 				Timeline newTimeline = new(TimelineType.Only, []);
@@ -57,7 +59,7 @@ public class Timeline {
 				return newTimeline;
 			}
 			if (timeline.timelineType == TimelineType.Except) {
-				Timeline newTimeline = new(TimelineType.Only, [..this.timelines]);
+				Timeline newTimeline = new(TimelineType.Only, [.. this.timelines]);
 				foreach (string line in timeline.timelines) {
 					newTimeline.timelines.Remove(line);
 				}
@@ -66,34 +68,34 @@ public class Timeline {
 		}
 		if (this.timelineType == TimelineType.Except) {
 			if (timeline.timelineType == TimelineType.Only) {
-				Timeline newTimeline = new(TimelineType.Only, [..timeline.timelines]);
+				Timeline newTimeline = new(TimelineType.Only, [.. timeline.timelines]);
 				foreach (string line in this.timelines) {
 					newTimeline.timelines.Remove(line);
 				}
 				return newTimeline;
 			}
 			if (timeline.timelineType == TimelineType.Except) {
-				Timeline newTimeline = new(TimelineType.Except, [..this.timelines]);
+				Timeline newTimeline = new(TimelineType.Except, [.. this.timelines]);
 				foreach (string line in timeline.timelines) {
 					newTimeline.timelines.Add(line);
 				}
 				return newTimeline;
 			}
 		}
-		return new (this);
+		return new(this);
 	}
 
 	public Timeline Inverted() {
-		Timeline result = new ();
+		Timeline result = new();
 		if (this.timelineType == TimelineType.All) {
 			result.timelines = [];
 			result.timelineType = TimelineType.Only;
 		}
 		else {
-			result.timelines = [..this.timelines];
+			result.timelines = [.. this.timelines];
 			result.timelineType = this.timelineType == TimelineType.Only ? TimelineType.Except : TimelineType.Only;
 		}
-		
+
 		return result;
 	}
 
@@ -116,7 +118,7 @@ public class Timeline {
 						}
 						return false;
 				}
-			break;
+				break;
 			case TimelineType.Only:
 				switch (timeline.timelineType) {
 					case TimelineType.Except:
@@ -136,7 +138,7 @@ public class Timeline {
 						}
 						return false;
 				}
-			break;
+				break;
 		}
 		return false;
 	}
@@ -161,7 +163,7 @@ public class Timeline {
 						}
 						return false;
 				}
-			break;
+				break;
 			case TimelineType.Only:
 				switch (timelineType) {
 					case TimelineType.Except:
@@ -179,7 +181,7 @@ public class Timeline {
 						}
 						return false;
 				}
-			break;
+				break;
 		}
 		return false;
 	}
