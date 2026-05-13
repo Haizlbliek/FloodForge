@@ -27,6 +27,7 @@ public static class WorldWindow {
 	public static readonly bool[] VisibleLayers = [true, true, true];
 
 	public static Timeline VisibleTimeline = new();
+	public static bool setNewConnectionTimeline = false;
 
 	// REVIEW: Auto-mode? Which basically chooses whichever looks better for any given connection?
 	// (I.E. choose the one that's closest, but preferably one that does not invert (for example, CC_S01))
@@ -390,6 +391,9 @@ public static class WorldWindow {
 								message += "\nNote: can be solved with timelines";
 							PopupManager.Add(new InfoPopup(message));
 						}
+					}
+					if (VisibleTimeline.timelineType != TimelineType.All && setNewConnectionTimeline) {
+						NewConnection.timeline = new(VisibleTimeline);
 					}
 					change.AddConnection(NewConnection);
 					worldHistory.Apply(change);
@@ -1849,7 +1853,7 @@ public static class WorldWindow {
 				new LayerButton(2, button => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Timeline", button => {
-					PopupManager.Add(new TimelinePopup(
+					PopupManager.Add(new VisibleTimelinePopup(
 						WorldWindow.VisibleTimeline,
 						(TimelineType) => {
 							WorldWindow.VisibleTimeline.timelineType = TimelineType;
