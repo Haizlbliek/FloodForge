@@ -491,15 +491,32 @@ public static class WorldWindow {
 								string newPath = Path.Combine(region.roomsPath, $"{region.acronym}_{newName}.txt");
 								File.Copy(Path.Combine(region.roomsPath, room.name + ".txt"), newPath, true);
 								selectedDraggables = [];
-								// REVIEW - Because we can't start collecting changes ahead of this, undo/redo of the timeline things is a little (very) broken
+								string key = "TIMELINEROOM";
+								worldHistory.StartCollectingChanges([], key);
 								Room[] newRooms = HandleRoomFilesSelected([newPath]);
+								Change[] foundChanges = worldHistory.StopCollectingChanges(key);
+								RoomAndConnectionChange change = new(true);
+								List<Change> unmanagedChanges = [];
+								foreach (Change foundChange in foundChanges){
+									if (foundChange is RoomAndConnectionChange roomChange){
+										foreach (Room room in roomChange.GetRooms()) {
+											change.AddRoom(room);
+										}
+										foreach (Connection connection in roomChange.GetExternalConnections()) {
+											change.AddConnection(connection);
+										}
+									}
+									else {
+										unmanagedChanges.Add(foundChange);
+									}
+								}
+								worldHistory.StartCollectingChanges([], key);
+								worldHistory.Apply(new MassChange([..unmanagedChanges]));
 								if (newRooms.Length != 0) {
-									worldHistory.StartCollectingChanges([typeof(RoomAndConnectionChange), typeof(TimelineChange), typeof(TimelineTypeChange)]);
 									Room newRoom = newRooms.First();
 									newRoom.timeline = new(newTimeline);
 									room.timeline = newTimeline.Inverted();
 									if (copyConnections){
-										RoomAndConnectionChange change = new(true);
 										foreach (Connection connection in room.connections){
 											connection.timeline = connection.timeline.And(newTimeline.Inverted());
 											Room roomA = connection.roomA == room ? newRoom : connection.roomA;
@@ -507,10 +524,10 @@ public static class WorldWindow {
 											Connection newConnection = new(roomA, roomB, connection.roomAExitID, connection.roomBExitID) { timeline = new(newTimeline) };
 											change.AddConnection(newConnection);
 										}
-										worldHistory.Apply(change);
 									}
-									worldHistory.GetAndApplyCollectedMassChange();
 								}
+								worldHistory.Apply(change);
+								worldHistory.GetAndApplyCollectedMassChange(key);
 							}).SetContextCheck(() => {
 								return newName != "" && $"{region.acronym}_" + newName != room.name;
 							})
