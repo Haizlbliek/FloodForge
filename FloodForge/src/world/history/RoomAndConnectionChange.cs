@@ -20,7 +20,18 @@ public class RoomAndConnectionChange : Change {
 		this.rooms.Add(room);
 	}
 
+	public Room[] GetRooms() {
+		return [..this.rooms];
+	}
+
 	public void AddConnection(Connection connection) => this.externalConnections.Add(connection);
+
+	public Connection[] GetInternalConnections() {
+		return [.. this.internalConnections];
+	}
+	public Connection[] GetExternalConnections() {
+		return [.. this.externalConnections];
+	}
 
 	protected void Add() {
 		foreach (Room room in this.rooms) {
