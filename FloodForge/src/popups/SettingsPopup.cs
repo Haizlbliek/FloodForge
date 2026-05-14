@@ -2,16 +2,16 @@ namespace FloodForge.Popups;
 
 public class SettingsPopup : Popup {
 	public SettingContainer[] settingContainers;
-	protected float settingHeight = 0.04f;
-	protected float settingSpacing = 0.03f;
+	protected static float settingHeight = 0.04f;
+	protected static float settingSpacing = 0.03f;
 	protected Rect usableBounds;
 	public SettingsPopup(SettingContainer[] settings) {
 		this.settingContainers = settings;
 		float totalHeight = 0;
 		foreach (SettingContainer _ in this.settingContainers) {
-			totalHeight += (totalHeight != 0 ? this.settingSpacing : 0) + this.settingHeight;
+			totalHeight += (totalHeight != 0 ? settingSpacing : 0) + settingHeight;
 		}
-		totalHeight += 0.05f + this.settingSpacing;
+		totalHeight += 0.05f + settingSpacing;
 		this.bounds = new Rect(-0.3f, -(totalHeight * 0.5f) - 0.01f, 0.3f, (totalHeight * 0.5f) + 0.01f);
 	}
 
@@ -21,11 +21,11 @@ public class SettingsPopup : Popup {
 		if (this.collapsed) return;
 
 		this.usableBounds = new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y1 - 0.05f - 0.01f);
-		float yVal = this.usableBounds.y1 - this.settingSpacing * 0.5f;
+		float yVal = this.usableBounds.y1 - settingSpacing * 0.5f;
 		foreach (SettingContainer container in this.settingContainers) {
-			Rect bounds = new Rect(this.usableBounds.x0, yVal - this.settingHeight, this.usableBounds.x1, yVal);
+			Rect bounds = new Rect(this.usableBounds.x0, yVal - settingHeight, this.usableBounds.x1, yVal);
 			container.Draw(bounds);
-			yVal -= this.settingHeight + this.settingSpacing;
+			yVal -= settingHeight + settingSpacing;
 		}
 	}
 
