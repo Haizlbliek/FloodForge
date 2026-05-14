@@ -415,7 +415,7 @@ public static class WorldWindow {
 		bool isOriginal = Settings.OriginalControls;
 		
 		if ((Mouse.Right && !Mouse.LastRight && (connectionState == ConnectionState.None || connectionState == ConnectionState.NoConnection)) || (!Mouse.Right && Mouse.LastRight && lastConnectionState == ConnectionState.PendingConnection)) {
-			if (HoveringDraggable is Room room and not OffscreenRoom && !PopupManager.HasTitle<SettingsPopup>($"Room Settings - {room.name}")) {
+			if (HoveringDraggable is Room room and not OffscreenRoom && !PopupManager.HasTitle<SettingsPopup>($"Settings - {room.name}")) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.BoolSettingContainer("Enclosed Room", room.data.enclosedRoom, b => {
 						worldHistory.Apply(new VariableChange<bool>(room.data.enclosedRoom, b, bRedo => room.data.enclosedRoom = bRedo));
@@ -549,7 +549,7 @@ public static class WorldWindow {
 					})
 				]).Translate(Mouse.Pos, true).Title("Settings - Reference"));
 			}
-			else if (HoveringDraggable == null &! PopupManager.HasTitle<SettingsPopup>("World Settings")) {
+			else if (HoveringDraggable == null &! PopupManager.HasTitle<SettingsPopup>("Settings - World")) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.ButtonSettingContainer("Change Acronym", () => {
 						PopupManager.Add(new AcronymPopup((acronym) => {
