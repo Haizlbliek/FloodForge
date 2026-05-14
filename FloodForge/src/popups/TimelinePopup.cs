@@ -13,6 +13,7 @@ public class TimelinePopup : Popup {
 
 	public Action<bool, string> onSelectionChangeCallback;
 	public Action<TimelineType> onTimelineTypeChangeCallback;
+	protected bool updateSelf;
 	protected string allText = "ALL", onlyText = "ONLY", exceptText = "EXCEPT";
 
 	public TimelinePopup(Timeline timeline, Action<TimelineType> onTimelineTypeChangeCallback, Action<bool, string> onSelectionChangeCallback, ref Action<Timeline>? updateEvent)
@@ -20,11 +21,12 @@ public class TimelinePopup : Popup {
 		updateEvent += this.UpdateTimeline;
 	}
 
-	public TimelinePopup(Timeline timeline, Action<TimelineType> onTimelineTypeChangeCallback, Action<bool, string> onSelectionChangeCallback) {
+	public TimelinePopup(Timeline timeline, Action<TimelineType> onTimelineTypeChangeCallback, Action<bool, string> onSelectionChangeCallback, bool updateSelf = false) {
 		this.bounds = new Rect(-0.4f, -0.4f, 0.4f, 0.4f);
 		this.onSelectionChangeCallback = onSelectionChangeCallback;
 		this.onTimelineTypeChangeCallback = onTimelineTypeChangeCallback;
 		this.timeline = timeline;
+		this.updateSelf = updateSelf;
 	}
 
 	public T SetButtons<T>(string All = "ALL", string Only = "ONLY", string Except = "EXCEPT") where T : TimelinePopup {
@@ -37,6 +39,8 @@ public class TimelinePopup : Popup {
 	protected void DrawButton(Rect rect, string text, TimelineType type) {
 		if (UI.TextButton(text, rect, new UI.TextButtonMods { selected = this.timeline.timelineType == type })) {
 			this.onTimelineTypeChangeCallback.Invoke(type);
+			if (this.updateSelf)
+				this.timeline.timelineType = type;
 		}
 	}
 
@@ -99,6 +103,12 @@ public class TimelinePopup : Popup {
 					// if clicked, run the callback.
 					if (response.clicked) {
 						this.onSelectionChangeCallback.Invoke(selected, timeline);
+						if (this.updateSelf) {
+							if (!selected)
+								this.timeline.timelines?.Add(timeline);
+							else
+								this.timeline.timelines?.Remove(timeline);
+						}
 					}
 
 					if (response.hovered) {
