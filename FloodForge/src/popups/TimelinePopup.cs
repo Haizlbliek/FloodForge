@@ -13,6 +13,7 @@ public class TimelinePopup : Popup {
 
 	public Action<bool, string> onSelectionChangeCallback;
 	public Action<TimelineType> onTimelineTypeChangeCallback;
+	protected string allText = "ALL", onlyText = "ONLY", exceptText = "EXCEPT";
 
 	public TimelinePopup(Timeline timeline, Action<TimelineType> onTimelineTypeChangeCallback, Action<bool, string> onSelectionChangeCallback, ref Action<Timeline>? updateEvent)
 	 : this(timeline, onTimelineTypeChangeCallback, onSelectionChangeCallback) {
@@ -26,6 +27,13 @@ public class TimelinePopup : Popup {
 		this.timeline = timeline;
 	}
 
+	public T SetButtons<T>(string All = "ALL", string Only = "ONLY", string Except = "EXCEPT") where T : TimelinePopup {
+		this.allText = All;
+		this.onlyText = Only;
+		this.exceptText = Except;
+		return (T) this;
+	}
+
 	protected void DrawButton(Rect rect, string text, TimelineType type) {
 		if (UI.TextButton(text, rect, new UI.TextButtonMods { selected = this.timeline.timelineType == type })) {
 			this.onTimelineTypeChangeCallback.Invoke(type);
@@ -34,9 +42,9 @@ public class TimelinePopup : Popup {
 
 	public virtual void DrawButtons(float centerX, float buttonY) {
 		// draw (and check for clicks on) the view type buttons (ALL, ONLY, EXCEPT)
-		this.DrawButton(Rect.FromSize(this.bounds.x0 * 0.6f + centerX * 0.4f - 0.1f, buttonY - 0.025f, 0.2f, 0.05f), "ALL", TimelineType.All);
-		this.DrawButton(Rect.FromSize(centerX - 0.1f, buttonY - 0.025f, 0.2f, 0.05f), "ONLY", TimelineType.Only);
-		this.DrawButton(Rect.FromSize(this.bounds.x1 * 0.6f + centerX * 0.4f - 0.1f, buttonY - 0.025f, 0.2f, 0.05f), "EXCEPT", TimelineType.Except);
+		if (this.allText != "") this.DrawButton(Rect.FromSize(this.bounds.x0 * 0.6f + centerX * 0.4f - 0.1f, buttonY - 0.025f, 0.2f, 0.05f), this.allText, TimelineType.All);
+		if (this.onlyText != "") this.DrawButton(Rect.FromSize(centerX - 0.1f, buttonY - 0.025f, 0.2f, 0.05f), this.onlyText, TimelineType.Only);
+		if (this.exceptText != "") this.DrawButton(Rect.FromSize(this.bounds.x1 * 0.6f + centerX * 0.4f - 0.1f, buttonY - 0.025f, 0.2f, 0.05f), this.exceptText, TimelineType.Except);
 	}
 
 	public void UpdateTimeline(Timeline timeline) {

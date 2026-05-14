@@ -833,7 +833,7 @@ public static class WorldWindow {
 				connection.conditionalPopup = PopupManager.Add(new ConditionalPopup(connection));
 			}
 			else if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
-				ConditionalPopup? conditionalPopup = PopupManager.Add(new ConditionalPopup(rooms));
+				ConditionalPopup? conditionalPopup = PopupManager.Add(new ConditionalPopup(rooms).SetButtons<ConditionalPopup>("DEFAULT", "EXCLUSIVE", "HIDE"));
 				rooms.ForEach((room) => { room.conditionalPopup = conditionalPopup; });
 			}
 		}

@@ -64,15 +64,4 @@ public class ConditionalPopup : TimelinePopup {
 	public ConditionalPopup(DenLineage lineage) : this(null, null, lineage) {
 		this.lineage = lineage;
 	}
-
-	public override void DrawButtons(float centerX, float buttonY) {
-		if (this.connection != null || this.lineage != null) {
-			base.DrawButtons(centerX, buttonY);
-		}
-		else {
-			this.DrawButton(Rect.FromSize(this.bounds.x0 * 0.6f + centerX * 0.4f - 0.1f, buttonY - 0.025f, 0.2f, 0.05f), "DEFAULT", TimelineType.All);
-			this.DrawButton(Rect.FromSize(centerX - 0.1f, buttonY - 0.025f, 0.2f, 0.05f), "EXCLUSIVE", TimelineType.Only);
-			this.DrawButton(Rect.FromSize(this.bounds.x1 * 0.6f + centerX * 0.4f - 0.1f, buttonY - 0.025f, 0.2f, 0.05f), "HIDE", TimelineType.Except);
-		}
-	}
 }
