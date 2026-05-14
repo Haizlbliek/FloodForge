@@ -15,6 +15,7 @@ public class ChangeHistory {
 		this.RedoChangeOnApply = RedoChangeOnApply;
 	}
 	
+	// REVIEW - add ability to specify Collection Key, which is then used to retrieve collected changes
 	/// <summary>
 	/// Start collecting changes of types <c>collectingTypes</c> instead of applying them directly.
 	/// Does not yet support multiple differing collections happening at the same time.

@@ -461,6 +461,60 @@ public static class WorldWindow {
 								}
 							}).Translate(Mouse.Pos, true).Title("Rename Room"));
 						}
+					}),
+					new SettingsPopup.ButtonSettingContainer("Create Timeline Room", () => {
+						bool copyConnections = true;
+						string newName = "";
+						Timeline newTimeline = new();
+						Action<string>? updateName = s => {};
+						PopupManager.Add(new SettingsPopup([
+							new SettingsPopup.BoolSettingContainer("Copy Connections", copyConnections, b => copyConnections = b),
+							new SettingsPopup.ButtonSettingContainer("Timeline", () => {
+								PopupManager.Add(new TimelinePopup(newTimeline, type => newTimeline.timelineType = type == TimelineType.All ? TimelineType.Only : type,
+								(enabled, timeline) => {
+									if (!enabled)
+										newTimeline.timelines.Add(timeline);
+									else
+										newTimeline.timelines.Remove(timeline);
+									
+								}, true).SetButtons<TimelinePopup>("", "EXCLUSIVE", "HIDE").Translate(Mouse.Pos, false).Title("Specify Timeline"));
+							}),
+							new SettingsPopup.HorizontalElement([
+								new SettingsPopup.StringSettingContainer("", name => newName = name, ref updateName, $"{region.acronym}_", room.name[(room.name.IndexOf('_') + 1)..]),
+								new SettingsPopup.ButtonSettingContainer("Generate", () => {
+									string generatedName = room.name[(room.name.IndexOf('_') + 1)..];
+									generatedName += (newTimeline.timelineType == TimelineType.Only ? "" : "X") + newTimeline.timelines.FirstOrDefault();
+									updateName?.Invoke(generatedName);
+								})
+							], [0f, UI.font.Measure("Generate", 0.03f).x + 0.01f]),
+							new SettingsPopup.ButtonSettingContainer("Create Room", () => {
+								string newPath = Path.Combine(region.roomsPath, $"{region.acronym}_{newName}.txt");
+								File.Copy(Path.Combine(region.roomsPath, room.name + ".txt"), newPath, true);
+								selectedDraggables = [];
+								// REVIEW - Because we can't start collecting changes ahead of this, undo/redo of the timeline things is a little (very) broken
+								Room[] newRooms = HandleRoomFilesSelected([newPath]);
+								if (newRooms.Length != 0) {
+									worldHistory.StartCollectingChanges([typeof(RoomAndConnectionChange), typeof(TimelineChange), typeof(TimelineTypeChange)]);
+									Room newRoom = newRooms.First();
+									newRoom.timeline = new(newTimeline);
+									room.timeline = newTimeline.Inverted();
+									if (copyConnections){
+										RoomAndConnectionChange change = new(true);
+										foreach (Connection connection in room.connections){
+											connection.timeline = connection.timeline.And(newTimeline.Inverted());
+											Room roomA = connection.roomA == room ? newRoom : connection.roomA;
+											Room roomB = connection.roomB == room ? newRoom : connection.roomB;
+											Connection newConnection = new(roomA, roomB, connection.roomAExitID, connection.roomBExitID) { timeline = new(newTimeline) };
+											change.AddConnection(newConnection);
+										}
+										worldHistory.Apply(change);
+									}
+									worldHistory.GetAndApplyCollectedMassChange();
+								}
+							}).SetContextCheck(() => {
+								return newName != "" && $"{region.acronym}_" + newName != room.name;
+							})
+						]).Translate(Mouse.Pos, false).Title("Create Timeline Room"));
 					})
 				]).Translate(Mouse.Pos, true).Title($"Settings - {room.name}"));
 			}
