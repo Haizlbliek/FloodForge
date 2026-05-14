@@ -177,6 +177,46 @@ public class SettingsPopup : Popup {
 		}
 	}
 
+	public class StringSettingContainer : SettingContainer {
+		protected UI.TextInputEditable stringInput = new UI.TextInputEditable(UI.TextInputEditable.Type.Text, "");
+		protected Action<string> callback;
+		protected string prefix;
+		protected float prefixSizeX;
+		protected string hint;
+
+		public StringSettingContainer (string name, Action<string> callback, string prefix = "", string hint = "", string postfix = "") : base (name) {
+			this.callback = callback;
+			this.prefix = prefix;
+			this.prefixSizeX = UI.font.Measure(this.prefix, 0.03f).x;
+			this.hint = hint;
+		}
+
+		public StringSettingContainer (string name, Action<string> callback, ref Action<string>? onValueChangeEvent, string prefix = "", string hint = "", string postfix = "") : this(name, callback, prefix, hint, postfix) {
+			onValueChangeEvent += this.UpdateValue;
+		}
+
+		public void UpdateValue(string newValue) {
+			this.stringInput.value = newValue;
+		}
+
+		public override void Draw(Rect bounds) {
+			base.Draw(bounds);
+			
+			Immediate.Color(Themes.Text);
+			float xPos = bounds.x0 + UI.font.Measure(this.settingName, 0.03f).x + (this.settingName != "" ? 0.02f : 0);
+			UI.font.Write(this.prefix, xPos, bounds.CenterY, 0.03f, Font.Align.MiddleLeft);
+			xPos += this.prefixSizeX;
+			UI.TextInputResponse inputResponse = UI.TextInput(new Rect(xPos, bounds.y0, bounds.x1, bounds.y1), this.stringInput);
+			if (inputResponse.submitted) {
+				this.callback(this.stringInput.value);
+			}
+			if (!inputResponse.focused && this.stringInput.value == "") {
+				Immediate.Color(Themes.TextDisabled);
+				UI.font.Write(this.hint, xPos + 0.01f, bounds.CenterY, 0.03f, Font.Align.MiddleLeft);
+			}
+		}
+	}
+
 	public class ButtonSettingContainer : SettingContainer {
 		readonly Action onClickCallback;
 		Func<bool>? contextCheckCallback;
