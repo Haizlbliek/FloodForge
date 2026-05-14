@@ -42,6 +42,56 @@ public class SettingsPopup : Popup {
 		}
 	}
 
+	public class HorizontalElement : SettingContainer {
+		protected SettingContainer[] settings;
+		protected float[] widthOverrides;
+		protected bool hasDivider;
+
+		public HorizontalElement(SettingContainer[] settings, float[]? widthOverrides = null, bool hasDivider = true) : base ("") {
+			this.settings = settings;
+			this.widthOverrides = widthOverrides ?? [];
+			this.hasDivider = hasDivider;
+		}
+
+		public override void Draw(Rect bounds) {
+			float betweenElementMargin = 0.02f;
+			float totalWidth = bounds.x1 - bounds.x0;
+			float totalMarginlessWidth = totalWidth - betweenElementMargin * (this.settings.Length - 1);
+			List<int> unOverriddenValues = [];
+			float remainingSpace = totalMarginlessWidth;
+			for (int i = 0; i < this.settings.Length; i++) {
+				if (i >= this.widthOverrides.Length || this.widthOverrides[i] == 0)
+					unOverriddenValues.Add(i);
+				else
+					remainingSpace -= this.widthOverrides[i];
+			}
+			float remainingWidthPerElement = remainingSpace / unOverriddenValues.Count;
+			float[] resultingWidths = new float[this.settings.Length];
+			for (int i = 0; i < resultingWidths.Length; i++) {
+				if (unOverriddenValues.Contains(i)) {
+					resultingWidths[i] = remainingWidthPerElement;
+				}
+				else {
+					resultingWidths[i] = this.widthOverrides[i];
+				}
+			}
+
+			float currentXPosition = bounds.x0;
+			for (int i = 0; i < this.settings.Length; i++) {
+				float x1 = currentXPosition + resultingWidths[i];
+				Rect newBounds = new Rect(currentXPosition, bounds.y0, x1, bounds.y1);
+				this.settings[i].Draw(newBounds);
+				if (i != 0 && this.hasDivider) {
+					float lineX = currentXPosition - (betweenElementMargin / 2);
+					float lineHeight = SettingsPopup.settingSpacing + SettingsPopup.settingHeight;
+					Immediate.Color(Themes.Border);
+					UI.Line(lineX, bounds.CenterY - lineHeight / 2, lineX, bounds.CenterY + lineHeight / 2);
+				}
+				currentXPosition = x1 + betweenElementMargin;
+			}
+		}
+	}
+
 	public class BoolSettingContainer : SettingContainer {
 		protected bool value;
 		protected Action<bool> callback;
