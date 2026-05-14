@@ -1491,7 +1491,7 @@ public static class DropletWindow {
 
 		for(int y = firstTilePositionY; y <= lastTilePositionY; y++) {
 			for(int x = firstTilePositionX; x <= lastTilePositionX; x++) {
-				uint tileType = Room.GetTile(x, y);
+				uint tileType = Room.GetTile(x, y, true);
 				float offsetX = camera.position.x;
 				float offsetY = camera.position.y;
 				int pixelOffsetX = Mathf.FloorToInt(offsetX);

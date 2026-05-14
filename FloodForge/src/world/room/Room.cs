@@ -784,15 +784,20 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		this.GenerateMesh();
 	}
 
-	public uint GetTile(Vector2i pos) {
-		return this.GetTile(pos.x, pos.y);
+	public uint GetTile(Vector2i pos, bool repeatOutside = false) {
+		return this.GetTile(pos.x, pos.y, repeatOutside);
 	}
 
-	public uint GetTile(int x, int y) {
+	public uint GetTile(int x, int y, bool repeatOutside = false) {
 		if (!this.valid)
 			return 1u;
-		if (x < 0 || y < 0 || x >= this.width || y >= this.height)
-			return 1u;
+		if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
+			if (!repeatOutside)
+				return 1u;
+			else {
+				return this.GetTile(Math.Clamp(x, 0, this.width - 1), Math.Clamp(y, 0, this.height - 1), false);
+			}
+		}
 
 		return this.geometry[x * this.height + y];
 	}
