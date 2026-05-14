@@ -427,7 +427,7 @@ public static class DropletWindow {
 							ApplyTool(x, y, drawingState == 1);
 						}
 					}
-					dropletHistory.GetAndApplyCollectedMassChange(true);
+					dropletHistory.GetAndApplyCollectedMassChange(dropIfEmpty: true);
 					drawingState = -1; // then, return to original state
 				}
 			}
@@ -440,13 +440,13 @@ public static class DropletWindow {
 							ApplyTool(point.x, point.y, drawingState == 4);
 						}
 					}
-					dropletHistory.GetAndApplyCollectedMassChange(true);
+					dropletHistory.GetAndApplyCollectedMassChange(dropIfEmpty: true);
 					drawingState = -1; // then, return to original state
 				}
 			}
 			else if (drawingState == 2) { // if we are drawing a stroke
 				if (!(Mouse.Left || Mouse.Right) || Keys.Modifier(Keys.Modifiers.Shift) || Keys.Modifier(Keys.Modifiers.Control)) { // and are ending said stroke
-					dropletHistory.GetAndApplyCollectedMassChange(true);
+					dropletHistory.GetAndApplyCollectedMassChange(dropIfEmpty: true);
 					drawingState = -1;
 				}
 				else if ((Mouse.Left || Mouse.Right) && (lastMouseTile != mouseTile)) {
@@ -504,7 +504,7 @@ public static class DropletWindow {
 						items.Push(new Vector2i(tile.x, tile.y + 1));
 					}
 				}
-				dropletHistory.GetAndApplyCollectedMassChange(true);
+				dropletHistory.GetAndApplyCollectedMassChange(dropIfEmpty: true);
 			}
 			else if (Mouse.JustLeft || Mouse.JustRight) {
 				if (drawingState == -1) {

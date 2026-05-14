@@ -7,12 +7,16 @@ public class ChangeHistory {
 	public Change? Last => this.undos.Count == 0 ? null : this.undos.Peek();
 	private readonly bool RedoChangeOnApply = true;
 
-	private bool Collectingchanges = false;
-	private List<Change> collectedChanges = [];
-	private List<Type> typesToCollect = [];
+	private List<ChangeCollector> changeCollectors = [];
 
 	public ChangeHistory(bool RedoChangeOnApply = true) {
 		this.RedoChangeOnApply = RedoChangeOnApply;
+	}
+
+	protected class ChangeCollector(HashSet<Type> typesToCollect, string key) {
+		public string key = key;
+		public List<Change> collectedChanges = [];
+		public HashSet<Type> typesToCollect = typesToCollect;
 	}
 	
 	// REVIEW - add ability to specify Collection Key, which is then used to retrieve collected changes
@@ -21,48 +25,70 @@ public class ChangeHistory {
 	/// Does not yet support multiple differing collections happening at the same time.
 	/// Make sure to use <c>StopCollectingChanges</c> in order to avoid nullifying all changes of types <c>collectingTypes</c>.
 	/// </summary>
-	public void StartCollectingChanges(List<Type> collectingTypes) {
-		if(this.Collectingchanges) throw new Exception("Cannot start new collection while collection is in progress!");
-		this.collectedChanges = [];
-		this.Collectingchanges = true;
-		this.typesToCollect = collectingTypes;
+	public void StartCollectingChanges(HashSet<Type> collectingTypes, string key = "") {
+		foreach (ChangeCollector collector in this.changeCollectors) {
+			if (collector.key == key)
+				throw new Exception($"Cannot start multiple collections with key {(key == "" ? "\"\"" : key)}");
+		}
+		this.changeCollectors.Add(new ChangeCollector(collectingTypes, key));
 	}
 	
+	public void ModifyCollectingTypes(HashSet<Type> collectingTypes, string key = "") {
+		foreach (ChangeCollector collector in this.changeCollectors) {
+			if (collector.key == key) {
+				collector.typesToCollect = collectingTypes;
+				return;
+			}
+		}
+	}
 	
 	/// <summary>
 	/// Stop collecting changes and return an array of all collected changes.
 	/// Of note: this does not automatically apply the collected changes. Apply them after if necessary.
 	/// Does not yet support multiple differing collections happening at the same time.
 	/// </summary>
-	public Change[] StopCollectingChanges() {
-		this.Collectingchanges = false;
-		return [.. this.collectedChanges];
+	public Change[] StopCollectingChanges(string key = "") {
+		for (int i = this.changeCollectors.Count - 1; i >= 0; i++) {
+			ChangeCollector collector = this.changeCollectors [i];
+			if (collector.key == key) {
+				this.changeCollectors.Remove(collector);
+				return [..collector.collectedChanges];
+			}
+		}
+		return [];
 	}
 
 	/// <summary>
 	/// Stop collecting changes and return a new MassChange from all collected changes.
 	/// Does not yet support multiple differing collections happening at the same time.
 	/// </summary>
-	public MassChange GetCollectedMassChange() {
-		return new MassChange(this.StopCollectingChanges());
+	public MassChange GetCollectedMassChange(string key = "") {
+		return new MassChange(this.StopCollectingChanges(key));
 	}
 
-	public void GetAndApplyCollectedMassChange(bool dropIfEmpty = false) {
-		MassChange collectedChange = this.GetCollectedMassChange();
+	public void GetAndApplyCollectedMassChange(string key = "", bool dropIfEmpty = false) {
+		MassChange collectedChange = this.GetCollectedMassChange(key);
 		if(collectedChange.GetCount() > 0 || !dropIfEmpty)
 			this.Apply(collectedChange);
 	}
 
 	public void Apply(Change change) {
-		if (!this.Collectingchanges || (this.typesToCollect.Count != 0 && !this.typesToCollect.Contains(change.GetType()))) {
-			if(this.RedoChangeOnApply) change.Redo();
+		if (this.changeCollectors.Count != 0) {
+			Logger.Info($"Received Change of type {change.GetType()};");
+			for (int i = this.changeCollectors.Count - 1; i >= 0; i--) {
+				ChangeCollector collector = this.changeCollectors [i];
+				if (collector.typesToCollect.Count == 0 || collector.typesToCollect.Contains(change.GetType())) {
+					Logger.Info($"Change of type {change.GetType()} Collected by collector [{i}] - key: {collector.key}");
+					collector.collectedChanges.Add(change);
+					return;
+				}
+			}
+		}
 
-			this.redos.Clear();
-			this.undos.Push(change);
-		}
-		else {
-			this.collectedChanges.Add(change);
-		}
+		if(this.RedoChangeOnApply) change.Redo();
+
+		this.redos.Clear();
+		this.undos.Push(change);
 	}
 
 	public void Clear() {
