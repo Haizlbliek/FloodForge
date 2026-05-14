@@ -81,6 +81,14 @@ public static class WorldExporter {
 		try {
 			using StreamWriter writer = new StreamWriter(path, false);
 			
+			// delete existing timeline-specifying files in case the new export doesn't use those
+			foreach (string timelineMapPath in Directory.GetFiles(WorldWindow.region.exportPath)) {
+				if (!timelineMapPath.EndsWith(fileName) && timelineMapPath.StartsWith(Path.Combine(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}-")) && path.EndsWith(".txt")) {
+					Backup.File(timelineMapPath);
+					File.Delete(timelineMapPath);
+				}
+			}
+			
 			Dictionary<string, StreamWriter> timelineMapWriters = [];
 			foreach (string timeline in timelinesInRegion) {
 				string timelineFileName = $"map_{WorldWindow.region.acronym}-{timeline}.txt";
@@ -589,6 +597,14 @@ public static class WorldExporter {
 		}
 		catch (Exception) {
 			Logger.Info($"Error creating map_image_{WorldWindow.region.acronym}.txt");
+		}
+
+		// delete existing timeline-specifying files in case the new export doesn't use those
+		foreach (string path in Directory.GetFiles(WorldWindow.region.exportPath)) {
+			if (path != mapPath && path.StartsWith(Path.Combine(WorldWindow.region.exportPath, $"map_image_{WorldWindow.region.acronym}-")) && path.EndsWith(".txt")) {
+				Backup.File(path);
+				File.Delete(path);
+			}
 		}
 
 		Dictionary<string, StreamWriter?> timelineMapFiles = [];
