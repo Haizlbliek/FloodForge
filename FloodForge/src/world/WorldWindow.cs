@@ -1470,17 +1470,19 @@ public static class WorldWindow {
 		return bounds.x0 < camBound.x1 && bounds.x1 > camBound.x0 && bounds.y0 < camBound.y1 && bounds.y1 > camBound.y0;
 	}
 
-	private static void HandleRoomFilesSelected(string[] paths) {
+	private static Room[] HandleRoomFilesSelected(string[] paths) {
 		if (paths.Length == 0)
-			return;
+			return [];
 
 		if (paths.Length > 1)
 			worldHistory.StartCollectingChanges([typeof(RoomAndConnectionChange), typeof(RoomReplacementChange)]);
 		int pathCount = 0;
+
+		List<Room> addedRooms = [];
 		foreach (string path in paths) {
 			if (!path.EndsWith(".txt")) {
 				PopupManager.Add(new InfoPopup("File must be .txt: " + path));
-				return;
+				return [];
 			}
 
 			string filename = Path.GetFileNameWithoutExtension(path);
@@ -1493,6 +1495,7 @@ public static class WorldWindow {
 				if (newRoom != null) {
 					newRoom.CanonPosition.x += (pathCount - paths.Length / 2) * 15f;
 					newRoom.CanonPosition.y -= (pathCount - paths.Length / 2) * 5f;
+					addedRooms.Add(newRoom);
 					selectedDraggables.Add(newRoom);
 					pathCount++;
 				}
@@ -1505,6 +1508,7 @@ public static class WorldWindow {
 				worldHistory.Apply(change);
 			}
 		}
+		return [..addedRooms];
 	}
 
 	private static void HandleGateFile(string path, string filename) {
@@ -1801,7 +1805,7 @@ public static class WorldWindow {
 
 				new Button("Add Room", button => {
 					PopupManager.Add(
-						new FilesystemPopup(HandleRoomFilesSelected, 1)
+						new FilesystemPopup(s => HandleRoomFilesSelected(s), 1)
 							.Filter(new Regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"))
 							.Multiple()
 							.Hint("xx_a01.txt")
