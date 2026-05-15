@@ -47,6 +47,11 @@ public class SplashArtPopup : Popup {
 				return true;
 			}));
 		}
+
+		this.buttons.Add(new IconButton("Support FloodForge on Ko-Fi!", 0f, 0.25f, 0.25f, 0.5f, () => {
+			Process.Start(new ProcessStartInfo() { FileName = "https://ko-fi.com/haizlbliek", UseShellExecute = true });
+			return false;
+		}));
 	}
 
 	private class FailedException : Exception {}
