@@ -526,7 +526,9 @@ public static class WorldWindow {
 											Room roomA = connection.roomA == room ? newRoom : connection.roomA;
 											Room roomB = connection.roomB == room ? newRoom : connection.roomB;
 											Connection newConnection = new(roomA, roomB, connection.roomAExitID, connection.roomBExitID) { timeline = new(newTimeline) };
-											change.AddConnection(newConnection);
+											if(!newConnection.EffectiveConnectionTimeline.IsNone()){
+												change.AddConnection(newConnection);
+											}
 										}
 									}
 								}
