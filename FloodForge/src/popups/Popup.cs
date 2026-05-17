@@ -327,6 +327,12 @@ public abstract class Popup {
 		return this;
 	}
 
+	public Popup SetSize(Vector2 size) {
+		Rect newBounds = new (this.bounds.CenterX - size.x / 2, this.bounds.CenterY + size.y / 2, this.bounds.CenterX + size.x / 2, this.bounds.CenterY - size.y / 2);
+		this.bounds = new (size.x != 0 ? newBounds.x0 : this.bounds.x0, size.y != 0 ? newBounds.y0 : this.bounds.y0, size.x != 0 ? newBounds.x1 : this.bounds.x1, size.y != 0 ? newBounds.y1 : this.bounds.y1);
+		return this;
+	}
+
 	public enum ResizeHandlePosition {
 		UpLeft,
 		UpMid,
