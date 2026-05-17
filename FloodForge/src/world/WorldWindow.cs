@@ -476,8 +476,10 @@ public static class WorldWindow {
 										newTimeline.timelines.Add(timeline);
 									else
 										newTimeline.timelines.Remove(timeline);
-									
 								}, true).SetButtons<TimelinePopup>("", "EXCLUSIVE", "HIDE").Translate(Mouse.Pos, false).Title("Specify Timeline"));
+							}).SetContextCheck(b => {
+								b.settingName = "Timeline" + (newTimeline.timelines.Count == 0 ? "" : $" - {newTimeline}");
+								return true;
 							}),
 							new SettingsPopup.HorizontalElement([
 								new SettingsPopup.StringSettingContainer("", name => newName = name, ref updateName, $"{region.acronym}_", room.name[(room.name.IndexOf('_') + 1)..]),
