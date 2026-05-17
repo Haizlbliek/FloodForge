@@ -465,7 +465,7 @@ public static class WorldWindow {
 					new SettingsPopup.ButtonSettingContainer("Create Timeline Room", () => {
 						bool copyConnections = true;
 						string newName = "";
-						Timeline newTimeline = new();
+						Timeline newTimeline = new(TimelineType.Only, []);
 						Action<string>? updateName = s => {};
 						PopupManager.Add(new SettingsPopup([
 							new SettingsPopup.BoolSettingContainer("Copy Connections", copyConnections, b => copyConnections = b),
