@@ -5,11 +5,23 @@ It aims for intuitive controls, clean ui, and more features than anyone every th
 
 ## Installation
 
-Head to https://github.com/Haizlbliek/FloodForge/releases/latest to get the latest build, download, extract, and run `FloodForge` or `FloodForge.exe` (Depending on if you're using Linux or Windows)
+FloodForge has two types of releases, Stable, and Nightly. Stable builds take longer to release, but are usually safer. Nightly builds are automatically compiled after every commit, therefore they have the newest changes but are more likely to contain bugs and crashes.
+
+**Stable**
+- Head to https://github.com/Haizlbliek/FloodForge/releases/latest
+- Download the .zip that closest matches your machine
+- Extract the .zip
+- Run `FloodForge` or `FloodForge.exe` (Depending on if you're using Linux or Windows)
+
+**Nightly**
+- Head to https://github.com/Haizlbliek/FloodForge/releases/tag/nightly
+- Download the .zip that closest matches your machine
+- Extract the .zip
+- Run `FloodForge` or `FloodForge.exe` (Depending on if you're using Linux or Windows)
 
 ## I found a bug!
 
-Report it in the [FloodForge Discord server](https://discord.gg/RBq8PDbCmB)!
+Report it in the [FloodForge Discord server](https://discord.gg/RBq8PDbCmB) please!
 
 ## Building
 
