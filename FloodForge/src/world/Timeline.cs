@@ -186,6 +186,13 @@ public class Timeline {
 		}
 		return false;
 	}
+
+	public bool IsNone() {
+		if (this.timelineType == TimelineType.Only) {
+			return this.timelines.Count == 0;
+		}
+		return false;
+	}
 }
 
 public enum TimelineType {
