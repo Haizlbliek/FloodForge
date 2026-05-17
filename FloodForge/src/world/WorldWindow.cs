@@ -516,6 +516,8 @@ public static class WorldWindow {
 								worldHistory.Apply(new MassChange([..unmanagedChanges]));
 								if (newRooms.Length != 0) {
 									Room newRoom = newRooms.First();
+									newRoom.DevPosition = room.DevPosition + Vector2.One;
+									newRoom.CanonPosition = room.CanonPosition + Vector2.One;
 									newRoom.timeline = new(newTimeline);
 									room.timeline = newTimeline.Inverted();
 									if (copyConnections){
