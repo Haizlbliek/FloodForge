@@ -11,12 +11,12 @@ public class Timeline {
 
 	public Timeline(Timeline timeline) {
 		this.timelineType = timeline.timelineType;
-		this.timelines = timeline.timelines;
+		this.timelines = [..timeline.timelines];
 	}
 
 	public Timeline(TimelineType type, HashSet<string> timelines) {
 		this.timelineType = type;
-		this.timelines = timelines;
+		this.timelines = [..timelines];
 	}
 
 	public bool Match(Timeline other) {

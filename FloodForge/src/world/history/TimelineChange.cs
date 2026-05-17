@@ -3,6 +3,8 @@ using FloodForge.World;
 namespace FloodForge.History;
 
 // REVIEW - merge TimelineChange and TimelineTypeChange into one TimelineChange class
+// that, or add a separate SimultaneousTimelineChange class that does everything currently done 
+// within the room setting constructor lambdas for WorldWindow's Create Timeline Room (because oh stars that's a nightmare)
 public class TimelineChange : MultipleRoomChange {
 	protected bool add;
 	protected string timeline;
