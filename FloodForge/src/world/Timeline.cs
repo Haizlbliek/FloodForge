@@ -37,6 +37,7 @@ public class Timeline {
 			string timelineText = "";
 			foreach (string timelineEntry in this.timelines) {
 				timelineText += (first ? "" : ",") + timelineEntry;
+				first = false;
 			}
 			if (this.timelineType == TimelineType.Except)
 				timelineText = "X-" + timelineText;
