@@ -535,7 +535,7 @@ public static class WorldWindow {
 							}).SetContextCheck(_ => {
 								return newName != "" && $"{region.acronym}_" + newName != room.name;
 							})
-						]).Translate(Mouse.Pos, false).Title("Create Timeline Room"));
+						]).SetSize(new (0.7f, 0f)).Translate(Mouse.Pos, false).Title("Create Timeline Room"));
 					})
 				]).Translate(Mouse.Pos, true).Title($"Settings - {room.name}"));
 			}
