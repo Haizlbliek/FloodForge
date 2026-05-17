@@ -462,6 +462,7 @@ public static class WorldWindow {
 							}).Translate(Mouse.Pos, true).Title("Rename Room"));
 						}
 					}),
+					// I apologise for the bulk of this constructor. I am now slowly starting to see where lambdas have their drawbacks. Whoops.
 					new SettingsPopup.ButtonSettingContainer("Create Timeline Room", () => {
 						bool copyConnections = true;
 						string newName = "";
@@ -519,10 +520,51 @@ public static class WorldWindow {
 									newRoom.DevPosition = room.DevPosition + Vector2.One;
 									newRoom.CanonPosition = room.CanonPosition + Vector2.One;
 									newRoom.timeline = new(newTimeline);
-									room.timeline = newTimeline.Inverted();
+
+									List<Change> tlModifications = [];
+
+									Timeline newInverted = newTimeline.Inverted();
+									Timeline newInvertedAndRoom = room.timeline.And(newInverted);
+									TimelineTypeChange roomTypeChange = new (newInvertedAndRoom.timelineType);
+									roomTypeChange.AddRoom(room);
+									tlModifications.Add(roomTypeChange);
+									foreach (string timeline in room.timeline.timelines) {
+										if (!newInvertedAndRoom.timelines.Contains(timeline)){
+											TimelineChange roomTLChange = new(false, timeline);
+											roomTLChange.AddRoom(room);
+											tlModifications.Add(roomTLChange);
+										}
+									}
+									foreach (string timeline in newInvertedAndRoom.timelines){
+										if (!room.timeline.timelines.Contains(timeline)){
+											TimelineChange roomTLChange = new(true, timeline);
+											roomTLChange.AddRoom(room);
+											tlModifications.Add(roomTLChange);
+										}
+									}
+									
 									if (copyConnections){
 										foreach (Connection connection in room.connections){
-											connection.timeline = connection.timeline.And(newTimeline.Inverted());
+											Timeline newInvertedAndConnection = connection.timeline.And(newTimeline.Inverted());
+											TimelineTypeChange connectionTypeChange = new (newInvertedAndConnection.timelineType);
+											connectionTypeChange.AddConnection(connection);
+											tlModifications.Add(connectionTypeChange);
+
+											foreach (string timeline in connection.timeline.timelines) {
+												if (!newInvertedAndConnection.timelines.Contains(timeline)){
+													TimelineChange connectionTLChange = new(false, timeline);
+													connectionTLChange.AddConnection(connection);
+													tlModifications.Add(connectionTLChange);
+												}
+											}
+											foreach (string timeline in newInvertedAndConnection.timelines){
+												if (!connection.timeline.timelines.Contains(timeline)){
+													TimelineChange connectionTLChange = new(true, timeline);
+													connectionTLChange.AddConnection(connection);
+													tlModifications.Add(connectionTLChange);
+												}
+											}
+											
 											Room roomA = connection.roomA == room ? newRoom : connection.roomA;
 											Room roomB = connection.roomB == room ? newRoom : connection.roomB;
 											Connection newConnection = new(roomA, roomB, connection.roomAExitID, connection.roomBExitID) { timeline = new(newTimeline) };
@@ -531,6 +573,7 @@ public static class WorldWindow {
 											}
 										}
 									}
+									worldHistory.Apply(new MassChange([..tlModifications]));
 								}
 								worldHistory.Apply(change);
 								worldHistory.GetAndApplyCollectedMassChange(key);
