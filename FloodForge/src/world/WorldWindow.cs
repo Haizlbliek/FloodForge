@@ -111,7 +111,7 @@ public static class WorldWindow {
 	public static WorldDraggable? HoveringDraggable => (placingRoom && roomPlacementVisualiser.Inside(worldMouse)) ? roomPlacementVisualiser : (HoveringRoom != null) ? HoveringRoom : HoveringReferenceImage;
 
 	public static Connection? HoveringConnection => region.connections?.LastOrDefault(c => {
-		return c.ConnectionVisible && c.roomA.Visible && c.roomB.Visible && c.Hovered;
+		return (c.ConnectionVisible || c.roomA.Visible && c.roomB.Visible) && c.Hovered;
 	});
 
 	public static bool HoveringOrSelectedRooms(out HashSet<Room> rooms) {
