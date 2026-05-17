@@ -219,18 +219,18 @@ public class SettingsPopup : Popup {
 
 	public class ButtonSettingContainer : SettingContainer {
 		readonly Action onClickCallback;
-		Func<bool>? contextCheckCallback;
+		Func<ButtonSettingContainer, bool>? contextCheckCallback;
 		public ButtonSettingContainer(string name, Action onClickCallback) : base (name) {
 			this.onClickCallback = onClickCallback;
 		}
 
-		public ButtonSettingContainer SetContextCheck(Func<bool> contextCheckCallback) {
+		public ButtonSettingContainer SetContextCheck(Func<ButtonSettingContainer, bool> contextCheckCallback) {
 			this.contextCheckCallback = contextCheckCallback;
 			return this;
 		}
 
 		public override void Draw(Rect bounds) {
-			bool enabled = this.contextCheckCallback == null || this.contextCheckCallback();
+			bool enabled = this.contextCheckCallback == null || this.contextCheckCallback(this);
 			Immediate.Color(enabled ? Themes.Text : Themes.TextDisabled);
 			if (UI.TextButton(this.settingName, bounds) && enabled) {
 				this.onClickCallback();

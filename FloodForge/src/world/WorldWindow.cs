@@ -528,7 +528,7 @@ public static class WorldWindow {
 								}
 								worldHistory.Apply(change);
 								worldHistory.GetAndApplyCollectedMassChange(key);
-							}).SetContextCheck(() => {
+							}).SetContextCheck(_ => {
 								return newName != "" && $"{region.acronym}_" + newName != room.name;
 							})
 						]).Translate(Mouse.Pos, false).Title("Create Timeline Room"));
