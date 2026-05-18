@@ -35,7 +35,8 @@ public static class WorldWindow {
 
 	public static Region region = null!;
 	public static List<Connection> connectionsToBeRemoved = [];
-	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty());
+	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty() || importIncomplete);
+	public static bool importIncomplete = false;
 	public static bool invalidCreaturesEncountered = false;
 	public static bool ExportFinished = true;
 	public static Vector2 cameraOffset;
