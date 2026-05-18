@@ -104,7 +104,7 @@ public class ColorEditPopup : Popup {
 		Immediate.End();
 		Immediate.UseProgram(0);
 
-		float hueY = Mathf.Lerp(this.sliderRect.y0, this.sliderRect.y1, this.hue / 360f);
+		float hueY = Mathf.LerpUnclamped(this.sliderRect.y0, this.sliderRect.y1, this.hue / 360f);
 		UI.Line(this.sliderRect.x0 - 0.01f, hueY, this.sliderRect.x1 + 0.01f, hueY);
 
 		bool sliderHover = this.sliderRect.Inside(Mouse.Pos);

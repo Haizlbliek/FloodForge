@@ -47,30 +47,30 @@ public static class Noise {
 
 		float ix0, ix1;
 
-		ix0 = Mathf.Lerp(
+		ix0 = Mathf.LerpUnclamped(
 			DotGridGradient3(x0, y0, z0, x, y, z),
 			DotGridGradient3(x1, y0, z0, x, y, z),
 			sx
 		);
-		ix1 = Mathf.Lerp(
+		ix1 = Mathf.LerpUnclamped(
 			DotGridGradient3(x0, y1, z0, x, y, z),
 			DotGridGradient3(x1, y1, z0, x, y, z),
 			sx
 		);
-		float ty0 = Mathf.Lerp(ix0, ix1, sy);
+		float ty0 = Mathf.LerpUnclamped(ix0, ix1, sy);
 
-		ix0 = Mathf.Lerp(
+		ix0 = Mathf.LerpUnclamped(
 			DotGridGradient3(x0, y0, z1, x, y, z),
 			DotGridGradient3(x1, y0, z1, x, y, z),
 			sx
 		);
-		ix1 = Mathf.Lerp(
+		ix1 = Mathf.LerpUnclamped(
 			DotGridGradient3(x0, y1, z1, x, y, z),
 			DotGridGradient3(x1, y1, z1, x, y, z),
 			sx
 		);
-		float ty1 = Mathf.Lerp(ix0, ix1, sy);
+		float ty1 = Mathf.LerpUnclamped(ix0, ix1, sy);
 
-		return Mathf.Lerp(ty0, ty1, sz);
+		return Mathf.LerpUnclamped(ty0, ty1, sz);
 	}
 }
