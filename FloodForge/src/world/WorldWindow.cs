@@ -258,7 +258,7 @@ public static class WorldWindow {
 		hoveringRoom?.hoveredShortcutEntrance = hoveringShortcutEntrance;
 		
 		lastConnectionState = connectionState;
-		if (Input.Connection) {
+		if (Mouse.Right) {
 			if (connectionState == ConnectionState.None) {
 				if (hoveringRoom == null) {
 					connectionState = ConnectionState.NoConnection;
@@ -1960,15 +1960,15 @@ public static class WorldWindow {
 				new Button("No Colors", button => {
 					if (ColorType == RoomColors.None) {
 						ColorType = RoomColors.Layer;
-						button.text = "Layer Colors";
+						button.Text = "Layer Colors";
 					}
 					else if (ColorType == RoomColors.Layer) {
 						ColorType = RoomColors.Subregion;
-						button.text = "Subregion Colors";
+						button.Text = "Subregion Colors";
 					}
 					else if (ColorType == RoomColors.Subregion) {
 						ColorType = RoomColors.None;
-						button.text = "No Colors";
+						button.Text = "No Colors";
 					}
 				}, button => { return WorldWindow.ValidRegionLoaded; }),
 
@@ -1982,9 +1982,9 @@ public static class WorldWindow {
 						(TimelineType) => {
 							WorldWindow.VisibleTimeline.timelineType = TimelineType;
 							UpdateVisibleTimeline?.Invoke(WorldWindow.VisibleTimeline);
-							if(VisibleTimeline.timelineType == TimelineType.All) button.text = "Timeline";
-							else if(VisibleTimeline.timelineType == TimelineType.Only) button.text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
-							else button.text = ">Timeline<";
+							if(VisibleTimeline.timelineType == TimelineType.All) button.Text = "Timeline";
+							else if(VisibleTimeline.timelineType == TimelineType.Only) button.Text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
+							else button.Text = ">Timeline<";
 						},
 						(selected, timeline) => {
 							if(selected)
@@ -1992,9 +1992,9 @@ public static class WorldWindow {
 							else
 								WorldWindow.VisibleTimeline.timelines.Add(timeline);
 							UpdateVisibleTimeline?.Invoke(WorldWindow.VisibleTimeline);
-							if(VisibleTimeline.timelineType == TimelineType.All) button.text = "Timeline";
-							else if(VisibleTimeline.timelineType == TimelineType.Only) button.text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
-							else button.text = ">Timeline<";
+							if(VisibleTimeline.timelineType == TimelineType.All) button.Text = "Timeline";
+							else if(VisibleTimeline.timelineType == TimelineType.Only) button.Text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
+							else button.Text = ">Timeline<";
 						},
 						ref UpdateVisibleTimeline));
 					}, button => {
@@ -2004,12 +2004,12 @@ public static class WorldWindow {
 
 				new Button("Dev Items: Hidden", button => {
 					VisibleDevItems = !VisibleDevItems;
-					button.text = VisibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden";
+					button.Text = VisibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden";
 				}, button => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Creatures: Shown", button => {
 					VisibleCreatures = !VisibleCreatures;
-					button.text = VisibleCreatures ? "Creatures: Shown" : "Creatures: Hidden";
+					button.Text = VisibleCreatures ? "Creatures: Shown" : "Creatures: Hidden";
 				}, button => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Refresh Region", button => {
@@ -2026,22 +2026,22 @@ public static class WorldWindow {
 				new Button("Canon", button => {
 					if (PositionType == RoomPosition.Canon) {
 						PositionType = RoomPosition.Dev;
-						button.text = "Dev";
+						button.Text = "Dev";
 					}
 					else if (PositionType == RoomPosition.Dev) {
 						PositionType = RoomPosition.Both;
-						button.text = "Both";
+						button.Text = "Both";
 					}
 					else if (PositionType == RoomPosition.Both) {
 						PositionType = RoomPosition.Canon;
-						button.text = "Canon";
+						button.Text = "Canon";
 					}
 					MoveUpdate();
 				}, button => { return WorldWindow.ValidRegionLoaded; }),
 
 				new Button("Connect: Path", button => {
 					changeConnectBehaviour = !changeConnectBehaviour;
-					button.text = changeConnectBehaviour ? "Connect: Path" : "Connect: Default";
+					button.Text = changeConnectBehaviour ? "Connect: Path" : "Connect: Default";
 					MoveUpdate();
 				}, button => { return WorldWindow.ValidRegionLoaded; }),
 

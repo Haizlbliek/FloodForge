@@ -1894,11 +1894,11 @@ public static class DropletWindow {
 				}),
 				new Button("Show Objects", b => {
 					showObjects = !showObjects;
-					b.text = showObjects ? "Hide objects" : "Show objects";
+					b.Text = showObjects ? "Hide objects" : "Show objects";
 				}),
 				new Button("Show Position", b => {
 					showMousePosition = !showMousePosition;
-					b.text = showMousePosition ? "Hide Position" : "Show Position";
+					b.Text = showMousePosition ? "Hide Position" : "Show Position";
 				}, button => {
 					return currentTab == EditorTab.Geometry;
 				}),

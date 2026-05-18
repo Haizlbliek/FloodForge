@@ -27,7 +27,6 @@ public class Font {
 	public uint textureHeight;
 	public uint baseSize;
 	public Texture texture;
-
 	public float separationScale = 1f;
 
 	public Font(string name) {
@@ -37,7 +36,7 @@ public class Font {
 
 	public void LoadData(string path) {
 		if (!File.Exists(path)) {
-			Console.WriteLine("File not found");
+			Console.WriteLine($"File not found: {path}");
 			return;
 		}
 
@@ -69,8 +68,10 @@ public class Font {
 		});
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static int GetValue(string pair) {
-		return int.Parse(pair[(pair.IndexOf('=') + 1)..]);
+		int eqIdx = pair.IndexOf('=');
+		return eqIdx == -1 ? 0 : int.Parse(pair[(eqIdx + 1)..]);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -84,14 +85,17 @@ public class Font {
 
 	public static int ParseSeverity(string line, out string trimmedLine) {
 		trimmedLine = line;
-		if (line != "" && line.StartsWith("<s:")) {
-			trimmedLine = line[Math.Min(line.IndexOf('>') + 1, line.Length)..];
-			return int.Parse(line[Math.Min(line.Length, line.IndexOf(':') + 1)..line.IndexOf('>')]);
-		}
-		return 0;
+		if (string.IsNullOrEmpty(line) || !line.StartsWith("<s:")) return 0;
+
+		int closeBracket = line.IndexOf('>');
+		int colon = line.IndexOf(':');
+		
+		if (closeBracket == -1 || colon == -1 || closeBracket < colon) return 0;
+
+		trimmedLine = line[(closeBracket + 1)..];
+		return int.Parse(line[(colon + 1)..closeBracket]);
 	}
-	
-	// REVIEW - lerp the neutralcolor to the Warn and Error colors instead of brute setting them, so that neutralColor still has an effect?
+
 	public void WriteFormatted(string lineToWrite, float x, float y, float size, Align align, Color neutralColor) {
 		int severity = ParseSeverity(lineToWrite, out string trimmedLine);
 		Immediate.Color(severity switch {
@@ -103,6 +107,8 @@ public class Font {
 	}
 
 	public Vector2 Measure(string text, float textSize) {
+		if (string.IsNullOrEmpty(text)) return Vector2.Zero;
+
 		float scale = textSize / this.baseSize;
 		float width = 0;
 		float currentLineWidth = 0;
@@ -127,30 +133,33 @@ public class Font {
 		float totalSpaceInLine = maxWidth * Program.initialDisplayResolution.X;
 		string output = "";
 		float croppedTextWidth = 0f;
+
+		UI.font.characters.TryGetValue(' ', out Character fallbackChar);
+
 		for (int i = fromRight ? input.Length - 1 : 0; fromRight ? i >= 0 : i < input.Length; i += fromRight ? -1 : 1) {
 			char textChar = input[i];
-			Character fontChar = UI.font.characters.Values.FirstOrDefault();
-			if (UI.font.characters.TryGetValue(textChar, out Character result))
-				fontChar = result;
+			if (UI.font.characters.TryGetValue(textChar, out Character fontChar))
+				fontChar = fallbackChar;
 
 			if (croppedTextWidth + fontChar.xAdvance >= totalSpaceInLine) {
 				break;
 			}
-			else {
-				croppedTextWidth += fontChar.xAdvance;
-				output = fromRight ? textChar + output : output + textChar;
-			}
+
+			croppedTextWidth += fontChar.xAdvance;
+			output = fromRight ? textChar + output : output + textChar;
 		}
 		margin = Mathf.Abs(totalSpaceInLine - croppedTextWidth) / Program.initialDisplayResolution.X;
 		return output;
 	}
 
 	public void Write(string text, float startX, float startY, float textSize, Align center) {
+		if (string.IsNullOrEmpty(text)) return;
+
 		float scale = textSize / this.baseSize;
 		Vector2 size = this.Measure(text, textSize);
 
 		if (center.HasFlag(Align.AnyCenter)) startX -= size.x / 2f;
-		else if (center.HasFlag(Align.AnyRight))  startX -= size.x;
+		else if (center.HasFlag(Align.AnyRight)) startX -= size.x;
 
 		if (center.HasFlag(Align.AnyMiddle)) startY += size.y / 2f;
 		else if (center.HasFlag(Align.AnyBottom)) startY += size.y;
@@ -158,8 +167,8 @@ public class Font {
 		float cursorX = startX;
 		float cursorY = startY;
 
-		bool reenableBlend = Program.gl.IsEnabled(EnableCap.Blend);
 		Program.gl.Enable(EnableCap.Blend);
+
 		Immediate.UseTexture(this.texture);
 		Immediate.Begin(Immediate.PrimitiveType.QUADS);
 
@@ -192,8 +201,6 @@ public class Font {
 
 		Immediate.End();
 		Immediate.UseTexture(0);
-
-		if (!reenableBlend) Program.gl.Disable(EnableCap.Blend);
 	}
 
 	public struct Character {
@@ -210,19 +217,15 @@ public class Font {
 		private readonly int _value;
 		private Align(int value) => this._value = value;
 
-		// Base Bitfields (Internal Logic)
 		private const int MaskLeft = 1, MaskCenter = 2, MaskRight = 4;
 		private const int MaskTop = 8, MaskMiddle = 16, MaskBottom = 32;
 
-		// The 9 Alignment Values
 		public static readonly Align TopLeft      = new Align(MaskTop | MaskLeft);
 		public static readonly Align TopCenter    = new Align(MaskTop | MaskCenter);
 		public static readonly Align TopRight     = new Align(MaskTop | MaskRight);
-	
 		public static readonly Align MiddleLeft   = new Align(MaskMiddle | MaskLeft);
 		public static readonly Align MiddleCenter = new Align(MaskMiddle | MaskCenter);
-		public static readonly Align MiddleRight  = new Align(MaskMiddle | MaskRight);
-	
+		public static readonly Align MiddleRight  = new Align(MaskMiddle | MaskRight);	
 		public static readonly Align BottomLeft   = new Align(MaskBottom | MaskLeft);
 		public static readonly Align BottomCenter = new Align(MaskBottom | MaskCenter);
 		public static readonly Align BottomRight  = new Align(MaskBottom | MaskRight);
@@ -232,10 +235,8 @@ public class Font {
 		public static readonly Align AnyMiddle = new Align(MaskMiddle);
 		public static readonly Align AnyBottom = new Align(MaskBottom);
 
-		// Default
 		public static readonly Align None = new Align(0);
 
-		// Operators
 		public static Align operator |(Align left, Align right) => new Align(left._value | right._value);
 		public static Align operator &(Align left, Align right) => new Align(left._value & right._value);
 
