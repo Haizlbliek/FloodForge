@@ -57,10 +57,6 @@ public static class Main {
 		RichPresenceManager.Initialize();
 		if (Settings.DisableAprilFoolsUpdates) AprilFools = false;
 		Immediate.Initialize();
-		WorldWindow.Initialize();
-		DropletWindow.Initialize();
-		PopupManager.Initialize();
-		Sfx.Initialize();
 
 		input = Program.window.CreateInput();
 		for (int i = 0; i < input.Keyboards.Count; i++) {
@@ -73,6 +69,11 @@ public static class Main {
 		mouse?.Scroll += OnScroll;
 
 		UI.Initialize();
+
+		WorldWindow.Initialize();
+		DropletWindow.Initialize();
+		PopupManager.Initialize();
+		Sfx.Initialize();
 
 		if (Program.patcherUpdated) {
 			FloodForge.Popups.PopupManager.Add("FloodForge updated file structure\nPlease double check if mods are correct");
