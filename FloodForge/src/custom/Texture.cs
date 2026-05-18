@@ -14,10 +14,11 @@ public class Texture : IDisposable {
 	}
 
 	public static unsafe Texture Load(string path, TextureWrapMode wrapMode = TextureWrapMode.Repeat, TextureMinFilter minFilter = TextureMinFilter.Nearest, TextureMagFilter magFilter = TextureMagFilter.Nearest) {
-		ImageResult result = ImageResult.FromMemory(File.ReadAllBytes(path), ColorComponents.RedGreenBlueAlpha);
+		using Stream stream = File.OpenRead(path);
+		ImageResult result = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
 		Texture texture = new Texture(Custom.gl.GenTexture(), (uint) result.Width, (uint) result.Height);
-		Custom.gl.ActiveTexture(TextureUnit.Texture0);
+
 		Custom.gl.BindTexture(TextureTarget.Texture2D, texture._id);
 
 		fixed (byte* ptr = result.Data) {
@@ -29,15 +30,14 @@ public class Texture : IDisposable {
 		Custom.gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int) minFilter);
 		Custom.gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int) magFilter);
 
-		// Custom.gl.GenerateMipmap(TextureTarget.Texture2D);
-
 		Custom.gl.BindTexture(TextureTarget.Texture2D, 0);
 
 		return texture;
 	}
 
 	public static RawImage LoadRawImage(string path) {
-		ImageResult result = ImageResult.FromMemory(File.ReadAllBytes(path), ColorComponents.RedGreenBlueAlpha);
+		using Stream stream = File.OpenRead(path);
+		ImageResult result = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
 		return new RawImage(result.Width, result.Height, result.Data);
 	}

@@ -388,13 +388,13 @@ public static class UI {
 		Immediate.Color(mods.textureColor);
 		Immediate.Begin(Immediate.PrimitiveType.QUADS);
 		Immediate.TexCoord(rect.uv0.x, rect.uv0.y);
-		Immediate.Vertex(Mathf.Lerp(rect.x1, rect.x0, 0.5f + mods.textureScale.x * 0.5f), Mathf.Lerp(rect.y1, rect.y0, 0.5f + mods.textureScale.y * 0.5f));
+		Immediate.Vertex(Mathf.LerpUnclamped(rect.x1, rect.x0, 0.5f + mods.textureScale.x * 0.5f), Mathf.LerpUnclamped(rect.y1, rect.y0, 0.5f + mods.textureScale.y * 0.5f));
 		Immediate.TexCoord(rect.uv1.x, rect.uv1.y);
-		Immediate.Vertex(Mathf.Lerp(rect.x0, rect.x1, 0.5f + mods.textureScale.x * 0.5f), Mathf.Lerp(rect.y1, rect.y0, 0.5f + mods.textureScale.y * 0.5f));
+		Immediate.Vertex(Mathf.LerpUnclamped(rect.x0, rect.x1, 0.5f + mods.textureScale.x * 0.5f), Mathf.LerpUnclamped(rect.y1, rect.y0, 0.5f + mods.textureScale.y * 0.5f));
 		Immediate.TexCoord(rect.uv2.x, rect.uv2.y);
-		Immediate.Vertex(Mathf.Lerp(rect.x0, rect.x1, 0.5f + mods.textureScale.x * 0.5f), Mathf.Lerp(rect.y0, rect.y1, 0.5f + mods.textureScale.y * 0.5f));
+		Immediate.Vertex(Mathf.LerpUnclamped(rect.x0, rect.x1, 0.5f + mods.textureScale.x * 0.5f), Mathf.LerpUnclamped(rect.y0, rect.y1, 0.5f + mods.textureScale.y * 0.5f));
 		Immediate.TexCoord(rect.uv3.x, rect.uv3.y);
-		Immediate.Vertex(Mathf.Lerp(rect.x1, rect.x0, 0.5f + mods.textureScale.x * 0.5f), Mathf.Lerp(rect.y0, rect.y1, 0.5f + mods.textureScale.y * 0.5f));
+		Immediate.Vertex(Mathf.LerpUnclamped(rect.x1, rect.x0, 0.5f + mods.textureScale.x * 0.5f), Mathf.LerpUnclamped(rect.y0, rect.y1, 0.5f + mods.textureScale.y * 0.5f));
 		Immediate.End();
 		Immediate.UseTexture(0);
 		Program.gl.Disable(EnableCap.Blend);

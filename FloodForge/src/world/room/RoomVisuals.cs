@@ -21,10 +21,10 @@ public class RoomVisuals {
 
 	private static float SampleTerrain(TerrainHandleObject left, TerrainHandleObject right, float x) {
 		if (x < left.Middle.x) {
-			return Mathf.Lerp(left.Middle.y, left.Left.y, Mathf.InverseLerp(x, left.Middle.x, left.Left.x));
+			return Mathf.LerpUnclamped(left.Middle.y, left.Left.y, Mathf.InverseLerp(x, left.Middle.x, left.Left.x));
 		}
 		if (x > right.Middle.x) {
-			return Mathf.Lerp(right.Middle.y, right.Right.y, Mathf.InverseLerp(x, right.Middle.x, right.Right.x));
+			return Mathf.LerpUnclamped(right.Middle.y, right.Right.y, Mathf.InverseLerp(x, right.Middle.x, right.Right.x));
 		}
 
 		float leftPos = 0f;
@@ -49,7 +49,7 @@ public class RoomVisuals {
 		float xb = MathF.Ceiling(x / 20f) * 20f;
 		float ya = this.terrain[Mathf.FloorToInt(xa / 20f)].y;
 		float yb = this.terrain[Mathf.FloorToInt(xb / 20f)].y;
-		return Mathf.Lerp(ya, yb, Mathf.InverseLerp(x, xa, xb));
+		return Mathf.LerpUnclamped(ya, yb, Mathf.InverseLerp(x, xa, xb));
 	}
 
 	private void RefreshTerrain() {

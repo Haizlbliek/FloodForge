@@ -19,16 +19,18 @@ public static class Mathf {
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static float Lerp(float a, float b, float t) {
-		return a + (b - a) * t;
+		return a + (b - a) * Math.Clamp(t, 0f, 1f);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static double Lerp(double a, double b, double t) {
+	public static float LerpUnclamped(float a, float b, float t) {
 		return a + (b - a) * t;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static float InverseLerp(float value, float a, float b) {
+		if (a == b) return 0f;
+
 		return (value - a) / (b - a);
 	}
 
@@ -64,7 +66,7 @@ public static class Mathf {
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static int FloorToInt(float a) {
-		return (int) a;
+		return (int) MathF.Floor(a);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -74,7 +76,7 @@ public static class Mathf {
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static int RoundToInt(float a) {
-		return (int) (a + 0.5f);
+		return (int) MathF.Round(a);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -94,6 +96,6 @@ public static class Mathf {
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static float Abs(float v) {
-		return Math.Abs(v);
+		return MathF.Abs(v);
 	}
 }
