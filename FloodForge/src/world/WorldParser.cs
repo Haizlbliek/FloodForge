@@ -827,6 +827,7 @@ public static class WorldParser {
 	}
 
 	public static bool ImportWorldFile(string worldPath) {
+		WorldWindow.importIncomplete = true;
 		if (!File.Exists(worldPath)) {
 			Logger.Error("Cannot find world_XX.txt");
 			return false;
@@ -923,6 +924,7 @@ public static class WorldParser {
 
 		Logger.Info("World file imported");
 
+		WorldWindow.importIncomplete = false;
 		return true;
 	}
 }
