@@ -878,7 +878,7 @@ public static class WorldParser {
 		Logger.Info("Opening world ", WorldWindow.region.acronym);
 
 		string? roomsPath = PathUtil.FindDirectory(PathUtil.Parent(WorldWindow.region.exportPath), WorldWindow.region.acronym + "-rooms");
-		if (roomsPath == null) {
+		if (roomsPath == null || roomsPath == "") {
 			Logger.Error("Cannot find rooms directory");
 			return false;
 		}
