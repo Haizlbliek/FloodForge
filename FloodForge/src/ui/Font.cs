@@ -130,26 +130,28 @@ public class Font {
 		return new Vector2(Math.Max(width, currentLineWidth), height);
 	}
 
-	public static string CropText(string input, float maxWidth, out float margin, bool fromRight = false) {
-		float totalSpaceInLine = maxWidth * Program.initialDisplayResolution.X;
+	public string CropText(string input, float maxWidth, float textSize, out float margin, bool fromRight = false) {
+		float totalSpaceInLine = maxWidth;
 		string output = "";
 		float croppedTextWidth = 0f;
+		float scale = textSize / this.baseSize;
 
 		UI.font.characters.TryGetValue(' ', out Character fallbackChar);
 
 		for (int i = fromRight ? input.Length - 1 : 0; fromRight ? i >= 0 : i < input.Length; i += fromRight ? -1 : 1) {
 			char textChar = input[i];
-			if (UI.font.characters.TryGetValue(textChar, out Character fontChar))
+			if (!UI.font.characters.TryGetValue(textChar, out Character fontChar))
 				fontChar = fallbackChar;
 
-			if (croppedTextWidth + fontChar.xAdvance >= totalSpaceInLine) {
+			float width = fontChar.xAdvance * scale * this.separationScale;
+			if (croppedTextWidth + width >= totalSpaceInLine) {
 				break;
 			}
 
-			croppedTextWidth += fontChar.xAdvance;
+			croppedTextWidth += width;
 			output = fromRight ? textChar + output : output + textChar;
 		}
-		margin = Mathf.Abs(totalSpaceInLine - croppedTextWidth) / Program.initialDisplayResolution.X;
+		margin = Mathf.Abs(totalSpaceInLine - croppedTextWidth);
 		return output;
 	}
 
@@ -173,6 +175,8 @@ public class Font {
 		Immediate.UseTexture(this.texture);
 		Immediate.Begin(Immediate.PrimitiveType.QUADS);
 
+		UI.font.characters.TryGetValue(' ', out Character fallbackChar);
+
 		foreach (char c in text) {
 			if (c == '\n') {
 				cursorX = startX;
@@ -180,7 +184,9 @@ public class Font {
 				continue;
 			}
 
-			if (!this.characters.TryGetValue(c, out Character ch)) continue;
+			if (!this.characters.TryGetValue(c, out Character ch)) {
+				ch = fallbackChar;
+			}
 
 			float x = cursorX + (ch.xOffset * scale);
 			float y = cursorY - (ch.yOffset * scale);

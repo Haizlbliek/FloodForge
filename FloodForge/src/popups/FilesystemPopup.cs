@@ -318,14 +318,16 @@ public class FilesystemPopup : Popup {
 			UI.font.Write(this.hint, this.bounds.x0 + 0.02f, this.bounds.y0 + 0.09f, this.fontSize);
 		}
 
+		float left = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 0.23f : 0.16f;
+
 		if (UI.TextButton("Open", new Rect(this.bounds.x1 - 0.16f, this.bounds.y0 + 0.09f, this.bounds.x1 - 0.05f, this.bounds.y0 + 0.04f), new UI.TextButtonMods() { disabled = this.selected.Count == 0 && this.typeFilter == SelectionType.File })) {
 			this.Accept();
 		}
 
-		string croppedPath = Font.CropText(this.currentPath, this.bounds.x1 - 0.11f - (this.bounds.x0 + 0.23f), out _, true);
+		string croppedPath = UI.font.CropText(this.currentPath, this.bounds.x1 - 0.11f - (this.bounds.x0 + left), this.fontSize, out _, true);
 
 		Immediate.Color(Themes.Text);
-		UI.font.Write(croppedPath, this.bounds.x0 + 0.23f, this.bounds.y1 - 0.07f, this.fontSize);
+		UI.font.Write(croppedPath, this.bounds.x0 + left, this.bounds.y1 - 0.07f, this.fontSize);
 
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
 			string root = Path.GetPathRoot(this.currentPath) ?? "";
@@ -348,60 +350,64 @@ public class FilesystemPopup : Popup {
 
 
 		float offsetY = this.bounds.CenterY;
-		float scrollAreaY1 = this.bounds.y1 - 0.135f;
-		float scrollAreaY0 = this.bounds.y0 + 0.2f;
+		float scrollAreaY1 = this.bounds.y1 - 0.145f;
+		float scrollAreaY0 = this.bounds.y0 + 0.145f;
 		float y = scrollAreaY1 - this.scroll;
 		bool hasExtras = false;
 
+		float padding = 0.01f;
+		int width = Program.window.FramebufferSize.X;
+		int height = Program.window.FramebufferSize.Y;
+
+		Program.gl.Enable(EnableCap.ScissorTest);
+		Program.gl.Scissor(
+			(int) (((this.bounds.x0 + padding) / Main.screenBounds.x + 1f) * 0.5f * width),
+			(int) ((scrollAreaY0 / Main.screenBounds.y + 1f) * 0.5f * height),
+			(uint) ((this.bounds.x1 - this.bounds.x0 - padding * 2f) / Main.screenBounds.x * 0.5f * width),
+			(uint) ((scrollAreaY1 - scrollAreaY0) / Main.screenBounds.y * 0.5f * height)
+		);
+
+		bool IsInScrollView(float itemY) => itemY <= scrollAreaY1 + 0.01f && itemY - 0.06f >= scrollAreaY0 - 0.01f;
+
 		if (this.newDirectory != null) {
-			if (y > scrollAreaY0) {
-				if (y > scrollAreaY1) {
-					y -= 0.06f;
+			if (UI.TextureButton(new UVRect(this.bounds.x1 - 0.09f, y - 0.05f, this.bounds.x1 - 0.04f, y).UV(0f, 0f, 0.25f, 0.25f)) && IsInScrollView(y)) {
+				this.newDirectory = null;
+			}
+			else {
+				Immediate.Color(Themes.TextDisabled);
+				UI.FillRect(this.bounds.x0 + 0.1f, y, this.bounds.x1 - 0.1f, y - 0.05f);
+
+				Immediate.Color(Themes.TextHighlight);
+				string cropText = UI.font.CropText(this.newDirectory, this.bounds.x1 - this.bounds.x0 - 0.1f, this.fontSize, out float margin, true);
+				margin = cropText.Length != this.newDirectory.Length ? margin : 0f;
+				UI.font.Write(cropText, margin + this.bounds.x0 + 0.1f, y, this.fontSize);
+
+				if (this.frame % 60 < 30) {
+					Immediate.Color(Themes.Text);
+					float cursorX = margin + this.bounds.x0 + 0.1f + UI.font.Measure(cropText, 0.04f).x;
+					UI.FillRect(cursorX, y + 0.01f, cursorX + 0.005f, y - 0.06f);
 				}
-				else {
-					if(UI.TextureButton(new UVRect(this.bounds.x1 - 0.09f, y - 0.05f, this.bounds.x1 - 0.04f, y).UV(0f, 0f, 0.25f, 0.25f))) {
-						this.newDirectory = null;
-					}
-					else {
-						Immediate.Color(Themes.TextDisabled);
-						UI.FillRect(this.bounds.x0 + 0.1f, y, this.bounds.x1 - 0.1f, y - 0.05f);
 
-						Immediate.Color(Themes.TextHighlight);
-						string cropText = Font.CropText(this.newDirectory, this.bounds.x1 - this.bounds.x0 - 0.1f, out float margin, true);
-						margin = cropText.Length != this.newDirectory.Length ? margin : 0f;
-						UI.font.Write(cropText, margin + this.bounds.x0 + 0.1f, y, this.fontSize);
-
-						if (this.frame % 60 < 30) {
-							Immediate.Color(Themes.Text);
-							float cursorX = margin + this.bounds.x0 + 0.1f + UI.font.Measure(cropText, 0.04f).x;
-							UI.FillRect(cursorX, y + 0.01f, cursorX + 0.005f, y - 0.06f);
-						}
-
-						Immediate.Color(Themes.TextDisabled);
-						this.DrawIcon(5, y);
-						y -= 0.06f;
-					}
-				}
+				Immediate.Color(Themes.TextDisabled);
+				this.DrawIcon(5, y);
+				y -= 0.06f;
 			}
 		}
 
 		bool refreshing = false;
 
 		foreach (string path in this.directories) {
-			if (y <= scrollAreaY0) { hasExtras = true; break; }
-			if (y > scrollAreaY1) {
-				y -= 0.06f;
-				continue;
-			}
+			if (y < scrollAreaY0) { hasExtras = true; }
 
 			Rect rect = new Rect(this.bounds.x0 + 0.1f, y, this.bounds.x1 - 0.1f, y - 0.06f);
-			bool hover = rect.Inside(Mouse.X, Mouse.Y) &! this.awaitingDeleteConfirmation;
+			bool hover = rect.Inside(Mouse.X, Mouse.Y) && !this.awaitingDeleteConfirmation && IsInScrollView(y);
 
 			Immediate.Color(hover ? Themes.TextHighlight : Themes.Text);
 			UI.font.Write(path + "/", this.bounds.x0 + 0.1f, y, this.fontSize);
 			string currentFolderPath = Path.Join(this.currentPath, path);
+			
 			if (this.createdFolders.Contains(currentFolderPath)) {
-				if (UI.TextureButton(new UVRect(this.bounds.x1 - 0.09f, y - 0.05f, this.bounds.x1 - 0.04f, y).UV(0f, 0f, 0.25f, 0.25f))) {
+				if (UI.TextureButton(new UVRect(this.bounds.x1 - 0.09f, y - 0.05f, this.bounds.x1 - 0.04f, y).UV(0f, 0f, 0.25f, 0.25f)) && hover) {
 					if (Directory.GetFileSystemEntries(currentFolderPath).Length != 0) {
 						this.awaitingDeleteConfirmation = true;
 						PopupManager.Add(new ConfirmPopup("Delete folder?").SetButtons("Delete", "Cancel").Swap().Okay(() => { this.DeleteFolder(currentFolderPath); this.awaitingDeleteConfirmation = false; }).Cancel(() => { this.awaitingDeleteConfirmation = false; }));
@@ -429,17 +435,13 @@ public class FilesystemPopup : Popup {
 
 		foreach (string path in this.files) {
 			if (refreshing) break;
-			if (y <= scrollAreaY0) { hasExtras = true; break; }
-			if (y > scrollAreaY1) {
-				y -= 0.06f;
-				continue;
-			}
+			if (y < scrollAreaY0) { hasExtras = true; }
 
 			Rect rect = new Rect(this.bounds.x0 + 0.1f, y, this.bounds.x1 - 0.1f, y - 0.06f);
-			bool hover = rect.Inside(Mouse.X, Mouse.Y);
+			bool hover = rect.Inside(Mouse.X, Mouse.Y) && IsInScrollView(y);
 
 			if (hover && Mouse.JustLeft) {
-				if (this.allowMultiple && Keys.Modifier(Keys.Modifiers.Shift) || Keys.Modifier(Keys.Modifiers.Control)) {
+				if (this.allowMultiple && (Keys.Modifier(Keys.Modifiers.Shift) || Keys.Modifier(Keys.Modifiers.Control))) {
 					if (Keys.Modifier(Keys.Modifiers.Shift)) {
 						string latestSelected = this.selected.Last();
 						bool startSelecting = false;
@@ -476,10 +478,14 @@ public class FilesystemPopup : Popup {
 			y -= 0.06f;
 		}
 
-		if (hasExtras && !refreshing) {
-			Immediate.Color(Themes.TextDisabled);
-			//UI.font.Write("...", this.bounds.x0 + 0.1f, MathF.Ceiling((y - offsetY) / 0.06f) * 0.06f + offsetY, 0.04f);
-			UI.font.Write("...", this.bounds.x0 + 0.1f, y, this.fontSize);
+		Program.gl.Disable(EnableCap.ScissorTest);
+
+		Immediate.Color(Themes.TextDisabled);
+		if (hasExtras && !refreshing && y < scrollAreaY0) {
+			UI.font.Write("...", this.bounds.x0 + 0.1f, scrollAreaY0 + 0.01f, this.fontSize);
+		}
+		if (!refreshing && this.scroll < -0.01f) {
+			UI.font.Write("...", this.bounds.x0 + 0.1f, scrollAreaY1 + 0.045f, this.fontSize);
 		}
 	}
 
