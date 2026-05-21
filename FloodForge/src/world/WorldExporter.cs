@@ -833,15 +833,23 @@ public static class WorldExporter {
 
 		Backup.File(outputPath);
 		try {
-			{ using Stream stream = File.OpenWrite(outputPath);
+			{
+				using Stream stream = File.OpenWrite(outputPath);
 				ImageWriter writer = new ImageWriter();
 				writer.WritePng(imageData, textureWidth, textureHeight, ColorComponents.RedGreenBlue, stream);
 			}
+			string psdPath = Path.ChangeExtension(outputPath, ".psd");
+			ImageUtil.WritePsd(psdPath, imageData, textureWidth, textureHeight);
+
 			foreach (KeyValuePair<string, byte[]> item in timelineImageData) {
 				string image = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}-{item.Key}.png");
+
 				using Stream stream = File.OpenWrite(image);
 				ImageWriter writer = new ImageWriter();
 				writer.WritePng(item.Value, textureWidth, textureHeight, ColorComponents.RedGreenBlue, stream);
+
+				string timelinePsdPath = Path.ChangeExtension(image, ".psd");
+				ImageUtil.WritePsd(timelinePsdPath, item.Value, textureWidth, textureHeight);
 			}
 			Logger.Info("Image file exported");
 		}
