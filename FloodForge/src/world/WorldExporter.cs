@@ -878,8 +878,10 @@ public static class WorldExporter {
 				ImageWriter writer = new ImageWriter();
 				writer.WritePng(imageData, textureWidth, textureHeight, ColorComponents.RedGreenBlue, stream);
 			}
-			string psdPath = Path.ChangeExtension(outputPath, ".psd");
-			ImageUtil.WritePsd(psdPath, imageData, textureWidth, textureHeight);
+			if (Settings.ExportPsdFiles) {
+				string psdPath = Path.ChangeExtension(outputPath, ".psd");
+				ImageUtil.WritePsd(psdPath, imageData, textureWidth, textureHeight);
+			}
 
 			foreach (KeyValuePair<string, byte[]> item in timelineImageData) {
 				string image = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}-{item.Key}.png");
@@ -888,8 +890,10 @@ public static class WorldExporter {
 				ImageWriter writer = new ImageWriter();
 				writer.WritePng(item.Value, textureWidth, textureHeight, ColorComponents.RedGreenBlue, stream);
 
-				string timelinePsdPath = Path.ChangeExtension(image, ".psd");
-				ImageUtil.WritePsd(timelinePsdPath, item.Value, textureWidth, textureHeight);
+				if (Settings.ExportPsdFiles) {
+					string timelinePsdPath = Path.ChangeExtension(image, ".psd");
+					ImageUtil.WritePsd(timelinePsdPath, item.Value, textureWidth, textureHeight);
+				}
 			}
 			Logger.Info("Image file exported");
 		}
