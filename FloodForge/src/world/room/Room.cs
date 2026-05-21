@@ -1571,7 +1571,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 
 	public virtual void DrawBlack(WorldWindow.RoomPosition positionType) {
 		Immediate.Color(Themes.RoomSolid);
-		if (this.data.hidden) {
+		if (this.data.hidden != 0) {
 			Immediate.Alpha(0.5f);
 		}
 
@@ -1620,7 +1620,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			tint *= 0.25f;
 		}
 
-		float alpha = this.data.hidden ? 0.5f : tint.a;
+		float alpha = this.data.hidden != 0 ? 0.5f : tint.a;
 		if (positionType != WorldWindow.PositionType) {
 			alpha *= 0.5f;
 		}

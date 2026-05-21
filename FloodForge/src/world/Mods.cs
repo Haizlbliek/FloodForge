@@ -181,7 +181,7 @@ public static class Mods {
 
 			if (PathUtil.TryGetDirectory(dir, "objects", out string? objectsPath)) {
 				foreach (string filePath in Directory.GetFiles(objectsPath, "*.png")) {
-					objectTextures.Add(Path.GetFileNameWithoutExtension(filePath).ToLowerInvariant(), Texture.Load(filePath));
+					objectTextures.Add(Path.GetFileNameWithoutExtension(filePath).ToLowerInvariant(), Texture.Load(filePath, TextureWrapMode.ClampToBorder));
 				}
 			}
 		}

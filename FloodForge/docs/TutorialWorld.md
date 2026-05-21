@@ -16,6 +16,7 @@ Ctrl+Y - Redo
 X - Delete
 C - Open creature den
 G - Toggle visual merge
+W - Toggle warpable through Warp Menu mod
 L - Change layer
 T - Change tag
 S - Change subregion
