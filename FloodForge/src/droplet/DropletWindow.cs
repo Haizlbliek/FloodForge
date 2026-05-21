@@ -187,7 +187,7 @@ public static class DropletWindow {
 			}
 			else {
 				trashCanState = 0;
-				movingNode.position = nodeMouse - movingNode.parent.position;
+				movingNode.position = nodeMouse - movingNode.parent.GlobalPosition;
 			}
 
 			if (movingNode.devObject is TerrainHandleObject) {

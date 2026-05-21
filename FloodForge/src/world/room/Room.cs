@@ -376,7 +376,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 						string last = po[(end + 2)..];
 
 						Vector2 pos = new Vector2(float.Parse(xStr), float.Parse(yStr));
-						string[] splits = last.Split('~');
+						string[] splits = last.Split('~', StringSplitOptions.None);
 
 						int separatorIdx = po.IndexOf('>');
 						string key = separatorIdx != -1 ? po[..separatorIdx] : po;
