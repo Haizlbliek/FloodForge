@@ -635,7 +635,7 @@ public static class WorldWindow {
 		}
 
 		if (Mouse.Left) {
-			if (!Mouse.LastLeft && !menuItems.menuBarRect.Inside(Mouse.Pos)) { // if just started pressing left
+			if (!Mouse.LastLeft && !menuItems.Hovered()) { // if just started pressing left
 				if (selectingState == SelectingState.None) { // if we weren't selecting anything before
 					WorldDraggable? draggable = HoveringDraggable; // get hovering room -> WorldDraggable
 
@@ -1912,163 +1912,177 @@ public static class WorldWindow {
 		}
 
 		public WorldMenuItems() {
-			this.buttons = [
-				new Button("New", button => {
-					PopupManager.Add(new AcronymPopup((acronym) => {
-							WorldWindow.Reset();
-							WorldWindow.region.offscreenDen = new OffscreenRoom("offscreenden" + acronym.ToLowerInvariant(), "OffscreenDen" + acronym.ToUpperInvariant());
-							WorldWindow.region.rooms.Add(WorldWindow.region.offscreenDen);
-							WorldWindow.region.acronym = acronym;
-						})
-					);
-				}),
+			this.items = [
+				new Dropdown("File", [
+					new Button("New", button => {
+						PopupManager.Add(new AcronymPopup((acronym) => {
+								WorldWindow.Reset();
+								WorldWindow.region.offscreenDen = new OffscreenRoom("offscreenden" + acronym.ToLowerInvariant(), "OffscreenDen" + acronym.ToUpperInvariant());
+								WorldWindow.region.rooms.Add(WorldWindow.region.offscreenDen);
+								WorldWindow.region.acronym = acronym;
+							})
+						);
+					}),
 
-				new Button("Add Room", button => {
-					PopupManager.Add(
-						new FilesystemPopup(s => HandleRoomFilesSelected(s), 1)
-							.Filter(new Regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"))
-							.Multiple()
-							.Hint("xx_a01.txt")
-					);
-				}, button => {
-					return WorldWindow.ValidRegionLoaded;
-				},
-				"You must create or import a region\nbefore adding rooms."),
+					new Button("Import", button => {
+						PopupManager.Add(new FilesystemPopup(selection => {
+							if (selection.Length == 0) return;
 
-				new Button("Import", button => {
-					PopupManager.Add(new FilesystemPopup(selection => {
-						if (selection.Length == 0) return;
+							if (!WorldParser.ImportWorldFile(selection[0]))
+								PopupManager.Add(new InfoPopup("Importing world failed!\nView log.txt for more info."));
+						}, 0).Filter(Regexs.WorldFileRegex()).Hint("world_xx.txt"));
+					}),
 
-						if (!WorldParser.ImportWorldFile(selection[0]))
-							PopupManager.Add(new InfoPopup("Importing world failed!\nView log.txt for more info."));
-					}, 0).Filter(Regexs.WorldFileRegex()).Hint("world_xx.txt"));
-				}),
-
-				new Button("Export", button => {
-					if(!invalidCreaturesEncountered){
-						WorldWindow.ExportFinished = false;
-						ExportButton();
-					}
-					else{
-						PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(ExportButton));
-					}
-				}, button => {
-					return WorldWindow.region != null && WorldWindow.ExportFinished;
-				},
-				"You must create or import a region\nbefore exporting."),
-
-				new Button("No Colors", button => {
-					if (ColorType == RoomColors.None) {
-						ColorType = RoomColors.Layer;
-						button.Text = "Layer Colors";
-					}
-					else if (ColorType == RoomColors.Layer) {
-						ColorType = RoomColors.Subregion;
-						button.Text = "Subregion Colors";
-					}
-					else if (ColorType == RoomColors.Subregion) {
-						ColorType = RoomColors.None;
-						button.Text = "No Colors";
-					}
-				}, button => { return WorldWindow.ValidRegionLoaded; }),
-
-				new LayerButton(0, button => { return WorldWindow.ValidRegionLoaded; }),
-				new LayerButton(1, button => { return WorldWindow.ValidRegionLoaded; }),
-				new LayerButton(2, button => { return WorldWindow.ValidRegionLoaded; }),
-
-				new Button("Timeline", button => {
-					PopupManager.Add(new VisibleTimelinePopup(
-						WorldWindow.VisibleTimeline,
-						(TimelineType) => {
-							WorldWindow.VisibleTimeline.timelineType = TimelineType;
-							UpdateVisibleTimeline?.Invoke(WorldWindow.VisibleTimeline);
-							if(VisibleTimeline.timelineType == TimelineType.All) button.Text = "Timeline";
-							else if(VisibleTimeline.timelineType == TimelineType.Only) button.Text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
-							else button.Text = ">Timeline<";
+					new Button("Export",
+						button => {
+							if(!invalidCreaturesEncountered){
+								WorldWindow.ExportFinished = false;
+								ExportButton();
+							}
+							else{
+								PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(ExportButton));
+							}
 						},
-						(selected, timeline) => {
-							if(selected)
-								WorldWindow.VisibleTimeline.timelines.Remove(timeline);
-							else
-								WorldWindow.VisibleTimeline.timelines.Add(timeline);
-							UpdateVisibleTimeline?.Invoke(WorldWindow.VisibleTimeline);
-							if(VisibleTimeline.timelineType == TimelineType.All) button.Text = "Timeline";
-							else if(VisibleTimeline.timelineType == TimelineType.Only) button.Text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
-							else button.Text = ">Timeline<";
+						button => {
+							return WorldWindow.region != null && WorldWindow.ExportFinished;
 						},
-						ref UpdateVisibleTimeline));
+						"You must create or import a region\nbefore exporting."
+					),
+				]),
+
+
+				new Dropdown("Edit", [
+					new Button("Add Room",
+						button => {
+							PopupManager.Add(
+								new FilesystemPopup(s => HandleRoomFilesSelected(s), 1)
+									.Filter(new Regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"))
+									.Multiple()
+									.Hint("xx_a01.txt")
+							);
+						},
+						button => {
+							return WorldWindow.ValidRegionLoaded;
+						},
+						"You must create or import a region\nbefore adding rooms."
+					),
+
+					new Button("Mass Render", button => {
+						confirmRenderPopup = new ConfirmPopup("Render " + SelectedRooms.Count + " rooms?" + (
+							region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
+							region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
+							region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" :
+							"\n<s:1>This will overwrite all existing images!")
+							).Okay(() => {
+								renderRoomsTask = Task.Run(MassRenderRooms);
+							});
+						PopupManager.Add(confirmRenderPopup);
+					}, button => { return SelectedRooms.Count != 0 && ValidRegionLoaded; },
+					"Select at least one valid room\nto render."),
+
+					new Button("Add Reference", button => {
+						PopupManager.Add(new FilesystemPopup((pathstring) => {
+							if(pathstring.Length != 0) {
+								ReferenceImage newImage = new ReferenceImage(pathstring.First()) { Position = cameraOffset };
+								referenceImages.Add(newImage);
+								selectedDraggables.Add(newImage);
+							}
+						}));
 					}, button => {
 						return WorldWindow.ValidRegionLoaded;
-					}
-				),
+					}),
 
-				new Button("Dev Items: Hidden", button => {
-					VisibleDevItems = !VisibleDevItems;
-					button.Text = VisibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden";
-				}, button => { return WorldWindow.ValidRegionLoaded; }),
-
-				new Button("Creatures: Shown", button => {
-					VisibleCreatures = !VisibleCreatures;
-					button.Text = VisibleCreatures ? "Creatures: Shown" : "Creatures: Hidden";
-				}, button => { return WorldWindow.ValidRegionLoaded; }),
-
-				new Button("Refresh Region", button => {
-					string? path = PathUtil.FindFile(WorldWindow.region.exportPath, $"world_{WorldWindow.region.acronym}.txt");
-					if (path == null) {
-						PopupManager.Add(new InfoPopup("Could not find world_xx.txt file!"));
-						return;
-					}
-					if (!WorldParser.ImportWorldFile(path))
-						PopupManager.Add(new InfoPopup("Importing world failed!\nView log.txt for more info."));
-				}, button => { return WorldWindow.ValidRegionLoaded; },
-				"You must create or import a region\nbefore refreshing."),
-
-				new Button("Canon", button => {
-					if (PositionType == RoomPosition.Canon) {
-						PositionType = RoomPosition.Dev;
-						button.Text = "Dev";
-					}
-					else if (PositionType == RoomPosition.Dev) {
-						PositionType = RoomPosition.Both;
-						button.Text = "Both";
-					}
-					else if (PositionType == RoomPosition.Both) {
-						PositionType = RoomPosition.Canon;
-						button.Text = "Canon";
-					}
-					MoveUpdate();
-				}, button => { return WorldWindow.ValidRegionLoaded; }),
-
-				new Button("Connect: Path", button => {
-					changeConnectBehaviour = !changeConnectBehaviour;
-					button.Text = changeConnectBehaviour ? "Connect: Path" : "Connect: Default";
-					MoveUpdate();
-				}, button => { return WorldWindow.ValidRegionLoaded; }),
-
-				new AlignedButton("Mass Render", true, button => {
-					confirmRenderPopup = new ConfirmPopup("Render " + SelectedRooms.Count + " rooms?" + (
-						region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
-						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
-						region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" :
-						"\n<s:1>This will overwrite all existing images!")
-						).Okay(() => {
-							renderRoomsTask = Task.Run(MassRenderRooms);
-						});
-					PopupManager.Add(confirmRenderPopup);
-				}, button => { return SelectedRooms.Count != 0 && ValidRegionLoaded; },
-				"Select at least one valid room\nto render."),
-
-				new Button("Add Reference", button => {
-					PopupManager.Add(new FilesystemPopup((pathstring) => {
-						if(pathstring.Length != 0) {
-							ReferenceImage newImage = new ReferenceImage(pathstring.First()) { Position = cameraOffset };
-							referenceImages.Add(newImage);
-							selectedDraggables.Add(newImage);
+					new Button("Refresh Region", button => {
+						string? path = PathUtil.FindFile(WorldWindow.region.exportPath, $"world_{WorldWindow.region.acronym}.txt");
+						if (path == null) {
+							PopupManager.Add(new InfoPopup("Could not find world_xx.txt file!"));
+							return;
 						}
-					}));
-				}, button => {
-					return WorldWindow.ValidRegionLoaded;
-				})
+						if (!WorldParser.ImportWorldFile(path))
+							PopupManager.Add(new InfoPopup("Importing world failed!\nView log.txt for more info."));
+					}, button => { return WorldWindow.ValidRegionLoaded; },
+					"You must create or import a region\nbefore refreshing."),
+				]),
+
+
+				new Dropdown("View", [
+					new Button("No Colors", button => {
+						if (ColorType == RoomColors.None) {
+							ColorType = RoomColors.Layer;
+							button.Text = "Layer Colors";
+						}
+						else if (ColorType == RoomColors.Layer) {
+							ColorType = RoomColors.Subregion;
+							button.Text = "Subregion Colors";
+						}
+						else if (ColorType == RoomColors.Subregion) {
+							ColorType = RoomColors.None;
+							button.Text = "No Colors";
+						}
+					}, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
+
+					new LayerButton(0, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
+					new LayerButton(1, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
+					new LayerButton(2, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
+
+					new Button("Timeline", button => {
+						PopupManager.Add(new VisibleTimelinePopup(
+							WorldWindow.VisibleTimeline,
+							(TimelineType) => {
+								WorldWindow.VisibleTimeline.timelineType = TimelineType;
+								UpdateVisibleTimeline?.Invoke(WorldWindow.VisibleTimeline);
+								if(VisibleTimeline.timelineType == TimelineType.All) button.Text = "Timeline";
+								else if(VisibleTimeline.timelineType == TimelineType.Only) button.Text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
+								else button.Text = ">Timeline<";
+							},
+							(selected, timeline) => {
+								if(selected)
+									WorldWindow.VisibleTimeline.timelines.Remove(timeline);
+								else
+									WorldWindow.VisibleTimeline.timelines.Add(timeline);
+								UpdateVisibleTimeline?.Invoke(WorldWindow.VisibleTimeline);
+								if(VisibleTimeline.timelineType == TimelineType.All) button.Text = "Timeline";
+								else if(VisibleTimeline.timelineType == TimelineType.Only) button.Text = (VisibleTimeline.timelines.Count == 0 ? "<s:1>" : "") + "<Timeline>";
+								else button.Text = ">Timeline<";
+							},
+							ref UpdateVisibleTimeline));
+						}, button => {
+							return WorldWindow.ValidRegionLoaded;
+						}
+					),
+
+					new Button("Dev Items: Hidden", button => {
+						VisibleDevItems = !VisibleDevItems;
+						button.Text = VisibleDevItems ? "Dev Items: Shown" : "Dev Items: Hidden";
+					}, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
+
+					new Button("Creatures: Shown", button => {
+						VisibleCreatures = !VisibleCreatures;
+						button.Text = VisibleCreatures ? "Creatures: Shown" : "Creatures: Hidden";
+					}, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
+
+					new Button("Canon", button => {
+						if (PositionType == RoomPosition.Canon) {
+							PositionType = RoomPosition.Dev;
+							button.Text = "Dev";
+						}
+						else if (PositionType == RoomPosition.Dev) {
+							PositionType = RoomPosition.Both;
+							button.Text = "Both";
+						}
+						else if (PositionType == RoomPosition.Both) {
+							PositionType = RoomPosition.Canon;
+							button.Text = "Canon";
+						}
+						MoveUpdate();
+					}, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
+
+					new Button("Connect: Path", button => {
+						changeConnectBehaviour = !changeConnectBehaviour;
+						button.Text = changeConnectBehaviour ? "Connect: Path" : "Connect: Default";
+						MoveUpdate();
+					}, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
+				]),
 			];
 		}
 

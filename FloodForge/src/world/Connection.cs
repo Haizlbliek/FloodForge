@@ -214,11 +214,12 @@ public class Connection {
 			this.RecalculateBezier();
 		}
 		if (WorldWindow.CullTest(this.fittedAABB)) {
-			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && this.roomA.timeline.OverlapsWith(WorldWindow.VisibleTimeline) || this.ConnectionVisible;
-			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && this.roomB.timeline.OverlapsWith(WorldWindow.VisibleTimeline) || this.ConnectionVisible;
+			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && this.roomA.timeline.OverlapsWith(WorldWindow.VisibleTimeline) && this.ConnectionVisible;
+			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && this.roomB.timeline.OverlapsWith(WorldWindow.VisibleTimeline) && this.ConnectionVisible;
 			float opacity = Settings.ConnectionOpacity;
 			if (!aVisible && !bVisible || opacity < 0.01f)
 				return;
+
 			bool hovered = this.Hovered || Keys.Modifier(Keys.Modifiers.Shift);
 
 			bool fadeMiddle = aVisible && bVisible && !this.ConnectionVisible;
