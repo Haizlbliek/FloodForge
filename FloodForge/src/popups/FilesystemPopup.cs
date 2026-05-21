@@ -13,6 +13,7 @@ public class FilesystemPopup : Popup {
 	protected SelectionType typeFilter = SelectionType.File;
 	protected string hint = "";
 
+	protected string? search = null;
 	protected string? newDirectory = null;
 	protected bool showAll = false;
 	protected float scroll;
@@ -120,13 +121,19 @@ public class FilesystemPopup : Popup {
 		List<string> d = [];
 
 		foreach (string entry in Directory.EnumerateFileSystemEntries(this.currentPath).Order()) {
+			string name = Path.GetFileName(entry);
+
+			if (this.search != null && !name.Contains(this.search, StringComparison.InvariantCultureIgnoreCase)) {
+				continue;
+			}
+
 			if (Directory.Exists(entry)) {
 				d.Add(Path.GetFileName(entry));
 				continue;
 			}
 
 			if (this.showAll || (this.regexFilter == null) || this.regexFilter.IsMatch(Path.GetFileName(entry))) {
-				f.Add(Path.GetFileName(entry));
+				f.Add(name);
 			}
 		}
 
@@ -184,7 +191,7 @@ public class FilesystemPopup : Popup {
 
 
 
-	public override void Accept() { // REVIEW - check if floodforge even has permission to enter a folder
+	public override void Accept() {
 		previousDirectories[this.directoryIndex] = this.currentPath;
 
 		if (this.newDirectory != null) {
@@ -219,6 +226,12 @@ public class FilesystemPopup : Popup {
 			return;
 		}
 
+		if (this.search != null) {
+			this.search = null;
+			this.Refresh();
+			return;
+		}
+
 		this.Close();
 	}
 
@@ -234,33 +247,54 @@ public class FilesystemPopup : Popup {
 	}
 
 	protected void KeyPress(Key key) {
-		if (this.newDirectory == null) return;
+		bool isNewDirActive = this.newDirectory != null;
+
+		string currentText = (isNewDirActive ? this.newDirectory : this.search) ?? "";
 
 		if (key == Key.V && Keys.Modifier(Keys.Modifiers.Control)) {
-			this.newDirectory += Clipboard.Content.Replace("\\", "").Replace("/", "").Replace(".", "");
+			string clipboardClean = Clipboard.Content.Replace("\\", "").Replace("/", "").Replace(".", "");
+			currentText += clipboardClean;
 			this.frame = 0;
+			
+			if (isNewDirActive) this.newDirectory = currentText; else this.search = currentText;
 			return;
 		}
 
-		if (key == Key.Period || key == Key.Slash || key == Key.BackSlash || key == Key.Enter) {
+		if (key == Key.Period || key == Key.Slash || key == Key.BackSlash || key == Key.Enter || key == Key.Escape) {
 			return;
 		}
 
 		if (key == Key.Backspace) {
-			if (this.newDirectory.Length > 0) this.newDirectory = this.newDirectory[0..^1];
+			if (currentText.Length > 0) currentText = currentText[0..^1];
 			this.frame = 0;
+
+			if (isNewDirActive) {
+				this.newDirectory = currentText;
+			}
+			else {
+				this.search = currentText;
+				this.Refresh();
+			}
 			return;
 		}
 
 		if (key >= Key.A && key <= Key.Z) {
 			this.frame = 0;
 			string k = key.ToString();
-			this.newDirectory += Keys.Modifier(Keys.Modifiers.Shift) ? k.ToUpper() : k.ToLower();
+			currentText += Keys.Modifier(Keys.Modifiers.Shift) ? k.ToUpper() : k.ToLower();
 		}
 
 		if (key >= Key.Number0 && key <= Key.Number9) {
 			this.frame = 0;
-			this.newDirectory += key.ToString()[^1];
+			currentText += key.ToString()[^1];
+		}
+
+		if (isNewDirActive) {
+			this.newDirectory = currentText;
+		}
+		else {
+			this.search = currentText;
+			this.Refresh();
 		}
 	}
 
@@ -280,7 +314,7 @@ public class FilesystemPopup : Popup {
 
 
 		// Up Directory
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.02f, this.bounds.y1 - 0.12f, 0.05f, 0.05f).UV(0.25f, 0.25f, 0.5f, 0f))) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.25f, 0.25f, 0.5f, 0f))) {
 			this.currentPath = PathUtil.Parent(this.currentPath);
 			this.scroll = 0f;
 			this.targetScroll = 0f;
@@ -289,49 +323,60 @@ public class FilesystemPopup : Popup {
 		}
 
 		// Refresh
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.09f, this.bounds.y1 - 0.12f, 0.05f, 0.05f).UV(0.5f, 0.25f, 0.75f, 0f))) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.07f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.5f, 0.25f, 0.75f, 0f))) {
 			this.Refresh();
 			this.ClampScroll();
 		}
 
+		// Search
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.12f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.25f, 1f, 0.5f, 0.75f), new UI.TextureButtonMods() { disabled = this.newDirectory != null })) {
+			this.search = this.search == null ? "" : null;
+			this.Refresh();
+		}
+
 		// New Directory
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.09f, this.bounds.y1 - 0.12f, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.25f))) {
-			this.newDirectory = "";
-			this.scroll = 0f;
-			this.targetScroll = 0f;
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.25f), new UI.TextureButtonMods() { disabled = this.search != null })) {
+			if (this.newDirectory == null) {
+				this.newDirectory = "";
+				this.scroll = 0f;
+				this.targetScroll = 0f;
+			}
+			else {
+				this.newDirectory = null;
+			}
 		}
 
 		if (this.typeFilter == SelectionType.File) {
-			if (UI.CheckBox(Rect.FromSize(this.bounds.x0 + 0.02f, this.bounds.y0 + 0.04f, 0.05f, 0.05f), ref this.showAll)) {
+			if (UI.CheckBox(Rect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, 0.05f, 0.05f), ref this.showAll)) {
 				this.Refresh();
 				this.ClampScroll();
 			}
 
 			Immediate.Color(Themes.Text);
-			UI.font.Write("Show all", this.bounds.x0 + 0.09f, this.bounds.y0 + 0.09f, this.fontSize);
+			UI.font.Write("Show all", this.bounds.x0 + 0.08f, this.bounds.y0 + 0.06f, this.fontSize);
 
 			Immediate.Color(Themes.TextDisabled);
-			UI.font.Write(this.hint, this.bounds.x0 + 0.35f, this.bounds.y0 + 0.09f, this.fontSize);
+			UI.font.Write(this.hint, this.bounds.x0 + 0.32f, this.bounds.y0 + 0.06f, this.fontSize);
 		}
 		else {
 			Immediate.Color(Themes.TextDisabled);
-			UI.font.Write(this.hint, this.bounds.x0 + 0.02f, this.bounds.y0 + 0.09f, this.fontSize);
+			UI.font.Write(this.hint, this.bounds.x0 + 0.01f, this.bounds.y0 + 0.06f, this.fontSize);
 		}
 
-		float left = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 0.23f : 0.16f;
+		float left = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 0.21f : 0.14f;
 
-		if (UI.TextButton("Open", new Rect(this.bounds.x1 - 0.16f, this.bounds.y0 + 0.09f, this.bounds.x1 - 0.05f, this.bounds.y0 + 0.04f), new UI.TextButtonMods() { disabled = this.selected.Count == 0 && this.typeFilter == SelectionType.File })) {
+		if (UI.TextButton("Open", new Rect(this.bounds.x1 - 0.11f, this.bounds.y0 + 0.06f, this.bounds.x1 - 0.01f, this.bounds.y0 + 0.01f), new UI.TextButtonMods() { disabled = this.selected.Count == 0 && this.typeFilter == SelectionType.File })) {
 			this.Accept();
 		}
 
-		string croppedPath = UI.font.CropText(this.currentPath, this.bounds.x1 - 0.11f - (this.bounds.x0 + left), this.fontSize, out _, true);
+		string croppedPath = UI.font.CropText(this.currentPath, this.bounds.x1 - 0.14f - (this.bounds.x0 + left), this.fontSize, out _, true);
 
 		Immediate.Color(Themes.Text);
-		UI.font.Write(croppedPath, this.bounds.x0 + left, this.bounds.y1 - 0.07f, this.fontSize);
+		UI.font.Write(croppedPath, this.bounds.x0 + left, this.bounds.y1 - 0.06f, this.fontSize);
 
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
 			string root = Path.GetPathRoot(this.currentPath) ?? "";
-			if (UI.TextButton(root, new Rect(this.bounds.x0 + 0.16f, this.bounds.y1 - 0.12f, this.bounds.x0 + 0.21f, this.bounds.y1 - 0.07f))) {
+			if (UI.TextButton(root, Rect.FromSize(this.bounds.x0 + 0.13f, this.bounds.y1 - 0.11f, 0.05f, 0.05f))) {
 				DriveInfo[] drives = [.. DriveInfo.GetDrives().Where(d => d.IsReady)];
 				if (drives.Length > 0) {
 					int idx = Array.FindIndex(drives, d => d.Name.Equals(root, StringComparison.InvariantCultureIgnoreCase));
@@ -348,12 +393,33 @@ public class FilesystemPopup : Popup {
 			}
 		}
 
+		if (this.search != null) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.17f, 0.05f, 0.05f).UV(0f, 0f, 0.25f, 0.25f))) {
+				this.search = null;
+				this.Refresh();
+			}
+			else {
+				Immediate.Color(Themes.TextDisabled);
+				UI.FillRect(this.bounds.x0 + 0.1f, this.bounds.y1 - 0.12f, this.bounds.x1 - 0.07f, this.bounds.y1 - 0.17f);
+
+				Immediate.Color(Themes.TextHighlight);
+				string cropText = UI.font.CropText(this.search, this.bounds.x1 - this.bounds.x0 - 0.16f, this.fontSize, out float margin, true);
+				margin = cropText.Length != this.search.Length ? margin : 0f;
+				UI.font.Write(cropText, margin + this.bounds.x0 + 0.1f, this.bounds.y1 - 0.12f, this.fontSize);
+
+				if (this.frame % 60 < 30) {
+					Immediate.Color(Themes.Text);
+					float cursorX = margin + this.bounds.x0 + 0.1f + UI.font.Measure(cropText, 0.04f).x;
+					UI.FillRect(cursorX, this.bounds.y1 - 0.12f, cursorX + 0.005f, this.bounds.y1 - 0.17f);
+				}
+			}
+		}
+
 
 		float offsetY = this.bounds.CenterY;
-		float scrollAreaY1 = this.bounds.y1 - 0.145f;
-		float scrollAreaY0 = this.bounds.y0 + 0.145f;
+		float scrollAreaY1 = this.bounds.y1 - (this.search == null ? 0.12f : 0.18f);
+		float scrollAreaY0 = this.bounds.y0 + 0.07f;
 		float y = scrollAreaY1 - this.scroll;
-		bool hasExtras = false;
 
 		float padding = 0.01f;
 		int width = Program.window.FramebufferSize.X;
@@ -370,22 +436,22 @@ public class FilesystemPopup : Popup {
 		bool IsInScrollView(float itemY) => itemY <= scrollAreaY1 + 0.01f && itemY - 0.06f >= scrollAreaY0 - 0.01f;
 
 		if (this.newDirectory != null) {
-			if (UI.TextureButton(new UVRect(this.bounds.x1 - 0.09f, y - 0.05f, this.bounds.x1 - 0.04f, y).UV(0f, 0f, 0.25f, 0.25f)) && IsInScrollView(y)) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, y - 0.05f, 0.05f, 0.05f).UV(0f, 0f, 0.25f, 0.25f)) && IsInScrollView(y)) {
 				this.newDirectory = null;
 			}
 			else {
 				Immediate.Color(Themes.TextDisabled);
-				UI.FillRect(this.bounds.x0 + 0.1f, y, this.bounds.x1 - 0.1f, y - 0.05f);
+				UI.FillRect(this.bounds.x0 + 0.1f, y, this.bounds.x1 - 0.07f, y - 0.05f);
 
 				Immediate.Color(Themes.TextHighlight);
-				string cropText = UI.font.CropText(this.newDirectory, this.bounds.x1 - this.bounds.x0 - 0.1f, this.fontSize, out float margin, true);
+				string cropText = UI.font.CropText(this.newDirectory, this.bounds.x1 - this.bounds.x0 - 0.16f, this.fontSize, out float margin, true);
 				margin = cropText.Length != this.newDirectory.Length ? margin : 0f;
 				UI.font.Write(cropText, margin + this.bounds.x0 + 0.1f, y, this.fontSize);
 
 				if (this.frame % 60 < 30) {
 					Immediate.Color(Themes.Text);
 					float cursorX = margin + this.bounds.x0 + 0.1f + UI.font.Measure(cropText, 0.04f).x;
-					UI.FillRect(cursorX, y + 0.01f, cursorX + 0.005f, y - 0.06f);
+					UI.FillRect(cursorX, y, cursorX + 0.005f, y - 0.05f);
 				}
 
 				Immediate.Color(Themes.TextDisabled);
@@ -397,8 +463,6 @@ public class FilesystemPopup : Popup {
 		bool refreshing = false;
 
 		foreach (string path in this.directories) {
-			if (y < scrollAreaY0) { hasExtras = true; }
-
 			Rect rect = new Rect(this.bounds.x0 + 0.1f, y, this.bounds.x1 - 0.1f, y - 0.06f);
 			bool hover = rect.Inside(Mouse.X, Mouse.Y) && !this.awaitingDeleteConfirmation && IsInScrollView(y);
 
@@ -422,6 +486,8 @@ public class FilesystemPopup : Popup {
 			this.DrawIcon(5, y);
 
 			if (hover && Mouse.JustLeft) {
+				this.search = null;
+				this.newDirectory = null;
 				this.currentPath = currentFolderPath;
 				this.scroll = 0f;
 				this.targetScroll = 0f;
@@ -435,7 +501,6 @@ public class FilesystemPopup : Popup {
 
 		foreach (string path in this.files) {
 			if (refreshing) break;
-			if (y < scrollAreaY0) { hasExtras = true; }
 
 			Rect rect = new Rect(this.bounds.x0 + 0.1f, y, this.bounds.x1 - 0.1f, y - 0.06f);
 			bool hover = rect.Inside(Mouse.X, Mouse.Y) && IsInScrollView(y);
@@ -479,14 +544,6 @@ public class FilesystemPopup : Popup {
 		}
 
 		Program.gl.Disable(EnableCap.ScissorTest);
-
-		Immediate.Color(Themes.TextDisabled);
-		if (hasExtras && !refreshing && y < scrollAreaY0) {
-			UI.font.Write("...", this.bounds.x0 + 0.1f, scrollAreaY0 + 0.01f, this.fontSize);
-		}
-		if (!refreshing && this.scroll < -0.01f) {
-			UI.font.Write("...", this.bounds.x0 + 0.1f, scrollAreaY1 + 0.045f, this.fontSize);
-		}
 	}
 
 	public enum SelectionType {
