@@ -6,5 +6,7 @@ public static class DevObjects {
 		{ "MudPit",        () => new MudPitObject() },
 		{ "AirPocket",     () => new AirPocketObject() },
 		{ "SuperSlope",    () => new SuperSlopeObject() },
+		{ "CurvedSlope",   () => new CurvedSlopeObject() },
+		{ "LocalTerrain",  () => new LocalTerrainObject() },
 	};
 }

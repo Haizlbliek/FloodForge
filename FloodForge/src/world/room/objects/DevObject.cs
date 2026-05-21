@@ -5,8 +5,10 @@ public abstract class DevObject {
 
 	public virtual bool ShowInDroplet => true;
 
-	public void AddNode(Vector2 pos, Node? parent = null) {
-		this.nodes.Add(new Node(pos, parent, this));
+	public Node AddNode(Vector2 pos, Node? parent = null) {
+		Node node = new Node(pos, parent, this);
+		this.nodes.Add(node);
+		return node;
 	}
 
 	public DevObject() {
