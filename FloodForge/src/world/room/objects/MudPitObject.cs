@@ -1,4 +1,4 @@
-namespace FloodForge.Droplet;
+namespace FloodForge.World;
 
 public class MudPitObject : DevObject, ISaveableObject {
 	public MudPitObject() {

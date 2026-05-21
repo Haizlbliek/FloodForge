@@ -1,4 +1,4 @@
-namespace FloodForge.Droplet;
+namespace FloodForge.World;
 
 public interface ISaveableObject {
 	public string SaveKey { get; }

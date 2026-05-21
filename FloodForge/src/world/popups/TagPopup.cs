@@ -1,8 +1,6 @@
 using FloodForge.Popups;
 using FloodForge.History;
-using Silk.NET.GLFW;
 
-// using Silk.NET.SDL;
 using Stride.Core.Extensions;
 
 namespace FloodForge.World;
