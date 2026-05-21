@@ -26,6 +26,7 @@ I - Move to back
 D - Change conditionals
 R - Open room in Droplet
 F - Search for room
+B - Toggle bat migration blockage
 Alt+T - Open Tutorial
 Alt+S - Open Splash
 Right click - Open reference image settings; Reset popup size

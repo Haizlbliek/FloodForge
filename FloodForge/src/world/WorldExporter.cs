@@ -569,6 +569,18 @@ public static class WorldExporter {
 
 			writer.Write(WorldWindow.region.extraWorldCreatures);
 			writer.WriteLine("END CREATURES");
+
+			Logger.Info("- Bat migration blockages");
+			writer.WriteLine();
+			writer.WriteLine("BAT MIGRATION BLOCKAGES");
+			foreach (Room room in WorldWindow.region.rooms) {
+				if (room is OffscreenRoom || !room.data.blockedBatMigration)
+					continue;
+
+				writer.WriteLine($"{FancyRoomCasing(room)}");
+			}
+			writer.WriteLine("END BAT MIGRATION BLOCKAGES");
+
 			writer.Write(WorldWindow.region.extraWorld);
 		}
 		catch (Exception exception) {
