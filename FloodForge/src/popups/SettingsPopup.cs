@@ -1,31 +1,33 @@
 namespace FloodForge.Popups;
 
 public class SettingsPopup : Popup {
+	protected const float SettingHeight = 0.04f;
+	protected const float SettingSpacing = 0.03f;
+
 	public SettingContainer[] settingContainers;
-	protected static float settingHeight = 0.04f;
-	protected static float settingSpacing = 0.03f;
 	protected Rect usableBounds;
 	public SettingsPopup(SettingContainer[] settings) {
 		this.settingContainers = settings;
 		float totalHeight = 0;
 		foreach (SettingContainer _ in this.settingContainers) {
-			totalHeight += (totalHeight != 0 ? settingSpacing : 0) + settingHeight;
+			totalHeight += (totalHeight != 0 ? SettingSpacing : 0) + SettingHeight;
 		}
-		totalHeight += 0.05f + settingSpacing;
+		totalHeight += 0.05f + SettingSpacing;
 		this.bounds = new Rect(-0.3f, -(totalHeight * 0.5f) - 0.01f, 0.3f, (totalHeight * 0.5f) + 0.01f);
 	}
 
 	public override void Draw() {
 		base.Draw();
 
-		if (this.collapsed) return;
+		if (this.collapsed)
+			return;
 
 		this.usableBounds = new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y1 - 0.05f - 0.01f);
-		float yVal = this.usableBounds.y1 - settingSpacing * 0.5f;
+		float yVal = this.usableBounds.y1 - SettingSpacing * 0.5f;
 		foreach (SettingContainer container in this.settingContainers) {
-			Rect bounds = new Rect(this.usableBounds.x0, yVal - settingHeight, this.usableBounds.x1, yVal);
+			Rect bounds = new Rect(this.usableBounds.x0, yVal - SettingHeight, this.usableBounds.x1, yVal);
 			container.Draw(bounds);
-			yVal -= settingHeight + settingSpacing;
+			yVal -= SettingHeight + SettingSpacing;
 		}
 	}
 
@@ -47,7 +49,7 @@ public class SettingsPopup : Popup {
 		protected float[] widthOverrides;
 		protected bool hasDivider;
 
-		public HorizontalElement(SettingContainer[] settings, float[]? widthOverrides = null, bool hasDivider = true) : base ("") {
+		public HorizontalElement(SettingContainer[] settings, float[]? widthOverrides = null, bool hasDivider = true) : base("") {
 			this.settings = settings;
 			this.widthOverrides = widthOverrides ?? [];
 			this.hasDivider = hasDivider;
@@ -83,7 +85,7 @@ public class SettingsPopup : Popup {
 				this.settings[i].Draw(newBounds);
 				if (i != 0 && this.hasDivider) {
 					float lineX = currentXPosition - (betweenElementMargin / 2);
-					float lineHeight = SettingsPopup.settingSpacing + SettingsPopup.settingHeight;
+					float lineHeight = SettingsPopup.SettingSpacing + SettingsPopup.SettingHeight;
 					Immediate.Color(Themes.Border);
 					UI.Line(lineX, bounds.CenterY - lineHeight / 2, lineX, bounds.CenterY + lineHeight / 2);
 				}
@@ -111,7 +113,7 @@ public class SettingsPopup : Popup {
 	}
 
 	// Minimum seems exclusive - slider only goes to -1 with minimum set to -2
-	public class IntSliderSettingContainer (string name, int initialValue, int minimum, int maximum, Action<int> callback) : SettingContainer (name) {
+	public class IntSliderSettingContainer(string name, int initialValue, int minimum, int maximum, Action<int> callback) : SettingContainer(name) {
 		protected UI.SliderIntEditable valueSlider = new UI.SliderIntEditable(minimum, maximum);
 		protected int value = initialValue;
 		protected bool updateWhileDragging = true;
@@ -122,7 +124,7 @@ public class SettingsPopup : Popup {
 			this.updateWhileDragging = updateWhileDragging;
 			return this;
 		}
-		
+
 		public IntSliderSettingContainer UpdateWhileUnchanged(bool updateWhileSame = false) {
 			this.updateWhileUnchanged = updateWhileSame;
 			return this;
@@ -138,13 +140,13 @@ public class SettingsPopup : Popup {
 			bool swap = slider.sliderPos.x > rect.x1 + 0.1f;
 			float x = slider.sliderPos.x + (swap ? -0.01f : 0.01f);
 			UI.font.Write($"{this.value}", x, slider.sliderPos.y, 0.03f, swap ? Font.Align.MiddleRight : Font.Align.MiddleLeft);
-			if ((slider.submitted &! slider.dragging) || (slider.dragging && this.updateWhileDragging && (this.value != previousValue || this.updateWhileUnchanged))) {
+			if ((slider.submitted & !slider.dragging) || (slider.dragging && this.updateWhileDragging && (this.value != previousValue || this.updateWhileUnchanged))) {
 				this.callback(this.value);
 			}
 		}
 	}
 
-	public class FloatSliderSettingContainer (string name, float initialValue, float minimum, float maximum, Action<float> callback) : SettingContainer (name) {
+	public class FloatSliderSettingContainer(string name, float initialValue, float minimum, float maximum, Action<float> callback) : SettingContainer(name) {
 		protected UI.SliderFloatEditable valueSlider = new UI.SliderFloatEditable(minimum, maximum);
 		protected float value = initialValue;
 		protected bool updateWhileDragging = true;
@@ -155,7 +157,7 @@ public class SettingsPopup : Popup {
 			this.updateWhileDragging = updateWhileDragging;
 			return this;
 		}
-		
+
 		public FloatSliderSettingContainer UpdateWhileUnchanged(bool updateWhileSame = true) {
 			this.updateWhileUnchanged = updateWhileSame;
 			return this;
@@ -171,7 +173,7 @@ public class SettingsPopup : Popup {
 			bool swap = slider.sliderPos.x > rect.x1 + 0.1f;
 			float x = slider.sliderPos.x + (swap ? -0.01f : 0.01f);
 			UI.font.Write($"{this.value}", x, slider.sliderPos.y, 0.03f, swap ? Font.Align.MiddleRight : Font.Align.MiddleLeft);
-			if ((slider.submitted &! slider.dragging) || (slider.dragging && this.updateWhileDragging && (this.value != previousValue || this.updateWhileUnchanged))) {
+			if ((slider.submitted & !slider.dragging) || (slider.dragging && this.updateWhileDragging && (this.value != previousValue || this.updateWhileUnchanged))) {
 				this.callback(this.value);
 			}
 		}
@@ -184,14 +186,14 @@ public class SettingsPopup : Popup {
 		protected float prefixSizeX;
 		protected string hint;
 
-		public StringSettingContainer (string name, Action<string> callback, string prefix = "", string hint = "", string postfix = "") : base (name) {
+		public StringSettingContainer(string name, Action<string> callback, string prefix = "", string hint = "", string postfix = "") : base(name) {
 			this.callback = callback;
 			this.prefix = prefix;
 			this.prefixSizeX = UI.font.Measure(this.prefix, 0.03f).x;
 			this.hint = hint;
 		}
 
-		public StringSettingContainer (string name, Action<string> callback, ref Action<string>? onValueChangeEvent, string prefix = "", string hint = "", string postfix = "") : this(name, callback, prefix, hint, postfix) {
+		public StringSettingContainer(string name, Action<string> callback, ref Action<string>? onValueChangeEvent, string prefix = "", string hint = "", string postfix = "") : this(name, callback, prefix, hint, postfix) {
 			onValueChangeEvent += this.UpdateValue;
 		}
 
@@ -201,7 +203,7 @@ public class SettingsPopup : Popup {
 
 		public override void Draw(Rect bounds) {
 			base.Draw(bounds);
-			
+
 			Immediate.Color(Themes.Text);
 			float xPos = bounds.x0 + UI.font.Measure(this.settingName, 0.03f).x + (this.settingName != "" ? 0.02f : 0);
 			UI.font.Write(this.prefix, xPos, bounds.CenterY, 0.03f, Font.Align.MiddleLeft);
@@ -220,7 +222,7 @@ public class SettingsPopup : Popup {
 	public class ButtonSettingContainer : SettingContainer {
 		readonly Action onClickCallback;
 		Func<ButtonSettingContainer, bool>? contextCheckCallback;
-		public ButtonSettingContainer(string name, Action onClickCallback) : base (name) {
+		public ButtonSettingContainer(string name, Action onClickCallback) : base(name) {
 			this.onClickCallback = onClickCallback;
 		}
 

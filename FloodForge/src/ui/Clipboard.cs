@@ -7,4 +7,6 @@ public static class Clipboard {
 		get => ClipboardService.GetText() ?? "";
 		set => ClipboardService.SetText(value);
 	}
+
+	public static void Clear() => ClipboardService.SetText("");
 }

@@ -19,21 +19,20 @@ public abstract class MenuItems {
 		float rightX = Main.screenBounds.x - 0.01f;
 
 		foreach (Button button in this.buttons) {
-			if (button.hasContextCheckCallback) {
+			if (button.contextCheckCallback != null) {
 				button.buttonEnabled = button.contextCheckCallback(button);
 			}
 			if (button.buttonEnabled || Settings.DisabledButtonsMode.value != Settings.STDisabledButtonsMode.Hide ) {
 				bool onRight = (button is AlignedButton alignedButton) && alignedButton.alignment;
-				Font.ParseSeverity(button.text, out string trimmedLine);
-				float width = UI.font.Measure(trimmedLine, 0.03f).x + 0.02f;
+				float width = button.Size.x + 0.02f;
 				UI.TextButtonMods mods = new UI.TextButtonMods();
 				if (button.Dark || (!button.buttonEnabled && Settings.DisabledButtonsMode.value == Settings.STDisabledButtonsMode.Grey)) {
 					mods.textColor = Themes.TextDisabled;
 				}
-				if (UI.TextButton(button.text, Rect.FromSize(onRight ? rightX - width : leftX, Main.screenBounds.y - 0.05f, width, 0.04f), mods)) {
+				if (UI.TextButton(button.Text, Rect.FromSize(onRight ? rightX - width : leftX, Main.screenBounds.y - 0.05f, width, 0.04f), mods)) {
 					if(button.buttonEnabled)
 						button.onclick(button);
-					else if (button.disabledInteractMessage != "") {
+					else if (button.disabledInteractMessage != null) {
 						PopupManager.Add(new InfoPopup(button.disabledInteractMessage));
 					}
 				}
@@ -55,26 +54,37 @@ public abstract class MenuItems {
 	}
 
 	protected class Button {
-		public string text;
+		private string text;
 		public Action<Button> onclick;
-		public bool hasContextCheckCallback = false;
-		public Func<Button, bool> contextCheckCallback;
+		public Func<Button, bool>? contextCheckCallback;
 		public bool buttonEnabled = true;
-		public string disabledInteractMessage;
+		public string? disabledInteractMessage;
 		public virtual bool Dark => false;
+
+		public Vector2 Size { get; private set; }
+
+		public string Text {
+			get => this.text;
+			set {
+				this.text = value;
+				this.CalculateSize();
+			}
+		}
 
 		public Button(string text, Action<Button> callback) {
 			this.text = text;
 			this.onclick = callback;
-			this.contextCheckCallback = new Func<Button, bool>(button => { return true; });
-			this.hasContextCheckCallback = false;
-			this.disabledInteractMessage = "";
+			this.contextCheckCallback = null;
+			this.CalculateSize();
 		}
 
-		public Button (string text, Action<Button> callback, Func<Button, bool> contextCheckCallback, string disabledInteractMessage = "") : this(text, callback) {
-			this.hasContextCheckCallback = true;
+		public Button(string text, Action<Button> callback, Func<Button, bool> contextCheckCallback, string? disabledInteractMessage = null) : this(text, callback) {
 			this.contextCheckCallback = contextCheckCallback;
-			this.disabledInteractMessage =disabledInteractMessage;
+			this.disabledInteractMessage = disabledInteractMessage;
+		}
+
+		public void CalculateSize() {
+			this.Size = UI.font.Measure(this.text, 0.03f);
 		}
 	}
 }

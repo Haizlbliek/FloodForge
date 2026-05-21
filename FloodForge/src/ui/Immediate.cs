@@ -65,8 +65,6 @@ public static class Immediate {
 		public static uint active_idx1 = 0;
 	}
 
-	public static bool flushOnEnd = true;
-
 	public static unsafe void Initialize() {
 		DrawState.vertexCount = 0;
 		DrawState.indexCount = 0;
@@ -202,6 +200,17 @@ void main() {
 		DrawState.placeholderTexture = 0;
 	}
 
+	private static unsafe void UploadMatrix(int location, in Matrix4X4<float> matrix) {
+		float* data = stackalloc float[16];
+
+		data[0]  = matrix.M11; data[1]  = matrix.M12; data[2]  = matrix.M13; data[3]  = matrix.M14;
+		data[4]  = matrix.M21; data[5]  = matrix.M22; data[6]  = matrix.M23; data[7]  = matrix.M24;
+		data[8]  = matrix.M31; data[9]  = matrix.M32; data[10] = matrix.M33; data[11] = matrix.M34;
+		data[12] = matrix.M41; data[13] = matrix.M42; data[14] = matrix.M43; data[15] = matrix.M44;
+
+		Cstm.gl.UniformMatrix4(location, 1, false, data);
+	}
+
 	public static unsafe void Flush() {
 		DrawState.dirty = false;
 		if (DrawState.vertexCount == 0) return;
@@ -224,26 +233,11 @@ void main() {
 
 		Cstm.gl.UseProgram(DrawState.activeProgram);
 
-		if (flushOnEnd) {
-			Matrix4X4<float> modelView = DrawState.mats[(int)EMatrixMode.MODELVIEW].cur;
-			Matrix4X4<float> proj = DrawState.mats[(int)EMatrixMode.PROJECTION].cur;
-			Matrix4X4<float> mvp = proj * modelView;
+		Matrix4X4<float> modelView = DrawState.mats[(int)EMatrixMode.MODELVIEW].cur;
+		Matrix4X4<float> proj = DrawState.mats[(int)EMatrixMode.PROJECTION].cur;
+		Matrix4X4<float> mvp = proj * modelView;
+		UploadMatrix(DrawState.mvpUniform, mvp);
 
-			float[] mvpArray = mvp.ToArray();
-			unsafe {
-				fixed (float* mvpPtr = mvpArray) {
-					Cstm.gl.UniformMatrix4(DrawState.mvpUniform, 1, false, mvpPtr);
-				}
-			}
-		}
-		else {
-			float[] projArray = DrawState.mats[(int)EMatrixMode.PROJECTION].cur.ToArray();
-			unsafe {
-				fixed (float* projPtr = projArray) {
-					Cstm.gl.UniformMatrix4(DrawState.mvpUniform, 1, false, projPtr);
-				}
-			}
-		}
 		Cstm.gl.ActiveTexture(GLEnum.Texture0);
 		Cstm.gl.BindTexture(GLEnum.Texture2D, DrawState.activeTexture);
 		Cstm.gl.Uniform1(DrawState.texUniform, 0);
@@ -255,12 +249,11 @@ void main() {
 	}
 
 	public static void UseTexture(uint textureId) {
-		if (textureId == 0) {
-			DrawState.activeTexture = DrawState.placeholderTexture;
+		uint real = textureId == 0 ? DrawState.placeholderTexture : textureId;
+		if (DrawState.drawActive && DrawState.activeTexture != real && DrawState.vertexCount > 0) {
+			Flush();
 		}
-		else {
-			DrawState.activeTexture = textureId;
-		}
+		DrawState.activeTexture = real;
 	}
 
 	public static void UseTexture(Texture? texture) {
@@ -293,25 +286,7 @@ void main() {
 		}
 	}
 
-	private static void PushVertex(VertexData vtxData, bool cpuTransform) {
-		if (cpuTransform) {
-			Matrix4X4<float> mat = DrawState.mats[(int)EMatrixMode.MODELVIEW].cur;
-
-			float x = vtxData.x;
-			float y = vtxData.y;
-			float z = 0.0f;
-			float w = 1.0f;
-
-			float x0 = x * mat.M11 + y * mat.M21 + z * mat.M31 + w * mat.M41;
-			float y0 = x * mat.M12 + y * mat.M22 + z * mat.M32 + w * mat.M42;
-			float z0 = x * mat.M13 + y * mat.M23 + z * mat.M33 + w * mat.M43;
-			float w0 = x * mat.M14 + y * mat.M24 + z * mat.M34 + w * mat.M44;
-
-			vtxData.x = x0 / w0;
-			vtxData.y = y0 / w0;
-			vtxData.z = z0;
-		}
-
+	private static void PushVertex(VertexData vtxData) {
 		DrawState.batchVertices[DrawState.vertexCount++] = vtxData;
 	}
 
@@ -319,7 +294,7 @@ void main() {
 		DrawState.batchIndices[DrawState.indexCount++] = idx;
 	}
 
-	private static void ProcessVertex(Vector3D<float> pos, bool cpuTransform) {
+	private static void ProcessVertex(Vector3D<float> pos) {
 		if (!DrawState.drawActive) {
 			Logger.Error("ERROR: Immediate.Vertex called before Immediate.Begin.");
 			return;
@@ -342,7 +317,7 @@ void main() {
 		switch (DrawState.curPrim) {
 			case PrimitiveType.POINTS:
 				BeginDraw(1, 1, GLEnum.Points);
-				PushVertex(DrawState.verts[0], cpuTransform);
+				PushVertex(DrawState.verts[0]);
 				PushIndex(DrawState.currentIndex++);
 				DrawState.active_idx0 = 0;
 				break;
@@ -351,8 +326,8 @@ void main() {
 				if (DrawState.active_idx0 >= 2) {
 					BeginDraw(2, 2, GLEnum.Lines);
 
-					PushVertex(DrawState.verts[0], cpuTransform);
-					PushVertex(DrawState.verts[1], cpuTransform);
+					PushVertex(DrawState.verts[0]);
+					PushVertex(DrawState.verts[1]);
 					PushIndex(DrawState.currentIndex++);
 					PushIndex(DrawState.currentIndex++);
 
@@ -366,12 +341,12 @@ void main() {
 					BeginDraw(1, 0, GLEnum.Lines);
 
 					DrawState.active_idx1 = DrawState.currentIndex;
-					PushVertex(DrawState.verts[0], cpuTransform);
+					PushVertex(DrawState.verts[0]);
 				}
 				else {
 					BeginDraw(1, 2, GLEnum.Lines);
 
-					PushVertex(DrawState.verts[1], cpuTransform);
+					PushVertex(DrawState.verts[1]);
 					PushIndex(DrawState.currentIndex++);
 					PushIndex(DrawState.currentIndex);
 					DrawState.active_idx0--;
@@ -382,9 +357,9 @@ void main() {
 				if (DrawState.active_idx0 >= 3) {
 					BeginDraw(3, 3, GLEnum.Triangles);
 
-					PushVertex(DrawState.verts[0], cpuTransform);
-					PushVertex(DrawState.verts[1], cpuTransform);
-					PushVertex(DrawState.verts[2], cpuTransform);
+					PushVertex(DrawState.verts[0]);
+					PushVertex(DrawState.verts[1]);
+					PushVertex(DrawState.verts[2]);
 
 					PushIndex(DrawState.currentIndex++);
 					PushIndex(DrawState.currentIndex++);
@@ -397,9 +372,9 @@ void main() {
 			case PrimitiveType.TRIANGLE_FAN:
 				if (DrawState.active_idx0 > 2) {
 					BeginDraw(3, 3, GLEnum.Triangles);
-					PushVertex(DrawState.verts[0], cpuTransform);
-					PushVertex(DrawState.verts[1], cpuTransform);
-					PushVertex(DrawState.verts[2], cpuTransform);
+					PushVertex(DrawState.verts[0]);
+					PushVertex(DrawState.verts[1]);
+					PushVertex(DrawState.verts[2]);
 					PushIndex(DrawState.currentIndex++);
 					PushIndex(DrawState.currentIndex++);
 					PushIndex(DrawState.currentIndex++);
@@ -413,10 +388,10 @@ void main() {
 				if (DrawState.active_idx0 >= 4) {
 					BeginDraw(4, 6, GLEnum.Triangles);
 
-					PushVertex(DrawState.verts[0], cpuTransform);
-					PushVertex(DrawState.verts[1], cpuTransform);
-					PushVertex(DrawState.verts[2], cpuTransform);
-					PushVertex(DrawState.verts[3], cpuTransform);
+					PushVertex(DrawState.verts[0]);
+					PushVertex(DrawState.verts[1]);
+					PushVertex(DrawState.verts[2]);
+					PushVertex(DrawState.verts[3]);
 
 					uint idx = DrawState.currentIndex;
 					PushIndex(idx + 0);
@@ -448,7 +423,7 @@ void main() {
 	}
 
 	public static void Vertex(Vector3D<float> pos) {
-		ProcessVertex(pos, !flushOnEnd);
+		ProcessVertex(pos);
 	}
 
 	public static void Vertex(float x, float y, float z) {
@@ -507,14 +482,13 @@ void main() {
 			PushIndex(DrawState.active_idx1);
 		}
 
-		if (flushOnEnd || DrawState.dirty)
-			Flush();
+		Flush();
 
 		DrawState.drawActive = false;
 	}
+
 	private static void MatrixChange() {
-		if (DrawState.matIdx == (int)EMatrixMode.PROJECTION)
-			DrawState.dirty = true;
+		DrawState.dirty = true;
 	}
 
 	private static void ValidateMatrixOperation() {
