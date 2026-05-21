@@ -2112,6 +2112,10 @@ public static class WorldWindow {
 						MoveUpdate();
 					}, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
 				]),
+
+				new Button("Help", button => {
+					PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+				}),
 			];
 		}
 

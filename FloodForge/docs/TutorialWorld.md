@@ -36,52 +36,50 @@ Right click - Open reference image settings; Reset popup size
 ## How to...
 
 ### Creating a new region
-- `New`
+- `File` -> `New`
 - In the popup, type your region acronym
 - `Confirm`
 
 ### 
 ### Importing an existing region
-- `Import`
+- `File` -> `Import`
 - Navigate to your `world\_xx.txt` file (`mods/YOUR_MOD/world/xx/world_xx.txt`)
 - `Open`
 
 ### 
 ### Adding rooms to a region
 *After creating or importing a region*
-- `Add Room`
+- `Edit` -> `Add Room`
 - Navigate to `mods/YOUR_MOD/world/xx-rooms/XX_A01.txt`
 - `Open`
 
 ### 
 ### Connecting rooms
-- Find two connections between two different rooms
-- Right click and drag from the first connection to the second
+- Find two room exits between two different rooms
+- Right click and drag from the first room exit to the second
 
 ### 
 ### Adding creatures to a den
 - Choose a den, hover it, and press `C`
 - In the popup, select the creature you wish to add
 - Click multiple times for multiple of the same type of creature
-- Press the right `+` to expand the `Tag` sidebar
 
 ### 
 ### Lineages & multiple types of creatures
-*After opening a den*
-- Press the left `+` to expand the `Lineages` sidebar
+*After opening a den, the left section controls lineages*
 `<` -> Select previous lineage
 `x` -> Delete selected lineage
 `+` -> Add new lineage
 `>` -> Select next lineage
 - Creatures in the lineage are vertically placed
-- Press the large `+` to add a new creature
+- Press the large `+` at the bottom to add a new creature
 - Press `...` to edit conditionals (See `Conditionals`)
-- Press `x` to remove the creature from the lineage
+- Press `x` beside a creature to remove the creature from the lineage
 
 ### 
 ### Conditionals
 - Either by pressing `D` while hovering a connection or room,
-or by pressing `...` in a den lineage, the conditionals popup opens
+or by pressing `...` in a den lineage
 
 **Connections and creatures:**
 `ALL` -> This is visible to  *all*  slugcats
@@ -109,8 +107,8 @@ limited to `ONLY` the selected slugcats.
 ### Creating a room
 - Hover an empty area
 - Press `R`
-- Enter room name
 - Select room size
+- Enter room name
 - `Create`
 - (See Droplet)
 
@@ -158,7 +156,7 @@ When making a region, you may have made a rough (or very polished) plan.
 FloodForge allows you to use such an image as reference.
 To add a new reference image:
 
-1. `Add Reference`
+1. `Edit` -> `Add Reference`
 2. Navigate to the relevant image
 3. `Open`
 

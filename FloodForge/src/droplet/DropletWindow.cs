@@ -1917,6 +1917,10 @@ public static class DropletWindow {
 						DropletWindow.Reset();
 					}));
 				}),
+
+				new Button("Help", button => {
+					PopupManager.Add(new MarkdownPopup("docs/TutorialDroplet.md"));
+				}),
 			];
 		}
 	}
