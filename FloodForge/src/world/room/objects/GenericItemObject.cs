@@ -1,4 +1,6 @@
-namespace FloodForge.World;
+using FloodForge.World;
+
+namespace FloodForge.Droplet;
 
 public class GenericItemObject : DevObject {
 	public string name;
