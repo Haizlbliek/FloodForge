@@ -3,7 +3,6 @@ using System.Text;
 using FloodForge.History;
 using FloodForge.Popups;
 using FloodForge.World;
-using Silk.NET.GLFW;
 using Silk.NET.Input;
 using StbImageWriteSharp;
 using Stride.Core.Extensions;

@@ -1,4 +1,4 @@
-namespace FloodForge.Droplet;
+namespace FloodForge.World;
 
 public class TerrainHandleObject : DevObject, ISaveableObject {
 	public Vector2 Left => this.nodes[0].position + this.nodes[1].position;

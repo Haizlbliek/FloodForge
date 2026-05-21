@@ -1,4 +1,4 @@
-namespace FloodForge.Droplet;
+namespace FloodForge.World;
 
 public static class DevObjects {
 	public static readonly Dictionary<string, Func<DevObject>> objectFactories = new Dictionary<string, Func<DevObject>> {
