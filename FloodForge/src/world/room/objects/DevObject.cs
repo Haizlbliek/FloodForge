@@ -1,4 +1,4 @@
-namespace FloodForge.World;
+namespace FloodForge.Droplet;
 
 public abstract class DevObject {
 	public readonly List<Node> nodes = [ ];

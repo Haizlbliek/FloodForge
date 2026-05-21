@@ -1,4 +1,4 @@
-namespace FloodForge.World;
+namespace FloodForge.Droplet;
 
 public sealed class Node {
 	public Vector2 position;
