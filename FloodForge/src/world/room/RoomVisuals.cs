@@ -47,8 +47,14 @@ public class RoomVisuals {
 
 		float xa = MathF.Floor(x / 20f) * 20f;
 		float xb = MathF.Ceiling(x / 20f) * 20f;
-		float ya = this.terrain[Mathf.FloorToInt(xa / 20f)].y;
-		float yb = this.terrain[Mathf.FloorToInt(xb / 20f)].y;
+		int idxA = Mathf.FloorToInt(xa / 20f);
+		int idxB = Mathf.FloorToInt(xb / 20f);
+
+		if (idxA < 0 || idxA >= this.terrain.Count || idxB < 0 || idxB >= this.terrain.Count) 
+			return -10000f;
+
+		float ya = this.terrain[idxA].y;
+		float yb = this.terrain[idxB].y;
 		return Mathf.LerpUnclamped(ya, yb, Mathf.InverseLerp(x, xa, xb));
 	}
 
@@ -125,9 +131,56 @@ public class RoomVisuals {
 		}
 	}
 
+	private bool OverlapsDevObject(Vector2 p) {
+		foreach (DevObject obj in this.room.data.objects) {
+			if (obj is SuperSlopeObject slope) {
+				Vector2 basePos = slope.nodes[0].position;
+				Vector2 node1 = basePos + slope.nodes[1].position;
+				Vector2 node2 = basePos + slope.nodes[2].position;
+				Vector2 node3 = node1 + slope.nodes[2].position;
+
+				Vector2[] quad = [basePos, node1, node3, node2];
+				if (MathUtil.PointInPolygon(p, quad)) return true;
+			}
+
+			if (obj is LocalTerrainObject terrainObj) {
+				Vector2 basePos = terrainObj.nodes[0].position;
+				Vector2 posB = basePos + terrainObj.PosB;
+				Vector2 handleA = basePos + terrainObj.HandleA;
+				Vector2 handleB = basePos + terrainObj.HandleB;
+				float floorY = basePos.y + terrainObj.nodes[4].position.y;
+
+				float minX = MathF.Min(basePos.x, posB.x);
+				float maxX = MathF.Max(basePos.x, posB.x);
+
+				if (p.x < minX || p.x > maxX) continue;
+
+				float leftT = 0f;
+				float rightT = 1f;
+
+				for (int i = 0; i < 16; i++) {
+					float correctT = (leftT + rightT) * 0.5f;
+					Vector2 sampledPoint = MathUtil.BezierCubic(correctT, basePos, handleA, handleB, posB);
+					
+					if (sampledPoint.x < p.x) {
+						leftT = correctT;
+					}
+					else {
+						rightT = correctT;
+					}
+				}
+
+				Vector2 absoluteCurvePoint = MathUtil.BezierCubic((leftT + rightT) * 0.5f, basePos, handleA, handleB, posB);
+
+				if (p.y <= absoluteCurvePoint.y && p.y >= floorY) return true;
+			}
+		}
+		return false;
+	}
+
 	private int UnderTerrain(float x, float y) {
 		float height = this.SampleTerrain(x);
-		return height > y ? 1 : 0;
+		return (height > y || this.OverlapsDevObject(new Vector2(x, y))) ? 1 : 0;
 	}
 
 	public bool UnderTerrain(int ox, int oy, out bool slope) {

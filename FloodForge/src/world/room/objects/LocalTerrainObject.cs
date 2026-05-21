@@ -7,15 +7,15 @@ public class LocalTerrainObject : DevObject, ISaveableObject {
 	private readonly Node bottom;
 	private readonly Node nodeB;
 
-	private Vector2 PosB {
+	public Vector2 PosB {
 		get => this.nodes[1].position;
 		set => this.nodes[1].position = value;
 	}
-	private Vector2 HandleA {
+	public Vector2 HandleA {
 		get => this.nodes[2].position;
 		set => this.nodes[2].position = value;
 	}
-	private Vector2 HandleB {
+	public Vector2 HandleB {
 		get => this.PosB + this.nodes[3].position;
 		set => this.nodes[3].position = value - this.PosB;
 	}
