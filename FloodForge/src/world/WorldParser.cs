@@ -5,6 +5,8 @@ using Stride.Core.Extensions;
 
 namespace FloodForge.World;
 
+// REVIEW: Make sure to load correctly capitalized room name
+
 public static class WorldParser {
 	private static readonly List<(string, Dictionary<string, RoomAttractiveness>)> roomAttractiveness = [];
 
@@ -133,7 +135,7 @@ public static class WorldParser {
 	}
 
 	public static bool ParseMap(string path) {
-		Dictionary<string, (bool hidden, bool merge)> extraRoomData = [];
+		Dictionary<string, (int hidden, bool warpable, bool merge)> extraRoomData = [];
 		List<string> allMaps = [path];
 		
 		Logger.Info("Looking for alternate maps");
@@ -152,15 +154,20 @@ public static class WorldParser {
 				if (line.StartsWith("//FloodForge;")) {
 					string[] data = line[(line.IndexOf(';') + 1)..].Split('|');
 					if (data[0] == "ROOM") {
-						(bool hidden, bool merge) extra = (false, true);
+						(int hidden, bool warpable, bool merge) extra = (0, true, true);
 
 						for (int i = 2; i < data.Length; i++) {
 							string key = data[i];
-							if (key == "hidden") {
-								extra.hidden = true;
+							if (key.StartsWith("hidden=") && int.TryParse(key[7..], out extra.hidden)) {
+							}
+							else if (key == "hidden") {
+								extra.hidden = 2;
 							}
 							else if (key == "nomerge") {
 								extra.merge = false;
+							}
+							else if (key == "nowarp") {
+								extra.warpable = false;
 							}
 						}
 		
@@ -183,9 +190,11 @@ public static class WorldParser {
 			}
 		}
 
-		foreach (KeyValuePair<string, (bool hidden, bool merge)> pair in extraRoomData) {
+		foreach (KeyValuePair<string, (int hidden, bool warpable, bool merge)> pair in extraRoomData) {
 			Room room = WorldWindow.region.rooms.First(x => x.name.Equals(pair.Key, StringComparison.InvariantCultureIgnoreCase));
+
 			room.data.hidden = pair.Value.hidden;
+			room.data.warpable = pair.Value.warpable;
 			room.data.merge = pair.Value.merge;
 		}
 

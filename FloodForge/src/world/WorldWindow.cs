@@ -887,12 +887,27 @@ public static class WorldWindow {
 			}
 		}
 
+		if (Keys.JustPressed(Key.W)) {
+			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
+				bool setWarpable = !rooms.Any(r => r.data.warpable);
+
+				GeneralRoomChange<bool> change = new GeneralRoomChange<bool>(r => r.data.warpable, (r, i) => r.data.warpable = i);
+				rooms.ForEach(r => change.AddRoom(r, setWarpable));
+				worldHistory.Apply(change);
+			}
+		}
+
 		if (Keys.JustPressed(Key.H)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
-				bool setHidden = !rooms.Any(r => r.data.hidden);
+				int minimumHidden = 3;
+				foreach (Room room in rooms) {
+					minimumHidden = Math.Min(minimumHidden, room.data.hidden);
+				}
 
-				GeneralRoomChange<bool> change = new GeneralRoomChange<bool>(r => r.data.hidden, (r, i) => r.data.hidden = i);
-				rooms.ForEach(r => change.AddRoom(r, setHidden));
+				minimumHidden = (minimumHidden + 1) % 3;
+
+				GeneralRoomChange<int> change = new GeneralRoomChange<int>(r => r.data.hidden, (r, i) => r.data.hidden = i);
+				rooms.ForEach(r => change.AddRoom(r, minimumHidden));
 				worldHistory.Apply(change);
 			}
 		}
@@ -1391,8 +1406,10 @@ public static class WorldWindow {
 					debugText.Add($"Layer: {room.data.layer}");
 					if (!room.data.merge)
 						debugText.Add("No Merge");
-					if (room.data.hidden)
-						debugText.Add("Hidden");
+					if (!room.data.warpable)
+						debugText.Add("Hidden from Warp Menu");
+					if (room.data.hidden != 0)
+						debugText.Add(room.data.hidden switch { 1 => "Hidden", 2 => "Lost", _ => "" } );
 				}
 			}
 		}
