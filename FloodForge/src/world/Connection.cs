@@ -277,11 +277,11 @@ public class Connection {
 					}
 					Vector2 point = this.BezierPoints[i];
 					float lastCurveProgress = curveProgress - (1f / curveLength);
-					float lerpedAlphaA = Mathf.Lerp(alphaA, alphaB, lastCurveProgress);
-					float lerpedAlphaB = Mathf.Lerp(alphaA, alphaB, curveProgress);
+					float lerpedAlphaA = Mathf.LerpUnclamped(alphaA, alphaB, lastCurveProgress);
+					float lerpedAlphaB = Mathf.LerpUnclamped(alphaA, alphaB, curveProgress);
 					if (fadeMiddle) {
-						lerpedAlphaA = Math.Max(0f, float.CopySign(Mathf.Lerp(lerpedAlphaA, 0, lastCurveProgress * 2), lerpedAlphaA) * 2 - 1);
-						lerpedAlphaB = Math.Max(0f, float.CopySign(Mathf.Lerp(lerpedAlphaB, 0, curveProgress * 2), lerpedAlphaB) * 2 - 1);
+						lerpedAlphaA = Math.Max(0f, float.CopySign(Mathf.LerpUnclamped(lerpedAlphaA, 0, lastCurveProgress * 2), lerpedAlphaA) * 2 - 1);
+						lerpedAlphaB = Math.Max(0f, float.CopySign(Mathf.LerpUnclamped(lerpedAlphaB, 0, curveProgress * 2), lerpedAlphaB) * 2 - 1);
 					}
 					this.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, lerpedAlphaA, lerpedAlphaB);
 					lastPoint = point;

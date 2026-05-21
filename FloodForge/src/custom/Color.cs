@@ -43,7 +43,7 @@ public struct Color : IParsable<Color> {
 		if (v < 16) {
 			return "0" + hex[v];
 		}
-		return hex[v / 16].ToString() + hex[v % 16];
+		return $"{hex[v / 16]}{hex[v % 16]}";
 	}
 
 	public readonly Color WithAlpha(float a) => new Color(this.r, this.g, this.b, a);
@@ -64,7 +64,7 @@ public struct Color : IParsable<Color> {
 
 		if (delta > 0.0f) {
 			if (cmax == color.r) {
-				h = 60.0f * ((color.g - color.b) / delta % 6.0f);
+				h = 60.0f * Mathf.Mod((color.g - color.b) / delta, 6.0f);
 			}
 			else if (cmax == color.g) {
 				h = 60.0f * (((color.b - color.r) / delta) + 2.0f);
@@ -107,6 +107,15 @@ public struct Color : IParsable<Color> {
 			Mathf.Lerp(a.g, b.g, t),
 			Mathf.Lerp(a.b, b.b, t),
 			Mathf.Lerp(a.a, b.a, t)
+		);
+	}
+
+	public static Color LerpUnclamped(Color a, Color b, float t) {
+		return new Color(
+			Mathf.LerpUnclamped(a.r, b.r, t),
+			Mathf.LerpUnclamped(a.g, b.g, t),
+			Mathf.LerpUnclamped(a.b, b.b, t),
+			Mathf.LerpUnclamped(a.a, b.a, t)
 		);
 	}
 

@@ -7,7 +7,7 @@ public static class Mouse {
 	public static float LastY { get; private set; }
 	public static float X { get; private set; }
 	public static float Y { get; private set; }
-	public static bool Moved => LastX != X && LastY != Y;
+	public static bool Moved => LastX != X || LastY != Y;
 
 	public static bool Disabled;
 

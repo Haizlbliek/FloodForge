@@ -3,47 +3,44 @@ using Silk.NET.Input;
 namespace FloodForge;
 
 public static class Keys {
-	private static HashSet<Key> lastKeys = [];
-	private static readonly HashSet<Key> keys = [];
-	private static readonly HashSet<Key> checkedKeys = [Key.ShiftLeft, Key.ShiftRight, Key.ControlLeft, Key.ControlRight, Key.AltLeft, Key.AltRight];
+	private static readonly int MaxKeyIndex = ((int[])Enum.GetValues(typeof(Key))).Max();
+	private static readonly bool[] currentKeys = new bool[MaxKeyIndex + 1];
+	private static readonly bool[] lastKeys = new bool[MaxKeyIndex + 1];
 
 	public static void End() {
-		lastKeys = [.. keys];
+		Array.Copy(currentKeys, lastKeys, currentKeys.Length);
 	}
 
 	public static void Press(Key key) {
-		checkedKeys.Add(key);
-		keys.Add(key);
+		if (key != Key.Unknown) currentKeys[(int)key] = true;
 	}
 
 	public static void Release(Key key) {
-		checkedKeys.Add(key);
-		keys.Remove(key);
+		if (key != Key.Unknown) currentKeys[(int)key] = false;
 	}
 
 	public static bool Pressed(Key key) {
-		if (!checkedKeys.Contains(key)) {
-			checkedKeys.Add(key);
-			lastKeys.Add(key);
-		}
-
-		return keys.Contains(key);
+		return key != Key.Unknown && currentKeys[(int)key];
 	}
 
 	public static bool JustPressed(Key key) {
-		if (!checkedKeys.Contains(key)) {
-			checkedKeys.Add(key);
-			lastKeys.Add(key);
-		}
-
-		return keys.Contains(key) && !lastKeys.Contains(key);
+		if (key == Key.Unknown) return false;
+		int index = (int)key;
+		return currentKeys[index] && !lastKeys[index];
 	}
 
-	public static bool Modifier(Modifiers key) {
-		return key switch {
-			Modifiers.Shift => keys.Contains(Key.ShiftLeft) || keys.Contains(Key.ShiftRight),
-			Modifiers.Control => keys.Contains(Key.ControlLeft) || keys.Contains(Key.ControlRight),
-			Modifiers.Alt => keys.Contains(Key.AltLeft) || keys.Contains(Key.AltRight),
+	public static bool JustReleased(Key key) {
+		if (key == Key.Unknown) return false;
+		int index = (int)key;
+		return !currentKeys[index] && lastKeys[index];
+	}
+
+	public static bool Modifier(Modifiers modifier) {
+		return modifier switch 
+		{
+			Modifiers.Shift => currentKeys[(int)Key.ShiftLeft] || currentKeys[(int)Key.ShiftRight],
+			Modifiers.Control => currentKeys[(int)Key.ControlLeft] || currentKeys[(int)Key.ControlRight],
+			Modifiers.Alt => currentKeys[(int)Key.AltLeft] || currentKeys[(int)Key.AltRight],
 			_ => false,
 		};
 	}
