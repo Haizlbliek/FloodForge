@@ -107,6 +107,7 @@ public class Font {
 	}
 
 	public Vector2 Measure(string text, float textSize) {
+		ParseSeverity(text, out text);
 		if (string.IsNullOrEmpty(text)) return Vector2.Zero;
 
 		float scale = textSize / this.baseSize;

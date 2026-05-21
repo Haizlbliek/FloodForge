@@ -1835,76 +1835,87 @@ public static class DropletWindow {
 
 	private class DropletMenuItems : MenuItems {
 		public DropletMenuItems() {
-			this.buttons = [
-				new Button("Export Geometry", b => {
-					try {
-						ExportGeometry();
-						PopupManager.Add(new InfoPopup("Exported successfully"));
-					}
-					catch (Exception e){
-						Logger.Error(e);
-						PopupManager.Add(new InfoPopup($"Error:\n{e.Message}"));
-					}
-				}),
-				new Button("Render", b => {
-					bool success = true;
-					string message = "";
-					try {
-						if (Render(out message, out (string name, string outputPath, byte[] image)[] images)){
-							for(int i = 0; i < images.Length; i++){
-								FloodForge.Backup.File(images[i].outputPath);
+			this.items = [
+				new Dropdown("File", [
+					new Button("Export Geometry", b => {
+						try {
+							ExportGeometry();
+							PopupManager.Add(new InfoPopup("Exported successfully"));
+						}
+						catch (Exception e){
+							Logger.Error(e);
+							PopupManager.Add(new InfoPopup($"Error:\n{e.Message}"));
+						}
+					}),
 
-								try {
-									using Stream stream = File.OpenWrite(images[i].outputPath);
-									ImageWriter writer = new ImageWriter();
-									writer.WritePng(images[i].image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
-									Logger.Info("Screen exported");
-									success = true;
-								}
-								catch (Exception ex) {
-									Logger.Error("Exporting screen failed: " + ex.Message);
-									message = ex.Message;
-									success = false;
+					new Button("Render", b => {
+						bool success = true;
+						string message = "";
+						try {
+							if (Render(out message, out (string name, string outputPath, byte[] image)[] images)){
+								for(int i = 0; i < images.Length; i++){
+									FloodForge.Backup.File(images[i].outputPath);
+
+									try {
+										using Stream stream = File.OpenWrite(images[i].outputPath);
+										ImageWriter writer = new ImageWriter();
+										writer.WritePng(images[i].image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
+										Logger.Info("Screen exported");
+										success = true;
+									}
+									catch (Exception ex) {
+										Logger.Error("Exporting screen failed: " + ex.Message);
+										message = ex.Message;
+										success = false;
+									}
 								}
 							}
+							else{
+								success = false;
+							}
 						}
-						else{
+						catch (Exception e) {
+							message += e.Message + "\n";
+							Logger.Error(e);
 							success = false;
 						}
-					}
-					catch (Exception e) {
-						message += e.Message + "\n";
-						Logger.Error(e);
-						success = false;
-					}
-					if (success){
-						PopupManager.Add(new InfoPopup("Rendered successfully"));
-					}
-					else
-						PopupManager.Add(new InfoPopup($"Render failed!\nMessage: \n{message}View log.txt for more information."));
-				}),
-				new Button("Export Leditor Project", b => {
-					PopupManager.Add(
-						new FilesystemPopup(paths => {
-							if (paths.Length != 1) return;
+						if (success){
+							PopupManager.Add(new InfoPopup("Rendered successfully"));
+						}
+						else
+							PopupManager.Add(new InfoPopup($"Render failed!\nMessage: \n{message}View log.txt for more information."));
+					}),
 
-							ExportProject(paths[0]);
-						}).Filter(FilesystemPopup.SelectionType.Folder).Hint("Data/LevelEditorProjects")
-					);
-				}),
-				new Button("Show Objects", b => {
-					showObjects = !showObjects;
-					b.Text = showObjects ? "Hide objects" : "Show objects";
-				}),
-				new Button("Show Position", b => {
-					showMousePosition = !showMousePosition;
-					b.Text = showMousePosition ? "Hide Position" : "Show Position";
-				}, button => {
-					return currentTab == EditorTab.Geometry;
-				}),
-				new Button("Resize", b => {
-					PopupManager.Add(new ResizeLevelPopup());
-				}),
+					new Button("Export Leditor Project", b => {
+						PopupManager.Add(
+							new FilesystemPopup(paths => {
+								if (paths.Length != 1) return;
+
+								ExportProject(paths[0]);
+							}).Filter(FilesystemPopup.SelectionType.Folder).Hint("Data/LevelEditorProjects")
+						);
+					}),
+
+					new Button("Resize", b => {
+						PopupManager.Add(new ResizeLevelPopup());
+					}),
+				]),
+
+
+				new Dropdown("View", [
+					new Button("Show Objects", b => {
+						showObjects = !showObjects;
+						b.Text = showObjects ? "Hide objects" : "Show objects";
+					}),
+
+					new Button("Show Position", b => {
+						showMousePosition = !showMousePosition;
+						b.Text = showMousePosition ? "Hide Position" : "Show Position";
+					}, button => {
+						return currentTab == EditorTab.Geometry;
+					}),
+				]),
+
 				new Button("Exit Droplet", b =>{
 					PopupManager.Add(new ConfirmPopup("Exit Droplet?\nUnsaved changes will be lost").Okay(() => {
 						mode = Mode.World;
