@@ -205,7 +205,8 @@ public static class WorldParser {
 		None,
 		ConditionalLinks,
 		Rooms,
-		Creatures
+		Creatures,
+		BatMigrationBlockages,
 	}
 
 	private struct ConnectionToAdd {
@@ -743,6 +744,27 @@ public static class WorldParser {
 				continue;
 			}
 
+			if (line == "BAT MIGRATION BLOCKAGES") {
+				if (parseState != WorldParseState.None) {
+					Logger.Warn("Invalid world file. Failed to close " + parseState);
+					return false;
+				}
+
+				parseState = WorldParseState.BatMigrationBlockages;
+				Logger.Info("World - Bat Migration Blockages");
+				continue;
+			}
+
+			if (line == "END BAT MIGRATION BLOCKAGES") {
+				if (parseState != WorldParseState.BatMigrationBlockages) {
+					Logger.Warn("Invalid world file. END BAT MIGRATION BLOCKAGES without matching BAT MIGRATION BLOCKAGES");
+					return false;
+				}
+
+				parseState = WorldParseState.None;
+				continue;
+			}
+
 			if (parseState == WorldParseState.None) {
 				WorldWindow.region.extraWorld += line + "\n";
 			}
@@ -758,6 +780,15 @@ public static class WorldParser {
 			}
 			else if (parseState == WorldParseState.ConditionalLinks) {
 				conditionalLinks.Add(line);
+			}
+			else if (parseState == WorldParseState.BatMigrationBlockages) {
+				Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(line, StringComparison.InvariantCultureIgnoreCase));
+				if (room == null) {
+					Logger.Warn($"No room {line} in bat migration blockages");
+					continue;
+				}
+
+				room.data.blockedBatMigration = true;
 			}
 		}
 

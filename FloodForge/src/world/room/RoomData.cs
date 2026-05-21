@@ -12,9 +12,12 @@ public class RoomData {
 	public bool enclosedRoom = false;
 	public int subregion = -1;
 	public int layer = 0;
+
+	public bool blockedBatMigration = false;
 	public int hidden = 0;
 	public bool merge = true;
 	public bool warpable = true;
+
 	public Dictionary<string, RoomAttractiveness> attractiveness = [];
 	public HashSet<string> tags = [];
 	public List<Camera> cameras = [];
