@@ -139,6 +139,8 @@ public class FilesystemPopup : Popup {
 
 		this.files = [.. f];
 		this.directories = [.. d];
+
+		this.ClampScroll();
 	}
 
 	protected void ClampScroll() {
