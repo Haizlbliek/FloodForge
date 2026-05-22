@@ -1892,6 +1892,9 @@ public static class WorldWindow {
 			string lastExportDirectory = WorldWindow.region.exportPath;
 
 			if (!Settings.UpdateWorldFiles) {
+				if (!Directory.Exists("worlds")) {
+					Directory.CreateDirectory("worlds");
+				}
 				WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory("worlds", WorldWindow.region.acronym);
 				Logger.Info($"Special exporting to directory: {WorldWindow.region.exportPath}");
 
