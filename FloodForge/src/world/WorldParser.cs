@@ -232,6 +232,7 @@ public static class WorldParser {
 		public string roomBName = "";
 		public uint? roomBExitID = null;
 		public Timeline timeline = new();
+		public string[] preProcessorConditions = [];
 
 		public ConditionalConnection(Room roomA, uint connectionA, string roomBName, string originLine = "") {
 			this.roomA = roomA;
@@ -339,7 +340,7 @@ public static class WorldParser {
 		return new DenCreature.Tag(Mods.GetOrCreateTag(tag));
 	}
 
-	private static bool ParseWorldCreatureLineage(string[] splits, Room room, Timeline timeline) {
+	private static bool ParseWorldCreatureLineage(string[] splits, Room room, Timeline timeline, string[] preProcessorConditions) {
 		int denId = int.Parse(splits[2]);
 
 		if (room is OffscreenRoom offscreenRoom) {
@@ -354,7 +355,8 @@ public static class WorldParser {
 
 		Den den = room.GetDen(denId);
 		DenLineage lineage = new DenLineage("", 0) {
-			timeline = timeline
+			timeline = timeline,
+			preProcessorConditions = preProcessorConditions
 		};
 		den.creatures.Add(lineage);
 
@@ -390,7 +392,7 @@ public static class WorldParser {
 		return true;
 	}
 
-	private static bool ParseWorldCreatureNormal(string[] splits, Room room, Timeline timeline) {
+	private static bool ParseWorldCreatureNormal(string[] splits, Room room, Timeline timeline, string[] preProcessorConditions) {
 		foreach (string creatureInDen in Regex.Split(splits[1], @",(?![^{]*})").Select(s => s.Trim())) {
 			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
 			int denId = int.Parse(sections[0], NumberStyles.Any, CultureInfo.InvariantCulture);
@@ -405,6 +407,7 @@ public static class WorldParser {
 				GarbageWormDen worm = new GarbageWormDen() {
 					type = Mods.ParseCreature(creature),
 					timeline = timeline,
+					preProcessorConditions = preProcessorConditions,
 					count = sections.Length < 3 ? 1 : int.Parse(sections[2])
 				};
 				room.garbageWormDens.Add(worm);
@@ -418,7 +421,8 @@ public static class WorldParser {
 
 			Den den = room.GetDen(denId);
 			DenLineage lineage = new DenLineage(Mods.ParseCreature(creature), 1) {
-				timeline = timeline
+				timeline = timeline,
+				preProcessorConditions = preProcessorConditions
 			};
 			den.creatures.Add(lineage);
 
@@ -445,10 +449,12 @@ public static class WorldParser {
 		try {
 			string[] splits = line.Split(" : ", StringSplitOptions.TrimEntries);
 			Timeline timeline = new();
+			string[] preProcessorConditions = [];
 
 			if (splits[0][0] == '(') {
-				string v = splits[0][1..splits[0].IndexOf(')')];
-				splits[0] = splits[0][(splits[0].IndexOf(')') + 1)..].Trim();
+				int closingBracketPosition = splits[0].IndexOf(')');
+				string v = splits[0][1..closingBracketPosition];
+				splits[0] = splits[0][(closingBracketPosition + 1)..].Trim();
 				if (v.StartsWith("x-", StringComparison.InvariantCultureIgnoreCase)) {
 					timeline.timelineType = TimelineType.Except;
 					v = v[2..];
@@ -457,6 +463,12 @@ public static class WorldParser {
 					timeline.timelineType = TimelineType.Only;
 				}
 				timeline.timelines = [.. v.Split(',')];
+			}
+			if (splits[0][0] == '{') {
+				int closingBracketPosition = splits[0].IndexOf('}');
+				string conditions = splits[0][1..closingBracketPosition];
+				splits[0] = splits[0][(closingBracketPosition + 1)..].Trim();
+				preProcessorConditions = [.. conditions.Split(',')];
 			}
 
 			bool lineage = splits[0].Equals("lineage", StringComparison.InvariantCultureIgnoreCase);
@@ -471,10 +483,10 @@ public static class WorldParser {
 			}
 
 			if (lineage) {
-				if (!ParseWorldCreatureLineage(splits, room, timeline)) return false;
+				if (!ParseWorldCreatureLineage(splits, room, timeline, preProcessorConditions)) return false;
 			}
 			else {
-				if (!ParseWorldCreatureNormal(splits, room, timeline)) return false;
+				if (!ParseWorldCreatureNormal(splits, room, timeline, preProcessorConditions)) return false;
 			}
 		}
 		catch (Exception e) {
@@ -485,14 +497,68 @@ public static class WorldParser {
 		return true;
 	}
 
+	private static string[] SplitTopLevel(string item, char separator, char[] openers, char[] closers, StringSplitOptions options) {
+		List<string> items = [];
+		string currentItem = "";
+		Stack<int> depth = [];
+		for (int i = 0; i < item.Length; i++) {
+			if (openers.Contains(item[i])) {
+				depth.Push(openers.IndexOf(item[i]));
+				currentItem += item[i];
+			}
+			else if (closers.Contains(item[i]) && depth.Count > 0 && closers[depth.Peek()] == item[i]) {
+				depth.Pop();
+				currentItem += item[i];
+			}
+			else {
+				if (item[i] == separator && depth.Count == 0) {
+					if (options == StringSplitOptions.TrimEntries) {
+						currentItem = currentItem.Trim();
+					}
+					if (currentItem != "" || options != StringSplitOptions.RemoveEmptyEntries) {
+						items.Add(currentItem);
+					}
+					currentItem = "";
+				}
+				else {
+					currentItem += item[i];
+				}
+			}
+		}
+		if (currentItem != "") {
+			if (options == StringSplitOptions.TrimEntries) {
+				currentItem = currentItem.Trim();
+			}
+			items.Add(currentItem);
+		}
+		return [.. items];
+	}
+
 	// REVIEW - Does not parse correctly
 	private static bool ParseWorldConditionalLink(string link, ref List<ConditionalConnection> conditionalConnectionsToAdd) {
-		string[] parts = link.Split(':', StringSplitOptions.TrimEntries);
+		string[] parts = SplitTopLevel(link, ':', ['(', '{'], [')', '}'], StringSplitOptions.TrimEntries);
 		if (parts.Length < 3 || parts.Length > 4) {
 			Logger.Warn("Skipping line due to improper length");
 			Logger.Warn($"> {link}");
 			return false;
 		}
+
+		string[] preProcessorConditions = [];
+
+		//Logger.Info($"Parsing link: {link}");
+		//Logger.Info($"parts[0]: {parts[0]}");
+		if(parts[0][0] == '{') {
+			//Logger.Info("'{' found");
+			int closingBracketPosition = parts[0].IndexOf('}');
+			//Logger.Info($"closingBracketPosition = {closingBracketPosition}");
+			string conditions = parts[0][1..closingBracketPosition];
+			//Logger.Info($"conditions = {conditions}");
+			parts[0] = parts[0][(closingBracketPosition + 1)..].Trim();
+			//Logger.Info($"parts[0] = {conditions}");
+			preProcessorConditions = [.. conditions.Split(',')];
+			//Logger.Info($"yay");
+		}
+		//Logger.Info($"done");
 
 		string[] timelines = parts[0].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
@@ -506,6 +572,8 @@ public static class WorldParser {
 				Logger.Warn($"> {link}");
 				return false;
 			}
+
+			room2.preProcessorConditions = preProcessorConditions;
 
 			string mod = parts[1].ToLowerInvariant();
 
@@ -572,6 +640,7 @@ public static class WorldParser {
 				timelines.ForEach(x => connection.timeline.timelines.Add(x));
 			}
 			
+			connection.preProcessorConditions = preProcessorConditions;
 			return true;
 		}
 
@@ -644,6 +713,7 @@ public static class WorldParser {
 			roomB = null,
 			roomBExitID = null,
 			timeline = new Timeline (TimelineType.Only, [..timelines]),
+			preProcessorConditions = preProcessorConditions,
 			originLine = link
 		});
 
@@ -830,7 +900,8 @@ public static class WorldParser {
 			}
 
 			Connection connection = new Connection(connectionData.roomA, connectionData.roomAExitID, connectionData.roomB, connectionData.roomBExitID.Value) {
-				timeline = connectionData.timeline
+				timeline = connectionData.timeline,
+				preProcessorConditions = connectionData.preProcessorConditions
 			};
 			WorldWindow.region.connections.Add(connection);
 			connectionData.roomA.Connect(connection);

@@ -216,6 +216,17 @@ public static class WorldExporter {
 		if (otherRoom == null || connectionId == -1)
 			return;
 
+		string stringifiedConditions = "";
+		bool first = true;
+		foreach (string condition in connection.preProcessorConditions) {
+			if (!first)
+				stringifiedConditions += ',';
+			first = false;
+			stringifiedConditions += condition;
+		}
+		if (!string.IsNullOrEmpty(stringifiedConditions))
+			stringifiedConditions = $"{{{stringifiedConditions}}}";
+
 		foreach (string timeline in connection.timeline.timelines) {
 			if (!state.ContainsKey(timeline)) {
 				state[timeline] = [.. defaultState];
@@ -223,7 +234,7 @@ public static class WorldExporter {
 			}
 
 			if (connection.timeline.timelineType == TimelineType.Only) {
-				writer.Write($"{timeline} : {RoomNameCasing(room.name)} : ");
+				writer.Write($"{stringifiedConditions}{timeline} : {RoomNameCasing(room.name)} : ");
 
 				if (state[timeline][connectionId].first == null) {
 					int disconnectedBefore = 0;
@@ -251,7 +262,7 @@ public static class WorldExporter {
 						continue;
 					}
 
-					writer.Write($"{otherTimeline} : {RoomNameCasing(room.name)} : ");
+					writer.Write($"{stringifiedConditions}{otherTimeline} : {RoomNameCasing(room.name)} : ");
 					if (state[otherTimeline][connectionId].first == null) {
 						int disconnectedBefore = 0;
 						for (int i = 0; i < connectionId; i++) {
@@ -266,7 +277,7 @@ public static class WorldExporter {
 					writer.WriteLine($" : {RoomNameCasing(otherRoom.name)}");
 				}
 
-				writer.Write($"{timeline} : {RoomNameCasing(room.name)} : ");
+				writer.Write($"{stringifiedConditions}{timeline} : {RoomNameCasing(room.name)} : ");
 				if (state[timeline][connectionId].second) {
 					if (state[timeline][connectionId].first == null) {
 						int disconnectedBefore = 0;
@@ -392,7 +403,30 @@ public static class WorldExporter {
 						ParseConditionalLinkConnection(stringWriter, room, connection, timelines, state, defaultState);
 					}
 
+					foreach (Connection connection in room.connections) {
+						if (connection.timeline.timelineType != TimelineType.All)
+							continue;
+						
+						ParseConditionalLinkConnection(stringWriter, room, connection, timelines, state, defaultState);
+					}
+
 					roomDefaultStates[RoomNameCasing(room.name)] = defaultState;
+
+					if ((room.timeline.timelineType == TimelineType.All || room.timeline.timelines.Count == 0) && room.preProcessorConditions.Length == 0) {
+						continue;
+					}
+
+					if (room.preProcessorConditions.Length != 0) {
+						stringWriter.Write("{");
+						bool first1 = true;
+						foreach (string preProcessor in room.preProcessorConditions) {
+							if (!first1)
+								stringWriter.Write(",");
+							first1 = false;
+							stringWriter.Write(preProcessor);
+						}
+						stringWriter.Write("}");
+					}
 
 					if (room.timeline.timelineType == TimelineType.All || room.timeline.timelines.Count == 0) {
 						continue;
@@ -506,6 +540,19 @@ public static class WorldExporter {
 							writer.Write(")");
 						}
 
+						if (mainCreature.preProcessorConditions.Length != 0) {
+							string text = "{";
+							bool first1 = true;
+							foreach (string preProcessor in mainCreature.preProcessorConditions) {
+								if (!first1)
+									text += ",";
+								first1 = false;
+								text += preProcessor;
+							}
+							text += "}";
+							writer.Write(text);
+						}
+
 						if (room == WorldWindow.region.offscreenDen) {
 							writer.Write("OFFSCREEN : ");
 						}
@@ -547,6 +594,19 @@ public static class WorldExporter {
 							writer.Write("(");
 							writer.Write(lineage.timeline);
 							writer.Write(")");
+						}
+
+						if (lineage.preProcessorConditions.Length != 0) {
+							string text = "{";
+							bool first = true;
+							foreach (string preProcessor in lineage.preProcessorConditions) {
+								if (!first)
+									text += ",";
+								first = false;
+								text += preProcessor;
+							}
+							text += "}";
+							writer.Write(text);
 						}
 
 						writer.Write("LINEAGE : ");
@@ -592,6 +652,18 @@ public static class WorldExporter {
 						writer.Write(")");
 					}
 
+					if (worm.preProcessorConditions.Length != 0) {
+						writer.Write("{");
+						bool first = true;
+						foreach (string preProcessor in worm.preProcessorConditions) {
+							if (!first)
+								writer.Write(",");
+							first = false;
+							writer.Write(preProcessor);
+						}
+						writer.Write("}");
+					}
+
 					writer.Write($"{RoomNameCasing(room.name)} : {room.GarbageWormDenIndex}-{Mods.ExportCreatureName(worm.type)}");
 					if (worm.count > 1)
 						writer.Write($"-{worm.count}");
@@ -629,6 +701,10 @@ public static class WorldExporter {
 		}
 	}
 
+	// REVIEW: this does not take into account preprocessorconditions - for example, Watcher's WAUA does not contain a "map_WAUA-Watcher.png",
+	// whereas this method does end up creating one.
+	// One possible solution might be to have the timeline getting simply ignore any rooms and connections that have preprocessorconditions?
+	// but there's multiple other checks that would have to be added/changed to make sure it works in all cases, which is why I'm leaving this for REVIEW.
 	public static void ExportImageFile(string outputPath) {
 		Logger.Info("Exporting image file");
 

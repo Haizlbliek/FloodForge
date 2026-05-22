@@ -99,6 +99,7 @@ public class DenCreature {
 
 public class DenLineage : DenCreature {
 	public Timeline timeline = new ();
+	public string[] preProcessorConditions = [];
 	public ConditionalPopup? conditionalPopup;
 
 	public DenLineage(string type, int count) : base(type, count) {
@@ -113,6 +114,7 @@ public class GarbageWormDen {
 	public string type = "";
 	public int count;
 	public Timeline timeline = new();
+	public string[] preProcessorConditions = [];
 
 	public GarbageWormDen() {
 	}
