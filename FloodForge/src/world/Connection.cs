@@ -61,6 +61,22 @@ public class Connection {
 		};
 	}
 
+	public bool Intersects(Vector2 from, Vector2 to) {
+		Vector2 cornerMin = Vector2.Min(from, to);
+		Vector2 cornerMax = Vector2.Max(from, to);
+
+		if (!(cornerMax.x >= this.fittedAABB.x0 && cornerMax.y >= this.fittedAABB.y0 && cornerMin.x < this.fittedAABB.x1 && cornerMin.y <= this.fittedAABB.y1))
+			return false;
+		for (int i = 0; i < this.BezierPoints.Length - 1; i++) {
+			Vector2 pointA = this.BezierPoints[i];
+			Vector2 pointB = this.BezierPoints[i + 1];
+			if (new Rect(from, to).IntersectsLine(pointA, pointB)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	// Not perfect, but it works
 	public Rect AABB {
 		get {
