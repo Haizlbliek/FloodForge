@@ -7,6 +7,7 @@ public class Connection {
 	public uint roomAExitID;
 	public uint roomBExitID;
 
+	public string[] preProcessorConditions = [];
 	public Timeline timeline;
 	public Timeline EffectiveConnectionTimeline {
 		get {
