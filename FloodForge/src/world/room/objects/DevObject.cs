@@ -5,14 +5,14 @@ public abstract class DevObject {
 
 	public virtual bool ShowInDroplet => true;
 
-	public Node AddNode(Vector2 pos, Node? parent = null) {
-		Node node = new Node(pos, parent, this);
+	public Node AddNode(Vector2 pos, Node? parent = null, Color? color = null) {
+		Node node = new Node(pos, parent, this, color);
 		this.nodes.Add(node);
 		return node;
 	}
 
 	public DevObject() {
-		this.AddNode(Vector2.Zero);
+		this.AddNode(Vector2.Zero, color: DevObjects.MainHandleColor);
 	}
 
 	public abstract void Draw(Vector2 offset);

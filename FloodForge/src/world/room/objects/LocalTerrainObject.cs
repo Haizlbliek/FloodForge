@@ -23,9 +23,9 @@ public class LocalTerrainObject : DevObject, ISaveableObject {
 
 	public LocalTerrainObject() {
 		this.nodeB = this.AddNode(new Vector2(100f, 0f), this.nodes[0]);
-		this.AddNode(new Vector2(0f, 100f), this.nodes[0]);
-		this.AddNode(new Vector2(0f, -100f), this.nodeB);
-		this.bottom = this.AddNode(new Vector2(0f, -100f), this.nodes[0]);
+		this.AddNode(new Vector2(0f, 100f), this.nodes[0], color: DevObjects.TerrainColor);
+		this.AddNode(new Vector2(0f, -100f), this.nodeB, color: DevObjects.TerrainColor);
+		this.bottom = this.AddNode(new Vector2(0f, -100f), this.nodes[0], color: DevObjects.HeightColor);
 	}
 
 	public virtual string SaveKey => "LocalTerrain";

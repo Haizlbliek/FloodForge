@@ -3,7 +3,7 @@ namespace FloodForge.World;
 public class SuperSlopeObject : DevObject, ISaveableObject {
 	public SuperSlopeObject() {
 		this.AddNode(new Vector2(100f, 100f), this.nodes[0]);
-		this.AddNode(new Vector2(0f, -20f), this.nodes[0]);
+		this.AddNode(new Vector2(0f, -20f), this.nodes[0], color: DevObjects.HeightColor);
 	}
 
 	public string SaveKey => "SuperSlope";

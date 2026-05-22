@@ -6,8 +6,8 @@ public class TerrainHandleObject : DevObject, ISaveableObject {
 	public Vector2 Right => this.nodes[0].position + this.nodes[2].position;
 
 	public TerrainHandleObject() {
-		this.AddNode(new Vector2(-40f, 0f), this.nodes[0]);
-		this.AddNode(new Vector2(40f, 0f), this.nodes[0]);
+		this.AddNode(new Vector2(-40f, 0f), this.nodes[0], color: DevObjects.TerrainColor);
+		this.AddNode(new Vector2(40f, 0f), this.nodes[0], color: DevObjects.TerrainColor);
 	}
 
 	public string SaveKey => "TerrainHandle";

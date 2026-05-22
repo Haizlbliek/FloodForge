@@ -130,15 +130,12 @@ public static class DropletWindow {
 
 	private static Node? movingNode = null;
 
+	private static void DrawTerrain() {
+		Room.DrawTerrain(new Vector2(roomRect.x0, roomRect.y0));
+	}
+
 	private static void UpdateDetailsTab() {
-		if (Room.visuals.hasTerrain && Room.visuals.terrain.Count >= 2) {
-			Immediate.Color(0f, 1f, 0f);
-			Immediate.Begin(Immediate.PrimitiveType.LINE_STRIP);
-			foreach (Vector2 point in Room.visuals.terrain) {
-				Immediate.Vertex(roomRect.x0 + point.x / 20f, roomRect.y0 + point.y / 20f);
-			}
-			Immediate.End();
-		}
+		DrawTerrain();
 
 		Node? hoveringNode = null;
 		Vector2 nodeMouse = new Vector2(transformedMouse.x, transformedMouse.y + (roomRect.y1 - roomRect.y0)) * 20f;
@@ -150,13 +147,14 @@ public static class DropletWindow {
 
 			foreach (Node node in devObject.nodes) {
 				Vector2 nodePos = node.GlobalPosition;
+				Color color = node.color ?? Color.Grey;
 
-				if ((nodePos - nodeMouse).Length < mouseDistance) {
-					Immediate.Color(Color.White);
+				if ((nodePos - nodeMouse).Length < mouseDistance && movingNode == null || node == movingNode) {
+					Immediate.Color(color * 2f);
 					hoveringNode = node;
 				}
 				else {
-					Immediate.Color(Color.Grey);
+					Immediate.Color(color);
 				}
 
 				Vector2 nodeRenderPos = new Vector2(roomRect.x0 + nodePos.x / 20f, roomRect.y0 + nodePos.y / 20f);
@@ -230,14 +228,7 @@ public static class DropletWindow {
 	private static void UpdateNotDetailsTab() {
 		if (!showObjects) return;
 
-		if (Room.visuals.hasTerrain && Room.visuals.terrain.Count >= 2) {
-			Immediate.Color(0f, 1f, 0f);
-			Immediate.Begin(Immediate.PrimitiveType.LINE_STRIP);
-			foreach (Vector2 point in Room.visuals.terrain) {
-				Immediate.Vertex(roomRect.x0 + point.x / 20f, roomRect.y0 + point.y / 20f);
-			}
-			Immediate.End();
-		}
+		DrawTerrain();
 
 		foreach (DevObject devObject in Room.data.objects) {
 			if (!devObject.ShowInDroplet) continue;
