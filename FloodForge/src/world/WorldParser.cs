@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using FloodForge.Popups;
 using Stride.Core;
 using Stride.Core.Extensions;
 
@@ -836,8 +837,10 @@ public static class WorldParser {
 		}
 
 		Logger.Info("Loaded conditional links");
+		if (!success)
+			PopupManager.Add(new InfoPopup("Issue encountered\nwhile loading links\ncheck log.txt for more info"));
 
-		return success;
+		return true;
 	}
 
 	public static string GetRegionDisplayname(string worldPath) {
