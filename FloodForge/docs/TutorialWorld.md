@@ -160,8 +160,8 @@ To add a new reference image:
 2. Navigate to the relevant image
 3. `Open`
 
-The reference image will behave similarly to rooms, but is *not* exported
-and is *not* preserved when loading another region or closing Floodforge.
+The reference image will behave similarly to rooms, but is *not* exported,
+and does not affect the in-game map.
 To resize the image, right click it and drag the `Scale` slider.
 To delete the image, similarly to a room, select or hover over it and press `X`.
 
@@ -192,5 +192,5 @@ To show the proper icons and be able to add the creatures and timelines to new r
 
 ### 
 ## Changing settings
-Open `assets/settings.txt`, each line contains a setting key and value.
+Open `assets/settings.cfg`, each line contains a setting key and value.
 Settings are individually explained in comments above each key.
