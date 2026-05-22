@@ -434,6 +434,10 @@ void main() {
 		Vertex(new Vector3D<float>(x, y, 0.0f));
 	}
 
+	public static void Vertex(Vector2 pos) {
+		Vertex(new Vector3D<float>(pos.x, pos.y, 0.0f));
+	}
+
 	public static void TexCoord(Vector2D<float> uv) {
 		DrawState.u = uv.X;
 		DrawState.v = uv.Y;

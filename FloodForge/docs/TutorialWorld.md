@@ -26,6 +26,7 @@ I - Move to back
 D - Change conditionals
 R - Open room in Droplet
 F - Search for room
+B - Toggle bat migration blockage
 Alt+T - Open Tutorial
 Alt+S - Open Splash
 Right click - Open reference image settings; Reset popup size
@@ -35,52 +36,50 @@ Right click - Open reference image settings; Reset popup size
 ## How to...
 
 ### Creating a new region
-- `New`
+- `File` -> `New`
 - In the popup, type your region acronym
 - `Confirm`
 
 ### 
 ### Importing an existing region
-- `Import`
+- `File` -> `Import`
 - Navigate to your `world\_xx.txt` file (`mods/YOUR_MOD/world/xx/world_xx.txt`)
 - `Open`
 
 ### 
 ### Adding rooms to a region
 *After creating or importing a region*
-- `Add Room`
+- `Edit` -> `Add Room`
 - Navigate to `mods/YOUR_MOD/world/xx-rooms/XX_A01.txt`
 - `Open`
 
 ### 
 ### Connecting rooms
-- Find two connections between two different rooms
-- Right click and drag from the first connection to the second
+- Find two room exits between two different rooms
+- Right click and drag from the first room exit to the second
 
 ### 
 ### Adding creatures to a den
 - Choose a den, hover it, and press `C`
 - In the popup, select the creature you wish to add
 - Click multiple times for multiple of the same type of creature
-- Press the right `+` to expand the `Tag` sidebar
 
 ### 
 ### Lineages & multiple types of creatures
-*After opening a den*
-- Press the left `+` to expand the `Lineages` sidebar
+*After opening a den, the left section controls lineages*
 `<` -> Select previous lineage
 `x` -> Delete selected lineage
 `+` -> Add new lineage
 `>` -> Select next lineage
 - Creatures in the lineage are vertically placed
-- Press the large `+` to add a new creature
+- Press the large `+` at the bottom to add a new creature
 - Press `...` to edit conditionals (See `Conditionals`)
-- Press `x` to remove the creature from the lineage
+- Press `x` beside a creature to remove the creature from the lineage
 
 ### 
 ### Conditionals
 - Either by pressing `D` while hovering a connection or room,
-or by pressing `...` in a den lineage, the conditionals popup opens
+or by pressing `...` in a den lineage
 
 **Connections and creatures:**
 `ALL` -> This is visible to  *all*  slugcats
@@ -108,8 +107,8 @@ limited to `ONLY` the selected slugcats.
 ### Creating a room
 - Hover an empty area
 - Press `R`
-- Enter room name
 - Select room size
+- Enter room name
 - `Create`
 - (See Droplet)
 
@@ -157,7 +156,7 @@ When making a region, you may have made a rough (or very polished) plan.
 FloodForge allows you to use such an image as reference.
 To add a new reference image:
 
-1. `Add Reference`
+1. `Edit` -> `Add Reference`
 2. Navigate to the relevant image
 3. `Open`
 
@@ -167,13 +166,18 @@ To resize the image, right click it and drag the `Scale` slider.
 To delete the image, similarly to a room, select or hover over it and press `X`.
 
 ### 
-## Adding custom creatures
-Some mods add creatures to the game, these will show up as `?` in FloodForge,
-to show the proper icon and be able to add the creature to new rooms:
+## Adding custom mods
+Some mods add creatures or timelines to the game, these will show up as `?` in FloodForge until you add them.
+To show the proper icons and be able to add the creatures and timelines to new rooms:
 
-1. Add a folder inside `assets/creatures` with the mod name (e.g. `m4rblelous`).
-2. Inside, put a .png image for every creature you want to add.
-3. In `assets/creatures/mods.txt`, add a line with your directory name.
+1. Add a folder inside `assets/mods` with the mod name (e.g. `assets/mods/silly_mod`)
+2. Inside add a `creatures` and `timelines` directory.
+3. Inside the `assets/mods/<yourmod>/creatures`, put a .png image for every creature you want to add.
+- Make sure the .png name matches your creature id! (e.g. `GreenLizard.png` for GreenLizard)
+4. Inside the `assets/mods/<yourmod>/timlines`, put a .png image for every timeline you want to add.
+- Make sure the .png name matches your slugcat id! (e.g. `MyCustomScug.png` for MyCustomScug)
+- This is directly equivalent to the Slugbase id field.
+5. In `assets/mods.txt`, add a line with your directory name.
 
 > **Side note:**
 > Sometimes, mods add custom "parsings" for creature names, allowing alternate
@@ -181,20 +185,10 @@ to show the proper icon and be able to add the creature to new rooms:
 > in the world file with either `GreenLizard` OR `Green`.
 > 
 > Adding your own is pretty simple,
-> In `assets/creatures/parse.txt` add a line with the format:
+> In `assets/mods/<yourmod>/creatures/parse.txt` add a line with the format:
 > `Abbreviated Name>ActualID`
 > 
 > You can add as many as you like!
-
-### 
-## Adding custom slugcat timelines
-To add a custom slugcat to FloodForge,
-Upload your slugcat's icon into `assets/timelines` with the case-sensitive filename exactly equal
-to the timeline ID.
-
-E.g.  If you would use
-`SillySlugcat : SU_A01 : SU_B01 : DISCONNECTED`
-Then your timeline ID is `SillySlugcat`
 
 ### 
 ## Changing settings

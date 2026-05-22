@@ -3,7 +3,6 @@ using System.Text;
 using FloodForge.History;
 using FloodForge.Popups;
 using FloodForge.World;
-using Silk.NET.GLFW;
 using Silk.NET.Input;
 using StbImageWriteSharp;
 using Stride.Core.Extensions;
@@ -188,7 +187,7 @@ public static class DropletWindow {
 			}
 			else {
 				trashCanState = 0;
-				movingNode.position = nodeMouse - movingNode.parent.position;
+				movingNode.position = nodeMouse - movingNode.parent.GlobalPosition;
 			}
 
 			if (movingNode.devObject is TerrainHandleObject) {
@@ -1112,26 +1111,26 @@ public static class DropletWindow {
 			UI.font.Write("Water", sidebar.x0 + 0.07f, sidebar.y1 - 0.095f, 0.03f, Font.Align.MiddleLeft);
 			UI.font.Write("Water in Front", sidebar.x0 + 0.07f, sidebar.y1 - 0.155f, 0.03f, Font.Align.MiddleLeft);
 
-			float barY = sidebar.y1 - 0.2f;
+			float barY = sidebar.y1 - 0.19f;
 			Immediate.Color(Themes.Border);
-			UI.Line(sidebar.x0, barY, sidebar.x1, sidebar.y1 - 0.2f);
+			UI.Line(sidebar.x0, barY, sidebar.x1, barY);
 
-			if (UI.TextButton("Add TerrainHandle", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.06f, 0.39f, 0.05f))) {
-				DevObject newObject = new TerrainHandleObject();
-				Room.data.objects.Add(newObject);
-				Room.visuals.terrainNeedsRefresh = true;
-				dropletHistory.Apply(new ObjectAddChange(Room, newObject, true));
-			}
-			if (UI.TextButton("Add MudPit", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.12f, 0.39f, 0.05f))) {
-				DevObject newObject = new MudPitObject();
-				Room.data.objects.Add(newObject);
-				dropletHistory.Apply(new ObjectAddChange(Room, newObject, true));
-			}
-			if (UI.TextButton("Add AirPocket", Rect.FromSize(sidebar.x0 + 0.01f, barY - 0.18f, 0.39f, 0.05f))) {
-				DevObject newObject = new AirPocketObject();
-				Room.data.objects.Add(newObject);
-				Room.visuals.waterNeedsRefresh = true;
-				dropletHistory.Apply(new ObjectAddChange(Room, newObject, true));
+			float currentButtonY = barY - 0.06f;
+
+			foreach (KeyValuePair<string, Func<DevObject>> pair in DevObjects.objectFactories) {
+				string key = pair.Key;
+				Func<DevObject> factoryMethod = pair.Value;
+
+				if (UI.TextButton($"Add {key}", Rect.FromSize(sidebar.x0 + 0.01f, currentButtonY, 0.39f, 0.05f))) {
+					DevObject newObject = factoryMethod();
+					Room.data.objects.Add(newObject);
+					dropletHistory.Apply(new ObjectAddChange(Room, newObject, true));
+
+					if (newObject is TerrainHandleObject) Room.visuals.terrainNeedsRefresh = true;
+					if (newObject is AirPocketObject) Room.visuals.waterNeedsRefresh = true;
+				}
+
+				currentButtonY -= 0.06f;
 			}
 
 			if (trashCanState > 0) {
@@ -1368,14 +1367,25 @@ public static class DropletWindow {
 			string data = placedObjectsLine.Contains(' ') ? placedObjectsLine[(placedObjectsLine.IndexOf(' ') + 1)..] : "";
 			string[] poData = data.Split([", "], StringSplitOptions.RemoveEmptyEntries);
 
-			int terrainIdx = 0, mudIdx = 0, airIdx = 0;
-			TerrainHandleObject[] terrainHandleObjects = [.. Room.data.objects.OfType<TerrainHandleObject>()];
-			MudPitObject[] mudPitObjects = [.. Room.data.objects.OfType<MudPitObject>()];
-			AirPocketObject[] airPocketObjects = [.. Room.data.objects.OfType<AirPocketObject>()];
+			Dictionary<string, Queue<ISaveableObject>> objectQueues = DevObjects.objectFactories.Keys.ToDictionary(key => key, _ => new Queue<ISaveableObject>());
+			IEnumerable<IGrouping<string, ISaveableObject>> activeObjects = Room.data.objects
+				.OfType<ISaveableObject>()
+				.GroupBy(obj => obj.SaveKey);
+
+			foreach (IGrouping<string, ISaveableObject> group in activeObjects) {
+				if (objectQueues.TryGetValue(group.Key, out Queue<ISaveableObject>? queue)) {
+					foreach (ISaveableObject obj in group) {
+						queue.Enqueue(obj);
+					}
+				} else {
+					objectQueues[group.Key] = new Queue<ISaveableObject>(group);
+				}
+			}
 
 			foreach (string po in poData) {
 				if (string.IsNullOrWhiteSpace(po)) continue;
 				string currentOutputState = output.ToString();
+
 				try {
 					int start = po.IndexOf('<');
 					int next = po.IndexOf('>', start);
@@ -1383,29 +1393,19 @@ public static class DropletWindow {
 					string last = po[(end + 2)..];
 					string[] splits = last.Split('~');
 
-					if (po.StartsWith("TerrainHandle>")) {
-						if (terrainIdx >= terrainHandleObjects.Length) continue;
-						TerrainHandleObject h = terrainHandleObjects[terrainIdx++];
-						string height = splits.Length >= 5 ? splits[4] : "20";
-						output.Append($"TerrainHandle><{h.nodes[0].position.x}><{h.nodes[0].position.y}><{h.nodes[1].position.x}~{h.nodes[1].position.y}~{h.nodes[2].position.x}~{h.nodes[2].position.y}~{height}");
-					}
-					else if (po.StartsWith("MudPit>")) {
-						if (mudIdx >= mudPitObjects.Length) continue;
-						MudPitObject m = mudPitObjects[mudIdx++];
-						string size = splits.Length >= 3 ? splits[2] : "15.0";
-						output.Append($"MudPit><{m.nodes[0].position.x}><{m.nodes[0].position.y}><{m.nodes[1].position.x}~{m.nodes[1].position.y}~{size}");
-					}
-					else if (po.StartsWith("AirPocket>")) {
-						if (airIdx >= airPocketObjects.Length) continue;
-						AirPocketObject p = airPocketObjects[airIdx++];
-						string px = "30.0", py = "30.0", flood = "Y";
-						if (splits.Length >= 6) { px = splits[2]; py = splits[3]; flood = splits[4]; }
-						output.Append($"AirPocket><{p.nodes[0].position.x}><{p.nodes[0].position.y}><{p.nodes[1].position.x}~{p.nodes[1].position.y}~{px}~{py}~{flood}~{p.nodes[2].position.y}");
-					}
-					else {
+					int separatorIdx = po.IndexOf('>');
+					string prefix = separatorIdx != -1 ? po[..separatorIdx] : po;
+
+					bool isKnownType = DevObjects.objectFactories.ContainsKey(prefix);
+					if (isKnownType) {
+						if (objectQueues.TryGetValue(prefix, out Queue<ISaveableObject>? queue) && queue.Count > 0) {
+							output.Append(queue.Dequeue().Save(splits));
+							output.Append(", ");
+						}
+					} else {
 						output.Append(po);
+						output.Append(", ");
 					}
-					output.Append(", ");
 				} catch {
 					output.Clear();
 					output.Append(currentOutputState).Append(po).Append(", ");
@@ -1413,33 +1413,23 @@ public static class DropletWindow {
 				}
 			}
 
-			while (terrainIdx < terrainHandleObjects.Length) {
-				TerrainHandleObject h = terrainHandleObjects[terrainIdx++];
-				output.Append($"TerrainHandle><{h.nodes[0].position.x}><{h.nodes[0].position.y}><{h.nodes[1].position.x}~{h.nodes[1].position.y}~{h.nodes[2].position.x}~{h.nodes[2].position.y}~20, ");
-			}
-			while (mudIdx < mudPitObjects.Length) {
-				MudPitObject m = mudPitObjects[mudIdx++];
-				output.Append($"MudPit><{m.nodes[0].position.x}><{m.nodes[0].position.y}><{m.nodes[1].position.x}~{m.nodes[1].position.y}~15, ");
-			}
-			while (airIdx < airPocketObjects.Length) {
-				AirPocketObject p = airPocketObjects[airIdx++];
-				output.Append($"AirPocket><{p.nodes[0].position.x}><{p.nodes[0].position.y}><{p.nodes[1].position.x}~{p.nodes[1].position.y}~30.0~30.0~Y~{p.nodes[2].position.y}, ");
+			foreach (Queue<ISaveableObject> queue in objectQueues.Values) {
+				while (queue.Count > 0) {
+					output.Append(queue.Dequeue().Save([]));
+					output.Append(", ");
+				}
 			}
 
 			placedObjectsLine = output.ToString();
 		}
 
-		if (before != null && before != "" || after != null && after != "" || !string.IsNullOrWhiteSpace(placedObjectsLine)) {
-			settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.name + "_settings.txt");
-			using StreamWriter sw = new StreamWriter(settingsPath);
-			sw.Write(before);
-			if (!string.IsNullOrWhiteSpace(placedObjectsLine)) {
-				if (!placedObjectsLine.EndsWith(", "))
-					placedObjectsLine += ", ";
-				sw.Write("PlacedObjects: " + placedObjectsLine + "\n");
-			}
-			sw.Write(after);
+		settingsPath ??= PathUtil.Combine(WorldWindow.region.roomsPath, Room.name + "_settings.txt");
+		using StreamWriter sw = new StreamWriter(settingsPath);
+		sw.Write(before);
+		if (!string.IsNullOrEmpty(placedObjectsLine)) {
+			sw.Write("PlacedObjects: " + placedObjectsLine + "\n");
 		}
+		sw.Write(after);
 	}
 
 	private static bool ValidSlopePos(uint geo, Vector2 tp) { // something in this function is broken, which is why the other overload doesn't simply make a new vector2 to call this one with.
@@ -1926,6 +1916,10 @@ public static class DropletWindow {
 						Room.MoveUpdate();
 						DropletWindow.Reset();
 					}));
+				}),
+
+				new Button("Help", button => {
+					PopupManager.Add(new MarkdownPopup("docs/TutorialDroplet.md"));
 				}),
 			];
 		}

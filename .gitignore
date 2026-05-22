@@ -8,6 +8,7 @@ crashlog.txt
 *.lock
 
 FloodForge/assets/recents.txt
+FloodForge/assets/persistentdata.txt
 
 TODO.md
 CHANGES.md
