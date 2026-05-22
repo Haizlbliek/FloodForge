@@ -3,7 +3,7 @@ namespace FloodForge.World;
 public class AirPocketObject : DevObject, ISaveableObject {
 	public AirPocketObject() {
 		this.AddNode(new Vector2(100f, 200f), this.nodes[0]);
-		this.AddNode(new Vector2(0f, 80f), this.nodes[0]);
+		this.AddNode(new Vector2(0f, 80f), this.nodes[0], color: new Color(0.2f, 1f, 1f));
 	}
 
 	public string SaveKey => "AirPocket";

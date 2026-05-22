@@ -1549,6 +1549,52 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			], [ "projection", "model", "tintColor", "tintStrength" ]);
 	}
 
+	public virtual void DrawTerrain(Vector2 pos) {
+		if (!this.visuals.hasTerrain || this.visuals.terrain.Count < 2) {
+			return;
+		}
+
+		Immediate.Color(0f, 1f, 0f);
+		bool drawingSegment = false;
+		Vector2 prevPoint = this.visuals.terrain[0];
+		float height = this.height * 20f;
+
+		foreach (Vector2 point in this.visuals.terrain) {
+			bool currentValid = point.y >= 0f && point.y <= height;
+
+			if (currentValid) {
+				if (!drawingSegment) {
+					Immediate.Begin(Immediate.PrimitiveType.LINE_STRIP);
+					drawingSegment = true;
+
+					if (prevPoint.y < 0f || prevPoint.y > height) {
+						float targetY = prevPoint.y < 0f ? 0f : height;
+						float t = Mathf.InverseLerp(targetY, prevPoint.y, point.y);
+						float intersectX = Mathf.Lerp(prevPoint.x, point.x, t);
+						Immediate.Vertex(pos.x + intersectX / 20f, pos.y + targetY / 20f);
+					}
+				}
+				Immediate.Vertex(pos.x + point.x / 20f, pos.y + point.y / 20f);
+			}
+			else {
+				if (drawingSegment) {
+					float targetY = point.y < 0f ? 0f : height;
+					float t = Mathf.InverseLerp(targetY, prevPoint.y, point.y);
+					float intersectX = Mathf.Lerp(prevPoint.x, point.x, t);
+					Immediate.Vertex(pos.x + intersectX / 20f, pos.y + targetY / 20f);
+
+					Immediate.End();
+					drawingSegment = false;
+				}
+			}
+			prevPoint = point;
+		}
+
+		if (drawingSegment) {
+			Immediate.End();
+		}
+	}
+
 	public virtual void DrawBlack(WorldWindow.RoomPosition positionType) {
 		Immediate.Color(Themes.RoomSolid);
 		if (this.data.hidden != 0) {
@@ -1578,18 +1624,18 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
 		}
-		Vector2 position = positionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
+		Vector2 renderedPosition = positionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
 
 		if (!this.valid) {
 			Immediate.Color(1f, 0f, 0f);
 			Immediate.Begin(Immediate.PrimitiveType.LINES);
-			Immediate.Vertex(position.x, position.y);
-			Immediate.Vertex(position.x + this.width, position.y - this.height);
-			Immediate.Vertex(position.x + this.width, position.y);
-			Immediate.Vertex(position.x, position.y - this.height);
+			Immediate.Vertex(renderedPosition.x, renderedPosition.y);
+			Immediate.Vertex(renderedPosition.x + this.width, renderedPosition.y - this.height);
+			Immediate.Vertex(renderedPosition.x + this.width, renderedPosition.y);
+			Immediate.Vertex(renderedPosition.x, renderedPosition.y - this.height);
 			Immediate.End();
 
-			UI.StrokeRect(position.x, position.y, position.x + this.width, position.y - this.height);
+			UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.width, renderedPosition.y - this.height);
 
 			return;
 		}
@@ -1611,7 +1657,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		if (this.roomRenderable != null){
 			this.roomRenderable.PreDraw();
 			this.roomRenderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
-			this.roomRenderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(position.x, position.y, 0f)]);
+			this.roomRenderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(renderedPosition.x, renderedPosition.y, 0f)]);
 			this.roomRenderable.Uniform4("tintColor", tint.r, tint.g, tint.b, alpha);
 			this.roomRenderable.Uniform1("tintStrength", Settings.RoomTintStrength);
 			this.roomRenderable.DoDraw();
@@ -1622,21 +1668,16 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 				Color color = Themes.RoomWater;
 				this.waterRenderable.PreDraw();
 				this.waterRenderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
-				this.waterRenderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(position.x, position.y, 0f)]);
+				this.waterRenderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(renderedPosition.x, renderedPosition.y, 0f)]);
 				this.waterRenderable.Uniform4("tintColor", color.r, color.g, color.b, color.a);
 				this.waterRenderable.Uniform1("tintStrength", 0f);
 				this.waterRenderable.DoDraw();
 			}
 			else
-				this.DrawWater(position);
+				this.DrawWater(renderedPosition);
 		}
-		if (WorldWindow.VisibleDevItems && this.visuals.hasTerrain && this.visuals.terrain.Count >= 2) {
-			Immediate.Color(0f, 1f, 0f);
-			Immediate.Begin(Immediate.PrimitiveType.LINE_STRIP);
-			foreach (Vector2 point in this.visuals.terrain) {
-				Immediate.Vertex(position.x + point.x / 20f, position.y + point.y / 20f - this.height);
-			}
-			Immediate.End();
+		if (WorldWindow.VisibleDevItems) {
+			this.DrawTerrain(new Vector2(renderedPosition.x, renderedPosition.y - this.height));
 		}
 		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Fill);
@@ -1746,7 +1787,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 
 			if (WorldWindow.VisibleCreatures) {
 				for (int i = 0; i < this.denShortcutEntrances.Count; i++) {
-					this.DrawDen(this.dens[i], position.x + this.denShortcutEntrances[i].x, position.y - this.denShortcutEntrances[i].y, i == this.hoveredDen, WorldWindow.HoveringDraggable == this);
+					this.DrawDen(this.dens[i], renderedPosition.x + this.denShortcutEntrances[i].x, renderedPosition.y - this.denShortcutEntrances[i].y, i == this.hoveredDen, WorldWindow.HoveringDraggable == this);
 				}
 			}
 		}
@@ -1754,20 +1795,20 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		if (this.timeline.timelineType != TimelineType.All) {
 			int i = 0;
 			foreach (string timeline in this.timeline.timelines) {
-				UI.CenteredTexture(Mods.GetTimelineTexture(timeline), (float) (position.x + (i * WorldWindow.SelectorScale) + 1.5f), (float) (position.y - 1.5f), WorldWindow.SelectorScale);
+				UI.CenteredTexture(Mods.GetTimelineTexture(timeline), (float) (renderedPosition.x + (i * WorldWindow.SelectorScale) + 1.5f), (float) (renderedPosition.y - 1.5f), WorldWindow.SelectorScale);
 				i++;
 			}
 
 			if (this.timeline.timelines.Count > 0 && this.timeline.timelineType == TimelineType.Except) {
 				Immediate.Color(1f, 0f, 0f);
-				UI.Line(position.x + 2f - WorldWindow.SelectorScale * 0.5f, position.y - 2f, position.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.timeline.timelines.Count - 1) * WorldWindow.SelectorScale, position.y - 2f, WorldWindow.SelectorScale * 4f);
+				UI.Line(renderedPosition.x + 2f - WorldWindow.SelectorScale * 0.5f, renderedPosition.y - 2f, renderedPosition.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.timeline.timelines.Count - 1) * WorldWindow.SelectorScale, renderedPosition.y - 2f, WorldWindow.SelectorScale * 4f);
 			}
 		}
 
-		Vector2 o = WorldWindow.worldMouse - position;
+		Vector2 o = WorldWindow.worldMouse - renderedPosition;
 		bool hovered = o.x >= 0f && o.y <= 0f && o.x <= this.width && o.y >= -this.height;
 		Immediate.Color(hovered ? Themes.RoomBorderHighlight : Themes.RoomBorder);
-		UI.StrokeRect(position.x, position.y, position.x + this.width, position.y - this.height);
+		UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.width, renderedPosition.y - this.height);
 		this.hoveredShortcutEntrance = -1;
 	}
 
