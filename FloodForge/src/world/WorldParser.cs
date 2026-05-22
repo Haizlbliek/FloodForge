@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using FloodForge.Popups;
 using Stride.Core;
 using Stride.Core.Extensions;
 
@@ -231,6 +232,7 @@ public static class WorldParser {
 		public string roomBName = "";
 		public uint? roomBExitID = null;
 		public Timeline timeline = new();
+		public string[] preProcessorConditions = [];
 
 		public ConditionalConnection(Room roomA, uint connectionA, string roomBName, string originLine = "") {
 			this.roomA = roomA;
@@ -287,14 +289,14 @@ public static class WorldParser {
 			bool alreadyExists = false;
 			for (int i = 0; i < connectionsToAdd.Count; i++) { // look through the connections that have already been found
 				ConnectionToAdd connectionData = connectionsToAdd[i];
-				if (connectionData.roomB != null) continue; // if a connection has already found its other side, skip that connection
+				if (connectionData.roomB != null && !(connectionData.roomB == room)) continue; // if a connection has already found its other side, skip that connection
 
 				// otherwise, check if the found connection: - comes from the room we're looking for, and: - is looking for this room
 				// this is probably where the ConnectionExtensions compatibility has to be first implemented, so it also looks for the right connection index.
 				if (connectionData.roomA.name.Equals(connection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(roomName, StringComparison.InvariantCultureIgnoreCase)) {
 					connectionsToAdd[i] = connectionData with { roomB = room, roomBExitID = connectionId };
 					alreadyExists = true;
-					break;
+					//break;
 				}
 			}
 
@@ -338,7 +340,7 @@ public static class WorldParser {
 		return new DenCreature.Tag(Mods.GetOrCreateTag(tag));
 	}
 
-	private static bool ParseWorldCreatureLineage(string[] splits, Room room, Timeline timeline) {
+	private static bool ParseWorldCreatureLineage(string[] splits, Room room, Timeline timeline, string[] preProcessorConditions) {
 		int denId = int.Parse(splits[2]);
 
 		if (room is OffscreenRoom offscreenRoom) {
@@ -353,7 +355,8 @@ public static class WorldParser {
 
 		Den den = room.GetDen(denId);
 		DenLineage lineage = new DenLineage("", 0) {
-			timeline = timeline
+			timeline = timeline,
+			preProcessorConditions = preProcessorConditions
 		};
 		den.creatures.Add(lineage);
 
@@ -389,7 +392,7 @@ public static class WorldParser {
 		return true;
 	}
 
-	private static bool ParseWorldCreatureNormal(string[] splits, Room room, Timeline timeline) {
+	private static bool ParseWorldCreatureNormal(string[] splits, Room room, Timeline timeline, string[] preProcessorConditions) {
 		foreach (string creatureInDen in Regex.Split(splits[1], @",(?![^{]*})").Select(s => s.Trim())) {
 			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
 			int denId = int.Parse(sections[0], NumberStyles.Any, CultureInfo.InvariantCulture);
@@ -404,6 +407,7 @@ public static class WorldParser {
 				GarbageWormDen worm = new GarbageWormDen() {
 					type = Mods.ParseCreature(creature),
 					timeline = timeline,
+					preProcessorConditions = preProcessorConditions,
 					count = sections.Length < 3 ? 1 : int.Parse(sections[2])
 				};
 				room.garbageWormDens.Add(worm);
@@ -417,7 +421,8 @@ public static class WorldParser {
 
 			Den den = room.GetDen(denId);
 			DenLineage lineage = new DenLineage(Mods.ParseCreature(creature), 1) {
-				timeline = timeline
+				timeline = timeline,
+				preProcessorConditions = preProcessorConditions
 			};
 			den.creatures.Add(lineage);
 
@@ -444,10 +449,12 @@ public static class WorldParser {
 		try {
 			string[] splits = line.Split(" : ", StringSplitOptions.TrimEntries);
 			Timeline timeline = new();
+			string[] preProcessorConditions = [];
 
 			if (splits[0][0] == '(') {
-				string v = splits[0][1..splits[0].IndexOf(')')];
-				splits[0] = splits[0][(splits[0].IndexOf(')') + 1)..].Trim();
+				int closingBracketPosition = splits[0].IndexOf(')');
+				string v = splits[0][1..closingBracketPosition];
+				splits[0] = splits[0][(closingBracketPosition + 1)..].Trim();
 				if (v.StartsWith("x-", StringComparison.InvariantCultureIgnoreCase)) {
 					timeline.timelineType = TimelineType.Except;
 					v = v[2..];
@@ -456,6 +463,12 @@ public static class WorldParser {
 					timeline.timelineType = TimelineType.Only;
 				}
 				timeline.timelines = [.. v.Split(',')];
+			}
+			if (splits[0][0] == '{') {
+				int closingBracketPosition = splits[0].IndexOf('}');
+				string conditions = splits[0][1..closingBracketPosition];
+				splits[0] = splits[0][(closingBracketPosition + 1)..].Trim();
+				preProcessorConditions = [.. conditions.Split(',')];
 			}
 
 			bool lineage = splits[0].Equals("lineage", StringComparison.InvariantCultureIgnoreCase);
@@ -470,10 +483,10 @@ public static class WorldParser {
 			}
 
 			if (lineage) {
-				if (!ParseWorldCreatureLineage(splits, room, timeline)) return false;
+				if (!ParseWorldCreatureLineage(splits, room, timeline, preProcessorConditions)) return false;
 			}
 			else {
-				if (!ParseWorldCreatureNormal(splits, room, timeline)) return false;
+				if (!ParseWorldCreatureNormal(splits, room, timeline, preProcessorConditions)) return false;
 			}
 		}
 		catch (Exception e) {
@@ -484,21 +497,74 @@ public static class WorldParser {
 		return true;
 	}
 
+	private static string[] SplitTopLevel(string item, char separator, char[] openers, char[] closers, StringSplitOptions options) {
+		List<string> items = [];
+		string currentItem = "";
+		Stack<int> depth = [];
+		for (int i = 0; i < item.Length; i++) {
+			if (openers.Contains(item[i])) {
+				depth.Push(openers.IndexOf(item[i]));
+				currentItem += item[i];
+			}
+			else if (closers.Contains(item[i]) && depth.Count > 0 && closers[depth.Peek()] == item[i]) {
+				depth.Pop();
+				currentItem += item[i];
+			}
+			else {
+				if (item[i] == separator && depth.Count == 0) {
+					if (options == StringSplitOptions.TrimEntries) {
+						currentItem = currentItem.Trim();
+					}
+					if (currentItem != "" || options != StringSplitOptions.RemoveEmptyEntries) {
+						items.Add(currentItem);
+					}
+					currentItem = "";
+				}
+				else {
+					currentItem += item[i];
+				}
+			}
+		}
+		if (currentItem != "") {
+			if (options == StringSplitOptions.TrimEntries) {
+				currentItem = currentItem.Trim();
+			}
+			items.Add(currentItem);
+		}
+		return [.. items];
+	}
+
 	// REVIEW - Does not parse correctly
 	private static bool ParseWorldConditionalLink(string link, ref List<ConditionalConnection> conditionalConnectionsToAdd) {
-		string[] parts = link.Split(':', StringSplitOptions.TrimEntries);
+		string[] parts = SplitTopLevel(link, ':', ['(', '{'], [')', '}'], StringSplitOptions.TrimEntries);
 		if (parts.Length < 3 || parts.Length > 4) {
 			Logger.Warn("Skipping line due to improper length");
 			Logger.Warn($"> {link}");
 			return false;
 		}
 
+		string[] preProcessorConditions = [];
+
+		//Logger.Info($"Parsing link: {link}");
+		//Logger.Info($"parts[0]: {parts[0]}");
+		if(parts[0][0] == '{') {
+			//Logger.Info("'{' found");
+			int closingBracketPosition = parts[0].IndexOf('}');
+			//Logger.Info($"closingBracketPosition = {closingBracketPosition}");
+			string conditions = parts[0][1..closingBracketPosition];
+			//Logger.Info($"conditions = {conditions}");
+			parts[0] = parts[0][(closingBracketPosition + 1)..].Trim();
+			//Logger.Info($"parts[0] = {conditions}");
+			preProcessorConditions = [.. conditions.Split(',')];
+			//Logger.Info($"yay");
+		}
+		//Logger.Info($"done");
+
 		string[] timelines = parts[0].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
 		// LATER: REPLACEROOM
 
 		if (parts.Length == 3) {
-			//Logger.Info($"    parts.Length == 3");
 			string roomName2 = parts[2];
 			Room? room2 = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName2, StringComparison.InvariantCultureIgnoreCase));
 			if (room2 == null) {
@@ -506,6 +572,8 @@ public static class WorldParser {
 				Logger.Warn($"> {link}");
 				return false;
 			}
+
+			room2.preProcessorConditions = preProcessorConditions;
 
 			string mod = parts[1].ToLowerInvariant();
 
@@ -532,10 +600,8 @@ public static class WorldParser {
 
 			return true;
 		}
-		//Logger.Info($"    parts.Length == 4");
 
 		string roomName = parts[1];
-		//Logger.Info($"    roomName = {roomName}");
 		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 		if (room == null) {
 			Logger.Warn($"Skipping line due to missing room {roomName}");
@@ -544,12 +610,9 @@ public static class WorldParser {
 		}
 
 		string currentConnection = parts[2];
-		//Logger.Info($"    currentConnection = {currentConnection}");
 		int disconnectedId = -1;
 		bool isCurrentDisconnected = int.TryParse(currentConnection, NumberStyles.Any, CultureInfo.InvariantCulture, out disconnectedId);
-		//Logger.Info($"    isCurrentDisconnected = {isCurrentDisconnected}; disconnectedId = {disconnectedId}");
 		string toConnection = parts[3];
-		//Logger.Info($"    toConnection = {toConnection}");
 
 		if (currentConnection.Equals(toConnection, StringComparison.InvariantCultureIgnoreCase)) {
 			Logger.Warn("Skipping line due to no change");
@@ -557,17 +620,12 @@ public static class WorldParser {
 			return false;
 		}
 
-		//Logger.Info($"checking room {room.name} for connections");
 		Connection? connection = room.connections.FirstOrDefault(otherConnection => {
-			//Logger.Info($"otherConnection = {otherConnection.roomA.name}[{otherConnection.roomAExitID}] - {otherConnection.roomB.name}[{otherConnection.roomBExitID}]");
 			Room otherRoom = (otherConnection.roomA == room) ? otherConnection.roomB : otherConnection.roomA;
-			//Logger.Info($"    otherRoom = {otherRoom.name}; currentConnection = {currentConnection}");
 			return otherRoom.name.Equals(currentConnection, StringComparison.InvariantCultureIgnoreCase);
 		});
-		//Logger.Info($"connection = {(connection != null ? $"{connection.roomA.name}[{connection.roomAExitID}] - {connection.roomB.name}[{connection.roomBExitID}]" : "NULL")}");
 
 		if (toConnection.Equals("disconnected", StringComparison.InvariantCultureIgnoreCase)) {
-			//Logger.Info($"    toConnection == disconnected");
 			if (connection == null) {
 				Logger.Warn("Skipping line due to missing connection");
 				Logger.Warn($"> {link}");
@@ -581,12 +639,12 @@ public static class WorldParser {
 				connection.timeline.timelineType = TimelineType.Except;
 				timelines.ForEach(x => connection.timeline.timelines.Add(x));
 			}
-			//Logger.Info($"    updated connection timeline to {connection.timeline}");
+			
+			connection.preProcessorConditions = preProcessorConditions;
 			return true;
 		}
 
 		int connectionId = -1;
-		//Logger.Info($"    isCurrentDisconnected == {isCurrentDisconnected}");
 		if (isCurrentDisconnected) {
 			string timeline = timelines[0]; // LATER: Figure out what this does and clean up
 			bool[] connected = new bool[room.roomExits.Count];
@@ -615,9 +673,7 @@ public static class WorldParser {
 				connectionId = (int) ((connection.roomA == room) ? connection.roomAExitID : connection.roomBExitID);
 			}
 		}
-		//Logger.Info($"    this: {room.name}[{connectionId}] > {toConnection}[?]");
 
-		//Logger.Info($"    connection = {(connection != null ? $"{connection.roomA.name}[{connection.roomAExitID}] - {connection.roomB.name}[{connection.roomBExitID}]" : "NULL")}");
 		if (connection != null) {
 			if (connection.timeline.timelineType == TimelineType.Only) {
 				timelines.ForEach(x => connection.timeline.timelines.Remove(x));
@@ -626,10 +682,8 @@ public static class WorldParser {
 				connection.timeline.timelineType = TimelineType.Except;
 				timelines.ForEach(x => connection.timeline.timelines.Add(x));
 			}
-			//Logger.Info($"    updated connection timeline to {connection.timeline}");
 			ConditionalConnection conditionalConnection = new (connection.roomA == room ? connection.roomA : connection.roomB, connection.roomA == room ? connection.roomAExitID : connection.roomBExitID, toConnection, link);
 			conditionalConnectionsToAdd.Add(conditionalConnection);
-			//Logger.Info($"added: {conditionalConnection.roomA.name}[{conditionalConnection.roomAExitID}] > {conditionalConnection.roomB?.name ?? conditionalConnection.roomBName}[{conditionalConnection}]");
 
 			return true;
 		}
@@ -640,21 +694,17 @@ public static class WorldParser {
 			return false;
 		}
 
-		//Logger.Info($"    Checking connectionData");
 		for (int i = 0; i < conditionalConnectionsToAdd.Count; i++) {
 			ConditionalConnection connectionData = conditionalConnectionsToAdd[i];
-			//Logger.Info($"{i}: {connectionData.roomA.name}[{connectionData.roomAExitID}] > {connectionData.roomB?.name ?? connectionData.roomBName}[{connectionData.roomBExitID}]");
 
 			if (connectionData.roomB == null && connectionData.roomA.name.Equals(toConnection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(room.name, StringComparison.InvariantCultureIgnoreCase)) {
 				conditionalConnectionsToAdd[i] = connectionData with {
 					roomB = room,
 					roomBExitID = (uint) connectionId
 				};
-				//Logger.Info("    Set roomB");
 				return true;
 			}
 		}
-		//Logger.Info("    roomB not set.");
 
 		conditionalConnectionsToAdd.Add(new ConditionalConnection() {
 			roomA = room,
@@ -663,6 +713,7 @@ public static class WorldParser {
 			roomB = null,
 			roomBExitID = null,
 			timeline = new Timeline (TimelineType.Only, [..timelines]),
+			preProcessorConditions = preProcessorConditions,
 			originLine = link
 		});
 
@@ -673,6 +724,7 @@ public static class WorldParser {
 		List<ConnectionToAdd> connectionsToAdd = [];
 		List<string> conditionalLinks = [];
 		WorldParseState parseState = WorldParseState.None;
+		WorldWindow.invalidCreaturesEncountered = false;
 
 		foreach (string line in File.ReadAllLines(path)) {
 			if (line.IsNullOrEmpty() || line.StartsWith("//")) continue;
@@ -848,7 +900,8 @@ public static class WorldParser {
 			}
 
 			Connection connection = new Connection(connectionData.roomA, connectionData.roomAExitID, connectionData.roomB, connectionData.roomBExitID.Value) {
-				timeline = connectionData.timeline
+				timeline = connectionData.timeline,
+				preProcessorConditions = connectionData.preProcessorConditions
 			};
 			WorldWindow.region.connections.Add(connection);
 			connectionData.roomA.Connect(connection);
@@ -856,8 +909,10 @@ public static class WorldParser {
 		}
 
 		Logger.Info("Loaded conditional links");
+		if (!success)
+			PopupManager.Add(new InfoPopup("Issue encountered\nwhile loading links\ncheck log.txt for more info"));
 
-		return success;
+		return true;
 	}
 
 	public static string GetRegionDisplayname(string worldPath) {
@@ -867,6 +922,7 @@ public static class WorldParser {
 	}
 
 	public static bool ImportWorldFile(string worldPath) {
+		WorldWindow.importIncomplete = true;
 		if (!File.Exists(worldPath)) {
 			Logger.Error("Cannot find world_XX.txt");
 			return false;
@@ -918,7 +974,7 @@ public static class WorldParser {
 		Logger.Info("Opening world ", WorldWindow.region.acronym);
 
 		string? roomsPath = PathUtil.FindDirectory(PathUtil.Parent(WorldWindow.region.exportPath), WorldWindow.region.acronym + "-rooms");
-		if (roomsPath == null) {
+		if (roomsPath == null || roomsPath == "") {
 			Logger.Error("Cannot find rooms directory");
 			return false;
 		}
@@ -963,6 +1019,7 @@ public static class WorldParser {
 
 		Logger.Info("World file imported");
 
+		WorldWindow.importIncomplete = false;
 		return true;
 	}
 }
