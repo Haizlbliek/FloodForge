@@ -362,14 +362,14 @@ public class MarkdownPopup : Popup {
 		if (this.targetScroll >= this.maxScroll) {
 			this.targetScroll = this.maxScroll;
 			if (this.scroll >= this.maxScroll - 0.03f) {
-				this.scroll = this.maxScroll - 0.03f;
+				this.scroll = this.maxScroll + 0.03f;
 			}
 		}
 
 		if (this.targetScroll < 0) {
 			this.targetScroll = 0;
 			if (this.scroll < 0.03f) {
-				this.scroll = 0.03f;
+				this.scroll = -0.03f;
 			}
 		}
 	}

@@ -376,41 +376,21 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 						string last = po[(end + 2)..];
 
 						Vector2 pos = new Vector2(float.Parse(xStr), float.Parse(yStr));
-						string[] splits = last.Split('~');
+						string[] splits = last.Split('~', StringSplitOptions.None);
 
-						if (po.StartsWith("TerrainHandle>")) {
-							TerrainHandleObject obj = new TerrainHandleObject();
-							obj.nodes[0].position = pos;
-							if (splits.Length >= 4) {
-								obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
-								obj.nodes[2].position = new Vector2(float.Parse(splits[2]), float.Parse(splits[3]));
-							}
-							this.data.objects.Add(obj);
-						}
-						else if (po.StartsWith("MudPit>")) {
-							MudPitObject obj = new MudPitObject();
-							obj.nodes[0].position = pos;
-							if (splits.Length >= 2) {
-								obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
-							}
-							this.data.objects.Add(obj);
-						}
-						else if (po.StartsWith("AirPocket>")) {
-							AirPocketObject obj = new AirPocketObject();
-							obj.nodes[0].position = pos;
-							if (splits.Length >= 6) {
-								obj.nodes[1].position = new Vector2(float.Parse(splits[0]), float.Parse(splits[1]));
-								obj.nodes[2].position.y = float.Parse(splits[5]);
+						int separatorIdx = po.IndexOf('>');
+						string key = separatorIdx != -1 ? po[..separatorIdx] : po;
+
+						if (DevObjects.objectFactories.TryGetValue(key, out Func<DevObject>? createObject)) {
+							DevObject obj = createObject();
+							if (obj is ISaveableObject saveable) {
+								saveable.Load(pos, splits);
 							}
 							this.data.objects.Add(obj);
 						}
 						else {
-							string[] splits2 = po.Split('>');
-							string key = splits2[0];
-
 							Texture texture = Mods.GetObjectTexture(key);
-							if (texture == Mods.Unknown)
-								continue;
+							if (texture == Mods.Unknown) continue;
 
 							GenericItemObject obj = new GenericItemObject(key, texture);
 							obj.nodes[0].position = pos;

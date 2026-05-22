@@ -23,6 +23,8 @@ LMB - Draw
 RMB - Erase
 Shift+LMB - Rect draw
 Shift+RMB - Rect erase
+Ctrl+LMB - Line draw
+Ctrl+RMB - Line erase
 Q+LMB - Flood fill draw
 Q+RMB - Flood fill erase
 

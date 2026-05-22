@@ -1,3 +1,4 @@
+using System.Text;
 using StbImageWriteSharp;
 using Stride.Core.Extensions;
 
@@ -117,6 +118,7 @@ public static class WorldExporter {
 				}
 			}
 			Logger.Info("- Rooms");
+
 			foreach (Room room in WorldWindow.region.rooms) {
 				Vector2 canonPosition = new Vector2(
 					(room.CanonPosition.x + room.width * 0.5f) * 3.0f,
@@ -198,7 +200,7 @@ public static class WorldExporter {
 		}
 	}
 
-	private static void ParseConditionalLinkConnection(StreamWriter writer, Room room, Connection connection, List<string> timelines, Dictionary<string, List<(Room? first, bool second)>> state, List<(Room? first, bool second)> defaultState) {
+	private static void ParseConditionalLinkConnection(TextWriter writer, Room room, Connection connection, List<string> timelines, Dictionary<string, List<(Room? first, bool second)>> state, List<(Room? first, bool second)> defaultState) {
 		Room? otherRoom;
 		int connectionId;
 
@@ -348,70 +350,100 @@ public static class WorldExporter {
 			Dictionary<string, List<(Room?, bool)>> roomDefaultStates = [];
 
 			Logger.Info("- Conditional Links");
-			writer.WriteLine("CONDITIONAL LINKS");
-			foreach (Room room in WorldWindow.region.rooms) {
-				if (room is OffscreenRoom)
-					continue;
+			StringBuilder conditionalLinksBuffer = new StringBuilder();
+			using (StreamWriter tempWriter = new StreamWriter(new MemoryStream(), Encoding.UTF8, 1024, leaveOpen: true))
+			using (StringWriter stringWriter = new StringWriter(conditionalLinksBuffer)) {
+				Dictionary<string, List<(Room?, bool)>> tempStates = [];
 
-				List<string> timelines = [];
-				Dictionary<string, List<(Room?, bool)>> state = [];
-				List<(Room?, bool)> defaultState = [];
-				for (int i = 0; i < room.roomExits.Count; i++) {
-					defaultState.Add((null, false));
-				}
-
-				foreach (Connection connection in room.connections) {
-					if (connection.timeline.timelineType != TimelineType.All)
+				foreach (Room room in WorldWindow.region.rooms) {
+					if (room is OffscreenRoom)
 						continue;
 
-					if (connection.roomA == room) {
-						defaultState[(int) connection.roomAExitID] = (connection.roomB, false);
+					List<string> timelines = [];
+					Dictionary<string, List<(Room?, bool)>> state = [];
+					List<(Room?, bool)> defaultState = [];
+					for (int i = 0; i < room.roomExits.Count; i++) {
+						defaultState.Add((null, false));
 					}
-					else {
-						defaultState[(int) connection.roomBExitID] = (connection.roomA, false);
+
+					foreach (Connection connection in room.connections) {
+						if (connection.timeline.timelineType != TimelineType.All)
+							continue;
+
+						if (connection.roomA == room) {
+							defaultState[(int) connection.roomAExitID] = (connection.roomB, false);
+						}
+						else {
+							defaultState[(int) connection.roomBExitID] = (connection.roomA, false);
+						}
 					}
-				}
 
-				foreach (Connection connection in room.connections) {
-					if (connection.timeline.timelineType != TimelineType.Except || connection.timeline.timelines.Count == 0)
+					foreach (Connection connection in room.connections) {
+						if (connection.timeline.timelineType != TimelineType.Except || connection.timeline.timelines.Count == 0)
+							continue;
+
+						ParseConditionalLinkConnection(stringWriter, room, connection, timelines, state, defaultState);
+					}
+
+					foreach (Connection connection in room.connections) {
+						if (connection.timeline.timelineType != TimelineType.Only || connection.timeline.timelines.Count == 0)
+							continue;
+
+						ParseConditionalLinkConnection(stringWriter, room, connection, timelines, state, defaultState);
+					}
+
+					roomDefaultStates[RoomNameCasing(room.name)] = defaultState;
+
+					if (room.timeline.timelineType == TimelineType.All || room.timeline.timelines.Count == 0) {
 						continue;
+					}
 
-					ParseConditionalLinkConnection(writer, room, connection, timelines, state, defaultState);
+					bool first = true;
+					foreach (string timeline in room.timeline.timelines) {
+						if (!first)
+							stringWriter.Write(",");
+						first = false;
+						stringWriter.Write(timeline);
+					}
+
+					stringWriter.Write(" : ");
+					stringWriter.Write((room.timeline.timelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
+					stringWriter.WriteLine($" : {RoomNameCasing(room.name)}");
 				}
-
-				foreach (Connection connection in room.connections) {
-					if (connection.timeline.timelineType != TimelineType.Only || connection.timeline.timelines.Count == 0)
-						continue;
-
-					ParseConditionalLinkConnection(writer, room, connection, timelines, state, defaultState);
-				}
-
-				roomDefaultStates[RoomNameCasing(room.name)] = defaultState;
-
-				if (room.timeline.timelineType == TimelineType.All || room.timeline.timelines.Count == 0) {
-					continue;
-				}
-
-				bool first = true;
-				foreach (string timeline in room.timeline.timelines) {
-					if (!first)
-						writer.Write(",");
-					first = false;
-					writer.Write(timeline);
-				}
-
-				writer.Write(" : ");
-				writer.Write((room.timeline.timelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
-				writer.WriteLine($" : {RoomNameCasing(room.name)}");
 			}
-			writer.WriteLine("END CONDITIONAL LINKS");
-			writer.WriteLine();
+
+			if (conditionalLinksBuffer.Length > 0) {
+				writer.WriteLine("CONDITIONAL LINKS");
+				writer.Write(conditionalLinksBuffer.ToString());
+				writer.WriteLine("END CONDITIONAL LINKS");
+				writer.WriteLine();
+			}
 
 			Logger.Info("- Rooms");
 			writer.WriteLine("ROOMS");
-			foreach (Room room in WorldWindow.region.rooms) {
-				if (room is OffscreenRoom)
-					continue;
+
+			IOrderedEnumerable<Room> sortedRooms = WorldWindow.region.rooms
+					.Where(room => room is not OffscreenRoom)
+					.OrderBy(room => room.data.tags.Contains("GATE") ? 0 : 1)
+					.ThenBy(room => room.data.subregion)
+					.ThenBy(room => room.data.tags.Contains("SHELTER") ? 0 : 1)
+					.ThenBy(room => room.data.cameras.Count)
+					.ThenBy(room => room.name, StringComparer.OrdinalIgnoreCase);
+
+			int? lastSubregion = null;
+			bool isFirstRoom = true;
+			bool wasGate = false;
+
+			foreach (Room room in sortedRooms) {
+				bool isGate = room.data.tags.Contains("GATE");
+
+				if (!isFirstRoom && ((wasGate && !isGate) || (!isGate && room.data.subregion != lastSubregion))) {
+					writer.WriteLine();
+				}
+				
+				isFirstRoom = false;
+				wasGate = isGate;
+				lastSubregion = room.data.subregion;
 
 				writer.Write($"{FancyRoomCasing(room)} : ");
 
@@ -569,6 +601,26 @@ public static class WorldExporter {
 
 			writer.Write(WorldWindow.region.extraWorldCreatures);
 			writer.WriteLine("END CREATURES");
+
+			Logger.Info("- Bat migration blockages");
+
+			IOrderedEnumerable<Room> sortedMigrationRooms = WorldWindow.region.rooms
+				.Where(room => room is not OffscreenRoom && room.data.blockedBatMigration)
+				.OrderBy(room => room.data.tags.Contains("GATE") ? 0 : 1)
+				.ThenBy(room => room.data.subregion)
+				.ThenBy(room => room.data.tags.Contains("SHELTER") ? 0 : 1)
+				.ThenBy(room => room.data.cameras.Count)
+				.ThenBy(room => room.name, StringComparer.OrdinalIgnoreCase);
+
+			if (sortedMigrationRooms.Any()) {
+				writer.WriteLine();
+				writer.WriteLine("BAT MIGRATION BLOCKAGES");
+				foreach (Room room in sortedMigrationRooms) {
+					writer.WriteLine($"{FancyRoomCasing(room)}");
+				}
+				writer.WriteLine("END BAT MIGRATION BLOCKAGES");
+			}
+
 			writer.Write(WorldWindow.region.extraWorld);
 		}
 		catch (Exception exception) {
@@ -821,15 +873,27 @@ public static class WorldExporter {
 
 		Backup.File(outputPath);
 		try {
-			{ using Stream stream = File.OpenWrite(outputPath);
+			{
+				using Stream stream = File.OpenWrite(outputPath);
 				ImageWriter writer = new ImageWriter();
 				writer.WritePng(imageData, textureWidth, textureHeight, ColorComponents.RedGreenBlue, stream);
 			}
+			if (Settings.ExportPsdFiles) {
+				string psdPath = Path.ChangeExtension(outputPath, ".psd");
+				ImageUtil.WritePsd(psdPath, imageData, textureWidth, textureHeight);
+			}
+
 			foreach (KeyValuePair<string, byte[]> item in timelineImageData) {
 				string image = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}-{item.Key}.png");
+
 				using Stream stream = File.OpenWrite(image);
 				ImageWriter writer = new ImageWriter();
 				writer.WritePng(item.Value, textureWidth, textureHeight, ColorComponents.RedGreenBlue, stream);
+
+				if (Settings.ExportPsdFiles) {
+					string timelinePsdPath = Path.ChangeExtension(image, ".psd");
+					ImageUtil.WritePsd(timelinePsdPath, item.Value, textureWidth, textureHeight);
+				}
 			}
 			Logger.Info("Image file exported");
 		}

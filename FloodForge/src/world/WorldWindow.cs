@@ -913,6 +913,16 @@ public static class WorldWindow {
 			}
 		}
 
+		if (Keys.JustPressed(Key.B)) {
+			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
+				bool setBlocked = !rooms.Any(r => r.data.blockedBatMigration);
+
+				GeneralRoomChange<bool> change = new GeneralRoomChange<bool>(r => r.data.blockedBatMigration, (r, i) => r.data.blockedBatMigration = i);
+				rooms.ForEach(r => change.AddRoom(r, setBlocked));
+				worldHistory.Apply(change);
+			}
+		}
+
 		if (VisibleCreatures && Keys.JustPressed(Key.C)) {
 			bool found = false;
 
@@ -1411,6 +1421,8 @@ public static class WorldWindow {
 						debugText.Add("Hidden from Warp Menu");
 					if (room.data.hidden != 0)
 						debugText.Add(room.data.hidden switch { 1 => "Hidden", 2 => "Lost", _ => "" } );
+					if (room.data.blockedBatMigration)
+						debugText.Add("Blocked bat migration");
 				}
 			}
 		}
@@ -2101,6 +2113,10 @@ public static class WorldWindow {
 						MoveUpdate();
 					}, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
 				]),
+
+				new Button("Help", button => {
+					PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+				}),
 			];
 		}
 

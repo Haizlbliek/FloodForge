@@ -14,4 +14,15 @@ public static class MathUtil {
 
 		return (a + ab * t - p).Length;
 	}
+
+	public static bool PointInPolygon(Vector2 p, Vector2[] poly) {
+		bool inside = false;
+		for (int i = 0, j = poly.Length - 1; i < poly.Length; j = i++) {
+			if (((poly[i].y > p.y) != (poly[j].y > p.y)) &&
+				(p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x)) {
+				inside = !inside;
+			}
+		}
+		return inside;
+	}
 }
