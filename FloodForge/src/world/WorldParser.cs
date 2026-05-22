@@ -654,6 +654,7 @@ public static class WorldParser {
 		List<ConnectionToAdd> connectionsToAdd = [];
 		List<string> conditionalLinks = [];
 		WorldParseState parseState = WorldParseState.None;
+		WorldWindow.invalidCreaturesEncountered = false;
 
 		foreach (string line in File.ReadAllLines(path)) {
 			if (line.IsNullOrEmpty() || line.StartsWith("//")) continue;
