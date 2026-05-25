@@ -37,7 +37,7 @@ public class ReferenceImage : WorldDraggable {
 	}
 
 	public void UpdateBounds() {
-		this.imageBounds = new Rect(this.Position.x - this.Width, this.Position.y + this.Height, this.position.x + this.Width, this.Position.y - this.Height);
+		this.imageBounds = new Rect(this.Position.x - this.Width + 0.5f, this.Position.y + this.Height - 0.5f, this.position.x + this.Width + 0.5f, this.Position.y - this.Height - 0.5f);
 	}
 
 	public void Draw() {
