@@ -586,11 +586,15 @@ public static class WorldWindow {
 				]).Translate(Mouse.Pos, true).Title($"Settings - {room.name}"));
 			}
 			else if (HoveringConnection != null) {
-				PopupManager.Add(new SettingsPopup([
-					new SettingsPopup.ButtonSettingContainer("Delete Connection", 
-						() => DeleteConnection(HoveringConnection)
+				SettingsPopup? connectionSettingsPopup = null;
+				connectionSettingsPopup = (SettingsPopup) new SettingsPopup([
+					new SettingsPopup.ButtonSettingContainer("Delete Connection", () => {
+							DeleteConnection(HoveringConnection);
+							connectionSettingsPopup?.Close();
+						}
 					)
-				]).Translate(Mouse.Pos, true).Title("Settings - Connection"));
+				]).Translate(Mouse.Pos, true).Title("Settings - Connection");
+				PopupManager.Add(connectionSettingsPopup);
 			}
 			else if (HoveringDraggable is ReferenceImage image) {
 				SettingsPopup? refSettingsPopup = null;
