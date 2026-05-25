@@ -18,6 +18,7 @@ public class GenericItemObject : DevObject {
 	}
 
 	public override void Draw(Vector2 offset) {
+		Immediate.Color(1f, 1f, 1f);
 		UI.CenteredTexture(
 			this.texture,
 			offset.x + this.nodes[0].position.x / 20f,
