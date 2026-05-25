@@ -35,7 +35,7 @@ public static class PersistentData {
 					string path = "";
 					Vector2 pos = Vector2.Zero;
 					float scale = 1f;
-					float brightness = 1f;
+					float opacity = 1f;
 					bool lockImage = false;
 					bool drawUnderGrid = true;
 					foreach (string property in splitLine[1].Split("</b>")) {
@@ -51,8 +51,9 @@ public static class PersistentData {
 							case "scale":
 								scale = float.Parse(splitProperty[1]);
 								break;
-							case "brightness":
-								brightness = float.Parse(splitProperty[1]);
+							case "brightness": // makes sure old refimages don't have their brightness/opacity reset
+							case "opacity":
+								opacity = float.Parse(splitProperty[1]);
 								break;
 							case "lock":
 								lockImage = splitProperty[1] == "1";
@@ -66,7 +67,7 @@ public static class PersistentData {
 						WorldWindow.referenceImages.Add(new(path) {
 							Position = pos,
 							Scale = scale,
-							brightness = brightness,
+							opacity = opacity,
 							lockImage = lockImage,
 							drawUnderGrid = drawUnderGrid
 						});
@@ -100,7 +101,7 @@ public static class PersistentData {
 				+ $"scale</c>{image.Scale}</b>"
 				+ $"lock</c>{(image.lockImage ? "1" : "0")}</b>"
 				+ $"under</c>{(image.drawUnderGrid ? "1" : "0")}</b>"
-				+ $"brightness</c>{image.brightness}");
+				+ $"opacity</c>{image.opacity}");
 			}
 			newFile.Add($"ENDREGION");
 		}
