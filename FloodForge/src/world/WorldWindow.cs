@@ -469,7 +469,8 @@ public static class WorldWindow {
 						string newName = "";
 						Timeline newTimeline = new(TimelineType.Only, []);
 						Action<string>? updateName = s => {};
-						PopupManager.Add(new SettingsPopup([
+						SettingsPopup? timelineRoomPopup = null;
+						timelineRoomPopup = (SettingsPopup) new SettingsPopup([
 							new SettingsPopup.BoolSettingContainer("Copy Connections", copyConnections, b => copyConnections = b),
 							new SettingsPopup.ButtonSettingContainer("Timeline", () => {
 								PopupManager.Add(new TimelinePopup(newTimeline, type => newTimeline.timelineType = type == TimelineType.All ? TimelineType.Only : type,
@@ -578,10 +579,12 @@ public static class WorldWindow {
 								}
 								worldHistory.Apply(change);
 								worldHistory.GetAndApplyCollectedMassChange(key);
+								timelineRoomPopup?.Close();
 							}).SetContextCheck(_ => {
 								return newName != "" && $"{region.acronym}_" + newName != room.name;
 							})
-						]).SetSize(new (0.7f, 0f)).Translate(Mouse.Pos, false).Title("Create Timeline Room"));
+						]).SetSize(new (0.7f, 0f)).Translate(Mouse.Pos, false).Title("Create Timeline Room");
+						PopupManager.Add(timelineRoomPopup);
 					})
 				]).Translate(Mouse.Pos, true).Title($"Settings - {room.name}"));
 			}
