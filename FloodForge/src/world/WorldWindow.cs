@@ -593,7 +593,8 @@ public static class WorldWindow {
 				]).Translate(Mouse.Pos, true).Title("Settings - Connection"));
 			}
 			else if (HoveringDraggable is ReferenceImage image) {
-				PopupManager.Add(new SettingsPopup([
+				SettingsPopup? refSettingsPopup = null;
+				refSettingsPopup = (SettingsPopup) new SettingsPopup([
 					new SettingsPopup.FloatSliderSettingContainer("Scale", image.Scale, 0.001f, 5f, scale => 
 						worldHistory.Apply(new VariableChange<float>(image.Scale, scale, scaleRedo => image.Scale = scaleRedo))),
 					new SettingsPopup.FloatSliderSettingContainer("Brightness", image.brightness, 0.01f, 1f, brightness => 
@@ -612,9 +613,11 @@ public static class WorldWindow {
 					new SettingsPopup.ButtonSettingContainer("Delete Reference", () => {
 						PopupManager.Add(new ConfirmPopup("Delete reference?").SetOkay("Delete").SetCancel("Keep").Okay(() => {
 							referenceImages.Remove(image); // make this undo-able
+							refSettingsPopup?.Close();
 						}));
 					})
-				]).Translate(Mouse.Pos, true).Title("Settings - Reference"));
+				]).Translate(Mouse.Pos, true).Title("Settings - Reference");
+				PopupManager.Add(refSettingsPopup);
 			}
 			else if (HoveringDraggable == null &! PopupManager.HasTitle<SettingsPopup>("Settings - World")) {
 				PopupManager.Add(new SettingsPopup([
