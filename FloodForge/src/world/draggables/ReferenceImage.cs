@@ -5,7 +5,7 @@ public class ReferenceImage : WorldDraggable {
 	public Texture image;
 	public float Height => this.image.height * this.scale;
 	public float Width => this.image.width * this.scale;
-	public float brightness = 1f;
+	public float opacity = 1f;
 	protected float scale;
 	public float Scale {
 		get {
@@ -43,12 +43,12 @@ public class ReferenceImage : WorldDraggable {
 	public void Draw() {
 		if (this.Visible) {
 			Immediate.Color(1f, 1f, 1f);
-			if (this.brightness != 1f) {
+			if (this.opacity != 1f) {
 				Program.gl.Enable(EnableCap.Blend);
-				Immediate.Alpha(this.brightness);
+				Immediate.Alpha(this.opacity);
 			}
 			UI.CenteredTexture(this.image, this.Position.x, this.Position.y, this.Width * 2);
-			if (this.brightness != 1f) {
+			if (this.opacity != 1f) {
 				Program.gl.Disable(EnableCap.Blend);
 				Immediate.Alpha(1f);
 			}

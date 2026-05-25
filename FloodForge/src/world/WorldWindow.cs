@@ -597,8 +597,8 @@ public static class WorldWindow {
 				refSettingsPopup = (SettingsPopup) new SettingsPopup([
 					new SettingsPopup.FloatSliderSettingContainer("Scale", image.Scale, 0.001f, 5f, scale => 
 						worldHistory.Apply(new VariableChange<float>(image.Scale, scale, scaleRedo => image.Scale = scaleRedo))),
-					new SettingsPopup.FloatSliderSettingContainer("Brightness", image.brightness, 0.01f, 1f, brightness => 
-						worldHistory.Apply(new VariableChange<float>(image.brightness, brightness, brightnessRedo => image.brightness = brightnessRedo))),
+					new SettingsPopup.FloatSliderSettingContainer("Opacity", image.opacity, 0.01f, 1f, opacity => 
+						worldHistory.Apply(new VariableChange<float>(image.opacity, opacity, opacityRedo => image.opacity = opacityRedo))),
 					new SettingsPopup.BoolSettingContainer("Locked", image.lockImage, locked => 
 						worldHistory.Apply(new VariableChange<bool>(image.lockImage, locked, lockedRedo => {
 							image.lockImage = lockedRedo;
