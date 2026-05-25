@@ -1795,6 +1795,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 
 		if (this.timeline.timelineType != TimelineType.All) {
 			int i = 0;
+			Immediate.Color(1f, 1f, 1f);
 			foreach (string timeline in this.timeline.timelines) {
 				UI.CenteredTexture(Mods.GetTimelineTexture(timeline), (float) (renderedPosition.x + (i * WorldWindow.SelectorScale) + 1.5f), (float) (renderedPosition.y - 1.5f), WorldWindow.SelectorScale);
 				i++;
@@ -1877,11 +1878,11 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			}
 			if (WorldWindow.cameraScale < 1000f || roomHovered) {
 				drawnDen = true;
+				Immediate.Color(1f, 1f, 1f);
 				if (!denEmpty && !creature.type.IsNullOrEmpty()) {
 					UI.CenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
 				}
 				if (creature.lineageTo == null) {
-					Immediate.Color(Color.White);
 					UI.font.Write(creature.count.ToString(), rectX + 0.5f + scale * 0.25f, rectY - 0.5f - scale * 0.5f, 0.5f * scale, Font.Align.MiddleCenter);
 				}
 				else {
@@ -1892,7 +1893,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 						if (!creature.type.IsNullOrEmpty()) {
 							UI.CenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
 						}
-						Immediate.Color(Color.White);
 						UI.font.Write((int) (chance * 100f) + "%", rectX + 0.5f + scale * 0.25f, rectY + selectorScale - 0.4f - scale * 0.5f, 0.3f * scale, Font.Align.MiddleCenter);
 					}
 				}

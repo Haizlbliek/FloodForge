@@ -529,7 +529,6 @@ public static class UI {
 	}
 
 	public static void CenteredTexture(Texture texture, float x, float y, float scale) {
-		Immediate.Color(1f, 1f, 1f);
 		Program.gl.Enable(EnableCap.Blend);
 		Immediate.UseTexture(texture);
 		Immediate.Begin(Immediate.PrimitiveType.QUADS);

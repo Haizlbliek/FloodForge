@@ -42,19 +42,20 @@ public class ReferenceImage : WorldDraggable {
 
 	public void Draw() {
 		if (this.Visible) {
+			Immediate.Color(1f, 1f, 1f);
+			if (this.brightness != 1f) {
+				Program.gl.Enable(EnableCap.Blend);
+				Immediate.Alpha(this.brightness);
+			}
 			UI.CenteredTexture(this.image, this.Position.x, this.Position.y, this.Width * 2);
+			if (this.brightness != 1f) {
+				Program.gl.Disable(EnableCap.Blend);
+				Immediate.Alpha(1f);
+			}
 
 			if (WorldWindow.selectedDraggables.Contains(this)) {
 				Immediate.Color(Themes.RoomBorderHighlight);
 				UI.StrokeRect(this.imageBounds);
-			}
-			if(this.brightness != 1f) {
-				Program.gl.Enable(EnableCap.Blend);
-				Immediate.Color(Themes.Background);
-				Immediate.Alpha(1f - this.brightness);
-				UI.FillRect(this.imageBounds);
-				Program.gl.Disable(EnableCap.Blend);
-				Immediate.Alpha(1f);
 			}
 		}
 	}

@@ -334,7 +334,8 @@ public class Connection {
 				for (int x = 0; x < squareWidth; x++) {
 					if (!timelineEnumerator.MoveNext())
 						break;
-					
+
+					Immediate.Color(1f, 1f, 1f);
 					UI.CenteredTexture(Mods.GetTimelineTexture(timelineEnumerator.Current), offsetX0 + (x * size) + size / 2, offsetY1 - (y * size) - size / 2, size);
 
 					if (this.timeline.timelineType == TimelineType.Except) {
