@@ -583,7 +583,7 @@ public class FilesystemPopup : Popup {
 			bool hover = rect.Inside(Mouse.X, Mouse.Y) && !this.awaitingDeleteConfirmation && IsInScrollView(y);
 
 			Immediate.Color(hover ? Themes.TextHighlight : Themes.Text);
-				UI.font.Write(path + "/", this.bounds.x0 + 0.1f, y, this.fontSize);
+			UI.font.Write(path + "/", this.bounds.x0 + 0.1f, y, this.fontSize);
 			string currentFolderPath = Path.Join(this.currentPath, path);
 
 			if (this.createdFolders.Contains(currentFolderPath)) {
