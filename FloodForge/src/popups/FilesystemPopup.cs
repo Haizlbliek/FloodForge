@@ -448,13 +448,13 @@ public class FilesystemPopup : Popup {
 		}
 
 		// Search
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.12f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.25f, 1f, 0.5f, 0.75f), new UI.TextureButtonMods() { disabled = this.newDirectory != null })) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.12f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.25f, 1f, 0.5f, 0.75f), new UI.TextureButtonMods() { disabled = this.newDirectory != null || this.noDirectoryPerms == true})) {
 			this.search = this.search == null ? "" : null;
 			this.Refresh();
 		}
 
 		// New Directory
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.25f), new UI.TextureButtonMods() { disabled = this.search != null })) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.25f), new UI.TextureButtonMods() { disabled = this.search != null || this.noDirectoryPerms == true})) {
 			if (this.newDirectory == null) {
 				this.newDirectory = "";
 				this.scroll = 0f;
@@ -583,7 +583,7 @@ public class FilesystemPopup : Popup {
 			bool hover = rect.Inside(Mouse.X, Mouse.Y) && !this.awaitingDeleteConfirmation && IsInScrollView(y);
 
 			Immediate.Color(hover ? Themes.TextHighlight : Themes.Text);
-			UI.font.Write(path + "/", this.bounds.x0 + 0.1f, y, this.fontSize);
+				UI.font.Write(path + "/", this.bounds.x0 + 0.1f, y, this.fontSize);
 			string currentFolderPath = Path.Join(this.currentPath, path);
 
 			if (this.createdFolders.Contains(currentFolderPath)) {
