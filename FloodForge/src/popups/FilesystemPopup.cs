@@ -30,6 +30,7 @@ public class FilesystemPopup : Popup {
 	protected int directoryIndex = 0;
 	protected Dictionary<string, string> rootPaths = [];
 	protected float fontSize = 0.04f;
+	protected bool noDirectoryPerms;
 
 	public FilesystemPopup(Action<string[]> callback, int directoryIndex = 0) : base() {
 		this.directoryIndex = directoryIndex;
@@ -65,9 +66,14 @@ public class FilesystemPopup : Popup {
 
 		string? homePath = Environment.GetEnvironmentVariable("HOME");
 		if (homePath != null) {
-			string path = Path.Join(homePath, ".steam/steam/steamapps/common/Rain World/RainWorld_Data/StreamingAssets");
-			if (Directory.Exists(path)) {
-				this.currentPath = path;
+			string officialPath = Path.Join(homePath, ".steam/steam/steamapps/common/Rain World/RainWorld_Data/StreamingAssets");
+			if (Directory.Exists(officialPath)) {
+				this.currentPath = officialPath;
+				return;
+			}
+			string flatpakPath = Path.Join(homePath, ".var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Rain World/RainWorld_Data/StreamingAssets");
+			if (Directory.Exists(flatpakPath)) {
+				this.currentPath = flatpakPath;
 				return;
 			}
 		}
@@ -119,48 +125,56 @@ public class FilesystemPopup : Popup {
 		this.selected.Clear();
 		List<string> d = [];
 		List<string> f = [];
+		this.noDirectoryPerms = false;
 
 		string? trimmedSearch = this.search?.TrimStart();
 		bool hasSearch = !string.IsNullOrEmpty(trimmedSearch);
 
 		string[] searchWords = hasSearch ? trimmedSearch!.Split([' ', '-', '_', '.'], StringSplitOptions.RemoveEmptyEntries) : [];
 
-		foreach (string entry in Directory.EnumerateFileSystemEntries(this.currentPath).Order()) {
-			string name = Path.GetFileName(entry);
+		try {
+			foreach (string entry in Directory.EnumerateFileSystemEntries(this.currentPath).Order()) {
+				string name = Path.GetFileName(entry);
 
-			if (hasSearch) {
-				bool matchesLiteral = name.Contains(trimmedSearch!, StringComparison.InvariantCultureIgnoreCase);
-				bool matchesFuzzy = false;
+				if (hasSearch) {
+					bool matchesLiteral = name.Contains(trimmedSearch!, StringComparison.InvariantCultureIgnoreCase);
+					bool matchesFuzzy = false;
 
-				if (!matchesLiteral && searchWords.Length > 0) {
-					int lastIndex = 0;
-					bool sequenceMatched = true;
+					if (!matchesLiteral && searchWords.Length > 0) {
+						int lastIndex = 0;
+						bool sequenceMatched = true;
 
-					foreach (string word in searchWords) {
-						int foundIndex = name.IndexOf(word, lastIndex, StringComparison.InvariantCultureIgnoreCase);
-						if (foundIndex == -1) {
-							sequenceMatched = false;
-							break;
+						foreach (string word in searchWords) {
+							int foundIndex = name.IndexOf(word, lastIndex, StringComparison.InvariantCultureIgnoreCase);
+							if (foundIndex == -1) {
+								sequenceMatched = false;
+								break;
+							}
+							lastIndex = foundIndex + word.Length;
 						}
-						lastIndex = foundIndex + word.Length;
+						matchesFuzzy = sequenceMatched;
 					}
-					matchesFuzzy = sequenceMatched;
+
+					if (!matchesLiteral && !matchesFuzzy) {
+						continue;
+					}
 				}
 
-				if (!matchesLiteral && !matchesFuzzy) {
+				if (Directory.Exists(entry)) {
+					d.Add(name);
 					continue;
 				}
-			}
 
-			if (Directory.Exists(entry)) {
-				d.Add(name);
-				continue;
+				if (this.showAll || this.regexFilter == null || this.regexFilter.IsMatch(name)) {
+					f.Add(name);
+				}
 			}
-
-			if (this.showAll || this.regexFilter == null || this.regexFilter.IsMatch(name)) {
-				f.Add(name);
-			}
-		}
+		} catch (UnauthorizedAccessException) {
+			this.noDirectoryPerms = true;
+		} catch (Exception ex) {
+			Logger.Error(ex.ToString());
+			throw;
+		} 
 
 		if (hasSearch && trimmedSearch != null) {
 			int getSortIndex(string s) {
@@ -410,6 +424,7 @@ public class FilesystemPopup : Popup {
 		this.Refresh();
 	}
 
+
 	public override void Draw() {
 		base.Draw();
 
@@ -642,6 +657,14 @@ public class FilesystemPopup : Popup {
 			this.DrawIcon(4, y);
 
 			y -= 0.06f;
+		}
+
+		if (this.noDirectoryPerms == true) {
+			Immediate.Color(Themes.TextError);
+			UI.font.Write("You do not have the required", this.bounds.CenterX, this.bounds.CenterY + 0.02f, 0.03f, Font.Align.MiddleCenter);
+			Immediate.Color(Themes.TextError);
+			UI.font.Write("permissions to access this folder!", this.bounds.CenterX, this.bounds.CenterY - 0.02f, 0.03f, Font.Align.MiddleCenter);
+			Immediate.Color(Themes.TextError);
 		}
 
 		Program.gl.Disable(EnableCap.ScissorTest);
