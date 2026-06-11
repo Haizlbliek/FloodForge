@@ -34,6 +34,7 @@ public static class WorldWindow {
 	public static bool changeConnectBehaviour = true;
 
 	public static Region region = null!;
+	public static List<ConnectionVisual> virtualConnections = [];
 	public static List<Connection> connectionsToBeRemoved = [];
 	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty() || importIncomplete);
 	public static bool importIncomplete = false;
@@ -141,6 +142,7 @@ public static class WorldWindow {
 
 	public static void Reset() {
 		referenceImages.Clear();
+		virtualConnections.Clear();
 		selectedDraggables.Clear();
 		draggablePossibleSelect = null;
 		selectingState = SelectingState.None;
@@ -1242,6 +1244,10 @@ public static class WorldWindow {
 			connection.roomA.Disconnect(connection);
 			connection.roomB.Disconnect(connection);
 			region.connections.Remove(connection);
+			connection.replacementVirtualConnections.ForEach(x => WorldWindow.virtualConnections.Remove(x));
+		}
+		foreach (ConnectionVisual visual in WorldWindow.virtualConnections) {
+			visual.Draw();
 		}
 
 		DrawCurrentConnection();
@@ -1372,9 +1378,21 @@ public static class WorldWindow {
 					debugText.Add($"Name: {room.name}");
 					if (room.pathOutsideRoomsFolder)
 						debugText.Add($" > Room imported from outside {region.acronym}-rooms");
+					if (room.roomReplacements.Count != 0) {
+						List<string> replaces = [];
+						List<string> replacedby = [];
+						foreach (RoomReplacement replacement in room.roomReplacements) {
+							if (replacement.replacedRoom == room)
+								replacedby.Add($" > Room replaced by {replacement.replacingRoom.name}");
+							else
+								replaces.Add($" > Room replaces {replacement.replacedRoom.name}");
+						}
+						debugText.AddRange(replaces);
+						debugText.AddRange(replacedby);
+					}
 					debugText.Add($"Tags: {string.Join(" ", room.data.tags)}");
 					debugText.Add($"Size: {room.width}x{room.height}");
-					if(room.timeline.timelineType != TimelineType.All)
+					if (room.timeline.timelineType != TimelineType.All)
 						debugText.Add($"Timeline: {room.timeline}");	
 					if (room.preProcessorConditions.Length != 0) {
 						string line = "PreProcessorConditions: {";

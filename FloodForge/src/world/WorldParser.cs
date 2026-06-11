@@ -242,6 +242,38 @@ public static class WorldParser {
 		}
 	}
 
+	private static Room ParseReplaceRoom(string roomName, Room roomToReplace) {
+		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
+		if (room == null) {
+			string path = WorldWindow.region.roomsPath;
+			if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
+				path = PathUtil.FindDirectory(PathUtil.Parent(path), "gates") ?? "";
+				if (path.IsNullOrEmpty()) {
+					Logger.Warn($"Couldn't find gates folder in {WorldWindow.region.roomsPath}");
+				}
+			}
+
+			string filePath = PathUtil.FindFile(path, roomName + ".txt") ?? "";
+			if (filePath.IsNullOrEmpty()) {
+				Logger.Warn($"Room file {path}/{roomName}.txt could not be found");
+			}
+
+			room = new Room(filePath, roomName);
+
+			WorldWindow.region.rooms.Add(room);
+		}
+
+		// copy data from roomToReplace
+		room.DevPosition = roomToReplace.DevPosition;
+		room.CanonPosition = roomToReplace.CanonPosition;
+		RoomReplacement replacement = new (roomToReplace, room);
+		room.roomReplacements.Add(replacement);
+		roomToReplace.roomReplacements.Add(replacement);
+		// REVIEW - what other parts should be copied?
+
+		return room;
+	}
+
 	private static void ParseWorldRoom(string line, ref List<ConnectionToAdd> connectionsToAdd) {
 		string[] data = line.Split(':', StringSplitOptions.TrimEntries);
 		if (data.Length < 2) return;
@@ -545,25 +577,18 @@ public static class WorldParser {
 
 		string[] preProcessorConditions = [];
 
-		//Logger.Info($"Parsing link: {link}");
-		//Logger.Info($"parts[0]: {parts[0]}");
 		if(parts[0][0] == '{') {
-			//Logger.Info("'{' found");
 			int closingBracketPosition = parts[0].IndexOf('}');
-			//Logger.Info($"closingBracketPosition = {closingBracketPosition}");
 			string conditions = parts[0][1..closingBracketPosition];
-			//Logger.Info($"conditions = {conditions}");
 			parts[0] = parts[0][(closingBracketPosition + 1)..].Trim();
-			//Logger.Info($"parts[0] = {conditions}");
 			preProcessorConditions = [.. conditions.Split(',')];
-			//Logger.Info($"yay");
 		}
-		//Logger.Info($"done");
 
 		string[] timelines = parts[0].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
 		// LATER: REPLACEROOM
 
+		string mod = parts[1].ToLowerInvariant();
 		if (parts.Length == 3) {
 			string roomName2 = parts[2];
 			Room? room2 = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName2, StringComparison.InvariantCultureIgnoreCase));
@@ -574,8 +599,6 @@ public static class WorldParser {
 			}
 
 			room2.preProcessorConditions = preProcessorConditions;
-
-			string mod = parts[1].ToLowerInvariant();
 
 			if (mod == "exclusiveroom") {
 				if (room2.timeline.timelineType == TimelineType.Except) {
@@ -598,6 +621,50 @@ public static class WorldParser {
 				timelines.ForEach(x => room2.timeline.timelines.Add(x));
 			}
 
+			return true;
+		}
+		else if (parts.Length == 4 && mod == "replaceroom") {
+			Logger.Info($"Parsing REPLACEROOM: {link}");
+			string roomAName = parts[2];
+			Room? roomA = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomAName, StringComparison.InvariantCultureIgnoreCase));
+			if (roomA == null) {
+				Logger.Warn($"Skipping line due to missing room {roomAName}");
+				Logger.Warn($"> {link}");
+				return false;
+			}
+
+			//roomA.preProcessorConditions = preProcessorConditions;
+
+			string roomBName = parts[3];
+			Room roomB = ParseReplaceRoom(roomBName, roomA);
+
+			roomB.preProcessorConditions = preProcessorConditions;
+
+			// SET TIMELINES
+
+			if (roomA.timeline.timelineType == TimelineType.Only) {
+				Logger.Warn($"Skipping line due to invalid REPLACEROOM {roomAName}");
+				Logger.Warn($"> {link}");
+				return false;
+			}
+
+			roomA.timeline.timelineType = TimelineType.Except;
+			timelines.ForEach(x => roomA.timeline.timelines.Add(x));
+
+			if (roomB.timeline.timelineType == TimelineType.Except) {
+				Logger.Warn($"Skipping line due to invalid REPLACEROOM {roomBName}");
+				Logger.Warn($"> {link}");
+				return false;
+			}
+
+			roomB.timeline.timelineType = TimelineType.Only;
+			timelines.ForEach(x => roomB.timeline.timelines.Add(x));
+
+			foreach (Connection connection1 in roomA.connections) {
+				ConnectionVisual visual = new (connection1.roomA == roomA ? roomB : connection1.roomA, connection1.roomB == roomA ? roomB : connection1.roomB, connection1.roomAExitID, connection1.roomBExitID);
+				WorldWindow.virtualConnections.Add(visual);
+				connection1.replacementVirtualConnections.Add(visual);
+			}
 			return true;
 		}
 

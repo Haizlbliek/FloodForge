@@ -416,6 +416,19 @@ public static class WorldExporter {
 						continue;
 					}
 
+					Timeline virtualTimeline = room.timeline;
+
+					foreach (RoomReplacement relevantReplacement in room.roomReplacements.FindAll(x => { return x.replacedRoom == room; })) {
+						Timeline replacingTimeline = relevantReplacement.replacingRoom.timeline;
+						Timeline replacedTimeline = relevantReplacement.replacedRoom.timeline;
+						Timeline resultingTimeline = replacingTimeline.Inverted().And(replacedTimeline.Inverted()).Inverted(); // this is cursed but should work
+						virtualTimeline = resultingTimeline;
+					}
+
+					if ((virtualTimeline.timelineType == TimelineType.All || virtualTimeline.timelines.Count == 0) && room.preProcessorConditions.Length == 0) {
+						continue;
+					}
+
 					if (room.preProcessorConditions.Length != 0) {
 						stringWriter.Write("{");
 						bool first1 = true;
@@ -428,12 +441,12 @@ public static class WorldExporter {
 						stringWriter.Write("}");
 					}
 
-					if (room.timeline.timelineType == TimelineType.All || room.timeline.timelines.Count == 0) {
+					if (virtualTimeline.timelineType == TimelineType.All || virtualTimeline.timelines.Count == 0) {
 						continue;
 					}
 
 					bool first = true;
-					foreach (string timeline in room.timeline.timelines) {
+					foreach (string timeline in virtualTimeline.timelines) {
 						if (!first)
 							stringWriter.Write(",");
 						first = false;
@@ -441,7 +454,11 @@ public static class WorldExporter {
 					}
 
 					stringWriter.Write(" : ");
-					stringWriter.Write((room.timeline.timelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
+					RoomReplacement? replacement = room.roomReplacements.FirstOrDefault(x => x.replacingRoom == room);
+					if (replacement != null)
+						stringWriter.Write($"REPLACEROOM : {replacement.replacedRoom.name}");
+					else
+						stringWriter.Write((virtualTimeline.timelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
 					stringWriter.WriteLine($" : {RoomNameCasing(room.name)}");
 				}
 			}
@@ -469,6 +486,9 @@ public static class WorldExporter {
 			bool wasGate = false;
 
 			foreach (Room room in sortedRooms) {
+				if (room.roomReplacements != null && room.roomReplacements.Any(x => x.replacingRoom == room))
+					continue;
+
 				bool isGate = room.data.tags.Contains("GATE");
 
 				if (!isFirstRoom && ((wasGate && !isGate) || (!isGate && room.data.subregion != lastSubregion))) {
