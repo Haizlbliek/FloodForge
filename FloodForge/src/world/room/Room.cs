@@ -1805,6 +1805,14 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 				Immediate.Color(1f, 0f, 0f);
 				UI.Line(renderedPosition.x + 2f - WorldWindow.SelectorScale * 0.5f, renderedPosition.y - 2f, renderedPosition.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.timeline.timelines.Count - 1) * WorldWindow.SelectorScale, renderedPosition.y - 2f, WorldWindow.SelectorScale * 4f);
 			}
+
+			if (this.preProcessorConditions != null) {
+				Immediate.Color(1f, 1f, 0f);
+				float x0 = renderedPosition.x + 2f - WorldWindow.SelectorScale * 0.5f;
+				float y0 = renderedPosition.y - 2f - WorldWindow.SelectorScale * 0.5f;
+				float y1 = renderedPosition.y - 2f + WorldWindow.SelectorScale * 0.5f;
+				UI.Line(x0, y0, x0, y1, WorldWindow.SelectorScale * 3f);
+			}
 		}
 
 		Vector2 o = WorldWindow.worldMouse - renderedPosition;

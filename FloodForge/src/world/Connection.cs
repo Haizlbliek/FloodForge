@@ -348,6 +348,14 @@ public class Connection {
 						UI.Line(x0, y1, x1, y0, WorldWindow.SelectorScale * 3f);
 					}
 				}
+
+				if (this.preProcessorConditions != null) {
+					Immediate.Color(1f, 1f, 0f);
+					float x0 = offsetX0 + 0.5f;
+					float y0 = offsetY1 - 0.5f - (y * size);
+					float y1 = offsetY1 - 0.5f - ((y + 1) * size);
+					UI.Line(x0, y0, x0, y1, WorldWindow.SelectorScale * 3f);
+				}
 			}
 		}
 	}
