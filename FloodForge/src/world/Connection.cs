@@ -8,6 +8,7 @@ public class Connection {
 	public uint roomBExitID;
 
 	public string[] preProcessorConditions = [];
+	public List<ConnectionVisual> replacementVirtualConnections = [];
 	public Timeline timeline;
 	public Timeline EffectiveConnectionTimeline {
 		get {

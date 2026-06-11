@@ -50,6 +50,22 @@ public class RoomAndConnectionChange : Change {
 			WorldWindow.region.connections.Add(connection);
 			connection.roomA.Connect(connection);
 			connection.roomB.Connect(connection);
+
+			ConnectionVisual? visual = null;
+			foreach (RoomReplacement replacement in connection.roomA.roomReplacements) {
+				if (replacement.replacedRoom == connection.roomA) {
+					visual = new (replacement.replacingRoom, connection.roomB, connection.roomAExitID, connection.roomBExitID);
+					connection.replacementVirtualConnections.Add(visual);
+					WorldWindow.virtualConnections.Add(visual);
+				}
+			}
+			foreach (RoomReplacement replacement in connection.roomB.roomReplacements) {
+				if (replacement.replacedRoom == connection.roomB) {
+					visual = new (connection.roomA, replacement.replacingRoom, connection.roomAExitID, connection.roomBExitID);
+					connection.replacementVirtualConnections.Add(visual);
+					WorldWindow.virtualConnections.Add(visual);
+				}
+			}
 		}
 	}
 
@@ -58,10 +74,12 @@ public class RoomAndConnectionChange : Change {
 			connection.roomA.Disconnect(connection);
 			connection.roomB.Disconnect(connection);
 			WorldWindow.region.connections.Remove(connection);
+			connection.replacementVirtualConnections.ForEach(x => WorldWindow.virtualConnections.Remove(x));
 		}
 
 		foreach (Connection internalConnection in this.internalConnections) {
 			WorldWindow.region.connections.Remove(internalConnection);
+			internalConnection.replacementVirtualConnections.ForEach(x => WorldWindow.virtualConnections.Remove(x));
 		}
 
 		foreach (Room room in this.rooms) {

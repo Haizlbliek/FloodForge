@@ -25,6 +25,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 	public string path;
 	public string name;
 	public string[] preProcessorConditions = [];
+	public List<RoomReplacement> roomReplacements = [];
 	public Timeline timeline = new();
 	public ConditionalPopup? conditionalPopup;
 	public Vector2 CanonPosition;
@@ -141,6 +142,15 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 	public void MoveUpdate() {
 		foreach (Connection connection in this.connections) {
 			connection.recalculateBezier = true;
+			connection.replacementVirtualConnections.ForEach(x => x.recalculateBezier = true);
+		}
+		foreach (RoomReplacement replacement in this.roomReplacements) {
+			foreach (Connection connection in replacement.replacedRoom.connections) {
+				connection.replacementVirtualConnections.ForEach(x => x.recalculateBezier = true);
+			}
+			foreach (Connection connection in replacement.replacingRoom.connections) {
+				connection.replacementVirtualConnections.ForEach(x => x.recalculateBezier = true);
+			}
 		}
 	}
 
@@ -1790,6 +1800,14 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 				for (int i = 0; i < this.denShortcutEntrances.Count; i++) {
 					this.DrawDen(this.dens[i], renderedPosition.x + this.denShortcutEntrances[i].x, renderedPosition.y - this.denShortcutEntrances[i].y, i == this.hoveredDen, WorldWindow.HoveringDraggable == this);
 				}
+			}
+		}
+
+		foreach (RoomReplacement replacement in this.roomReplacements) {
+			if (replacement.replacedRoom == this) {
+				Vector2 roomBRenderedPosition = positionType == WorldWindow.RoomPosition.Canon ? replacement.replacingRoom.CanonPosition : replacement.replacingRoom.DevPosition;
+				Immediate.Color(Themes.RoomConnection);
+				UI.Line(renderedPosition, roomBRenderedPosition);
 			}
 		}
 
