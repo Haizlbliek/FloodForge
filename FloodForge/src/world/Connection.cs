@@ -349,7 +349,7 @@ public class Connection {
 					}
 				}
 
-				if (this.preProcessorConditions != null) {
+				if (this.preProcessorConditions.Length != 0) {
 					Immediate.Color(1f, 1f, 0f);
 					float x0 = offsetX0 + 0.5f;
 					float y0 = offsetY1 - 0.5f - (y * size);

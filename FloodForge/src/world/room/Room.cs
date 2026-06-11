@@ -1806,7 +1806,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 				UI.Line(renderedPosition.x + 2f - WorldWindow.SelectorScale * 0.5f, renderedPosition.y - 2f, renderedPosition.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.timeline.timelines.Count - 1) * WorldWindow.SelectorScale, renderedPosition.y - 2f, WorldWindow.SelectorScale * 4f);
 			}
 
-			if (this.preProcessorConditions != null) {
+			if (this.preProcessorConditions.Length != 0) {
 				Immediate.Color(1f, 1f, 0f);
 				float x0 = renderedPosition.x + 2f - WorldWindow.SelectorScale * 0.5f;
 				float y0 = renderedPosition.y - 2f - WorldWindow.SelectorScale * 0.5f;
