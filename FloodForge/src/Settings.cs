@@ -20,6 +20,7 @@ public static class Settings {
 	public static Setting<bool> UpdateWorldFiles = Setting.Of("UpdateWorldFiles", true);
 	public static Setting<Color> NoSubregionColor = Setting.Of("NoSubregionColor", Color.White);
 	public static Setting<float> RoomTintStrength = Setting.Of("RoomTintStrength", 0.5f);
+	public static Setting<bool> DropdownOnHover = Setting.Of("DropdownOnHover", false);
 	public static Setting<STDisabledButtonsMode> DisabledButtonsMode = Setting.Of("DisabledButtonsMode", STDisabledButtonsMode.Grey);
 	public static Setting<STForceExportCasing> ForceExportCasing = Setting.Of("ForceExportCasing", STForceExportCasing.None);
 	public static Setting<STDropletGridVisibility> DropletGridVisibility = Setting.Of("DropletGridVisibility", STDropletGridVisibility.Air);
