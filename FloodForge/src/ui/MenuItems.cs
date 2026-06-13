@@ -5,10 +5,11 @@ namespace FloodForge;
 public abstract class MenuItems {
 	protected UIItem[] items = [];
 	protected Rect menuBarRect;
-	protected Dropdown? selectedDropdown;
+	protected Dropdown? selectedDropdownButton;
+	protected Rect selectedDropdownRect;
 
 	public bool Hovered() {
-		return this.menuBarRect.Inside(Mouse.Pos) || this.selectedDropdown != null;
+		return this.menuBarRect.Inside(Mouse.Pos) || (this.selectedDropdownButton != null && this.selectedDropdownRect.Inside(Mouse.Pos));
 	}
 
 	private bool DrawButton(Button button, float x, float y) {
@@ -29,7 +30,7 @@ public abstract class MenuItems {
 					PopupManager.Add(new InfoPopup(button.disabledInteractMessage));
 				}
 
-				if (!button.preventClose) this.selectedDropdown = null;
+				if (!button.preventClose) this.selectedDropdownButton = null;
 			}
 			return true;
 		}
@@ -48,10 +49,12 @@ public abstract class MenuItems {
 
 		float x = -Main.screenBounds.x + 0.01f;
 
+		bool hoveringDropdownButton = false;
+
 		foreach (UIItem item in this.items) {
 			float width = item.Size.x + 0.02f;
 
-			if (item is Dropdown dropdown && this.selectedDropdown == dropdown) {
+			if (item is Dropdown dropdown && this.selectedDropdownButton == dropdown) {
 				float y = Main.screenBounds.y - 0.1f;
 
 				float maxWidth = width;
@@ -59,6 +62,7 @@ public abstract class MenuItems {
 					maxWidth = MathF.Max(maxWidth, button.Size.x + 0.02f);
 				}
 				Rect extendedRect = Rect.FromSize(x - 0.01f, y + 0.05f, maxWidth + 0.02f, -0.05f * dropdown.buttons.Count - 0.01f);
+				this.selectedDropdownRect = extendedRect;
 
 				Immediate.Color(Themes.Popup);
 				UI.FillRect(extendedRect);
@@ -81,11 +85,24 @@ public abstract class MenuItems {
 				}
 			}
 			else if (item is Dropdown dropdown1) {
-				if (UI.TextButton(item.Text, Rect.FromSize(x, Main.screenBounds.y - 0.05f, width, 0.04f), new UI.TextButtonMods { selected = this.selectedDropdown == item })) {
-					this.selectedDropdown = this.selectedDropdown == dropdown1 ? null : dropdown1;
+				bool currentDropdownIsSelected = this.selectedDropdownButton == dropdown1;
+				UI.ButtonResponse response = UI.TextButton(item.Text, Rect.FromSize(x, Main.screenBounds.y - 0.05f, width, 0.04f), new UI.TextButtonMods { selected = this.selectedDropdownButton == item });
+				if (Settings.DropdownOnHover) {
+					if (response.hovered) {
+						hoveringDropdownButton = true;
+						this.selectedDropdownButton = dropdown1;
+					}
+				}
+				else if (response.clicked) {
+					this.selectedDropdownButton = currentDropdownIsSelected ? null : dropdown1;
 				}
 
 				x += width + 0.01f;
+			}
+		}
+		if (Settings.DropdownOnHover) {
+			if (this.selectedDropdownButton != null && !(hoveringDropdownButton || this.selectedDropdownRect.Inside(Mouse.Pos))) {
+				this.selectedDropdownButton = null;
 			}
 		}
 	}
