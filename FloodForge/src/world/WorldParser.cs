@@ -73,7 +73,7 @@ public static class WorldParser {
 		string roomPath = WorldWindow.region.roomsPath;
 
 		foreach (Room existingRoom in WorldWindow.region.rooms) {
-			if (existingRoom.name == roomName) // skip parsing the room if another map has already loaded this one
+			if (existingRoom.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase)) // skip parsing the room if another map has already loaded this one
 				return true;
 		}
 
