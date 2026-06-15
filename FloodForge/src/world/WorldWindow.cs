@@ -816,6 +816,8 @@ public static class WorldWindow {
 					return;
 
 				RoomAndConnectionChange change = new RoomAndConnectionChange(false);
+				if(room != null)
+					selectedDraggables.Add(room);
 
 				if (selectedDraggables.Count != 0) {
 					foreach (WorldDraggable room1 in selectedDraggables) {
@@ -827,11 +829,6 @@ public static class WorldWindow {
 							.ForEach(change.AddConnection);
 					}
 					selectedDraggables.Clear();
-				}
-				if (room != null) {
-					change.AddRoom(room);
-					region.connections.Where(c => c.roomA == room || c.roomB == room)
-						.ForEach(change.AddConnection);
 				}
 
 				worldHistory.Apply(change);
