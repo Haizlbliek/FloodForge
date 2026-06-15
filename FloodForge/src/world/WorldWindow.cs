@@ -34,7 +34,7 @@ public static class WorldWindow {
 	public static bool changeConnectBehaviour = true;
 
 	public static Region region = null!;
-	public static List<ConnectionVisual> virtualConnections = [];
+	// public static List<ConnectionVisual> virtualConnections = [];
 	public static List<Connection> connectionsToBeRemoved = [];
 	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty() || importIncomplete);
 	public static bool importIncomplete = false;
@@ -142,7 +142,6 @@ public static class WorldWindow {
 
 	public static void Reset() {
 		referenceImages.Clear();
-		virtualConnections.Clear();
 		selectedDraggables.Clear();
 		draggablePossibleSelect = null;
 		selectingState = SelectingState.None;
@@ -1242,10 +1241,6 @@ public static class WorldWindow {
 			connection.roomA.Disconnect(connection);
 			connection.roomB.Disconnect(connection);
 			region.connections.Remove(connection);
-			connection.replacementVirtualConnections.ForEach(x => WorldWindow.virtualConnections.Remove(x));
-		}
-		foreach (ConnectionVisual visual in WorldWindow.virtualConnections) {
-			visual.Draw();
 		}
 
 		DrawCurrentConnection();

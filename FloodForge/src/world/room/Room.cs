@@ -137,12 +137,19 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 
 	public void Disconnect(Connection connection) {
 		this.connections.Remove(connection);
+		foreach (RoomReplacement replacement in this.roomReplacements) {
+			foreach (Connection connectionB in replacement.replacedRoom.connections) {
+				connectionB.replacementVirtualConnections.ForEach(x => x.recalculateBezier = true);
+			}
+			foreach (Connection connectionB in replacement.replacingRoom.connections) {
+				connectionB.replacementVirtualConnections.ForEach(x => x.recalculateBezier = true);
+			}
+		}
 	}
 
 	public void MoveUpdate() {
 		foreach (Connection connection in this.connections) {
 			connection.recalculateBezier = true;
-			connection.replacementVirtualConnections.ForEach(x => x.recalculateBezier = true);
 		}
 		foreach (RoomReplacement replacement in this.roomReplacements) {
 			foreach (Connection connection in replacement.replacedRoom.connections) {
