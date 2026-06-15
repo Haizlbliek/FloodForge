@@ -25,7 +25,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 	public string path;
 	public string name;
 	public string[] preProcessorConditions = [];
-	public List<RoomReplacement> roomReplacements = [];
+	public HashSet<RoomReplacement> roomReplacements = [];
 	public Timeline timeline = new();
 	public ConditionalPopup? conditionalPopup;
 	public Vector2 CanonPosition;
