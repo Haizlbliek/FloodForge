@@ -592,9 +592,10 @@ public static class WorldWindow {
 			}
 			else if (HoveringConnection != null) {
 				SettingsPopup? connectionSettingsPopup = null;
+				Connection popupConnection = HoveringConnection;
 				connectionSettingsPopup = (SettingsPopup) new SettingsPopup([
 					new SettingsPopup.ButtonSettingContainer("Delete Connection", () => {
-							DeleteConnection(HoveringConnection);
+							DeleteConnection(popupConnection);
 							connectionSettingsPopup?.Close();
 						}
 					)
