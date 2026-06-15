@@ -418,11 +418,13 @@ public static class WorldExporter {
 
 					Timeline virtualTimeline = room.timeline;
 
-					foreach (RoomReplacement relevantReplacement in room.roomReplacements.FindAll(x => { return x.replacedRoom == room; })) {
-						Timeline replacingTimeline = relevantReplacement.replacingRoom.timeline;
-						Timeline replacedTimeline = relevantReplacement.replacedRoom.timeline;
-						Timeline resultingTimeline = replacingTimeline.Inverted().And(replacedTimeline.Inverted()).Inverted(); // this is cursed but should work
-						virtualTimeline = resultingTimeline;
+					foreach (RoomReplacement relevantReplacement in room.roomReplacements) {
+						if (relevantReplacement.replacedRoom == room) {
+							Timeline replacingTimeline = relevantReplacement.replacingRoom.timeline;
+							Timeline replacedTimeline = relevantReplacement.replacedRoom.timeline;
+							Timeline resultingTimeline = replacingTimeline.Inverted().And(replacedTimeline.Inverted()).Inverted(); // this is cursed but should work
+							virtualTimeline = resultingTimeline;
+						}
 					}
 
 					if ((virtualTimeline.timelineType == TimelineType.All || virtualTimeline.timelines.Count == 0) && room.preProcessorConditions.Length == 0) {
