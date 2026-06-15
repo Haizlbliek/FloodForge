@@ -660,11 +660,6 @@ public static class WorldParser {
 			roomB.timeline.timelineType = TimelineType.Only;
 			timelines.ForEach(x => roomB.timeline.timelines.Add(x));
 
-			foreach (Connection connection1 in roomA.connections) {
-				ConnectionVisual visual = new (connection1.roomA == roomA ? roomB : connection1.roomA, connection1.roomB == roomA ? roomB : connection1.roomB, connection1.roomAExitID, connection1.roomBExitID);
-				WorldWindow.virtualConnections.Add(visual);
-				connection1.replacementVirtualConnections.Add(visual);
-			}
 			return true;
 		}
 

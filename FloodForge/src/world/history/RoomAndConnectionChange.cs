@@ -39,6 +39,14 @@ public class RoomAndConnectionChange : Change {
 
 			// LATER: Add into correct index
 			WorldWindow.region.rooms.Add(room);
+			foreach (RoomReplacement roomReplacement in room.roomReplacements) {
+				if (roomReplacement.replacedRoom == room && WorldWindow.region.rooms.Contains(roomReplacement.replacingRoom) && !this.rooms.Contains(roomReplacement.replacingRoom))
+					roomReplacement.replacingRoom.roomReplacements.Add(roomReplacement);
+				else if (roomReplacement.replacingRoom == room && WorldWindow.region.rooms.Contains(roomReplacement.replacedRoom) && !this.rooms.Contains(roomReplacement.replacedRoom)) {
+					roomReplacement.replacedRoom.roomReplacements.Add(roomReplacement);
+					roomReplacement.replacedRoom.MoveUpdate();
+				}
+			}
 		}
 
 		foreach (Connection internalConnection in this.internalConnections) {
@@ -50,22 +58,6 @@ public class RoomAndConnectionChange : Change {
 			WorldWindow.region.connections.Add(connection);
 			connection.roomA.Connect(connection);
 			connection.roomB.Connect(connection);
-
-			ConnectionVisual? visual = null;
-			foreach (RoomReplacement replacement in connection.roomA.roomReplacements) {
-				if (replacement.replacedRoom == connection.roomA) {
-					visual = new (replacement.replacingRoom, connection.roomB, connection.roomAExitID, connection.roomBExitID);
-					connection.replacementVirtualConnections.Add(visual);
-					WorldWindow.virtualConnections.Add(visual);
-				}
-			}
-			foreach (RoomReplacement replacement in connection.roomB.roomReplacements) {
-				if (replacement.replacedRoom == connection.roomB) {
-					visual = new (connection.roomA, replacement.replacingRoom, connection.roomAExitID, connection.roomBExitID);
-					connection.replacementVirtualConnections.Add(visual);
-					WorldWindow.virtualConnections.Add(visual);
-				}
-			}
 		}
 	}
 
@@ -74,18 +66,24 @@ public class RoomAndConnectionChange : Change {
 			connection.roomA.Disconnect(connection);
 			connection.roomB.Disconnect(connection);
 			WorldWindow.region.connections.Remove(connection);
-			connection.replacementVirtualConnections.ForEach(x => WorldWindow.virtualConnections.Remove(x));
 		}
 
 		foreach (Connection internalConnection in this.internalConnections) {
 			WorldWindow.region.connections.Remove(internalConnection);
-			internalConnection.replacementVirtualConnections.ForEach(x => WorldWindow.virtualConnections.Remove(x));
 		}
 
 		foreach (Room room in this.rooms) {
 			if (room is OffscreenRoom) continue;
 
 			WorldWindow.region.rooms.Remove(room);
+			foreach (RoomReplacement roomReplacement in room.roomReplacements) {
+				if (roomReplacement.replacedRoom == room && WorldWindow.region.rooms.Contains(roomReplacement.replacingRoom) && !this.rooms.Contains(roomReplacement.replacingRoom))
+					roomReplacement.replacingRoom.roomReplacements.Remove(roomReplacement);
+				else if (roomReplacement.replacingRoom == room && WorldWindow.region.rooms.Contains(roomReplacement.replacedRoom) && !this.rooms.Contains(roomReplacement.replacedRoom)) {
+					roomReplacement.replacedRoom.roomReplacements.Remove(roomReplacement);
+					roomReplacement.replacedRoom.MoveUpdate();
+				}
+			}
 		}
 	}
 
