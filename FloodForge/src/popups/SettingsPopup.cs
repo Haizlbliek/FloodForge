@@ -274,4 +274,31 @@ public class SettingsPopup : Popup {
 			}
 		}
 	}
+
+	public class LabelContainer : SettingContainer {
+		public override float SettingWidth {
+			get {
+				return UI.font.Measure(this.settingName, 0.03f).x;
+			}
+		}
+
+		public LabelContainer(string name) : base(name) {}
+
+		public override void Draw(Rect bounds) {
+			Immediate.Color(Themes.Text);
+			UI.font.Write(this.settingName, bounds.CenterX, bounds.CenterY, 0.03f, Font.Align.MiddleCenter);
+		}
+	}
+
+	public class Divider : SettingContainer {
+		public override float SettingHeight => 0.01f;
+		public override float SettingWidth => 0.1f;
+
+		public Divider() : base("") {}
+
+		public override void Draw(Rect bounds) {
+			Immediate.Color(Themes.BorderHighlight);
+			UI.Line(bounds.x0, bounds.CenterY, bounds.x1, bounds.CenterY);
+		}
+	}
 }
