@@ -13,6 +13,9 @@ public class OffscreenRoom : Room {
 		return this.dens[0];
 	}
 
+	protected override void GenerateWaterMesh() {
+	}
+
 	protected override void GenerateMesh() {
 	}
 

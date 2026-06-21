@@ -425,9 +425,9 @@ public static class WorldWindow {
 					new SettingsPopup.IntSliderSettingContainer("Water Height", room.data.waterHeight, -2, room.height, h => 
 						worldHistory.Apply(new VariableChange<int>(room.data.waterHeight, h, hRedo => {
 							room.data.waterHeight = hRedo;
-							room.RegenerateGeometry(); // REVIEW - make this only refresh water
+							room.RegenerateWater();
 						}))
-					).UpdateWhileDragging(false),
+					).UpdateWhileDragging(true),
 					new SettingsPopup.BoolSettingContainer("Water In Front", room.data.waterInFront, b => {
 						worldHistory.Apply(new VariableChange<bool>(room.data.waterInFront, b, bRedo => room.data.waterInFront = bRedo));
 					}),
