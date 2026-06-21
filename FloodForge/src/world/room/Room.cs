@@ -80,6 +80,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			this.LoadSettings();
 			this.visuals.Refresh();
 			this.GenerateMesh();
+			this.GenerateWaterMesh();
 			this.CheckImages();
 		}
 		catch (Exception e) {
@@ -780,6 +781,11 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		}
 
 		this.GenerateMesh();
+		this.GenerateWaterMesh();
+	}
+
+	public void RegenerateWater() {
+		this.GenerateWaterMesh();
 	}
 
 	public uint GetTile(Vector2i pos, bool repeatOutside = false) {
@@ -1115,8 +1121,209 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 	protected static uint HeightMask = 65520;
 	protected static uint WidthMask = 268369920;
 
-	protected unsafe virtual void GenerateMesh() {
+	protected unsafe virtual void GenerateWaterMesh() {
+		if (this.data.waterHeight < 0)
+			return;
 		this.waterMesh.Clear();
+
+		int waterStartPoint = this.height - this.data.waterHeight - 1;
+		int marginedWaterHeight = this.data.waterHeight + 1; // if you want a funny striped water mesh, remove this +1, it's kind of? cool
+
+		List<byte> waterMeshTiles = [];
+		// 0000 = nothing
+		// 0001 = solid
+		// x100 = slope 0 - top, left - NOTE! for generating meshes, keep in mind that this describes the solid slope, not the air slope, which is the part that is meshed.
+		// x101 = slope 1 - bottom, left
+		// x110 = slope 2 - top, right
+		// x111 = slope 3 - bottom, right
+		Dictionary<Vector2i, uint> greedyTiles = [];
+		// greedyTile
+		// contains: startX, startY, width, height, type
+		// Dictionary<Vector2i, uint> greedyTiles
+		// Vector2i = startX and startY
+		// uint = ____xxxxxxxxxxxxyyyyyyyyyyyyzzzz
+		// x = width = (uint & 268369920) >> 16
+		// y = height = (uint & 65520) >> 4
+		// z = type = uint & 15
+
+		for (int x = 0; x < this.width; x++) {
+			for (int y = waterStartPoint; y < this.height; y++) {
+				uint tile = this.GetTile(x, y);
+				uint type = tile & 15;
+
+				if (type == 1)
+					waterMeshTiles.Add(1); // add x0001 ==> type = solid
+				else if (type == 2) {
+					uint direction = (tile >> 10) & 3;
+					if (direction == 0)
+						waterMeshTiles.Add(4); // add x0100 ==> type = slope 0
+					else if (direction == 1)
+						waterMeshTiles.Add(5); // add x0101 ==> type = slope 1
+					else if (direction == 2)
+						waterMeshTiles.Add(6); // add x0110 ==> type = slope 2
+					else if (direction == 3)
+						waterMeshTiles.Add(7); // add x0111 ==> type = slope 3
+				}
+				else
+					waterMeshTiles.Add(0);
+			}
+		}
+
+		// REVIEW - supply tile array to unified GreedyMesher algorithm for less duplicated code
+		// merging tiles horizontally
+		for (int y = waterStartPoint; y < this.height; y++) {
+			for (int x = 0; x < this.width;) {
+				// first: get tiletype
+				Vector2i key = new Vector2i(x, y);
+				int indexer = x * marginedWaterHeight + (y - waterStartPoint);
+				byte tileType = waterMeshTiles[indexer];
+				// then: look rightwards
+				uint stripWidth = 1;
+				x++;
+				indexer += marginedWaterHeight;
+				for (;x <= this.width; x++, indexer += marginedWaterHeight) {
+					// until a nonmatching tiletype is encountered OR y >= this.height OR stripHeight >= 4095 (12-bit limit)
+					if (indexer >= waterMeshTiles.Count) indexer = waterMeshTiles.Count - 1;
+					if(x == this.width || stripWidth >= TwelveBitLimit || waterMeshTiles[indexer] != tileType) {
+						// then: if not solid, add to greedyTiles
+						if(tileType != 1) {
+							uint data = tileType;
+							data |= stripWidth << 16;
+							greedyTiles.Add(key, data);
+						}
+						break;
+					}
+					else
+						stripWidth++;
+				}
+				// new loop starts from the end point of the previous one OR, if x reaches the cap, from the start of the next line, therefore no tiles are missed.
+			}
+		}
+
+		// merging tiles vertically
+		for (int x = 0; x < this.width; x++) {
+			for (int y = waterStartPoint; y < this.height; y++) {
+				Vector2i key = new Vector2i(x, y);
+				if(greedyTiles.TryGetValue(key, out uint data)) {
+					byte tileType = (byte)(data & 15);
+					uint height = 1;
+					uint width = (data & WidthMask) >> 16;
+					for (int y1 = y + 1; y1 < this.height; y1++) {
+						if(height < TwelveBitLimit && greedyTiles.TryGetValue(new (x, y1), out uint compareData)
+							&& (byte)(compareData & 15) == tileType && ((compareData & WidthMask) >> 16) == width) {
+							greedyTiles.Remove(new (x, y1));
+							height++;
+						}
+						else
+							break;
+					}
+					data |= height << 4;
+					greedyTiles[key] = data;
+				}
+			}
+		}
+
+		foreach (KeyValuePair<Vector2i, uint> greedyTile in greedyTiles) {
+			byte tileType = (byte)(greedyTile.Value & 15);
+			uint height = (greedyTile.Value & HeightMask) >> 4;
+			uint width = (greedyTile.Value & WidthMask) >> 16;
+			int x = greedyTile.Key.x;
+			int y = greedyTile.Key.y;
+			float x0 = x;// + 0.1f;
+			float y0 = -y;// - 0.1f;
+			float x1 = x + width;// - 0.1f;
+			float y1 = -y - height;// + 0.1f;
+
+			int waterY = this.data.waterHeight - this.height;
+			float cutoffY0 = waterY + 0.5f;
+			bool addWater = y1 <= waterY;
+			bool isTopOfwater = y0 >= cutoffY0;
+
+			// tiletypes we need: air, solid, slope
+			if (!addWater)
+				continue;
+			if(tileType == 0) { // if it's air, we add full water
+				this.waterMesh.AddQuad(
+					new Vertex(x0, isTopOfwater ? cutoffY0 : y0, Themes.RoomWater),
+					new Vertex(x1, isTopOfwater ? cutoffY0 : y0, Themes.RoomWater),
+					new Vertex(x1, y1, Themes.RoomWater),
+					new Vertex(x0, y1, Themes.RoomWater)
+				);
+			}
+			else { // otherwise, it's a slope
+				float x2 = x + 0.5f;
+				float y2 = -y - 0.5f;
+				switch (tileType & 3) {
+					case 0:
+						if (isTopOfwater)
+							this.waterMesh.AddQuad(
+								new Vertex(x1, y1, Themes.RoomWater),
+								new Vertex(x0, y1, Themes.RoomWater),
+								new Vertex(x2, y2, Themes.RoomWater),
+								new Vertex(x1, y2, Themes.RoomWater)
+							);
+						else 
+							this.waterMesh.AddTriangle(
+								new Vertex(x1, y1, Themes.RoomWater),
+								new Vertex(x0, y1, Themes.RoomWater),
+								new Vertex(x1, y0, Themes.RoomWater)
+							);
+					break;
+					case 1:
+						if (isTopOfwater)
+							this.waterMesh.AddTriangle(
+								new Vertex(x1, y2, Themes.RoomWater),
+								new Vertex(x2, y2, Themes.RoomWater),
+								new Vertex(x1, y1, Themes.RoomWater)
+							);
+						else
+							this.waterMesh.AddTriangle(
+								new Vertex(x1, y0, Themes.RoomWater),
+								new Vertex(x0, y0, Themes.RoomWater),
+								new Vertex(x1, y1, Themes.RoomWater)
+							);
+					break;
+					case 2:
+						if (isTopOfwater)
+							this.waterMesh.AddQuad(
+								new Vertex(x0, y1, Themes.RoomWater),
+								new Vertex(x1, y1, Themes.RoomWater),
+								new Vertex(x2, y2, Themes.RoomWater),
+								new Vertex(x0, y2, Themes.RoomWater)
+							);
+						else
+							this.waterMesh.AddTriangle(
+								new Vertex(x0, y1, Themes.RoomWater),
+								new Vertex(x1, y1, Themes.RoomWater),
+								new Vertex(x0, y0, Themes.RoomWater)
+							);
+					break;
+					case 3:
+						if (isTopOfwater)
+							this.waterMesh.AddTriangle(
+								new Vertex(x0, y2, Themes.RoomWater),
+								new Vertex(x2, y2, Themes.RoomWater),
+								new Vertex(x0, y1, Themes.RoomWater)
+							);
+						else
+							this.waterMesh.AddTriangle(
+								new Vertex(x0, y0, Themes.RoomWater),
+								new Vertex(x1, y0, Themes.RoomWater),
+								new Vertex(x0, y1, Themes.RoomWater)
+							);
+					break;
+				}
+			}
+		}
+
+		this.waterRenderable = new MeshRenderable(this.waterMesh, Preload.RoomShader, [
+				new (0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
+				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2))
+			], [ "projection", "model", "tintColor", "tintStrength" ]);
+	}
+
+	// TODO - split water mesh generation off from room greedymeshing for performance
+	protected unsafe virtual void GenerateMesh() {
 		this.roomMesh.Clear();
 		this.allShortcutEntrances.Clear();
 
@@ -1189,6 +1396,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			}
 		}
 
+		// merging horizontally
 		for (int y = 0; y < this.height; y++) {
 			for (int x = 0; x < this.width;) {
 				// first: get tiletype
@@ -1218,6 +1426,7 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			}
 		}
 
+		// merging vertically
 		for (int x = 0; x < this.width; x++) {
 			for (int y = 0; y < this.height; y++) {
 				Vector2i key = new Vector2i(x, y);
@@ -1240,7 +1449,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			}
 		}
 
-		// REVIEW - generate and greedy-mesh Water separately?
 		foreach (KeyValuePair<Vector2i, uint> greedyTile in greedyTiles) {
 			byte tileType = (byte)(greedyTile.Value & 15);
 			uint height = (greedyTile.Value & HeightMask) >> 4;
@@ -1251,11 +1459,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			float y0 = -y;// - 0.1f;
 			float x1 = x + width;// - 0.1f;
 			float y1 = -y - height;// + 0.1f;
-
-			int waterY = this.data.waterHeight - this.height;
-			float waterY0 = waterY + 0.5f;
-			bool addWater =  y1 <= waterY && this.data.waterHeight != -1;
-			bool isTopOfwater = y0 >= waterY0;
 
 			Color? color = tileType switch {
 				0 => Themes.RoomAir,
@@ -1270,22 +1473,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 					new Vertex(x1, y1, color.Value),
 					new Vertex(x0, y1, color.Value)
 				);
-				if (addWater) {
-					if (isTopOfwater)
-						this.waterMesh.AddQuad(
-							new Vertex(x0, waterY0, Themes.RoomWater),
-							new Vertex(x1, waterY0, Themes.RoomWater),
-							new Vertex(x1, y1, Themes.RoomWater),
-							new Vertex(x0, y1, Themes.RoomWater)
-						);
-					else
-						this.waterMesh.AddQuad(
-							new Vertex(x0, y0, Themes.RoomWater),
-							new Vertex(x1, y0, Themes.RoomWater),
-							new Vertex(x1, y1, Themes.RoomWater),
-							new Vertex(x0, y1, Themes.RoomWater)
-						);
-				}
 			}
 			else { // otherwise, it's a slope
 				float x2 = x + 0.5f;
@@ -1298,21 +1485,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 							new Vertex(x0, y1, color.Value),
 							new Vertex(x1, y0, color.Value)
 						);
-						if (addWater) {
-							if (isTopOfwater)
-								this.waterMesh.AddQuad(
-									new Vertex(x1, y1, Themes.RoomWater),
-									new Vertex(x0, y1, Themes.RoomWater),
-									new Vertex(x2, y2, Themes.RoomWater),
-									new Vertex(x1, y2, Themes.RoomWater)
-								);
-							else 
-								this.waterMesh.AddTriangle(
-									new Vertex(x1, y1, Themes.RoomWater),
-									new Vertex(x0, y1, Themes.RoomWater),
-									new Vertex(x1, y0, Themes.RoomWater)
-								);
-						}
 					break;
 					case 1:
 						this.roomMesh.AddTriangle(
@@ -1320,20 +1492,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 							new Vertex(x0, y0, color.Value),
 							new Vertex(x1, y1, color.Value)
 						);
-						if(addWater) {
-							if (isTopOfwater)
-								this.waterMesh.AddTriangle(
-									new Vertex(x1, y2, Themes.RoomWater),
-									new Vertex(x2, y2, Themes.RoomWater),
-									new Vertex(x1, y1, Themes.RoomWater)
-								);
-							else
-								this.waterMesh.AddTriangle(
-									new Vertex(x1, y0, Themes.RoomWater),
-									new Vertex(x0, y0, Themes.RoomWater),
-									new Vertex(x1, y1, Themes.RoomWater)
-								);
-						}
 					break;
 					case 2:
 						this.roomMesh.AddTriangle(
@@ -1341,21 +1499,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 							new Vertex(x1, y1, color.Value),
 							new Vertex(x0, y0, color.Value)
 						);
-						if(addWater) {
-							if (isTopOfwater)
-								this.waterMesh.AddQuad(
-									new Vertex(x0, y1, Themes.RoomWater),
-									new Vertex(x1, y1, Themes.RoomWater),
-									new Vertex(x2, y2, Themes.RoomWater),
-									new Vertex(x0, y2, Themes.RoomWater)
-								);
-							else
-								this.waterMesh.AddTriangle(
-									new Vertex(x0, y1, Themes.RoomWater),
-									new Vertex(x1, y1, Themes.RoomWater),
-									new Vertex(x0, y0, Themes.RoomWater)
-								);
-						}
 					break;
 					case 3:
 						this.roomMesh.AddTriangle(
@@ -1363,20 +1506,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 							new Vertex(x1, y0, color.Value),
 							new Vertex(x0, y1, color.Value)
 						);
-						if(addWater) {
-							if (isTopOfwater)
-								this.waterMesh.AddTriangle(
-									new Vertex(x0, y2, Themes.RoomWater),
-									new Vertex(x2, y2, Themes.RoomWater),
-									new Vertex(x0, y1, Themes.RoomWater)
-								);
-							else
-								this.waterMesh.AddTriangle(
-									new Vertex(x0, y0, Themes.RoomWater),
-									new Vertex(x1, y0, Themes.RoomWater),
-									new Vertex(x0, y1, Themes.RoomWater)
-								);
-						}
 					break;
 				}
 			}
@@ -1557,11 +1686,6 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		}
 
 		this.roomRenderable = new MeshRenderable(this.roomMesh, Preload.RoomShader, [
-				new (0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
-				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2))
-			], [ "projection", "model", "tintColor", "tintStrength" ]);
-
-		this.waterRenderable = new MeshRenderable(this.waterMesh, Preload.RoomShader, [
 				new (0, 2, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
 				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2))
 			], [ "projection", "model", "tintColor", "tintStrength" ]);
