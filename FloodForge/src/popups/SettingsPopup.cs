@@ -1,19 +1,29 @@
 namespace FloodForge.Popups;
 
 public class SettingsPopup : Popup {
-	protected const float SettingHeight = 0.04f;
-	protected const float SettingSpacing = 0.03f;
+	protected const float SettingSpacing = 0.02f;
+	protected const float SettingHeight = 0.05f;
+	protected const float SettingWidth = 0.6f;
 
 	public SettingContainer[] settingContainers;
 	protected Rect usableBounds;
 	public SettingsPopup(SettingContainer[] settings) {
 		this.settingContainers = settings;
+		this.RecalculateBounds();
+	}
+
+	private void RecalculateBounds(bool retainTopLeft = false) {
+		Vector2 TopLeft = new (this.bounds.x0, this.bounds.y1);
 		float totalHeight = 0;
-		foreach (SettingContainer _ in this.settingContainers) {
-			totalHeight += (totalHeight != 0 ? SettingSpacing : 0) + SettingHeight;
+		float maxWidth = 0;
+		foreach (SettingContainer settingContainer in this.settingContainers) {
+			totalHeight += (totalHeight != 0 ? SettingSpacing : 0) + settingContainer.SettingHeight;
+			maxWidth = Math.Max(maxWidth, settingContainer.SettingWidth);
 		}
-		totalHeight += 0.05f + SettingSpacing;
-		this.bounds = new Rect(-0.3f, -(totalHeight * 0.5f) - 0.01f, 0.3f, (totalHeight * 0.5f) + 0.01f);
+		totalHeight += 0.05f + SettingSpacing + 0.02f;
+		maxWidth += 0.02f;
+		Vector2 BottomLeft = new (TopLeft.x, TopLeft.y - totalHeight);
+		this.bounds = retainTopLeft ? Rect.FromSize(BottomLeft, new (maxWidth, totalHeight)) : new Rect(-maxWidth * 0.5f, totalHeight * 0.5f, maxWidth * 0.5f, -totalHeight * 0.5f);
 	}
 
 	public override void Draw() {
@@ -25,14 +35,24 @@ public class SettingsPopup : Popup {
 		this.usableBounds = new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y1 - 0.05f - 0.01f);
 		float yVal = this.usableBounds.y1 - SettingSpacing * 0.5f;
 		foreach (SettingContainer container in this.settingContainers) {
-			Rect bounds = new Rect(this.usableBounds.x0, yVal - SettingHeight, this.usableBounds.x1, yVal);
+			Rect bounds = new Rect(this.usableBounds.x0, yVal - container.SettingHeight, this.usableBounds.x1, yVal);
 			container.Draw(bounds);
-			yVal -= SettingHeight + SettingSpacing;
+			yVal -= container.SettingHeight + SettingSpacing;
 		}
 	}
 
 	public class SettingContainer {
 		public string settingName;
+		public virtual float SettingHeight {
+			get {
+				return SettingsPopup.SettingHeight;
+			}
+		}
+		public virtual float SettingWidth {
+			get {
+				return SettingsPopup.SettingWidth;
+			}
+		}
 
 		public SettingContainer(string name) {
 			this.settingName = name;
