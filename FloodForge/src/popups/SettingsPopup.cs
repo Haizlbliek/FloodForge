@@ -26,6 +26,20 @@ public class SettingsPopup : Popup {
 		this.bounds = retainTopLeft ? Rect.FromSize(BottomLeft, new (maxWidth, totalHeight)) : new Rect(-maxWidth * 0.5f, totalHeight * 0.5f, maxWidth * 0.5f, -totalHeight * 0.5f);
 	}
 
+	public void AddSetting(SettingContainer container) {
+		List<SettingContainer> newContainer = [.. this.settingContainers];
+		newContainer.Add(container);
+		this.settingContainers = [.. newContainer];
+		this.RecalculateBounds(true);
+	}
+
+	public void RemoveSetting(SettingContainer container) {
+		List<SettingContainer> newContainer = [.. this.settingContainers];
+		newContainer.Remove(container);
+		this.settingContainers = [.. newContainer];
+		this.RecalculateBounds(true);
+	}
+
 	public override void Draw() {
 		base.Draw();
 
