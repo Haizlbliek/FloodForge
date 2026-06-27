@@ -317,7 +317,7 @@ public abstract class Popup {
 		return false;
 	}
 
-	public Popup Title(string title) {
+	public virtual Popup Title(string title) {
 		this.popupTitle = title;
 		return this;
 	}

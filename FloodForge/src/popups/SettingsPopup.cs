@@ -26,6 +26,12 @@ public class SettingsPopup : Popup {
 		this.bounds = retainTopLeft ? Rect.FromSize(BottomLeft, new (maxWidth, totalHeight)) : new Rect(-maxWidth * 0.5f, totalHeight * 0.5f, maxWidth * 0.5f, -totalHeight * 0.5f);
 	}
 
+	public override Popup Title(string title) {
+		Popup returnPopup = base.Title(title);
+		this.RecalculateBounds(true);
+		return returnPopup;
+	}
+
 	public void AddSetting(SettingContainer container) {
 		List<SettingContainer> newContainer = [.. this.settingContainers];
 		newContainer.Add(container);
