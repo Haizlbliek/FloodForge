@@ -418,13 +418,9 @@ public static class WorldExporter {
 
 					Timeline virtualTimeline = room.timeline;
 
-					foreach (RoomReplacement relevantReplacement in room.roomReplacements) {
-						if (relevantReplacement.replacedRoom == room) {
-							Timeline replacingTimeline = relevantReplacement.replacingRoom.timeline;
-							Timeline replacedTimeline = relevantReplacement.replacedRoom.timeline;
-							Timeline resultingTimeline = replacingTimeline.Inverted().And(replacedTimeline.Inverted()).Inverted(); // this is cursed but should work
-							virtualTimeline = resultingTimeline;
-						}
+					foreach (Room replacingRoom in room.replacingRooms) {
+						Timeline resultingTimeline = replacingRoom.timeline.Inverted().And(room.timeline.Inverted()).Inverted(); // this is cursed but should work
+						virtualTimeline = resultingTimeline;
 					}
 
 					if ((virtualTimeline.timelineType == TimelineType.All || virtualTimeline.timelines.Count == 0) && room.preProcessorConditions.Length == 0) {
@@ -456,9 +452,8 @@ public static class WorldExporter {
 					}
 
 					stringWriter.Write(" : ");
-					RoomReplacement? replacement = room.roomReplacements.FirstOrDefault(x => x.replacingRoom == room);
-					if (replacement != null)
-						stringWriter.Write($"REPLACEROOM : {replacement.replacedRoom.name}");
+					if (room.replacedRoom != null)
+						stringWriter.Write($"REPLACEROOM : {room.replacedRoom.name}");
 					else
 						stringWriter.Write((virtualTimeline.timelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
 					stringWriter.WriteLine($" : {RoomNameCasing(room.name)}");
@@ -488,7 +483,7 @@ public static class WorldExporter {
 			bool wasGate = false;
 
 			foreach (Room room in sortedRooms) {
-				if (room.roomReplacements != null && room.roomReplacements.Any(x => x.replacingRoom == room))
+				if (room.replacedRoom != null)
 					continue;
 
 				bool isGate = room.data.tags.Contains("GATE");

@@ -242,9 +242,9 @@ public static class WorldParser {
 		}
 	}
 
-	private static Room ParseReplaceRoom(string roomName, Room roomToReplace) {
-		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
-		if (room == null) {
+	private static Room ParseReplaceRoom(string roomName, Room replacedRoom) {
+		Room? replacingRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
+		if (replacingRoom == null) {
 			string path = WorldWindow.region.roomsPath;
 			if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
 				path = PathUtil.FindDirectory(PathUtil.Parent(path), "gates") ?? "";
@@ -258,20 +258,19 @@ public static class WorldParser {
 				Logger.Warn($"Room file {path}/{roomName}.txt could not be found");
 			}
 
-			room = new Room(filePath, roomName);
+			replacingRoom = new Room(filePath, roomName);
 
-			WorldWindow.region.rooms.Add(room);
+			WorldWindow.region.rooms.Add(replacingRoom);
 		}
 
 		// copy data from roomToReplace
-		room.DevPosition = roomToReplace.DevPosition;
-		room.CanonPosition = roomToReplace.CanonPosition;
-		RoomReplacement replacement = new (roomToReplace, room);
-		room.roomReplacements.Add(replacement);
-		roomToReplace.roomReplacements.Add(replacement);
+		replacingRoom.DevPosition = replacedRoom.DevPosition;
+		replacingRoom.CanonPosition = replacedRoom.CanonPosition;
+		replacingRoom.replacedRoom = replacedRoom;
+		replacedRoom.replacingRooms.Add(replacingRoom);
 		// REVIEW - what other parts should be copied?
 
-		return room;
+		return replacingRoom;
 	}
 
 	private static void ParseWorldRoom(string line, ref List<ConnectionToAdd> connectionsToAdd) {

@@ -11,17 +11,18 @@ public class Connection {
 	public List<ConnectionVisual> replacementVirtualConnections = [];
 	public void RefreshReplacementVirtualConnections() {
 		this.replacementVirtualConnections = [];
-		if (this.roomA.roomReplacements.Count == 0 && this.roomB.roomReplacements.Count == 0)
+		if (this.roomA.replacingRooms.Count == 0 && this.roomB.replacingRooms.Count == 0)
 			return;
-		foreach (RoomReplacement replacement in this.roomA.roomReplacements) {
-			if (replacement.replacedRoom == this.roomA) {
-				this.replacementVirtualConnections.Add(new ConnectionVisual(replacement.replacingRoom, this.roomB, this.roomAExitID, this.roomBExitID));
-			}
+		foreach (Room replacement in this.roomA.replacingRooms) {
+			this.replacementVirtualConnections.Add(new ConnectionVisual(replacement, this.roomB, this.roomAExitID, this.roomBExitID));
 		}
-		foreach (RoomReplacement replacement in this.roomB.roomReplacements) {
-			if (replacement.replacedRoom == this.roomB) {
-				this.replacementVirtualConnections.Add(new ConnectionVisual(this.roomA, replacement.replacingRoom, this.roomAExitID, this.roomBExitID));
-			}
+		foreach (Room replacement in this.roomB.replacingRooms) {
+			this.replacementVirtualConnections.Add(new ConnectionVisual(this.roomA, replacement, this.roomAExitID, this.roomBExitID));
+		}
+	}
+	public void RecalculateReplacementVirtualConnectionBeziers() {
+		foreach (ConnectionVisual connectionVisual in this.replacementVirtualConnections) {
+			connectionVisual.recalculateBezier = true;
 		}
 	}
 	
