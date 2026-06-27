@@ -1371,18 +1371,10 @@ public static class WorldWindow {
 					debugText.Add($"Name: {room.name}");
 					if (room.pathOutsideRoomsFolder)
 						debugText.Add($" > Room imported from outside {region.acronym}-rooms");
-					if (room.roomReplacements.Count != 0) {
-						List<string> replaces = [];
-						List<string> replacedby = [];
-						foreach (RoomReplacement replacement in room.roomReplacements) {
-							if (replacement.replacedRoom == room)
-								replacedby.Add($" > Room replaced by {replacement.replacingRoom.name}");
-							else
-								replaces.Add($" > Room replaces {replacement.replacedRoom.name}");
-						}
-						debugText.AddRange(replaces);
-						debugText.AddRange(replacedby);
-					}
+					if (room.replacedRoom != null)
+						debugText.Add($"Room replaces {room.replacedRoom.name}");
+					foreach (Room replacement in room.replacingRooms)
+						debugText.Add($" > Room replaced by {replacement.name} ({replacement.timeline})");
 					debugText.Add($"Tags: {string.Join(" ", room.data.tags)}");
 					debugText.Add($"Size: {room.width}x{room.height}");
 					if (room.timeline.timelineType != TimelineType.All)

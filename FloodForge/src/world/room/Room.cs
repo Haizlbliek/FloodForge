@@ -4,7 +4,7 @@ using Stride.Core.Extensions;
 namespace FloodForge.World;
 
 // TODO: Fix room water behind level rendering
-public class Room : WorldDraggable { // change Room and ReferenceImage to derive from WorldDraggable
+public class Room : WorldDraggable {
 	public const uint FLAG_VERTICAL_POLE = 16;
 	public const uint FLAG_HORIZONTAL_POLE = 32;
 	public const uint FLAG_ROOM_EXIT = 64;
@@ -25,7 +25,11 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 	public string path;
 	public string name;
 	public string[] preProcessorConditions = [];
-	public HashSet<RoomReplacement> roomReplacements = [];
+	
+	// The room that is replaced by this one in specific timelines
+	public Room? replacedRoom = null;
+	// The rooms that replace this one in specific timelines
+	public HashSet<Room> replacingRooms = [];
 	public Timeline timeline = new();
 	public ConditionalPopup? conditionalPopup;
 	public Vector2 CanonPosition;
@@ -138,12 +142,9 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 
 	public void Disconnect(Connection connection) {
 		this.connections.Remove(connection);
-		foreach (RoomReplacement replacement in this.roomReplacements) {
-			foreach (Connection connectionB in replacement.replacedRoom.connections) {
-				connectionB.replacementVirtualConnections.ForEach(x => x.recalculateBezier = true);
-			}
-			foreach (Connection connectionB in replacement.replacingRoom.connections) {
-				connectionB.replacementVirtualConnections.ForEach(x => x.recalculateBezier = true);
+		if (this.replacedRoom != null) {
+			foreach (Connection replacedRoomConnection in this.replacedRoom.connections) {
+				replacedRoomConnection.RecalculateReplacementVirtualConnectionBeziers();
 			}
 		}
 	}
@@ -152,12 +153,9 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 		foreach (Connection connection in this.connections) {
 			connection.recalculateBezier = true;
 		}
-		foreach (RoomReplacement replacement in this.roomReplacements) {
-			foreach (Connection connection in replacement.replacedRoom.connections) {
-				connection.replacementVirtualConnections.ForEach(x => x.recalculateBezier = true);
-			}
-			foreach (Connection connection in replacement.replacingRoom.connections) {
-				connection.replacementVirtualConnections.ForEach(x => x.recalculateBezier = true);
+		if (this.replacedRoom != null) {
+			foreach (Connection connection in this.replacedRoom.connections) {
+				connection.RefreshReplacementVirtualConnections();
 			}
 		}
 	}
@@ -821,6 +819,14 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 				return true;
 			if (connection.roomB == this && connection.roomBExitID == i)
 				return true;
+		}
+		if (this.replacedRoom != null) {
+			foreach (Connection connection in this.replacedRoom.connections) {
+				if (connection.roomA == this.replacedRoom && connection.roomAExitID == i)
+					return true;
+				if (connection.roomB == this.replacedRoom && connection.roomBExitID == i)
+					return true;
+			}
 		}
 
 		return false;
@@ -1934,12 +1940,10 @@ public class Room : WorldDraggable { // change Room and ReferenceImage to derive
 			}
 		}
 
-		foreach (RoomReplacement replacement in this.roomReplacements) {
-			if (replacement.replacedRoom == this) {
-				Vector2 roomBRenderedPosition = positionType == WorldWindow.RoomPosition.Canon ? replacement.replacingRoom.CanonPosition : replacement.replacingRoom.DevPosition;
-				Immediate.Color(Themes.RoomConnection);
-				UI.Line(renderedPosition, roomBRenderedPosition);
-			}
+		foreach (Room replacingRoom in this.replacingRooms) {
+			Vector2 roomBRenderedPosition = positionType == WorldWindow.RoomPosition.Canon ? replacingRoom.CanonPosition : replacingRoom.DevPosition;
+			Immediate.Color(Themes.RoomConnection);
+			UI.Line(renderedPosition, roomBRenderedPosition);
 		}
 
 		if (this.timeline.timelineType != TimelineType.All) {
