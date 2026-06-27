@@ -15,7 +15,7 @@ public class SettingsPopup : Popup {
 	private void RecalculateBounds(bool retainTopLeft = false) {
 		Vector2 TopLeft = new (this.bounds.x0, this.bounds.y1);
 		float totalHeight = 0;
-		float maxWidth = 0;
+		float maxWidth = UI.font.Measure(this.popupTitle, 0.03f).x + 0.1f;
 		foreach (SettingContainer settingContainer in this.settingContainers) {
 			totalHeight += (totalHeight != 0 ? SettingSpacing : 0) + settingContainer.SettingHeight;
 			maxWidth = Math.Max(maxWidth, settingContainer.SettingWidth);
@@ -81,49 +81,81 @@ public class SettingsPopup : Popup {
 	public class HorizontalElement : SettingContainer {
 		protected SettingContainer[] settings;
 		protected float[] widthOverrides;
+		protected float lastCalculatedWidth = 0f;
+		protected float[] resultingWidths = [];
 		protected bool hasDivider;
+		protected bool forceEqualWidth = false;
 
-		public HorizontalElement(SettingContainer[] settings, float[]? widthOverrides = null, bool hasDivider = true) : base("") {
+		public HorizontalElement(SettingContainer[] settings, float[]? widthOverrides = null, bool hasDivider = true, bool forceEqualWidth = false) : base("") {
 			this.settings = settings;
 			this.widthOverrides = widthOverrides ?? [];
+			this.forceEqualWidth = forceEqualWidth;
 			this.hasDivider = hasDivider;
 		}
 
-		public override void Draw(Rect bounds) {
-			float betweenElementMargin = 0.02f;
-			float totalWidth = bounds.x1 - bounds.x0;
-			float totalMarginlessWidth = totalWidth - betweenElementMargin * (this.settings.Length - 1);
-			List<int> unOverriddenValues = [];
+		void RecalculateWidths(float totalWidth) {
+			// - list with only overrides filled in
+			this.resultingWidths = new float[this.settings.Length];
+			// get remaining width
+			float totalMarginlessWidth = totalWidth - SettingsPopup.SettingSpacing * (this.settings.Length - 1);
 			float remainingSpace = totalMarginlessWidth;
+			int unOverriddenCount = 0;
 			for (int i = 0; i < this.settings.Length; i++) {
 				if (i >= this.widthOverrides.Length || this.widthOverrides[i] == 0)
-					unOverriddenValues.Add(i);
-				else
-					remainingSpace -= this.widthOverrides[i];
-			}
-			float remainingWidthPerElement = remainingSpace / unOverriddenValues.Count;
-			float[] resultingWidths = new float[this.settings.Length];
-			for (int i = 0; i < resultingWidths.Length; i++) {
-				if (unOverriddenValues.Contains(i)) {
-					resultingWidths[i] = remainingWidthPerElement;
-				}
+					unOverriddenCount++;
 				else {
-					resultingWidths[i] = this.widthOverrides[i];
+					this.resultingWidths[i] = this.widthOverrides[i];
+					remainingSpace -= this.widthOverrides[i];
 				}
 			}
+			// if forceEqualWidths: divide evenly
+			if (this.forceEqualWidth) {
+				float dividedWidth = remainingSpace / unOverriddenCount;
+				for (int i = 0; i < this.resultingWidths.Length; i++) {
+					if (this.resultingWidths[i] == 0)
+						this.resultingWidths[i] = dividedWidth;
+				}
+			}
+			// else: 
+			else {
+				//	get each individual setting's width
+				List<float> settingWidths = [];
+				float totalSettingWidth = 0f;
+				for (int i = 0; i < this.settings.Length; i++) {
+					if (this.resultingWidths[i] == 0) {
+						float width = this.settings[i].SettingWidth;
+						settingWidths.Add(width);
+						totalSettingWidth += width;
+					}
+				}
+				float widthFactor = remainingSpace / totalSettingWidth;
+				// 	scale widths to fit remaining width
+				int j = 0;
+				for (int i = 0; i < this.resultingWidths.Length; i++) {
+					if (i >= this.widthOverrides.Length || this.widthOverrides[i] == 0) {
+						this.resultingWidths[i] = settingWidths[j] * widthFactor;
+						j++;
+					}
+				}
+			}
+			this.lastCalculatedWidth = totalWidth;
+		}
 
+		public override void Draw(Rect bounds) {
+			if (this.lastCalculatedWidth != bounds.x1 - bounds.x0)
+				this.RecalculateWidths(bounds.x1 - bounds.x0);
 			float currentXPosition = bounds.x0;
 			for (int i = 0; i < this.settings.Length; i++) {
-				float x1 = currentXPosition + resultingWidths[i];
+				float x1 = currentXPosition + this.resultingWidths[i];
 				Rect newBounds = new Rect(currentXPosition, bounds.y0, x1, bounds.y1);
 				this.settings[i].Draw(newBounds);
 				if (i != 0 && this.hasDivider) {
-					float lineX = currentXPosition - (betweenElementMargin / 2);
+					float lineX = currentXPosition - (SettingsPopup.SettingSpacing / 2);
 					float lineHeight = SettingsPopup.SettingSpacing + SettingsPopup.SettingHeight;
 					Immediate.Color(Themes.Border);
 					UI.Line(lineX, bounds.CenterY - lineHeight / 2, lineX, bounds.CenterY + lineHeight / 2);
 				}
-				currentXPosition = x1 + betweenElementMargin;
+				currentXPosition = x1 + SettingsPopup.SettingSpacing;
 			}
 		}
 	}
@@ -257,6 +289,13 @@ public class SettingsPopup : Popup {
 		readonly Action onClickCallback;
 		Func<ButtonSettingContainer, bool>? contextCheckCallback;
 		bool darkenOnFalse;
+
+		public override float SettingWidth {
+			get {
+				return UI.font.Measure(this.settingName, 0.03f).x + 0.01f;
+			}
+		}
+
 		public ButtonSettingContainer(string name, Action onClickCallback) : base(name) {
 			this.onClickCallback = onClickCallback;
 		}
