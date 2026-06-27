@@ -296,6 +296,30 @@ public static class WorldWindow {
 						CurrentConnectionValid = false;
 					}
 					else {
+						// todo - add check for case:
+						// roomA > roomB
+						// roomB replaced by roomB2 in TL1
+						// roomC replaced by roomC2 in TL1
+						// roomA > roomC2 is allowed, despite both roomA and roomC2 having their exits occupied in by replacementvirtualconnections
+						if (NewConnection.roomA.replacedRoom != null || NewConnection.roomB.replacedRoom != null){
+							Room originRoomA = NewConnection.roomA;
+							while (originRoomA.replacedRoom != null && originRoomA.replacedRoom != originRoomA) {
+								originRoomA = originRoomA.replacedRoom;
+							}
+							Room originRoomB = NewConnection.roomB;
+							while (originRoomB.replacedRoom != null && originRoomB.replacedRoom != originRoomB) {
+								originRoomB = originRoomB.replacedRoom;
+							}
+							foreach (Connection connection in originRoomA.connections) {
+								if (connection.roomA == originRoomA && connection.roomB == originRoomB ||
+								connection.roomB == originRoomA && connection.roomA == originRoomB) {
+									CurrentConnectionWarn = false;
+								}
+							}
+							if (originRoomA == originRoomB)
+								CurrentConnectionValid = false;
+						}
+
 						foreach (Connection other in NewConnection.roomB.connections) {
 							if ((other.roomA == NewConnection.roomB && other.roomAExitID == NewConnection.roomBExitID &&
 								other.roomB == NewConnection.roomA && other.roomBExitID == NewConnection.roomAExitID) ||
@@ -337,48 +361,26 @@ public static class WorldWindow {
 					{ // check for duplicate connections
 						bool foundDuplicate = false;
 						bool foundOccupiedExit = false;
-						bool overlapCanBeSolved = true;
-						List<Connection> connections = [..NewConnection.roomA.connections];
+						bool overlapCanBeSolved = false; // algorithm for determining solvability should be reworked.
+						List<Connection> connections = [.. NewConnection.roomA.connections];
 						connections.AddRange(NewConnection.roomB.connections);
 
-						//Logger.Info("STARTING CONNECTION CHECK!");
 						foreach (Connection connection in connections) {
-							//Logger.Info("-start-");
-							//Logger.Info("CHECK TIMELINES");
-
-							//Logger.Info("connection timelines:\n" + 
-							//$"connection: {TimelineToText(connection.timelineType, connection.timelines)}\n" + 
-							//$"roomA ({connection.roomA.name}): {TimelineToText(connection.roomA.TimelineType, connection.roomA.Timelines)}\n" + 
-							//$"roomB ({connection.roomB.name}): {TimelineToText(connection.roomB.TimelineType, connection.roomB.Timelines)}");
 							Timeline connectionEffectiveTimeline = connection.EffectiveConnectionTimeline;
-							//Logger.Info("connectionEffectiveTimeline: " + TimelineToText(connectionEffectiveType, connectionEffectiveLines));
 
-							//Logger.Info("NewConnection timelines:\n" + 
-							//$"connection: {TimelineToText(NewConnection.timelineType, NewConnection.timelines)}\n" + 
-							//$"roomA ({NewConnection.roomA.name}): {TimelineToText(NewConnection.roomA.TimelineType, NewConnection.roomA.Timelines)}\n" + 
-							//$"roomB ({NewConnection.roomB.name}): {TimelineToText(NewConnection.roomB.TimelineType, NewConnection.roomB.Timelines)}");
 							Timeline newConnectionEffectiveTimeline = NewConnection.EffectiveConnectionTimeline;
-							//Logger.Info("newConnectionEffectiveTimeline: " + TimelineToText(newConnectionEffectiveType, newConnectionEffectiveLines));
 							bool hasOverlap = connectionEffectiveTimeline.OverlapsWith(newConnectionEffectiveTimeline);
-							//Logger.Info($"RESULTING hasOverlap: {hasOverlap}");
-							//Logger.Info("END CHECK TIMELINES");
 							if (hasOverlap) {
 								if (connectionEffectiveTimeline.timelineType == TimelineType.All)
 									overlapCanBeSolved = false;
-								//Logger.Info("CHECK CONNECTION");
-								//Logger.Info($"connection: roomA = {connection.roomA.name}; roomB = {connection.roomB.name};\nNewConnection: roomA = {NewConnection.roomA.name}; roomB = {NewConnection.roomB.name};");
 								foundDuplicate |= connection.roomA == NewConnection.roomA && connection.roomB == NewConnection.roomB;
 								foundDuplicate |= connection.roomB == NewConnection.roomA && connection.roomA == NewConnection.roomB;
-								//Logger.Info($"foundDuplicate: {foundDuplicate}");
-								
-								//Logger.Info($"connection: roomAExitID = {connection.roomAExitID}; roomBExitID = {connection.roomBExitID}\nNewConnection: roomAExitID = {NewConnection.roomAExitID}; roomBExitID = {NewConnection.roomBExitID}");
+
 								foundOccupiedExit |= connection.roomA == NewConnection.roomA && connection.roomAExitID == NewConnection.roomAExitID;
 								foundOccupiedExit |= connection.roomB == NewConnection.roomB && connection.roomBExitID == NewConnection.roomBExitID;
 								foundOccupiedExit |= connection.roomA == NewConnection.roomB && connection.roomAExitID == NewConnection.roomBExitID;
 								foundOccupiedExit |= connection.roomB == NewConnection.roomA && connection.roomBExitID == NewConnection.roomAExitID;
-								//Logger.Info($"foundOccupiedExit: {foundOccupiedExit}");
 
-								//Logger.Info("-end-");
 								if (foundDuplicate && foundOccupiedExit)
 									break;
 							}
