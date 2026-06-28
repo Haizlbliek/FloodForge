@@ -1035,4 +1035,12 @@ public static class WorldExporter {
 			writer.WriteLine($"//FloodForge|SubregionColorOverride|{item.Key}|{item.Value}");
 		}
 	}
+
+	public static void ExportDisplayName(string outputPath) {
+		Logger.Info("Exporting displayname file");
+
+		Backup.File(outputPath);
+
+		File.WriteAllLines(outputPath, [WorldWindow.region.displayName]);
+	}
 }
