@@ -40,6 +40,7 @@ public class AcronymPopup : Popup {
 
 		if (this.setTo != null) {
 			this.Acronym.value = this.setTo;
+			this.setTo = null;
 		}
 
 		UI.TextInput(new Rect(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.14f, this.bounds.x1 - 0.01f, this.bounds.y1 - 0.19f), this.Acronym);
