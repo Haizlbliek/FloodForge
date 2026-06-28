@@ -1847,6 +1847,12 @@ public static class WorldWindow {
 			renderStatusPopup.UpdateText($"Updating Images\n0/{renderedRooms.Count}");
 			List<(string path, byte[] image)> overwrittenImages = [];
 
+			string renderOutputFolderPath = Path.Combine("renderOutput", WorldWindow.region.acronym);
+			if (Settings.UpdateRoomImagesOnRender)
+				renderOutputFolderPath = WorldWindow.region.roomsPath;
+			else
+				Directory.CreateDirectory(renderOutputFolderPath);
+
 			for (int i = 0; i < renderedRooms.Count; i++) {
 				int imagesCopied = 0;
 				for (int j = 0; j < renderedRooms[i].Length; j++) {
@@ -1872,7 +1878,7 @@ public static class WorldWindow {
 							oldImg = File.ReadAllBytes(path);
 						overwrittenImages.Add((path, oldImg));
 
-						using Stream stream = File.OpenWrite(path); // Make this a History Change, so it's CTRL+Z-able
+						using Stream stream = File.OpenWrite(path); // REVIEW - Make this a History Change, so it's CTRL+Z-able
 						ImageWriter writer = new ImageWriter();
 						writer.WritePng(image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
 						Logger.Info($"Screen {name} exported");
@@ -1889,7 +1895,7 @@ public static class WorldWindow {
 			renderStatusPopup.Close();
 			Logger.Info($"Finished mass-render.\nSelection: {totalCount}\nSucceeded: {successCount}/{finished}");
 			if (successCount == finished) {
-				PopupManager.Add(new ConfirmPopup($"Finished mass-render.\n {successCount}/{finished} succeeded.").SetOkay("Copy path").SetCancel("Continue").Okay(() => { ClipboardService.SetText(WorldWindow.region.roomsPath); }));
+				PopupManager.Add(new ConfirmPopup($"Finished mass-render.\n {successCount}/{finished} succeeded.").SetButtons("Copy path", "Continue").Okay(() => { ClipboardService.SetText(renderOutputFolderPath); }));
 			}
 			else {
 				string reportString = $"Finished mass-render.\n {successCount}/{finished} succeeded.";
@@ -2060,12 +2066,13 @@ public static class WorldWindow {
 					),
 
 					new Button("Mass Render", button => {
-						confirmRenderPopup = new ConfirmPopup("Render " + SelectedRooms.Count + " rooms?" + (
-							region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
-							region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
-							region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" :
-							"\n<s:1>This will overwrite all existing images!")
-							).Okay(() => {
+						confirmRenderPopup = new ConfirmPopup("Render " + SelectedRooms.Count + " rooms?" + (Settings.UpdateRoomImagesOnRender ? 
+								(region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
+								region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
+								region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" :
+								"\n<s:1>This will overwrite all existing images!") :
+								"\nThis will export images to the renderOutput folder"
+							)).Okay(() => {
 								renderRoomsTask = Task.Run(MassRenderRooms);
 							});
 						PopupManager.Add(confirmRenderPopup);
