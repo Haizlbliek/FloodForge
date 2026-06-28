@@ -1993,43 +1993,40 @@ public static class WorldWindow {
 
 		public WorldMenuItems() {
 			this.items = [
-				new Dropdown("File", [
-					new Button("New", button => {
-						PopupManager.Add(new AcronymPopup((acronym) => {
-								WorldWindow.Reset();
-								WorldWindow.region.offscreenDen = new OffscreenRoom("offscreenden" + acronym.ToLowerInvariant(), "OffscreenDen" + acronym.ToUpperInvariant());
-								WorldWindow.region.rooms.Add(WorldWindow.region.offscreenDen);
-								WorldWindow.region.acronym = acronym;
-							})
-						);
-					}),
+				new Button("New", button => {
+					PopupManager.Add(new AcronymPopup((acronym) => {
+							WorldWindow.Reset();
+							WorldWindow.region.offscreenDen = new OffscreenRoom("offscreenden" + acronym.ToLowerInvariant(), "OffscreenDen" + acronym.ToUpperInvariant());
+							WorldWindow.region.rooms.Add(WorldWindow.region.offscreenDen);
+							WorldWindow.region.acronym = acronym;
+						})
+					);
+				}),
 
-					new Button("Import", button => {
-						PopupManager.Add(new FilesystemPopup(selection => {
-							if (selection.Length == 0) return;
+				new Button("Import Map", button => {
+					PopupManager.Add(new FilesystemPopup(selection => {
+						if (selection.Length == 0) return;
 
-							if (!WorldParser.ImportWorldFile(selection[0]))
-								PopupManager.Add(new InfoPopup("Importing world failed!\nView log.txt for more info."));
-						}, 0).Filter(Regexs.WorldFileRegex()).Hint("world_xx.txt"));
-					}),
+						if (!WorldParser.ImportWorldFile(selection[0]))
+							PopupManager.Add(new InfoPopup("Importing world failed!\nView log.txt for more info."));
+					}, 0).Filter(Regexs.WorldFileRegex()).Hint("world_xx.txt"));
+				}),
 
-					new Button("Export",
-						button => {
-							if(!invalidCreaturesEncountered){
-								WorldWindow.ExportFinished = false;
-								ExportButton();
-							}
-							else{
-								PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(ExportButton));
-							}
-						},
-						button => {
-							return WorldWindow.region != null && !importIncomplete && WorldWindow.ExportFinished;
-						},
-						"You must create or import a region\nbefore exporting."
-					),
-				]),
-
+				new Button("Export Map",
+					button => {
+						if(!invalidCreaturesEncountered){
+							WorldWindow.ExportFinished = false;
+							ExportButton();
+						}
+						else{
+							PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(ExportButton));
+						}
+					},
+					button => {
+						return WorldWindow.region != null && !importIncomplete && WorldWindow.ExportFinished;
+					},
+					"You must create or import a region\nbefore exporting."
+				),
 
 				new Dropdown("Edit", [
 					new Button("Add Room",
@@ -2057,7 +2054,11 @@ public static class WorldWindow {
 								renderRoomsTask = Task.Run(MassRenderRooms);
 							});
 						PopupManager.Add(confirmRenderPopup);
-					}, button => { return SelectedRooms.Count != 0 && ValidRegionLoaded; },
+					}, button => {
+						bool result = SelectedRooms.Count != 0 && ValidRegionLoaded;
+						button.Text = (result ? "<s:1>" : "") + "Mass Render";
+						return result;
+					},
 					"Select at least one valid room\nto render."),
 
 					new Button("Add Reference", button => {
