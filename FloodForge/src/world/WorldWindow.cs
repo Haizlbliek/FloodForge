@@ -668,6 +668,9 @@ public static class WorldWindow {
 								}).Title("Change Acronym"));
 							}).Title("Change Acronym"));
 						}).Title("Change Acronym"));
+					}),
+					new SettingsPopup.ButtonSettingContainer("Edit Subregions", () => {
+						PopupManager.Add(new SubregionPopup());
 					})
 				]).Translate(Mouse.Pos, true).Title($"Settings - World ({region.acronym})"), true);
 			}

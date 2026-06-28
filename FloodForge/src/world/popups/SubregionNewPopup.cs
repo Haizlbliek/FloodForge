@@ -10,8 +10,8 @@ public class SubregionNewPopup : AcronymPopup {
 	protected override int MinLength => 1;
 	protected override string BanLetters => ":<>";
 
-	public SubregionNewPopup(IEnumerable<Room> rooms, int? editIndex = null) : base((_) => {}) {
-		if (rooms.IsNullOrEmpty()) throw new NotImplementedException("SubregionPopup must have at least 1 room");
+	public SubregionNewPopup(IEnumerable<Room> rooms, int? editIndex = null) : base(_ => {}) {
+		if (rooms == null) throw new NotImplementedException("SubregionPopup rooms must not be null");
 
 		this.bounds = new Rect(-0.4f, -0.08f, 0.4f, 0.25f);
 		this.rooms = [..rooms];

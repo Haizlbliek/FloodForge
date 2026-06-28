@@ -17,6 +17,11 @@ public class SubregionPopup : Popup {
 		Main.Scroll += this.Scroll;
 	}
 
+	public SubregionPopup() {
+		this.rooms = [];
+		Main.Scroll += this.Scroll;
+	}
+
 	protected void Scroll(float deltaX, float deltaY) {
 		if (!this.isHovered || this.collapsed) return;
 
@@ -50,22 +55,18 @@ public class SubregionPopup : Popup {
 		if (UI.TextButton(subregion, rect, new UI.TextButtonMods { selected = selected })) {
 			if (idx == -1) {
 				this.SetSubregion(-1);
-				this.Close();
 			}
 			else if (idx == -2) {
-				PopupManager.Add(new SubregionNewPopup(this.rooms));
-				this.Close();
+				PopupManager.Add(new SubregionNewPopup(this.rooms));  // make it so this works, and maybe also that adding a new subregion does not close the popup
 			}
 			else if (idx <= WorldWindow.region.subregions.Count) {
 				this.SetSubregion(idx);
-				this.Close();
 			}
 		}
 
 		if (idx >= 0) {
 			if (UI.TextButton("Edit", new Rect(this.bounds.x0 + 0.01f, y, -0.335f + centerX, y - 0.05f))) {
 				PopupManager.Add(new SubregionNewPopup(this.rooms, idx));
-				this.Close();
 			}
 
 			if (UI.TextButton("X", new Rect(0.335f + centerX, y, 0.385f + centerX, y - 0.05f))) {
@@ -171,8 +172,10 @@ public class SubregionPopup : Popup {
 	}
 
 	protected void SetSubregion(int subregion) {
-		GeneralRoomChange<int> change = new GeneralRoomChange<int>(r => r.data.subregion, (r, i) => r.data.subregion = i);
-		this.rooms.ForEach(r => change.AddRoom(r, subregion));
-		WorldWindow.worldHistory.Apply(change);
+		if (this.rooms.Count > 0) {
+			GeneralRoomChange<int> change = new GeneralRoomChange<int>(r => r.data.subregion, (r, i) => r.data.subregion = i);
+			this.rooms.ForEach(r => change.AddRoom(r, subregion));
+			WorldWindow.worldHistory.Apply(change);
+		}
 	}
 }
