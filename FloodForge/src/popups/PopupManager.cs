@@ -83,8 +83,9 @@ public static class PopupManager {
 		Mouse.Disabled = interactingPopup != null;
 	}
 
-	public static T Add<T>(T popup) where T : Popup {
-		toAdd.Add(popup);
+	public static T Add<T>(T popup, bool checkTitleForDuplicates = false) where T : Popup {
+		if(!checkTitleForDuplicates || !PopupManager.HasTitle<T>(popup.popupTitle))
+			toAdd.Add(popup);
 		return popup;
 	}
 	
