@@ -1649,8 +1649,8 @@ public static class DropletWindow {
 		List<(string, string, byte[])> renderedRooms = [];
 		for (int i = 0; i < Room.data.cameras.Count; i++) {
 			string imageName = $"{Room.name}_{i + 1}";
-			string outputPath = Path.Combine(WorldWindow.region.roomsPath, $"{imageName}.png");
-			Logger.Info(outputPath.Split("Rain World")[^1]);
+			string outputPath = Settings.UpdateRoomImagesOnRender ? Path.Combine(WorldWindow.region.roomsPath, $"{imageName}.png") : Path.Combine("renderOutput", WorldWindow.region.acronym, $"{imageName}.png");
+			Logger.Info(outputPath.Split("Rain World")[^1].Split("FloodForge")[^1]);
 			if (WorldWindow.renderStatusPopup != null) WorldWindow.renderStatusPopup?.UpdateText(updateBaseText + " " + (i + 1) + "/" + Room.data.cameras.Count);
 			try {
 				renderedRooms.Add(new (imageName, outputPath, RenderCamera(Room.data.cameras[i])));
