@@ -8,6 +8,7 @@ public class SubregionPopup : Popup {
 	protected readonly HashSet<Room> rooms;
 	protected float scroll = 0f;
 	protected float targetScroll = 0f;
+	Dictionary<int, ColorEditPopup> colorEditPopups = [];
 
 	public SubregionPopup(IEnumerable<Room> rooms) {
 		if (rooms.IsNullOrEmpty()) throw new NotImplementedException("SubregionPopup must have at least 1 room");
@@ -113,13 +114,17 @@ public class SubregionPopup : Popup {
 				if (!exists) {
 					WorldWindow.worldHistory.Apply(new OverrideSubregionColorChange(idx, subregionColor));
 				}
-				PopupManager.Add(new ColorEditPopup(WorldWindow.region.overrideSubregionColors[idx], (col) => {
-					WorldWindow.worldHistory.Apply(new OverrideSubregionColorChange(idx, WorldWindow.region.overrideSubregionColors[idx], col));
-				}));
+				this.colorEditPopups[idx] = new ColorEditPopup(WorldWindow.region.overrideSubregionColors[idx], (col) => {
+					if (WorldWindow.region.overrideSubregionColors.TryGetValue(idx, out Color value))
+						WorldWindow.worldHistory.Apply(new OverrideSubregionColorChange(idx, value, col));
+				});
+				PopupManager.Add(this.colorEditPopups[idx]);
 			}
 			if (exists) {
 				if (UI.TextureButton(UVRect.FromSize(0.455f + centerX, y - 0.04f, 0.03f, 0.03f).UV(0.5f, 0.25f, 0.75f, 0f))) {
 					WorldWindow.worldHistory.Apply(new OverrideSubregionColorChange(idx));
+					if (this.colorEditPopups.TryGetValue(idx, out ColorEditPopup? colorEditPopup))
+						colorEditPopup.Close();
 				}
 			}
 		}
@@ -158,6 +163,8 @@ public class SubregionPopup : Popup {
 	}
 
 	public override void Close() {
+		foreach (ColorEditPopup colorEditPopup in this.colorEditPopups.Values)
+			colorEditPopup.Close();
 		base.Close();
 
 		Main.Scroll -= this.Scroll;
