@@ -421,7 +421,7 @@ public static class WorldWindow {
 		bool isOriginal = Settings.OriginalControls;
 		
 		if ((Mouse.Right && !Mouse.LastRight && (connectionState == ConnectionState.None || connectionState == ConnectionState.NoConnection)) || (!Mouse.Right && Mouse.LastRight && lastConnectionState == ConnectionState.PendingConnection)) {
-			if (HoveringDraggable is Room room and not OffscreenRoom && !PopupManager.HasTitle<SettingsPopup>($"Settings - {room.name}")) {
+			if (HoveringDraggable is Room room and not OffscreenRoom) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.BoolSettingContainer("Enclosed Room", room.data.enclosedRoom, b => {
 						worldHistory.Apply(new VariableChange<bool>(room.data.enclosedRoom, b, bRedo => room.data.enclosedRoom = bRedo));
@@ -591,7 +591,7 @@ public static class WorldWindow {
 						]).SetSize(new (0.7f, 0f)).Translate(Mouse.Pos, false).Title("Create Timeline Room");
 						PopupManager.Add(timelineRoomPopup);
 					})
-				]).Translate(Mouse.Pos, true).Title($"Settings - {room.name}"));
+				]).Translate(Mouse.Pos, true).Title($"Settings - {room.name}"), true);
 			}
 			else if (HoveringConnection != null) {
 				SettingsPopup? connectionSettingsPopup = null;
@@ -632,7 +632,7 @@ public static class WorldWindow {
 				]).Translate(Mouse.Pos, true).Title("Settings - Reference");
 				PopupManager.Add(refSettingsPopup);
 			}
-			else if (HoveringDraggable == null &! PopupManager.HasTitle<SettingsPopup>("Settings - World")) {
+			else if (HoveringDraggable == null) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.ButtonSettingContainer("Change Acronym", () => {
 						PopupManager.Add(new AcronymPopup((acronym) => {
@@ -647,7 +647,7 @@ public static class WorldWindow {
 							}).Title("Change Acronym"));
 						}).Title("Change Acronym"));
 					})
-				]).Translate(Mouse.Pos, true).Title("Settings - World"));
+				]).Translate(Mouse.Pos, true).Title($"Settings - World ({region.acronym})"), true);
 			}
 		}
 
