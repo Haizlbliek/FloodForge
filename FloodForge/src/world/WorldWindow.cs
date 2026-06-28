@@ -633,7 +633,29 @@ public static class WorldWindow {
 				PopupManager.Add(refSettingsPopup);
 			}
 			else if (HoveringDraggable == null) {
+				static string GetDisplayNameText() { return WorldWindow.region.displayName != "" ? WorldWindow.region.displayName : "no displayname set"; }
+				SettingsPopup.LabelContainer displayNameLabel = new SettingsPopup.LabelContainer(GetDisplayNameText());
 				PopupManager.Add(new SettingsPopup([
+					displayNameLabel,
+					new SettingsPopup.ButtonSettingContainer("Change Displayname", () => {
+						string newDisplayName = region.displayName;
+						SettingsPopup? displayNameChangePopup = null;
+						displayNameChangePopup = new SettingsPopup([
+							new SettingsPopup.StringSettingContainer("DisplayName: ", s => {
+								newDisplayName = s;
+							}, defaultValue: region.displayName, hint: "Overgrown Urban"), 
+							new SettingsPopup.ButtonSettingContainer("Set DisplayName", () => {
+								worldHistory.Apply(new VariableChange<string>(WorldWindow.region.displayName, newDisplayName, c => {
+									region.displayName = c;
+								}));
+								displayNameChangePopup?.Close();
+							})
+						]);
+						PopupManager.Add(displayNameChangePopup);
+					}).SetContextCheck(b => {
+						displayNameLabel.settingName = GetDisplayNameText();
+						return true;
+					}),
 					new SettingsPopup.ButtonSettingContainer("Change Acronym", () => {
 						PopupManager.Add(new AcronymPopup((acronym) => {
 							string checkPath = WorldWindow.region.roomsPath[..(WorldWindow.region.roomsPath.IndexOfReverse('\\') + 1)] + acronym + $"\\world_{acronym}.txt";
