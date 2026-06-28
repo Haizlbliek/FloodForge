@@ -252,20 +252,21 @@ public class SettingsPopup : Popup {
 	}
 
 	public class StringSettingContainer : SettingContainer {
-		protected UI.TextInputEditable stringInput = new UI.TextInputEditable(UI.TextInputEditable.Type.Text, "");
+		protected UI.TextInputEditable stringInput;
 		protected Action<string> callback;
 		protected string prefix;
 		protected float prefixSizeX;
 		protected string hint;
 
-		public StringSettingContainer(string name, Action<string> callback, string prefix = "", string hint = "", string postfix = "") : base(name) {
+		public StringSettingContainer(string name, Action<string> callback, string defaultValue = "", string prefix = "", string hint = "", string postfix = "") : base(name) {
+			this.stringInput = new UI.TextInputEditable(UI.TextInputEditable.Type.Text, defaultValue);
 			this.callback = callback;
 			this.prefix = prefix;
 			this.prefixSizeX = UI.font.Measure(this.prefix, 0.03f).x;
 			this.hint = hint;
 		}
 
-		public StringSettingContainer(string name, Action<string> callback, ref Action<string>? onValueChangeEvent, string prefix = "", string hint = "", string postfix = "") : this(name, callback, prefix, hint, postfix) {
+		public StringSettingContainer(string name, Action<string> callback, ref Action<string>? onValueChangeEvent, string defaultValue = "", string prefix = "", string hint = "", string postfix = "") : this(name, callback, defaultValue, prefix, hint, postfix) {
 			onValueChangeEvent += this.UpdateValue;
 		}
 
