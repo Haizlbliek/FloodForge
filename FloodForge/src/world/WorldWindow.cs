@@ -90,6 +90,8 @@ public static class WorldWindow {
 
 	public static bool EnableProfilerScreen = false;
 
+	static bool EncounteredErrorOnLastDebug = false;
+
 	public static ChangeHistory worldHistory = new ChangeHistory();
 
 	private enum ConnectionState {
@@ -1302,220 +1304,232 @@ public static class WorldWindow {
 		RichPresenceManager.ConnectionCount = region.connections.Count;
 
 		List<string> debugText = [];
-		debugText.Add("    Count:");
-		debugText.Add($"Rooms: {region.rooms.Count}");
-		debugText.Add($"Screens: {screenCount}");
-		debugText.Add($"Connections: {region.connections.Count}");
-		if (selectedDraggables.Count != 0) {
-			List<string> totalDebug = [];
-			string debug = "";
-			foreach (WorldDraggable worldDraggable in selectedDraggables) {
-				if (worldDraggable is Room room) {
-					debug += room.name + "; ";
-				}
-				else {
-					debug += worldDraggable.GetType().ToString() + "; ";
-				}
-				if (debug.Length > 75) {
-					totalDebug.Add(debug);
-					debug = "";
-				}
-			}
-			if (debug != "")
-				totalDebug.Add(debug);
-			debugText.Add($"Selection: {selectedDraggables.Count} : {(totalDebug.Count >= 0 ? totalDebug[0] : "")}");
-			for (int j = 1; j < totalDebug.Count; j++) {
-				debugText.Add(totalDebug[j]);
-			}
-		}
-
-		if (hoveringConnection != null) {
-			bool specifyTimelines = hoveringConnection.timeline.timelineType != TimelineType.All || hoveringConnection.roomA.timeline.timelineType != TimelineType.All || hoveringConnection.roomB.timeline.timelineType != TimelineType.All;
-			debugText.Add("");
-			debugText.Add("    Connection:");
-			debugText.Add($"Room A: {hoveringConnection.roomA.name}");
-			debugText.Add($"Connection A: {hoveringConnection.roomAExitID}");
-			debugText.Add($"Room B: {hoveringConnection.roomB.name}");
-			debugText.Add($"Connection B: {hoveringConnection.roomBExitID}");
-			if (specifyTimelines) {
-				debugText.Add("");
-				debugText.Add("    Connection Timelines:");
-				debugText.Add($"Connection: {hoveringConnection.timeline}");
-				debugText.Add($"Room A: {hoveringConnection.roomA.timeline}");
-				debugText.Add($"Room B: {hoveringConnection.roomB.timeline}");
-				string timelineToTextText = hoveringConnection.EffectiveConnectionTimeline.ToString();
-				debugText.Add($"Effective Timeline: {(timelineToTextText == "" ? "NONE" : timelineToTextText)}");
-				if (timelineToTextText == "" && hoveringConnection.timeline.timelines.Count != 0)
-					debugText.Add($" > Connection timeline conflicts with room(s)");
-			}
-				
-			if (hoveringConnection.preProcessorConditions.Length != 0) {
-				string line = "PreProcessorConditions: {";
-				bool first = true;
-				foreach(string item in hoveringConnection.preProcessorConditions) {
-					line += (first ? "" : ",") + item;
-					first = false;
-				}
-				line += "}";
-				debugText.Add(line);
-			}
-		}
-
-		if (hoveringDraggable != null) {
-			if (hoveringDraggable is Room room) {
-				debugText.Add("");
-				debugText.Add("    Room:");
-				if (!room.valid) {
-					debugText.Add($"INVALID - Check {region.acronym}-rooms");
-					debugText.Add($"Name: {room.name}");
-				}
-				else {
-					debugText.Add($"Name: {room.name}");
-					if (room.pathOutsideRoomsFolder)
-						debugText.Add($" > Room imported from outside {region.acronym}-rooms");
-					if (room.replacedRoom != null)
-						debugText.Add($"Room replaces {room.replacedRoom.name}");
-					foreach (Room replacement in room.replacingRooms)
-						debugText.Add($" > Room replaced by {replacement.name} ({replacement.timeline})");
-					debugText.Add($"Tags: {string.Join(" ", room.data.tags)}");
-					debugText.Add($"Size: {room.width}x{room.height}");
-					if (room.timeline.timelineType != TimelineType.All)
-						debugText.Add($"Timeline: {room.timeline}");	
-					if (room.preProcessorConditions.Length != 0) {
-						string line = "PreProcessorConditions: {";
-						bool first = true;
-						foreach(string item in room.preProcessorConditions) {
-							line += (first ? "" : ",") + item;
-							first = false;
-						}
-						line += "}";
-						debugText.Add(line);
-					}
-					debugText.Add($"Dens: {room.dens.Count}");
-					// CONNECTION DEBUG
-					{
-						List<string> encounteredConnections = [];
-						List<string> connectionStringList = [];
-						string connectionList = "";
-						for (uint index = 0; index < room.roomExits.Count; index++) {
-							if (room.AnyConnectionConnectedTo(index)) {
-								bool alreadyFoundConnectionForExit = false;
-								foreach (Connection connection in room.connections) {
-									string finalString = "";
-									bool canHaveArrows = false;
-									if (connection.roomA.name != room.name && connection.roomBExitID == index) {
-										finalString += connection.roomA.name;
-										encounteredConnections.Add(connection.roomA.name);
-										canHaveArrows = true;
-									}
-									else if (connection.roomB.name != room.name && connection.roomAExitID == index) {
-										finalString += connection.roomB.name;
-										encounteredConnections.Add(connection.roomB.name);
-										canHaveArrows = true;
-									}
-									if (finalString != "") {
-										Timeline effectiveTimeline = connection.EffectiveConnectionTimeline;
-										if (effectiveTimeline.timelineType != TimelineType.All) {
-											string timelineText = effectiveTimeline.ToString();
-											finalString = $"({(timelineText != "" ? timelineText : "NONE")}){finalString}";
-										}
-										if (connection == hoveringConnection && canHaveArrows)
-											finalString = $">{finalString}<";
-										connectionList += (alreadyFoundConnectionForExit ? "/" : "") + finalString;
-										alreadyFoundConnectionForExit = true;
-									}
-								}
-							}
-							else {
-								connectionList += "DISCONNECTED";
-							}
-							if (index + 1 < room.roomExits.Count)
-								connectionList += ", ";
-							if (connectionList.Length > 75) {
-								connectionStringList.Add(connectionList);
-								connectionList = "";
-							}
-							;
-						}
-						if (connectionList != "")
-							connectionStringList.Add(connectionList);
-						debugText.Add($"Connections: {room.roomExitPaths.Count}{(room.roomExitPaths.Count > 0 ? " : " + (connectionStringList.Count > 0 ? connectionStringList[0] : "") : "")}");
-						if (connectionStringList.Count > 1)
-							foreach (string line in connectionStringList[1..]) {
-								debugText.Add(line);
-							}
-						List<string> duplicateConnections = [];
-						string duplicateString = "";
-						for (int index = 0; index < encounteredConnections.Count; index++) {
-							for (int index2 = index + 1; index2 < encounteredConnections.Count; index2++) {
-								if (!duplicateConnections.Contains(encounteredConnections[index]) && encounteredConnections[index] == encounteredConnections[index2]) {
-									duplicateConnections.Add(encounteredConnections[index]);
-									duplicateString += (duplicateString.Length > 0 ? ", " : "") + encounteredConnections[index];
-									continue;
-								}
-							}
-						}
-
-						if (duplicateConnections.Count > 0)
-							debugText.Add($" > This room has duplicate connections: {duplicateString}");
-					}
-					// END CONNECTION DEBUG
-					debugText.Add($"Subregion: {(room.data.subregion == -1 ? "<<NONE>>" : region.subregions[room.data.subregion])}");
-					debugText.Add($"Layer: {room.data.layer}");
-					if (!room.data.merge)
-						debugText.Add("No Merge");
-					if (!room.data.warpable)
-						debugText.Add("Hidden from Warp Menu");
-					if (room.data.hidden != 0)
-						debugText.Add(room.data.hidden switch { 1 => "Hidden", 2 => "Lost", _ => "" } );
-					if (room.data.blockedBatMigration)
-						debugText.Add("Blocked bat migration");
-				}
-			}
-		}
-
-		if (VisibleCreatures) {
-			bool debuggedDen = false;
-
-			for (int r = region.rooms.Count - 1; r >= 0; r--) {
-				Room room = region.rooms[r];
-				if (!room.Visible)
-					continue;
-				Vector2 roomMouse = worldMouse - room.Position;
-				Vector2 shortcutPosition;
-
-				if (room is OffscreenRoom offscreenRoom) {
-					for (int j = 0; j <= room.dens.Count; j++) {
-						shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + r * 4f + 2.5f, -room.height * 0.25f - 0.5f);
-						if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-							DebugDen(offscreenRoom.GetDen(), offscreenRoom, ref debugText);
-							debuggedDen = true;
-							break;
-						}
-					}
-				}
-				else {
-					if (room.hoveredDen != -1) {
-						DebugDen(room.GetDen01(room.hoveredDen), room, ref debugText);
-						debuggedDen = true;
+		try {
+			debugText.Add("    Count:");
+			debugText.Add($"Rooms: {region.rooms.Count}");
+			debugText.Add($"Screens: {screenCount}");
+			debugText.Add($"Connections: {region.connections.Count}");
+			if (selectedDraggables.Count != 0) {
+				List<string> totalDebug = [];
+				string debug = "";
+				foreach (WorldDraggable worldDraggable in selectedDraggables) {
+					if (worldDraggable is Room room) {
+						debug += room.name + "; ";
 					}
 					else {
-						for (int j = 0; j < room.denShortcutEntrances.Count; j++) {
-							Vector2i shortcut = room.denShortcutEntrances[j];
-							shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
+						debug += worldDraggable.GetType().ToString() + "; ";
+					}
+					if (debug.Length > 75) {
+						totalDebug.Add(debug);
+						debug = "";
+					}
+				}
+				if (debug != "")
+					totalDebug.Add(debug);
+				debugText.Add($"Selection: {selectedDraggables.Count} : {(totalDebug.Count >= 0 ? totalDebug[0] : "")}");
+				for (int j = 1; j < totalDebug.Count; j++) {
+					debugText.Add(totalDebug[j]);
+				}
+			}
+
+			if (hoveringConnection != null) {
+				bool specifyTimelines = hoveringConnection.timeline.timelineType != TimelineType.All || hoveringConnection.roomA.timeline.timelineType != TimelineType.All || hoveringConnection.roomB.timeline.timelineType != TimelineType.All;
+				debugText.Add("");
+				debugText.Add("    Connection:");
+				debugText.Add($"Room A: {hoveringConnection.roomA.name}");
+				debugText.Add($"Connection A: {hoveringConnection.roomAExitID}");
+				debugText.Add($"Room B: {hoveringConnection.roomB.name}");
+				debugText.Add($"Connection B: {hoveringConnection.roomBExitID}");
+				if (specifyTimelines) {
+					debugText.Add("");
+					debugText.Add("    Connection Timelines:");
+					debugText.Add($"Connection: {hoveringConnection.timeline}");
+					debugText.Add($"Room A: {hoveringConnection.roomA.timeline}");
+					debugText.Add($"Room B: {hoveringConnection.roomB.timeline}");
+					string timelineToTextText = hoveringConnection.EffectiveConnectionTimeline.ToString();
+					debugText.Add($"Effective Timeline: {(timelineToTextText == "" ? "NONE" : timelineToTextText)}");
+					if (timelineToTextText == "" && hoveringConnection.timeline.timelines.Count != 0)
+						debugText.Add($" > Connection timeline conflicts with room(s)");
+				}
+					
+				if (hoveringConnection.preProcessorConditions.Length != 0) {
+					string line = "PreProcessorConditions: {";
+					bool first = true;
+					foreach(string item in hoveringConnection.preProcessorConditions) {
+						line += (first ? "" : ",") + item;
+						first = false;
+					}
+					line += "}";
+					debugText.Add(line);
+				}
+			}
+
+			if (hoveringDraggable != null) {
+				if (hoveringDraggable is Room room) {
+					debugText.Add("");
+					debugText.Add("    Room:");
+					if (!room.valid) {
+						debugText.Add($"INVALID - Check {region.acronym}-rooms");
+						debugText.Add($"Name: {room.name}");
+					}
+					else {
+						debugText.Add($"Name: {room.name}");
+						if (room.pathOutsideRoomsFolder)
+							debugText.Add($" > Room imported from outside {region.acronym}-rooms");
+						if (room.replacedRoom != null)
+							debugText.Add($"Room replaces {room.replacedRoom.name}");
+						foreach (Room replacement in room.replacingRooms)
+							debugText.Add($" > Room replaced by {replacement.name} ({replacement.timeline})");
+						debugText.Add($"Tags: {string.Join(" ", room.data.tags)}");
+						debugText.Add($"Size: {room.width}x{room.height}");
+						if (room.timeline.timelineType != TimelineType.All)
+							debugText.Add($"Timeline: {room.timeline}");	
+						if (room.preProcessorConditions.Length != 0) {
+							string line = "PreProcessorConditions: {";
+							bool first = true;
+							foreach(string item in room.preProcessorConditions) {
+								line += (first ? "" : ",") + item;
+								first = false;
+							}
+							line += "}";
+							debugText.Add(line);
+						}
+						debugText.Add($"Dens: {room.dens.Count}");
+						// CONNECTION DEBUG
+						{
+							List<string> encounteredConnections = [];
+							List<string> connectionStringList = [];
+							string connectionList = "";
+							for (uint index = 0; index < room.roomExits.Count; index++) {
+								if (room.AnyConnectionConnectedTo(index)) {
+									bool alreadyFoundConnectionForExit = false;
+									foreach (Connection connection in room.connections) {
+										string finalString = "";
+										bool canHaveArrows = false;
+										if (connection.roomA.name != room.name && connection.roomBExitID == index) {
+											finalString += connection.roomA.name;
+											encounteredConnections.Add(connection.roomA.name);
+											canHaveArrows = true;
+										}
+										else if (connection.roomB.name != room.name && connection.roomAExitID == index) {
+											finalString += connection.roomB.name;
+											encounteredConnections.Add(connection.roomB.name);
+											canHaveArrows = true;
+										}
+										if (finalString != "") {
+											Timeline effectiveTimeline = connection.EffectiveConnectionTimeline;
+											if (effectiveTimeline.timelineType != TimelineType.All) {
+												string timelineText = effectiveTimeline.ToString();
+												finalString = $"({(timelineText != "" ? timelineText : "NONE")}){finalString}";
+											}
+											if (connection == hoveringConnection && canHaveArrows)
+												finalString = $">{finalString}<";
+											connectionList += (alreadyFoundConnectionForExit ? "/" : "") + finalString;
+											alreadyFoundConnectionForExit = true;
+										}
+									}
+								}
+								else {
+									connectionList += "DISCONNECTED";
+								}
+								if (index + 1 < room.roomExits.Count)
+									connectionList += ", ";
+								if (connectionList.Length > 75) {
+									connectionStringList.Add(connectionList);
+									connectionList = "";
+								}
+							}
+							if (connectionList != "")
+								connectionStringList.Add(connectionList);
+							debugText.Add($"Connections: {room.roomExitPaths.Count}{(room.roomExitPaths.Count > 0 ? " : " + (connectionStringList.Count > 0 ? connectionStringList[0] : "") : "")}");
+							if (connectionStringList.Count > 1)
+								foreach (string line in connectionStringList[1..]) {
+									debugText.Add(line);
+								}
+							List<string> duplicateConnections = [];
+							string duplicateString = "";
+							for (int index = 0; index < encounteredConnections.Count; index++) {
+								for (int index2 = index + 1; index2 < encounteredConnections.Count; index2++) {
+									if (!duplicateConnections.Contains(encounteredConnections[index]) && encounteredConnections[index] == encounteredConnections[index2]) {
+										duplicateConnections.Add(encounteredConnections[index]);
+										duplicateString += (duplicateString.Length > 0 ? ", " : "") + encounteredConnections[index];
+										continue;
+									}
+								}
+							}
+
+							if (duplicateConnections.Count > 0)
+								debugText.Add($" > This room has duplicate connections: {duplicateString}");
+						}
+						// END CONNECTION DEBUG
+						debugText.Add($"Subregion: {(room.data.subregion == -1 ? "<<NONE>>" : region.subregions[room.data.subregion])}");
+						debugText.Add($"Layer: {room.data.layer}");
+						if (!room.data.merge)
+							debugText.Add("No Merge");
+						if (!room.data.warpable)
+							debugText.Add("Hidden from Warp Menu");
+						if (room.data.hidden != 0)
+							debugText.Add(room.data.hidden switch { 1 => "Hidden", 2 => "Lost", _ => "" } );
+						if (room.data.blockedBatMigration)
+							debugText.Add("Blocked bat migration");
+					}
+				}
+			}
+
+			if (VisibleCreatures) {
+				bool debuggedDen = false;
+
+				for (int r = region.rooms.Count - 1; r >= 0; r--) {
+					Room room = region.rooms[r];
+					if (!room.Visible)
+						continue;
+					Vector2 roomMouse = worldMouse - room.Position;
+					Vector2 shortcutPosition;
+
+					if (room is OffscreenRoom offscreenRoom) {
+						for (int j = 0; j <= room.dens.Count; j++) {
+							shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + r * 4f + 2.5f, -room.height * 0.25f - 0.5f);
 							if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-								DebugDen(room.GetDen01(j), room, ref debugText);
+								DebugDen(offscreenRoom.GetDen(), offscreenRoom, ref debugText);
 								debuggedDen = true;
 								break;
 							}
 						}
 					}
-				}
+					else {
+						if (room.hoveredDen != -1) {
+							DebugDen(room.GetDen01(room.hoveredDen), room, ref debugText);
+							debuggedDen = true;
+						}
+						else {
+							for (int j = 0; j < room.denShortcutEntrances.Count; j++) {
+								Vector2i shortcut = room.denShortcutEntrances[j];
+								shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
+								if ((roomMouse - shortcutPosition).Length < SelectorScale) {
+									DebugDen(room.GetDen01(j), room, ref debugText);
+									debuggedDen = true;
+									break;
+								}
+							}
+						}
+					}
 
-				if (debuggedDen)
-					break;
+					if (debuggedDen)
+						break;
+				}
 			}
+			EncounteredErrorOnLastDebug = false;
 		}
+		catch (Exception e) {
+			if (!EncounteredErrorOnLastDebug) {
+				Logger.Error(e);
+				EncounteredErrorOnLastDebug = true;
+			}
+			debugText.Add("");
+			debugText.Add("<s:1>Error encountered while creating debugText.");
+			debugText.Add("Please report. Check log.txt for more information.");
+		}
+		
 
 		float maxWidth = 0f;
 		debugText.ForEach(val => {
@@ -1532,16 +1546,17 @@ public static class WorldWindow {
 		Immediate.Color(0f, 0f, 0f, 1f);
 		foreach (string line in debugText.AsEnumerable().Reverse()) {
 			float yPos = -Main.screenBounds.y + (i * 0.04f);
-			UI.font.Write(line, -Main.screenBounds.x + 0f, yPos - 0.003f, 0.03f);
-			UI.font.Write(line, -Main.screenBounds.x + 0f, yPos + 0.003f, 0.03f);
-			UI.font.Write(line, -Main.screenBounds.x - 0.003f, yPos + 0f, 0.03f);
-			UI.font.Write(line, -Main.screenBounds.x + 0.003f, yPos + 0f, 0.03f);
+			Font.ParseSeverity(line, out string trimmedLine);
+			UI.font.Write(trimmedLine, -Main.screenBounds.x + 0f, yPos - 0.003f, 0.03f);
+			UI.font.Write(trimmedLine, -Main.screenBounds.x + 0f, yPos + 0.003f, 0.03f);
+			UI.font.Write(trimmedLine, -Main.screenBounds.x - 0.003f, yPos + 0f, 0.03f);
+			UI.font.Write(trimmedLine, -Main.screenBounds.x + 0.003f, yPos + 0f, 0.03f);
 			i++;
 		}
 		i = 1;
 		Immediate.Color(Themes.Text);
 		foreach (string line in debugText.AsEnumerable().Reverse()) {
-			UI.font.Write(line, -Main.screenBounds.x, -Main.screenBounds.y + (i * 0.04f), 0.03f);
+			UI.font.WriteFormatted(line, -Main.screenBounds.x, -Main.screenBounds.y + (i * 0.04f), 0.03f, Font.Align.TopLeft);
 			i++;
 		}
 	}
