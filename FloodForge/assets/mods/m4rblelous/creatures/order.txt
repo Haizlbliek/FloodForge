@@ -27,6 +27,7 @@ Scutigera
 SilverLizard
 SparkEye
 SurfaceSwimmer
+Tailfly
 ThornBug
 WaterBlob
 WaterSpitter
