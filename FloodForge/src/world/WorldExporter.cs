@@ -319,9 +319,9 @@ public static class WorldExporter {
 				writer.Write(tag.id.id);
 			}
 			else {
-				string name = Mods.ExportTagName(tag.id.id);
-				if (tag.id == Mods.tags["polemimic_length"] || tag.id == Mods.tags["centipede_length"]) name = "Mean";
-				writer.Write($"{name}:{(tag is DenCreature.IntegerTag intTag ? intTag.data : (tag is DenCreature.FloatTag floatTag ? floatTag.data : (tag is DenCreature.StringTag stringTag ? stringTag.data : "IDK LOL")))}");
+				string name = Mods.ExportTagName(tag.id.id) + ":";
+				if (tag.id == Mods.tags["polemimic_length"] || tag.id == Mods.tags["centipede_length"]) name = "";
+				writer.Write($"{name}{(tag is DenCreature.IntegerTag intTag ? intTag.data : (tag is DenCreature.FloatTag floatTag ? floatTag.data : (tag is DenCreature.StringTag stringTag ? stringTag.data : "IDK LOL")))}");
 			}
 			// if (tag.id == CreatureTags.Mean) {
 			// 	writer.Write($"Mean:{((DenCreature.FloatTag) tag).data}");
