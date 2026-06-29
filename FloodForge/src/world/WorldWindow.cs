@@ -322,6 +322,11 @@ public static class WorldWindow {
 								CurrentConnectionValid = false;
 						}
 
+						// todo: check for timeline intersections
+						if (NewConnection.roomA.AnyConnectionConnectedTo(NewConnection.roomAExitID) || NewConnection.roomB.AnyConnectionConnectedTo(NewConnection.roomBExitID)) {
+							CurrentConnectionWarn = true;
+						}
+
 						foreach (Connection other in NewConnection.roomB.connections) {
 							if ((other.roomA == NewConnection.roomB && other.roomAExitID == NewConnection.roomBExitID &&
 								other.roomB == NewConnection.roomA && other.roomBExitID == NewConnection.roomAExitID) ||
