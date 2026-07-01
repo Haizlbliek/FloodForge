@@ -495,7 +495,7 @@ public static class WorldWindow {
 								return true;
 							}),
 							new SettingsPopup.HorizontalElement([
-								new SettingsPopup.StringSettingContainer("", name => newName = name, ref updateName, $"{region.acronym}_", room.name[(room.name.IndexOf('_') + 1)..]),
+								new SettingsPopup.StringSettingContainer("", name => newName = name, ref updateName, prefix: $"{region.acronym}_", hint: room.name[(room.name.IndexOf('_') + 1)..]),
 								new SettingsPopup.ButtonSettingContainer("Generate", () => {
 									string generatedName = room.name[(room.name.IndexOf('_') + 1)..];
 									generatedName += (newTimeline.timelineType == TimelineType.Only ? "" : "X") + newTimeline.timelines.FirstOrDefault();
