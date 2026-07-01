@@ -425,6 +425,7 @@ public static class WorldWindow {
 
 		bool isOriginal = Settings.OriginalControls;
 		
+		// REVIEW - move settingspopup callbacks into separate class (or just SettingsPopup) so that settings don't take up too much space in other classes
 		if ((Mouse.Right && !Mouse.LastRight && (connectionState == ConnectionState.None || connectionState == ConnectionState.NoConnection)) || (!Mouse.Right && Mouse.LastRight && lastConnectionState == ConnectionState.PendingConnection)) {
 			if (HoveringDraggable is Room room and not OffscreenRoom) {
 				PopupManager.Add(new SettingsPopup([
@@ -440,7 +441,7 @@ public static class WorldWindow {
 					new SettingsPopup.BoolSettingContainer("Water In Front", room.data.waterInFront, b => {
 						worldHistory.Apply(new VariableChange<bool>(room.data.waterInFront, b, bRedo => room.data.waterInFront = bRedo));
 					}),
-					new SettingsPopup.ButtonSettingContainer("Render Room", () => {
+					new SettingsPopup.ButtonContainer("Render Room", () => {
 						PopupManager.Add(new ConfirmPopup($"Render Room {room}?\nThis will overwrite existing images.")).SetOkay("Render").Okay(() => {
 							DropletWindow.LoadRoom(room);
 							if (DropletWindow.Render(out string errorMessage, out (string name, string path, byte[] image)[] images)) {
@@ -458,7 +459,7 @@ public static class WorldWindow {
 							}
 						});
 					}),
-					new SettingsPopup.ButtonSettingContainer("Rename Room", () => {
+					new SettingsPopup.ButtonContainer("Rename Room", () => {
 						if (room.data.tags.Contains("GATE") || room.name.StartsWith("GATE")){
 							PopupManager.Add(new InfoPopup("Cannot rename GATE rooms!"));
 						}
@@ -474,7 +475,7 @@ public static class WorldWindow {
 						}
 					}),
 					// I apologise for the bulk of this constructor. I am now slowly starting to see where lambdas have their drawbacks. Whoops.
-					new SettingsPopup.ButtonSettingContainer("Create Timeline Room", () => {
+					new SettingsPopup.ButtonContainer("Create Timeline Room", () => {
 						bool copyConnections = true;
 						string newName = "";
 						Timeline newTimeline = new(TimelineType.Only, []);
@@ -482,7 +483,7 @@ public static class WorldWindow {
 						SettingsPopup? timelineRoomPopup = null;
 						timelineRoomPopup = (SettingsPopup) new SettingsPopup([
 							new SettingsPopup.BoolSettingContainer("Copy Connections", copyConnections, b => copyConnections = b),
-							new SettingsPopup.ButtonSettingContainer("Timeline", () => {
+							new SettingsPopup.ButtonContainer("Timeline", () => {
 								PopupManager.Add(new TimelinePopup(newTimeline, type => newTimeline.timelineType = type == TimelineType.All ? TimelineType.Only : type,
 								(enabled, timeline) => {
 									if (!enabled)
@@ -496,13 +497,13 @@ public static class WorldWindow {
 							}),
 							new SettingsPopup.HorizontalElement([
 								new SettingsPopup.StringSettingContainer("", name => newName = name, ref updateName, prefix: $"{region.acronym}_", hint: room.name[(room.name.IndexOf('_') + 1)..]),
-								new SettingsPopup.ButtonSettingContainer("Generate", () => {
+								new SettingsPopup.ButtonContainer("Generate", () => {
 									string generatedName = room.name[(room.name.IndexOf('_') + 1)..];
 									generatedName += (newTimeline.timelineType == TimelineType.Only ? "" : "X") + newTimeline.timelines.FirstOrDefault();
 									updateName?.Invoke(generatedName);
 								})
 							], [0f, UI.font.Measure("Generate", 0.03f).x + 0.01f]),
-							new SettingsPopup.ButtonSettingContainer("Create Room", () => {
+							new SettingsPopup.ButtonContainer("Create Room", () => {
 								string newPath = Path.Combine(region.roomsPath, $"{region.acronym}_{newName}.txt");
 								File.Copy(Path.Combine(region.roomsPath, room.name + ".txt"), newPath, true);
 								selectedDraggables = [];
@@ -602,7 +603,7 @@ public static class WorldWindow {
 				SettingsPopup? connectionSettingsPopup = null;
 				Connection popupConnection = HoveringConnection;
 				connectionSettingsPopup = (SettingsPopup) new SettingsPopup([
-					new SettingsPopup.ButtonSettingContainer("Delete Connection", () => {
+					new SettingsPopup.ButtonContainer("Delete Connection", () => {
 							DeleteConnection(popupConnection);
 							connectionSettingsPopup?.Close();
 						}
@@ -625,10 +626,8 @@ public static class WorldWindow {
 							}
 					}))),
 					new SettingsPopup.BoolSettingContainer("Under Grid", image.drawUnderGrid, under => 
-						worldHistory.Apply(new VariableChange<bool>(image.drawUnderGrid, under, underRedo => {
-							image.drawUnderGrid = under;
-					}))),
-					new SettingsPopup.ButtonSettingContainer("Delete Reference", () => {
+						worldHistory.Apply(new VariableChange<bool>(image.drawUnderGrid, under, underRedo => image.drawUnderGrid = under))),
+					new SettingsPopup.ButtonContainer("Delete Reference", () => {
 						PopupManager.Add(new ConfirmPopup("Delete reference?").SetOkay("Delete").SetCancel("Keep").Okay(() => {
 							referenceImages.Remove(image); // make this undo-able
 							refSettingsPopup?.Close();
@@ -642,17 +641,15 @@ public static class WorldWindow {
 				SettingsPopup.LabelContainer displayNameLabel = new SettingsPopup.LabelContainer(GetDisplayNameText());
 				PopupManager.Add(new SettingsPopup([
 					displayNameLabel,
-					new SettingsPopup.ButtonSettingContainer("Change Displayname", () => {
+					new SettingsPopup.ButtonContainer("Change Displayname", () => {
 						string newDisplayName = region.displayName;
 						SettingsPopup? displayNameChangePopup = null;
 						displayNameChangePopup = new SettingsPopup([
 							new SettingsPopup.StringSettingContainer("DisplayName: ", s => {
 								newDisplayName = s;
 							}, defaultValue: region.displayName, hint: "Overgrown Urban"), 
-							new SettingsPopup.ButtonSettingContainer("Set DisplayName", () => {
-								worldHistory.Apply(new VariableChange<string>(WorldWindow.region.displayName, newDisplayName, c => {
-									region.displayName = c;
-								}));
+							new SettingsPopup.ButtonContainer("Set DisplayName", () => {
+								worldHistory.Apply(new VariableChange<string>(WorldWindow.region.displayName, newDisplayName, c => region.displayName = c));
 								displayNameChangePopup?.Close();
 							})
 						]);
@@ -661,7 +658,7 @@ public static class WorldWindow {
 						displayNameLabel.settingName = GetDisplayNameText();
 						return true;
 					}),
-					new SettingsPopup.ButtonSettingContainer("Change Acronym", () => {
+					new SettingsPopup.ButtonContainer("Change Acronym", () => {
 						PopupManager.Add(new AcronymPopup((acronym) => {
 							string checkPath = WorldWindow.region.roomsPath[..(WorldWindow.region.roomsPath.IndexOfReverse('\\') + 1)] + acronym + $"\\world_{acronym}.txt";
 							bool fileExists = File.Exists(checkPath);
@@ -674,7 +671,7 @@ public static class WorldWindow {
 							}).Title("Change Acronym"));
 						}).Title("Change Acronym"));
 					}),
-					new SettingsPopup.ButtonSettingContainer("Edit Subregions", () => {
+					new SettingsPopup.ButtonContainer("Edit Subregions", () => {
 						PopupManager.Add(new SubregionPopup());
 					})
 				]).Translate(Mouse.Pos, true).Title($"Settings - World ({region.acronym})"), true);

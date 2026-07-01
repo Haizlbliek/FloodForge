@@ -337,9 +337,9 @@ public class SettingsPopup : Popup {
 		}
 	}
 
-	public class ButtonSettingContainer : SettingContainer {
+	public class ButtonContainer : SettingContainer {
 		readonly Action onClickCallback;
-		Func<ButtonSettingContainer, bool>? contextCheckCallback;
+		Func<ButtonContainer, bool>? contextCheckCallback;
 		bool darkenOnFalse;
 
 		public override float SettingWidth {
@@ -348,11 +348,11 @@ public class SettingsPopup : Popup {
 			}
 		}
 
-		public ButtonSettingContainer(string name, Action onClickCallback) : base(name) {
+		public ButtonContainer(string name, Action onClickCallback) : base(name) {
 			this.onClickCallback = onClickCallback;
 		}
 
-		public ButtonSettingContainer SetContextCheck(Func<ButtonSettingContainer, bool> contextCheckCallback, bool darkenOnFalse = false) {
+		public ButtonContainer SetContextCheck(Func<ButtonContainer, bool> contextCheckCallback, bool darkenOnFalse = false) {
 			this.contextCheckCallback = contextCheckCallback;
 			this.darkenOnFalse = darkenOnFalse;
 			return this;
