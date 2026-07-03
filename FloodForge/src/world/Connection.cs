@@ -8,23 +8,6 @@ public class Connection {
 	public uint roomBExitID;
 
 	public string[] preProcessorConditions = [];
-	public List<ConnectionVisual> replacementVirtualConnections = [];
-	public void RefreshReplacementVirtualConnections() {
-		this.replacementVirtualConnections = [];
-		if (this.roomA.replacingRooms.Count == 0 && this.roomB.replacingRooms.Count == 0)
-			return;
-		foreach (Room replacement in this.roomA.replacingRooms) {
-			this.replacementVirtualConnections.Add(new ConnectionVisual(replacement, this.roomB, this.roomAExitID, this.roomBExitID));
-		}
-		foreach (Room replacement in this.roomB.replacingRooms) {
-			this.replacementVirtualConnections.Add(new ConnectionVisual(this.roomA, replacement, this.roomAExitID, this.roomBExitID));
-		}
-	}
-	public void RecalculateReplacementVirtualConnectionBeziers() {
-		foreach (ConnectionVisual connectionVisual in this.replacementVirtualConnections) {
-			connectionVisual.recalculateBezier = true;
-		}
-	}
 	
 	public Timeline timeline;
 	public Timeline EffectiveConnectionTimeline {
@@ -108,7 +91,6 @@ public class Connection {
 	public bool recalculateBezier = true;
 
 	public void RecalculateBezier() {
-		this.RefreshReplacementVirtualConnections();
 		Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
 		Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
 		this.segments = Math.Clamp((int) ((pointA - pointB).Length / 2f), 4, 100);
@@ -156,10 +138,6 @@ public class Connection {
 			this.fittedAABB = bounds;
 		}
 		this.recalculateBezier = false;
-
-		foreach (ConnectionVisual visual in this.replacementVirtualConnections) {
-			visual.RecalculateBezier();
-		}
 	}
 
 	public bool Hovered {
@@ -252,10 +230,6 @@ public class Connection {
 		}
 		if (this.BezierPoints == null || this.BezierPoints.Length == 0 || this.recalculateBezier) {
 			this.RecalculateBezier();
-		}
-		//this.RefreshReplacementVirtualConnections();
-		foreach (ConnectionVisual connectionVisual in this.replacementVirtualConnections) {
-			connectionVisual.Draw();
 		}
 		if (WorldWindow.CullTest(this.fittedAABB)) {
 			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && (this.roomA.timeline.OverlapsWith(WorldWindow.VisibleTimeline) || this.ConnectionVisible);

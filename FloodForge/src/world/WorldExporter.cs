@@ -416,17 +416,6 @@ public static class WorldExporter {
 						continue;
 					}
 
-					Timeline virtualTimeline = room.timeline;
-
-					foreach (Room replacingRoom in room.replacingRooms) {
-						Timeline resultingTimeline = replacingRoom.timeline.Inverted().And(room.timeline.Inverted()).Inverted(); // this is cursed but should work
-						virtualTimeline = resultingTimeline;
-					}
-
-					if ((virtualTimeline.timelineType == TimelineType.All || virtualTimeline.timelines.Count == 0) && room.preProcessorConditions.Length == 0) {
-						continue;
-					}
-
 					if (room.preProcessorConditions.Length != 0) {
 						stringWriter.Write("{");
 						bool first1 = true;
@@ -439,12 +428,12 @@ public static class WorldExporter {
 						stringWriter.Write("}");
 					}
 
-					if (virtualTimeline.timelineType == TimelineType.All || virtualTimeline.timelines.Count == 0) {
+					if (room.timeline.timelineType == TimelineType.All || room.timeline.timelines.Count == 0) {
 						continue;
 					}
 
 					bool first = true;
-					foreach (string timeline in virtualTimeline.timelines) {
+					foreach (string timeline in room.timeline.timelines) {
 						if (!first)
 							stringWriter.Write(",");
 						first = false;
@@ -452,10 +441,7 @@ public static class WorldExporter {
 					}
 
 					stringWriter.Write(" : ");
-					if (room.replacedRoom != null)
-						stringWriter.Write($"REPLACEROOM : {room.replacedRoom.name}");
-					else
-						stringWriter.Write((virtualTimeline.timelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
+					stringWriter.Write((room.timeline.timelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
 					stringWriter.WriteLine($" : {RoomNameCasing(room.name)}");
 				}
 			}
@@ -483,9 +469,6 @@ public static class WorldExporter {
 			bool wasGate = false;
 
 			foreach (Room room in sortedRooms) {
-				if (room.replacedRoom != null)
-					continue;
-
 				bool isGate = room.data.tags.Contains("GATE");
 
 				if (!isFirstRoom && ((wasGate && !isGate) || (!isGate && room.data.subregion != lastSubregion))) {
