@@ -186,7 +186,14 @@ public static class WorldParser {
 					// LATER
 				}
 				else {
-					if (!ParseMapRoom(line)) return false;
+					try {
+						if (!ParseMapRoom(line)) return false;
+					}
+					catch (Exception e) {
+						Logger.Warn($"Issue encountered while parsing {Path.GetFileName(mapPath)}");
+						Logger.Warn($"> {line}");
+						Logger.Warn(e);
+					}
 				}
 			}
 		}
