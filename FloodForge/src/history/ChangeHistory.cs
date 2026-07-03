@@ -74,11 +74,11 @@ public class ChangeHistory {
 
 	public void Apply(Change change) {
 		if (this.changeCollectors.Count != 0) {
-			Logger.Info($"Received Change of type {change.GetType()};");
+			//Logger.Info($"Received Change of type {change.GetType()};");
 			for (int i = this.changeCollectors.Count - 1; i >= 0; i--) {
 				ChangeCollector collector = this.changeCollectors [i];
 				if (collector.typesToCollect.Count == 0 || collector.typesToCollect.Contains(change.GetType())) {
-					Logger.Info($"Change of type {change.GetType()} Collected by collector [{i}] - key: {collector.key}");
+					//Logger.Info($"Change of type {change.GetType()} Collected by collector [{i}] - key: {collector.key}");
 					collector.collectedChanges.Add(change);
 					return;
 				}
