@@ -967,13 +967,31 @@ public static class WorldParser {
 				continue;
 			}
 
-			Connection connection = new Connection(connectionData.roomA, connectionData.roomAExitID, connectionData.roomB, connectionData.roomBExitID.Value) {
-				timeline = connectionData.timeline,
-				preProcessorConditions = connectionData.preProcessorConditions
-			};
-			WorldWindow.region.connections.Add(connection);
-			connectionData.roomA.Connect(connection);
-			connectionData.roomB.Connect(connection);
+			Connection? mergeWithConnection = null;
+			foreach (Connection existingConnection in connectionData.roomA.connections) {
+				if (((existingConnection.roomA == connectionData.roomA && existingConnection.roomAExitID == connectionData.roomAExitID && 
+				existingConnection.roomB == connectionData.roomB && existingConnection.roomBExitID == connectionData.roomBExitID) ||
+				(existingConnection.roomA == connectionData.roomB && existingConnection.roomAExitID == connectionData.roomBExitID && 
+				existingConnection.roomB == connectionData.roomA && existingConnection.roomBExitID == connectionData.roomAExitID)) &&
+				existingConnection.preProcessorConditions.SequenceEqual(connectionData.preProcessorConditions)) {
+					if (existingConnection.timeline.timelineType == connectionData.timeline.timelineType) {
+						mergeWithConnection = existingConnection;
+						break;
+					}
+				}
+			}
+			if (mergeWithConnection != null) {
+				connectionData.timeline.timelines.ForEach(x => mergeWithConnection.timeline.timelines.Add(x));
+			}
+			else {
+				Connection connection = new Connection(connectionData.roomA, connectionData.roomAExitID, connectionData.roomB, connectionData.roomBExitID.Value) {
+					timeline = connectionData.timeline,
+					preProcessorConditions = connectionData.preProcessorConditions
+				};
+				WorldWindow.region.connections.Add(connection);
+				connectionData.roomA.Connect(connection);
+				connectionData.roomB.Connect(connection);
+			}
 		}
 
 		Logger.Info("Loaded conditional links");
