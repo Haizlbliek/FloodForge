@@ -1038,9 +1038,11 @@ public static class WorldExporter {
 
 	public static void ExportDisplayName(string outputPath) {
 		Logger.Info("Exporting displayname file");
+		
+		if (WorldWindow.region.displayName != "") {
+			Backup.File(outputPath);
 
-		Backup.File(outputPath);
-
-		File.WriteAllLines(outputPath, [WorldWindow.region.displayName]);
+			File.WriteAllLines(outputPath, [WorldWindow.region.displayName]);
+		}
 	}
 }
