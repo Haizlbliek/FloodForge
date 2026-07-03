@@ -24,12 +24,8 @@ public class Room : WorldDraggable {
 	public bool pathOutsideRoomsFolder = false;
 	public string path;
 	public string name;
+
 	public string[] preProcessorConditions = [];
-	
-	// The room that is replaced by this one in specific timelines
-	public Room? replacedRoom = null;
-	// The rooms that replace this one in specific timelines
-	public HashSet<Room> replacingRooms = [];
 	public Timeline timeline = new();
 	public ConditionalPopup? conditionalPopup;
 	public Vector2 CanonPosition;
@@ -142,21 +138,11 @@ public class Room : WorldDraggable {
 
 	public void Disconnect(Connection connection) {
 		this.connections.Remove(connection);
-		if (this.replacedRoom != null) {
-			foreach (Connection replacedRoomConnection in this.replacedRoom.connections) {
-				replacedRoomConnection.RecalculateReplacementVirtualConnectionBeziers();
-			}
-		}
 	}
 
 	public void MoveUpdate() {
 		foreach (Connection connection in this.connections) {
 			connection.recalculateBezier = true;
-		}
-		if (this.replacedRoom != null) {
-			foreach (Connection connection in this.replacedRoom.connections) {
-				connection.RefreshReplacementVirtualConnections();
-			}
 		}
 	}
 
@@ -819,14 +805,6 @@ public class Room : WorldDraggable {
 				return true;
 			if (connection.roomB == this && connection.roomBExitID == i)
 				return true;
-		}
-		if (this.replacedRoom != null) {
-			foreach (Connection connection in this.replacedRoom.connections) {
-				if (connection.roomA == this.replacedRoom && connection.roomAExitID == i)
-					return true;
-				if (connection.roomB == this.replacedRoom && connection.roomBExitID == i)
-					return true;
-			}
 		}
 
 		return false;
@@ -1938,12 +1916,6 @@ public class Room : WorldDraggable {
 					this.DrawDen(this.dens[i], renderedPosition.x + this.denShortcutEntrances[i].x, renderedPosition.y - this.denShortcutEntrances[i].y, i == this.hoveredDen, WorldWindow.HoveringDraggable == this);
 				}
 			}
-		}
-
-		foreach (Room replacingRoom in this.replacingRooms) {
-			Vector2 roomBRenderedPosition = positionType == WorldWindow.RoomPosition.Canon ? replacingRoom.CanonPosition : replacingRoom.DevPosition;
-			Immediate.Color(Themes.RoomConnection);
-			UI.Line(renderedPosition, roomBRenderedPosition);
 		}
 
 		if (this.timeline.timelineType != TimelineType.All) {

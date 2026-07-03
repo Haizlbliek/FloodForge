@@ -298,30 +298,6 @@ public static class WorldWindow {
 						CurrentConnectionValid = false;
 					}
 					else {
-						// todo - add check for case:
-						// roomA > roomB
-						// roomB replaced by roomB2 in TL1
-						// roomC replaced by roomC2 in TL1
-						// roomA > roomC2 is allowed, despite both roomA and roomC2 having their exits occupied in by replacementvirtualconnections
-						if (NewConnection.roomA.replacedRoom != null || NewConnection.roomB.replacedRoom != null){
-							Room originRoomA = NewConnection.roomA;
-							while (originRoomA.replacedRoom != null && originRoomA.replacedRoom != originRoomA) {
-								originRoomA = originRoomA.replacedRoom;
-							}
-							Room originRoomB = NewConnection.roomB;
-							while (originRoomB.replacedRoom != null && originRoomB.replacedRoom != originRoomB) {
-								originRoomB = originRoomB.replacedRoom;
-							}
-							foreach (Connection connection in originRoomA.connections) {
-								if (connection.roomA == originRoomA && connection.roomB == originRoomB ||
-								connection.roomB == originRoomA && connection.roomA == originRoomB) {
-									CurrentConnectionWarn = false;
-								}
-							}
-							if (originRoomA == originRoomB)
-								CurrentConnectionValid = false;
-						}
-
 						// todo: check for timeline intersections
 						if (NewConnection.roomA.AnyConnectionConnectedTo(NewConnection.roomAExitID) || NewConnection.roomB.AnyConnectionConnectedTo(NewConnection.roomBExitID)) {
 							CurrentConnectionWarn = true;
@@ -1403,10 +1379,6 @@ public static class WorldWindow {
 						debugText.Add($"Name: {room.name}");
 						if (room.pathOutsideRoomsFolder)
 							debugText.Add($" > Room imported from outside {region.acronym}-rooms");
-						if (room.replacedRoom != null)
-							debugText.Add($"Room replaces {room.replacedRoom.name}");
-						foreach (Room replacement in room.replacingRooms)
-							debugText.Add($" > Room replaced by {replacement.name} ({replacement.timeline})");
 						debugText.Add($"Tags: {string.Join(" ", room.data.tags)}");
 						debugText.Add($"Size: {room.width}x{room.height}");
 						if (room.timeline.timelineType != TimelineType.All)

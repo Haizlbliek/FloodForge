@@ -242,37 +242,6 @@ public static class WorldParser {
 		}
 	}
 
-	private static Room ParseReplaceRoom(string roomName, Room replacedRoom) {
-		Room? replacingRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
-		if (replacingRoom == null) {
-			string path = WorldWindow.region.roomsPath;
-			if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
-				path = PathUtil.FindDirectory(PathUtil.Parent(path), "gates") ?? "";
-				if (path.IsNullOrEmpty()) {
-					Logger.Warn($"Couldn't find gates folder in {WorldWindow.region.roomsPath}");
-				}
-			}
-
-			string filePath = PathUtil.FindFile(path, roomName + ".txt") ?? "";
-			if (filePath.IsNullOrEmpty()) {
-				Logger.Warn($"Room file {path}/{roomName}.txt could not be found");
-			}
-
-			replacingRoom = new Room(filePath, roomName);
-
-			WorldWindow.region.rooms.Add(replacingRoom);
-		}
-
-		// copy data from roomToReplace
-		replacingRoom.DevPosition = replacedRoom.DevPosition;
-		replacingRoom.CanonPosition = replacedRoom.CanonPosition;
-		replacingRoom.replacedRoom = replacedRoom;
-		replacedRoom.replacingRooms.Add(replacingRoom);
-		// REVIEW - what other parts should be copied?
-
-		return replacingRoom;
-	}
-
 	private static void ParseWorldRoom(string line, ref List<ConnectionToAdd> connectionsToAdd) {
 		string[] data = line.Split(':', StringSplitOptions.TrimEntries);
 		if (data.Length < 2) return;
@@ -624,42 +593,7 @@ public static class WorldParser {
 		}
 		else if (parts.Length == 4 && mod == "replaceroom") {
 			Logger.Info($"Parsing REPLACEROOM: {link}");
-			string roomAName = parts[2];
-			Room? roomA = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomAName, StringComparison.InvariantCultureIgnoreCase));
-			if (roomA == null) {
-				Logger.Warn($"Skipping line due to missing room {roomAName}");
-				Logger.Warn($"> {link}");
-				return false;
-			}
-
-			//roomA.preProcessorConditions = preProcessorConditions;
-
-			string roomBName = parts[3];
-			Room roomB = ParseReplaceRoom(roomBName, roomA);
-
-			roomB.preProcessorConditions = preProcessorConditions;
-
-			// SET TIMELINES
-
-			if (roomA.timeline.timelineType == TimelineType.Only) {
-				Logger.Warn($"Skipping line due to invalid REPLACEROOM {roomAName}");
-				Logger.Warn($"> {link}");
-				return false;
-			}
-
-			roomA.timeline.timelineType = TimelineType.Except;
-			timelines.ForEach(x => roomA.timeline.timelines.Add(x));
-
-			if (roomB.timeline.timelineType == TimelineType.Except) {
-				Logger.Warn($"Skipping line due to invalid REPLACEROOM {roomBName}");
-				Logger.Warn($"> {link}");
-				return false;
-			}
-
-			roomB.timeline.timelineType = TimelineType.Only;
-			timelines.ForEach(x => roomB.timeline.timelines.Add(x));
-
-			return true;
+			// nothing
 		}
 
 		string roomName = parts[1];
