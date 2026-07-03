@@ -1785,6 +1785,7 @@ public class Room : WorldDraggable {
 
 			UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.width, renderedPosition.y - this.height);
 
+			this.DrawTimelineImages(renderedPosition);
 			return;
 		}
 
@@ -1945,7 +1946,17 @@ public class Room : WorldDraggable {
 			Immediate.Color(Themes.RoomConnection);
 			UI.Line(renderedPosition, roomBRenderedPosition);
 		}
+		
+		this.DrawTimelineImages(renderedPosition);
 
+		Vector2 o = WorldWindow.worldMouse - renderedPosition;
+		bool hovered = o.x >= 0f && o.y <= 0f && o.x <= this.width && o.y >= -this.height;
+		Immediate.Color(hovered ? Themes.RoomBorderHighlight : Themes.RoomBorder);
+		UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.width, renderedPosition.y - this.height);
+		this.hoveredShortcutEntrance = -1;
+	}
+
+	protected void DrawTimelineImages(Vector2 renderedPosition) {
 		if (this.timeline.timelineType != TimelineType.All) {
 			int i = 0;
 			Immediate.Color(1f, 1f, 1f);
@@ -1967,12 +1978,6 @@ public class Room : WorldDraggable {
 				UI.Line(x0, y0, x0, y1, WorldWindow.SelectorScale * 3f);
 			}
 		}
-
-		Vector2 o = WorldWindow.worldMouse - renderedPosition;
-		bool hovered = o.x >= 0f && o.y <= 0f && o.x <= this.width && o.y >= -this.height;
-		Immediate.Color(hovered ? Themes.RoomBorderHighlight : Themes.RoomBorder);
-		UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.width, renderedPosition.y - this.height);
-		this.hoveredShortcutEntrance = -1;
 	}
 
 	protected void DrawRoomPath(RoomConnection connectionPathToDraw, bool isHovered, bool isHighlighted) {
