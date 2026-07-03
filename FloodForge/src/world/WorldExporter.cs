@@ -294,7 +294,7 @@ public static class WorldExporter {
 				else {
 					writer.Write(RoomNameCasing(otherRoom.name));
 				}
-				writer.WriteLine($" : {(defaultState[connectionId].first == null ? "DISCONNECTED" : defaultState[connectionId].first)}");
+				writer.WriteLine($" : {(defaultState[connectionId].first == null ? "DISCONNECTED" : RoomNameCasing(defaultState[connectionId].first!.name))}");
 
 				if (otherRoom != defaultState[connectionId].first) {
 					defaultState[connectionId] = (otherRoom, false);
