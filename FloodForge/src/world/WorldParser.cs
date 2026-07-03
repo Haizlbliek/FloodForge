@@ -137,12 +137,12 @@ public static class WorldParser {
 
 	public static bool ParseMap(string path) {
 		Dictionary<string, (int hidden, bool warpable, bool merge)> extraRoomData = [];
-		List<string> allMaps = [path];
+		List<string> allMaps = [];
 		
 		Logger.Info("Looking for alternate maps");
 		string cutMapPath = path[..path.IndexOfReverse('.')];
 		foreach (string alternatePath in Directory.GetFiles(WorldWindow.region.exportPath)) {
-			if (alternatePath.StartsWith(cutMapPath) && alternatePath.EndsWith(".txt") && alternatePath != path) {
+			if (alternatePath.StartsWith(cutMapPath) && alternatePath.EndsWith(".txt")) {
 				Logger.Info($"found alternate map: {Path.GetFileNameWithoutExtension(alternatePath)}");
 				allMaps.Add(alternatePath);
 			}
@@ -1054,7 +1054,7 @@ public static class WorldParser {
 			if (!ParseProperties(propertiesPath)) return false;
 		}
 
-		string? mapPath = PathUtil.FindFile(WorldWindow.region.exportPath, "map_" + WorldWindow.region.acronym + ".txt");
+		string? mapPath = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "map_" + WorldWindow.region.acronym + ".txt");
 		if (mapPath != null) {
 			Logger.Info("Loading map");
 			if (!ParseMap(mapPath)) return false;
