@@ -917,12 +917,12 @@ public static class WorldParser {
 		foreach (ConnectionToAdd connectionData in connectionsToAdd) {
 			// Logger.Info($"connectionData - roomA: {connectionData.roomA.name} roomB: {connectionData.roomB?.name} roomAExitID: {connectionData.roomAExitID} roomBExitID: {connectionData.roomBExitID}");
 			if (connectionData.roomB == null || connectionData.roomBExitID == null) {
-				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? connectionData.roomBName}");
+				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? $"'{connectionData.roomBName}'"}");
 				continue;
 			}
 			
 			if (!connectionData.roomA.ValidConnection(connectionData.roomAExitID) || !connectionData.roomB.ValidConnection(connectionData.roomBExitID.Value)) {
-				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? connectionData.roomBName} - Not valid connections");
+				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? $"'{connectionData.roomBName}'"} - Not valid connections");
 				continue;
 			}
 

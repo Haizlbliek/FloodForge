@@ -175,6 +175,7 @@ public class SettingsPopup : Popup {
 		}
 	}
 
+	// IDEA - ScrollableList element
 	public class VerticalElement : SettingContainer {
 		protected SettingContainer[] settings;
 		public override float SettingHeight {
