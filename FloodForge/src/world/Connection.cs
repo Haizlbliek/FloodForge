@@ -356,32 +356,34 @@ public class Connection {
 			float offsetX0 = (onLeft ? this.fittedAABB.x0 : (this.fittedAABB.x1 - (squareWidth * size))) - 0.5f;
 			float offsetY1 = (onTop ? this.fittedAABB.y1 : (this.fittedAABB.y0 + (squareHeight * size))) + 0.5f;
 
-			HashSet<string>.Enumerator timelineEnumerator = this.timeline.timelines.GetEnumerator();
-			for (int y = 0; y < squareHeight; y++) {
-				for (int x = 0; x < squareWidth; x++) {
-					if (!timelineEnumerator.MoveNext())
-						break;
+			if (WorldWindow.VisibleTimelineIcons) {
+				HashSet<string>.Enumerator timelineEnumerator = this.timeline.timelines.GetEnumerator();
+				for (int y = 0; y < squareHeight; y++) {
+					for (int x = 0; x < squareWidth; x++) {
+						if (!timelineEnumerator.MoveNext())
+							break;
 
-					Immediate.Color(1f, 1f, 1f);
-					UI.CenteredTexture(Mods.GetTimelineTexture(timelineEnumerator.Current), offsetX0 + (x * size) + size / 2, offsetY1 - (y * size) - size / 2, size);
+						Immediate.Color(1f, 1f, 1f);
+						UI.CenteredTexture(Mods.GetTimelineTexture(timelineEnumerator.Current), offsetX0 + (x * size) + size / 2, offsetY1 - (y * size) - size / 2, size);
 
-					if (this.timeline.timelineType == TimelineType.Except) {
-						Immediate.Color(1f, 0f, 0f);
-						float x0 = offsetX0 + 0.5f + ((x + 0.1f) * size);
-						float x1 = offsetX0 + 0.5f + ((x + 0.9f) * size);
-						float y0 = offsetY1 - 0.5f - ((y + 0.1f) * size);
-						float y1 = offsetY1 - 0.5f - ((y + 0.9f) * size);
-						UI.Line(x0, y0, x1, y1, WorldWindow.SelectorScale * 3f);
-						UI.Line(x0, y1, x1, y0, WorldWindow.SelectorScale * 3f);
+						if (this.timeline.timelineType == TimelineType.Except) {
+							Immediate.Color(1f, 0f, 0f);
+							float x0 = offsetX0 + 0.5f + ((x + 0.1f) * size);
+							float x1 = offsetX0 + 0.5f + ((x + 0.9f) * size);
+							float y0 = offsetY1 - 0.5f - ((y + 0.1f) * size);
+							float y1 = offsetY1 - 0.5f - ((y + 0.9f) * size);
+							UI.Line(x0, y0, x1, y1, WorldWindow.SelectorScale * 3f);
+							UI.Line(x0, y1, x1, y0, WorldWindow.SelectorScale * 3f);
+						}
 					}
-				}
 
-				if (this.preProcessorConditions.Length != 0) {
-					Immediate.Color(1f, 1f, 0f);
-					float x0 = offsetX0 + 0.5f;
-					float y0 = offsetY1 - 0.5f - (y * size);
-					float y1 = offsetY1 - 0.5f - ((y + 1) * size);
-					UI.Line(x0, y0, x0, y1, WorldWindow.SelectorScale * 3f);
+					if (this.preProcessorConditions.Length != 0) {
+						Immediate.Color(1f, 1f, 0f);
+						float x0 = offsetX0 + 0.5f;
+						float y0 = offsetY1 - 0.5f - (y * size);
+						float y1 = offsetY1 - 0.5f - ((y + 1) * size);
+						UI.Line(x0, y0, x0, y1, WorldWindow.SelectorScale * 3f);
+					}
 				}
 			}
 		}
