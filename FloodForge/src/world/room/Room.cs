@@ -1957,7 +1957,7 @@ public class Room : WorldDraggable {
 	}
 
 	protected void DrawTimelineImages(Vector2 renderedPosition) {
-		if (this.timeline.timelineType != TimelineType.All) {
+		if (this.timeline.timelineType != TimelineType.All && WorldWindow.VisibleTimelineIcons) {
 			int i = 0;
 			Immediate.Color(1f, 1f, 1f);
 			foreach (string timeline in this.timeline.timelines) {
