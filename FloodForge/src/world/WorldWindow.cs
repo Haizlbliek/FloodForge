@@ -69,6 +69,7 @@ public static class WorldWindow {
 
 	public static List<ReferenceImage> referenceImages = [];
 	public static List<ReplaceRoom> replaceRooms = [];
+	public static List<Room> replaceReferenceRooms = [];
 
 	private static bool roomSnap;
 	public static bool placingRoom = false;
@@ -145,6 +146,7 @@ public static class WorldWindow {
 	public static void Reset() {
 		referenceImages.Clear();
 		replaceRooms.Clear();
+		replaceReferenceRooms.Clear();
 		selectedDraggables.Clear();
 		draggablePossibleSelect = null;
 		selectingState = SelectingState.None;
