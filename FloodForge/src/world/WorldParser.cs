@@ -595,11 +595,13 @@ public static class WorldParser {
 			preProcessorConditions = [.. conditions.Split(',')];
 		}
 
+		bool xminus = parts[0].StartsWith("x-", StringComparison.InvariantCultureIgnoreCase);
+		if (xminus)
+			parts[0] = parts[0][2..];
 		string[] timelines = parts[0].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-		// LATER: REPLACEROOM
-
 		string mod = parts[1].ToLowerInvariant();
+
 		if (parts.Length == 3) {
 			string roomName2 = parts[2];
 			Room? room2 = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName2, StringComparison.InvariantCultureIgnoreCase));
@@ -611,7 +613,7 @@ public static class WorldParser {
 
 			room2.preProcessorConditions = preProcessorConditions;
 
-			if (mod == "exclusiveroom") {
+			if (mod == "exclusiveroom" || (mod == "hideroom" && xminus)) {
 				if (room2.timeline.timelineType == TimelineType.Except) {
 					Logger.Warn($"Skipping line due to invalid EXCLUSIVEROOM {roomName2}");
 					Logger.Warn($"> {link}");
@@ -621,7 +623,7 @@ public static class WorldParser {
 				room2.timeline.timelineType = TimelineType.Only;
 				timelines.ForEach(x => room2.timeline.timelines.Add(x));
 			}
-			else if (mod == "hideroom") {
+			else if (mod == "hideroom" || (mod == "exclusiveroom" && xminus)) {
 				if (room2.timeline.timelineType == TimelineType.Only) {
 					Logger.Warn($"Skipping line due to invalid HIDEROOM {roomName2}");
 					Logger.Warn($"> {link}");
