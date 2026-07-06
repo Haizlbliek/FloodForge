@@ -535,7 +535,7 @@ public static class WorldParser {
 		return [.. items];
 	}
 
-	// REVIEW - Does not parse correctly
+	// REVIEW - Does not parse correctly // may be fixed
 	private static bool ParseWorldConditionalLink(string link, ref List<ConditionalConnection> conditionalConnectionsToAdd) {
 		string[] parts = SplitTopLevel(link, ':', ['(', '{'], [')', '}'], StringSplitOptions.TrimEntries);
 		if (parts.Length < 3 || parts.Length > 4) {
@@ -574,6 +574,10 @@ public static class WorldParser {
 				return false;
 			}
 
+			// REVIEW - this fails to correctly parse a case such as:
+			// 		{condition}Watcher : HIDEROOM : XX_A01
+            // 		Rivulet : HIDEROOM : XX_A01
+			// overwriting the preprocessorcondition for both conditionals to be the same, practically merging two distinct cases
 			room2.preProcessorConditions = preProcessorConditions;
 
 			if (mod == "exclusiveroom" || (mod == "hideroom" && xminus)) {
@@ -867,7 +871,7 @@ public static class WorldParser {
 			}
 			
 			if (!connectionData.roomA.ValidConnection(connectionData.roomAExitID) || !connectionData.roomB.ValidConnection(connectionData.roomBExitID.Value)) {
-				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? connectionData.roomBName} - Not valid connections");
+				Logger.Warn($"Failed to load connection from {connectionData.roomA.name}({connectionData.roomAExitID}) to {connectionData.roomB?.name ?? connectionData.roomBName}({connectionData.roomBExitID}) - Invalid connection indices");
 				continue;
 			}
 
