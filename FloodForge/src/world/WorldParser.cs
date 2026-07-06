@@ -546,7 +546,12 @@ public static class WorldParser {
 
 		string[] preProcessorConditions = [];
 
-		if(parts[0][0] == '{') {
+		if (parts[0].Length == 0) {
+			Logger.Warn($"Skipping line due to invalid conditional/timeline");
+			Logger.Warn($"> {link}");
+			return false;
+		}
+		if (parts[0][0] == '{') {
 			int closingBracketPosition = parts[0].IndexOf('}');
 			string conditions = parts[0][1..closingBracketPosition];
 			parts[0] = parts[0][(closingBracketPosition + 1)..].Trim();
