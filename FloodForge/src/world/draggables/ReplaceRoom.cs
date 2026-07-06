@@ -30,6 +30,26 @@ public class ReplaceRoom : WorldDraggable {
 		UI.font.Write(this.name, this.Position.x + (this.size.x * 0.5f), this.Position.y - (this.size.y * 0.5f), 2f, Font.Align.MiddleCenter);
 		Immediate.Color(Themes.Layer2Color);
 		UI.Line(this.Position, this.replacedRoom.Position);
+
+		int i = 0;
+		Immediate.Color(1f, 1f, 1f);
+		foreach (string timeline in this.timeline.timelines) {
+			UI.CenteredTexture(Mods.GetTimelineTexture(timeline), (float) (this.Position.x + (i * WorldWindow.SelectorScale) + 1.5f), (float) (this.Position.y - 1.5f), WorldWindow.SelectorScale);
+			i++;
+		}
+
+		if (this.timeline.timelines.Count > 0 && this.timeline.timelineType == TimelineType.Except) {
+			Immediate.Color(1f, 0f, 0f);
+			UI.Line(this.Position.x + 2f - WorldWindow.SelectorScale * 0.5f, this.Position.y - 2f, this.Position.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.timeline.timelines.Count - 1) * WorldWindow.SelectorScale, this.Position.y - 2f, WorldWindow.SelectorScale * 4f);
+		}
+
+		if (this.preProcessorConditions.Length != 0) {
+			Immediate.Color(1f, 1f, 0f);
+			float x0 = this.Position.x + 2f - WorldWindow.SelectorScale * 0.5f;
+			float y0 = this.Position.y - 2f - WorldWindow.SelectorScale * 0.5f;
+			float y1 = this.Position.y - 2f + WorldWindow.SelectorScale * 0.5f;
+			UI.Line(x0, y0, x0, y1, WorldWindow.SelectorScale * 3f);
+		}
     }
 
 	public bool Inside(Vector2 pos) {
