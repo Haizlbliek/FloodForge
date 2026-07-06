@@ -4,7 +4,6 @@ using Stride.Core.Extensions;
 
 namespace FloodForge.World;
 
-// TODO: Fix room water behind level rendering
 public class Room : WorldDraggable {
 	public const uint FLAG_VERTICAL_POLE = 16;
 	public const uint FLAG_HORIZONTAL_POLE = 32;
@@ -25,6 +24,8 @@ public class Room : WorldDraggable {
 	public bool pathOutsideRoomsFolder = false;
 	public string path;
 	public string name;
+
+	public List<ReplaceRoom> replaceRooms = [];
 
 	public string[] preProcessorConditions = [];
 	public Timeline timeline = new();
@@ -1131,7 +1132,6 @@ public class Room : WorldDraggable {
 			], [ "projection", "model", "tintColor", "tintStrength" ]);
 	}
 
-	// TODO - split water mesh generation off from room greedymeshing for performance
 	protected unsafe virtual void GenerateMesh() {
 		this.roomMesh.Clear();
 		this.allShortcutEntrances.Clear();
