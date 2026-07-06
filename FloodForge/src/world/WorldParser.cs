@@ -68,41 +68,24 @@ public static class WorldParser {
 		return true;
 	}
 
+	// REVIEW - calculate map general offset (by finding a room present in all maps) and subtract to avoid that annoying offset between map versions
 	public static bool ParseMapRoom(string line) {
 		string? roomName = line[..line.IndexOf(':')];
 		string roomPath = WorldWindow.region.roomsPath;
 
-		foreach (Room existingRoom in WorldWindow.region.rooms) {
-			if (existingRoom.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase)) // skip parsing the room if another map has already loaded this one
-				return true;
+		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, (StringComparison)3));
+		
+		if (roomName.StartsWith("offscreenden", (StringComparison) 3)) {
+			room = WorldWindow.region.rooms.FirstOrDefault(x => x is OffscreenRoom);
 		}
 
-		if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
-			roomPath = PathUtil.FindDirectory(PathUtil.Combine(roomPath, ".."), "gates") ?? "";
-			if (roomPath.IsNullOrEmpty()) {
-				Logger.Warn("Failed to load gate! Missing gates folder");
-				return true;
-			}
+		if (room == null) {
+			Logger.Warn($"MapRoom {roomName} not found!");
+			return true;
 		}
 
-		string? filePath = PathUtil.FindFile(roomPath, roomName + ".txt");
-
-		Room room;
-		if (roomName.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
-			if (WorldWindow.region.offscreenDen == null) {
-				WorldWindow.region.offscreenDen = new OffscreenRoom(roomName, roomName);
-				WorldWindow.region.rooms.Add(WorldWindow.region.offscreenDen);
-			}
-
-			room = WorldWindow.region.offscreenDen;
-		}
-		else {
-			if (filePath == null) {
-				Logger.Info("File '", Path.Combine(roomPath, roomName), ".txt' could not be found");
-			}
-
-			room = new Room(filePath ?? "", roomName);
-			WorldWindow.region.rooms.Add(room);
+		if (room.CanonPosition != Vector2.Zero) {
+			return true;
 		}
 
 		string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", "").Trim())];
@@ -118,6 +101,11 @@ public static class WorldParser {
 		room.DevPosition.x = devX - room.width * 0.5f;
 		room.DevPosition.y = devY + room.height * 0.5f;
 		room.data.layer = layer;
+		int replaceRoomCount = 1;
+		foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+			replaceRoom.Position = room.CanonPosition + Vector2.NegY * replaceRoomCount * 3;
+			replaceRoomCount++;
+		}
 		if (subregion.IsNullOrEmpty()) {
 			room.data.subregion = -1;
 		}
@@ -278,8 +266,7 @@ public static class WorldParser {
 
 		uint connectionId = 0;
 		foreach (string connection in connections) { // go through every room-connection
-			if (connection.IsNullOrEmpty())
-			{
+			if (connection.IsNullOrEmpty()) {
 				continue;
 			}
 			if (connection.ToLowerInvariant() == "disconnected") {
@@ -1003,6 +990,10 @@ public static class WorldParser {
 			if (!ParseProperties(propertiesPath)) return false;
 		}
 
+		Logger.Info("Loading world");
+
+		if (!ParseWorld(worldPath)) return false;
+
 		string? mapPath = PathUtil.FindFile(WorldWindow.region.exportPath, "map_" + WorldWindow.region.acronym + ".txt");
 		if (mapPath != null) {
 			Logger.Info("Loading map");
@@ -1011,10 +1002,6 @@ public static class WorldParser {
 		else {
 			Logger.Info("Map file not found");
 		}
-
-		Logger.Info("Loading world");
-
-		if (!ParseWorld(worldPath)) return false;
 
 		Logger.Info("Loading extra room data");
 

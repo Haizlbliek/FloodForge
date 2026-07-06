@@ -16,6 +16,7 @@ public class ReplaceRoom : WorldDraggable {
 		this.size = new Vector2i(48, 25);
 	}
 
+	//TODO - draw the referenced replacing room at the right position
     public void Draw() {
         Immediate.Color(Themes.RoomLayer2Solid);
 		Immediate.Alpha(1f);
