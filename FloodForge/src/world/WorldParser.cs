@@ -135,6 +135,7 @@ public static class WorldParser {
 		return true;
 	}
 
+	// REVIEW - parse world_XX.txt first, then with that information parse additional maps to avoid parsing replacerooms as normal rooms
 	public static bool ParseMap(string path) {
 		Dictionary<string, (int hidden, bool warpable, bool merge)> extraRoomData = [];
 		List<string> allMaps = [path];
@@ -593,7 +594,17 @@ public static class WorldParser {
 		}
 		else if (parts.Length == 4 && mod == "replaceroom") {
 			Logger.Info($"Parsing REPLACEROOM: {link}");
-			// nothing
+			Room? foundRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(parts[2], StringComparison.InvariantCultureIgnoreCase));
+			if (foundRoom != null) {
+				Logger.Info($"Found room {foundRoom.name}!");
+				ReplaceRoom newReplaceRoom = new ReplaceRoom(parts[3], foundRoom, new(), []);
+				foundRoom.replaceRooms.Add(newReplaceRoom);
+				WorldWindow.replaceRooms.Add(newReplaceRoom);
+			}
+			else {
+				Logger.Warn($"No room {parts[2]} found!");
+			}
+			return true;
 		}
 
 		string roomName = parts[1];

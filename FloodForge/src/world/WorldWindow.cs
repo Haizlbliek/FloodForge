@@ -68,6 +68,7 @@ public static class WorldWindow {
 	public static Vector2 selectionEnd;
 
 	public static List<ReferenceImage> referenceImages = [];
+	public static List<ReplaceRoom> replaceRooms = [];
 
 	private static bool roomSnap;
 	public static bool placingRoom = false;
@@ -111,8 +112,9 @@ public static class WorldWindow {
 
 	// REVIEW - find a way to make this more flexible - a list of all draggables?
 	public static Room? HoveringRoom => region.rooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
-	public static ReferenceImage? HoveringReferenceImage => referenceImages.LastOrDefault(i => i.Visible && i.Inside(worldMouse));
-	public static WorldDraggable? HoveringDraggable => (placingRoom && roomPlacementVisualiser.Inside(worldMouse)) ? roomPlacementVisualiser : (HoveringRoom != null) ? HoveringRoom : HoveringReferenceImage;
+	public static ReferenceImage? HoveringReferenceImage => referenceImages.LastOrDefault(i => i.Inside(worldMouse));
+	public static ReplaceRoom? HoveringReplaceRoom => replaceRooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
+	public static WorldDraggable? HoveringDraggable => (placingRoom && roomPlacementVisualiser.Inside(worldMouse)) ? roomPlacementVisualiser : HoveringReplaceRoom ?? HoveringRoom ?? (WorldDraggable?)HoveringReferenceImage;
 
 	public static Connection? HoveringConnection => region.connections?.LastOrDefault(c => {
 		return (c.ConnectionVisible || c.roomA.Visible && c.roomB.Visible) && c.Hovered;
@@ -136,14 +138,13 @@ public static class WorldWindow {
 
 	public static void Initialize() {
 		Mods.Initialize();
-		// CreatureTextures.Initialize();
-		// ConditionalTimelineTextures.Initialize();
 		RecentFiles.Initialize();
 		PersistentData.Initialize();
 	}
 
 	public static void Reset() {
 		referenceImages.Clear();
+		replaceRooms.Clear();
 		selectedDraggables.Clear();
 		draggablePossibleSelect = null;
 		selectingState = SelectingState.None;
@@ -1252,6 +1253,10 @@ public static class WorldWindow {
 
 		DrawCurrentConnection();
 		Profiler.MarkPoint("DrawConnections");
+
+		foreach (ReplaceRoom replaceRoom in replaceRooms) {
+			replaceRoom.Draw();
+		}
 
 		if (selectingState == SelectingState.Selecting) {
 			Program.gl.Enable(EnableCap.Blend);
