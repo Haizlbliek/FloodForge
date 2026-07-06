@@ -1946,14 +1946,14 @@ public class Room : WorldDraggable {
 			Immediate.Color(Themes.RoomConnection);
 			UI.Line(renderedPosition, roomBRenderedPosition);
 		}
-		
-		this.DrawTimelineImages(renderedPosition);
 
 		Vector2 o = WorldWindow.worldMouse - renderedPosition;
 		bool hovered = o.x >= 0f && o.y <= 0f && o.x <= this.width && o.y >= -this.height;
 		Immediate.Color(hovered ? Themes.RoomBorderHighlight : Themes.RoomBorder);
 		UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.width, renderedPosition.y - this.height);
 		this.hoveredShortcutEntrance = -1;
+		
+		this.DrawTimelineImages(renderedPosition);
 	}
 
 	protected void DrawTimelineImages(Vector2 renderedPosition) {
@@ -1961,20 +1961,20 @@ public class Room : WorldDraggable {
 			int i = 0;
 			Immediate.Color(1f, 1f, 1f);
 			foreach (string timeline in this.timeline.timelines) {
-				UI.CenteredTexture(Mods.GetTimelineTexture(timeline), (float) (renderedPosition.x + (i * WorldWindow.SelectorScale) + 1.5f), (float) (renderedPosition.y - 1.5f), WorldWindow.SelectorScale);
+				UI.CenteredTexture(Mods.GetTimelineTexture(timeline), renderedPosition.x - 0.5f + ((i + 0.5f) * WorldWindow.SelectorScale), renderedPosition.y + 0.5f - (0.5f * WorldWindow.SelectorScale), WorldWindow.SelectorScale);
 				i++;
 			}
 
 			if (this.timeline.timelines.Count > 0 && this.timeline.timelineType == TimelineType.Except) {
 				Immediate.Color(1f, 0f, 0f);
-				UI.Line(renderedPosition.x + 2f - WorldWindow.SelectorScale * 0.5f, renderedPosition.y - 2f, renderedPosition.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.timeline.timelines.Count - 1) * WorldWindow.SelectorScale, renderedPosition.y - 2f, WorldWindow.SelectorScale * 4f);
+				UI.Line(renderedPosition.x, renderedPosition.y - (0.5f * WorldWindow.SelectorScale), renderedPosition.x + this.timeline.timelines.Count * WorldWindow.SelectorScale, renderedPosition.y - (0.5f * WorldWindow.SelectorScale), WorldWindow.SelectorScale * 4f);
 			}
 
 			if (this.preProcessorConditions.Length != 0) {
 				Immediate.Color(1f, 1f, 0f);
-				float x0 = renderedPosition.x + 2f - WorldWindow.SelectorScale * 0.5f;
-				float y0 = renderedPosition.y - 2f - WorldWindow.SelectorScale * 0.5f;
-				float y1 = renderedPosition.y - 2f + WorldWindow.SelectorScale * 0.5f;
+				float x0 = renderedPosition.x + 0.1f * WorldWindow.SelectorScale;
+				float y0 = renderedPosition.y;
+				float y1 = renderedPosition.y - 1f * WorldWindow.SelectorScale;
 				UI.Line(x0, y0, x0, y1, WorldWindow.SelectorScale * 3f);
 			}
 		}
