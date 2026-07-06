@@ -444,6 +444,33 @@ public static class WorldExporter {
 					stringWriter.Write((room.timeline.timelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
 					stringWriter.WriteLine($" : {RoomNameCasing(room.name)}");
 				}
+
+				foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+					if (replaceRoom.preProcessorConditions.Length != 0) {
+						stringWriter.Write("{");
+						bool first1 = true;
+						foreach (string preProcessor in replaceRoom.preProcessorConditions) {
+							if (!first1)
+								stringWriter.Write(",");
+							first1 = false;
+							stringWriter.Write(preProcessor);
+						}
+						stringWriter.Write("}");
+					}
+
+					bool first = true;
+					if (replaceRoom.timeline.timelineType == TimelineType.Except) {
+						stringWriter.Write("X-");
+					}
+					foreach (string timeline in replaceRoom.timeline.timelines) {
+						if (!first)
+							stringWriter.Write(",");
+						first = false;
+						stringWriter.Write(timeline);
+					}
+
+					stringWriter.WriteLine($" : REPLACEROOM : {RoomNameCasing(replaceRoom.replacedRoom.name)} : {RoomNameCasing(replaceRoom.name)}");
+				}
 			}
 
 			if (conditionalLinksBuffer.Length > 0) {

@@ -2,15 +2,15 @@ namespace FloodForge.World;
 
 public class ReplaceRoom : WorldDraggable {
 	public string name;
-	public Room replacingRoom;
+	public Room replacedRoom;
 	public Timeline timeline;
 	public string[] preProcessorConditions;
 
     public Vector2i size;
 
-	public ReplaceRoom(string roomName, Room replacingRoom, Timeline replacingTimeline, string[] preProcessorConditions) {
+	public ReplaceRoom(string roomName, Room replacedRoom, Timeline replacingTimeline, string[] preProcessorConditions) {
 		this.name = roomName;
-		this.replacingRoom = replacingRoom;
+		this.replacedRoom = replacedRoom;
 		this.timeline = replacingTimeline;
 		this.preProcessorConditions = preProcessorConditions;
 		this.size = new Vector2i(48, 25);
@@ -29,7 +29,7 @@ public class ReplaceRoom : WorldDraggable {
 		Immediate.Color(Themes.RoomSolid);
 		UI.font.Write(this.name, this.Position.x + (this.size.x * 0.5f), this.Position.y - (this.size.y * 0.5f), 2f, Font.Align.MiddleCenter);
 		Immediate.Color(Themes.Layer2Color);
-		UI.Line(this.Position, this.replacingRoom.Position);
+		UI.Line(this.Position, this.replacedRoom.Position);
     }
 
 	public bool Inside(Vector2 pos) {
