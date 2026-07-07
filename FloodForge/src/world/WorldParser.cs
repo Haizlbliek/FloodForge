@@ -68,8 +68,8 @@ public static class WorldParser {
 		return true;
 	}
 
-	// REVIEW - calculate map general offset (by finding a room present in all maps) and subtract to avoid that annoying offset between map versions
-	public static bool ParseMapRoom(string line) {
+	public static bool ParseMapRoom(string line, out Room? offsetRoom) {
+		offsetRoom = null;
 		string? roomName = line[..line.IndexOf(':')];
 		string roomPath = WorldWindow.region.roomsPath;
 
@@ -84,10 +84,6 @@ public static class WorldParser {
 			return true;
 		}
 
-		if (room.CanonPosition != Vector2.Zero) {
-			return true;
-		}
-
 		string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", "").Trim())];
 		float canonX = float.Parse(data[0]) / 3f;
 		float canonY = float.Parse(data[1]) / 3f;
@@ -95,6 +91,13 @@ public static class WorldParser {
 		float devY = float.Parse(data[3]) / 3f;
 		int layer = data[4].IsNullOrEmpty() ? 0 : int.Parse(data[4]);
 		string subregion = data[5];
+
+		if (room.CanonPosition != Vector2.Zero) {
+			totalAvgOffset = (totalAvgOffset * avgCount + (new Vector2(canonX - room.width * 0.5f, canonY + room.height * 0.5f) - room.CanonPosition)) / (avgCount + 1);
+			avgCount++;
+			return true;
+		}
+		offsetRoom = room;
 
 		room.CanonPosition.x = canonX - room.width * 0.5f;
 		room.CanonPosition.y = canonY + room.height * 0.5f;
@@ -123,7 +126,9 @@ public static class WorldParser {
 		return true;
 	}
 
-	// REVIEW - parse world_XX.txt first, then with that information parse additional maps to avoid parsing replacerooms as normal rooms
+	// REVIEW - improve offset calculation robustness (and/or find out why it happens in the first place)
+	private static Vector2 totalAvgOffset;
+	private static int avgCount;
 	public static bool ParseMap(string path) {
 		Dictionary<string, (int hidden, bool warpable, bool merge)> extraRoomData = [];
 		List<string> allMaps = [path];
@@ -138,6 +143,9 @@ public static class WorldParser {
 		}
 
 		foreach (string mapPath in allMaps) {
+			totalAvgOffset = Vector2.Zero;
+			avgCount = 0;
+			List<Room> offsetRooms = [];
 			foreach (string line in File.ReadAllLines(mapPath)) {
 				if (line.IsNullOrEmpty()) continue;
 
@@ -175,7 +183,17 @@ public static class WorldParser {
 					// LATER
 				}
 				else {
-					if (!ParseMapRoom(line)) return false;
+					if (!ParseMapRoom(line, out Room? affectedOffsetRoom)) {
+						return false;
+					}
+					if (affectedOffsetRoom != null) offsetRooms.Add(affectedOffsetRoom);
+				}
+			}
+			if (offsetRooms.Count != 0 && avgCount != 0 && totalAvgOffset != Vector2.Zero) {
+				Logger.Info($"map offset detected in map {Path.GetFileNameWithoutExtension(mapPath)}, fixing");
+				Logger.Info($"offsetRooms.Count: {offsetRooms.Count}; avg offset: ({totalAvgOffset.x};{totalAvgOffset.y})");
+				foreach (Room offsetRoom in offsetRooms) {
+					offsetRoom.CanonPosition -= totalAvgOffset;
 				}
 			}
 		}
