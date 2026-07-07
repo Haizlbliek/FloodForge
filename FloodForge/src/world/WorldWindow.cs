@@ -1341,6 +1341,7 @@ public static class WorldWindow {
 					debugText.Add(totalDebug[j]);
 				}
 			}
+			debugText.Add($"ReplaceReferenceRooms: {replaceReferenceRooms.Count}");
 
 			if (hoveringConnection != null) {
 				bool specifyTimelines = hoveringConnection.timeline.timelineType != TimelineType.All || hoveringConnection.roomA.timeline.timelineType != TimelineType.All || hoveringConnection.roomB.timeline.timelineType != TimelineType.All;
@@ -1665,9 +1666,10 @@ public static class WorldWindow {
 		return room;
 	}
 
+	// REVIEW - prevent importing of rooms that already exist
 	private static Room CreateAndAddRoom(string path, string name, string tag = "", bool importFromOutside = false) {
 		RoomAndConnectionChange change = new RoomAndConnectionChange(true);
-		Room room = new Room(path, name, importFromOutside);
+		Room room = WorldWindow.replaceReferenceRooms.FirstOrDefault(x => x.name == name) ?? new Room(path, name, importFromOutside);
 		if (tag.Length > 0)
 			room.data.tags = [tag];
 		room.CanonPosition = room.DevPosition = WorldWindow.cameraOffset;

@@ -231,6 +231,30 @@ public static class WorldParser {
 		}
 	}
 
+	private static Room CreateRoom(string name) {
+		Room returnValue;
+		if (name.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
+			returnValue = new OffscreenRoom(name, name);
+		}
+		else {
+			string path = WorldWindow.region.roomsPath;
+			if (name.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
+				path = PathUtil.FindDirectory(PathUtil.Parent(path), "gates") ?? "";
+				if (path.IsNullOrEmpty()) {
+					Logger.Warn($"Couldn't find gates folder in {WorldWindow.region.roomsPath}");
+				}
+			}
+
+			string filePath = PathUtil.FindFile(path, name + ".txt") ?? "";
+			if (filePath.IsNullOrEmpty()) {
+				Logger.Warn($"Room file {path}/{name}.txt could not be found");
+			}
+
+			returnValue = new Room(filePath, name);
+		}
+		return returnValue;
+	}
+
 	private static void ParseWorldRoom(string line, ref List<ConnectionToAdd> connectionsToAdd) {
 		string[] data = line.Split(':', StringSplitOptions.TrimEntries);
 		if (data.Length < 2) return;
@@ -241,26 +265,7 @@ public static class WorldParser {
 
 		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 		if (room == null) {
-			if (roomName.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
-				room = new OffscreenRoom(roomName, roomName);
-			}
-			else {
-				string path = WorldWindow.region.roomsPath;
-				if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
-					path = PathUtil.FindDirectory(PathUtil.Parent(path), "gates") ?? "";
-					if (path.IsNullOrEmpty()) {
-						Logger.Warn($"Couldn't find gates folder in {WorldWindow.region.roomsPath}");
-					}
-				}
-
-				string filePath = PathUtil.FindFile(path, roomName + ".txt") ?? "";
-				if (filePath.IsNullOrEmpty()) {
-					Logger.Warn($"Room file {path}/{roomName}.txt could not be found");
-				}
-
-				room = new Room(filePath, roomName);
-			}
-
+			room = CreateRoom(roomName);
 			WorldWindow.region.rooms.Add(room);
 		}
 
@@ -595,7 +600,15 @@ public static class WorldParser {
 			Room? foundRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(parts[2], StringComparison.InvariantCultureIgnoreCase));
 			if (foundRoom != null) {
 				Logger.Info($"Found room {foundRoom.name}!");
-				ReplaceRoom newReplaceRoom = new ReplaceRoom(parts[3], foundRoom, new(xminus ? TimelineType.Except : TimelineType.Only, [..timelines]), []);
+				Room? replacingRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(parts[3], (StringComparison)3));
+				replacingRoom ??= WorldWindow.replaceReferenceRooms.FirstOrDefault(x => x.name.Equals(parts[3], (StringComparison)3));
+				if (replacingRoom == null) {
+					replacingRoom = CreateRoom(parts[3]);
+					replacingRoom.isVirtualRoom = true;
+					WorldWindow.replaceReferenceRooms.Add(replacingRoom);
+				}
+				ReplaceRoom newReplaceRoom = new ReplaceRoom(replacingRoom, foundRoom, new(xminus ? TimelineType.Except : TimelineType.Only, [..timelines]), []);
+				replacingRoom.referencingReplaceRooms.Add(newReplaceRoom);
 				foundRoom.replaceRooms.Add(newReplaceRoom);
 				WorldWindow.replaceRooms.Add(newReplaceRoom);
 			}

@@ -25,7 +25,9 @@ public class Room : WorldDraggable {
 	public string path;
 	public string name;
 
+	public bool isVirtualRoom = false;
 	public List<ReplaceRoom> replaceRooms = [];
+	public List<ReplaceRoom> referencingReplaceRooms = [];
 
 	public string[] preProcessorConditions = [];
 	public Timeline timeline = new();

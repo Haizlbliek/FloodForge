@@ -1,19 +1,19 @@
 namespace FloodForge.World;
 
 public class ReplaceRoom : WorldDraggable {
-	public string name;
+	public Room replacingRoom;
 	public Room replacedRoom;
 	public Timeline timeline;
 	public string[] preProcessorConditions;
 
     public Vector2i size;
 
-	public ReplaceRoom(string roomName, Room replacedRoom, Timeline replacingTimeline, string[] preProcessorConditions) {
-		this.name = roomName;
+	public ReplaceRoom(Room replacingRoom, Room replacedRoom, Timeline replacingTimeline, string[] preProcessorConditions) {
+		this.replacingRoom = replacingRoom;
 		this.replacedRoom = replacedRoom;
 		this.timeline = replacingTimeline;
 		this.preProcessorConditions = preProcessorConditions;
-		this.size = new Vector2i(48, 25);
+		this.size = new (replacingRoom.width, replacingRoom.height);
 	}
 
 	//TODO - draw the referenced replacing room at the right position
@@ -31,6 +31,10 @@ public class ReplaceRoom : WorldDraggable {
 		UI.font.Write(this.name, this.Position.x + (this.size.x * 0.5f), this.Position.y - (this.size.y * 0.5f), 2f, Font.Align.MiddleCenter);
 		Immediate.Color(Themes.Layer2Color);
 		UI.Line(this.Position, this.replacedRoom.Position);
+		if (!this.replacingRoom.isVirtualRoom){
+			Immediate.Color(Themes.Layer0Color);
+			UI.Line(this.Position, this.replacingRoom.Position);
+		}
 
 		int i = 0;
 		Immediate.Color(1f, 1f, 1f);
