@@ -29,16 +29,14 @@ public class OffscreenRoom : Room {
 	protected override void LoadSettings() {
 	}
 
-	public override void DrawBlack(WorldWindow.RoomPosition positionType) {
+	public override void DrawBlack(Vector2 position) {
 		if (!WorldWindow.VisibleCreatures) return;
 
-		base.DrawBlack(positionType);
+		base.DrawBlack(position);
 	}
 
-	public override void Draw(WorldWindow.RoomPosition positionType) {
+	public override void Draw(Vector2 position, WorldWindow.RoomPosition positionType, bool asReplacement = false) {
 		if (!WorldWindow.VisibleCreatures) return;
-
-		Vector2 position = positionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
 
 		Immediate.Color(Themes.RoomAir);
 		UI.FillRect(position.x, position.y, position.x + this.width, position.y - this.height);
