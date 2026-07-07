@@ -1184,11 +1184,12 @@ public static class WorldWindow {
 				continue;
 
 			if (PositionType == RoomPosition.Both) {
-				room.DrawBlack(RoomPosition.Canon);
-				room.DrawBlack(RoomPosition.Dev);
+				room.DrawBlack(room.CanonPosition);
+				room.DrawBlack(room.DevPosition);
 			}
 			else {
-				room.DrawBlack(PositionType);
+				Vector2 position = PositionType == WorldWindow.RoomPosition.Canon ? room.CanonPosition : room.DevPosition;
+				room.DrawBlack(position);
 			}
 		}
 		Profiler.MarkPoint("rooms", 2, true);
@@ -1201,22 +1202,24 @@ public static class WorldWindow {
 			if (WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
 				if (!room.data.merge) {
 					if (PositionType == RoomPosition.Both) {
-						room.DrawBlack(RoomPosition.Canon);
-						room.DrawBlack(RoomPosition.Dev);
+						room.DrawBlack(room.CanonPosition);
+						room.DrawBlack(room.DevPosition);
 					}
 					else {
-						room.DrawBlack(PositionType);
+						Vector2 position = PositionType == WorldWindow.RoomPosition.Canon ? room.CanonPosition : room.DevPosition;
+						room.DrawBlack(position);
 					}
 				}
 
 				if (PositionType == RoomPosition.Both) {
-					room.Draw(RoomPosition.Canon);
-					room.Draw(RoomPosition.Dev);
+					room.Draw(room.CanonPosition, RoomPosition.Canon);
+					room.Draw(room.DevPosition, RoomPosition.Dev);
 				}
 				else {
-					room.Draw(PositionType);
+					bool canonPos = PositionType == RoomPosition.Canon;
+					room.Draw(canonPos ? room.CanonPosition : room.DevPosition, PositionType);
 					if (Keys.Modifier(Keys.Modifiers.Alt)) {
-						room.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
+						room.Draw(canonPos ? room.DevPosition : room.CanonPosition, canonPos ? RoomPosition.Dev : RoomPosition.Canon);
 					}
 				}
 
