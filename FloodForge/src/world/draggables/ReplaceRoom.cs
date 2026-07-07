@@ -16,19 +16,12 @@ public class ReplaceRoom : WorldDraggable {
 		this.size = new (replacingRoom.width, replacingRoom.height);
 	}
 
-	//TODO - draw the referenced replacing room at the right position
+	//TODO - draw the replaced room's information at the replacingroom's positions (dens)
+	//IDEA - run timeline checks when drawing dens so that dens that would only appear on replaceroom are only rendered there
     public void Draw() {
-        Immediate.Color(Themes.RoomLayer2Solid);
-		Immediate.Alpha(1f);
-        Rect roomRect = new Rect(
-            this.Position.x, this.Position.y - this.size.y,
-            this.Position.x + this.size.x, this.Position.y
-        );
-        UI.FillRect(roomRect);
-        Immediate.Color(Themes.BorderHighlight);
-        UI.StrokeRect(roomRect);
-		Immediate.Color(Themes.RoomSolid);
-		UI.font.Write(this.name, this.Position.x + (this.size.x * 0.5f), this.Position.y - (this.size.y * 0.5f), 2f, Font.Align.MiddleCenter);
+		this.replacingRoom.DrawBlack(this.position);
+		this.replacingRoom.Draw(this.position, WorldWindow.RoomPosition.Canon, true);
+
 		Immediate.Color(Themes.Layer2Color);
 		UI.Line(this.Position, this.replacedRoom.Position);
 		if (!this.replacingRoom.isVirtualRoom){
