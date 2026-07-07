@@ -469,7 +469,7 @@ public static class WorldExporter {
 						stringWriter.Write(timeline);
 					}
 
-					stringWriter.WriteLine($" : REPLACEROOM : {RoomNameCasing(replaceRoom.replacedRoom.name)} : {RoomNameCasing(replaceRoom.name)}");
+					stringWriter.WriteLine($" : REPLACEROOM : {RoomNameCasing(replaceRoom.replacedRoom.name)} : {RoomNameCasing(replaceRoom.replacingRoom.name)}");
 				}
 			}
 

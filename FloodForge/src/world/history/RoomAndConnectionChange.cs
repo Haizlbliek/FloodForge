@@ -38,6 +38,10 @@ public class RoomAndConnectionChange : Change {
 			if (room is OffscreenRoom) continue;
 
 			// LATER: Add into correct index
+			if (room.isVirtualRoom) {
+				room.isVirtualRoom = false;
+				WorldWindow.replaceReferenceRooms.Remove(room);
+			}
 			WorldWindow.region.rooms.Add(room);
 		}
 
@@ -68,6 +72,10 @@ public class RoomAndConnectionChange : Change {
 			if (room is OffscreenRoom) continue;
 
 			WorldWindow.region.rooms.Remove(room);
+			if (room.referencingReplaceRooms.Count != 0) {
+				room.isVirtualRoom = true;
+				WorldWindow.replaceReferenceRooms.Add(room);
+			}
 		}
 	}
 
