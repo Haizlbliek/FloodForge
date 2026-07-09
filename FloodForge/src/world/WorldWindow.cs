@@ -91,6 +91,7 @@ public static class WorldWindow {
 	private static ConnectionState lastConnectionState;
 
 	public static bool EnableProfilerScreen = false;
+	public static bool EnableFPSCounter = false;
 
 	static bool EncounteredErrorOnLastDebug = false;
 
@@ -854,7 +855,15 @@ public static class WorldWindow {
 
 	private static void UpdateKeybinds() {
 		if (Keys.JustPressed(Key.F3)) {
-			EnableProfilerScreen = !EnableProfilerScreen;
+			// TODO - split log and profiler into separate keybinds
+			if (Keys.Modifier(Keys.Modifiers.Shift)) {
+				EnableProfilerScreen = false;
+				EnableFPSCounter = !EnableFPSCounter;
+			}
+			else {
+				EnableProfilerScreen = !EnableProfilerScreen;
+				EnableFPSCounter = false;
+			}
 		}
 
 		if (Keys.JustPressed(Key.O) && Keys.Modifier(Keys.Modifiers.Shift) && SelectedRooms.Count == 2) {
