@@ -454,6 +454,7 @@ public static class WorldWindow {
 						}
 					}),
 					// I apologise for the bulk of this constructor. I am now slowly starting to see where lambdas have their drawbacks. Whoops.
+					// REVIEW - Create Timeline Room doesn't work
 					new SettingsPopup.ButtonContainer("Create Timeline Room", () => {
 						bool copyConnections = true;
 						string newName = "";
@@ -1062,6 +1063,25 @@ public static class WorldWindow {
 					}
 				}
 			}
+			if (found)
+				return;
+			for (int i = replaceRooms.Count - 1; i >= 0; i--) {
+				ReplaceRoom replaceRoom = replaceRooms[i];
+				replaceRoom.replacedRoom.hoveredDen = -1;
+				Vector2 roomMouse = worldMouse - replaceRoom.Position;
+				Vector2 shortcutPosition;
+				float closestDistance = SelectorScale;
+
+				foreach (Vector2i shortcut in replaceRoom.replacingRoom.denShortcutEntrances) {
+					shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
+					float dist = (roomMouse - shortcutPosition).Length;
+					if (dist < closestDistance) {
+						replaceRoom.replacedRoom.hoveredDen = replaceRoom.replacingRoom.GetDenId01(shortcut);
+						closestDistance = dist;
+						found = true;
+					}
+				}
+			}
 		}
 	}
 
@@ -1184,12 +1204,11 @@ public static class WorldWindow {
 				continue;
 
 			if (PositionType == RoomPosition.Both) {
-				room.DrawBlack(room.CanonPosition);
-				room.DrawBlack(room.DevPosition);
+				room.DrawBlack(RoomPosition.Canon);
+				room.DrawBlack(RoomPosition.Dev);
 			}
 			else {
-				Vector2 position = PositionType == WorldWindow.RoomPosition.Canon ? room.CanonPosition : room.DevPosition;
-				room.DrawBlack(position);
+				room.DrawBlack(WorldWindow.PositionType);
 			}
 		}
 		Profiler.MarkPoint("rooms", 2, true);
@@ -1202,24 +1221,22 @@ public static class WorldWindow {
 			if (WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
 				if (!room.data.merge) {
 					if (PositionType == RoomPosition.Both) {
-						room.DrawBlack(room.CanonPosition);
-						room.DrawBlack(room.DevPosition);
+						room.DrawBlack(RoomPosition.Canon);
+						room.DrawBlack(RoomPosition.Dev);
 					}
 					else {
-						Vector2 position = PositionType == WorldWindow.RoomPosition.Canon ? room.CanonPosition : room.DevPosition;
-						room.DrawBlack(position);
+						room.DrawBlack(PositionType);
 					}
 				}
 
 				if (PositionType == RoomPosition.Both) {
-					room.Draw(room.CanonPosition, RoomPosition.Canon);
-					room.Draw(room.DevPosition, RoomPosition.Dev);
+					room.Draw(RoomPosition.Canon);
+					room.Draw(RoomPosition.Dev);
 				}
 				else {
-					bool canonPos = PositionType == RoomPosition.Canon;
-					room.Draw(canonPos ? room.CanonPosition : room.DevPosition, PositionType);
+					room.Draw(PositionType);
 					if (Keys.Modifier(Keys.Modifiers.Alt)) {
-						room.Draw(canonPos ? room.DevPosition : room.CanonPosition, canonPos ? RoomPosition.Dev : RoomPosition.Canon);
+						room.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
 					}
 				}
 
