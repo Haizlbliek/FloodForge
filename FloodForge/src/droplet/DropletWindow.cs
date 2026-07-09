@@ -380,6 +380,26 @@ public static class DropletWindow {
 	// 2 == drawing stroke
 	// 3 == drawing line L
 	// 4 == drawing line R
+	private static Vector2i selectionStart;
+	private static Vector2i selectionEnd;
+	private static uint[] selectionGeometry = [];
+	private static SelectionButtonPopup? selectionButtonPopup;
+	public static int selectionState = -1;
+	// -1 == not selecting
+	// 0 == pressed ctrl+E
+	// 1 == creating rectangle
+	// 2 == done creating rectangle
+	// 3 == entering move mode
+	// 4 == in move mode
+	// 5 == finalise
+	private static bool dragging = false;
+	private static Vector2i totalDragged;
+	private static Vector2i currentDragged;
+	public static int selectionModificationMode = -1;
+	// -1 == no mode set
+	// 0 == copy
+	// 1 == cut
+
 	private static void UpdateGeometryTab() {
 		if (!(Mouse.Left || Mouse.Right)) {
 			int tool = (int)selectedTool;
@@ -400,6 +420,12 @@ public static class DropletWindow {
 				tool = (tool + 4) % 16;
 			}
 
+			if (Keys.Modifier(Keys.Modifiers.Shift) && Keys.JustPressed(Key.E)) {
+				if (drawingState == -1 && selectionState == -1) {
+					selectionState = 0;
+				}
+			}
+
 			selectedTool = (GeometryTool)tool;
 		}
 
@@ -408,7 +434,7 @@ public static class DropletWindow {
 			UI.font.Write($"x:{mouseTile.x} y:{mouseTile.y}", mouseTile.x, -mouseTile.y + 1, 0.6f);
 		}
 
-		if (!blockMouse) {
+		if (!blockMouse && selectionState == -1) {
 			if (drawingState == 0 || drawingState == 1) { // if we are making a rectangle
 				if ((drawingState == 0 && !Mouse.Left) || (drawingState == 1 && !Mouse.Right)) { // if we are done with dragging the rectangle
 					dropletHistory.StartCollectingChanges([typeof(TileChange)]);
@@ -526,6 +552,125 @@ public static class DropletWindow {
 			}
 			else {
 				UI.StrokeRect(Rect.FromSize(roomRect.x0 + mouseTile.x, roomRect.y1 - mouseTile.y - 1, 1f, 1f));
+			}
+		}
+		else if (selectionState != -1) {
+			if (selectionButtonPopup != null) {
+				float TLX = Math.Min(selectionStart.x, selectionEnd.x);
+				float TLY = -Math.Min(selectionStart.y, selectionEnd.y);
+				selectionButtonPopup.SetPosition((new Vector2 (TLX, TLY) - cameraOffset) / cameraScale);
+			}
+			if (selectionState == 0) { // 0 == pressed ctrl+E
+				if (Mouse.Right) {
+					selectionState = -1;
+				}
+				if (Mouse.JustLeft) {
+					selectionStart = mouseTile;
+					selectionEnd = mouseTile;
+					selectionState = 1;
+				}
+			}
+			if (selectionState == 1) { // 1 == creating rectangle
+				if (Mouse.Right) {
+					selectionState = -1;
+				}
+				else if (!Mouse.Left) {
+					selectionEnd = mouseTile;
+					// make selectionStart smallest & selectionEnd the largest
+					(selectionStart, selectionEnd) = (new(Math.Min(selectionStart.x, selectionEnd.x), Math.Min(selectionStart.y, selectionEnd.y)), new(Math.Max(selectionStart.x, selectionEnd.x), Math.Max(selectionStart.y, selectionEnd.y)));
+					selectionState = 2;
+					selectionButtonPopup = new SelectionButtonPopup();
+					PopupManager.Add(selectionButtonPopup);
+				}
+			}
+			if (selectionState == 2) { // 2 == done creating rectangle
+				if (Mouse.Right) {
+					selectionState = -1;
+				}
+				// handled by SelectionButtonPopup
+			}
+			if (selectionState == 3) { // 3 == moving selected tiles
+				int arraySize = (selectionEnd.x + 1 - selectionStart.x) * (selectionEnd.y + 1 - selectionStart.y);
+				selectionGeometry = new uint[arraySize];
+				List<TileChange> tileChanges = [];
+				int i = 0;
+				for (int x = selectionStart.x; x <= selectionEnd.x; x++) {
+					for (int y = selectionStart.y; y <= selectionEnd.y; y++) {
+						selectionGeometry[i] = Room.GetTile(x, y);
+						if (selectionModificationMode == 1) {	
+							if (x >= 0 && y >= 0 && x < Room.width & y < Room.height) {
+								int index = x * Room.height + y;
+								tileChanges.Add(new(new (x, y), Room.geometry[index], 0));
+								Room.geometry[index] = 0;
+							}
+						}
+						i++;
+					}
+				}
+				if (selectionModificationMode == 1) {
+					dropletHistory.Apply(new MassChange([.. tileChanges]));
+				}
+				selectionState = 4;
+				totalDragged = Vector2i.Zero;
+				currentDragged = Vector2i.Zero;
+			}
+			if (selectionState == 4) {
+				Rect selectionRect = new Rect(selectionStart + totalDragged, selectionEnd + totalDragged + Vector2.One);
+				if (Mouse.JustLeft && selectionRect.Inside(mouseTile)) {
+					drawStart = mouseTile;
+					dragging = true;
+				}
+				if (Mouse.Left && dragging) {
+					currentDragged = totalDragged + mouseTile - drawStart;
+				}
+				if (Mouse.LastLeft && !Mouse.Left && dragging) {
+					totalDragged = currentDragged;
+					dragging = false;
+				}
+				selectionButtonPopup?.SetPosition(((selectionStart + currentDragged) * Vector2.NegY - cameraOffset) / cameraScale);
+			}
+			if (selectionState == 5) {
+				Vector2i pasteStart = selectionStart + totalDragged;
+				Vector2i pasteEnd = selectionEnd + totalDragged + Vector2i.One;
+				List<Change> tileChanges = [];
+				int i = 0;
+				for (int x = pasteStart.x; x < pasteEnd.x; x++) {
+					for (int y = pasteStart.y; y < pasteEnd.y; y++) {
+						if (i >= selectionGeometry.Length)
+							break;
+						if (x >= 0 && y >= 0 && x < Room.width & y < Room.height) {
+							int index = x * Room.height + y;
+							tileChanges.Add(new TileChange(new (x, y), Room.geometry[index], selectionGeometry[i]));
+							Room.geometry[index] = selectionGeometry[i];
+						}
+						i++;
+					}
+				}
+				dropletHistory.Apply(new MassChange([.. tileChanges]));
+				selectionState = -1;
+			}
+			
+			Immediate.Color(Color.Grey);
+			if (selectionState == 0) {
+				UI.StrokeRect(Rect.FromSize(roomRect.x0 + mouseTile.x, roomRect.y1 - mouseTile.y - 1, 1f, 1f));
+			}
+			if (selectionState == 1 || selectionState == 2) {
+				Vector2i endPos = selectionState == 2 ? selectionEnd : mouseTile;
+				int sx = Math.Min(selectionStart.x, endPos.x);
+				int sy = Math.Min(selectionStart.y, endPos.y);
+				int ex = Math.Max(selectionStart.x, endPos.x);
+				int ey = Math.Max(selectionStart.y, endPos.y);
+				UI.StrokeRect(new Rect(roomRect.x0 + sx, roomRect.y1 - sy, roomRect.x0 + ex + 1, roomRect.y1 - ey - 1));
+			}
+			if (selectionState == 3 || selectionState == 4) {
+				Rect rect = new Rect(selectionStart * Vector2.NegY, (selectionEnd + Vector2.One) * Vector2.NegY);
+				Immediate.Color(selectionState == 3 ? Themes.Layer0Color : Color.Grey);
+				UI.StrokeRect(rect);
+
+				if (selectionState == 4) {
+					Immediate.Color(Themes.BorderHighlight);
+					UI.StrokeRect(rect.x0 + currentDragged.x, rect.y0 - currentDragged.y, rect.x1 + currentDragged.x, rect.y1 - currentDragged.y);
+				}
 			}
 		}
 
