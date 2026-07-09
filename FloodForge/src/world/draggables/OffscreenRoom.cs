@@ -29,15 +29,16 @@ public class OffscreenRoom : Room {
 	protected override void LoadSettings() {
 	}
 
-	public override void DrawBlack(Vector2 position) {
+	public override void DrawBlack(WorldWindow.RoomPosition positionType) {
 		if (!WorldWindow.VisibleCreatures) return;
 
-		base.DrawBlack(position);
+		base.DrawBlack(positionType);
 	}
 
-	public override void Draw(Vector2 position, WorldWindow.RoomPosition positionType, bool asReplacement = false) {
+	public override void Draw(WorldWindow.RoomPosition positionType) {
 		if (!WorldWindow.VisibleCreatures) return;
 
+		Vector2 position = positionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
 		Immediate.Color(Themes.RoomAir);
 		UI.FillRect(position.x, position.y, position.x + this.width, position.y - this.height);
 
@@ -49,7 +50,7 @@ public class OffscreenRoom : Room {
 			this.denShortcutEntrances.Add(new Vector2i(0, 0));
 		}
 
-		this.DrawDen(this.dens[0], position.x + this.width * 0.5f, position.y - this.height * 0.25f, 0 == this.hoveredDen, WorldWindow.HoveringDraggable == this);
+		DrawDen(this.dens[0], position.x + this.width * 0.5f, position.y - this.height * 0.25f, 0 == this.hoveredDen, WorldWindow.HoveringDraggable == this);
 
 		Vector2 o = WorldWindow.worldMouse - position;
 		bool hovered = o.x >= 0f && o.y >= 0f && o.x <= this.width && o.y <= this.height;

@@ -16,17 +16,33 @@ public class ReplaceRoom : WorldDraggable {
 		this.size = new (replacingRoom.width, replacingRoom.height);
 	}
 
+	//TODO - add split between CanonPosition and DevPosition to actually match with the replaced room
 	//TODO - draw the replaced room's information at the replacingroom's positions (dens)
 	//IDEA - run timeline checks when drawing dens so that dens that would only appear on replaceroom are only rendered there
     public void Draw() {
-		this.replacingRoom.DrawBlack(this.position);
-		this.replacingRoom.Draw(this.position, WorldWindow.RoomPosition.Canon, true);
+		Immediate.Color(Themes.RoomSolid);
+		UI.FillRect(this.position.x, this.position.y - this.size.y, this.position.x + this.size.x, this.position.y);
+
+		this.replacingRoom.DrawRoomMeshes(this.position, WorldWindow.PositionType);
 
 		Immediate.Color(Themes.Layer2Color);
 		UI.Line(this.Position, this.replacedRoom.Position);
 		if (!this.replacingRoom.isVirtualRoom){
 			Immediate.Color(Themes.Layer0Color);
 			UI.Line(this.Position, this.replacingRoom.Position);
+		}
+
+		// TODO - make sure the hoveredRoomExit behaviour is separate from the replacingroom instance
+		this.replacingRoom.DrawRoomShortcuts(this.position);
+
+		Vector2 o = WorldWindow.worldMouse - this.position;
+		bool hovered = o.x >= 0f && o.y <= 0f && o.x <= this.size.x && o.y >= -this.size.y;
+		Immediate.Color(hovered ? Themes.RoomBorderHighlight : Themes.RoomBorder);
+		UI.StrokeRect(this.position.x, this.position.y, this.position.x + this.size.x, this.position.y - this.size.y);
+
+		for (int j = 0; j < this.replacingRoom.denShortcutEntrances.Count && j < this.replacedRoom.dens.Count; j++) {
+			Vector2i denPosition = this.replacingRoom.denShortcutEntrances[j];
+			Room.DrawDen(this.replacedRoom.dens[j], this.position.x + denPosition.x, this.position.y - denPosition.y, j == this.replacedRoom.hoveredDen, WorldWindow.HoveringDraggable == this, this.timeline);
 		}
 
 		int i = 0;
