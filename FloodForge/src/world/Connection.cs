@@ -187,26 +187,25 @@ public class Connection {
 		}
 	}
 
-	protected void DrawCustomLine(float x0, float y0, float x1, float y1, float alpha0 = 1f, float alpha1 = 1f) {
+	public static void DrawCustomLine(float x0, float y0, float x1, float y1, float alpha0 = 1f, float alpha1 = 1f) {
 		float thickness = WorldWindow.SelectorScale / 16f;
+
+		// Review - use vector flipping instead of trigonometric functions (since we're only ever rotating by quarter turns anyway)
 		float angle = MathF.Atan2(y1 - y0, x1 - x0);
 
-		float a0x = x0 + Mathf.Cos(angle - Mathf.PI_2) * thickness;
-		float a0y = y0 + Mathf.Sin(angle - Mathf.PI_2) * thickness;
-		float b0x = x0 + Mathf.Cos(angle + Mathf.PI_2) * thickness;
-		float b0y = y0 + Mathf.Sin(angle + Mathf.PI_2) * thickness;
-		float a1x = x1 + Mathf.Cos(angle - Mathf.PI_2) * thickness;
-		float a1y = y1 + Mathf.Sin(angle - Mathf.PI_2) * thickness;
-		float b1x = x1 + Mathf.Cos(angle + Mathf.PI_2) * thickness;
-		float b1y = y1 + Mathf.Sin(angle + Mathf.PI_2) * thickness;
+		// sin(angle + PI/2) == cos(angle);
+		// sin(angle - PI/2) == cos(angle - PI);
+		// sin(angle + PI) == -sin(angle);
+		float sinA = Mathf.Sin(angle) * thickness;
+		float cosA = Mathf.Cos(angle) * thickness;
 
 		Immediate.Begin(Immediate.PrimitiveType.QUADS);
 		Immediate.Alpha(alpha0);
-		Immediate.Vertex(a0x, a0y);
-		Immediate.Vertex(b0x, b0y);
+		Immediate.Vertex(x0 + sinA, y0 - cosA);
+		Immediate.Vertex(x0 - sinA, y0 + cosA);
 		Immediate.Alpha(alpha1);
-		Immediate.Vertex(b1x, b1y);
-		Immediate.Vertex(a1x, a1y);
+		Immediate.Vertex(x1 - sinA, y1 + cosA);
+		Immediate.Vertex(x1 + sinA, y1 - cosA);
 		Immediate.End();
 	}
 
@@ -310,8 +309,8 @@ public class Connection {
 			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 				Vector2 pointMiddle = (pointA + pointB) / 2;
 				float alphaMiddle = fadeMiddle ? 0f : (alphaA + alphaB) / 2;
-				this.DrawCustomLine(pointA.x, pointA.y, pointMiddle.x, pointMiddle.y, alphaA, alphaMiddle);
-				this.DrawCustomLine(pointMiddle.x, pointMiddle.y, pointB.x, pointB.y, alphaMiddle, alphaB);
+				Connection.DrawCustomLine(pointA.x, pointA.y, pointMiddle.x, pointMiddle.y, alphaA, alphaMiddle);
+				Connection.DrawCustomLine(pointMiddle.x, pointMiddle.y, pointB.x, pointB.y, alphaMiddle, alphaB);
 			}
 			else {
 				Vector2 lastPoint = this.BezierPoints![0];
@@ -329,7 +328,7 @@ public class Connection {
 						lerpedAlphaA = Math.Max(0f, float.CopySign(Mathf.LerpUnclamped(lerpedAlphaA, 0, lastCurveProgress * 2), lerpedAlphaA) * 2 - 1);
 						lerpedAlphaB = Math.Max(0f, float.CopySign(Mathf.LerpUnclamped(lerpedAlphaB, 0, curveProgress * 2), lerpedAlphaB) * 2 - 1);
 					}
-					this.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, lerpedAlphaA, lerpedAlphaB);
+					Connection.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, lerpedAlphaA, lerpedAlphaB);
 					lastPoint = point;
 				}
 			}
