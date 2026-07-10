@@ -44,6 +44,10 @@ public class Mesh() {
 		);
 	}
 
+	public void AddQuad(Vertex[] vertices) {
+		this.AddQuad(vertices[0], vertices[1], vertices[2], vertices[3]);
+	}
+
 	public void AddQuad(Vertex a, Vertex b, Vertex c, Vertex d) {
 		this.vertices.Add(a);
 		this.vertices.Add(b);

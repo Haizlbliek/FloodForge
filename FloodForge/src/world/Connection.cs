@@ -1,3 +1,5 @@
+using FloodForge.Rendering;
+
 namespace FloodForge.World;
 
 public class Connection {
@@ -160,6 +162,41 @@ public class Connection {
 		foreach (ConnectionVisual visual in this.replacementVirtualConnections) {
 			visual.RecalculateBezier();
 		}
+		this.GenerateMesh();
+	}
+
+	protected Mesh connectionMesh = new Mesh();
+	protected MeshRenderable? connectionRenderable;
+
+	protected unsafe void GenerateMesh() {
+		this.connectionMesh.Clear();
+
+		for (int i = 0; i < this.BezierPoints.Length - 1; i++) {
+			int j = i + 1;
+			Vector2 pointA = this.BezierPoints[i];
+			Vector2 pointB = this.BezierPoints[j];
+
+			float curveProgress = j / (float) this.BezierPoints.Length;
+			float lastCurveProgress = i / (float) this.BezierPoints.Length;
+
+			this.connectionMesh.AddQuad(this.CreateConnectionLineQuad(pointA.x, pointA.y, pointB.x, pointB.y, lastCurveProgress, curveProgress));
+		}
+
+		this.connectionRenderable = new MeshRenderable(this.connectionMesh, Preload.ConnectionShader, [
+				new (0, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
+				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2)),
+				new (2, 1, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 4))
+			], [ "projection", "model", "tintColor", "tintColorB", "widthClip" ]);
+	}
+
+	static void DrawConnectionMesh(MeshRenderable renderable, Vector2 cameraPosition, Vector2 cameraScale, Vector2 translation, Color color, Color colorB, float widthClip) {
+		renderable.PreDraw();
+		renderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-cameraScale.x + cameraPosition.x, cameraScale.x + cameraPosition.x, -cameraScale.y + cameraPosition.y, cameraScale.y + cameraPosition.y, 0f, 1f)]);
+		renderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(translation.x, translation.y, 0f)]);
+		renderable.Uniform4("tintColor", color.r, color.g, color.b, color.a);
+		renderable.Uniform4("tintColorB", colorB.r, colorB.g, colorB.b, colorB.a);
+		renderable.Uniform1("widthClip", widthClip);
+		renderable.DoDraw();
 	}
 
 	public bool Hovered {
@@ -187,7 +224,25 @@ public class Connection {
 		}
 	}
 
-	public static void DrawCustomLine(float x0, float y0, float x1, float y1, float alpha0 = 1f, float alpha1 = 1f) {
+	public Vertex[] CreateConnectionLineQuad(float x0, float y0, float x1, float y1, float progress0, float progress1, float thickness = 5f) {
+		// Review - use vector flipping instead of trigonometric functions? (since we're only ever rotating by quarter turns anyway)
+		float angle = MathF.Atan2(y1 - y0, x1 - x0);
+
+		// sin(angle + PI/2) == cos(angle);
+		// sin(angle - PI/2) == cos(angle - PI);
+		// sin(angle + PI) == -sin(angle);
+		float sinA = Mathf.Sin(angle) * thickness;
+		float cosA = Mathf.Cos(angle) * thickness;
+
+		return [
+			new Vertex(x0 + sinA, y0 - cosA, new Color(progress0, 1f, 0f, 0f)),
+			new Vertex(x0 - sinA, y0 + cosA, new Color(progress0, 0f, 0f, 0f)),
+			new Vertex(x1 - sinA, y1 + cosA, new Color(progress1, 0f, 0f, 0f)),
+			new Vertex(x1 + sinA, y1 - cosA, new Color(progress1, 1f, 0f, 0f))
+		];
+	}
+
+	public void DrawCustomLine(float x0, float y0, float x1, float y1, float alpha0 = 1f, float alpha1 = 1f) {
 		float thickness = WorldWindow.SelectorScale / 16f;
 
 		// Review - use vector flipping instead of trigonometric functions (since we're only ever rotating by quarter turns anyway)
@@ -300,37 +355,25 @@ public class Connection {
 
 			float alphaA = aVisible ? opacity : 0f;
 			float alphaB = bVisible ? opacity : 0f;
-			if (opacity <= 0.999f || aVisible != bVisible || fadeMiddle) {
-				Program.gl.Enable(EnableCap.Blend);
-			}
+			Program.gl.Enable(EnableCap.Blend);
+			connectionColorA.a = alphaA;
+			connectionColorB.a = alphaB;
 
 			Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
 			Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
 			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 				Vector2 pointMiddle = (pointA + pointB) / 2;
 				float alphaMiddle = fadeMiddle ? 0f : (alphaA + alphaB) / 2;
-				Connection.DrawCustomLine(pointA.x, pointA.y, pointMiddle.x, pointMiddle.y, alphaA, alphaMiddle);
-				Connection.DrawCustomLine(pointMiddle.x, pointMiddle.y, pointB.x, pointB.y, alphaMiddle, alphaB);
+				this.DrawCustomLine(pointA.x, pointA.y, pointMiddle.x, pointMiddle.y, alphaA, alphaMiddle);
+				this.DrawCustomLine(pointMiddle.x, pointMiddle.y, pointB.x, pointB.y, alphaMiddle, alphaB);
 			}
 			else {
-				Vector2 lastPoint = this.BezierPoints![0];
-				int curveLength = this.BezierPoints.Length;
-				for (int i = 1; i < curveLength; i++) {
-					float curveProgress = i / (float) curveLength;
-					if (blendColors) {
-						Immediate.Color(Color.Lerp(connectionColorA, connectionColorB, curveProgress));
-					}
-					Vector2 point = this.BezierPoints[i];
-					float lastCurveProgress = curveProgress - (1f / curveLength);
-					float lerpedAlphaA = Mathf.LerpUnclamped(alphaA, alphaB, lastCurveProgress);
-					float lerpedAlphaB = Mathf.LerpUnclamped(alphaA, alphaB, curveProgress);
-					if (fadeMiddle) {
-						lerpedAlphaA = Math.Max(0f, float.CopySign(Mathf.LerpUnclamped(lerpedAlphaA, 0, lastCurveProgress * 2), lerpedAlphaA) * 2 - 1);
-						lerpedAlphaB = Math.Max(0f, float.CopySign(Mathf.LerpUnclamped(lerpedAlphaB, 0, curveProgress * 2), lerpedAlphaB) * 2 - 1);
-					}
-					Connection.DrawCustomLine(lastPoint.x, lastPoint.y, point.x, point.y, lerpedAlphaA, lerpedAlphaB);
-					lastPoint = point;
-				}
+				Vector2 matrixPos = WorldWindow.cameraOffset;
+				Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
+
+				// TODO - re-add middle-fading (negative alpha, abs()'d in the shader?)
+				if (this.connectionRenderable != null)
+					DrawConnectionMesh(this.connectionRenderable, matrixPos, matrixScale, Vector2.Zero, connectionColorA, connectionColorB, WorldWindow.SelectorScale / 50);
 			}
 
 			Program.gl.Disable(EnableCap.Blend);
