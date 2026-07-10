@@ -878,6 +878,28 @@ public static class WorldWindow {
 			EnableProfilerScreen = !EnableProfilerScreen;
 		}
 
+		if (Keys.JustPressed(Key.O) && Keys.Modifier(Keys.Modifiers.Shift) && SelectedRooms.Count == 2) {
+			Room first = SelectedRooms.First();
+			Room second = SelectedRooms.Last();
+			RoomAndConnectionChange massConnectChange = new RoomAndConnectionChange(true);
+			uint connectionA = 0;
+			uint connectionB = 0;
+			while (connectionA < first.roomExits.Count && connectionB < second.roomExits.Count) {
+				if (first.AnyConnectionConnectedTo(connectionA)) {
+					connectionA++;
+				}
+				else if (second.AnyConnectionConnectedTo(connectionB)) {
+					connectionB++;
+				}
+				else {
+					massConnectChange.AddConnection(new Connection(first, second, connectionA, connectionB));
+					connectionA++;
+					connectionB++;
+				}
+			}
+			worldHistory.Apply(massConnectChange);
+		}
+
 		if (Keys.JustPressed(Key.F)) {
 			PopupManager.Add(new SearchPopup());
 		}
