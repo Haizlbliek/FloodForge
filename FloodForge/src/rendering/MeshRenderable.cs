@@ -62,7 +62,7 @@ public class MeshRenderable {
 
 	public void PreDraw() {
 		Program.gl.BindVertexArray(this._vao);
-		Program.gl.UseProgram(Preload.RoomShader);
+		Program.gl.UseProgram(this.shaderToUse);
 	}
 
 	public unsafe void DoDraw() {
@@ -72,6 +72,7 @@ public class MeshRenderable {
 		Program.gl.UseProgram(0);
 	}
 
+	// REVIEW - automatically calculate pointer based on int size (test if that can be reasonably derived first)
 	public unsafe struct VertexAttributeInformation (uint index, int size, VertexAttribPointerType type, bool normalised, uint stride, void* pointer){
 		public uint index = index;
 		public int size = size;
