@@ -373,7 +373,7 @@ public class Connection {
 
 				// TODO - re-add middle-fading (negative alpha, abs()'d in the shader?)
 				if (this.connectionRenderable != null)
-					DrawConnectionMesh(this.connectionRenderable, matrixPos, matrixScale, Vector2.Zero, connectionColorA, connectionColorB, WorldWindow.SelectorScale / 50);
+					DrawConnectionMesh(this.connectionRenderable, matrixPos, matrixScale, Vector2.Zero, connectionColorA, connectionColorB, WorldWindow.SelectorScale / 66);
 			}
 
 			Program.gl.Disable(EnableCap.Blend);
