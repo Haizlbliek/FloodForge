@@ -14,7 +14,7 @@ public static class Profiler {
 	static int FPSHistoryFillLevel = 0;
 	public static bool enableProfiler = false;
 	public static void InitProfiler() {
-		if (Main.mode == Main.Mode.World && WorldWindow.EnableProfilerScreen) {
+		if (Main.mode == Main.Mode.World && (WorldWindow.EnableProfilerScreen || WorldWindow.EnableFPSCounter)) {
 			enableProfiler = true;
 			contextStack = [];
 			segmentStopwatch = Stopwatch.StartNew();
@@ -226,7 +226,7 @@ public static class Profiler {
 		static List<string> profilerMessagesLeft = [];
 		static List<string> profilerMessagesRight = [];
 		static readonly List<(string, int)> logMessages = [];
-		public static void DrawProfilerMessages() {
+		public static void DrawProfilerMessages(bool drawLog = true) {
 			Immediate.Color(Color.White);
 			int i = 0;
 			foreach (string part in profilerMessagesLeft) {
@@ -246,27 +246,31 @@ public static class Profiler {
 			if(logMessages.Count > 45) {
 				logMessages.RemoveRange(0, logMessages.Count - 45);
 			}
-			foreach((string message, int severity) in logMessages.AsEnumerable().Reverse()) {
-				Immediate.Color(severity switch {
-					0 => Color.Grey,
-					1 => Color.White,
-					2 => Color.Yellow,
-					3 => Color.Red,
-					_ => Color.White
-				});
-				foreach (string line in message.Split("\n").Reverse()) {
-					UI.font.Write(line, Main.screenBounds.x - UI.font.Measure(line, 0.025f).x, -Main.screenBounds.y + 0.1f + (i * 0.03f), 0.025f);
-					i++;
-				}
-			}
+			
 			profilerMessagesLeft = [];
 			profilerMessagesRight = [];
 
-			UVRect clearButton = new UVRect(Main.screenBounds.x - 0.05f, -Main.screenBounds.y, Main.screenBounds.x, -Main.screenBounds.y + 0.05f).UV(0f, 0f, 0.25f, 0.25f);
-			if (UI.TextureButton(clearButton)) {
-				logMessages.Clear();
+			if (drawLog) {
+				foreach((string message, int severity) in logMessages.AsEnumerable().Reverse()) {
+					Immediate.Color(severity switch {
+						0 => Color.Grey,
+						1 => Color.White,
+						2 => Color.Yellow,
+						3 => Color.Red,
+						_ => Color.White
+					});
+					foreach (string line in message.Split("\n").Reverse()) {
+						UI.font.Write(line, Main.screenBounds.x - UI.font.Measure(line, 0.025f).x, -Main.screenBounds.y + 0.1f + (i * 0.03f), 0.025f);
+						i++;
+					}
+				}
+				UVRect clearButton = new UVRect(Main.screenBounds.x - 0.05f, -Main.screenBounds.y, Main.screenBounds.x, -Main.screenBounds.y + 0.05f).UV(0f, 0f, 0.25f, 0.25f);
+				if (UI.TextureButton(clearButton)) {
+					logMessages.Clear();
+				}
 			}
 		}
+
 		public static void AddProfilerMessage(string message, bool onRight = false) {
 			if (Profiler.enableProfiler) {
 				if(onRight) profilerMessagesRight.Add(message); else profilerMessagesLeft.Add(message);
