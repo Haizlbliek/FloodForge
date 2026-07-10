@@ -204,16 +204,20 @@ public static class Main {
 
 		if (Profiler.enableProfiler) {
 			if (Profiler.finalContext != null) {
-				string profilerText = Profiler.finalContext.ToString();
-				profilerText += $"\nTotal DrawTime: {Math.Floor(Profiler.finalContext.sumSpan.TotalMilliseconds * 1000) / 1000}ms";
-				profilerText += $"\n{Math.Floor(1 / Profiler.finalContext.sumSpan.TotalSeconds)} FPS";
-				Profiler.AddFPSDataPoint((float) (1 / Profiler.finalContext.sumSpan.TotalSeconds));
-				(float min, float max) = Profiler.GetMinMaxFPS();
-				profilerText += $"\nRENDER FPS: AVG - {Math.Floor(Profiler.GetAVGFPS())}; MIN/MAX - {Math.Floor(min)} FPS/{Math.Floor(max)} FPS";
-				Profiler.Debug.AddProfilerMessage(profilerText);
-				Profiler.Debug.AddProfilerMessage($"Program.Delta: {Program.Delta*1000}ms;\nMeasured time: {Math.Floor(diagnosticsStopwatch.Elapsed.TotalMilliseconds * 1000) / 1000}ms\nfps: {Math.Floor(1/Program.Delta)}");
+				if (WorldWindow.EnableProfilerScreen) {
+					string profilerText = Profiler.finalContext.ToString();
+					profilerText += $"\nTotal DrawTime: {Math.Floor(Profiler.finalContext.sumSpan.TotalMilliseconds * 1000) / 1000}ms";
+					profilerText += $"\n{Math.Floor(1 / Profiler.finalContext.sumSpan.TotalSeconds)} FPS";
+					Profiler.AddFPSDataPoint((float) (1 / Profiler.finalContext.sumSpan.TotalSeconds));
+					(float min, float max) = Profiler.GetMinMaxFPS();
+					profilerText += $"\nRENDER FPS: AVG - {Math.Floor(Profiler.GetAVGFPS())}; MIN/MAX - {Math.Floor(min)} FPS/{Math.Floor(max)} FPS";
+					Profiler.Debug.AddProfilerMessage(profilerText);
+				}
+				if (WorldWindow.EnableFPSCounter || WorldWindow.EnableProfilerScreen) {
+					Profiler.Debug.AddProfilerMessage($"Program.Delta: {Program.Delta*1000}ms;\nMeasured time: {Math.Floor(diagnosticsStopwatch.Elapsed.TotalMilliseconds * 1000) / 1000}ms\nfps: {Math.Floor(1/Program.Delta)}");
+				}
 			}
-			Profiler.Debug.DrawProfilerMessages();
+			Profiler.Debug.DrawProfilerMessages(!WorldWindow.EnableFPSCounter && WorldWindow.EnableProfilerScreen);
 		}
 		diagnosticsStopwatch.Stop();
 		

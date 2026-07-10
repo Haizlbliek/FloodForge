@@ -244,6 +244,7 @@ public class Connection {
 		Program.gl.Disable(EnableCap.Blend);
 	}
 
+	// TODO - render connection as a mesh instead of individual quads
 	public void Draw() {
 		if (this.roomAExitID >= this.roomA.roomExits.Count || this.roomBExitID >= this.roomB.roomExits.Count) {
 			Logger.Warn($"Connection {this.roomA.name}[{this.roomAExitID}] - {this.roomB.name}[{this.roomBExitID}] connects to invalid index! Deleting connection.");
