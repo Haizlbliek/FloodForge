@@ -318,6 +318,9 @@ public class FilesystemPopup : Popup {
 
 		string currentText = (isNewDirActive ? this.newDirectory : this.search) ?? "";
 
+		if (currentText == "" && (key == Key.ShiftLeft || key == Key.ShiftRight || key == Key.ControlLeft || key == Key.ControlRight))
+			return;
+
 		if (key == Key.Backspace && this.newDirectory == null && this.search == null) {
 			this.currentPath = PathUtil.Parent(this.currentPath);
 			this.Refresh();
