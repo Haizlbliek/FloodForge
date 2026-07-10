@@ -948,6 +948,15 @@ public class Room : WorldDraggable {
 	protected MeshRenderable? roomRenderable;
 	readonly List<Vector2i> allShortcutEntrances = [];
 
+	public static void FullDraw(MeshRenderable renderable, Vector2 cameraPosition, Vector2 cameraScale, Vector2 translation, Color color, float tintStrength) {
+		renderable.PreDraw();
+		renderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-cameraScale.x + cameraPosition.x, cameraScale.x + cameraPosition.x, -cameraScale.y + cameraPosition.y, cameraScale.y + cameraPosition.y, 0f, 1f)]);
+		renderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(translation.x, translation.y, 0f)]);
+		renderable.Uniform4("tintColor", color.r, color.g, color.b, color.a);
+		renderable.Uniform1("tintStrength", tintStrength);
+		renderable.DoDraw();
+	}
+
 	protected static uint TwelveBitLimit = 4095;
 	protected static uint HeightMask = 65520;
 	protected static uint WidthMask = 268369920;
@@ -1153,7 +1162,6 @@ public class Room : WorldDraggable {
 			], [ "projection", "model", "tintColor", "tintStrength" ]);
 	}
 
-	// TODO - split water mesh generation off from room greedymeshing for performance
 	protected unsafe virtual void GenerateMesh() {
 		this.roomMesh.Clear();
 		this.allShortcutEntrances.Clear();
@@ -1628,24 +1636,14 @@ public class Room : WorldDraggable {
 		Vector2 matrixPos = WorldWindow.cameraOffset;
 		Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
 
-		if (this.roomRenderable != null){
-			this.roomRenderable.PreDraw();
-			this.roomRenderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
-			this.roomRenderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(renderedPosition.x, renderedPosition.y, 0f)]);
-			this.roomRenderable.Uniform4("tintColor", tint.r, tint.g, tint.b, alpha);
-			this.roomRenderable.Uniform1("tintStrength", Settings.RoomTintStrength);
-			this.roomRenderable.DoDraw();
-		}
+		if (this.roomRenderable != null)
+			FullDraw(this.roomRenderable, matrixPos, matrixScale, renderedPosition, new(tint.r, tint.g, tint.b, alpha), Settings.RoomTintStrength);
 
 		if (this.data.waterHeight != -1) {
 			if (!this.data.waterInFront && this.waterRenderable != null) {
 				Color color = Themes.RoomWater;
-				this.waterRenderable.PreDraw();
-				this.waterRenderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-matrixScale.x + matrixPos.x, matrixScale.x + matrixPos.x, -matrixScale.y + matrixPos.y, matrixScale.y + matrixPos.y, 0f, 1f)]);
-				this.waterRenderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(renderedPosition.x, renderedPosition.y, 0f)]);
-				this.waterRenderable.Uniform4("tintColor", color.r, color.g, color.b, color.a);
-				this.waterRenderable.Uniform1("tintStrength", 0f);
-				this.waterRenderable.DoDraw();
+				if (this.waterRenderable != null)
+					FullDraw(this.waterRenderable, matrixPos, matrixScale, renderedPosition, color, 0f);
 			}
 			else
 				this.DrawWater(renderedPosition);
