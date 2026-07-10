@@ -214,7 +214,12 @@ public static class Main {
 					Profiler.Debug.AddProfilerMessage(profilerText);
 				}
 				if (WorldWindow.EnableFPSCounter || WorldWindow.EnableProfilerScreen) {
-					Profiler.Debug.AddProfilerMessage($"Program.Delta: {Program.Delta*1000}ms;\nMeasured time: {Math.Floor(diagnosticsStopwatch.Elapsed.TotalMilliseconds * 1000) / 1000}ms\nfps: {Math.Floor(1/Program.Delta)}");
+					fpsHistory[fpsHistoryIndex] = 1/Program.Delta;
+					fpsHistoryIndex = (fpsHistoryIndex + 1) % 500;
+					if (fpsHistoryIndex == 0)
+						populatedFPSHistory = true;
+					float averageFPS = fpsHistory.Average();
+					Profiler.Debug.AddProfilerMessage($"\nProgram.Delta: {Program.Delta*1000}ms;\nfps: {Math.Floor(1/Program.Delta)};\navgFPS: {averageFPS + (populatedFPSHistory ? "" : "*")}\nfpsIndex: {fpsHistoryIndex}");
 				}
 			}
 			Profiler.Debug.DrawProfilerMessages(!WorldWindow.EnableFPSCounter && WorldWindow.EnableProfilerScreen);
@@ -224,6 +229,10 @@ public static class Main {
 		if(postRenderStopwatch == null) postRenderStopwatch = Stopwatch.StartNew();
 		else postRenderStopwatch.Restart();
 	}
+
+	public static bool populatedFPSHistory = false;
+	public static int fpsHistoryIndex = 0;
+	public static float[] fpsHistory = new float[500];
 
 	public enum Mode {
 		World,
