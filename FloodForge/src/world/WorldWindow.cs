@@ -34,6 +34,8 @@ public static class WorldWindow {
 	// (I.E. choose the one that's closest, but preferably one that does not invert (for example, CC_S01))
 	public static bool changeConnectBehaviour = true;
 
+	public static bool connectionExtensionsEnabled = false;
+
 	public static Region region = null!;
 	// public static List<ConnectionVisual> virtualConnections = [];
 	public static List<Connection> connectionsToBeRemoved = [];
@@ -675,6 +677,12 @@ public static class WorldWindow {
 					}),
 					new SettingsPopup.ButtonContainer("Edit Subregions", () => {
 						PopupManager.Add(new SubregionPopup());
+					}),
+					new SettingsPopup.ButtonContainer("Enable ConnectionExtensions", () => {
+						WorldWindow.connectionExtensionsEnabled = !WorldWindow.connectionExtensionsEnabled;
+					}).SetContextCheck(b => {
+						b.settingName = WorldWindow.connectionExtensionsEnabled ? "Disable ConnectionExtensions" : "Enable ConnectionExtensions";
+						return true;
 					})
 				]).Translate(Mouse.Pos, true).Title($"Settings - World ({region.acronym})"), true);
 			}
