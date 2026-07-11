@@ -314,27 +314,49 @@ public static class WorldParser {
 		}
 
 		uint connectionId = 0;
-		foreach (string connection in connections) { // go through every room-connection
-			if (connection.IsNullOrEmpty())
-			{
+		for (int j = 0; j < connections.Length; j++) {
+			string connection = connections[j];
+			if (connection.IsNullOrEmpty()) {
 				continue;
 			}
-			if (connection.ToLowerInvariant() == "disconnected") {
+			if (connection.Equals("disconnected", StringComparison.InvariantCultureIgnoreCase)) {
 				connectionId++;
 				continue;
+			}
+
+			int openArrow = connection.IndexOf('<');
+			int closeArrow = connection.IndexOf('>');
+			int foundIndex = -1;
+			if (openArrow != -1 && closeArrow != -1) {
+				if (int.TryParse(connection[(openArrow + 1)..closeArrow], out int outcome)) {
+					if (!WorldWindow.connectionExtensionsEnabled) {
+						// REVIEW - add popup to allow user to decide?
+						WorldWindow.connectionExtensionsEnabled = true;
+						Logger.Info($"ConnectionExtensions syntax detected in room {room.name}, set to enabled");
+					}
+					foundIndex = outcome;
+					connection = connection[..openArrow];
+				}
+				else {
+					Logger.Info($"Failed to parse connection {connection} index ({connection[(openArrow + 1)..closeArrow]}) to int");
+				}
 			}
 
 			bool alreadyExists = false;
 			for (int i = 0; i < connectionsToAdd.Count; i++) { // look through the connections that have already been found
 				ConnectionToAdd connectionData = connectionsToAdd[i];
 				if (connectionData.roomB != null && !(connectionData.roomB == room)) continue; // if a connection has already found its other side, skip that connection
-
 				// otherwise, check if the found connection: - comes from the room we're looking for, and: - is looking for this room
-				// this is probably where the ConnectionExtensions compatibility has to be first implemented, so it also looks for the right connection index.
+
 				if (connectionData.roomA.name.Equals(connection, StringComparison.InvariantCultureIgnoreCase) && connectionData.roomBName.Equals(roomName, StringComparison.InvariantCultureIgnoreCase)) {
+					if (WorldWindow.connectionExtensionsEnabled) {
+						if (connectionData.roomBExitID != null && connectionData.roomBExitID != connectionId)
+							continue;
+					}
 					connectionsToAdd[i] = connectionData with { roomB = room, roomBExitID = connectionId };
 					alreadyExists = true;
-					//break;
+					if (foundIndex != -1)
+						break;
 				}
 			}
 
@@ -343,7 +365,10 @@ public static class WorldParser {
 				continue;
 			}
 
-			connectionsToAdd.Add(new ConnectionToAdd(room, connectionId, connection));
+			ConnectionToAdd connectionToAdd = new ConnectionToAdd(room, connectionId, connection);
+			if (foundIndex != -1)
+				connectionToAdd.roomBExitID = (uint)foundIndex;
+			connectionsToAdd.Add(connectionToAdd);
 			connectionId++;
 		}
 
