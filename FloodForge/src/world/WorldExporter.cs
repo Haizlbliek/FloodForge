@@ -323,27 +323,6 @@ public static class WorldExporter {
 				if (tag.id == Mods.tags["polemimic_length"] || tag.id == Mods.tags["centipede_length"]) name = "";
 				writer.Write($"{name}{(tag is DenCreature.IntegerTag intTag ? intTag.data : (tag is DenCreature.FloatTag floatTag ? floatTag.data : (tag is DenCreature.StringTag stringTag ? stringTag.data : "IDK LOL")))}");
 			}
-			// if (tag.id == CreatureTags.Mean) {
-			// 	writer.Write($"Mean:{((DenCreature.FloatTag) tag).data}");
-			// }
-			// else if (tag.id == CreatureTags.POLEMIMIC_LENGTH) {
-			// 	writer.Write($"{((DenCreature.IntegerTag) tag).data}");
-			// }
-			// else if (tag.id == CreatureTags.CENTIPEDE_LENGTH) {
-			// 	writer.Write($"{((DenCreature.FloatTag) tag).data}");
-			// }
-			// else if (tag.id == CreatureTags.Seed) {
-			// 	writer.Write($"Seed:{((DenCreature.IntegerTag) tag).data}");
-			// }
-			// else if (tag.id == CreatureTags.RotType) {
-			// 	writer.Write($"RotType:{((DenCreature.IntegerTag) tag).data}");
-			// }
-			// else if (tag.id == CreatureTags.NamedAttr) {
-			// 	writer.Write($"NamedAttr:{((DenCreature.StringTag) tag).data}");
-			// }
-			// else {
-			// 	writer.Write($"{tag.id.id}");
-			// }
 		}
 		writer.Write("}");
 	}
