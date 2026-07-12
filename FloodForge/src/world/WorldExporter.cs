@@ -327,8 +327,330 @@ public static class WorldExporter {
 		writer.Write("}");
 	}
 
+	public static bool KhyAnalysis() { // TODO - make this a hundred times more compact (this is a naive implementation)
+		Logger.Info("");
+		Logger.Info("========================================");
+		Logger.Info("Starting KhyAnalysis");
+		Logger.Info("");
+		Logger.Info("Rooms:");
+		List<ExportRoom> allRooms = [];
+		foreach (Room room in WorldWindow.region.rooms.OrderBy(r => r.data.tags.Contains("GATE")).ThenBy(r => r.data.tags.Contains("SHELTER")).ThenBy(r => r.name)) {
+			Logger.Info($"    {room.name}");
+			if (room is OffscreenRoom){
+				Logger.Info($"        offscreenroom, skipping");
+				continue;
+			}
+			allRooms.Add(new(room.name, room.data.tags, new string[room.roomExits.Count], room.timeline));
+		}
+		Logger.Info("Connections:");
+		List<ExportConnection> allConnections = [];
+		foreach (Connection connection in WorldWindow.region.connections) {
+			ExportConnection newExportConnection = new(connection.roomA.name, (int)connection.roomAExitID, connection.roomB.name, (int)connection.roomBExitID, connection.timeline);
+			Logger.Info($"    {newExportConnection}");
+			allConnections.Add(newExportConnection);
+		}
+		Logger.Info("");
+		List<ExportConnection> defaultConnections = [];
+		List<ExportConnection> conditionalConnections = [];
+		Logger.Info("Finding defaultConnections & conditionalConnections");
+		foreach (ExportConnection connection in allConnections) {
+			if (connection.timeline.timelineType != TimelineType.Only) {
+				Logger.Info($"    added defaultConnection: {connection}");
+				defaultConnections.Add(connection);
+			}
+			if (connection.timeline.timelineType != TimelineType.All) {
+				Logger.Info($"    added conditionalConnection: {connection}");
+				conditionalConnections.Add(connection);
+			}
+		}
+		Logger.Info("");
+		Logger.Info("Populating ExportRoom default connections");
+		foreach (ExportRoom exportRoom in allRooms) {
+			Logger.Info($"    Populating {exportRoom.name}");
+			for (int i = 0; i < exportRoom.connectionNames.Length; i++) {
+				foreach (ExportConnection exportConnection in defaultConnections) {
+					if((exportConnection.roomAName == exportRoom.name && exportConnection.roomAExitID == i) ||
+					(exportConnection.roomBName == exportRoom.name && exportConnection.roomBExitID == i)) {
+						string nameToSet = exportConnection.roomAName == exportRoom.name ? exportConnection.roomBName : exportConnection.roomAName;
+						Logger.Info($"        Found: {exportConnection}; set [{i}] -> {(nameToSet.IsNullOrEmpty() ? "DISCONNECTED" : nameToSet)}");
+						exportRoom.connectionNames[i] = nameToSet;
+						break;
+					}
+				}
+			}
+		}
+		Logger.Info("");
+		Logger.Info("Finding Room Conditionals"); // TODO - add replaceroom exporting with new replaceRoom rework implementation
+		List<ExportRoom> hideRooms = [];
+		List<ExportRoom> exclusiveRooms = [];
+		foreach (ExportRoom exportRoom in allRooms) {
+			if (exportRoom.timeline.timelineType == TimelineType.Only) {
+				Logger.Info($"    Found: {exportRoom}; add to exclusiveRooms");
+				exclusiveRooms.Add(exportRoom);
+			}
+			else if (exportRoom.timeline.timelineType == TimelineType.Except) {
+				Logger.Info($"    Found: {exportRoom}; add to hideRooms");
+				hideRooms.Add(exportRoom);
+			}
+		}
+		Logger.Info("");
+		Logger.Info("Finding encountered timelines");
+		List<string> timelines = [];
+		Logger.Info("    Checking Rooms");
+		foreach (ExportRoom exportRoom in allRooms) {
+			foreach (string roomTimeline in exportRoom.timeline.timelines) {
+				if (!timelines.Contains(roomTimeline)) {
+					Logger.Info($"        Found: {roomTimeline}");
+					timelines.Add(roomTimeline);
+				}
+			}
+		}
+		Logger.Info("    Checking connections");
+		foreach (ExportConnection exportConnection in allConnections) {
+			foreach (string connectionTimeline in exportConnection.timeline.timelines) {
+				if (!timelines.Contains(connectionTimeline)) {
+					Logger.Info($"        Found: {connectionTimeline}");
+					timelines.Add(connectionTimeline);
+				}
+			}
+		}
+		Logger.Info("");
+		Logger.Info("Running through found timelines");
+		List<SpecifiedChange> specifiedChanges = [];
+		foreach (string worldTimeline in timelines) {
+			Logger.Info($"");
+			Logger.Info($"Checking {worldTimeline}");
+			List<ExportRoom> roomsInTimeline = [];
+			Logger.Info($"    Finding timeline rooms");
+			foreach (ExportRoom exportRoom in allRooms) {
+				if (exportRoom.timeline.OverlapsWith(TimelineType.Only, [worldTimeline])) {
+					Logger.Info($"        added {exportRoom}");
+					roomsInTimeline.Add(new (exportRoom.name, [..exportRoom.tags], new string[exportRoom.connectionNames.Length], exportRoom.timeline)); // new instance to avoid modifying default
+				}
+			}
+			List<ExportConnection> connectionsInTimeline = [];
+			Logger.Info($"    Finding timeline connections");
+			foreach (ExportConnection exportConnection in allConnections) {
+				if (exportConnection.timeline.OverlapsWith(TimelineType.Only, [worldTimeline])) {
+					Logger.Info($"        added {exportConnection}");
+					connectionsInTimeline.Add(exportConnection);
+				}
+			}
+			Logger.Info("");
+			Logger.Info($"    Populating ExportRoom connections for {worldTimeline}");
+			foreach (ExportRoom timelineRoom in roomsInTimeline) {
+				Logger.Info($"        Populating {timelineRoom.name}");
+				for (int exitID = 0; exitID < timelineRoom.connectionNames.Length; exitID++) {
+					foreach (ExportConnection timelineConnection in connectionsInTimeline) {
+						if((timelineConnection.roomAName == timelineRoom.name && timelineConnection.roomAExitID == exitID) ||
+						(timelineConnection.roomBName == timelineRoom.name && timelineConnection.roomBExitID == exitID)) {
+							string nameToSet = timelineConnection.roomAName == timelineRoom.name ? timelineConnection.roomBName : timelineConnection.roomAName;
+							Logger.Info($"            Found: {timelineConnection}; set [{exitID}] -> {(nameToSet.IsNullOrEmpty() ? "DISCONNECTED" : nameToSet)}");
+							timelineRoom.connectionNames[exitID] = nameToSet;
+							break;
+						}
+					}
+				}
+			}
+			Logger.Info("");
+			Logger.Info($"    Finding changes");
+			List<TLChange> changes = [];
+			foreach (ExportRoom timelineRoom in roomsInTimeline) {
+				Logger.Info($"        Checking {timelineRoom}");
+				ExportRoom matchingDefaultRoom = allRooms.First(r => r.name == timelineRoom.name);
+				for (int exitIndex = 0; exitIndex < timelineRoom.connectionNames.Length; exitIndex++) {
+					string defaultConnection = matchingDefaultRoom.connectionNames[exitIndex] ?? "DISCONNECTED";
+					string newConnection = timelineRoom.connectionNames[exitIndex] ?? "DISCONNECTED";
+					if (defaultConnection != newConnection) {
+						Logger.Info($"            Change at [{exitIndex}]: {defaultConnection} -> {newConnection}; added");
+						changes.Add(new(timelineRoom.name, exitIndex, defaultConnection, newConnection));
+					}
+					else {
+						Logger.Info($"            No change at [{exitIndex}]: {defaultConnection} -> {newConnection};");
+					}
+				}
+			}
+			Logger.Info("");
+			Logger.Info("    Finding unpaired disconnections"); // Probably not really needed, but i'd rather be safe than have pathfinding get a one-way and break.
+			List<TLChange> pairChanges = [];
+			foreach (TLChange possibleUnpairedChange in changes) {
+				Logger.Info($"        Checking {possibleUnpairedChange.affectedRoom}({possibleUnpairedChange.exitID}) {possibleUnpairedChange.oldConnection} -> {possibleUnpairedChange.newConnection}");
+				if (possibleUnpairedChange.oldConnection == "DISCONNECTED") {
+					Logger.Info("            DISCONNECTED by default, skipping");
+					continue;
+				}
+				ExportRoom? pairedRoom = roomsInTimeline.FirstOrDefault(x => x.name == possibleUnpairedChange.oldConnection);
+				if (pairedRoom == null) {
+					Logger.Info($"            Found unpaired disconnection");
+					ExportRoom unpairedRoom = allRooms.First(x => x.name == possibleUnpairedChange.oldConnection);
+					for (int i = 0; i < unpairedRoom.connectionNames.Length; i++) {
+						if (unpairedRoom.connectionNames[i] == possibleUnpairedChange.affectedRoom) {
+							TLChange changeToAdd = new (unpairedRoom.name, i, possibleUnpairedChange.affectedRoom, "DISCONNECTED");
+							Logger.Info($"            Added {changeToAdd.affectedRoom}({changeToAdd.exitID}) {changeToAdd.oldConnection} -> {changeToAdd.newConnection}");
+							pairChanges.Add(changeToAdd);
+							break;
+						}
+					}
+				}
+				else
+					Logger.Info($"            Found pairedRoom {pairedRoom.name}");
+			}
+			Logger.Info("    Adding pair-resolving changes");
+			foreach (TLChange pairChange in pairChanges) {
+				changes.Add(pairChange);
+			}
+			Logger.Info("");
+			Logger.Info("    Ordering changes");
+			List<TLChange> orderedChanges = [];
+			for (int changeIndex = 0; changeIndex < changes.Count;) {
+				TLChange changeToOrder = changes[changeIndex];
+				Logger.Info($"        Looking for conditionals related to: {changeToOrder.affectedRoom}({changeToOrder.exitID}) {changeToOrder.oldConnection} -> {changeToOrder.newConnection}");
+				List<TLChange> groupedChanges = [changeToOrder];
+				for (int compareIndex = changeIndex + 1; compareIndex < changes.Count;) {
+					TLChange changeToCompare = changes[compareIndex];
+					if (changeToOrder.oldConnection == changeToCompare.affectedRoom || changeToOrder.newConnection == changeToCompare.affectedRoom) {
+						Logger.Info($"            Found: {changeToCompare.affectedRoom}({changeToCompare.exitID}) {changeToCompare.oldConnection} -> {changeToCompare.newConnection}");
+						groupedChanges.Add(changeToCompare);
+						changes.RemoveAt(compareIndex);
+					}
+					else {
+						compareIndex++;
+					}
+				}
+				if (groupedChanges.Count > 1) {
+					Logger.Info("        Adding ordered change");
+					changes.RemoveAt(changeIndex);
+					foreach (TLChange change in groupedChanges) {
+						orderedChanges.Add(change);
+					}
+				}
+				else {
+					changeIndex++;
+				}
+			}
+			Logger.Info("    Adding unordered changes");
+			foreach (TLChange change in changes) {
+				orderedChanges.Add(change);
+			}
+			Logger.Info("");
+			Logger.Info($"    Adding changes to specifiedChanges");
+			foreach(TLChange change in orderedChanges) {
+				specifiedChanges.Add(new (change, new (TimelineType.Only, [worldTimeline])));
+			}
+		}
+		Logger.Info("");
+		Logger.Info("Merging similar changes"); // Review - make this optional?
+		List<SpecifiedChange> mergedSpecifiedChanges = [];
+		for (int changeID = 0; changeID < specifiedChanges.Count; changeID++) {
+			SpecifiedChange changeToMerge = specifiedChanges[changeID];
+			Logger.Info($"    looking at ID {changeID}: {changeToMerge.affectedRoom}({changeToMerge.exitID}) {changeToMerge.oldConnection} -> {changeToMerge.newConnection}");
+			for (int otherID = changeID + 1; otherID < specifiedChanges.Count;) {
+				SpecifiedChange otherChange = specifiedChanges[otherID];
+				if (changeToMerge.Matches(otherChange)) {
+					Logger.Info($"        matched with ID {otherID}: {otherChange.affectedRoom}({otherChange.exitID}) {otherChange.oldConnection} -> {otherChange.newConnection}");
+					otherChange.timeline.timelines.ForEach(x => changeToMerge.timeline.timelines.Add(x));
+					specifiedChanges.RemoveAt(otherID);
+				}
+				else {
+					otherID++;
+				}
+			}
+			Logger.Info($"    end");
+			mergedSpecifiedChanges.Add(changeToMerge);
+		}
+		Logger.Info("");
+		Logger.Info("Composing world_XX.txt file");
+		Logger.Info("---------------------------");
+		Logger.Info("CONDITIONAL LINKS");
+		foreach (ExportRoom hideRoom in hideRooms) {
+			Logger.Info($"{hideRoom.timeline.Inverted()} : HIDEROOM : {hideRoom.name}");
+		}
+		Logger.Info("");
+		foreach (ExportRoom exclusiveRoom in exclusiveRooms) {
+			Logger.Info($"{exclusiveRoom.timeline} : EXCLUSIVEROOM : {exclusiveRoom.name}");
+		}
+		Logger.Info("");
+		foreach (SpecifiedChange specifiedChange in mergedSpecifiedChanges) {
+			string finalLine = $"{specifiedChange.timeline} : {specifiedChange.affectedRoom} : ";
+			if (specifiedChange.oldConnection.IsNullOrEmpty() || specifiedChange.oldConnection == "DISCONNECTED") {
+				ExportRoom affectedRoom = allRooms.First(r => r.name == specifiedChange.affectedRoom);
+				int disconnectedBeforeExit = 0;
+				for (int exitID = 0; exitID < specifiedChange.exitID; exitID++) {
+					if (affectedRoom.connectionNames[exitID].IsNullOrEmpty())
+						disconnectedBeforeExit++;
+				}
+				finalLine += $"{disconnectedBeforeExit + 1} : ";
+			}
+			else {
+				finalLine += $"{specifiedChange.oldConnection} : ";
+			}
+			finalLine += specifiedChange.newConnection ?? "DISCONNECTED";
+			Logger.Info(finalLine);
+		}
+		Logger.Info("END CONDITIONAL LINKS");
+		Logger.Info("");
+		Logger.Info("ROOMS");
+		foreach (ExportRoom exportRoom in allRooms) {
+			string finalLine = exportRoom.name + " : ";
+			for (int i = 0; i < exportRoom.connectionNames.Length; i++)
+				finalLine += (i > 0 ? ", " : "") + (exportRoom.connectionNames[i] ?? "DISCONNECTED");
+			foreach (string tag in exportRoom.tags)
+				finalLine += $" : {tag}";
+			Logger.Info(finalLine);
+		}
+		Logger.Info("END ROOMS");
+		Logger.Info("---------------------------");
+		Logger.Info("");
+		Logger.Info("End KhyAnalysis!");
+		Logger.Info("========================================");
+		Logger.Info("");
+		return true;
+	}
+
+	public struct TLChange(string affectedRoom, int exitID, string oldConnection, string newConnection) {
+		public string affectedRoom = affectedRoom;
+		public int exitID = exitID;
+		public string oldConnection = oldConnection;
+		public string newConnection = newConnection;
+	}
+
+	public struct SpecifiedChange(TLChange change, Timeline timeline) {
+		public string affectedRoom = change.affectedRoom;
+		public int exitID = change.exitID;
+		public string oldConnection = change.oldConnection;
+		public string newConnection = change.newConnection;
+		public Timeline timeline = timeline;
+		public readonly bool Matches (SpecifiedChange otherChange) {
+			return this.affectedRoom == otherChange.affectedRoom && this.exitID == otherChange.exitID && this.oldConnection == otherChange.oldConnection && this.newConnection == otherChange.newConnection;
+		}
+	}
+
+	public class ExportRoom(string name, HashSet<string> tags, string[] connections, Timeline timeline) {
+		public string name = name;
+		public HashSet<string> tags = tags;
+		public string[] connectionNames = connections;
+		public Timeline timeline = timeline;
+		public override string ToString() {
+			return (this.timeline.timelineType == TimelineType.All ? "" : $"({this.timeline}) ") + $"{this.name}";
+		}
+	}
+
+	public class ExportConnection(string roomAName, int roomAExitID, string roomBName, int roomBExitID, Timeline timeline) {
+		public string roomAName = roomAName;
+		public int roomAExitID = roomAExitID;
+		public string roomBName = roomBName;
+		public int roomBExitID = roomBExitID;
+		public Timeline timeline = timeline;
+		public override string ToString() {
+			return (this.timeline.timelineType == TimelineType.All ? "" : $"({this.timeline}) ") + $"{this.roomAName}({this.roomAExitID}) - {this.roomBName}({this.roomBExitID})";
+		}
+	}
+
 	public static void ExportWorldFile() {
 		Logger.Info("Exporting world file");
+		
+		if (KhyAnalysis())
+			return;
 
 		string fileName = $"world_{WorldWindow.region.acronym}.txt";
 		string path = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, fileName);
