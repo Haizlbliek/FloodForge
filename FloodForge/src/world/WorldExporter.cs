@@ -327,10 +327,10 @@ public static class WorldExporter {
 		writer.Write("}");
 	}
 
-	public static bool KhyAnalysis() { // TODO - make this a hundred times more compact (this is a naive implementation)
+	public static bool KhyExporter() { // TODO - make this a hundred times more compact (this is a naive implementation)
 		Logger.Info("");
 		Logger.Info("========================================");
-		Logger.Info("Starting KhyAnalysis");
+		Logger.Info("Starting KhyExporter");
 		bool CEEE = WorldWindow.connectionExtensionsEnabled;
 		if (CEEE)
 			Logger.Info("    connectionExtensions enabled!");
@@ -546,24 +546,30 @@ public static class WorldExporter {
 				specifiedChanges.Add(new (change, new (TimelineType.Only, [worldTimeline])));
 			}
 		}
+		bool mergeSimilarChanges = false;
 		Logger.Info("");
 		Logger.Info("Merging similar changes"); // Review - make this optional?
+		if (!mergeSimilarChanges) {
+			Logger.Info("    mergeSimilarChanges set to false, skipping");
+		}
 		List<SpecifiedChange> mergedSpecifiedChanges = [];
 		for (int changeID = 0; changeID < specifiedChanges.Count; changeID++) {
 			SpecifiedChange changeToMerge = specifiedChanges[changeID];
-			Logger.Info($"    looking at ID {changeID}: {changeToMerge}");
-			for (int otherID = changeID + 1; otherID < specifiedChanges.Count;) {
-				SpecifiedChange otherChange = specifiedChanges[otherID];
-				if (changeToMerge.Matches(otherChange, CEEE)) {
-					Logger.Info($"        matched with ID {otherID}: {otherChange}");
-					otherChange.timeline.timelines.ForEach(x => changeToMerge.timeline.timelines.Add(x));
-					specifiedChanges.RemoveAt(otherID);
+			if (mergeSimilarChanges) {
+				Logger.Info($"    looking at ID {changeID}: {changeToMerge}");
+				for (int otherID = changeID + 1; otherID < specifiedChanges.Count;) {
+					SpecifiedChange otherChange = specifiedChanges[otherID];
+					if (changeToMerge.Matches(otherChange, CEEE)) {
+						Logger.Info($"        matched with ID {otherID}: {otherChange}");
+						otherChange.timeline.timelines.ForEach(x => changeToMerge.timeline.timelines.Add(x));
+						specifiedChanges.RemoveAt(otherID);
+					}
+					else {
+						otherID++;
+					}
 				}
-				else {
-					otherID++;
-				}
+				Logger.Info($"    end");
 			}
-			Logger.Info($"    end");
 			mergedSpecifiedChanges.Add(changeToMerge);
 		}
 		// TODO - decide where it's necessary to specify exitID in case of connectionExtensions (so we don't clutter the world file with unnecessary specificity)
@@ -612,7 +618,7 @@ public static class WorldExporter {
 		Logger.Info("END ROOMS");
 		Logger.Info("---------------------------");
 		Logger.Info("");
-		Logger.Info("End KhyAnalysis!");
+		Logger.Info("End KhyExporter!");
 		Logger.Info("========================================");
 		Logger.Info("");
 		return true;
@@ -673,7 +679,7 @@ public static class WorldExporter {
 	public static void ExportWorldFile() {
 		Logger.Info("Exporting world file");
 		
-		if (KhyAnalysis())
+		if (KhyExporter())
 			return;
 
 		string fileName = $"world_{WorldWindow.region.acronym}.txt";
