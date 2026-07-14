@@ -384,6 +384,33 @@ public static class WorldExporter {
 			}
 		}
 		Logger.Info("");
+		Logger.Info("Checking default state for special connections"); // TODO - apply this to conditionals too
+		Dictionary<string, List<string>> defaultSpecifyLists = [];
+		bool anythingSpecified = false;
+		foreach (ExportRoom exportRoom in allRooms)
+			defaultSpecifyLists.Add(exportRoom.name, []);
+		foreach (ExportRoom exportRoom in allRooms) {
+			Logger.Info($"    Checking {exportRoom.name}");
+			List<string> namesEncountered = [];
+			for (int exportRoomExit = 0; exportRoomExit < exportRoom.connections.Length; exportRoomExit++) {
+				string foundName = exportRoom.connections[exportRoomExit].roomName;
+				Logger.Info($"        {exportRoomExit}: {foundName ?? "-"}");
+				if (foundName == null)
+					continue;
+				if (namesEncountered.Contains(foundName)) {
+					Logger.Info($"            Duplicate found, added {exportRoom.name} to {foundName} specify list");
+					defaultSpecifyLists[foundName].Add(exportRoom.name);
+					anythingSpecified = true;
+				}
+				else
+					namesEncountered.Add(foundName);
+			}
+		}
+		if (!CEEE && anythingSpecified) {
+			Logger.Info("");
+			Logger.Warn("Special connections found with connectionExtension support disabled."); // TODO - give user the option to enable at this point
+		}
+		Logger.Info("");
 		Logger.Info("Finding Room Conditionals"); // TODO - add replaceroom exporting with new replaceRoom rework implementation
 		List<ExportRoom> hideRooms = [];
 		List<ExportRoom> exclusiveRooms = [];
@@ -418,6 +445,9 @@ public static class WorldExporter {
 				}
 			}
 		}
+		Logger.Info("");
+		Logger.Info("Initialising timelineSpecifyLists");
+		Dictionary<string, Dictionary<string, List<string>>> timelineSpecifyLists = [];
 		Logger.Info("");
 		Logger.Info("Running through found timelines");
 		List<SpecifiedChange> specifiedChanges = [];
@@ -455,6 +485,27 @@ public static class WorldExporter {
 							break;
 						}
 					}
+				}
+			}
+			Logger.Info("");
+			Logger.Info($"    Checking {worldTimeline} for special connections"); // TODO - apply this to conditionals too
+			timelineSpecifyLists.Add(worldTimeline, []);
+			foreach (ExportRoom exportRoom in allRooms) // add all rooms to handle pair-fix changes later on
+				timelineSpecifyLists[worldTimeline].Add(exportRoom.name, []);
+			foreach (ExportRoom timelineRoom in roomsInTimeline) {
+				Logger.Info($"        Checking {timelineRoom.name}");
+				List<string> namesEncountered = [];
+				for (int timelineRoomExit = 0; timelineRoomExit < timelineRoom.connections.Length; timelineRoomExit++) {
+					string foundName = timelineRoom.connections[timelineRoomExit].roomName;
+					Logger.Info($"        {timelineRoomExit}: {foundName ?? "-"}");
+					if (foundName == null)
+						continue;
+					if (namesEncountered.Contains(foundName)) {
+						Logger.Info($"            Duplicate found, added {timelineRoom.name} to {foundName} specify list");
+						timelineSpecifyLists[worldTimeline][foundName].Add(timelineRoom.name);
+					}
+					else
+						namesEncountered.Add(foundName);
 				}
 			}
 			Logger.Info("");
@@ -597,11 +648,16 @@ public static class WorldExporter {
 				finalLine += $"{disconnectedBeforeExit + 1} : ";
 			}
 			else {
-				bool oldConnectionDisconnected = specifiedChange.oldConnection.roomName == "DISCONNECTED";
-				finalLine += $"{specifiedChange.oldConnection.roomName + (CEEE && !oldConnectionDisconnected ? $"<{specifiedChange.oldConnection.exitID}>" : "")} : ";
+				finalLine += $"{specifiedChange.oldConnection.roomName + (CEEE && defaultSpecifyLists[specifiedChange.oldConnection.roomName].Contains(specifiedChange.affectedRoom) ? $"<{specifiedChange.oldConnection.exitID}>" : "")} : ";
 			}
-			bool newConnectionDisconnected = specifiedChange.newConnection.roomName == "DISCONNECTED";
-			finalLine += specifiedChange.newConnection.roomName + (CEEE && !newConnectionDisconnected ? $"<{specifiedChange.oldConnection.exitID}>" : "");
+			bool specifyExitID = false;
+			foreach (string timeline in specifiedChange.timeline.timelines) {
+				if (timelineSpecifyLists[timeline][specifiedChange.affectedRoom].Contains(specifiedChange.newConnection.roomName)) {
+					specifyExitID = true;
+					break;
+				}
+			}
+			finalLine += specifiedChange.newConnection.roomName + (CEEE && specifyExitID ? $"<{specifiedChange.newConnection.exitID}>" : "");
 			Logger.Info(finalLine);
 		}
 		Logger.Info("END CONDITIONAL LINKS");
@@ -610,7 +666,7 @@ public static class WorldExporter {
 		foreach (ExportRoom exportRoom in allRooms) {
 			string finalLine = exportRoom.name + " : ";
 			for (int i = 0; i < exportRoom.connections.Length; i++)
-				finalLine += (i > 0 ? ", " : "") + (exportRoom.connections[i].roomName.IsNullOrEmpty() ? "DISCONNECTED" : (exportRoom.connections[i].roomName + (CEEE ? $"<{exportRoom.connections[i].exitID}>" : "")));
+				finalLine += (i > 0 ? ", " : "") + (exportRoom.connections[i].roomName.IsNullOrEmpty() ? "DISCONNECTED" : (exportRoom.connections[i].roomName + ((CEEE && defaultSpecifyLists[exportRoom.name].Contains(exportRoom.connections[i].roomName)) ? $"<{exportRoom.connections[i].exitID}>" : "")));
 			foreach (string tag in exportRoom.tags)
 				finalLine += $" : {tag}";
 			Logger.Info(finalLine);
