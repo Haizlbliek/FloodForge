@@ -622,8 +622,10 @@ public static class WorldExporter {
 				List<TLChange> groupedChanges = [changeToOrder];
 				for (int compareIndex = changeIndex + 1; compareIndex < changes.Count;) {
 					TLChange changeToCompare = changes[compareIndex];
-					if ((changeToOrder.oldConnection.roomName == changeToCompare.affectedRoom && (!CEEE || changeToOrder.oldConnection.exitID == changeToCompare.exitID)) || 
-						changeToOrder.newConnection.roomName == changeToCompare.affectedRoom && (!CEEE || changeToOrder.newConnection.exitID == changeToCompare.exitID)) {
+					if (((changeToCompare.newConnection.connectionConditions.Length == 0 && changeToOrder.newConnection.connectionConditions.Length == 0) || 
+						changeToCompare.newConnection.connectionConditions.SequenceEqual(changeToOrder.newConnection.connectionConditions)) &&
+						((changeToCompare.oldConnection.roomName == changeToOrder.affectedRoom && (!CEEE || changeToOrder.oldConnection.exitID == changeToCompare.exitID)) || 
+						changeToCompare.newConnection.roomName == changeToOrder.affectedRoom && (!CEEE || changeToOrder.newConnection.exitID == changeToCompare.exitID))) {
 						Logger.Info($"            Found: {changeToCompare}");
 						groupedChanges.Add(changeToCompare);
 						changes.RemoveAt(compareIndex);
@@ -679,19 +681,22 @@ public static class WorldExporter {
 			}
 			mergedSpecifiedChanges.Add(changeToMerge);
 		}
-		// TODO - decide where it's necessary to specify exitID in case of connectionExtensions (so we don't clutter the world file with unnecessary specificity)
 		Logger.Info("");
 		Logger.Info("Composing world_XX.txt file");
 		List<string> finalWorldFile = [];
 		finalWorldFile.Add("CONDITIONAL LINKS");
+		if (hideRooms.Count != 0)
+			finalWorldFile.Add("");
 		foreach (ExportRoom hideRoom in hideRooms) {
 			finalWorldFile.Add($"{PreProcessorsToString(hideRoom.preProcessorConditions)}{hideRoom.timeline.Inverted()} : HIDEROOM : {hideRoom.name}");
 		}
-		finalWorldFile.Add("");
+		if (exclusiveRooms.Count != 0)
+			finalWorldFile.Add("");
 		foreach (ExportRoom exclusiveRoom in exclusiveRooms) {
 			finalWorldFile.Add($"{PreProcessorsToString(exclusiveRoom.preProcessorConditions)}{exclusiveRoom.timeline} : EXCLUSIVEROOM : {exclusiveRoom.name}");
 		}
-		finalWorldFile.Add("");
+		if (mergedSpecifiedChanges.Count != 0)
+			finalWorldFile.Add("");
 		foreach (SpecifiedChange specifiedChange in mergedSpecifiedChanges) {
 			string finalLine = $"{PreProcessorsToString(specifiedChange.newConnection.connectionConditions)}{specifiedChange.timeline} : {specifiedChange.affectedRoom} : ";
 			if (specifiedChange.oldConnection.roomName.IsNullOrEmpty() || specifiedChange.oldConnection.roomName == "DISCONNECTED") {
