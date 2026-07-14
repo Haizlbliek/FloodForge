@@ -111,10 +111,14 @@ public class Connection {
 
 	public void RecalculateBezier() {
 		this.RefreshReplacementVirtualConnections();
+		bool isSingleExitConnection = this.roomA == this.roomB && this.roomAExitID == this.roomBExitID;
 		Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
 		Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
 		this.segments = Math.Clamp((int) ((pointA - pointB).Length / 2f), 4, 100);
 		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
+			if (isSingleExitConnection) {
+				pointB += (Vector2)this.roomA.GetConnectionConnectDirection(this.roomAExitID) * 3;
+			}
 			this.BezierCenter = (pointA + pointB) * 0.5f;
 			this.BezierPoints = [pointA, pointB];
 			this.fittedAABB = new Rect(pointA, pointB);
@@ -124,6 +128,11 @@ public class Connection {
 			Vector2 directionB = this.roomB.GetConnectionConnectDirection(this.roomBExitID);
 
 			this.directionStrength = (pointA - pointB).Length;
+			if (isSingleExitConnection) {
+				this.directionStrength = 10f;
+				directionA += new Vector2(-directionA.y, directionA.x);
+				directionB += new Vector2(directionB.y, -directionB.x);
+			}
 			if (this.directionStrength > 300f) {
 				this.directionStrength = this.directionStrength * 0.5f + 150f;
 			}

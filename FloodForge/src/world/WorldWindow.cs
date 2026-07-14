@@ -1192,18 +1192,27 @@ public static class WorldWindow {
 		// REVIEW - add separate theme color for warning
 		Immediate.Color(CurrentConnectionValid ? (CurrentConnectionWarn ? Themes.TextWarn : Themes.RoomConnectionHover) : Themes.RoomConnectionInvalid);
 
-		int segments = Mathf.RoundToInt((ConnectionStart - ConnectionEnd).Value.Length / 2f);
+		bool isSingleExitConnection = NewConnection.roomA == NewConnection.roomB && NewConnection.roomAExitID == NewConnection.roomBExitID;
 		segments = Math.Clamp(segments, 4, 100);
 		float directionStrength = (ConnectionStart - ConnectionEnd).Value.Length;
 		if (directionStrength > 300f)
 			directionStrength = (directionStrength - 300f) * 0.5f + 300f;
 
 		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-			UI.Line(ConnectionStart.Value, ConnectionEnd.Value, cameraScale / 4f);
+			Vector2 endPoint = ConnectionEnd.Value;
+			if (isSingleExitConnection)
+				endPoint += (NewConnection.roomB?.GetConnectionConnectDirection(NewConnection.roomBExitID) ?? Vector2.Zero) * 3;
+			UI.Line(ConnectionStart.Value, endPoint, cameraScale / 4f);
 		}
 		else {
 			Vector2 directionA = NewConnection.roomA.GetConnectionConnectDirection(NewConnection.roomAExitID);
 			Vector2 directionB = NewConnection.roomB?.GetConnectionConnectDirection(NewConnection.roomBExitID) ?? Vector2.Zero;
+
+			if (isSingleExitConnection) {
+				directionStrength = 10f;
+				directionA += new Vector2(-directionA.y, directionA.x);
+				directionB += new Vector2(directionB.y, -directionB.x);
+			}
 
 			if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
 				directionStrength *= 0.3333f;
