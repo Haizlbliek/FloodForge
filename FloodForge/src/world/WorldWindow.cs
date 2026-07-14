@@ -298,7 +298,7 @@ public static class WorldWindow {
 					CurrentConnectionValid = true;
 					CurrentConnectionWarn = false;
 
-					if (NewConnection.roomA == NewConnection.roomB) {
+					if (NewConnection.roomA == NewConnection.roomB && !connectionExtensionsEnabled) {
 						CurrentConnectionValid = false;
 					}
 					else {
@@ -322,7 +322,7 @@ public static class WorldWindow {
 									CurrentConnectionWarn = false;
 								}
 							}
-							if (originRoomA == originRoomB)
+							if (originRoomA == originRoomB && !connectionExtensionsEnabled)
 								CurrentConnectionValid = false;
 						}
 
@@ -340,7 +340,7 @@ public static class WorldWindow {
 								CurrentConnectionValid = false;
 								break;
 							}
-							else {
+							else if (!connectionExtensionsEnabled) {
 								Timeline otherTimeline = other.EffectiveConnectionTimeline;
 								Timeline currentTimeline = NewConnection.EffectiveConnectionTimeline;
 								if (otherTimeline.OverlapsWith(currentTimeline)) {
@@ -384,8 +384,10 @@ public static class WorldWindow {
 							if (hasOverlap) {
 								if (connectionEffectiveTimeline.timelineType == TimelineType.All)
 									overlapCanBeSolved = false;
-								foundDuplicate |= connection.roomA == NewConnection.roomA && connection.roomB == NewConnection.roomB;
-								foundDuplicate |= connection.roomB == NewConnection.roomA && connection.roomA == NewConnection.roomB;
+								if (!connectionExtensionsEnabled) {
+									foundDuplicate |= connection.roomA == NewConnection.roomA && connection.roomB == NewConnection.roomB;
+									foundDuplicate |= connection.roomB == NewConnection.roomA && connection.roomA == NewConnection.roomB;
+								}
 
 								foundOccupiedExit |= connection.roomA == NewConnection.roomA && connection.roomAExitID == NewConnection.roomAExitID;
 								foundOccupiedExit |= connection.roomB == NewConnection.roomB && connection.roomBExitID == NewConnection.roomBExitID;
