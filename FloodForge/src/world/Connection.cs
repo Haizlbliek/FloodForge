@@ -361,20 +361,13 @@ public class Connection {
 
 			Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
 			Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
-			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-				Vector2 pointMiddle = (pointA + pointB) / 2;
-				float alphaMiddle = fadeMiddle ? 0f : (alphaA + alphaB) / 2;
-				this.DrawCustomLine(pointA.x, pointA.y, pointMiddle.x, pointMiddle.y, alphaA, alphaMiddle);
-				this.DrawCustomLine(pointMiddle.x, pointMiddle.y, pointB.x, pointB.y, alphaMiddle, alphaB);
-			}
-			else {
-				Vector2 matrixPos = WorldWindow.cameraOffset;
-				Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
 
-				// TODO - re-add middle-fading (negative alpha, abs()'d in the shader?)
-				if (this.connectionRenderable != null)
-					DrawConnectionMesh(this.connectionRenderable, matrixPos, matrixScale, Vector2.Zero, connectionColorA, connectionColorB, WorldWindow.SelectorScale / 66);
-			}
+			Vector2 matrixPos = WorldWindow.cameraOffset;
+			Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
+
+			// TODO - re-add middle-fading (negative alpha, abs()'d in the shader?)
+			if (this.connectionRenderable != null)
+				DrawConnectionMesh(this.connectionRenderable, matrixPos, matrixScale, Vector2.Zero, connectionColorA, connectionColorB, WorldWindow.SelectorScale / 66);
 
 			Program.gl.Disable(EnableCap.Blend);
 
