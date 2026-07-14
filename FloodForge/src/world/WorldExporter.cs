@@ -374,9 +374,9 @@ public static class WorldExporter {
 				foreach (ExportConnection exportConnection in defaultConnections) {
 					if((exportConnection.roomA.roomName == exportRoom.name && exportConnection.roomA.exitID == i) ||
 					(exportConnection.roomB.roomName == exportRoom.name && exportConnection.roomB.exitID == i)) {
-						bool otherRoomisRoomB = exportConnection.roomA.roomName == exportRoom.name;
+						bool otherRoomisRoomB = exportConnection.roomA.roomName == exportRoom.name && exportConnection.roomA.exitID == i;
 						IDExit idExitToSet = otherRoomisRoomB ? exportConnection.roomB : exportConnection.roomA;
-						Logger.Info($"        Found: {exportConnection}; set [{i}] -> {(idExitToSet.roomName.IsNullOrEmpty() ? "DISCONNECTED" : idExitToSet.roomName)}");
+						Logger.Info($"        Found: {exportConnection}; set [{i}] -> {(idExitToSet.roomName.IsNullOrEmpty() ? "DISCONNECTED" : idExitToSet)}");
 						exportRoom.connections[i] = idExitToSet;
 						break;
 					}
@@ -448,9 +448,9 @@ public static class WorldExporter {
 					foreach (ExportConnection timelineConnection in connectionsInTimeline) {						
 						if((timelineConnection.roomA.roomName == timelineRoom.name && timelineConnection.roomA.exitID == exitID) ||
 						(timelineConnection.roomB.roomName == timelineRoom.name && timelineConnection.roomB.exitID == exitID)) {
-							bool otherRoomisRoomB = timelineConnection.roomA.roomName == timelineRoom.name;
+							bool otherRoomisRoomB = timelineConnection.roomA.roomName == timelineRoom.name && timelineConnection.roomA.exitID == exitID;
 							IDExit idExitToSet = otherRoomisRoomB ? timelineConnection.roomB : timelineConnection.roomA;
-							Logger.Info($"            Found: {timelineConnection}; set [{exitID}] -> {(idExitToSet.roomName.IsNullOrEmpty() ? "DISCONNECTED" : idExitToSet.roomName)}");
+							Logger.Info($"            Found: {timelineConnection}; set [{exitID}] -> {(idExitToSet.roomName.IsNullOrEmpty() ? "DISCONNECTED" : idExitToSet)}");
 							timelineRoom.connections[exitID] = idExitToSet;
 							break;
 						}
@@ -491,7 +491,7 @@ public static class WorldExporter {
 					Logger.Info($"            Found unpaired disconnection");
 					ExportRoom unpairedRoom = allRooms.First(x => x.name == possibleUnpairedChange.oldConnection.roomName);
 					for (int i = 0; i < unpairedRoom.connections.Length; i++) {
-						if (unpairedRoom.connections[i].roomName == possibleUnpairedChange.affectedRoom && CEEE || (unpairedRoom.connections[i].exitID == possibleUnpairedChange.exitID)) {
+						if (unpairedRoom.connections[i].roomName == possibleUnpairedChange.affectedRoom && (!CEEE || (unpairedRoom.connections[i].exitID == possibleUnpairedChange.exitID))) {
 							TLChange changeToAdd = new (unpairedRoom.name, i, unpairedRoom.connections[i], new("DISCONNECTED", 0));
 							Logger.Info($"            Added {changeToAdd}");
 							pairChanges.Add(changeToAdd);
