@@ -327,6 +327,32 @@ public static class WorldExporter {
 		writer.Write("}");
 	}
 
+	private static string ExportCreatureTags(DenCreature creature) {
+		if (creature.tags.Count <= 0) {
+			return "";
+		}
+
+		string finalTags = "";
+		finalTags += "-{";
+		bool first = true;
+		foreach (DenCreature.Tag tag in creature.tags) {
+			if (!first)
+				finalTags += ",";
+			first = false;
+
+			// TODO: Handle dynamically?
+			if (tag.id.displayType == Mods.DisplayType.None) {
+				finalTags += tag.id.id;
+			}
+			else {
+				string name = Mods.ExportTagName(tag.id.id) + ":";
+				if (tag.id == Mods.tags["polemimic_length"] || tag.id == Mods.tags["centipede_length"]) name = "";
+				finalTags += $"{name}{(tag is DenCreature.IntegerTag intTag ? intTag.data : (tag is DenCreature.FloatTag floatTag ? floatTag.data : (tag is DenCreature.StringTag stringTag ? stringTag.data : "IDK LOL")))}";
+			}
+		}
+		return finalTags + "}";
+	}
+
 	public static bool KhyExporter() { // TODO - make this a hundred times more compact (this is a naive implementation)
 		Logger.Info("");
 		Logger.Info("========================================");
@@ -626,16 +652,16 @@ public static class WorldExporter {
 		// TODO - decide where it's necessary to specify exitID in case of connectionExtensions (so we don't clutter the world file with unnecessary specificity)
 		Logger.Info("");
 		Logger.Info("Composing world_XX.txt file");
-		Logger.Info("---------------------------");
-		Logger.Info("CONDITIONAL LINKS");
+		List<string> finalWorldFile = [];
+		finalWorldFile.Add("CONDITIONAL LINKS");
 		foreach (ExportRoom hideRoom in hideRooms) {
-			Logger.Info($"{hideRoom.timeline.Inverted()} : HIDEROOM : {hideRoom.name}");
+			finalWorldFile.Add($"{hideRoom.timeline.Inverted()} : HIDEROOM : {hideRoom.name}");
 		}
-		Logger.Info("");
+		finalWorldFile.Add("");
 		foreach (ExportRoom exclusiveRoom in exclusiveRooms) {
-			Logger.Info($"{exclusiveRoom.timeline} : EXCLUSIVEROOM : {exclusiveRoom.name}");
+			finalWorldFile.Add($"{exclusiveRoom.timeline} : EXCLUSIVEROOM : {exclusiveRoom.name}");
 		}
-		Logger.Info("");
+		finalWorldFile.Add("");
 		foreach (SpecifiedChange specifiedChange in mergedSpecifiedChanges) {
 			string finalLine = $"{specifiedChange.timeline} : {specifiedChange.affectedRoom} : ";
 			if (specifiedChange.oldConnection.roomName.IsNullOrEmpty() || specifiedChange.oldConnection.roomName == "DISCONNECTED") {
@@ -658,21 +684,214 @@ public static class WorldExporter {
 				}
 			}
 			finalLine += specifiedChange.newConnection.roomName + (CEEE && specifyExitID ? $"<{specifiedChange.newConnection.exitID}>" : "");
-			Logger.Info(finalLine);
+			finalWorldFile.Add(finalLine);
 		}
-		Logger.Info("END CONDITIONAL LINKS");
-		Logger.Info("");
-		Logger.Info("ROOMS");
+		finalWorldFile.Add("END CONDITIONAL LINKS");
+		finalWorldFile.Add("");
+		finalWorldFile.Add("ROOMS");
 		foreach (ExportRoom exportRoom in allRooms) {
 			string finalLine = exportRoom.name + " : ";
 			for (int i = 0; i < exportRoom.connections.Length; i++)
 				finalLine += (i > 0 ? ", " : "") + (exportRoom.connections[i].roomName.IsNullOrEmpty() ? "DISCONNECTED" : (exportRoom.connections[i].roomName + ((CEEE && defaultSpecifyLists[exportRoom.name].Contains(exportRoom.connections[i].roomName)) ? $"<{exportRoom.connections[i].exitID}>" : "")));
 			foreach (string tag in exportRoom.tags)
 				finalLine += $" : {tag}";
-			Logger.Info(finalLine);
+			finalWorldFile.Add(finalLine);
 		}
-		Logger.Info("END ROOMS");
-		Logger.Info("---------------------------");
+		finalWorldFile.Add("END ROOMS");
+		finalWorldFile.Add("");
+		finalWorldFile.Add("CREATURES"); // this section is directly taken from the old exporter.
+		foreach (Room room in WorldWindow.region.rooms) {
+			for (int i = 0; i < room.dens.Count; i++) {
+				List<DenLineage?> nonLineageCreatures = [];
+
+				Den den = room.GetDen01(i);
+				foreach (DenLineage creature in den.creatures) {
+					if (creature.lineageTo != null)
+						continue;
+
+					if (string.IsNullOrEmpty(creature.type) || creature.count == 0)
+						continue;
+
+					nonLineageCreatures.Add(creature);
+				}
+
+				for (int j = 0; j < nonLineageCreatures.Count; j++) {
+					string finalCreature = "";
+					DenLineage? mainCreature = nonLineageCreatures[j];
+					if (mainCreature == null)
+						continue;
+
+					List<DenLineage> sameTimelineCreatures = [mainCreature];
+					nonLineageCreatures[j] = null;
+					for (int k = j + 1; k < nonLineageCreatures.Count; k++) {
+						DenLineage? otherCreature = nonLineageCreatures[k];
+						if (otherCreature == null)
+							continue;
+
+						if (mainCreature.timeline.Match(otherCreature.timeline)) {
+							sameTimelineCreatures.Add(otherCreature);
+							nonLineageCreatures[k] = null;
+						}
+					}
+
+					if (mainCreature.timeline.timelineType != TimelineType.All) {
+						finalCreature += $"({mainCreature.timeline})";
+					}
+
+					if (mainCreature.preProcessorConditions.Length != 0) {
+						string text = "";
+						bool first1 = true;
+						foreach (string preProcessor in mainCreature.preProcessorConditions) {
+							if (!first1)
+								text += ",";
+							first1 = false;
+							text += preProcessor;
+						}
+						finalCreature += $"{{{text}}}";
+					}
+
+					if (room == WorldWindow.region.offscreenDen) {
+						finalCreature += "OFFSCREEN : ";
+					}
+					else {
+						finalCreature += $"{RoomNameCasing(room.name)} : ";
+					}
+
+					bool first = true;
+
+					foreach (DenLineage creature in sameTimelineCreatures) {
+						if (!first)
+							finalCreature += ", ";
+						first = false;
+
+						if (room == WorldWindow.region.offscreenDen) {
+							finalCreature += $"0-{Mods.ExportCreatureName(creature.type)}";
+						}
+						else {
+							finalCreature += $"{i + room.nonDenExitCount}-{Mods.ExportCreatureName(creature.type)}";
+						}
+						finalCreature += ExportCreatureTags(creature);
+						if (creature.count > 1)
+							finalCreature += $"-{creature.count}";
+					}
+
+					finalWorldFile.Add(finalCreature);
+				}
+			}
+
+			for (int i = 0; i < room.dens.Count; i++) {
+				Den den = room.GetDen01(i);
+				string finalDen = "";
+				foreach (DenLineage lineage in den.creatures) {
+					DenCreature creature = lineage;
+
+					if (creature.lineageTo == null)
+						continue;
+
+					if (lineage.timeline.timelineType != TimelineType.All && lineage.timeline.timelines.Count > 0) {
+						finalDen += "(";
+						finalDen += lineage.timeline;
+						finalDen += ")";
+					}
+
+					if (lineage.preProcessorConditions.Length != 0) {
+						string text = "";
+						bool first = true;
+						foreach (string preProcessor in lineage.preProcessorConditions) {
+							if (!first)
+								text += ",";
+							first = false;
+							text += preProcessor;
+						}
+						finalDen += $"{{{text}}}";
+					}
+
+					finalDen += "LINEAGE : ";
+
+					if (room == WorldWindow.region.offscreenDen) {
+						finalDen += "OFFSCREEN : ";
+					}
+					else {
+						finalDen += $"{RoomNameCasing(room.name)} : ";
+					}
+
+					if (room == WorldWindow.region.offscreenDen) {
+						finalDen += "0 : ";
+					}
+					else {
+						finalDen += $"{i + room.nonDenExitCount} : ";
+					}
+
+					DenCreature current = creature;
+					while (current != null) {
+						finalDen += string.IsNullOrEmpty(current.type) || current.count == 0 ? "NONE" : Mods.ExportCreatureName(current.type);
+
+						finalDen += ExportCreatureTags(current);
+
+						if (current.lineageTo == null) {
+							finalWorldFile.Add(finalDen + "-0");
+							break;
+						}
+						finalDen += $"-{Math.Clamp(current.lineageChance, 0.0f, 1.0f)}, ";
+
+						current = current.lineageTo;
+					}
+				}
+			}
+
+			if (room == WorldWindow.region.offscreenDen)
+				continue;
+
+			foreach (GarbageWormDen worm in room.garbageWormDens) {
+				string finalWorm = "";
+				if (worm.timeline.timelineType != TimelineType.All) {
+					finalWorm += $"({worm.timeline})";
+				}
+
+				if (worm.preProcessorConditions.Length != 0) {
+					finalWorm += "{";
+					bool first = true;
+					foreach (string preProcessor in worm.preProcessorConditions) {
+						if (!first)
+							finalWorm += ",";
+						first = false;
+						finalWorm += preProcessor;
+					}
+					finalWorm += "}";
+				}
+
+				finalWorm += $"{RoomNameCasing(room.name)} : {room.GarbageWormDenIndex}-{Mods.ExportCreatureName(worm.type)}";
+				if (worm.count > 1)
+					finalWorm += $"-{worm.count}";
+				finalWorldFile.Add(finalWorm);
+			}
+		}
+
+		if (!WorldWindow.region.extraWorldCreatures.IsNullOrEmpty())
+			WorldWindow.region.extraWorldCreatures.Split('\n').ForEach(finalWorldFile.Add);
+		finalWorldFile.Add("END CREATURES");
+		IOrderedEnumerable<Room> sortedMigrationRooms = WorldWindow.region.rooms
+			.Where(room => room is not OffscreenRoom && room.data.blockedBatMigration)
+			.OrderBy(room => room.data.tags.Contains("GATE") ? 0 : 1)
+			.ThenBy(room => room.data.subregion)
+			.ThenBy(room => room.data.tags.Contains("SHELTER") ? 0 : 1)
+			.ThenBy(room => room.data.cameras.Count)
+			.ThenBy(room => room.name, StringComparer.OrdinalIgnoreCase);
+
+		if (sortedMigrationRooms.Any()) {
+			finalWorldFile.Add("");
+			finalWorldFile.Add("BAT MIGRATION BLOCKAGES");
+			foreach (Room room in sortedMigrationRooms) {
+				finalWorldFile.Add($"{FancyRoomCasing(room)}");
+			}
+			finalWorldFile.Add("END BAT MIGRATION BLOCKAGES");
+		}
+		if (!WorldWindow.region.extraWorld.IsNullOrEmpty())
+			WorldWindow.region.extraWorld.Split('\n').ForEach(finalWorldFile.Add);;
+		
+		string worldFileStringified = "";
+		finalWorldFile.ForEach(l => worldFileStringified += "\n" + l);
+		Logger.Info($"\n---------------------------{worldFileStringified}\n---------------------------");
 		Logger.Info("");
 		Logger.Info("End KhyExporter!");
 		Logger.Info("========================================");
