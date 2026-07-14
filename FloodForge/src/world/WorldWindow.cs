@@ -1193,7 +1193,7 @@ public static class WorldWindow {
 		Immediate.Color(CurrentConnectionValid ? (CurrentConnectionWarn ? Themes.TextWarn : Themes.RoomConnectionHover) : Themes.RoomConnectionInvalid);
 
 		bool isSingleExitConnection = NewConnection.roomA == NewConnection.roomB && NewConnection.roomAExitID == NewConnection.roomBExitID;
-		segments = Math.Clamp(segments, 4, 100);
+
 		float directionStrength = (ConnectionStart - ConnectionEnd).Value.Length;
 		if (directionStrength > 300f)
 			directionStrength = (directionStrength - 300f) * 0.5f + 300f;
@@ -1223,6 +1223,8 @@ public static class WorldWindow {
 
 			directionA *= directionStrength;
 			directionB *= directionStrength;
+
+			int segments = isSingleExitConnection ? 10 : Math.Clamp(Mathf.RoundToInt(Math.Max((ConnectionStart - ConnectionEnd).Value.Length, (ConnectionStart + directionA - (ConnectionEnd + directionB)).Value.Length) / 2f), 4, 100);
 
 			Vector2 lastPoint = MathUtil.BezierCubic(0f, ConnectionStart.Value, ConnectionStart.Value + directionA, ConnectionEnd.Value + directionB, ConnectionEnd.Value);
 			for (float t = 1f / segments; t <= 1.01f; t += 1f / segments) {

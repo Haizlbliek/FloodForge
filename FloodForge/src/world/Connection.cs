@@ -114,7 +114,7 @@ public class Connection {
 		bool isSingleExitConnection = this.roomA == this.roomB && this.roomAExitID == this.roomBExitID;
 		Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
 		Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
-		this.segments = Math.Clamp((int) ((pointA - pointB).Length / 2f), 4, 100);
+
 		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
 			if (isSingleExitConnection) {
 				pointB += (Vector2)this.roomA.GetConnectionConnectDirection(this.roomAExitID) * 3;
@@ -144,6 +144,7 @@ public class Connection {
 			}
 			directionA *= this.directionStrength;
 			directionB *= this.directionStrength;
+			this.segments = isSingleExitConnection ? 10 : Math.Clamp((int) (Math.Max((pointA - pointB).Length, (pointA + directionA - (pointB + directionB)).Length) / 2f), 4, 100);
 
 			float overSegments = 1f / this.segments;
 			List<Vector2> bezierPoints = [];
