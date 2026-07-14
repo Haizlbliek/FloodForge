@@ -70,7 +70,7 @@ public static class WorldExporter {
 		Logger.Info("Getting timelines"); // REVIEW - consolidate the timeline gathering into one place. Who knows, maybe WorldWindow already does that lmao.
 		HashSet<string> timelinesInRegion = [];
 		foreach (Room room in WorldWindow.region.rooms) {
-			if(room.timeline.timelineType != TimelineType.All) {
+			if (room.timeline.timelineType != TimelineType.All) {
 				foreach (string timelineEntry in room.timeline.timelines) {
 					timelinesInRegion.Add(timelineEntry);
 				}
@@ -398,7 +398,7 @@ public static class WorldExporter {
 			Logger.Info($"    Populating {exportRoom.name}");
 			for (int i = 0; i < exportRoom.connections.Length; i++) {
 				foreach (ExportConnection exportConnection in defaultConnections) {
-					if((exportConnection.roomA.roomName == exportRoom.name && exportConnection.roomA.exitID == i) ||
+					if ((exportConnection.roomA.roomName == exportRoom.name && exportConnection.roomA.exitID == i) ||
 					(exportConnection.roomB.roomName == exportRoom.name && exportConnection.roomB.exitID == i)) {
 						bool otherRoomisRoomB = exportConnection.roomA.roomName == exportRoom.name && exportConnection.roomA.exitID == i;
 						IDExit idExitToSet = otherRoomisRoomB ? exportConnection.roomB : exportConnection.roomA;
@@ -502,7 +502,7 @@ public static class WorldExporter {
 				Logger.Info($"        Populating {timelineRoom.name}");
 				for (int exitID = 0; exitID < timelineRoom.connections.Length; exitID++) {
 					foreach (ExportConnection timelineConnection in connectionsInTimeline) {						
-						if((timelineConnection.roomA.roomName == timelineRoom.name && timelineConnection.roomA.exitID == exitID) ||
+						if ((timelineConnection.roomA.roomName == timelineRoom.name && timelineConnection.roomA.exitID == exitID) ||
 						(timelineConnection.roomB.roomName == timelineRoom.name && timelineConnection.roomB.exitID == exitID)) {
 							bool otherRoomisRoomB = timelineConnection.roomA.roomName == timelineRoom.name && timelineConnection.roomA.exitID == exitID;
 							IDExit idExitToSet = otherRoomisRoomB ? timelineConnection.roomB : timelineConnection.roomA;
@@ -1342,7 +1342,7 @@ public static class WorldExporter {
 		Logger.Info("Getting timelines");
 		HashSet<string> timelinesInRegion = [];
 		foreach (Room room in WorldWindow.region.rooms) {
-			if(room.timeline.timelineType != TimelineType.All) {
+			if (room.timeline.timelineType != TimelineType.All) {
 				foreach (string timelineEntry in room.timeline.timelines) {
 					timelinesInRegion.Add(timelineEntry);
 				}
