@@ -150,6 +150,7 @@ public static class WorldWindow {
 		referenceImages.Clear();
 		selectedDraggables.Clear();
 		draggablePossibleSelect = null;
+		connectionExtensionsEnabled = false;
 		selectingState = SelectingState.None;
 		region = new Region();
 	}
