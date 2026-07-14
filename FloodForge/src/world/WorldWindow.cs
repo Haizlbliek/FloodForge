@@ -1487,7 +1487,7 @@ public static class WorldWindow {
 									foreach (Connection connection in room.connections) {
 										string finalString = "";
 										bool canHaveArrows = false;
-										if (connection.roomA.name != room.name && connection.roomBExitID == index) {
+										if ((connection.roomA == connection.roomB || connection.roomA.name != room.name) && connection.roomBExitID == index) {
 											finalString += connection.roomA.name;
 											encounteredConnections.Add(connection.roomA.name);
 											canHaveArrows = true;
