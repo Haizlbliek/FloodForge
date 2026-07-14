@@ -1,6 +1,7 @@
 namespace FloodForge.World;
 
 // REVIEW - turn this class into the base for all connection visuals, only taking in from- and to-point when drawing and a gradient when relevant
+// TODO - update to match Connection's mesh rendering
 public class ConnectionVisual {
 	public Room roomA;
 	public Room roomB;
@@ -126,7 +127,7 @@ public class ConnectionVisual {
 
 			Color connectionColorA;
 			Color connectionColorB;
-		bool blendColors = false;
+			bool blendColors = false;
 
 			connectionColorA = Themes.RoomConnection;
 			connectionColorB = Themes.RoomConnection;
