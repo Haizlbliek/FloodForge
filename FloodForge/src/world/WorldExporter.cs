@@ -369,7 +369,7 @@ public static class WorldExporter {
 				Logger.Info($"        offscreenroom, skipping");
 				continue;
 			}
-			allRooms.Add(new(room.name, room.data.tags, new IDExit[room.roomExits.Count], room.timeline));
+			allRooms.Add(new(room.name, room.data.tags, room.data.subregion, room.data.cameras.Count, new IDExit[room.roomExits.Count], room.timeline));
 		}
 		Logger.Info("Connections:");
 		List<ExportConnection> allConnections = [];
@@ -485,7 +485,7 @@ public static class WorldExporter {
 			foreach (ExportRoom exportRoom in allRooms) {
 				if (exportRoom.timeline.OverlapsWith(TimelineType.Only, [worldTimeline])) {
 					Logger.Info($"        added {exportRoom}");
-					roomsInTimeline.Add(new (exportRoom.name, [..exportRoom.tags], new IDExit[exportRoom.connections.Length], exportRoom.timeline)); // new instance to avoid modifying default
+					roomsInTimeline.Add(new (exportRoom.name, [..exportRoom.tags], exportRoom.subregion, exportRoom.cameraCount, new IDExit[exportRoom.connections.Length], exportRoom.timeline)); // new instance to avoid modifying default
 				}
 			}
 			List<ExportConnection> connectionsInTimeline = [];
@@ -689,7 +689,11 @@ public static class WorldExporter {
 		finalWorldFile.Add("END CONDITIONAL LINKS");
 		finalWorldFile.Add("");
 		finalWorldFile.Add("ROOMS");
-		foreach (ExportRoom exportRoom in allRooms) {
+		foreach (ExportRoom exportRoom in allRooms.OrderBy(r => r.tags.Contains("GATE") ? 0 : 1)
+					.ThenBy(r => r.subregion)
+					.ThenBy(room => room.tags.Contains("SHELTER") ? 0 : 1)
+					.ThenBy(room => room.cameraCount)
+					.ThenBy(room => room.name, StringComparer.OrdinalIgnoreCase)) {
 			string finalLine = exportRoom.name + " : ";
 			for (int i = 0; i < exportRoom.connections.Length; i++)
 				finalLine += (i > 0 ? ", " : "") + (exportRoom.connections[i].roomName.IsNullOrEmpty() ? "DISCONNECTED" : (exportRoom.connections[i].roomName + ((CEEE && defaultSpecifyLists[exportRoom.name].Contains(exportRoom.connections[i].roomName)) ? $"<{exportRoom.connections[i].exitID}>" : "")));
@@ -932,11 +936,15 @@ public static class WorldExporter {
 		}
 	}
 
-	public class ExportRoom(string name, HashSet<string> tags, IDExit[] connections, Timeline timeline) {
+	public class ExportRoom(string name, HashSet<string> tags, int subregion, int cameraCount, IDExit[] connections, Timeline timeline) {
 		public string name = name;
-		public HashSet<string> tags = tags;
 		public IDExit[] connections = connections;
 		public Timeline timeline = timeline;
+		public HashSet<string> tags = tags;
+		
+		// ordering information
+		public int subregion = subregion;
+		public int cameraCount = cameraCount;
 		public override string ToString() {
 			return (this.timeline.timelineType == TimelineType.All ? "" : $"({this.timeline}) ") + $"{this.name}";
 		}
