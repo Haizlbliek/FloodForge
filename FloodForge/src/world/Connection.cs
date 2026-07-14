@@ -206,14 +206,7 @@ public class Connection {
 
 			float lineDist = WorldWindow.SelectorScale / 4f;
 
-			Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
-			Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
-
-			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-				return MathUtil.LineDistance(WorldWindow.worldMouse, pointA, pointB) < lineDist;
-			}
-
-			Vector2 lastPoint = pointA;
+			Vector2 lastPoint = this.BezierPoints[0];
 			foreach (Vector2 point in this.BezierPoints) {
 				if (MathUtil.LineDistance(WorldWindow.worldMouse, lastPoint, point) < lineDist)
 					return true;
