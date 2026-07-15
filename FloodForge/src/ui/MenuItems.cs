@@ -87,23 +87,21 @@ public abstract class MenuItems {
 			else if (item is Dropdown dropdown1) {
 				bool currentDropdownIsSelected = this.selectedDropdownButton == dropdown1;
 				UI.ButtonResponse response = UI.TextButton(item.Text, Rect.FromSize(x, Main.screenBounds.y - 0.05f, width, 0.04f), new UI.TextButtonMods { selected = this.selectedDropdownButton == item });
-				if (Settings.DropdownOnHover) {
-					if (response.hovered) {
-						hoveringDropdownButton = true;
+				if (response.hovered) {
+					hoveringDropdownButton = true;
+					if (Settings.DropdownOnHover) {
 						this.selectedDropdownButton = dropdown1;
 					}
 				}
-				else if (response.clicked) {
+				if (response.clicked) {
 					this.selectedDropdownButton = currentDropdownIsSelected ? null : dropdown1;
 				}
 
 				x += width + 0.01f;
 			}
 		}
-		if (Settings.DropdownOnHover) {
-			if (this.selectedDropdownButton != null && !(hoveringDropdownButton || this.selectedDropdownRect.Inside(Mouse.Pos))) {
-				this.selectedDropdownButton = null;
-			}
+		if ((Settings.DropdownOnHover || Mouse.JustLeft) && this.selectedDropdownButton != null && !(hoveringDropdownButton || this.selectedDropdownRect.Inside(Mouse.Pos))) {
+			this.selectedDropdownButton = null;
 		}
 	}
 
