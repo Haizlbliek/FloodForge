@@ -11,6 +11,7 @@ public abstract class Popup {
 	protected bool hoverRetained = false;
 	protected bool collapsed = false;
 	protected bool slatedForDeletion = false;
+	public bool IsDeleted => this.slatedForDeletion;
 	protected UVRect closeButton;
 	protected UVRect collapseButton;
 	protected Rect bounds;
