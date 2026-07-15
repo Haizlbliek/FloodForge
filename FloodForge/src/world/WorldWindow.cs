@@ -2262,10 +2262,15 @@ public static class WorldWindow {
 				]),
 
 				new Button("Help", button => {
-					PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+					if (tutorialPopup != null && !tutorialPopup.IsDeleted)
+						tutorialPopup.Close();
+					else
+						tutorialPopup = PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
 				}),
 			];
 		}
+
+		private static Popup? tutorialPopup = null;
 
 		private class LayerButton : Button {
 			private readonly int layer;
