@@ -1621,7 +1621,6 @@ public static class WorldWindow {
 			i++;
 		}
 		i = 1;
-		Immediate.Color(Themes.Text);
 		foreach (string line in debugText.AsEnumerable().Reverse()) {
 			UI.font.WriteFormatted(line, -Main.screenBounds.x, -Main.screenBounds.y + (i * 0.04f), 0.03f, Font.Align.TopLeft);
 			i++;
