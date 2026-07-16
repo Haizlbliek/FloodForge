@@ -133,6 +133,12 @@ public static class DropletWindow {
 	private static void DrawTerrain() {
 		Room.DrawTerrain(new Vector2(roomRect.x0, roomRect.y0));
 	}
+	
+	private static void UpdateGenericControls() {
+		if (Keys.JustPressed(Key.F3)) {
+			Profiler.profilerMode = Profiler.profilerMode == Profiler.ProfilerMode.disabled ? Profiler.ProfilerMode.fpsOnly : Profiler.ProfilerMode.disabled;
+		}
+	}
 
 	private static void UpdateDetailsTab() {
 		DrawTerrain();
@@ -1168,6 +1174,7 @@ public static class DropletWindow {
 
 		blockMouse = Mouse.Y >= Main.screenBounds.y - 0.12f || Mouse.X >= Main.screenBounds.x - 0.41f || Mouse.Disabled;
 
+		UpdateGenericControls();
 		if (currentTab == EditorTab.Details) {
 			UpdateDetailsTab();
 		}
