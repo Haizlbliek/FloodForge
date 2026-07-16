@@ -1070,6 +1070,7 @@ public static class DropletWindow {
 
 		Program.gl.Enable(EnableCap.Blend);
 		Immediate.UseTexture(GeometryTexture);
+		Immediate.Begin(Immediate.PrimitiveType.QUADS);
 
 		for (int x = 0; x < Room.width; x++) {
 			for (int y = 0; y < Room.height; y++) {
@@ -1082,64 +1083,65 @@ public static class DropletWindow {
 				if ((geo & 15) == 4) {
 					Immediate.Color(Themes.RoomShortcutRoom);
 					if ((Room.GetTile(x, y + 1) & 128) > 0) {
-						UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0f, 0f, 0.125f, 0.125f));
+						UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0f, 0f, 0.125f, 0.125f));
 					}
 					else if ((Room.GetTile(x - 1, y) & 128) > 0) {
-						UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0.125f, 0f, 0.25f, 0.125f));
+						UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.125f, 0f, 0.25f, 0.125f));
 					}
 					else if ((Room.GetTile(x + 1, y) & 128) > 0) {
-						UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0.25f, 0f, 0.375f, 0.125f));
+						UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.25f, 0f, 0.375f, 0.125f));
 					}
 					else if ((Room.GetTile(x, y - 1) & 128) > 0) {
-						UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0.375f, 0f, 0.5f, 0.125f));
+						UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.375f, 0f, 0.5f, 0.125f));
 					}
 					else {
-						UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0.125f, 0.125f, 0.25f, 0.25f));
+						UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.125f, 0.125f, 0.25f, 0.25f));
 					}
 				}
 				else if ((geo & 64) > 0) {
 					Immediate.Color(Themes.RoomShortcutRoom);
-					UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0f, 0.375f, 0.125f, 0.5f));
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0f, 0.375f, 0.125f, 0.5f));
 				}
 				else if ((geo & 128) > 0) {
 					Immediate.Color(Themes.RoomShortcutDot);
-					UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0f, 0.125f, 0.125f, 0.25f));
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0f, 0.125f, 0.125f, 0.25f));
 				}
 
 				if ((geo & 256) > 0) {
 					Immediate.Color(Themes.RoomShortcutDen);
-					UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0.125f, 0.375f, 0.25f, 0.5f));
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.125f, 0.375f, 0.25f, 0.5f));
 				}
 				if ((geo & 4096) > 0) {
 					Immediate.Color(Themes.RoomShortcutDen);
-					UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0.25f, 0.375f, 0.375f, 0.5f));
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.25f, 0.375f, 0.375f, 0.5f));
 				}
 				if ((geo & 8192) > 0) {
 					Immediate.Color(Themes.RoomShortcutDen);
-					UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0.375f, 0.375f, 0.5f, 0.5f));
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.375f, 0.375f, 0.5f, 0.5f));
 				}
 				if ((geo & 16384) > 0) {
 					Immediate.Color(Themes.RoomShortcutDot);
-					UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0.25f, 0.125f, 0.375f, 0.25f));
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.25f, 0.125f, 0.375f, 0.25f));
 				}
 				if ((geo & 32768) > 0) {
 					Immediate.Color(Themes.RoomShortcutDot);
-					UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0.25f, 0.25f, 0.375f, 0.375f));
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.25f, 0.25f, 0.375f, 0.375f));
 				}
 				if ((geo & 65536) > 0) {
 					Immediate.Color(Themes.RoomShortcutDot);
-					UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0.375f, 0.25f, 0.5f, 0.375f));
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.375f, 0.25f, 0.5f, 0.375f));
 				}
 				if ((geo & 262144) > 0) {
 					Immediate.Color(Themes.RoomShortcutDot);
-					UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0.125f, 0.25f, 0.25f, 0.375f));
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.125f, 0.25f, 0.25f, 0.375f));
 				}
 				if ((geo & 524288) > 0) {
 					Immediate.Color(Themes.RoomShortcutDot);
-					UI.FillRect(new UVRect(x0, y0, x1, y1).UV(0f, 0.25f, 0.125f, 0.375f));
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0f, 0.25f, 0.125f, 0.375f));
 				}
 			}
 		}
+		Immediate.End();
 		Immediate.UseTexture(null);
 		Profiler.MarkPoint("Tiles");
 
