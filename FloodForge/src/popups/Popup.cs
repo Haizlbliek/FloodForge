@@ -217,12 +217,14 @@ public abstract class Popup {
 			Immediate.Color(Themes.Popup);
 			UI.ButtonFillRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
 		}
+		
+		float collapsedWidth = Math.Min(Math.Max(UI.font.Measure(this.popupTitle, 0.03f).x + 0.12f, 0.25f), this.bounds.x1 - this.bounds.x0);
 
 		Immediate.Color(Themes.PopupHeader);
-		UI.ButtonFillRect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
+		UI.ButtonFillRect(this.collapsed ? this.bounds.x1 - collapsedWidth : this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
 		if(this.popupTitle != "") {
 			Immediate.Color(this.collapsed ? Themes.TextDisabled : Themes.Text);
-			UI.font.WriteFormatted(this.popupTitle, this.bounds.x0 + 0.01f, this.bounds.y1 - 0.025f, 0.03f, Font.Align.MiddleLeft);
+			UI.font.WriteFormatted(this.popupTitle, this.collapsed ? this.bounds.x1 - collapsedWidth + 0.01f : this.bounds.x0 + 0.01f, this.bounds.y1 - 0.025f, 0.03f, Font.Align.MiddleLeft);
 		}
 
 		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).UV(0f, 0f, 0.25f, 0.25f);
@@ -244,7 +246,7 @@ public abstract class Popup {
 
 		Immediate.Color(this.isHovered ? Themes.BorderHighlight : Themes.Border);
 		if (this.collapsed) {
-			UI.ButtonStrokeRect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
+			UI.ButtonStrokeRect(this.bounds.x1 - collapsedWidth, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
 		}
 		else {
 			UI.ButtonStrokeRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
