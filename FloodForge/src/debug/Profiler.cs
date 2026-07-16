@@ -95,6 +95,14 @@ public static class Profiler {
 
 	/// <summary>
 	/// Marks a segment in the profiler timeline.<br />Use <c>navigateContext</c> to profile timings within a method and around it.
+	/// navigateContext if <c>sumContext</c> == false:
+	/// 	 1: navigate deeper
+	/// 	 0: mark new point at same level
+	/// 	-1: navigate shallower
+	/// navigateContext if <c>sumContext</c> == true:
+	/// 	 2: enter sumContext
+	/// 	 1: mark start of single sum element
+	/// 	 0: mark end of single sum element
 	/// </summary>
 	public static void MarkPoint(string key, int navigateContext = 0, bool sumContext = false) {
 		if (profilerMode == ProfilerMode.disabled) {
