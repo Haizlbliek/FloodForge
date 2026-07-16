@@ -324,10 +324,13 @@ public abstract class Popup {
 		return this;
 	}
 
+	// REVIEW - apply bounds-clamping when resizing the program window so that doing so doesn't allow popups to go out of bounds
+	// alternatively, make popups reset when out of bounds?
 	public Popup Translate(Vector2 offset, bool topLeftCorner = false) {
-		Vector2 unclampedOffset = offset + (topLeftCorner ? new Vector2 (this.bounds.CenterX - this.bounds.x0, this.bounds.CenterY - this.bounds.y1) : Vector2.Zero);
-		unclampedOffset.y = Math.Min(unclampedOffset.y, Main.screenBounds.y - 0.06f - this.bounds.y1);
-		this.bounds += unclampedOffset;
+		Vector2 totalOffset = offset + (topLeftCorner ? new Vector2 (this.bounds.CenterX - this.bounds.x0, this.bounds.CenterY - this.bounds.y1) : Vector2.Zero);
+		totalOffset.y = Math.Clamp(totalOffset.y, -Main.screenBounds.y + 0.05f - this.bounds.y1, Main.screenBounds.y - 0.06f - this.bounds.y1);
+		totalOffset.x = Math.Clamp(totalOffset.x, -Main.screenBounds.x + 0.15f - this.bounds.x1, Main.screenBounds.x - 0.05f - this.bounds.x0);
+		this.bounds += totalOffset;
 		return this;
 	}
 
