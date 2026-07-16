@@ -324,7 +324,9 @@ public abstract class Popup {
 	}
 
 	public Popup Translate(Vector2 offset, bool topLeftCorner = false) {
-		this.bounds += offset + (topLeftCorner ? new Vector2 (this.bounds.CenterX - this.bounds.x0, this.bounds.CenterY - this.bounds.y1) : Vector2.Zero);
+		Vector2 unclampedOffset = offset + (topLeftCorner ? new Vector2 (this.bounds.CenterX - this.bounds.x0, this.bounds.CenterY - this.bounds.y1) : Vector2.Zero);
+		unclampedOffset.y = Math.Min(unclampedOffset.y, Main.screenBounds.y - 0.06f - this.bounds.y1);
+		this.bounds += unclampedOffset;
 		return this;
 	}
 
