@@ -14,6 +14,7 @@ public class MarkdownPopup : Popup {
 		this.bounds = new Rect(-0.8f, -0.8f, 0.8f, 0.8f);
 		Main.Scroll += this.Scroll;
 		this.LoadFile(path);
+		this.Title(Path.GetFileName(path));
 	}
 
 	protected void LoadFile(string path) {
