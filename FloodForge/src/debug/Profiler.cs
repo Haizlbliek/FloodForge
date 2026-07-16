@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using FloodForge;
-using FloodForge.World;
 
 public static class Profiler {
 	static Stack<(Stopwatch contextSegment, ProfilerContext context)> contextStack = [];
@@ -12,17 +11,20 @@ public static class Profiler {
 	static readonly float[] FPSHistory = new float[100];
 	static int currentIndex = 0;
 	static int FPSHistoryFillLevel = 0;
-	public static bool enableProfiler = false;
+	public static ProfilerMode profilerMode = ProfilerMode.disabled;
+
+	public enum ProfilerMode {
+		disabled,
+		fpsOnly,
+		full
+	}
+
 	public static void InitProfiler() {
-		if (Main.mode == Main.Mode.World && (WorldWindow.EnableProfilerScreen || WorldWindow.EnableFPSCounter)) {
-			enableProfiler = true;
+		if (profilerMode != ProfilerMode.disabled) {
 			contextStack = [];
 			segmentStopwatch = Stopwatch.StartNew();
 			sumStopwatch = Stopwatch.StartNew();
 			AllSumStopwatches = [];
-		}
-		else {
-			enableProfiler = false;
 		}
 	}
 
@@ -34,7 +36,7 @@ public static class Profiler {
 	}
 
 	public static float GetAVGFPS() {
-		if (!enableProfiler) {
+		if (profilerMode == ProfilerMode.disabled) {
 			return 0f;
 		}
 		else {
@@ -56,7 +58,7 @@ public static class Profiler {
 	}
 
 	public static (float, float) GetMinMaxFPS() {
-		if (!enableProfiler) {
+		if (profilerMode == ProfilerMode.disabled) {
 			return (0f, 0f);
 		}
 		else {
@@ -95,7 +97,7 @@ public static class Profiler {
 	/// Marks a segment in the profiler timeline.<br />Use <c>navigateContext</c> to profile timings within a method and around it.
 	/// </summary>
 	public static void MarkPoint(string key, int navigateContext = 0, bool sumContext = false) {
-		if (!enableProfiler) {
+		if (profilerMode == ProfilerMode.disabled) {
 			return;
 		}
 		if (sumContext) {
@@ -231,14 +233,14 @@ public static class Profiler {
 			int i = 0;
 			foreach (string part in profilerMessagesLeft) {
 				foreach (string line in part.Split("\n")) {
-					UI.font.Write(line, -Main.screenBounds.x, Main.screenBounds.y - 0.1f - (i * 0.04f), 0.03f);
+					UI.font.Write(line, -Main.screenBounds.x, Main.screenBounds.y - (Main.mode == Main.Mode.Droplet ? 0.14f : 0.1f) - (i * 0.04f), 0.03f);
 					i++;
 				}
 			}
 			i = 0;
 			foreach (string part in profilerMessagesRight) {
 				foreach (string line in part.Split("\n")) {
-					UI.font.Write(line, Main.screenBounds.x - UI.font.Measure(line, 0.03f).x, Main.screenBounds.y - 0.1f - (i * 0.04f), 0.03f);
+					UI.font.Write(line, Main.screenBounds.x - UI.font.Measure(line, 0.03f).x, Main.screenBounds.y - (Main.mode == Main.Mode.Droplet ? 0.14f : 0.1f) - (i * 0.04f), 0.03f);
 					i++;
 				}
 			}
@@ -272,7 +274,7 @@ public static class Profiler {
 		}
 
 		public static void AddProfilerMessage(string message, bool onRight = false) {
-			if (Profiler.enableProfiler) {
+			if (profilerMode != ProfilerMode.disabled) {
 				if(onRight) profilerMessagesRight.Add(message); else profilerMessagesLeft.Add(message);
 			}
 		}

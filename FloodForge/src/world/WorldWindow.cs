@@ -91,9 +91,6 @@ public static class WorldWindow {
 	private static ConnectionState connectionState;
 	private static ConnectionState lastConnectionState;
 
-	public static bool EnableProfilerScreen = false;
-	public static bool EnableFPSCounter = false;
-
 	static bool EncounteredErrorOnLastDebug = false;
 
 	public static ChangeHistory worldHistory = new ChangeHistory();
@@ -885,14 +882,14 @@ public static class WorldWindow {
 	private static void UpdateKeybinds() {
 		if (Keys.JustPressed(Key.F3)) {
 			// TODO - split log and profiler into separate keybinds
-			if (Keys.Modifier(Keys.Modifiers.Shift)) {
-				EnableProfilerScreen = false;
-				EnableFPSCounter = !EnableFPSCounter;
+			if (Profiler.profilerMode == Profiler.ProfilerMode.disabled) {
+				if (Keys.Modifier(Keys.Modifiers.Shift))
+					Profiler.profilerMode = Profiler.ProfilerMode.fpsOnly;
+				else
+					Profiler.profilerMode = Profiler.ProfilerMode.full;
 			}
-			else {
-				EnableProfilerScreen = !EnableProfilerScreen;
-				EnableFPSCounter = false;
-			}
+			else
+				Profiler.profilerMode = Profiler.ProfilerMode.disabled;
 		}
 
 		if (Keys.JustPressed(Key.O) && Keys.Modifier(Keys.Modifiers.Shift) && SelectedRooms.Count == 2) {

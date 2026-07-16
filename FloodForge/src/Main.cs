@@ -202,9 +202,9 @@ public static class Main {
 
 		Profiler.MarkPoint(-2);
 
-		if (Profiler.enableProfiler) {
+		if (Profiler.profilerMode != Profiler.ProfilerMode.disabled) {
 			if (Profiler.finalContext != null) {
-				if (WorldWindow.EnableProfilerScreen) {
+				if (Profiler.profilerMode == Profiler.ProfilerMode.full) {
 					string profilerText = Profiler.finalContext.ToString();
 					profilerText += $"\nTotal DrawTime: {Math.Floor(Profiler.finalContext.sumSpan.TotalMilliseconds * 1000) / 1000}ms";
 					profilerText += $"\n{Math.Floor(1 / Profiler.finalContext.sumSpan.TotalSeconds)} FPS";
@@ -213,16 +213,14 @@ public static class Main {
 					profilerText += $"\nRENDER FPS: AVG - {Math.Floor(Profiler.GetAVGFPS())}; MIN/MAX - {Math.Floor(min)} FPS/{Math.Floor(max)} FPS";
 					Profiler.Debug.AddProfilerMessage(profilerText);
 				}
-				if (WorldWindow.EnableFPSCounter || WorldWindow.EnableProfilerScreen) {
-					fpsHistory[fpsHistoryIndex] = 1/Program.Delta;
-					fpsHistoryIndex = (fpsHistoryIndex + 1) % 500;
-					if (fpsHistoryIndex == 0)
-						populatedFPSHistory = true;
-					float averageFPS = fpsHistory.Average();
-					Profiler.Debug.AddProfilerMessage($"\nProgram.Delta: {Program.Delta*1000}ms;\nfps: {Math.Floor(1/Program.Delta)};\navgFPS: {averageFPS + (populatedFPSHistory ? "" : "*")}\nfpsIndex: {fpsHistoryIndex}");
-				}
+				fpsHistory[fpsHistoryIndex] = 1/Program.Delta;
+				fpsHistoryIndex = (fpsHistoryIndex + 1) % 500;
+				if (fpsHistoryIndex == 0)
+					populatedFPSHistory = true;
+				float averageFPS = fpsHistory.Average();
+				Profiler.Debug.AddProfilerMessage($"\nProgram.Delta: {Program.Delta*1000}ms;\nfps: {Math.Floor(1/Program.Delta)};\navgFPS: {averageFPS + (populatedFPSHistory ? "" : "*")}\nfpsIndex: {fpsHistoryIndex}");
 			}
-			Profiler.Debug.DrawProfilerMessages(!WorldWindow.EnableFPSCounter && WorldWindow.EnableProfilerScreen);
+			Profiler.Debug.DrawProfilerMessages(Profiler.profilerMode == Profiler.ProfilerMode.full);
 		}
 		diagnosticsStopwatch.Stop();
 		
