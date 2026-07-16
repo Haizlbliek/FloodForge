@@ -172,6 +172,18 @@ public static class Main {
 			fullscreen = !fullscreen;
 			Program.window.WindowState = fullscreen ? Silk.NET.Windowing.WindowState.Fullscreen : Silk.NET.Windowing.WindowState.Normal;
 		}
+		
+		if (Keys.JustPressed(Key.F3)) {
+			// TODO - split log and profiler into separate keybinds
+			if (Profiler.profilerMode == Profiler.ProfilerMode.disabled) {
+				if (Keys.Modifier(Keys.Modifiers.Shift))
+					Profiler.profilerMode = Profiler.ProfilerMode.fpsOnly;
+				else
+					Profiler.profilerMode = Profiler.ProfilerMode.full;
+			}
+			else
+				Profiler.profilerMode = Profiler.ProfilerMode.disabled;
+		}
 
 		if (Keys.JustPressed(Key.Escape)) {
 			if (PopupManager.Windows.Count > 0) {

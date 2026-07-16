@@ -880,18 +880,6 @@ public static class WorldWindow {
 	}
 
 	private static void UpdateKeybinds() {
-		if (Keys.JustPressed(Key.F3)) {
-			// TODO - split log and profiler into separate keybinds
-			if (Profiler.profilerMode == Profiler.ProfilerMode.disabled) {
-				if (Keys.Modifier(Keys.Modifiers.Shift))
-					Profiler.profilerMode = Profiler.ProfilerMode.fpsOnly;
-				else
-					Profiler.profilerMode = Profiler.ProfilerMode.full;
-			}
-			else
-				Profiler.profilerMode = Profiler.ProfilerMode.disabled;
-		}
-
 		if (Keys.JustPressed(Key.O) && Keys.Modifier(Keys.Modifiers.Shift) && SelectedRooms.Count == 2) {
 			Room first = SelectedRooms.First();
 			Room second = SelectedRooms.Last();
