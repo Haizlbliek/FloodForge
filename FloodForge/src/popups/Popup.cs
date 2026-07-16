@@ -17,6 +17,7 @@ public abstract class Popup {
 	protected Rect bounds;
 	protected Rect minimumResizeBounds;
 	protected Rect? initialBounds;
+	public Vector2 TopLeft => new (this.bounds.x0, this.bounds.y1);
 
 	protected Rect scaleControlIncluder;
 	protected Rect scaleControlExcluder;
