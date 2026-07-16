@@ -130,6 +130,14 @@ public static class UI {
 
 	public static void FillRect(UVRect rect) {
 		Immediate.Begin(Immediate.PrimitiveType.QUADS);
+		FillRectNoCall(rect);
+		Immediate.End();
+	}
+
+/// <summary>
+/// Similar to the <c>FillRect</c> method, but without <c>Immediate.Begin</c> or <c>Immediate.End()</c> calls
+/// </summary>
+	public static void FillRectNoCall(UVRect rect) {
 		Immediate.TexCoord(rect.uv0.x, rect.uv0.y);
 		Immediate.Vertex(rect.x0, rect.y1);
 		Immediate.TexCoord(rect.uv1.x, rect.uv1.y);
@@ -138,7 +146,6 @@ public static class UI {
 		Immediate.Vertex(rect.x1, rect.y0);
 		Immediate.TexCoord(rect.uv3.x, rect.uv3.y);
 		Immediate.Vertex(rect.x0, rect.y0);
-		Immediate.End();
 	}
 
 	private static void RoundedRect(float x0, float y0, float x1, float y1, float radius, Immediate.PrimitiveType type) {
