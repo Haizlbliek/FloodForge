@@ -160,7 +160,9 @@ public static class Main {
 			Profiler.MarkPoint(-1);
 		}
 		else if (mode == Mode.Droplet) {
+			Profiler.MarkPoint("DropletWindow.Draw", 1);
 			Droplet.DropletWindow.Draw();
+			Profiler.MarkPoint(-1);
 		}
 
 		PopupManager.Draw();

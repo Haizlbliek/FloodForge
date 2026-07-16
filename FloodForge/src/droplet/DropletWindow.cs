@@ -980,6 +980,8 @@ public static class DropletWindow {
 			DrawWater(false);
 		}
 
+		Profiler.MarkPoint("preGeo");
+
 		Immediate.Begin(Immediate.PrimitiveType.QUADS);
 		for (int x = 0; x < Room.width; x++) {
 			for (int y = 0; y < Room.height; y++) {
@@ -1064,6 +1066,8 @@ public static class DropletWindow {
 		}
 		Immediate.End();
 
+		Profiler.MarkPoint("Geo");
+
 		Program.gl.Enable(EnableCap.Blend);
 		Immediate.UseTexture(GeometryTexture);
 
@@ -1137,6 +1141,7 @@ public static class DropletWindow {
 			}
 		}
 		Immediate.UseTexture(null);
+		Profiler.MarkPoint("Tiles");
 
 		if (Room.data.waterHeight != -1) {
 			if (Room.data.waterInFront) {
