@@ -112,6 +112,12 @@ public static class WorldWindow {
 		Panning,
 	}
 
+	public static Room? denRoom = null;
+	public static int hoveredDen = -1; // LATER: Remove / improve
+	public static Room? shortcutRoom = null;
+	public static int hoveredRoomExit = -1; // LATER: Remove / improve
+	public static int hoveredShortcutEntrance = -1;
+
 	// REVIEW - find a way to make this more flexible - a list of all draggables?
 	public static Room? HoveringRoom => region.rooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
 	public static ReferenceImage? HoveringReferenceImage => referenceImages.LastOrDefault(i => i.Inside(worldMouse));
@@ -214,13 +220,15 @@ public static class WorldWindow {
 		highlightRoom = room;
 	}
 
+	// REVIEW - optimise distance checks by only checking rooms within a distance from the cursor
+	// REVIEW - move hoveredDen and hoveredShortcut/exit detection into one method instead of splitting between UpdateKeybinds and UpdateConnectionControls
 	private static void UpdateConnectionControls() {
 		Room? hoveringRoom = null;
 		uint hoveringConnection = 0;
 		int hoveringShortcutEntrance = -1;
 		float maxSqrDist = MathF.Pow(SelectorScale / (cameraScale / 100), 2);
+		shortcutRoom = null;
 		foreach (Room room in WorldWindow.region.rooms) {
-			room.hoveredRoomExit = -1;
 			if (!WorldWindow.VisibleLayers[room.data.layer])
 				continue;
 
@@ -262,8 +270,9 @@ public static class WorldWindow {
 				}
 			}
 		}
-		hoveringRoom?.hoveredRoomExit = (int) hoveringConnection;
-		hoveringRoom?.hoveredShortcutEntrance = hoveringShortcutEntrance;
+		hoveredRoomExit = (int) hoveringConnection;
+		hoveredShortcutEntrance = hoveringShortcutEntrance;
+		shortcutRoom = hoveringRoom;
 		
 		lastConnectionState = connectionState;
 		if (Mouse.Right) {
@@ -1062,9 +1071,10 @@ public static class WorldWindow {
 
 		{
 			bool found = false;
+			denRoom = null;
+			hoveredDen = -1;
 			for (int i = region.rooms.Count - 1; i >= 0; i--) {
 				Room room = region.rooms[i];
-				room.hoveredDen = -1;
 				if (found || !room.Visible)
 					continue;
 				Vector2 roomMouse = worldMouse - room.Position;
@@ -1072,11 +1082,12 @@ public static class WorldWindow {
 				float closestDistance = SelectorScale;
 
 				if (room is OffscreenRoom offscreenRoom) {
-					for (int j = 0; j < room.dens.Count; j++) {
+					for (int j = 0; j < room.dens.Count; j++) { // why does this look for multiple dens? can offscreenrooms have multiple dens?
 						shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + i * 4f + 2.5f, -room.height * 0.25f - 0.5f);
 						float dist = (roomMouse - shortcutPosition).Length;
 						if (dist < closestDistance) {
-							room.hoveredDen = i;
+							hoveredDen = i;
+							denRoom = room;
 							closestDistance = dist;
 							found = true;
 						}
@@ -1088,7 +1099,8 @@ public static class WorldWindow {
 					shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
 					float dist = (roomMouse - shortcutPosition).Length;
 					if (dist < closestDistance) {
-						room.hoveredDen = room.GetDenId01(shortcut);
+						hoveredDen = room.GetDenId01(shortcut);
+						denRoom = room;
 						closestDistance = dist;
 						found = true;
 					}
@@ -1096,23 +1108,6 @@ public static class WorldWindow {
 			}
 			if (found)
 				return;
-			for (int i = replaceRooms.Count - 1; i >= 0; i--) {
-				ReplaceRoom replaceRoom = replaceRooms[i];
-				replaceRoom.replacedRoom.hoveredDen = -1;
-				Vector2 roomMouse = worldMouse - replaceRoom.Position;
-				Vector2 shortcutPosition;
-				float closestDistance = SelectorScale;
-
-				foreach (Vector2i shortcut in replaceRoom.replacingRoom.denShortcutEntrances) {
-					shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
-					float dist = (roomMouse - shortcutPosition).Length;
-					if (dist < closestDistance) {
-						replaceRoom.replacedRoom.hoveredDen = replaceRoom.replacingRoom.GetDenId01(shortcut);
-						closestDistance = dist;
-						found = true;
-					}
-				}
-			}
 		}
 	}
 
@@ -1555,8 +1550,8 @@ public static class WorldWindow {
 						}
 					}
 					else {
-						if (room.hoveredDen != -1) {
-							DebugDen(room.GetDen01(room.hoveredDen), room, ref debugText);
+						if (denRoom == room && hoveredDen != -1) {
+							DebugDen(room.GetDen01(hoveredDen), room, ref debugText);
 							debuggedDen = true;
 						}
 						else {

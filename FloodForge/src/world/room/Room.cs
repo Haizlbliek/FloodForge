@@ -49,9 +49,6 @@ public class Room : WorldDraggable {
 	public int nonDenExitCount = 0;
 	public List<Den> dens = [];
 	public List<GarbageWormDen> garbageWormDens = [];
-	public int hoveredDen = -1; // LATER: Remove / improve
-	public int hoveredRoomExit = -1; // LATER: Remove / improve
-	public int hoveredShortcutEntrance = -1;
 
 	public List<Connection> connections = [];
 
@@ -1604,7 +1601,6 @@ public class Room : WorldDraggable {
 		bool hovered = o.x >= 0f && o.y <= 0f && o.x <= this.width && o.y >= -this.height;
 		Immediate.Color(hovered ? Themes.RoomBorderHighlight : Themes.RoomBorder);
 		UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.width, renderedPosition.y - this.height);
-		this.hoveredShortcutEntrance = -1;
 	}
 
 	protected void DrawInvalidRoom(Vector2 renderedPosition) {
@@ -1678,21 +1674,22 @@ public class Room : WorldDraggable {
 			Vector2 entrancePos = this.RoomPositionToWorldPosition(this.roomExitPaths[this.roomExits[i]].path.EndPosition, renderedPosition);
 			bool entranceIsShortcutEntrance = this.roomExitPaths[this.roomExits[i]].endType == RoomPathEndType.shortcutEntrance;
 			bool connected = this.AnyConnectionConnectedTo((uint) i);
+			bool thisRoomExitHovered = WorldWindow.shortcutRoom == this && WorldWindow.hoveredRoomExit == i;
 
 			// Shortcut Entrance
 			Immediate.Color(connected ? Themes.RoomConnection : Themes.RoomShortcutRoom);
 			if (entranceIsShortcutEntrance) {
 				if (WorldWindow.changeConnectBehaviour)
-					UI.StrokeCircle(entrancePos, clippedSelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
+					UI.StrokeCircle(entrancePos, clippedSelectorScale * (thisRoomExitHovered ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
 				else
-					UI.FillCircle(entrancePos, clippedSelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
+					UI.FillCircle(entrancePos, clippedSelectorScale * (thisRoomExitHovered ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
 			}
 
 			// Room Exit
 			if (WorldWindow.changeConnectBehaviour || !entranceIsShortcutEntrance)
-				UI.FillCircle(exitPos, clippedSelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
+				UI.FillCircle(exitPos, clippedSelectorScale * (thisRoomExitHovered ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
 			else
-				UI.StrokeCircle(exitPos, clippedSelectorScale * (i == this.hoveredRoomExit ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
+				UI.StrokeCircle(exitPos, clippedSelectorScale * (thisRoomExitHovered ? 1.5f : 1f) * (connected ? 0.5f : 1f) * 0.25f, 8);
 
 			// Find the index of the connection associated with this RoomExit (if it's connected to something)
 			int getConnectionIndex = 0;
@@ -1709,10 +1706,10 @@ public class Room : WorldDraggable {
 			}
 
 			// Draws shortcutpath if either the associated exit or connection is hovered over.
-			bool shouldBeHighlighted = (i == this.hoveredRoomExit || connectionFound && this.connections[getConnectionIndex].Hovered) && this.hoveredShortcutEntrance == -1;
+			bool shouldBeHighlighted = (thisRoomExitHovered || connectionFound && this.connections[getConnectionIndex].Hovered) && WorldWindow.hoveredShortcutEntrance == -1;
 			if (shouldBeHighlighted || Keys.Modifier(Keys.Modifiers.Shift)) {
 				if (this.roomExitPaths.TryGetValue(this.roomExits[i], out RoomConnection result)) {
-					DrawRoomPath(renderedPosition, result, i == this.hoveredRoomExit, shouldBeHighlighted);
+					DrawRoomPath(renderedPosition, result, thisRoomExitHovered, shouldBeHighlighted);
 				}
 			}
 		}
@@ -1736,6 +1733,7 @@ public class Room : WorldDraggable {
 		// this bit handles the case where:
 		// a shortcut entrance that connects to a roomexit, without said roomexit connecting back to the same entrance
 		for (int i = 0; i < this.allShortcutEntrancePoints.Count; i++) {
+			bool thisShortcutEntranceHovered = WorldWindow.shortcutRoom == this && WorldWindow.hoveredShortcutEntrance == i;
 			if (this.shortcutEntrancePaths.TryGetValue(this.allShortcutEntrancePoints[i], out (RoomConnection connection, bool isMatchedWithRoomExit) value)) {
 				bool entranceConnectedToRoomExit = value.connection.endType == RoomPathEndType.roomExit;
 				if (!value.isMatchedWithRoomExit && entranceConnectedToRoomExit) {
@@ -1747,19 +1745,18 @@ public class Room : WorldDraggable {
 					// Shortcut Entrance
 					Immediate.Color(roomExitIsConnected ? Themes.RoomConnection : Themes.RoomShortcutRoom);
 					if (WorldWindow.changeConnectBehaviour) {
-						UI.StrokeCircle(entrancePos, clippedSelectorScale * (i == this.hoveredShortcutEntrance ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
-						UI.FillCircle(exitPos, clippedSelectorScale * (i == this.hoveredShortcutEntrance ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
+						UI.StrokeCircle(entrancePos, clippedSelectorScale * (thisShortcutEntranceHovered ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
+						UI.FillCircle(exitPos, clippedSelectorScale * (thisShortcutEntranceHovered ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
 					}
 					else {
-						UI.FillCircle(entrancePos, clippedSelectorScale * (i == this.hoveredShortcutEntrance ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
-						UI.StrokeCircle(exitPos, clippedSelectorScale * (i == this.hoveredShortcutEntrance ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
+						UI.FillCircle(entrancePos, clippedSelectorScale * (thisShortcutEntranceHovered ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
+						UI.StrokeCircle(exitPos, clippedSelectorScale * (thisShortcutEntranceHovered ? 1.5f : 1f) * (roomExitIsConnected ? 0.5f : 1f) * 0.25f, 8);
 					}
 
 					// Draws shortcutpath if the connection is hovered over. (since a roomexit isn't related to this entrance
 					// (otherwise it'd have been drawn with the roomExits), there is no exit to hover over that should highlight this shortcut entrance)
-					bool shouldBeHighlighted = i == this.hoveredShortcutEntrance;
-					if (shouldBeHighlighted || Keys.Modifier(Keys.Modifiers.Shift)) {
-						DrawRoomPath(renderedPosition, value.connection, shouldBeHighlighted, shouldBeHighlighted);
+					if (thisShortcutEntranceHovered || Keys.Modifier(Keys.Modifiers.Shift)) {
+						DrawRoomPath(renderedPosition, value.connection, thisShortcutEntranceHovered, thisShortcutEntranceHovered);
 					}
 				}
 			}
@@ -1768,7 +1765,7 @@ public class Room : WorldDraggable {
 
 	protected void DrawDens(Vector2 renderedPosition) {
 		for (int i = 0; i < this.denShortcutEntrances.Count; i++) {
-			DrawDen(this.dens[i], renderedPosition.x + this.denShortcutEntrances[i].x, renderedPosition.y - this.denShortcutEntrances[i].y, i == this.hoveredDen, WorldWindow.HoveringDraggable == this);
+			DrawDen(this.dens[i], renderedPosition.x + this.denShortcutEntrances[i].x, renderedPosition.y - this.denShortcutEntrances[i].y, WorldWindow.denRoom == this && WorldWindow.hoveredDen == i, WorldWindow.HoveringDraggable == this);
 		}
 	}
 
