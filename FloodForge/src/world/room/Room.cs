@@ -1712,7 +1712,7 @@ public class Room : WorldDraggable {
 			bool shouldBeHighlighted = (i == this.hoveredRoomExit || connectionFound && this.connections[getConnectionIndex].Hovered) && this.hoveredShortcutEntrance == -1;
 			if (shouldBeHighlighted || Keys.Modifier(Keys.Modifiers.Shift)) {
 				if (this.roomExitPaths.TryGetValue(this.roomExits[i], out RoomConnection result)) {
-					this.DrawRoomPath(renderedPosition, result, i == this.hoveredRoomExit, shouldBeHighlighted);
+					DrawRoomPath(renderedPosition, result, i == this.hoveredRoomExit, shouldBeHighlighted);
 				}
 			}
 		}
@@ -1759,7 +1759,7 @@ public class Room : WorldDraggable {
 					// (otherwise it'd have been drawn with the roomExits), there is no exit to hover over that should highlight this shortcut entrance)
 					bool shouldBeHighlighted = i == this.hoveredShortcutEntrance;
 					if (shouldBeHighlighted || Keys.Modifier(Keys.Modifiers.Shift)) {
-						this.DrawRoomPath(renderedPosition, value.connection, shouldBeHighlighted, shouldBeHighlighted);
+						DrawRoomPath(renderedPosition, value.connection, shouldBeHighlighted, shouldBeHighlighted);
 					}
 				}
 			}
@@ -1794,7 +1794,7 @@ public class Room : WorldDraggable {
 		}
 	}
 
-	protected void DrawRoomPath(Vector2 position, RoomConnection connectionPathToDraw, bool isHovered, bool isHighlighted) {
+	public static void DrawRoomPath(Vector2 position, RoomConnection connectionPathToDraw, bool isHovered, bool isHighlighted) {
 		Vector2 positionOffset = position + new Vector2(0.5f, -0.5f);
 		Immediate.Color(isHovered ? Themes.RoomConnectionHover : Themes.RoomConnection);
 		if (WorldWindow.changeConnectBehaviour && isHighlighted && (WorldWindow.cameraScale < 75f || Keys.Pressed(Silk.NET.Input.Key.P))) {
