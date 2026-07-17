@@ -1547,45 +1547,13 @@ public static class WorldWindow {
 			}
 
 			if (VisibleCreatures) {
-				bool debuggedDen = false;
-
-				for (int r = region.rooms.Count - 1; r >= 0; r--) {
-					Room room = region.rooms[r];
-					if (!room.Visible)
-						continue;
-					Vector2 roomMouse = worldMouse - room.Position;
-					Vector2 shortcutPosition;
-
-					if (room is OffscreenRoom offscreenRoom) {
-						for (int j = 0; j <= room.dens.Count; j++) {
-							shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + r * 4f + 2.5f, -room.height * 0.25f - 0.5f);
-							if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-								DebugDen(offscreenRoom.GetDen(), offscreenRoom, ref debugText);
-								debuggedDen = true;
-								break;
-							}
-						}
+				if (denRoom != null) {
+					if (denRoom is OffscreenRoom offscreenRoom) {
+						DebugDen(offscreenRoom.GetDen(), offscreenRoom, ref debugText);
 					}
 					else {
-						if (denRoom == room && hoveredDen != -1) {
-							DebugDen(room.GetDen01(hoveredDen), room, ref debugText);
-							debuggedDen = true;
-						}
-						else {
-							for (int j = 0; j < room.denShortcutEntrances.Count; j++) {
-								Vector2i shortcut = room.denShortcutEntrances[j];
-								shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
-								if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-									DebugDen(room.GetDen01(j), room, ref debugText);
-									debuggedDen = true;
-									break;
-								}
-							}
-						}
+						DebugDen(denRoom.GetDen01(hoveredDen), denRoom, ref debugText);
 					}
-
-					if (debuggedDen)
-						break;
 				}
 			}
 			EncounteredErrorOnLastDebug = false;
