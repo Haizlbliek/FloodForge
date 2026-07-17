@@ -615,23 +615,32 @@ public static class WorldParser {
 		}
 		else if (parts.Length == 4 && mod == "replaceroom") {
 			Logger.Info($"Parsing REPLACEROOM: {link}");
-			Room? foundRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(parts[2], StringComparison.InvariantCultureIgnoreCase));
-			if (foundRoom != null) {
-				Logger.Info($"Found room {foundRoom.name}!");
-				Room? replacingRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(parts[3], (StringComparison)3));
-				replacingRoom ??= WorldWindow.replaceReferenceRooms.FirstOrDefault(x => x.name.Equals(parts[3], (StringComparison)3));
-				if (replacingRoom == null) {
-					replacingRoom = CreateRoom(parts[3]);
-					replacingRoom.isVirtualRoom = true;
-					WorldWindow.replaceReferenceRooms.Add(replacingRoom);
+			ReplaceRoom? similarReplaceRoom = WorldWindow.replaceRooms.FirstOrDefault(x => x.replacedRoom.name == parts[2] && x.replacingRoom.name == parts[3] && x.preProcessorConditions.Length == 0 && preProcessorConditions.Length == 0 && !((x.timeline.timelineType == TimelineType.Except) ^ xminus));
+			if (similarReplaceRoom != null) {
+				Logger.Info($"Existing replaceRoom found matching parameters.");
+				foreach (string timeline in timelines) {
+					similarReplaceRoom.timeline.timelines.Add(timeline);
 				}
-				ReplaceRoom newReplaceRoom = new ReplaceRoom(replacingRoom, foundRoom, new(xminus ? TimelineType.Except : TimelineType.Only, [..timelines]), []);
-				replacingRoom.referencingReplaceRooms.Add(newReplaceRoom);
-				foundRoom.replaceRooms.Add(newReplaceRoom);
-				WorldWindow.replaceRooms.Add(newReplaceRoom);
 			}
 			else {
-				Logger.Warn($"No room {parts[2]} found!");
+				Room? foundRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(parts[2], StringComparison.InvariantCultureIgnoreCase));
+				if (foundRoom != null) {
+					Logger.Info($"Found room {foundRoom.name}!");
+					Room? replacingRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(parts[3], (StringComparison)3));
+					replacingRoom ??= WorldWindow.replaceReferenceRooms.FirstOrDefault(x => x.name.Equals(parts[3], (StringComparison)3));
+					if (replacingRoom == null) {
+						replacingRoom = CreateRoom(parts[3]);
+						replacingRoom.isVirtualRoom = true;
+						WorldWindow.replaceReferenceRooms.Add(replacingRoom);
+					}
+					ReplaceRoom newReplaceRoom = new ReplaceRoom(replacingRoom, foundRoom, new(xminus ? TimelineType.Except : TimelineType.Only, [..timelines]), []);
+					replacingRoom.referencingReplaceRooms.Add(newReplaceRoom);
+					foundRoom.replaceRooms.Add(newReplaceRoom);
+					WorldWindow.replaceRooms.Add(newReplaceRoom);
+				}
+				else {
+					Logger.Warn($"No room {parts[2]} found!");
+				}
 			}
 			return true;
 		}
