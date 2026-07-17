@@ -8,6 +8,10 @@ public class ReplaceRoom : WorldDraggable {
 
     public Vector2i size;
 
+	public override bool IsVisible() {
+		return WorldWindow.VisibleTimeline.OverlapsWith(this.timeline);
+	}
+
 	public ReplaceRoom(Room replacingRoom, Room replacedRoom, Timeline replacingTimeline, string[] preProcessorConditions) {
 		this.replacingRoom = replacingRoom;
 		this.replacedRoom = replacedRoom;
