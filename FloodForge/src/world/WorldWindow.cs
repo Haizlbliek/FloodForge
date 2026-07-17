@@ -221,13 +221,14 @@ public static class WorldWindow {
 	}
 
 	// REVIEW - optimise distance checks by only checking rooms within a distance from the cursor
-	// REVIEW - move hoveredDen and hoveredShortcut/exit detection into one method instead of splitting between UpdateKeybinds and UpdateConnectionControls
-	private static void UpdateConnectionControls() {
+	private static void UpdateHoveredExits() {
 		Room? hoveringRoom = null;
 		uint hoveringConnection = 0;
 		int hoveringShortcutEntrance = -1;
 		float maxSqrDist = MathF.Pow(SelectorScale / (cameraScale / 100), 2);
 		shortcutRoom = null;
+		hoveredRoomExit = -1;
+		hoveredShortcutEntrance = -1;
 		foreach (Room room in WorldWindow.region.rooms) {
 			if (!WorldWindow.VisibleLayers[room.data.layer])
 				continue;
@@ -270,10 +271,58 @@ public static class WorldWindow {
 				}
 			}
 		}
-		hoveredRoomExit = (int) hoveringConnection;
-		hoveredShortcutEntrance = hoveringShortcutEntrance;
 		shortcutRoom = hoveringRoom;
-		
+		hoveredRoomExit = shortcutRoom != null ? (int) hoveringConnection : -1;
+		hoveredShortcutEntrance = shortcutRoom != null ? hoveringShortcutEntrance : -1;
+
+		bool found = false;
+		denRoom = null;
+		hoveredDen = -1;
+		float closestDistance = SelectorScale;
+		// TODO - fix offscreenDens not being c-able through other rooms despite their den position being closer to the mouse than any other room's
+		for (int i = region.rooms.Count - 1; i >= 0; i--) {
+			Room room = region.rooms[i];
+			if (found || !room.Visible)
+				continue;
+			Vector2 roomMouse = worldMouse - room.Position;
+			Vector2 shortcutPosition;
+
+			if (room is OffscreenRoom offscreenRoom) {
+				shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + i * 4f + 2.5f, -room.height * 0.25f - 0.5f);
+				float dist = (roomMouse - shortcutPosition).Length;
+				if (dist < closestDistance) {
+					hoveredDen = 0;
+					denRoom = offscreenRoom;
+					closestDistance = dist;
+					found = true;
+				}
+				continue;
+			}
+
+			foreach (Vector2i shortcut in room.denShortcutEntrances) {
+				shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
+				float dist = (roomMouse - shortcutPosition).Length;
+				if (dist < closestDistance) {
+					hoveredDen = room.GetDenId01(shortcut);
+					denRoom = room;
+					closestDistance = dist;
+					found = true;
+				}
+			}
+		}
+		if (found)
+			return;
+
+		if (!found) {
+			if (HoveringRoom is OffscreenRoom offscreenRoom) {
+				denRoom = offscreenRoom;
+				hoveredDen = 0;
+			}
+		}
+	}
+
+	private static void UpdateConnectionControls() {		
+		Room? hoveringRoom = hoveredRoomExit == -1 ? null : shortcutRoom;
 		lastConnectionState = connectionState;
 		if (Mouse.Right) {
 			if (connectionState == ConnectionState.None) {
@@ -283,10 +332,10 @@ public static class WorldWindow {
 				}
 
 				if (hoveringRoom.Visible) {
-					ConnectionStart = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
+					ConnectionStart = hoveringRoom.GetConnectionConnectPoint((uint)hoveredRoomExit);
 					ConnectionStartClickPosition = worldMouse;
 					ConnectionEnd = ConnectionStart;
-					NewConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
+					NewConnection = new Connection(hoveringRoom, (uint)hoveredRoomExit, null!, 0);
 					connectionState = ConnectionState.PendingConnection;
 					CurrentConnectionValid = false;
 					CurrentConnectionWarn = false;
@@ -301,9 +350,9 @@ public static class WorldWindow {
 			}
 			else if (connectionState == ConnectionState.Connection && NewConnection != null) {
 				if (hoveringRoom != null && hoveringRoom.Visible) {
-					ConnectionEnd = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
+					ConnectionEnd = hoveringRoom.GetConnectionConnectPoint((uint)hoveredRoomExit);
 					NewConnection.roomB = hoveringRoom;
-					NewConnection.roomBExitID = hoveringConnection;
+					NewConnection.roomBExitID = (uint)hoveredRoomExit;
 					CurrentConnectionValid = true;
 					CurrentConnectionWarn = false;
 
@@ -984,7 +1033,14 @@ public static class WorldWindow {
 		}
 
 		if (VisibleCreatures && Keys.JustPressed(Key.C)) {
-			bool found = false;
+			if (denRoom != null) {
+				if (denRoom is OffscreenRoom offscreenRoom) {
+					PopupManager.Add(new DenPopup(offscreenRoom.GetDen()));
+				}
+				else
+					PopupManager.Add(new DenPopup(denRoom.GetDen01(hoveredDen))); // make this work with offscreenRoom
+			}
+			/*bool found = false;
 
 			for (int i = region.rooms.Count - 1; i >= 0; i--) {
 				Room room = region.rooms[i];
@@ -1024,7 +1080,7 @@ public static class WorldWindow {
 				if (room is OffscreenRoom offscreen) {
 					PopupManager.Add(new DenPopup(offscreen.GetDen()));
 				}
-			}
+			}*/
 		}
 
 		if (Keys.JustPressed(Key.A)) {
@@ -1068,47 +1124,6 @@ public static class WorldWindow {
 				}
 			}
 		}
-
-		{
-			bool found = false;
-			denRoom = null;
-			hoveredDen = -1;
-			for (int i = region.rooms.Count - 1; i >= 0; i--) {
-				Room room = region.rooms[i];
-				if (found || !room.Visible)
-					continue;
-				Vector2 roomMouse = worldMouse - room.Position;
-				Vector2 shortcutPosition;
-				float closestDistance = SelectorScale;
-
-				if (room is OffscreenRoom offscreenRoom) {
-					for (int j = 0; j < room.dens.Count; j++) { // why does this look for multiple dens? can offscreenrooms have multiple dens?
-						shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + i * 4f + 2.5f, -room.height * 0.25f - 0.5f);
-						float dist = (roomMouse - shortcutPosition).Length;
-						if (dist < closestDistance) {
-							hoveredDen = i;
-							denRoom = room;
-							closestDistance = dist;
-							found = true;
-						}
-					}
-					continue;
-				}
-
-				foreach (Vector2i shortcut in room.denShortcutEntrances) {
-					shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
-					float dist = (roomMouse - shortcutPosition).Length;
-					if (dist < closestDistance) {
-						hoveredDen = room.GetDenId01(shortcut);
-						denRoom = room;
-						closestDistance = dist;
-						found = true;
-					}
-				}
-			}
-			if (found)
-				return;
-		}
 	}
 
 	private static void UpdateMain() {
@@ -1135,6 +1150,8 @@ public static class WorldWindow {
 			}
 
 			roomSnap = !Keys.Modifier(Keys.Modifiers.Alt);
+			
+			UpdateHoveredExits();
 
 			UpdateConnectionControls();
 
