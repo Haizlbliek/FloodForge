@@ -271,6 +271,48 @@ public static class WorldWindow {
 				}
 			}
 		}
+		foreach (ReplaceRoom replaceRoom in replaceRooms) {
+			Room roomReplacing = replaceRoom.replacingRoom;
+			Room roomReplaced = replaceRoom.replacedRoom;
+			for (uint i = 0; i < roomReplacing.roomExits.Count; i++) {
+				Vector2 spot = new Vector2();
+				float sqrDist = 0;
+				if (roomReplacing.roomExitPaths[roomReplacing.roomExits[(int) i]].endType == Room.RoomPathEndType.shortcutEntrance) {
+					spot = roomReplacing.GetShortcutEntranceWorldPoint(i, replaceRoom.Position); // if the roomPath has a shortcutExit, first check that
+					sqrDist = (worldMouse - spot).SqrLength;
+					if (sqrDist < maxSqrDist) {
+						maxSqrDist = sqrDist;
+						hoveringRoom = roomReplaced;
+						hoveringConnection = i;
+						hoveringShortcutEntrance = -1;
+					}
+				}
+				spot = roomReplacing.GetConnectionConnectPoint(i, replaceRoom.Position); // then check the roomExit
+				sqrDist = (worldMouse - spot).SqrLength;
+				if (sqrDist < maxSqrDist) {
+					maxSqrDist = sqrDist;
+					hoveringRoom = roomReplaced;
+					hoveringConnection = i;
+					hoveringShortcutEntrance = -1;
+				}
+			}
+			for (uint i = 0; i < roomReplacing.allShortcutEntrancePoints.Count; i++) {
+				Vector2 spot = new Vector2();
+				float sqrDist = 0;
+				(Room.RoomConnection connection, bool matchesWithRoomExitPath) = roomReplacing.shortcutEntrancePaths[roomReplacing.allShortcutEntrancePoints[(int) i]];
+				if (!matchesWithRoomExitPath && connection.endType == Room.RoomPathEndType.roomExit) {
+					spot = roomReplacing.RoomPositionToWorldPosition(connection.path.StartPosition, replaceRoom.Position);
+					sqrDist = (worldMouse - spot).SqrLength;
+					if (sqrDist < maxSqrDist) {
+						maxSqrDist = sqrDist;
+						hoveringRoom = roomReplaced;
+						hoveringConnection = roomReplacing.GetRoomExitIDFromShortcut(i);
+						hoveringShortcutEntrance = (int) i;
+					}
+				}
+			}
+		}
+
 		shortcutRoom = hoveringRoom;
 		hoveredRoomExit = shortcutRoom != null ? (int) hoveringConnection : -1;
 		hoveredShortcutEntrance = shortcutRoom != null ? hoveringShortcutEntrance : -1;
@@ -305,6 +347,25 @@ public static class WorldWindow {
 				if (dist < closestDistance) {
 					hoveredDen = room.GetDenId01(shortcut);
 					denRoom = room;
+					closestDistance = dist;
+					found = true;
+				}
+			}
+		}
+		for (int i = replaceRooms.Count - 1; i >= 0; i--) {
+			ReplaceRoom replaceRoom = replaceRooms[i];
+			if (found || !replaceRoom.Visible)
+				continue;
+			Vector2 roomMouse = worldMouse - replaceRoom.Position;
+			Vector2 shortcutPosition;
+
+			for (int j = 0; j < replaceRoom.replacedRoom.denShortcutEntrances.Count && j < replaceRoom.replacingRoom.denShortcutEntrances.Count; j++) {
+				Vector2i shortcut = replaceRoom.replacingRoom.denShortcutEntrances[j];
+				shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
+				float dist = (roomMouse - shortcutPosition).Length;
+				if (dist < closestDistance) {
+					hoveredDen = replaceRoom.replacingRoom.GetDenId01(shortcut);
+					denRoom = replaceRoom.replacedRoom;
 					closestDistance = dist;
 					found = true;
 				}
