@@ -23,6 +23,7 @@ public class ReplaceRoom : WorldDraggable {
 		Immediate.Color(Themes.RoomSolid);
 		UI.FillRect(this.position.x, this.position.y - this.size.y, this.position.x + this.size.x, this.position.y);
 
+		// REVIEW - change room mesh drawing to display correct layer information
 		this.replacingRoom.DrawRoomMeshes(this.position, WorldWindow.PositionType);
 
 		Immediate.Color(Themes.Layer2Color);
