@@ -118,16 +118,37 @@ public static class WorldExporter {
 				}
 			}
 			Logger.Info("- Rooms");
+			Vector2 topLeft = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+			Vector2 bottomRight = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+
+			foreach (Room room in WorldWindow.region.rooms) {
+				if (room is OffscreenRoom)
+					continue;
+
+				float left = room.CanonPosition.x;
+				float right = room.CanonPosition.x + room.width;
+				float top = room.CanonPosition.y - room.height;
+				float bottom = room.CanonPosition.y;
+
+				topLeft.x = Math.Min(topLeft.x, left);
+				bottomRight.x = Math.Max(bottomRight.x, right);
+				topLeft.y = Math.Min(topLeft.y, top);
+				bottomRight.y = Math.Max(bottomRight.y, bottom);
+			}
+
+			Vector2 centerOffset = (topLeft + bottomRight) / 2;
 
 			foreach (Room room in WorldWindow.region.rooms) {
 				Vector2 canonPosition = new Vector2(
 					(room.CanonPosition.x + room.width * 0.5f) * 3.0f,
 					(room.CanonPosition.y - room.height * 0.5f) * 3.0f
 				);
+				canonPosition -= centerOffset;
 				Vector2 devPosition = new Vector2(
 					(room.DevPosition.x + room.width * 0.5f) * 3.0f,
 					(room.DevPosition.y - room.height * 0.5f) * 3.0f
 				);
+				devPosition -= centerOffset;
 
 				string line = $"{FancyRoomCasing(room)}: " +
 							$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
