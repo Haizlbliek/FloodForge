@@ -812,14 +812,14 @@ public class Room : WorldDraggable {
 	}
 
 	#region Connection information methods
-	public Vector2 GetConnectionConnectPoint(uint i) {
+	public Vector2 GetConnectionConnectPoint(uint i, Vector2? position = null) {
 		if (!WorldWindow.changeConnectBehaviour) {
 			RoomConnection connection = this.roomExitPaths[this.roomExits[(int) i]];
 			if (connection.endType == RoomPathEndType.shortcutEntrance) {
-				return this.RoomPositionToWorldPosition(this.roomExitPaths[this.roomExits[(int) i]].path.EndPosition);
+				return this.RoomPositionToWorldPosition(this.roomExitPaths[this.roomExits[(int) i]].path.EndPosition, position);
 			}
 		}
-		return this.RoomPositionToWorldPosition(this.roomExits[(int) i]);
+		return this.RoomPositionToWorldPosition(this.roomExits[(int) i], position);
 	}
 
 	public Vector2i GetConnectionConnectDirection(uint i) {
@@ -832,8 +832,8 @@ public class Room : WorldDraggable {
 		return this.roomExitPaths[this.roomExits[(int) i]].path.StartDirection;
 	}
 
-	public Vector2 GetShortcutEntranceWorldPoint(uint i) {
-		return this.RoomPositionToWorldPosition(this.roomExitPaths[this.roomExits[(int) i]].path.EndPosition);
+	public Vector2 GetShortcutEntranceWorldPoint(uint i, Vector2? position = null) {
+		return this.RoomPositionToWorldPosition(this.roomExitPaths[this.roomExits[(int) i]].path.EndPosition, position);
 	}
 	public Vector2i GetShortcutEntranceRoomPoint(uint i) {
 		return this.roomExitPaths[this.roomExits[(int) i]].path.EndPosition;
