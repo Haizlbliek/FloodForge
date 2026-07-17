@@ -1321,6 +1321,8 @@ public static class WorldWindow {
 
 			if (!VisibleLayers[room.data.layer] || !VisibleTimeline.OverlapsWith(room.timeline))
 				continue;
+			
+			// TODO - hide rooms based on VisibleTimeline in conjunction with replacerooms
 
 			if (WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
 				if (!room.data.merge) {
@@ -1381,6 +1383,9 @@ public static class WorldWindow {
 		Profiler.MarkPoint("DrawConnections");
 
 		foreach (ReplaceRoom replaceRoom in replaceRooms) {
+			if (!VisibleLayers[replaceRoom.replacedRoom.data.layer] || !VisibleTimeline.OverlapsWith(replaceRoom.timeline))
+				continue;
+
 			replaceRoom.Draw();
 		}
 
