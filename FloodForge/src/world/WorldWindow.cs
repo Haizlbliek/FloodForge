@@ -1242,6 +1242,12 @@ public static class WorldWindow {
 			Immediate.Vertex(-cameraScale * Main.screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
 			Immediate.Vertex(cameraScale * Main.screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
 		}
+		Immediate.Color(Themes.Layer1Color);
+		Immediate.Vertex(cameraOffset.x - Main.screenBounds.x * cameraScale, -(cameraOffset.y * (1 - 1f)) / 2); // this may be another colorpopup situation
+		Immediate.Vertex(cameraOffset.x + Main.screenBounds.x * cameraScale, -(cameraOffset.y * (1 - 1f)) / 2);
+		Immediate.Color(Themes.Layer1Color);
+		Immediate.Vertex(-(cameraOffset.x * 0) / 2, cameraOffset.y - Main.screenBounds.y * cameraScale);
+		Immediate.Vertex(-(cameraOffset.x * 0) / 2, cameraOffset.y + Main.screenBounds.y * cameraScale);
 		Immediate.End();
 	}
 
