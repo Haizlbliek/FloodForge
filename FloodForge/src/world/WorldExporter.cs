@@ -869,6 +869,13 @@ public static class WorldExporter {
 			bottomRight.x = Math.Max(bottomRight.x, right);
 			topLeft.y = Math.Min(topLeft.y, top);
 			bottomRight.y = Math.Max(bottomRight.y, bottom);
+
+			foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+				float replaceRight = left + replaceRoom.replacingRoom.width;
+				float replaceTop = bottom - replaceRoom.replacingRoom.height;
+				bottomRight.x = Math.Max(bottomRight.x, replaceRight);
+				topLeft.y = Math.Min(topLeft.y, replaceTop);
+			}
 		}
 
 		int layerHeight = Math.Max((int) (bottomRight.y - topLeft.y) + 20, 20);
