@@ -428,7 +428,19 @@ public static class WorldWindow {
 		
 		// REVIEW - move settingspopup callbacks into separate class (or just SettingsPopup) so that settings don't take up too much space in other classes
 		if ((Mouse.Right && !Mouse.LastRight && (connectionState == ConnectionState.None || connectionState == ConnectionState.NoConnection)) || (!Mouse.Right && Mouse.LastRight && lastConnectionState == ConnectionState.PendingConnection)) {
-			if (HoveringDraggable is Room room and not OffscreenRoom) {
+			if (HoveringConnection != null) {
+				SettingsPopup? connectionSettingsPopup = null;
+				Connection popupConnection = HoveringConnection;
+				connectionSettingsPopup = (SettingsPopup) new SettingsPopup([
+					new SettingsPopup.ButtonContainer("Delete Connection", () => {
+							DeleteConnection(popupConnection);
+							connectionSettingsPopup?.Close();
+						}
+					)
+				]).Translate(Mouse.Pos, true).Title("Settings - Connection");
+				PopupManager.Add(connectionSettingsPopup);
+			}
+			else if (HoveringDraggable is Room room and not OffscreenRoom) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.BoolSettingContainer("Enclosed Room", room.data.enclosedRoom, b => {
 						worldHistory.Apply(new VariableChange<bool>(room.data.enclosedRoom, b, bRedo => room.data.enclosedRoom = bRedo));
@@ -599,18 +611,6 @@ public static class WorldWindow {
 						PopupManager.Add(timelineRoomPopup);
 					})
 				]).Translate(Mouse.Pos, true).Title($"Settings - {room.name}"), true);
-			}
-			else if (HoveringConnection != null) {
-				SettingsPopup? connectionSettingsPopup = null;
-				Connection popupConnection = HoveringConnection;
-				connectionSettingsPopup = (SettingsPopup) new SettingsPopup([
-					new SettingsPopup.ButtonContainer("Delete Connection", () => {
-							DeleteConnection(popupConnection);
-							connectionSettingsPopup?.Close();
-						}
-					)
-				]).Translate(Mouse.Pos, true).Title("Settings - Connection");
-				PopupManager.Add(connectionSettingsPopup);
 			}
 			else if (HoveringDraggable is ReferenceImage image) {
 				SettingsPopup? refSettingsPopup = null;
