@@ -895,19 +895,15 @@ public static class WorldExporter {
 				if (room.timeline.timelineType != TimelineType.Only)
 					imageData = DrawRoomAtMapPosition(room, roomPosition, imageData, textureWidth, textureHeight, layerXOffset, layerYOffset, true);
 				foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
-					bool drawnRoom = false;
+					Room? replaceRoomToDraw = null;
 					foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
 						if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
-							if (drawnRoom) {
-								// TODO - add a way to avoid this by making preprocessorcondition-specific maps (for examples, refer to Ancient Urban and Daemon)
-								Logger.Warn($"Skipped drawing {room.name} (hidden) replaceRoom {replaceRoom.replacingRoom.name} on map {timelineWriter.Key} - multiple replacerooms in one timeline");
-								break;
-							}
-							timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoom.replacingRoom, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset, true);
-							drawnRoom = true;
+							replaceRoomToDraw = replaceRoom.replacingRoom;
 						}
 					}
-					if (room.timeline.OverlapsWith(timelineWriter.Key)) {
+					if (replaceRoomToDraw != null)
+						timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoomToDraw, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset, true);
+					else if (room.timeline.OverlapsWith(timelineWriter.Key)) {
 						timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(room, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset, true);
 					}
 				}
@@ -920,7 +916,15 @@ public static class WorldExporter {
 				mapFile?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{mapfileRoomYPos},{room.width},{room.height}");
 			}
 			foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
-				if (room.timeline.OverlapsWith(timelineWriter.Key)) {
+				Room? replacingRoomToWrite = null;
+				foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+					if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
+						replacingRoomToWrite = replaceRoom.replacingRoom;
+					}
+				}
+				if (replacingRoomToWrite != null)
+					timelineWriter.Value?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{mapfileRoomYPos},{replacingRoomToWrite.width},{replacingRoomToWrite.height}");
+				else if (room.timeline.OverlapsWith(timelineWriter.Key)) {
 					timelineWriter.Value?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{mapfileRoomYPos},{room.width},{room.height}");
 				}
 			}
@@ -928,22 +932,18 @@ public static class WorldExporter {
 			if (room.timeline.timelineType != TimelineType.Only)
 				imageData = DrawRoomAtMapPosition(room, roomPosition, imageData, textureWidth, textureHeight, layerXOffset, layerYOffset);
 			foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
-				bool drawnRoom = false;
+				Room? replaceRoomToDraw = null;
 				foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
 					// TOFIX - rooms are drawn from the top-left corner, room positions are specified from bottom-left,
 					// thus a replaceroom smaller than the original will be drawn higher than it's supposed to
 					// a fix would be to convert to bottom-left position here and draw taking that into account in the new method
 					if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
-						if (drawnRoom) {
-							// TODO - add a way to avoid this by making preprocessorcondition-specific maps (for examples, refer to Ancient Urban and Daemon)
-							Logger.Warn($"Skipped drawing {room.name} replaceRoom {replaceRoom.replacingRoom.name} on map {timelineWriter.Key} - multiple replacerooms in one timeline");
-							break;
-						}
-						timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoom.replacingRoom, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset);
-						drawnRoom = true;
+						replaceRoomToDraw = replaceRoom.replacingRoom;
 					}
 				}
-				if (!drawnRoom && room.timeline.OverlapsWith(timelineWriter.Key)) {
+				if (replaceRoomToDraw != null)
+					timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoomToDraw, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset);
+				else if (room.timeline.OverlapsWith(timelineWriter.Key)) {
 					timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(room, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset);
 				}
 			}
