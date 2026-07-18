@@ -914,7 +914,7 @@ public static class WorldExporter {
 
 			Vector2i roomPosition = new Vector2i(
 				(int) (room.CanonPosition.x - topLeft.x),
-				(int) (bottomRight.y - room.CanonPosition.y)
+				(int) (bottomRight.y - room.CanonPosition.y + room.height)
 			);
 
 			int layerXOffset = 10;
@@ -963,9 +963,6 @@ public static class WorldExporter {
 			foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
 				Room? replaceRoomToDraw = null;
 				foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
-					// TOFIX - rooms are drawn from the top-left corner, room positions are specified from bottom-left,
-					// thus a replaceroom smaller than the original will be drawn higher than it's supposed to
-					// a fix would be to convert to bottom-left position here and draw taking that into account in the new method
 					if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
 						replaceRoomToDraw = replaceRoom.replacingRoom;
 					}
@@ -1017,10 +1014,11 @@ public static class WorldExporter {
 	// REVIEW - optimise usage of this method by returning a byte[] of the room's image, and then overlaying that separately onto each relevant timeline map?
 	// this would reduce the amount of times the same room is drawn, but might be counteracted by the increased cost of overlaying the new room?
 	private static byte[] DrawRoomAtMapPosition(Room roomToDraw, Vector2i mapPosition, byte[] imageToDraw, int textureWidth, int textureHeight, int layerXOffset, int layerYOffset, bool fillBlack = false) {
+		Vector2i topLeftRoomPosition = new (mapPosition.x + layerXOffset, mapPosition.y + layerYOffset - roomToDraw.height);
 		for (int ox = 0; ox < roomToDraw.width; ox++) {
 			for (int oy = 0; oy < roomToDraw.height; oy++) {
-				int targetX = mapPosition.x + ox + layerXOffset;
-				int targetY = mapPosition.y + oy + layerYOffset;
+				int targetX = topLeftRoomPosition.x + ox;
+				int targetY = topLeftRoomPosition.y + oy;
 
 				if (targetX < 0 || targetX >= textureWidth || targetY < 0 || targetY >= textureHeight)
 					continue;
