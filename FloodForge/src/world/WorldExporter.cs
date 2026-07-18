@@ -166,9 +166,42 @@ public static class WorldExporter {
 				
 				if (room.timeline.timelineType != TimelineType.Only)
 					writer.WriteLine(line);
+				
 				foreach (KeyValuePair<string, StreamWriter> timelineMapWriter in timelineMapWriters) {
-					if (room.timeline.OverlapsWith(timelineMapWriter.Key)) {
-						timelineMapWriter.Value.WriteLine(line);
+					ReplaceRoom? relevantReplaceRoom = null;
+					foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+						if (replaceRoom.timeline.OverlapsWith(timelineMapWriter.Key)) {
+							relevantReplaceRoom = replaceRoom;
+						}
+					}
+					if (room.timeline.OverlapsWith(timelineMapWriter.Key) || relevantReplaceRoom != null) {
+						Room roomToWriteFor = relevantReplaceRoom == null ? room : relevantReplaceRoom.replacingRoom;
+						if (relevantReplaceRoom != null) {
+							// I am certain there is redundant work here, but i am leaving future programmers to fix that, because right now it works.
+							int widthDifference = roomToWriteFor.width - room.width;
+							int heightDifference = roomToWriteFor.height - room.height;
+							canonPosition = new Vector2(
+								(room.CanonPosition.x + 0.5f + (widthDifference + room.width) * 0.5f) * 3.0f,
+								(room.CanonPosition.y + 0.5f + (heightDifference - room.height) * 0.5f) * 3.0f
+							);
+							canonPosition -= centerOffset;
+							devPosition = new Vector2(
+								(room.DevPosition.x + (widthDifference + room.width) * 0.5f) * 3.0f,
+								(room.DevPosition.y + (heightDifference - room.height) * 0.5f) * 3.0f
+							);
+							devPosition -= centerOffset;
+						}
+
+						string timelineLine = $"{FancyRoomCasing(room)}: " +
+									$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
+									$"{devPosition.x:G12}><{devPosition.y:G12}><" +
+									$"{room.data.layer}><";
+
+						if (room.data.subregion > -1) {
+							timelineLine += WorldWindow.region.subregions[room.data.subregion];
+						}
+						
+						timelineMapWriter.Value.WriteLine(timelineLine);
 					}
 				}
 			}
@@ -1020,6 +1053,9 @@ public static class WorldExporter {
 
 	// REVIEW - optimise usage of this method by returning a byte[] of the room's image, and then overlaying that separately onto each relevant timeline map?
 	// this would reduce the amount of times the same room is drawn, but might be counteracted by the increased cost of overlaying the new room?
+
+	// REVIEW - there's a chance that the 'fix' applied below was what caused the issue to begin with
+	// All of this might even have been easier to fix simply by giving replacerooms their own position separate from the replaced room.
 	private static byte[] DrawRoomAtMapPosition(Room roomToDraw, Vector2i mapPosition, byte[] imageToDraw, int textureWidth, int textureHeight, int layerXOffset, int layerYOffset, bool fillBlack = false) {
 		Vector2i topLeftRoomPosition = new (mapPosition.x + layerXOffset, mapPosition.y + layerYOffset - roomToDraw.height);
 		for (int ox = 0; ox < roomToDraw.width; ox++) {
