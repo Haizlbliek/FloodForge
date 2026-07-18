@@ -764,11 +764,18 @@ public static class WorldExporter {
 					timelinesInRegion.Add(timelineEntry);
 				}
 			}
-			foreach (Connection connection in room.connections) {
-				if (connection.timeline.timelineType != TimelineType.All) {
-					foreach (string timelineEntry in room.timeline.timelines) {
-						timelinesInRegion.Add(timelineEntry);
-					}
+		}
+		foreach (Connection connection in WorldWindow.region.connections) {
+			if (connection.timeline.timelineType != TimelineType.All) {
+				foreach (string timelineEntry in connection.timeline.timelines) {
+					timelinesInRegion.Add(timelineEntry);
+				}
+			}
+		}
+		foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+			if (replaceRoom.timeline.timelineType != TimelineType.All) {
+				foreach (string timelineEntry in replaceRoom.timeline.timelines) {
+					timelinesInRegion.Add(timelineEntry);
 				}
 			}
 		}
