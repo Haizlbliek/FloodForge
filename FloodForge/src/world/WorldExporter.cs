@@ -886,39 +886,26 @@ public static class WorldExporter {
 			int layerXOffset = 10;
 			int layerYOffset = (2 - room.data.layer) * layerHeight + 10;
 
-			if (room.data.hidden == 1) {
-				for (int ox = 0; ox < room.width; ox++) {
-					for (int oy = 0; oy < room.height; oy++) {
-						int targetX = roomPosition.x + ox + layerXOffset;
-						int targetY = roomPosition.y + oy + layerYOffset;
-
-						if (targetX < 0 || targetX >= textureWidth || targetY < 0 || targetY >= textureHeight)
-							continue;
-
-						int i = (targetY * textureWidth + targetX) * 3;
-
-						if (room.timeline.timelineType != TimelineType.Only) { // only rooms set to "only" don't appear in the default map
-							bool pixelIsGreen = imageData[i] == 0 && imageData[i + 2] == 0;
-							if (!room.data.merge || pixelIsGreen) {
-								imageData[i] = 0;
-								imageData[i + 1] = 0;
-								imageData[i + 2] = 0;
+			if (room.data.hidden == 1) { // if Hidden, draw the room as solid black
+				if (room.timeline.timelineType != TimelineType.Only)
+					imageData = DrawRoomAtMapPosition(room, roomPosition, imageData, textureWidth, textureHeight, layerXOffset, layerYOffset, true);
+				foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
+					bool drawnRoom = false;
+					foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+						if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
+							if (drawnRoom) {
+								// TODO - add a way to avoid this by making preprocessorcondition-specific maps (for examples, refer to Ancient Urban and Daemon)
+								Logger.Warn($"Skipped drawing {room.name} (hidden) replaceRoom {replaceRoom.replacingRoom.name} on map {timelineWriter.Key} - multiple replacerooms in one timeline");
+								break;
 							}
-						}
-
-						foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
-							if (room.timeline.OverlapsWith(timelineWriter.Key)) {
-								bool pixelIsGreen = timelineImageData[timelineWriter.Key][i] == 0 && timelineImageData[timelineWriter.Key][i + 2] == 0;
-								if (!room.data.merge || pixelIsGreen) {
-									timelineImageData[timelineWriter.Key][i] = 0;
-									timelineImageData[timelineWriter.Key][i + 1] = 0;
-									timelineImageData[timelineWriter.Key][i + 2] = 0;
-								}
-							}
+							timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoom.replacingRoom, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset, true);
+							drawnRoom = true;
 						}
 					}
+					if (room.timeline.OverlapsWith(timelineWriter.Key)) {
+						timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(room, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset, true);
+					}
 				}
-
 				continue;
 			}
 
@@ -933,66 +920,26 @@ public static class WorldExporter {
 				}
 			}
 
-			for (int ox = 0; ox < room.width; ox++) {
-				for (int oy = 0; oy < room.height; oy++) {
-					int targetX = roomPosition.x + ox + layerXOffset;
-					int targetY = roomPosition.y + oy + layerYOffset;
-
-					if (targetX < 0 || targetX >= textureWidth || targetY < 0 || targetY >= textureHeight)
-						continue;
-
-					int i = (targetY * textureWidth + targetX) * 3;
-					uint tile = room.GetTile(ox, oy);
-					uint tileType = tile & 15;
-
-					byte r = 0, g = 0, b = 0;
-
-					if (tileType == 0 || tileType == 4 || tileType == 5) {
-						r = 255;
-						g = 0;
-					}
-					if (tileType == 1) {
-						r = 0;
-						g = 0;
-					}
-					if (tileType == 2 || tileType == 3 || (tile & Room.FLAG_HORIZONTAL_POLE) != 0 || (tile & Room.FLAG_VERTICAL_POLE) != 0) {
-						r = 153;
-						g = 0;
-					}
-
-					if (room.visuals.UnderTerrain(ox, oy, out bool slope)) {
-						g = 0;
-						if (slope) {
-							r = Math.Min(r, (byte) 153);
-						} else {
-							r = 0;
+			if (room.timeline.timelineType != TimelineType.Only)
+				imageData = DrawRoomAtMapPosition(room, roomPosition, imageData, textureWidth, textureHeight, layerXOffset, layerYOffset);
+			foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
+				bool drawnRoom = false;
+				foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+					// TOFIX - rooms are drawn from the top-left corner, room positions are specified from bottom-left,
+					// thus a replaceroom smaller than the original will be drawn higher than it's supposed to
+					// a fix would be to convert to bottom-left position here and draw taking that into account in the new method
+					if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
+						if (drawnRoom) {
+							// TODO - add a way to avoid this by making preprocessorcondition-specific maps (for examples, refer to Ancient Urban and Daemon)
+							Logger.Warn($"Skipped drawing {room.name} replaceRoom {replaceRoom.replacingRoom.name} on map {timelineWriter.Key} - multiple replacerooms in one timeline");
+							break;
 						}
+						timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoom.replacingRoom, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset);
+						drawnRoom = true;
 					}
-
-					if (r > 0 && room.visuals.Underwater(ox, oy)) {
-						b = 255;
-					}
-
-					bool isBlack = r == 0 && g == 0 && b == 0;
-
-					if (room.timeline.timelineType != TimelineType.Only) { // only rooms set to "only" don't appear in the default map
-						bool pixelIsGreen = imageData[i] == 0 && imageData[i + 2] == 0;
-						if (!room.data.merge || !isBlack || pixelIsGreen) {
-							imageData[i] = r;
-							imageData[i + 1] = g;
-							imageData[i + 2] = b;
-						}
-					}
-					foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
-						if (room.timeline.OverlapsWith(timelineWriter.Key)) {
-							bool pixelIsGreen = timelineImageData[timelineWriter.Key][i] == 0 && timelineImageData[timelineWriter.Key][i + 2] == 0;
-							if (!room.data.merge || !isBlack || pixelIsGreen) {
-								timelineImageData[timelineWriter.Key][i] = r;
-								timelineImageData[timelineWriter.Key][i + 1] = g;
-								timelineImageData[timelineWriter.Key][i + 2] = b;
-							}
-						}
-					}
+				}
+				if (!drawnRoom && room.timeline.OverlapsWith(timelineWriter.Key)) {
+					timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(room, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset);
 				}
 			}
 		}
@@ -1031,6 +978,69 @@ public static class WorldExporter {
 		catch (Exception e) {
 			Logger.Error($"Exporting image failed: {e.Message}");
 		}
+	}
+
+	// REVIEW - optimise usage of this method by returning a byte[] of the room's image, and then overlaying that separately onto each relevant timeline map?
+	// this would reduce the amount of times the same room is drawn, but might be counteracted by the increased cost of overlaying the new room?
+	private static byte[] DrawRoomAtMapPosition(Room roomToDraw, Vector2i mapPosition, byte[] imageToDraw, int textureWidth, int textureHeight, int layerXOffset, int layerYOffset, bool fillBlack = false) {
+		for (int ox = 0; ox < roomToDraw.width; ox++) {
+			for (int oy = 0; oy < roomToDraw.height; oy++) {
+				int targetX = mapPosition.x + ox + layerXOffset;
+				int targetY = mapPosition.y + oy + layerYOffset;
+
+				if (targetX < 0 || targetX >= textureWidth || targetY < 0 || targetY >= textureHeight)
+					continue;
+
+				int i = (targetY * textureWidth + targetX) * 3;
+
+				if (fillBlack) {
+					imageToDraw[i] = 0;
+					imageToDraw[i + 1] = 0;
+					imageToDraw[i + 2] = 0;
+					continue;
+				}
+
+				uint tile = roomToDraw.GetTile(ox, oy);
+				uint tileType = tile & 15;
+
+				byte r = 0, g = 0, b = 0;
+
+				if (tileType == 0 || tileType == 4 || tileType == 5) {
+					r = 255;
+					g = 0;
+				}
+				if (tileType == 1) {
+					r = 0;
+					g = 0;
+				}
+				if (tileType == 2 || tileType == 3 || (tile & Room.FLAG_HORIZONTAL_POLE) != 0 || (tile & Room.FLAG_VERTICAL_POLE) != 0) {
+					r = 153;
+					g = 0;
+				}
+
+				if (roomToDraw.visuals.UnderTerrain(ox, oy, out bool slope)) {
+					g = 0;
+					if (slope) {
+						r = Math.Min(r, (byte) 153);
+					} else {
+						r = 0;
+					}
+				}
+
+				if (r > 0 && roomToDraw.visuals.Underwater(ox, oy)) {
+					b = 255;
+				}
+
+				bool isBlack = r == 0 && g == 0 && b == 0;
+				bool pixelIsGreen = imageToDraw[i] == 0 && imageToDraw[i + 2] == 0;
+				if (!roomToDraw.data.merge || !isBlack || pixelIsGreen) {
+					imageToDraw[i] = r;
+					imageToDraw[i + 1] = g;
+					imageToDraw[i + 2] = b;
+				}
+			}
+		}
+		return imageToDraw;
 	}
 
 	private static void ExportRoomAttr(StreamWriter writer, string name, Dictionary<string, RoomAttractiveness> attrs) {
