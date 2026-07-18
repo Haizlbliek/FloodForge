@@ -210,7 +210,36 @@ public static class WorldExporter {
 					writer.WriteLine(line);
 				foreach (KeyValuePair<string, StreamWriter> timelineMapWriter in timelineMapWriters) {
 					if (connection.timeline.OverlapsWith(timelineMapWriter.Key)) {
-						timelineMapWriter.Value.WriteLine(line);
+						if (connection.roomA.replaceRooms.Count != 0 || connection.roomB.replaceRooms.Count != 0) {
+							Room replaceRoomA = connection.roomA;
+							Room replaceRoomB = connection.roomB;
+							foreach (ReplaceRoom replaceRoom in connection.roomA.replaceRooms) {
+								if (replaceRoom.timeline.OverlapsWith(timelineMapWriter.Key)) {
+									replaceRoomA = replaceRoom.replacingRoom;
+								}
+							}
+							foreach (ReplaceRoom replaceRoom in connection.roomB.replaceRooms) {
+								if (replaceRoom.timeline.OverlapsWith(timelineMapWriter.Key)) {
+									replaceRoomB = replaceRoom.replacingRoom;
+								}
+							}
+							Vector2i newConnA = replaceRoomA.GetShortcutEntranceRoomPoint(connection.roomAExitID);
+							Vector2i newConnB = replaceRoomB.GetShortcutEntranceRoomPoint(connection.roomBExitID);
+
+							newConnA = new Vector2i(newConnA.x, replaceRoomA.height - newConnA.y - 1);
+							newConnB = new Vector2i(newConnB.x, replaceRoomB.height - newConnB.y - 1);
+							
+							string newLine = $"Connection: " +
+								$"{FancyRoomCasing(connection.roomA)}," +
+								$"{FancyRoomCasing(connection.roomB)}," +
+								$"{newConnA.x},{newConnA.y}," +
+								$"{newConnB.x},{newConnB.y}," +
+								$"{(int) replaceRoomA.GetShortcutEntranceDirectionInt(connection.roomAExitID)}," +
+								$"{(int) replaceRoomB.GetShortcutEntranceDirectionInt(connection.roomBExitID)}";
+							timelineMapWriter.Value.WriteLine(newLine);
+						}
+						else
+							timelineMapWriter.Value.WriteLine(line);
 					}
 				}
 			}
