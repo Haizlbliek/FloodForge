@@ -179,41 +179,49 @@ public static class WorldExporter {
 					writer.WriteLine(line);
 				
 				foreach (KeyValuePair<string, StreamWriter> timelineMapWriter in timelineMapWriters) {
-					ReplaceRoom? relevantReplaceRoom = null;
+					bool skipForReplaceRoom = false;
 					foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
 						if (replaceRoom.timeline.OverlapsWith(timelineMapWriter.Key)) {
-							relevantReplaceRoom = replaceRoom;
+							skipForReplaceRoom = true;
+							break;
 						}
 					}
-					if (room.timeline.OverlapsWith(timelineMapWriter.Key) || relevantReplaceRoom != null) {
-						Room roomToWriteFor = relevantReplaceRoom == null ? room : relevantReplaceRoom.replacingRoom;
-						if (relevantReplaceRoom != null) {
-							// I am certain there is redundant work here, but i am leaving future programmers to fix that, because right now it works.
-							int widthDifference = roomToWriteFor.width - room.width;
-							int heightDifference = roomToWriteFor.height - room.height;
-							canonPosition = new Vector2(
-								(room.CanonPosition.x + 0.5f + (widthDifference + room.width) * 0.5f) * 3.0f,
-								(room.CanonPosition.y + 0.5f + (heightDifference - room.height) * 0.5f) * 3.0f
-							);
-							canonPosition -= centerOffset;
-							devPosition = new Vector2(
-								(room.DevPosition.x + (widthDifference + room.width) * 0.5f) * 3.0f,
-								(room.DevPosition.y + (heightDifference - room.height) * 0.5f) * 3.0f
-							);
-							devPosition -= centerOffset;
-						}
+					if (!skipForReplaceRoom && room.timeline.OverlapsWith(timelineMapWriter.Key))
+						timelineMapWriter.Value.WriteLine(line);
+				}
+			}
+			
+			Dictionary<Room, List<ReplaceRoom>> replaceRooms = [];
+			foreach (ReplaceRoom room in WorldWindow.replaceRooms) {
+				replaceRooms.TryAdd(room.replacedRoom, []);
+				replaceRooms[room.replacedRoom].Add(room);
+			}
+			foreach (KeyValuePair<Room, List<ReplaceRoom>> keyValuePair in replaceRooms) {
+				foreach (KeyValuePair<string, StreamWriter> timelineMapWriter in timelineMapWriters) {
+					ReplaceRoom? replaceRoom = keyValuePair.Value.LastOrDefault(r => r.timeline.OverlapsWith(timelineMapWriter.Key));
+					if (replaceRoom == null)
+						continue;
+					Vector2 canonPosition = new Vector2(
+						(replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width * 0.5f) * 3.0f,
+						(replaceRoom.CanonPosition.y - replaceRoom.replacingRoom.height * 0.5f) * 3.0f
+					);
+					canonPosition -= centerOffset;
+					Vector2 devPosition = new Vector2(
+						(replaceRoom.DevPosition.x + replaceRoom.replacingRoom.width * 0.5f) * 3.0f,
+						(replaceRoom.DevPosition.y - replaceRoom.replacingRoom.height * 0.5f) * 3.0f
+					);
+					devPosition -= centerOffset;
 
-						string timelineLine = $"{FancyRoomCasing(room)}: " +
-									$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
-									$"{devPosition.x:G12}><{devPosition.y:G12}><" +
-									$"{room.data.layer}><";
+					string line = $"{FancyRoomCasing(replaceRoom.replacedRoom)}: " +
+								$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
+								$"{devPosition.x:G12}><{devPosition.y:G12}><" +
+								$"{replaceRoom.replacedRoom.data.layer}><";
 
-						if (room.data.subregion > -1) {
-							timelineLine += WorldWindow.region.subregions[room.data.subregion];
-						}
-						
-						timelineMapWriter.Value.WriteLine(timelineLine);
+					if (replaceRoom.replacedRoom.data.subregion > -1) {
+						line += WorldWindow.region.subregions[replaceRoom.replacedRoom.data.subregion];
 					}
+					
+					timelineMapWriter.Value.WriteLine(line);
 				}
 			}
 
@@ -980,15 +988,14 @@ public static class WorldExporter {
 				if (room.timeline.timelineType != TimelineType.Only)
 					imageData = DrawRoomAtMapPosition(room, roomPosition, imageData, textureWidth, textureHeight, layerXOffset, layerYOffset, true);
 				foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
-					Room? replaceRoomToDraw = null;
+					bool skipForReplaceRoom = false;
 					foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
 						if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
-							replaceRoomToDraw = replaceRoom.replacingRoom;
+							skipForReplaceRoom = true;
+							break;
 						}
 					}
-					if (replaceRoomToDraw != null)
-						timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoomToDraw, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset, true);
-					else if (room.timeline.OverlapsWith(timelineWriter.Key)) {
+					if (!skipForReplaceRoom && room.timeline.OverlapsWith(timelineWriter.Key)) {
 						timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(room, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset, true);
 					}
 				}
@@ -1001,15 +1008,14 @@ public static class WorldExporter {
 				mapFile?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{mapfileRoomYPos},{room.width},{room.height}");
 			}
 			foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
-				Room? replacingRoomToWrite = null;
+				bool skipForReplaceRoom = false;
 				foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
 					if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
-						replacingRoomToWrite = replaceRoom.replacingRoom;
+						skipForReplaceRoom = true;
+						break;
 					}
 				}
-				if (replacingRoomToWrite != null)
-					timelineWriter.Value?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{mapfileRoomYPos},{replacingRoomToWrite.width},{replacingRoomToWrite.height}");
-				else if (room.timeline.OverlapsWith(timelineWriter.Key)) {
+				if (!skipForReplaceRoom && room.timeline.OverlapsWith(timelineWriter.Key)) {
 					timelineWriter.Value?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{mapfileRoomYPos},{room.width},{room.height}");
 				}
 			}
@@ -1017,17 +1023,51 @@ public static class WorldExporter {
 			if (room.timeline.timelineType != TimelineType.Only)
 				imageData = DrawRoomAtMapPosition(room, roomPosition, imageData, textureWidth, textureHeight, layerXOffset, layerYOffset);
 			foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
-				Room? replaceRoomToDraw = null;
+				bool skipForReplaceRoom = false;
 				foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
 					if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
-						replaceRoomToDraw = replaceRoom.replacingRoom;
+						skipForReplaceRoom = true;
+						break;
 					}
 				}
-				if (replaceRoomToDraw != null)
-					timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoomToDraw, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset);
-				else if (room.timeline.OverlapsWith(timelineWriter.Key)) {
+				if (!skipForReplaceRoom && room.timeline.OverlapsWith(timelineWriter.Key)) {
 					timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(room, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset);
 				}
+			}
+		}
+
+		// TODO - fix write to prioritise and only write the last replaceroom for each room
+		Dictionary<Room, List<ReplaceRoom>> replaceRooms = [];
+		foreach (ReplaceRoom room in WorldWindow.replaceRooms) {
+			replaceRooms.TryAdd(room.replacedRoom, []);
+			replaceRooms[room.replacedRoom].Add(room);
+		}
+		foreach (KeyValuePair<Room, List<ReplaceRoom>> keyValuePair in replaceRooms) {
+			foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
+				ReplaceRoom? replaceRoom = keyValuePair.Value.LastOrDefault(r => r.timeline.OverlapsWith(timelineWriter.Key));
+				if (replaceRoom == null)
+					continue;
+				if (replaceRoom.replacedRoom.data.hidden == 2)
+					continue;
+				
+				Vector2i replaceRoomPosition = new Vector2i(
+					(int) (replaceRoom.CanonPosition.x - topLeft.x),
+					(int) (bottomRight.y - replaceRoom.CanonPosition.y + replaceRoom.replacingRoom.height)
+				);
+
+				int layerXOffset = 10;
+				int layerYOffset = (2 - replaceRoom.replacedRoom.data.layer) * layerHeight + 10;
+
+				if (replaceRoom.replacedRoom.data.hidden == 1) { // if Hidden, draw the room as solid black
+					timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoom.replacingRoom, replaceRoomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset, true);
+					continue;
+				}
+
+				int mapfileRoomYPos = textureHeight - replaceRoomPosition.y - layerYOffset - replaceRoom.replacingRoom.height;
+
+				timelineWriter.Value?.WriteLine($"{RoomNameCasing(replaceRoom.replacedRoom.name)}: {replaceRoomPosition.x + layerXOffset},{mapfileRoomYPos},{replaceRoom.replacingRoom.width},{replaceRoom.replacingRoom.height}");
+
+				timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoom.replacingRoom, replaceRoomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset);
 			}
 		}
 
