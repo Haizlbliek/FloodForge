@@ -782,7 +782,10 @@ public static class WorldParser {
 				connection.timeline.timelineType = TimelineType.Except;
 				timelines.ForEach(x => connection.timeline.timelines.Add(x));
 			}
-			ConditionalConnection conditionalConnection = new (connection.roomA == room ? connection.roomA : connection.roomB, connection.roomA == room ? connection.roomAExitID : connection.roomBExitID, toConnection, link);
+			ConditionalConnection conditionalConnection = new(connection.roomA == room ? connection.roomA : connection.roomB, connection.roomA == room ? connection.roomAExitID : connection.roomBExitID, toConnection, link) {
+				timeline = new(TimelineType.Only, [.. timelines]),
+				preProcessorConditions = preProcessorConditions
+			};
 			conditionalConnectionsToAdd.Add(conditionalConnection);
 
 			return true;
@@ -812,7 +815,7 @@ public static class WorldParser {
 			roomBName = toConnection,
 			roomB = null,
 			roomBExitID = null,
-			timeline = new Timeline (TimelineType.Only, [..timelines]),
+			timeline = new Timeline(TimelineType.Only, [..timelines]),
 			preProcessorConditions = preProcessorConditions,
 			originLine = link
 		});
