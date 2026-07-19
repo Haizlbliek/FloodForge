@@ -141,6 +141,17 @@ public static class WorldExporter {
 				bottomRight.y = Math.Max(bottomRight.y, bottom);
 			}
 
+			foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+				float replaceLeft = replaceRoom.CanonPosition.x;
+				float replaceRight = replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width;
+				float replaceTop = replaceRoom.CanonPosition.y - replaceRoom.replacingRoom.height;
+				float replaceBottom = replaceRoom.CanonPosition.y;
+				topLeft.x = Math.Min(topLeft.x, replaceLeft);
+				bottomRight.x = Math.Max(bottomRight.x, replaceRight);
+				topLeft.y = Math.Min(topLeft.y, replaceTop);
+				bottomRight.y = Math.Max(bottomRight.y, replaceBottom);
+			}
+
 			Vector2 centerOffset = (topLeft + bottomRight) / 2;
 
 			foreach (Room room in WorldWindow.region.rooms) {
@@ -903,12 +914,17 @@ public static class WorldExporter {
 			topLeft.y = Math.Min(topLeft.y, top);
 			bottomRight.y = Math.Max(bottomRight.y, bottom);
 
-			foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
-				float replaceRight = left + replaceRoom.replacingRoom.width;
-				float replaceTop = bottom - replaceRoom.replacingRoom.height;
-				bottomRight.x = Math.Max(bottomRight.x, replaceRight);
-				topLeft.y = Math.Min(topLeft.y, replaceTop);
-			}
+		}
+
+		foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+			float replaceLeft = replaceRoom.CanonPosition.x;
+			float replaceRight = replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width;
+			float replaceTop = replaceRoom.CanonPosition.y - replaceRoom.replacingRoom.height;
+			float replaceBottom = replaceRoom.CanonPosition.y;
+			topLeft.x = Math.Min(topLeft.x, replaceLeft);
+			bottomRight.x = Math.Max(bottomRight.x, replaceRight);
+			topLeft.y = Math.Min(topLeft.y, replaceTop);
+			bottomRight.y = Math.Max(bottomRight.y, replaceBottom);
 		}
 
 		int layerHeight = Math.Max((int) (bottomRight.y - topLeft.y) + 20, 20);
