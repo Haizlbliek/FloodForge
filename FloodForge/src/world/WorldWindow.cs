@@ -1391,7 +1391,16 @@ public static class WorldWindow {
 			if (!VisibleLayers[replaceRoom.replacedRoom.data.layer] || !VisibleTimeline.OverlapsWith(replaceRoom.timeline))
 				continue;
 
-			replaceRoom.Draw();
+			if (PositionType == RoomPosition.Both) {
+				replaceRoom.Draw(RoomPosition.Canon);
+				replaceRoom.Draw(RoomPosition.Dev);
+			}
+			else {
+				replaceRoom.Draw(PositionType);
+				if (Keys.Modifier(Keys.Modifiers.Alt)) {
+					replaceRoom.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
+				}
+			}
 		}
 
 		if (selectingState == SelectingState.Selecting) {
