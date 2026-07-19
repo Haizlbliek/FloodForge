@@ -84,6 +84,7 @@ public static class WorldParser {
 			return true;
 		}
 
+		// REVIEW - account for found replacerooms
 		string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", "").Trim())];
 		float canonX = float.Parse(data[0]) / 3f;
 		float canonY = float.Parse(data[1]) / 3f;
