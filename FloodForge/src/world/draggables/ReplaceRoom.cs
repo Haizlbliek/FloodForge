@@ -1,6 +1,6 @@
 namespace FloodForge.World;
 
-public class ReplaceRoom : WorldDraggable {
+public class ReplaceRoom : MapDraggable {
 	public Room replacingRoom;
 	public Room replacedRoom;
 	public Timeline timeline;
@@ -23,58 +23,63 @@ public class ReplaceRoom : WorldDraggable {
 	//TODO - add split between CanonPosition and DevPosition to actually match with the replaced room
 	//TODO - draw the replaced room's information at the replacingroom's positions (dens)
 	//IDEA - run timeline checks when drawing dens so that dens that would only appear on replaceroom are only rendered there
-    public void Draw() {
+    public void Draw(WorldWindow.RoomPosition positionType) {
+		if (Settings.DEBUGRoomWireframe) {
+			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
+		}
+		Vector2 renderedPosition = positionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
+
 		Immediate.Color(Themes.RoomSolid);
-		UI.FillRect(this.position.x, this.position.y - this.size.y, this.position.x + this.size.x, this.position.y);
+		UI.FillRect(renderedPosition.x, renderedPosition.y - this.size.y, renderedPosition.x + this.size.x, renderedPosition.y);
 
 		// REVIEW - change room mesh drawing to display correct layer information
-		this.replacingRoom.DrawRoomMeshes(this.position, WorldWindow.PositionType);
+		this.replacingRoom.DrawRoomMeshes(renderedPosition, positionType);
 
 		Immediate.Color(Themes.Layer2Color);
-		UI.Line(this.Position, this.replacedRoom.Position);
+		UI.Line(renderedPosition, this.replacedRoom.Position);
 		if (!this.replacingRoom.isVirtualRoom){
 			Immediate.Color(Themes.Layer0Color);
-			UI.Line(this.Position, this.replacingRoom.Position);
+			UI.Line(renderedPosition, this.replacingRoom.Position);
 		}
 
-		this.DrawReplaceRoomShortcuts();
+		this.DrawReplaceRoomShortcuts(renderedPosition);
 
-		Vector2 o = WorldWindow.worldMouse - this.position;
+		Vector2 o = WorldWindow.worldMouse - renderedPosition;
 		bool hovered = o.x >= 0f && o.y <= 0f && o.x <= this.size.x && o.y >= -this.size.y;
 		Immediate.Color(hovered ? Themes.RoomBorderHighlight : Themes.RoomBorder);
-		UI.StrokeRect(this.position.x, this.position.y, this.position.x + this.size.x, this.position.y - this.size.y);
+		UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.size.x, renderedPosition.y - this.size.y);
 
 		for (int j = 0; j < this.replacingRoom.denShortcutEntrances.Count && j < this.replacedRoom.dens.Count; j++) {
 			Vector2i denPosition = this.replacingRoom.denShortcutEntrances[j];
-			Room.DrawDen(this.replacedRoom.dens[j], this.position.x + denPosition.x, this.position.y - denPosition.y, WorldWindow.denRoom == this.replacedRoom && WorldWindow.hoveredDen == j, WorldWindow.HoveringDraggable == this, this.timeline);
+			Room.DrawDen(this.replacedRoom.dens[j], renderedPosition.x + denPosition.x, renderedPosition.y - denPosition.y, WorldWindow.denRoom == this.replacedRoom && WorldWindow.hoveredDen == j, WorldWindow.HoveringDraggable == this, this.timeline);
 		}
 
 		int i = 0;
 		Immediate.Color(1f, 1f, 1f);
 		foreach (string timeline in this.timeline.timelines) {
-			UI.CenteredTexture(Mods.GetTimelineTexture(timeline), (float) (this.Position.x + (i * WorldWindow.SelectorScale) + 1.5f), (float) (this.Position.y - 1.5f), WorldWindow.SelectorScale);
+			UI.CenteredTexture(Mods.GetTimelineTexture(timeline), (float) (renderedPosition.x + (i * WorldWindow.SelectorScale) + 1.5f), (float) (renderedPosition.y - 1.5f), WorldWindow.SelectorScale);
 			i++;
 		}
 
 		if (this.timeline.timelines.Count > 0 && this.timeline.timelineType == TimelineType.Except) {
 			Immediate.Color(1f, 0f, 0f);
-			UI.Line(this.Position.x + 2f - WorldWindow.SelectorScale * 0.5f, this.Position.y - 2f, this.Position.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.timeline.timelines.Count - 1) * WorldWindow.SelectorScale, this.Position.y - 2f, WorldWindow.SelectorScale * 4f);
+			UI.Line(renderedPosition.x + 2f - WorldWindow.SelectorScale * 0.5f, renderedPosition.y - 2f, renderedPosition.x + 2f + WorldWindow.SelectorScale * 0.5f + (this.timeline.timelines.Count - 1) * WorldWindow.SelectorScale, renderedPosition.y - 2f, WorldWindow.SelectorScale * 4f);
 		}
 
 		if (this.preProcessorConditions.Length != 0) {
 			Immediate.Color(1f, 1f, 0f);
-			float x0 = this.Position.x + 2f - WorldWindow.SelectorScale * 0.5f;
-			float y0 = this.Position.y - 2f - WorldWindow.SelectorScale * 0.5f;
-			float y1 = this.Position.y - 2f + WorldWindow.SelectorScale * 0.5f;
+			float x0 = renderedPosition.x + 2f - WorldWindow.SelectorScale * 0.5f;
+			float y0 = renderedPosition.y - 2f - WorldWindow.SelectorScale * 0.5f;
+			float y1 = renderedPosition.y - 2f + WorldWindow.SelectorScale * 0.5f;
 			UI.Line(x0, y0, x0, y1, WorldWindow.SelectorScale * 3f);
 		}
     }
 
-	public void DrawReplaceRoomShortcuts() {
+	public void DrawReplaceRoomShortcuts(Vector2 renderedPosition) {
 		float clippedSelectorScale = Math.Min(WorldWindow.SelectorScale, 10f);
 		for (int i = 0; i < this.replacingRoom.roomExits.Count; i++) {
-			Vector2 exitPos = this.replacingRoom.RoomPositionToWorldPosition(this.replacingRoom.roomExitPaths[this.replacingRoom.roomExits[i]].path.StartPosition, this.position);
-			Vector2 entrancePos = this.replacingRoom.RoomPositionToWorldPosition(this.replacingRoom.roomExitPaths[this.replacingRoom.roomExits[i]].path.EndPosition, this.position);
+			Vector2 exitPos = this.replacingRoom.RoomPositionToWorldPosition(this.replacingRoom.roomExitPaths[this.replacingRoom.roomExits[i]].path.StartPosition, renderedPosition);
+			Vector2 entrancePos = this.replacingRoom.RoomPositionToWorldPosition(this.replacingRoom.roomExitPaths[this.replacingRoom.roomExits[i]].path.EndPosition, renderedPosition);
 			bool entranceIsShortcutEntrance = this.replacingRoom.roomExitPaths[this.replacingRoom.roomExits[i]].endType == Room.RoomPathEndType.shortcutEntrance;
 			bool connected = this.replacedRoom.AnyConnectionConnectedTo((uint) i);
 			bool thisRoomExitHovered = WorldWindow.shortcutRoom == this.replacedRoom && WorldWindow.hoveredRoomExit == i;
@@ -112,7 +117,7 @@ public class ReplaceRoom : WorldDraggable {
 			bool shouldBeHighlighted = (thisRoomExitHovered || connectionFound && this.replacedRoom.connections[getConnectionIndex].Hovered) && WorldWindow.hoveredShortcutEntrance == -1;
 			if (shouldBeHighlighted || Keys.Modifier(Keys.Modifiers.Shift)) {
 				if (this.replacingRoom.roomExitPaths.TryGetValue(this.replacingRoom.roomExits[i], out Room.RoomConnection result)) {
-					Room.DrawRoomPath(this.position, result, thisRoomExitHovered, shouldBeHighlighted);
+					Room.DrawRoomPath(renderedPosition, result, thisRoomExitHovered, shouldBeHighlighted);
 				}
 			}
 		}
@@ -128,9 +133,9 @@ public class ReplaceRoom : WorldDraggable {
 					Room.RoomPathEndType.wackAMoleHole => new Color(0.2f, 0.4f, 0.6f),
 					_ => Color.Black
 				});
-				UI.StrokeCircle(this.replacingRoom.RoomPositionToWorldPosition(connection.path.StartPosition, this.position), isMatchedWithRoomExit ? 0.25f : 2f, 8);
+				UI.StrokeCircle(this.replacingRoom.RoomPositionToWorldPosition(connection.path.StartPosition, renderedPosition), isMatchedWithRoomExit ? 0.25f : 2f, 8);
 				Immediate.Color(isMatchedWithRoomExit ? Color.Black : Color.Magenta);
-				UI.StrokeCircle(this.replacingRoom.RoomPositionToWorldPosition(connection.path.EndPosition, this.position), isMatchedWithRoomExit ? 0.25f : 1f, 8);
+				UI.StrokeCircle(this.replacingRoom.RoomPositionToWorldPosition(connection.path.EndPosition, renderedPosition), isMatchedWithRoomExit ? 0.25f : 1f, 8);
 			}
 		}
 		// this bit handles the case where:
@@ -140,8 +145,8 @@ public class ReplaceRoom : WorldDraggable {
 			if (this.replacingRoom.shortcutEntrancePaths.TryGetValue(this.replacingRoom.allShortcutEntrancePoints[i], out (Room.RoomConnection connection, bool isMatchedWithRoomExit) value)) {
 				bool entranceConnectedToRoomExit = value.connection.endType == Room.RoomPathEndType.roomExit;
 				if (!value.isMatchedWithRoomExit && entranceConnectedToRoomExit) {
-					Vector2 entrancePos = this.replacingRoom.RoomPositionToWorldPosition(this.replacingRoom.shortcutEntrancePaths[this.replacingRoom.allShortcutEntrancePoints[i]].Item1.path.StartPosition, this.position);
-					Vector2 exitPos = this.replacingRoom.RoomPositionToWorldPosition(this.replacingRoom.shortcutEntrancePaths[this.replacingRoom.allShortcutEntrancePoints[i]].Item1.path.EndPosition, this.position);
+					Vector2 entrancePos = this.replacingRoom.RoomPositionToWorldPosition(this.replacingRoom.shortcutEntrancePaths[this.replacingRoom.allShortcutEntrancePoints[i]].Item1.path.StartPosition, renderedPosition);
+					Vector2 exitPos = this.replacingRoom.RoomPositionToWorldPosition(this.replacingRoom.shortcutEntrancePaths[this.replacingRoom.allShortcutEntrancePoints[i]].Item1.path.EndPosition, renderedPosition);
 					uint exitID = this.replacingRoom.GetRoomExitIDFromShortcut((uint) i);
 					bool roomExitIsConnected = this.replacedRoom.AnyConnectionConnectedTo(exitID);
 
@@ -159,7 +164,7 @@ public class ReplaceRoom : WorldDraggable {
 					// Draws shortcutpath if the connection is hovered over. (since a roomexit isn't related to this entrance
 					// (otherwise it'd have been drawn with the roomExits), there is no exit to hover over that should highlight this shortcut entrance)
 					if (thisShortcutEntranceHovered || Keys.Modifier(Keys.Modifiers.Shift)) {
-						Room.DrawRoomPath(this.position, value.connection, thisShortcutEntranceHovered, thisShortcutEntranceHovered);
+						Room.DrawRoomPath(renderedPosition, value.connection, thisShortcutEntranceHovered, thisShortcutEntranceHovered);
 					}
 				}
 			}
