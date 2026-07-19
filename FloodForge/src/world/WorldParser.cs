@@ -68,8 +68,8 @@ public static class WorldParser {
 		return true;
 	}
 
-	public static bool ParseMapRoom(string line, out Room? offsetRoom) {
-		offsetRoom = null;
+	public static bool ParseMapRoom(string line, out MapDraggable? offsetDraggable, string? timeline) {
+		offsetDraggable = null;
 		string? roomName = line[..line.IndexOf(':')];
 		string roomPath = WorldWindow.region.roomsPath;
 
@@ -84,7 +84,18 @@ public static class WorldParser {
 			return true;
 		}
 
-		// REVIEW - account for found replacerooms
+		Room dataTarget = room;
+		MapDraggable positionTarget = room;
+		Room sizeSource = room;
+		if (timeline != null) {
+			ReplaceRoom? relevantReplaceRoom = room.replaceRooms.LastOrDefault(x => x.timeline.OverlapsWith(timeline));
+			if (relevantReplaceRoom != null) {
+				dataTarget = relevantReplaceRoom.replacedRoom;
+				positionTarget = relevantReplaceRoom;
+				sizeSource = relevantReplaceRoom.replacingRoom;
+			}
+		}
+		
 		string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", "").Trim())];
 		float canonX = float.Parse(data[0]) / 3f;
 		float canonY = float.Parse(data[1]) / 3f;
@@ -93,33 +104,28 @@ public static class WorldParser {
 		int layer = data[4].IsNullOrEmpty() ? 0 : int.Parse(data[4]);
 		string subregion = data[5];
 
-		if (room.CanonPosition != Vector2.Zero) {
-			totalAvgOffset = (totalAvgOffset * avgCount + (new Vector2(canonX - room.width * 0.5f, canonY + room.height * 0.5f) - room.CanonPosition)) / (avgCount + 1);
+		if (positionTarget.CanonPosition != Vector2.Zero) {
+			totalAvgOffset = (totalAvgOffset * avgCount + (new Vector2(canonX - sizeSource.width * 0.5f, canonY + sizeSource.height * 0.5f) - positionTarget.CanonPosition)) / (avgCount + 1);
 			avgCount++;
 			return true;
 		}
-		offsetRoom = room;
+		offsetDraggable = positionTarget;
 
-		room.CanonPosition.x = canonX - room.width * 0.5f;
-		room.CanonPosition.y = canonY + room.height * 0.5f;
-		room.DevPosition.x = devX - room.width * 0.5f;
-		room.DevPosition.y = devY + room.height * 0.5f;
-		room.data.layer = layer;
-		int replaceRoomCount = 1;
-		foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
-			replaceRoom.Position = room.CanonPosition + Vector2.NegY * replaceRoomCount * 3;
-			replaceRoomCount++;
-		}
+		positionTarget.CanonPosition.x = canonX - sizeSource.width * 0.5f;
+		positionTarget.CanonPosition.y = canonY + sizeSource.height * 0.5f;
+		positionTarget.DevPosition.x = devX - sizeSource.width * 0.5f;
+		positionTarget.DevPosition.y = devY + sizeSource.height * 0.5f;
+		dataTarget.data.layer = layer;
 		if (subregion.IsNullOrEmpty()) {
-			room.data.subregion = -1;
+			dataTarget.data.subregion = -1;
 		}
 		else {
 			int idx = WorldWindow.region.subregions.IndexOf(subregion);
 			if (idx != -1) {
-				room.data.subregion = idx;
+				dataTarget.data.subregion = idx;
 			}
 			else {
-				room.data.subregion = WorldWindow.region.subregions.Count;
+				dataTarget.data.subregion = WorldWindow.region.subregions.Count;
 				WorldWindow.region.subregions.Add(subregion);
 			}
 		}
@@ -128,25 +134,28 @@ public static class WorldParser {
 	}
 
 	// REVIEW - improve offset calculation robustness (and/or find out why it happens in the first place)
+	// (it probably happens because of differing map sizes or differing map bounds, therefore different map origins... hmm)
 	private static Vector2 totalAvgOffset;
 	private static int avgCount;
 	public static bool ParseMap(string path) {
 		Dictionary<string, (int hidden, bool warpable, bool merge)> extraRoomData = [];
-		List<string> allMaps = [path];
+		List<(string? timeline, string mapPath)> allMaps = [(null, path)];
 		
 		Logger.Info("Looking for alternate maps");
 		string cutMapPath = path[..path.IndexOfReverse('.')];
 		foreach (string alternatePath in Directory.GetFiles(WorldWindow.region.exportPath)) {
 			if (alternatePath.StartsWith(cutMapPath) && alternatePath.EndsWith(".txt") && alternatePath != path) {
-				Logger.Info($"found alternate map: {Path.GetFileNameWithoutExtension(alternatePath)}");
-				allMaps.Add(alternatePath);
+				string fileName = Path.GetFileNameWithoutExtension(alternatePath);
+				Logger.Info($"found alternate map: {fileName}");
+				string timeline = fileName.Split('-').Last();
+				allMaps.Add((timeline, alternatePath));
 			}
 		}
 
-		foreach (string mapPath in allMaps) {
+		foreach ((string? timeline, string mapPath) in allMaps) {
 			totalAvgOffset = Vector2.Zero;
 			avgCount = 0;
-			List<Room> offsetRooms = [];
+			List<MapDraggable> offsetDraggables = [];
 			foreach (string line in File.ReadAllLines(mapPath)) {
 				if (line.IsNullOrEmpty()) continue;
 
@@ -184,17 +193,17 @@ public static class WorldParser {
 					// LATER
 				}
 				else {
-					if (!ParseMapRoom(line, out Room? affectedOffsetRoom)) {
+					if (!ParseMapRoom(line, out MapDraggable? affectedOffsetDraggable, timeline)) {
 						return false;
 					}
-					if (affectedOffsetRoom != null) offsetRooms.Add(affectedOffsetRoom);
+					if (affectedOffsetDraggable != null) offsetDraggables.Add(affectedOffsetDraggable);
 				}
 			}
-			if (offsetRooms.Count != 0 && avgCount != 0 && totalAvgOffset != Vector2.Zero) {
+			if (offsetDraggables.Count != 0 && avgCount != 0 && totalAvgOffset != Vector2.Zero) {
 				Logger.Info($"map offset detected in map {Path.GetFileNameWithoutExtension(mapPath)}, fixing");
-				Logger.Info($"offsetRooms.Count: {offsetRooms.Count}; avg offset: ({totalAvgOffset.x};{totalAvgOffset.y})");
-				foreach (Room offsetRoom in offsetRooms) {
-					offsetRoom.CanonPosition -= totalAvgOffset;
+				Logger.Info($"offsetDraggables.Count: {offsetDraggables.Count}; avg offset: ({totalAvgOffset.x};{totalAvgOffset.y})");
+				foreach (MapDraggable offsetDraggable in offsetDraggables) {
+					offsetDraggable.CanonPosition -= totalAvgOffset;
 				}
 			}
 		}
