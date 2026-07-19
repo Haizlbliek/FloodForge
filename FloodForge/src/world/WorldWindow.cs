@@ -891,7 +891,7 @@ public static class WorldWindow {
 
 			Vector2 diff = newPos - draggable.Position;
 
-			if (draggable is Room room) {
+			if (draggable is MapDraggable mapDraggable) {
 				Vector2 dev = Vector2.Zero, canon = Vector2.Zero; // initialise movement vectors
 
 				bool moveBoth = Keys.Modifier(Keys.Modifiers.Alt) || PositionType == RoomPosition.Both;
@@ -899,15 +899,14 @@ public static class WorldWindow {
 				if (PositionType == RoomPosition.Canon) { // depending on visible position type and moveBoth, move one and match the other
 					canon = diff;
 					if (moveBoth)
-						dev = canon - room.DevPosition + room.CanonPosition;
+						dev = canon - mapDraggable.DevPosition + mapDraggable.CanonPosition;
 				}
 				else {
 					dev = diff;
 					if (moveBoth)
-						canon = dev - room.CanonPosition + room.DevPosition;
+						canon = dev - mapDraggable.CanonPosition + mapDraggable.DevPosition;
 				}
-				room.MoveUpdate(); // REVIEW - is this necessary? since redoing and undoing runs MoveUpdate anyway
-				change.AddDraggable(room, dev, canon); // add the delta position to the moveChange
+				change.AddDraggable(mapDraggable, dev, canon); // add the delta position to the moveChange
 			}
 			else {
 				change.AddDraggable(draggable, diff, diff); // for non-rooms, it only uses the Dev diff anyway

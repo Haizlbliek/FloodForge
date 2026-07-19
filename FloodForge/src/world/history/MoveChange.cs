@@ -28,10 +28,10 @@ public class MoveChange : MultipleDraggableChange {
 
 	protected void Move(float multiplier) {
 		for (int i = 0; i < this.draggables.Count; i++) {
-			if(this.draggables[i] is Room room) {
-				room.DevPosition += this.devOffsets[i] * multiplier;
-				room.CanonPosition += this.canonOffsets[i] * multiplier;
-				room.MoveUpdate();
+			if(this.draggables[i] is MapDraggable mapDraggable) {
+				mapDraggable.DevPosition += this.devOffsets[i] * multiplier;
+				mapDraggable.CanonPosition += this.canonOffsets[i] * multiplier;
+				mapDraggable.MoveUpdate();
 			}
 			else {
 				this.draggables[i].Position += this.devOffsets[i] * multiplier;

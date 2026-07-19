@@ -4,7 +4,7 @@ using Stride.Core.Extensions;
 
 namespace FloodForge.World;
 
-public class Room : WorldDraggable {
+public class Room : MapDraggable {
 	public const uint FLAG_VERTICAL_POLE = 16;
 	public const uint FLAG_HORIZONTAL_POLE = 32;
 	public const uint FLAG_ROOM_EXIT = 64;
@@ -32,8 +32,6 @@ public class Room : WorldDraggable {
 	public string[] preProcessorConditions = [];
 	public Timeline timeline = new();
 	public ConditionalPopup? conditionalPopup;
-	public Vector2 CanonPosition;
-	public Vector2 DevPosition;
 	public int width;
 	public int height;
 	public bool valid;
@@ -141,7 +139,7 @@ public class Room : WorldDraggable {
 		this.connections.Remove(connection);
 	}
 
-	public void MoveUpdate() {
+	public override void MoveUpdate() {
 		foreach (Connection connection in this.connections) {
 			connection.recalculateBezier = true;
 		}
@@ -869,34 +867,6 @@ public class Room : WorldDraggable {
 		return roomPosition * new Vector2i(1, -1) + new Vector2(0.5f, -0.5f) + (position ?? this.Position);
 	}
 	#endregion
-
-	public override Vector2 GetPosition() {
-		return WorldWindow.PositionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
-	}
-
-	public override void SetPosition(Vector2 value) {
-		if (WorldWindow.PositionType == WorldWindow.RoomPosition.Canon) {
-			this.CanonPosition = value;
-		}
-		else {
-			this.DevPosition = value;
-		}
-	}
-
-	public Vector2 InactivePosition {
-		get {
-			return WorldWindow.PositionType == WorldWindow.RoomPosition.Canon ? this.DevPosition : this.CanonPosition;
-		}
-
-		set {
-			if (WorldWindow.PositionType == WorldWindow.RoomPosition.Canon) {
-				this.DevPosition = value;
-			}
-			else {
-				this.CanonPosition = value;
-			}
-		}
-	}
 
 	public bool Inside(Vector2 pos) {
 		Vector2 position = this.Position;
