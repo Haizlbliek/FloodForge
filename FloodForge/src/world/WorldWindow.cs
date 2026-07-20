@@ -542,7 +542,7 @@ public static class WorldWindow {
 					}),
 					new SettingsPopup.ButtonContainer("Render Room", () => {
 						PopupManager.Add(new ConfirmPopup($"Render Room {room}?\nThis will overwrite existing images.")).SetOkay("Render").Okay(() => {
-							DropletWindow.LoadRoom(room);
+							DropletWindow.LoadRoom(room, Vector2.Zero);
 							if (DropletWindow.Render(out string errorMessage, out (string name, string path, byte[] image)[] images)) {
 								foreach ((string name, string path, byte[] image) in images) {
 									FloodForge.Backup.File(path);
@@ -1100,47 +1100,6 @@ public static class WorldWindow {
 				else
 					PopupManager.Add(new DenPopup(denRoom.GetDen01(hoveredDen))); // make this work with offscreenRoom
 			}
-			/*bool found = false;
-
-			for (int i = region.rooms.Count - 1; i >= 0; i--) {
-				Room room = region.rooms[i];
-				if (!room.Visible)
-					continue;
-				Vector2 roomMouse = worldMouse - room.Position;
-				Vector2 shortcutPosition;
-
-				if (room is OffscreenRoom offscreenRoom) {
-					for (int j = 0; j <= room.dens.Count; j++) {
-						shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + i * 4f + 2.5f, -room.height * 0.25f - 0.5f);
-						if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-							PopupManager.Add(new DenPopup(room.GetDen01(j)));
-							found = true;
-							break;
-						}
-					}
-				}
-				else {
-					for (int j = 0; j < room.denShortcutEntrances.Count; j++) {
-						Vector2i shortcut = room.denShortcutEntrances[j];
-						shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
-						if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-							PopupManager.Add(new DenPopup(room.GetDen01(j)));
-							found = true;
-							break;
-						}
-					}
-				}
-
-				if (found)
-					break;
-			}
-
-			if (!found) {
-				Room? room = HoveringRoom;
-				if (room is OffscreenRoom offscreen) {
-					PopupManager.Add(new DenPopup(offscreen.GetDen()));
-				}
-			}*/
 		}
 
 		if (Keys.JustPressed(Key.A)) {
@@ -1168,19 +1127,33 @@ public static class WorldWindow {
 				PopupManager.Add(new InfoPopup("You must export your region\nbefore creating or editing a room."));
 			}
 			else {
-				if (HoveringDraggable == null || HoveringDraggable is not Room room || HoveringDraggable is OffscreenRoom) {
+				if (HoveringDraggable != null && HoveringDraggable is not OffscreenRoom && HoveringDraggable is Room or ReplaceRoom) {
+					Room? roomToLoad = null;
+					Vector2 camRelativePosition = WorldWindow.cameraOffset;
+					if (HoveringDraggable is Room room) {
+						roomToLoad = room;
+					}
+					else if (HoveringDraggable is ReplaceRoom replaceRoom) {
+						roomToLoad = replaceRoom.replacingRoom;
+						camRelativePosition += replaceRoom.replacingRoom.Position - replaceRoom.Position;
+					}
+					if (roomToLoad != null) {
+						if (roomToLoad.valid) {
+							Main.mode = Main.Mode.Droplet;
+							DropletWindow.LoadRoom(roomToLoad, camRelativePosition);
+						}
+						else {
+							PopupManager.Add(new InfoPopup($"Unable to open {roomToLoad.name}\nInvalid room!"));
+						}
+					}
+					else {
+						PopupManager.Add(new InfoPopup($"Unable to open room\nNo reference found!"));
+					}
+				}
+				else {
 					PopupManager.Add(new CreateRoomPopup());
 					placingRoom = true;
 					roomPlacementVisualiser.Position = worldMouse - ((Vector2)roomPlacementVisualiser.size * 0.5f * Vector2.NegY);
-				}
-				else {
-					if (room.valid) {
-						Main.mode = Main.Mode.Droplet;
-						DropletWindow.LoadRoom(room);
-					}
-					else {
-						PopupManager.Add(new InfoPopup($"Unable to open {room.name}\nInvalid room!"));
-					}
 				}
 			}
 		}
@@ -1935,7 +1908,7 @@ public static class WorldWindow {
 				if (await TryCancelRender($"Render cancelled at\n{finished}/{totalCount} rendered.\nNo changes made."))
 					return;
 				renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nloading");
-				await Task.Run(() => DropletWindow.LoadRoom(room));
+				await Task.Run(() => DropletWindow.LoadRoom(room, Vector2.Zero));
 				renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nrendering");
 				errorMessage = "";
 				(string name, string path, byte[] image)[] images = []; // possibly: make this tuple contain the exportpath so it doesn't need to be recalculated every time?

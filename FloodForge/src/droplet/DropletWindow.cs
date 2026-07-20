@@ -1375,7 +1375,7 @@ public static class DropletWindow {
 		Room.visuals.Refresh();
 	}
 
-	public static void LoadRoom(Room room) {
+	public static void LoadRoom(Room room, Vector2 relativeCamPosition) {
 		dropletHistory.Clear();
 		Room = room;
 
@@ -1389,7 +1389,7 @@ public static class DropletWindow {
 		Room.visuals.waterNeedsRefresh = true;
 		if (Main.mode == Mode.Droplet) {
 			if (Settings.DropletKeepRelativePosition) {
-				cameraOffset = targetCameraPan = WorldWindow.cameraOffset - room.Position;
+				cameraOffset = targetCameraPan = relativeCamPosition - room.Position;
 				targetCameraScale = cameraScale = WorldWindow.cameraScale;
 			}
 			else {

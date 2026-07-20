@@ -213,7 +213,7 @@ public class CreateRoomPopup : Popup {
 			};
 			WorldWindow.region.rooms.Add(room);
 			Main.mode = Main.Mode.Droplet;
-			DropletWindow.LoadRoom(room);
+			DropletWindow.LoadRoom(room, WorldWindow.cameraOffset);
 		}
 	}
 
