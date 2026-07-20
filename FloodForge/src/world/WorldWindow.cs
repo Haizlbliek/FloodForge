@@ -513,7 +513,8 @@ public static class WorldWindow {
 								new SettingsPopup.ButtonContainer("Generate", () => {
 									string generatedName = room.name[(room.name.IndexOf('_') + 1)..];
 									generatedName += (newTimeline.timelineType == TimelineType.Only ? "" : "X") + newTimeline.timelines.FirstOrDefault();
-									updateName?.Invoke(generatedName);
+									newName = generatedName;
+									updateName?.Invoke(newName);
 								})
 							], [0f, UI.font.Measure("Generate", 0.03f).x + 0.01f]),
 							new SettingsPopup.ButtonContainer("Create Room", () => {
@@ -606,7 +607,7 @@ public static class WorldWindow {
 								timelineRoomPopup?.Close();
 							}).SetContextCheck(_ => {
 								return newName != "" && $"{region.acronym}_" + newName != room.name;
-							})
+							}, true)
 						]).SetSize(new (0.7f, 0f)).Translate(Mouse.Pos, false).Title("Create Timeline Room");
 						PopupManager.Add(timelineRoomPopup);
 					})
