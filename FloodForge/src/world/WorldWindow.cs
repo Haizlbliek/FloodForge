@@ -526,7 +526,10 @@ public static class WorldWindow {
 		
 		// REVIEW - move settingspopup callbacks into separate class (or just SettingsPopup) so that settings don't take up too much space in other classes
 		if ((Mouse.Right && !Mouse.LastRight && (connectionState == ConnectionState.None || connectionState == ConnectionState.NoConnection)) || (!Mouse.Right && Mouse.LastRight && lastConnectionState == ConnectionState.PendingConnection)) {
-			if (HoveringDraggable is Room room and not OffscreenRoom) {
+			if (HoveringDraggable is ReplaceRoom replaceRoom) {
+				PopupManager.Add(new ReplaceRoomSettingsPopup(replaceRoom).Translate(Mouse.Pos, true));
+			}
+			else if (HoveringDraggable is Room room and not OffscreenRoom) {
 				PopupManager.Add(new SettingsPopup([
 					new SettingsPopup.BoolSettingContainer("Enclosed Room", room.data.enclosedRoom, b => {
 						worldHistory.Apply(new VariableChange<bool>(room.data.enclosedRoom, b, bRedo => room.data.enclosedRoom = bRedo));
