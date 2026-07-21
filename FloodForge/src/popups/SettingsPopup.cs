@@ -12,7 +12,9 @@ public class SettingsPopup : Popup {
 		this.RecalculateBounds();
 	}
 
-	private void RecalculateBounds(bool retainTopLeft = false) {
+	protected void RecalculateBounds(bool retainTopLeft = false, bool tryRetainScale = false) {
+		float oldWidth = this.bounds.x1 - this.bounds.x0;
+		float oldHeight = this.bounds.y1 - this.bounds.y0;
 		Vector2 TopLeft = new (this.bounds.x0, this.bounds.y1);
 		float totalHeight = 0;
 		float maxWidth = UI.font.Measure(this.popupTitle, 0.03f).x + 0.1f;
@@ -21,9 +23,13 @@ public class SettingsPopup : Popup {
 			maxWidth = Math.Max(maxWidth, settingContainer.SettingWidth);
 		}
 		totalHeight += 0.05f + SettingSpacing + 0.02f;
+		Vector2 minimumBottomLeft = new (TopLeft.x, TopLeft.y - totalHeight);
+		float finalHeight = tryRetainScale ? Math.Max(totalHeight, oldHeight) : totalHeight;
+		Vector2 finalBottomLeft = new (TopLeft.x, TopLeft.y - finalHeight);
 		maxWidth += 0.02f;
-		Vector2 BottomLeft = new (TopLeft.x, TopLeft.y - totalHeight);
-		this.bounds = retainTopLeft ? Rect.FromSize(BottomLeft, new (maxWidth, totalHeight)) : new Rect(-maxWidth * 0.5f, totalHeight * 0.5f, maxWidth * 0.5f, -totalHeight * 0.5f);
+		float finalWidth = tryRetainScale ? Math.Max(maxWidth, oldWidth) : maxWidth;
+		this.bounds = retainTopLeft ? Rect.FromSize(finalBottomLeft, new (finalWidth, finalHeight)) : new Rect(-finalWidth * 0.5f, finalHeight * 0.5f, finalWidth * 0.5f, -finalHeight * 0.5f);
+		this.initialBounds = this.minimumResizeBounds = retainTopLeft ? Rect.FromSize(minimumBottomLeft, new (maxWidth, totalHeight)) : new Rect(-maxWidth * 0.5f, totalHeight * 0.5f, maxWidth * 0.5f, -totalHeight * 0.5f);
 	}
 
 	public override Popup Title(string title) {
