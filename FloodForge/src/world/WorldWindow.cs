@@ -2252,6 +2252,14 @@ public static class WorldWindow {
 					else
 						tutorialPopup = PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
 				}),
+
+				new Button("<", button => {
+					worldHistory.Undo();
+				}, b => worldHistory.HasUndos),
+
+				new Button(">", button => {
+					worldHistory.Redo();
+				}, b => worldHistory.HasRedos)
 			];
 		}
 

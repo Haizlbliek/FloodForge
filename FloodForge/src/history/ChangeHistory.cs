@@ -9,6 +9,9 @@ public class ChangeHistory {
 
 	private List<ChangeCollector> changeCollectors = [];
 
+	public bool HasRedos => this.redos.Count != 0;
+	public bool HasUndos => this.undos.Count != 0;
+
 	public ChangeHistory(bool RedoChangeOnApply = true) {
 		this.RedoChangeOnApply = RedoChangeOnApply;
 	}
