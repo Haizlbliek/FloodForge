@@ -940,11 +940,17 @@ public static class WorldWindow {
 
 		WorldDraggable? draggable = HoveringDraggable;
 		if (draggable != null) {
-			if (draggable is Room room) {
+			if (draggable is ReplaceRoom replaceRoom) {
+				ReplaceRoomChange replaceRoomChange = new ReplaceRoomChange(false);
+				replaceRoomChange.AddReplaceRoom(replaceRoom);
+				worldHistory.Apply(replaceRoomChange);
+			}
+			else if (draggable is Room room) {
 				if (room is OffscreenRoom)
 					return;
 
 				RoomAndConnectionChange change = new RoomAndConnectionChange(false);
+				ReplaceRoomChange replaceRoomChange = new ReplaceRoomChange(false);
 				if(room != null)
 					selectedDraggables.Add(room);
 
@@ -956,11 +962,14 @@ public static class WorldWindow {
 						change.AddRoom(room2);
 						region.connections.Where(c => c.roomA == room2 && !selectedDraggables.Contains(c.roomB) || (c.roomB == room2 && !selectedDraggables.Contains(c.roomA)))
 							.ForEach(change.AddConnection);
+						foreach (ReplaceRoom replaceRoom1 in room2.replaceRooms) {
+							replaceRoomChange.AddReplaceRoom(replaceRoom1);
+						}
 					}
 					selectedDraggables.Clear();
 				}
 
-				worldHistory.Apply(change);
+				worldHistory.Apply(new MassChange([change, replaceRoomChange]));
 				return;
 			}
 			else if (draggable is ReferenceImage image) {
