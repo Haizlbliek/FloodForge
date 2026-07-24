@@ -5,7 +5,22 @@ using FloodForge.Popups;
 namespace FloodForge.World;
 
 public static class NameChanger {
-	public static bool ChangeRoomName(Room room, string newName) {
+	public static void ChangeRoomName(Room room, string newName) {
+		if (DoChangeRoomName(room, newName, out string[] copiedPaths)) {
+			InfoPopup finishedPopup = new InfoPopup($"Room successfully renamed to\n{newName}\n\nRemember to export map\nto keep the renamed room.");
+			string fromFilenames = "";
+			copiedPaths.ForEach(f => fromFilenames += "\n" + Path.GetFileName(f));
+			PopupManager.Add(new ConfirmPopup($"Delete old files?{fromFilenames}").SetButtons("Delete", "Keep").Cancel(() => PopupManager.Add(finishedPopup)).Okay(() => { copiedPaths.ForEach(f => File.Delete(f)); PopupManager.Add(finishedPopup); }));
+		}
+		else {
+			PopupManager.Add(new InfoPopup($"Problem encountered."));
+		}
+		return;
+	}
+
+	// todo - also edit the first line of the room file
+	public static bool DoChangeRoomName(Room room, string newName, out string[] copiedPaths) {
+		copiedPaths = [];
 		Logger.Info($"New name: {newName}");
 		string oldName = room.name;
 		if (oldName == newName) {
@@ -35,6 +50,9 @@ public static class NameChanger {
 		foreach ((string from, string to) in filesToCopy) {
 			File.Copy(from, to, true);
 		}
+		List<string> copiedPathsList = [];
+		filesToCopy.ForEach(f => copiedPathsList.Add(f.Item1));
+		copiedPaths = [.. copiedPathsList];
 		return true;
 	}
 
