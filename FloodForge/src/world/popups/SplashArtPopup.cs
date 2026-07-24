@@ -16,6 +16,7 @@ public class SplashArtPopup : Popup {
 	protected UpdateStatus updateStatus = UpdateStatus.Searching;
 	protected string? updatePath;
 	protected string? updateChecksum;
+	protected bool showTutorialAfterClose;
 
 	protected enum UpdateStatus {
 		Searching,
@@ -24,7 +25,7 @@ public class SplashArtPopup : Popup {
 		Unavailable,
 	}
 
-	public SplashArtPopup() {
+	public SplashArtPopup(bool showTutorialAfterClose) {
 		this.bounds = new Rect(-1f, -1f, 1f, 1f);
 		this.splashArt = Texture.Load(Main.AprilFools ? "assets/splash-corrupted.png" : "assets/splash.png");
 		this.uiIcons = Texture.Load("assets/uiIcons.png");
@@ -53,6 +54,8 @@ public class SplashArtPopup : Popup {
 			Process.Start(new ProcessStartInfo() { FileName = "https://ko-fi.com/haizlbliek", UseShellExecute = true });
 			return false;
 		}));
+
+		this.showTutorialAfterClose = showTutorialAfterClose;
 	}
 
 	private class FailedException : Exception {}
@@ -292,7 +295,7 @@ public class SplashArtPopup : Popup {
 		if (Mouse.JustLeft) {
 			this.Close();
 
-			if (!Settings.HideTutorial) {
+			if (!Settings.HideTutorial && this.showTutorialAfterClose) {
 				PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
 			}
 		}
