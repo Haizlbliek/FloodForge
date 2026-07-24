@@ -1617,7 +1617,7 @@ public static class WorldWindow {
 	public static void Draw() {
 		if (Keys.Modifier(Keys.Modifiers.Alt)) {
 			if (Keys.JustPressed(Key.S)) {
-				PopupManager.Add(new SplashArtPopup());
+				PopupManager.Add(new SplashArtPopup(false));
 				return;
 			}
 			else if (Keys.JustPressed(Key.T)) {
@@ -2253,7 +2253,7 @@ public static class WorldWindow {
 							tutorialPopup = PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
 					}),
 					new Button("Splash", button => {
-						PopupManager.Add(new SplashArtPopup());
+						PopupManager.Add(new SplashArtPopup(false));
 					})
 				]),
 

@@ -83,7 +83,7 @@ public static class Main {
 			PopupManager.Add(new MarkdownPopup("docs/crash.md"));
 		}
 		else {
-			PopupManager.Add(new SplashArtPopup());
+			PopupManager.Add(new SplashArtPopup(true));
 		}
 	}
 
