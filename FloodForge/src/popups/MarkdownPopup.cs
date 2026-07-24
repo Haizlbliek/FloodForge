@@ -242,8 +242,8 @@ public class MarkdownPopup : Popup {
 				case MDType.Quote: {
 					Immediate.Color(textColor * 0.7f);
 					Immediate.Begin(Immediate.PrimitiveType.LINES);
-					Immediate.Vertex(-0.77f, y);
-					Immediate.Vertex(-0.77f, y - 0.04f);
+					Immediate.Vertex(this.bounds.x0 + 0.03f, y);
+					Immediate.Vertex(this.bounds.x0 + 0.03f, y - 0.04f);
 					Immediate.End();
 
 					this.WriteLine(textColor, item.text, x + 0.05f, y, 0.03f);
