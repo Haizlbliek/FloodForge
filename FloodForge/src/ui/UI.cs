@@ -782,4 +782,12 @@ public static class UI {
 			this.max = max;
 		}
 	}
+
+	public class BoolToggleEditable : Editable {
+		public bool value;
+
+		public BoolToggleEditable(bool value) {
+			this.value = value;
+		}
+	}
 }

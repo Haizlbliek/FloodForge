@@ -301,6 +301,10 @@ public abstract class Popup {
 		this.bounds = newRect;
 	}
 
+	public virtual void Open() {
+		
+	}
+
 	public virtual void Close() {
 		if (this.cursorOverrideActive || this.lastCursorOverrideActive) {
 			Main.mouse?.Cursor.StandardCursor = StandardCursor.Default;
