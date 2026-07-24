@@ -11,13 +11,13 @@ public static class Settings {
 	public static Setting<float> PopupScrollSpeed = Setting.Of("PopupScrollSpeed", 0.4f);
 	public static Setting<STConnectionType> ConnectionType = Setting.Of("ConnectionType", STConnectionType.Bezier);
 	public static Setting<STConnectionPoint> ConnectionPoint = Setting.Of("ConnectionPoint", STConnectionPoint.Entrance);
+	public static Setting<bool> OriginalControls = Setting.Of("OriginalControls", false);
 	public static Setting<float> WorldIconScale = Setting.Of("WorldIconScale", 1f).Override(value => value.Equals("camera", StringComparison.InvariantCultureIgnoreCase) ? (true, -1) : (false, default));
 	public static Setting<string> DefaultFilePath = Setting.Of("DefaultFilePath", "");
-	public static Setting<bool> OriginalControls = Setting.Of("OriginalControls", false);
+	public static Setting<bool> KeepFilesystemPath = Setting.Of("KeepFilesystemPath", false);
 	public static Setting<bool> WarnMissingImages = Setting.Of("WarnMissingImages", false);
 	public static Setting<bool> HideTutorial = Setting.Of("HideTutorial", false);
 	public static Setting<bool> HideTutorialOnLoadWorld = Setting.Of("HideTutorialOnLoadWorld", false);
-	public static Setting<bool> KeepFilesystemPath = Setting.Of("KeepFilesystemPath", false);
 	public static Setting<bool> UpdateWorldFiles = Setting.Of("UpdateWorldFiles", true);
 	public static Setting<bool> UpdateRoomImagesOnRender = Setting.Of("UpdateRoomImagesOnRender", false);
 	public static Setting<Color> NoSubregionColor = Setting.Of("NoSubregionColor", Color.White);

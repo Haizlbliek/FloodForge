@@ -16,6 +16,7 @@ public static class PopupManager {
 	public static void Cleanup() {
 		foreach (Popup popup in toAdd) {
 			Windows.Add(popup);
+			popup.Open();
 		}
 		foreach (Popup popup in trash) {
 			Windows.Remove(popup);
