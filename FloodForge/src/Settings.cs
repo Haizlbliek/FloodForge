@@ -16,6 +16,7 @@ public static class Settings {
 	public static Setting<bool> OriginalControls = Setting.Of("OriginalControls", false);
 	public static Setting<bool> WarnMissingImages = Setting.Of("WarnMissingImages", false);
 	public static Setting<bool> HideTutorial = Setting.Of("HideTutorial", false);
+	public static Setting<bool> HideTutorialOnLoadWorld = Setting.Of("HideTutorialOnLoadWorld", false);
 	public static Setting<bool> KeepFilesystemPath = Setting.Of("KeepFilesystemPath", false);
 	public static Setting<bool> UpdateWorldFiles = Setting.Of("UpdateWorldFiles", true);
 	public static Setting<bool> UpdateRoomImagesOnRender = Setting.Of("UpdateRoomImagesOnRender", false);
