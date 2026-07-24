@@ -153,7 +153,7 @@ In a way this better visualises the 'actual' geometry of a connection.
 - This does not affect the in-game map.
 It only serves to reduce visual clutter while in Floodforge.
 
-###
+### 
 ## Adding Reference images
 When making a region, you may have made a rough (or very polished) plan.
 FloodForge allows you to use such an image as reference.
