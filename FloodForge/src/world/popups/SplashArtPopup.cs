@@ -246,6 +246,9 @@ public class SplashArtPopup : Popup {
 					this.Close();
 					if (!WorldParser.ImportWorldFile(RecentFiles.recents[i]))
 						PopupManager.Add(new InfoPopup("Importing world failed!\nView log.txt for more info."));
+					else if (!Settings.HideTutorial && !Settings.HideTutorialOnLoadWorld && this.showTutorialAfterClose) {
+						PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+					}
 					return;
 				}
 			}
