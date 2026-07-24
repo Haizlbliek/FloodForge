@@ -9,6 +9,7 @@ using StbImageWriteSharp;
 using Stride.Core;
 using Stride.Core.Extensions;
 using TextCopy;
+using static FloodForge.Main;
 
 namespace FloodForge.World;
 
@@ -1803,8 +1804,6 @@ public static class WorldWindow {
 	static bool cancelRender = false;
 	public static CancellablePopup? renderStatusPopup;
 	public static ConfirmPopup? confirmRenderPopup;
-	private const int CameraTextureWidth = 1400;
-	private const int CameraTextureHeight = 800; // make this not be in two places (WorldWindow && DropletWindow)
 	private static void CancelRender(CancellablePopup cancellablePopup) {
 		if (!WorldWindow.awaitingCancelConfirmation) {
 			WorldWindow.awaitingCancelConfirmation = true;

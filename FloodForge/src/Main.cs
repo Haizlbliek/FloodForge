@@ -14,6 +14,8 @@ public static class Main {
 	public static Vector2 GlobalMouse { get; private set; }
 	public static bool fullscreen = false;
 	public static Vector2 screenBounds;
+	public const int CameraTextureWidth = 1400;
+	public const int CameraTextureHeight = 800;
 
 	public static Mode mode = Mode.World;
 
