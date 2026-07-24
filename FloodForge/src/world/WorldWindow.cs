@@ -2245,12 +2245,17 @@ public static class WorldWindow {
 					}, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
 				]),
 
-				new Button("Help", button => {
-					if (tutorialPopup != null && !tutorialPopup.IsDeleted)
-						tutorialPopup.Close();
-					else
-						tutorialPopup = PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
-				}),
+				new Dropdown("Help", [
+					new Button("Tutorial", button => {
+						if (tutorialPopup != null && !tutorialPopup.IsDeleted)
+							tutorialPopup.Close();
+						else
+							tutorialPopup = PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+					}),
+					new Button("Splash", button => {
+						PopupManager.Add(new SplashArtPopup());
+					})
+				]),
 
 				new Button("<", button => {
 					worldHistory.Undo();
