@@ -480,12 +480,7 @@ public static class WorldWindow {
 						}
 						else {
 							PopupManager.Add(new RenameRoomPopup(room, name => {
-								if (NameChanger.ChangeRoomName(room, name)){
-									PopupManager.Add(new InfoPopup($"Room successfully renamed to\n{name}"));
-								}
-								else {
-									PopupManager.Add(new InfoPopup($"Problem encountered."));
-								}
+								NameChanger.ChangeRoomName(room, name);
 							}).Translate(Mouse.Pos, true).Title("Rename Room"));
 						}
 					}),
