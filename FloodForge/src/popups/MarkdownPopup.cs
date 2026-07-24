@@ -227,7 +227,7 @@ public class MarkdownPopup : Popup {
 		this.scroll += (this.targetScroll - this.scroll) * (1f - MathF.Pow(1f - Settings.PopupScrollSpeed, Program.Delta * 60f));
 
 		float x = this.bounds.x0;
-		float y = 0.75f + this.bounds.y0 + 0.8f + this.scroll;
+		float y = this.bounds.y1 - 0.05f + this.scroll;
 		int currentImage = 0;
 
 		Color textColor = Themes.Text;
@@ -360,10 +360,11 @@ public class MarkdownPopup : Popup {
 	}
 
 	protected void ClampScroll() {
-		if (this.targetScroll >= this.maxScroll) {
-			this.targetScroll = this.maxScroll;
-			if (this.scroll >= this.maxScroll - 0.03f) {
-				this.scroll = this.maxScroll + 0.03f;
+		float trueMaxScroll = this.maxScroll + this.bounds.y0;
+		if (this.targetScroll >= trueMaxScroll) {
+			this.targetScroll = trueMaxScroll;
+			if (this.scroll >= trueMaxScroll - 0.03f) {
+				this.scroll = trueMaxScroll + 0.03f;
 			}
 		}
 
