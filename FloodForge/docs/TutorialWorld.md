@@ -31,6 +31,10 @@ Alt+T - Open Tutorial
 Alt+S - Open Splash
 Right click - Open reference image settings; Reset popup size
 
+### 
+## Settings
+To change settings, open `assets/settings.cfg`. Each line contains a setting key and value.
+Settings are individually explained in comments above each key.
 
 ### 
 ## How to...
@@ -115,7 +119,6 @@ limited to `ONLY` the selected slugcats.
 
 # 
 # 
-# 
 # Knowledge Book
 
 ### 
@@ -189,8 +192,3 @@ To show the proper icons and be able to add the creatures and timelines to new r
 > `Abbreviated Name>ActualID`
 > 
 > You can add as many as you like!
-
-### 
-## Changing settings
-Open `assets/settings.cfg`, each line contains a setting key and value.
-Settings are individually explained in comments above each key.
