@@ -182,20 +182,23 @@ public class Connection {
 			this.connectionMesh.AddQuad(this.CreateConnectionLineQuad(pointA.x, pointA.y, pointB.x, pointB.y, lastCurveProgress, curveProgress));
 		}
 
+		// REVIEW - find a way to not have fadeMiddle be converted to a float. because that feels. painful.
 		this.connectionRenderable = new MeshRenderable(this.connectionMesh, Preload.ConnectionShader, [
 				new (0, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
 				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2)),
-				new (2, 1, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 4))
-			], [ "projection", "model", "tintColor", "tintColorB", "widthClip" ]);
+				new (2, 1, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 4)),
+				new (3, 1, VertexAttribPointerType.Byte, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 5))
+			], [ "projection", "model", "tintColor", "tintColorB", "widthClip", "fadeMiddle" ]);
 	}
 
-	static void DrawConnectionMesh(MeshRenderable renderable, Vector2 cameraPosition, Vector2 cameraScale, Vector2 translation, Color color, Color colorB, float widthClip) {
+	static void DrawConnectionMesh(MeshRenderable renderable, Vector2 cameraPosition, Vector2 cameraScale, Vector2 translation, Color color, Color colorB, float widthClip, bool fadeMiddle) {
 		renderable.PreDraw();
 		renderable.UniformMatrix4("projection", false, [.. Matrix4X4.CreateOrthographicOffCenter(-cameraScale.x + cameraPosition.x, cameraScale.x + cameraPosition.x, -cameraScale.y + cameraPosition.y, cameraScale.y + cameraPosition.y, 0f, 1f)]);
 		renderable.UniformMatrix4("model", false, [.. Matrix4X4.CreateTranslation(translation.x, translation.y, 0f)]);
 		renderable.Uniform4("tintColor", color.r, color.g, color.b, color.a);
 		renderable.Uniform4("tintColorB", colorB.r, colorB.g, colorB.b, colorB.a);
 		renderable.Uniform1("widthClip", widthClip);
+		renderable.Uniform1("fadeMiddle", fadeMiddle ? 1 : 0);
 		renderable.DoDraw();
 	}
 
@@ -371,9 +374,8 @@ public class Connection {
 				Vector2 matrixPos = WorldWindow.cameraOffset;
 				Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
 
-				// TODO - re-add middle-fading (negative alpha, abs()'d in the shader?)
 				if (this.connectionRenderable != null)
-					DrawConnectionMesh(this.connectionRenderable, matrixPos, matrixScale, Vector2.Zero, connectionColorA, connectionColorB, WorldWindow.SelectorScale / 66);
+					DrawConnectionMesh(this.connectionRenderable, matrixPos, matrixScale, Vector2.Zero, connectionColorA, connectionColorB, WorldWindow.SelectorScale / 66, fadeMiddle);
 			}
 
 			Program.gl.Disable(EnableCap.Blend);
