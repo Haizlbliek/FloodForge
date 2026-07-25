@@ -1594,8 +1594,6 @@ public static class DropletWindow {
 		};
 	}
 
-	private const int CameraTextureWidth = 1400;
-	private const int CameraTextureHeight = 800;
 	private static void SetPixel(byte[] data, int index, byte r, byte g, byte b) {
 		data[index] = r;
 		data[index + 1] = g;
