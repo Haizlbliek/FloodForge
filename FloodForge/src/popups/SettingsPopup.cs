@@ -404,17 +404,48 @@ public class SettingsPopup : Popup {
 	}
 
 	public class LabelContainer : SettingContainer {
+		protected Font.Align align = Font.Align.TopCenter;
+		protected bool autoCrop;
+		protected bool fromRight;
+
 		public override float SettingWidth {
 			get {
-				return UI.font.Measure(this.settingName, 0.03f).x;
+				if (this.autoCrop)
+					return 0f;
+				string[] splitLines = this.settingName.Split('\n');
+				float maxWidth = 0f;
+				foreach (string line in splitLines)
+					maxWidth = Math.Max(maxWidth, UI.font.Measure(line, 0.03f).x);
+				return maxWidth;
+			}
+		}
+		public override float SettingHeight {
+			get {
+				string[] splitLines = this.settingName.Split('\n');
+				float totalHeight = 0f;
+				foreach (string line in splitLines)
+					totalHeight += UI.font.Measure(line, 0.03f).y;
+				totalHeight += SettingSpacing * (splitLines.Length - 1);
+				return totalHeight;
 			}
 		}
 
-		public LabelContainer(string name) : base(name) {}
+		public LabelContainer(string name, Font.Align? align = null, bool autoCrop = false, bool fromRight = false) : base(name) {
+			if (align != null)
+				this.align = (Font.Align)align;
+			this.autoCrop = autoCrop;
+			this.fromRight = fromRight;
+		}
 
 		public override void Draw(Rect bounds) {
 			Immediate.Color(Themes.Text);
-			UI.font.Write(this.settingName, bounds.CenterX, bounds.CenterY, 0.03f, Font.Align.MiddleCenter);
+			string[] splitLines = this.settingName.Split('\n');
+			float y = bounds.y1;
+			foreach (string line in splitLines) {
+				string croppedLine = this.autoCrop ? UI.font.CropText(line, bounds.x1 - bounds.x0 - 0.02f, 0.03f, out _, this.fromRight) : line;
+				UI.font.Write(croppedLine, bounds.CenterX, y, 0.03f, this.align);
+				y -= UI.font.Measure(line, 0.03f).y + SettingSpacing;
+			}
 		}
 	}
 
