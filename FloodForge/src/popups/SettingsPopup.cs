@@ -309,6 +309,12 @@ public class SettingsPopup : Popup {
 		protected float prefixSizeX;
 		protected string hint;
 
+		public override float SettingWidth {
+			get {
+				return UI.font.Measure(this.settingName, 0.03f).x + UI.font.Measure(this.prefix, 0.03f).x + (this.stringInput.value == "" ? UI.font.Measure(this.hint, 0.03f).x : UI.font.Measure(this.stringInput.value, 0.03f).x);
+			}
+		}
+
 		public StringSettingContainer(string name, Action<string> callback, string defaultValue = "", string prefix = "", string hint = "", string postfix = "") : base(name) {
 			this.stringInput = new UI.TextInputEditable(UI.TextInputEditable.Type.Text, defaultValue);
 			this.callback = callback;
