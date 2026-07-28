@@ -374,6 +374,7 @@ public class SettingsPopup : Popup {
 		readonly Action onClickCallback;
 		Func<ButtonContainer, bool>? contextCheckCallback;
 		bool darkenOnFalse;
+		bool disableOnFalse;
 
 		public override float SettingWidth {
 			get {
@@ -385,15 +386,18 @@ public class SettingsPopup : Popup {
 			this.onClickCallback = onClickCallback;
 		}
 
-		public ButtonContainer SetContextCheck(Func<ButtonContainer, bool> contextCheckCallback, bool darkenOnFalse = false) {
+		public ButtonContainer SetContextCheck(Func<ButtonContainer, bool> contextCheckCallback, bool darkenOnFalse = false, bool disableOnFalse = true) {
 			this.contextCheckCallback = contextCheckCallback;
 			this.darkenOnFalse = darkenOnFalse;
+			this.disableOnFalse = disableOnFalse;
 			return this;
 		}
 
 		public override void Draw(Rect bounds) {
-			bool enabled = (this.contextCheckCallback == null) || this.contextCheckCallback(this);
-			if (UI.TextButton(this.settingName, bounds, new UI.TextButtonMods((enabled || !this.darkenOnFalse) ? Themes.Text : Themes.TextDisabled)) && enabled) {
+			bool callbackCheck = (this.contextCheckCallback == null) || this.contextCheckCallback(this);
+			bool darkened = !callbackCheck && this.darkenOnFalse;
+			bool disabled = !callbackCheck && this.disableOnFalse;
+			if (UI.TextButton(this.settingName, bounds, new UI.TextButtonMods(darkened ? Themes.TextDisabled : Themes.Text)) && !disabled) {
 				this.onClickCallback();
 			}
 		}
