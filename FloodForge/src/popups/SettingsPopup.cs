@@ -90,8 +90,23 @@ public class SettingsPopup : Popup {
 		}
 	}
 
-	public class HorizontalElement : SettingContainer {
-		protected SettingContainer[] settings;
+	public class MultiElement : SettingContainer {
+		protected (string ID, SettingContainer container)[] settings;
+
+		public MultiElement((string, SettingContainer)[] settings) : base("") {
+			this.settings = settings;
+		}
+
+		public SettingContainer? GetByID(string ID) {
+			foreach ((string containerID, SettingContainer container) in this.settings)
+				if (containerID == ID)
+					return container;
+			return null;
+		}
+	}
+
+
+	public class HorizontalElement : MultiElement {
 		protected float[] widthOverrides;
 		protected float lastCalculatedWidth = 0f;
 		protected float[] resultingWidths = [];
@@ -100,15 +115,14 @@ public class SettingsPopup : Popup {
 		public override float SettingHeight {
 			get {
 				float maxHeight = 0f;
-				foreach (SettingContainer container in this.settings) {
+				foreach ((_, SettingContainer container) in this.settings) {
 					maxHeight = Math.Max(container.SettingHeight, maxHeight);
 				}
 				return maxHeight == 0f ? SettingsPopup.SettingHeight : maxHeight;
 			}
 		}
 
-		public HorizontalElement(SettingContainer[] settings, float[]? widthOverrides = null, bool hasDivider = true, bool forceEqualWidth = false) : base("") {
-			this.settings = settings;
+		public HorizontalElement((string, SettingContainer)[] settings, float[]? widthOverrides = null, bool hasDivider = true, bool forceEqualWidth = false) : base(settings) {
 			this.widthOverrides = widthOverrides ?? [];
 			this.forceEqualWidth = forceEqualWidth;
 			this.hasDivider = hasDivider;
@@ -144,7 +158,7 @@ public class SettingsPopup : Popup {
 				float totalSettingWidth = 0f;
 				for (int i = 0; i < this.settings.Length; i++) {
 					if (this.resultingWidths[i] == 0) {
-						float width = this.settings[i].SettingWidth;
+						float width = this.settings[i].container.SettingWidth;
 						settingWidths.Add(width);
 						totalSettingWidth += width;
 					}
@@ -169,7 +183,7 @@ public class SettingsPopup : Popup {
 			for (int i = 0; i < this.settings.Length; i++) {
 				float x1 = currentXPosition + this.resultingWidths[i];
 				Rect newBounds = new Rect(currentXPosition, bounds.y0, x1, bounds.y1);
-				this.settings[i].Draw(newBounds);
+				this.settings[i].container.Draw(newBounds);
 				if (i != 0 && this.hasDivider) {
 					float lineX = currentXPosition - (SettingsPopup.SettingSpacing / 2);
 					float lineHeight = SettingsPopup.SettingSpacing + SettingsPopup.SettingHeight;
@@ -181,12 +195,11 @@ public class SettingsPopup : Popup {
 		}
 	}
 
-	public class VerticalElement : SettingContainer {
-		protected SettingContainer[] settings;
+	public class VerticalElement : MultiElement {
 		public override float SettingHeight {
 			get {
 				float totalHeight = 0f;
-				foreach (SettingContainer container in this.settings) {
+				foreach ((_, SettingContainer container) in this.settings) {
 					totalHeight += container.SettingHeight;
 				}
 				return totalHeight + ((this.settings.Length - 1) * SettingsPopup.SettingSpacing);
@@ -195,23 +208,21 @@ public class SettingsPopup : Popup {
 		public override float SettingWidth {
 			get {
 				float maxWidth = 0f;
-				foreach (SettingContainer container in this.settings) {
+				foreach ((_, SettingContainer container) in this.settings) {
 					maxWidth = Math.Max(container.SettingWidth, maxWidth);
 				}
 				return maxWidth;
 			}
 		}
 
-		public VerticalElement(SettingContainer[] settings) : base("") {
-			this.settings = settings;
-		}
+		public VerticalElement((string, SettingContainer)[] settings) : base(settings) {}
 
 		public override void Draw(Rect bounds) {
 			float currentYPosition = bounds.y1;
 			for (int i = 0; i < this.settings.Length; i++) {
-				float y0 = currentYPosition - this.settings[i].SettingHeight;
+				float y0 = currentYPosition - this.settings[i].container.SettingHeight;
 				Rect newBounds = new Rect(bounds.x0, y0, bounds.x1, currentYPosition);
-				this.settings[i].Draw(newBounds);
+				this.settings[i].container.Draw(newBounds);
 				currentYPosition = y0 - SettingsPopup.SettingSpacing;
 			}
 		}
