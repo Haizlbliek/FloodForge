@@ -122,6 +122,16 @@ public class SettingsPopup : Popup {
 			}
 		}
 
+		public override float SettingWidth {
+			get {
+				float totalWidth = 0f;
+				foreach ((_, SettingContainer container) in this.settings) {
+					totalWidth += container.SettingWidth + SettingSpacing;
+				}
+				return totalWidth;
+			}
+		}
+
 		public HorizontalElement((string, SettingContainer)[] settings, float[]? widthOverrides = null, bool hasDivider = true, bool forceEqualWidth = false) : base(settings) {
 			this.widthOverrides = widthOverrides ?? [];
 			this.forceEqualWidth = forceEqualWidth;
