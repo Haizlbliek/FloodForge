@@ -142,7 +142,7 @@ public class SettingsPopup : Popup {
 			// - list with only overrides filled in
 			this.resultingWidths = new float[this.settings.Length];
 			// get remaining width
-			float totalMarginlessWidth = totalWidth - SettingsPopup.SettingSpacing * (this.settings.Length - 1);
+			float totalMarginlessWidth = totalWidth - SettingsPopup.SettingSpacing * (this.settings.Length - 1) / (this.hasDivider ? 1 : 2);
 			float remainingSpace = totalMarginlessWidth;
 			int unOverriddenCount = 0;
 			for (int i = 0; i < this.settings.Length; i++) {
@@ -200,7 +200,7 @@ public class SettingsPopup : Popup {
 					Immediate.Color(Themes.Border);
 					UI.Line(lineX, bounds.CenterY - lineHeight / 2, lineX, bounds.CenterY + lineHeight / 2);
 				}
-				currentXPosition = x1 + SettingsPopup.SettingSpacing;
+				currentXPosition = x1 + SettingsPopup.SettingSpacing / (this.hasDivider ? 1 : 2);
 			}
 		}
 	}
