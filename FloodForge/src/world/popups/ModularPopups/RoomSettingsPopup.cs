@@ -122,7 +122,7 @@ public class RoomSettingsPopup : ModularPopup {
 
 			this.newNameSetting = new StringSettingContainer("", name => this.newName = name, ref this.updateNewNameSettingAction, prefix: $"{WorldWindow.region.acronym}_", hint: this.relevantRoom.name[(this.relevantRoom.name.IndexOf('_') + 1)..]);
 			this.generateNewNameButton = new ButtonContainer("Generate", this.GenerateNewName);
-			this.AddToQueue(new HorizontalElement([this.newNameSetting, this.generateNewNameButton], [0f, UI.font.Measure("Generate", 0.03f).x + 0.01f]));
+			this.AddToQueue(new HorizontalElement([("", this.newNameSetting), ("", this.generateNewNameButton)], [0f, UI.font.Measure("Generate", 0.03f).x + 0.01f]));
 
 			this.createRoomButton = new ButtonContainer("Create Room", this.CreateRoom).SetContextCheck(_ => {
 				return this.newName != "" && $"{WorldWindow.region.acronym}_" + this.newName != this.relevantRoom.name;
