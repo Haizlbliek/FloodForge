@@ -9,12 +9,12 @@ public class ModularPopup : SettingsPopup {
 		this.settingsQueue = [];
 	}
 
-	protected void AddQueuedSettings() {
+	protected void AddQueuedSettings(bool setPos = false) {
 		List<SettingContainer> finalList = [.. this.settingContainers];
 		this.settingsQueue.ForEach(finalList.Add);
 		this.settingsQueue = [];
 		this.settingContainers = [.. finalList];
-		this.RecalculateBounds();
+		this.RecalculateBounds(setPos, setPos);
 	}
 
 	protected void AddToQueue(SettingContainer container) {
