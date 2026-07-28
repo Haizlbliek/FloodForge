@@ -1344,6 +1344,7 @@ public static class WorldWindow {
 					}
 					else {
 						debugText.Add($"Name: {room.name}");
+						debugText.Add($"Path: {UI.font.CropText(room.path, 30, 1, out _, true)}");
 						if (room.pathOutsideRoomsFolder)
 							debugText.Add($" > Room imported from outside {region.acronym}-rooms");
 						debugText.Add($"Tags: {string.Join(" ", room.data.tags)}");
