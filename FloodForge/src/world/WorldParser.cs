@@ -115,6 +115,10 @@ public static class WorldParser {
 		positionTarget.CanonPosition.y = canonY + sizeSource.height * 0.5f;
 		positionTarget.DevPosition.x = devX - sizeSource.width * 0.5f;
 		positionTarget.DevPosition.y = devY + sizeSource.height * 0.5f;
+
+		if (gridOffsets.FirstOrDefault(x => x.Item1 == room).Item1 == null)
+			gridOffsets.Add((room, new (Mathf.Mod1(positionTarget.CanonPosition.x), Mathf.Mod1(positionTarget.CanonPosition.y))));
+
 		dataTarget.data.layer = layer;
 		if (subregion.IsNullOrEmpty()) {
 			dataTarget.data.subregion = -1;
@@ -137,7 +141,11 @@ public static class WorldParser {
 	// (it probably happens because of differing map sizes or differing map bounds, therefore different map origins... hmm)
 	private static Vector2 totalAvgOffset;
 	private static int avgCount;
+	
+	private static List<(Room, Vector2)> gridOffsets = [];
 	public static bool ParseMap(string path) {
+		gridOffsets = [];
+
 		Dictionary<string, (int hidden, bool warpable, bool merge)> extraRoomData = [];
 		List<(string? timeline, string mapPath)> allMaps = [(null, path)];
 		
@@ -214,6 +222,47 @@ public static class WorldParser {
 			room.data.hidden = pair.Value.hidden;
 			room.data.warpable = pair.Value.warpable;
 			room.data.merge = pair.Value.merge;
+		}
+
+		List<(float, int)> xOffsetCounters = [];
+		List<(float, int)> yOffsetCounters = [];
+		foreach ((Room room, Vector2 offset) in gridOffsets) {
+			bool found = false;
+			for (int i = 0; i < xOffsetCounters.Count; i++) {
+				(float existingXOffset, int count) = xOffsetCounters[i];
+				if (Math.Round(existingXOffset, 4) == Math.Round(offset.x, 4)) {
+					xOffsetCounters[i] = (offset.x, count + 1);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				xOffsetCounters.Add((offset.x, 1));
+			found = false;
+			for (int i = 0; i < yOffsetCounters.Count; i++) {
+				(float existingYOffset, int count) = yOffsetCounters[i];
+				if (Math.Round(existingYOffset, 4) == Math.Round(offset.y, 4)) {
+					yOffsetCounters[i] = (offset.y, count + 1);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				yOffsetCounters.Add((offset.y, 1));
+		}
+		List<(float, int)> orderedXOffsetCounters = [.. xOffsetCounters.OrderByDescending(x => x.Item2)];
+		List<(float, int)> orderedYOffsetCounters = [.. yOffsetCounters.OrderByDescending(x => x.Item2)];
+		Vector2 commonDir = new(orderedXOffsetCounters.First().Item1, orderedYOffsetCounters.First().Item1);
+		if (orderedXOffsetCounters.First().Item2 > Mathf.FloorDivide(gridOffsets.Count, 5) || orderedXOffsetCounters.First().Item2 > Mathf.FloorDivide(gridOffsets.Count, 5)) {
+			Vector2 reverseOffset = -commonDir;
+			foreach (Room room in WorldWindow.region.rooms) {
+				room.CanonPosition += reverseOffset;
+				room.DevPosition += reverseOffset;
+			}
+			foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+				replaceRoom.CanonPosition += reverseOffset;
+				replaceRoom.DevPosition += reverseOffset;
+			}
 		}
 
 		return true;

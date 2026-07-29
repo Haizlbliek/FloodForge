@@ -131,8 +131,8 @@ public static class WorldExporter {
 					continue;
 
 				float left = room.CanonPosition.x;
-				float right = room.CanonPosition.x + room.width;
-				float top = room.CanonPosition.y - room.height;
+				float right = room.CanonPosition.x + room.width; // REVIEW - do right & top need to be extended by one for completely accurate map bounds?
+				float top = room.CanonPosition.y - room.height;  // compare w/ existing regions, possibly
 				float bottom = room.CanonPosition.y;
 
 				topLeft.x = Math.Min(topLeft.x, left);
@@ -143,7 +143,7 @@ public static class WorldExporter {
 
 			foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
 				float replaceLeft = replaceRoom.CanonPosition.x;
-				float replaceRight = replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width;
+				float replaceRight = replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width; // same here
 				float replaceTop = replaceRoom.CanonPosition.y - replaceRoom.replacingRoom.height;
 				float replaceBottom = replaceRoom.CanonPosition.y;
 				topLeft.x = Math.Min(topLeft.x, replaceLeft);
