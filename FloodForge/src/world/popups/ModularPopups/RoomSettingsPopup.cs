@@ -117,6 +117,12 @@ public class RoomSettingsPopup : ModularPopup {
 		private ButtonContainer createNewModeButton, fromRoomModeButton, fromFileModeButton;
 		private HorizontalElement menuModeButtons;
 
+		// fromRoom
+		private Room? selectedRoom;
+		private ButtonContainer roomSelector;
+		private LabelContainer selectedRoomLabel;
+		private ButtonContainer createFromRoomButton;
+
 		// fromFile
 		private string filePath;
 		private ButtonContainer openFilePopupButton;
@@ -138,7 +144,14 @@ public class RoomSettingsPopup : ModularPopup {
 			this.timelineButton = new ButtonContainer("Timeline", this.OpenTimelinePopup).SetContextCheck(b => {
 				b.settingName = "Timeline" + (this.replaceRoomTimeline.timelines.Count == 0 ? "" : $" - {this.replaceRoomTimeline}"); this.RecalculateBounds(true, true); return true;});
 			
-			this.openFilePopupButton = new ButtonContainer("Select File", this.OpenFileSystem);
+			// fromRoom
+			this.selectedRoom = null;
+			this.roomSelector = new ButtonContainer("select Room to use", this.SelectRoomToUse).SetContextCheck(this.RoomSelectorCheck, true, true);
+			this.selectedRoomLabel = new LabelContainer("No room selected");
+			this.createFromRoomButton = new ButtonContainer("Create from Room", this.CreateFromRoom).SetContextCheck(_ => this.selectedRoom != null && this.replaceRoomTimeline.timelines.Count != 0);
+
+			// fromFile
+			this.openFilePopupButton = new ButtonContainer("select File", this.OpenFileSystem);
 			this.filePath = "";
 			this.filePathLabel = new LabelContainer("None selected", autoCrop: true, fromRight: true);
 			this.createFromFileButton = new ButtonContainer("Create from File", this.CreateFromFile).SetContextCheck(_ => File.Exists(this.filePath) && this.TimelineSelected, true);
@@ -177,9 +190,13 @@ public class RoomSettingsPopup : ModularPopup {
 					this.AddToQueue(new Divider());
 					switch (this.menuMode) {
 						case MenuMode.createNew:
+							this.AddToQueue(new LabelContainer("Not implemented yet."));
+						break;
 						case MenuMode.fromRoom:
-							this.AddToQueue(new LabelContainer("Not implemented yet."));
-							this.AddToQueue(new LabelContainer("Not implemented yet."));
+							this.AddToQueue(this.roomSelector);
+							this.selectedRoomLabel.settingName = this.selectedRoom == null ? "No room selected" : $"Using {this.selectedRoom.name}";
+							this.AddToQueue(this.selectedRoomLabel);
+							this.AddToQueue(this.createFromRoomButton);
 						break;
 						case MenuMode.fromFile:
 							this.AddToQueue(this.openFilePopupButton);
@@ -196,6 +213,7 @@ public class RoomSettingsPopup : ModularPopup {
 
 		private void ResetReplaceRoomParameters() {
 			this.replaceRoomTimeline = new(TimelineType.Only, []);
+			this.selectedRoom = null;
 			this.filePath = "";
 			this.filePathLabel.settingName = "None selected";
 			this.menuMode = MenuMode.closed;
@@ -211,6 +229,53 @@ public class RoomSettingsPopup : ModularPopup {
 			}, true).SetButtons<TimelinePopup>("", "REPLACE", "").Translate(Mouse.Pos, false).Title("Specify ReplaceRoom Timeline"), true);
 		}
 
+		private bool RoomSelectorCheck(ButtonContainer button) {
+			HashSet<WorldDraggable> selectedDraggables = WorldWindow.selectedDraggables;
+			HashSet<WorldDraggable> relevantDraggables = [];
+			foreach (WorldDraggable item in selectedDraggables) {
+				if (item is Room and not OffscreenRoom or ReplaceRoom)
+					relevantDraggables.Add(item);
+			}
+			if (relevantDraggables.Count != 1) {
+				if (relevantDraggables.Count > 1)
+					button.settingName = "Please select at most one room.";
+				else
+					button.settingName = this.selectedRoom != null ? "Room selected." : "Please select a room.";
+				return false;
+			}
+			WorldDraggable draggableToSelect = relevantDraggables.First();
+			if (draggableToSelect == this.relevantRoom) {
+				button.settingName = "Please select a different room.";
+				return false;
+			}
+			button.settingName = $"Click to select {(draggableToSelect is Room room ? room.name : (draggableToSelect as ReplaceRoom)?.replacingRoom.name ?? "NULL")}";
+			return true;
+		}
+
+		private void SelectRoomToUse() {
+			Room? roomToUse = (Room?)WorldWindow.selectedDraggables.FirstOrDefault(x => x is Room);
+			roomToUse ??= (WorldWindow.selectedDraggables.FirstOrDefault(x => x is ReplaceRoom) as ReplaceRoom)?.replacingRoom;
+			if (roomToUse == null)
+				return;
+
+			this.selectedRoom = roomToUse;
+			this.selectedRoomLabel.settingName = this.selectedRoom == null ? "No room selected" : $"Using {this.selectedRoom.name}";
+			this.RecalculateBounds(true, true);
+			WorldWindow.selectedDraggables = [];
+		}
+
+		private void CreateFromRoom() {
+			ReplaceRoom newReplaceRoom = new ReplaceRoom(this.selectedRoom!, this.relevantRoom, this.replaceRoomTimeline, []) {
+				DevPosition = this.relevantRoom.DevPosition + Vector2.One * 5,
+				CanonPosition = this.relevantRoom.CanonPosition + Vector2.One * 5
+			};
+			ReplaceRoomChange replaceRoomChange = new(true);
+			replaceRoomChange.AddReplaceRoom(newReplaceRoom);
+			WorldWindow.worldHistory.Apply(replaceRoomChange);
+			this.Close();
+			this.CheckForWarnings(newReplaceRoom);
+		}
+
 		private void OpenFileSystem() {
 			PopupManager.Add(new FilesystemPopup(this.SelectFile, 1).Hint("xx_a01_future.txt").Filter(new Regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)")).Title("Select room file to use"), true);
 		}
@@ -219,7 +284,7 @@ public class RoomSettingsPopup : ModularPopup {
 			if (selectedFileArray.Length == 0)
 				return;
 			this.filePath = selectedFileArray.First();
-			this.filePathLabel.settingName = UI.font.CropText(this.filePath, this.usableBounds.x1 - this.usableBounds.x0, 0.03f, out _, true);
+			this.filePathLabel.settingName = this.filePath;
 			this.RecalculateBounds(true, true);
 		}
 
@@ -249,9 +314,22 @@ public class RoomSettingsPopup : ModularPopup {
 			replaceRoomChange.AddReplaceRoom(newReplaceRoom);
 			WorldWindow.worldHistory.Apply(replaceRoomChange);
 			this.Close();
+			this.CheckForWarnings(newReplaceRoom);
+		}
 
+		private void CheckForWarnings(ReplaceRoom newReplaceRoom) {
+			string replacingRoom = newReplaceRoom.replacingRoom.name;
+			string replacedRoom = newReplaceRoom.replacedRoom.name;
+			List<string> warnings = [];
 			if (newReplaceRoom.replacedRoom.roomExits.Count != newReplaceRoom.replacingRoom.roomExits.Count)
-				PopupManager.Add($"New ReplaceRoom {newReplaceRoom.replacingRoom.name}\nhas different exit count from {newReplaceRoom.replacedRoom.name}\n(this may cause issues)");
+				warnings.Add($"New ReplaceRoom {replacingRoom}\nhas different exit count from {replacedRoom}");
+			if (newReplaceRoom.replacedRoom.dens.Count != newReplaceRoom.replacingRoom.dens.Count)
+				warnings.Add($"New ReplaceRoom {replacingRoom}\nhas different den count from {replacedRoom}");
+			string finalWarningString = "";
+			bool first = true;
+			foreach (string item in warnings)
+				finalWarningString += (first ? "" : "\n---\n") + item;
+			PopupManager.Add(finalWarningString);
 		}
 
 		private void Move(ReplaceRoom replaceRoomToMove, bool up) {
