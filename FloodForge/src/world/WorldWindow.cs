@@ -665,8 +665,19 @@ public static class WorldWindow {
 			if (selectingState == SelectingState.PendingDrag && draggablePossibleSelect != null) {
 				HandleSelectionLogic(draggablePossibleSelect); // change the selectedRooms list depending on shift/ctrl
 				if (roomSnap) {
-					foreach (WorldDraggable draggable in selectedDraggables)
-						draggable.Position = draggable.Position.Rounded();
+					MoveChange draggableMoveChange = new MoveChange();
+					foreach (WorldDraggable draggable in selectedDraggables) {
+						if (draggable is MapDraggable mapDraggable) {
+							Vector2 DevPosDiff = (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) ? mapDraggable.DevPosition.Rounded() - mapDraggable.DevPosition : Vector2.Zero;
+							Vector2 CanonPosDiff = (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) ? mapDraggable.CanonPosition.Rounded() - mapDraggable.CanonPosition : Vector2.Zero;
+							draggableMoveChange.AddDraggable(mapDraggable, DevPosDiff, CanonPosDiff);
+						}
+						else {
+							Vector2 diff = draggable.Position.Rounded() - draggable.Position;
+							draggableMoveChange.AddDraggable(draggable, diff, diff);
+						}
+					}
+					worldHistory.Apply(draggableMoveChange);
 				}
 			}
 
