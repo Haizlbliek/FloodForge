@@ -17,7 +17,7 @@ public class Connection {
 	}
 	public bool ConnectionVisible {
 		get {
-			return this.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
+			return this.timeline.OverlapsWith(WorldWindow.VisibleTimeline) || WorldWindow.VisibleTimeline.timelineType == TimelineType.Only && WorldWindow.VisibleTimeline.timelines.Count == 0;
 		}
 	}
 	public ConditionalPopup? conditionalPopup;
@@ -233,8 +233,9 @@ public class Connection {
 			this.RecalculateBezier();
 		}
 		if (WorldWindow.CullTest(this.fittedAABB)) {
-			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && (this.roomA.timeline.OverlapsWith(WorldWindow.VisibleTimeline) || this.ConnectionVisible);
-			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && (this.roomB.timeline.OverlapsWith(WorldWindow.VisibleTimeline) || this.ConnectionVisible);
+			bool visibleTimelineIsEmptyOnly = WorldWindow.VisibleTimeline.timelineType == TimelineType.Only && WorldWindow.VisibleTimeline.timelines.Count == 0;
+			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && (visibleTimelineIsEmptyOnly || WorldWindow.VisibleTimeline.OverlapsWith(this.roomA.timeline) || this.ConnectionVisible);
+			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && (visibleTimelineIsEmptyOnly || WorldWindow.VisibleTimeline.OverlapsWith(this.roomB.timeline) || this.ConnectionVisible);
 			float opacity = Settings.ConnectionOpacity;
 			if (!aVisible && !bVisible || opacity < 0.01f)
 				return;

@@ -1127,7 +1127,7 @@ public static class WorldWindow {
 		foreach (Room room in WorldWindow.region.rooms) {
 			if (!room.data.merge)
 				continue;
-			if (!VisibleLayers[room.data.layer] || !VisibleTimeline.OverlapsWith(room.timeline))
+			if (!VisibleLayers[room.data.layer] || (VisibleTimeline.timelineType != TimelineType.Only || VisibleTimeline.timelines.Count != 0) && !VisibleTimeline.OverlapsWith(room.timeline))
 				continue;
 
 			if (PositionType == RoomPosition.Both) {
@@ -1142,7 +1142,7 @@ public static class WorldWindow {
 		foreach (Room room in WorldWindow.region.rooms) {
 			Profiler.MarkPoint("rooms", 1, true);
 
-			if (!VisibleLayers[room.data.layer] || !VisibleTimeline.OverlapsWith(room.timeline))
+			if (!VisibleLayers[room.data.layer] || (VisibleTimeline.timelineType != TimelineType.Only || VisibleTimeline.timelines.Count != 0) && !VisibleTimeline.OverlapsWith(room.timeline))
 				continue;
 			
 			// TODO - hide rooms based on VisibleTimeline in conjunction with replacerooms
