@@ -263,7 +263,7 @@ public class RoomSettingsPopup : ModularPopup {
 
 			for (; originalRoomIndex < this.relevantRoom.replaceRooms.Count; originalRoomIndex++) {
 				if (this.relevantRoom.replaceRooms[originalRoomIndex] == replaceRoomToMove) {
-					newRoomIndex = Math.Clamp(newRoomIndex + direction, 0, this.relevantRoom.replaceRooms.Count - 1);
+					newRoomIndex = Math.Clamp(originalRoomIndex + direction, 0, this.relevantRoom.replaceRooms.Count - 1);
 					replaceRoomToSwapWith = this.relevantRoom.replaceRooms[newRoomIndex];
 					break;
 				}
