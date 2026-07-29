@@ -1123,12 +1123,18 @@ public static class WorldWindow {
 			if(!image.drawUnderGrid) image.Draw();
 		Profiler.MarkPoint("DrawGrid");
 
+		Dictionary<Room, bool> timelineCullResults = [];
+
 		Program.gl.Enable(EnableCap.Blend);
 		foreach (Room room in WorldWindow.region.rooms) {
+			bool timelineCullResult = room.CheckTimelineCull();
+			timelineCullResults.Add(room, timelineCullResult);
+
 			if (!room.data.merge)
 				continue;
-			if (!VisibleLayers[room.data.layer] || (VisibleTimeline.timelineType != TimelineType.Only || VisibleTimeline.timelines.Count != 0) && !VisibleTimeline.OverlapsWith(room.timeline))
+			if (!VisibleLayers[room.data.layer] || !timelineCullResult) {	
 				continue;
+			}
 
 			if (PositionType == RoomPosition.Both) {
 				room.DrawBlack(RoomPosition.Canon);
@@ -1140,12 +1146,10 @@ public static class WorldWindow {
 		}
 		Profiler.MarkPoint("rooms", 2, true);
 		foreach (Room room in WorldWindow.region.rooms) {
-			Profiler.MarkPoint("rooms", 1, true);
-
-			if (!VisibleLayers[room.data.layer] || (VisibleTimeline.timelineType != TimelineType.Only || VisibleTimeline.timelines.Count != 0) && !VisibleTimeline.OverlapsWith(room.timeline))
+			if (!VisibleLayers[room.data.layer] || !timelineCullResults[room])
 				continue;
-			
-			// TODO - hide rooms based on VisibleTimeline in conjunction with replacerooms
+
+			Profiler.MarkPoint("rooms", 1, true);
 
 			if (WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
 				if (!room.data.merge) {

@@ -60,6 +60,27 @@ public class Room : MapDraggable {
 		return WorldWindow.VisibleLayers[this.data.layer] && this.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
 	}
 
+	// REVIEW - check for redundancy in terms of edge-case checks
+	public bool CheckTimelineCull() {
+		if (WorldWindow.VisibleTimeline.timelineType == TimelineType.All)
+			return true;
+		if (WorldWindow.VisibleTimeline.timelineType == TimelineType.Only && WorldWindow.VisibleTimeline.timelines.Count == 0 && this.timeline.timelineType != TimelineType.Only)
+			return true;
+
+		Timeline andedTimeline = this.timeline.And(WorldWindow.VisibleTimeline);
+		if (andedTimeline.timelineType == TimelineType.Only) {
+			HashSet<string> leftTLs = [.. andedTimeline.timelines];
+			foreach (ReplaceRoom replaceRoom in this.replaceRooms) {
+				if (replaceRoom.timeline.OverlapsWith(WorldWindow.VisibleTimeline) && replaceRoom.timeline.timelineType == TimelineType.Only) {
+					replaceRoom.timeline.timelines.ForEach(tl => leftTLs.Remove(tl));
+				}
+			}
+			if (leftTLs.Count == 0)
+				return false;
+		}
+		return true;
+	}
+
 	public Room(string path, string name, bool pathOutsideRoomsFolder = false) {
 		this.pathOutsideRoomsFolder = pathOutsideRoomsFolder;
 		this.path = path;
