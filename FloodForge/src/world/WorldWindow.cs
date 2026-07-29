@@ -526,8 +526,10 @@ public static class WorldWindow {
 		bool isOriginal = Settings.OriginalControls;
 		
 		// REVIEW - move settingspopup callbacks into separate class (or just SettingsPopup) so that settings don't take up too much space in other classes
+		// REVIEW UPDATE - the above review is sort of in-progress with modularPopups.
 		if ((Mouse.Right && !Mouse.LastRight && (connectionState == ConnectionState.None || connectionState == ConnectionState.NoConnection)) || (!Mouse.Right && Mouse.LastRight && lastConnectionState == ConnectionState.PendingConnection)) {
 			if (HoveringDraggable is ReplaceRoom replaceRoom) {
+				// TODO - allow for viewing the replacing reference room's settings
 				PopupManager.Add(new ReplaceRoomSettingsPopup(replaceRoom).Translate(Mouse.Pos, true));
 			}
 			else if (HoveringDraggable is Room room and not OffscreenRoom) {
