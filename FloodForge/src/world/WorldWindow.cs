@@ -1217,6 +1217,16 @@ public static class WorldWindow {
 					replaceRoom.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
 				}
 			}
+
+			if (selectedDraggables.Contains(replaceRoom)) {
+				Immediate.Color(Themes.SelectionBorder);
+				if (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) {
+					UI.StrokeRect(Rect.FromSize(replaceRoom.DevPosition.x, replaceRoom.DevPosition.y, replaceRoom.replacingRoom.width, -replaceRoom.replacingRoom.height), cameraScale / 4f);
+				}
+				if (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) {
+					UI.StrokeRect(Rect.FromSize(replaceRoom.CanonPosition.x, replaceRoom.CanonPosition.y, replaceRoom.replacingRoom.width, -replaceRoom.replacingRoom.height), cameraScale / 4f);
+				}
+			}
 		}
 
 		if (selectingState == SelectingState.Selecting) {
