@@ -1051,6 +1051,17 @@ public static class WorldExporter {
 		string worldFileStringified = "";
 		finalWorldFile.ForEach(l => worldFileStringified += "\n" + l);
 		Logger.Info($"\n---------------------------{worldFileStringified}\n---------------------------");
+		Logger.Info("Writing to file");
+		try {
+			string fileName = $"world_{WorldWindow.region.acronym}.txt";
+			string path = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, fileName);
+			Backup.File(path);
+			File.WriteAllLines(path, finalWorldFile);
+		}
+		catch (Exception exception) {
+			Logger.Info($"Error writing to world_{WorldWindow.region.acronym}.txt");
+			Logger.Info($"> {exception}");
+		}
 		Logger.Info("");
 		Logger.Info("End KhyExporter!");
 		Logger.Info("========================================");
