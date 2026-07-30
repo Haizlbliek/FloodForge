@@ -149,6 +149,7 @@ public static class WorldWindow {
 		referenceImages.Clear();
 		selectedDraggables.Clear();
 		draggablePossibleSelect = null;
+		connectionExtensionsEnabled = false;
 		selectingState = SelectingState.None;
 		region = new Region();
 	}
@@ -297,7 +298,7 @@ public static class WorldWindow {
 					CurrentConnectionValid = true;
 					CurrentConnectionWarn = false;
 
-					if (NewConnection.roomA == NewConnection.roomB) {
+					if (NewConnection.roomA == NewConnection.roomB && !connectionExtensionsEnabled) {
 						CurrentConnectionValid = false;
 					}
 					else {
@@ -321,7 +322,7 @@ public static class WorldWindow {
 									CurrentConnectionWarn = false;
 								}
 							}
-							if (originRoomA == originRoomB)
+							if (originRoomA == originRoomB && !connectionExtensionsEnabled)
 								CurrentConnectionValid = false;
 						}
 
@@ -339,7 +340,7 @@ public static class WorldWindow {
 								CurrentConnectionValid = false;
 								break;
 							}
-							else {
+							else if (!connectionExtensionsEnabled) {
 								Timeline otherTimeline = other.EffectiveConnectionTimeline;
 								Timeline currentTimeline = NewConnection.EffectiveConnectionTimeline;
 								if (otherTimeline.OverlapsWith(currentTimeline)) {
@@ -383,8 +384,10 @@ public static class WorldWindow {
 							if (hasOverlap) {
 								if (connectionEffectiveTimeline.timelineType == TimelineType.All)
 									overlapCanBeSolved = false;
-								foundDuplicate |= connection.roomA == NewConnection.roomA && connection.roomB == NewConnection.roomB;
-								foundDuplicate |= connection.roomB == NewConnection.roomA && connection.roomA == NewConnection.roomB;
+								if (!connectionExtensionsEnabled) {
+									foundDuplicate |= connection.roomA == NewConnection.roomA && connection.roomB == NewConnection.roomB;
+									foundDuplicate |= connection.roomB == NewConnection.roomA && connection.roomA == NewConnection.roomB;
+								}
 
 								foundOccupiedExit |= connection.roomA == NewConnection.roomA && connection.roomAExitID == NewConnection.roomAExitID;
 								foundOccupiedExit |= connection.roomB == NewConnection.roomB && connection.roomBExitID == NewConnection.roomBExitID;
@@ -1172,18 +1175,27 @@ public static class WorldWindow {
 		// REVIEW - add separate theme color for warning
 		Immediate.Color(CurrentConnectionValid ? (CurrentConnectionWarn ? Themes.TextWarn : Themes.RoomConnectionHover) : Themes.RoomConnectionInvalid);
 
-		int segments = Mathf.RoundToInt((ConnectionStart - ConnectionEnd).Value.Length / 2f);
-		segments = Math.Clamp(segments, 4, 100);
+		bool isSingleExitConnection = NewConnection.roomA == NewConnection.roomB && NewConnection.roomAExitID == NewConnection.roomBExitID;
+
 		float directionStrength = (ConnectionStart - ConnectionEnd).Value.Length;
 		if (directionStrength > 300f)
 			directionStrength = (directionStrength - 300f) * 0.5f + 300f;
 
 		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-			UI.Line(ConnectionStart.Value, ConnectionEnd.Value, cameraScale / 4f);
+			Vector2 endPoint = ConnectionEnd.Value;
+			if (isSingleExitConnection)
+				endPoint += (NewConnection.roomB?.GetConnectionConnectDirection(NewConnection.roomBExitID) ?? Vector2.Zero) * 3;
+			UI.Line(ConnectionStart.Value, endPoint, cameraScale / 4f);
 		}
 		else {
 			Vector2 directionA = NewConnection.roomA.GetConnectionConnectDirection(NewConnection.roomAExitID);
 			Vector2 directionB = NewConnection.roomB?.GetConnectionConnectDirection(NewConnection.roomBExitID) ?? Vector2.Zero;
+
+			if (isSingleExitConnection) {
+				directionStrength = 10f;
+				directionA += new Vector2(-directionA.y, directionA.x);
+				directionB += new Vector2(directionB.y, -directionB.x);
+			}
 
 			if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
 				directionStrength *= 0.3333f;
@@ -1194,6 +1206,8 @@ public static class WorldWindow {
 
 			directionA *= directionStrength;
 			directionB *= directionStrength;
+
+			int segments = isSingleExitConnection ? 10 : Math.Clamp(Mathf.RoundToInt(Math.Max((ConnectionStart - ConnectionEnd).Value.Length, (ConnectionStart + directionA - (ConnectionEnd + directionB)).Value.Length) / 2f), 4, 100);
 
 			Vector2 lastPoint = MathUtil.BezierCubic(0f, ConnectionStart.Value, ConnectionStart.Value + directionA, ConnectionEnd.Value + directionB, ConnectionEnd.Value);
 			for (float t = 1f / segments; t <= 1.01f; t += 1f / segments) {
@@ -1456,7 +1470,7 @@ public static class WorldWindow {
 									foreach (Connection connection in room.connections) {
 										string finalString = "";
 										bool canHaveArrows = false;
-										if (connection.roomA.name != room.name && connection.roomBExitID == index) {
+										if ((connection.roomA == connection.roomB || connection.roomA.name != room.name) && connection.roomBExitID == index) {
 											finalString += connection.roomA.name;
 											encounteredConnections.Add(connection.roomA.name);
 											canHaveArrows = true;

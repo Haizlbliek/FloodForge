@@ -111,10 +111,14 @@ public class Connection {
 
 	public void RecalculateBezier() {
 		this.RefreshReplacementVirtualConnections();
+		bool isSingleExitConnection = this.roomA == this.roomB && this.roomAExitID == this.roomBExitID;
 		Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
 		Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
-		this.segments = Math.Clamp((int) ((pointA - pointB).Length / 2f), 4, 100);
+
 		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
+			if (isSingleExitConnection) {
+				pointB += (Vector2)this.roomA.GetConnectionConnectDirection(this.roomAExitID) * 3;
+			}
 			this.BezierCenter = (pointA + pointB) * 0.5f;
 			this.BezierPoints = [pointA, pointB];
 			this.fittedAABB = new Rect(pointA, pointB);
@@ -124,6 +128,11 @@ public class Connection {
 			Vector2 directionB = this.roomB.GetConnectionConnectDirection(this.roomBExitID);
 
 			this.directionStrength = (pointA - pointB).Length;
+			if (isSingleExitConnection) {
+				this.directionStrength = 10f;
+				directionA += new Vector2(-directionA.y, directionA.x);
+				directionB += new Vector2(directionB.y, -directionB.x);
+			}
 			if (this.directionStrength > 300f) {
 				this.directionStrength = this.directionStrength * 0.5f + 150f;
 			}
@@ -135,6 +144,7 @@ public class Connection {
 			}
 			directionA *= this.directionStrength;
 			directionB *= this.directionStrength;
+			this.segments = isSingleExitConnection ? 10 : Math.Clamp((int) (Math.Max((pointA - pointB).Length, (pointA + directionA - (pointB + directionB)).Length) / 2f), 4, 100);
 
 			float overSegments = 1f / this.segments;
 			List<Vector2> bezierPoints = [];
@@ -209,14 +219,7 @@ public class Connection {
 
 			float lineDist = WorldWindow.SelectorScale / 4f;
 
-			Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
-			Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
-
-			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-				return MathUtil.LineDistance(WorldWindow.worldMouse, pointA, pointB) < lineDist;
-			}
-
-			Vector2 lastPoint = pointA;
+			Vector2 lastPoint = this.BezierPoints[0];
 			foreach (Vector2 point in this.BezierPoints) {
 				if (MathUtil.LineDistance(WorldWindow.worldMouse, lastPoint, point) < lineDist)
 					return true;
@@ -364,19 +367,12 @@ public class Connection {
 
 			Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
 			Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
-			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-				Vector2 pointMiddle = (pointA + pointB) / 2;
-				float alphaMiddle = fadeMiddle ? 0f : (alphaA + alphaB) / 2;
-				this.DrawCustomLine(pointA.x, pointA.y, pointMiddle.x, pointMiddle.y, alphaA, alphaMiddle);
-				this.DrawCustomLine(pointMiddle.x, pointMiddle.y, pointB.x, pointB.y, alphaMiddle, alphaB);
-			}
-			else {
-				Vector2 matrixPos = WorldWindow.cameraOffset;
-				Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
 
-				if (this.connectionRenderable != null)
-					DrawConnectionMesh(this.connectionRenderable, matrixPos, matrixScale, Vector2.Zero, connectionColorA, connectionColorB, WorldWindow.SelectorScale / 66, fadeMiddle);
-			}
+			Vector2 matrixPos = WorldWindow.cameraOffset;
+			Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
+
+			if (this.connectionRenderable != null)
+				DrawConnectionMesh(this.connectionRenderable, matrixPos, matrixScale, Vector2.Zero, connectionColorA, connectionColorB, WorldWindow.SelectorScale / 66, fadeMiddle);
 
 			Program.gl.Disable(EnableCap.Blend);
 
