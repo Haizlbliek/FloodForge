@@ -1572,7 +1572,7 @@ public class Room : MapDraggable {
 			return;
 		}
 
-		this.DrawRoomMeshes(renderedPosition, positionType);
+		this.DrawRoomMeshes(renderedPosition, positionType, this.GetTintColor());
 
 		if (positionType == WorldWindow.PositionType) {
 			if (WorldWindow.VisibleDevItems)
@@ -1606,9 +1606,9 @@ public class Room : MapDraggable {
 		UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.width, renderedPosition.y - this.height);
 	}
 
-	public void DrawRoomMeshes(Vector2 renderedPosition, WorldWindow.RoomPosition positionType) {
+	public void DrawRoomMeshes(Vector2 renderedPosition, WorldWindow.RoomPosition positionType, Color tint) {
 		Program.gl.Enable(EnableCap.Blend);
-		Color tint = this.GetTintColor();
+		// TODO - make sure room highlighting is separated by replaceRooms
 		if (WorldWindow.highlightRoom != null && WorldWindow.highlightRoom != this) {
 			tint *= 0.25f;
 		}
