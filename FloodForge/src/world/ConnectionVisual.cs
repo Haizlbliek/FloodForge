@@ -2,6 +2,7 @@ namespace FloodForge.World;
 
 // REVIEW - turn this class into the base for all connection visuals, only taking in from- and to-point when drawing and a gradient when relevant
 // TODO - update to match Connection's mesh rendering
+// TODO - re-add virtual connection visuals to replaceRooms
 public class ConnectionVisual {
 	public Room roomA;
 	public Room roomB;
