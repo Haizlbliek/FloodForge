@@ -690,6 +690,10 @@ public static class WorldWindow {
 					if (image.Intersects(selectionStart, selectionEnd) && image.Draggable)
 						selectedDraggables.Add(image);
 				}
+				foreach (ReplaceRoom replaceRoom in replaceRooms) {
+					if (replaceRoom.Intersects(selectionStart, selectionEnd) && replaceRoom.Draggable)
+						selectedDraggables.Add(replaceRoom);
+				}
 			}
 
 			holdingDraggable = null;
