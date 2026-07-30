@@ -905,6 +905,15 @@ public static class WorldWindow {
 				rooms.ForEach(r => change.AddRoom(r, minimumLayer));
 				worldHistory.Apply(change);
 			}
+			else if (HoveringReplaceRoom != null) { // technically replaceRooms can have a different layer from the replaced room. separate mapData container for both room and replaceroom?
+				Room relevantRoom = HoveringReplaceRoom.replacedRoom;
+				int layer = relevantRoom.data.layer;
+
+				layer = (layer + 1) % 3;
+
+				VariableChange<int> change = new VariableChange<int>(relevantRoom.data.layer, layer, i => relevantRoom.data.layer = i);
+				worldHistory.Apply(change);
+			}
 		}
 
 		if (Keys.JustPressed(Key.G)) {
