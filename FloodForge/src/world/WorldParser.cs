@@ -598,6 +598,16 @@ public static class WorldParser {
 	}
 
 	// REVIEW - Does not parse correctly
+	//     CASE:
+	// ROOM_A : ROOM_B0
+	// ROOM_B0 : ROOM_A
+	// ROOM_B1 : DISCONNECTED
+	// Red : ROOM_A : ROOM_B0 : ROOM_B1
+	// Red : Room_B1 : 1 : ROOM_A
+	//     RESULT:
+	// connection from ROOM_A to ROOM_B0 and ROOM_B1 are both created
+	// connection from ROOM_A to ROOM_B0 excludes Red
+	// connection from ROOM_A to ROOM_B1 is ALL, should be ONLY-Red <<< problem
 	private static bool ParseWorldConditionalLink(string link, ref List<ConditionalConnection> conditionalConnectionsToAdd) {
 		string[] parts = SplitTopLevel(link, ':', ['(', '{'], [')', '}'], StringSplitOptions.TrimEntries);
 		if (parts.Length < 3 || parts.Length > 4) {

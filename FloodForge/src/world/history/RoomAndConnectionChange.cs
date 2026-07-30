@@ -58,14 +58,16 @@ public class RoomAndConnectionChange : Change {
 			// LATER: Add into correct index
 			WorldWindow.region.connections.Add(connection);
 			connection.roomA.Connect(connection);
-			connection.roomB.Connect(connection);
+			if (connection.roomA != connection.roomB)
+				connection.roomB.Connect(connection);
 		}
 	}
 
 	protected void Remove() {
 		foreach (Connection connection in this.externalConnections) {
 			connection.roomA.Disconnect(connection);
-			connection.roomB.Disconnect(connection);
+			if (connection.roomA != connection.roomB)
+				connection.roomB.Disconnect(connection);
 			WorldWindow.region.connections.Remove(connection);
 		}
 
