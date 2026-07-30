@@ -99,8 +99,8 @@ public static class WorldParser {
 		string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", "").Trim())];
 		float canonX = float.Parse(data[0]) / 3f;
 		float canonY = float.Parse(data[1]) / 3f;
-		float devX = float.Parse(data[2]) / 3f;
-		float devY = float.Parse(data[3]) / 3f;
+		float devX = float.Parse(data[2]) / 2f;
+		float devY = float.Parse(data[3]) / 2f;
 		int layer = data[4].IsNullOrEmpty() ? 0 : int.Parse(data[4]);
 		string subregion = data[5];
 
