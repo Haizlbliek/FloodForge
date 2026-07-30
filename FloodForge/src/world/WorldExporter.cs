@@ -557,7 +557,7 @@ public static class WorldExporter {
 			Logger.Warn("Special connections found with connectionExtension support disabled."); // TODO - give user the option to enable at this point
 		}
 		Logger.Info("");
-		Logger.Info("Finding Room Conditionals"); // TODO - add replaceroom exporting with new replaceRoom rework implementation
+		Logger.Info("Finding Room Conditionals");
 		List<ExportRoom> hideRooms = [];
 		List<ExportRoom> exclusiveRooms = [];
 		foreach (ExportRoom exportRoom in allRooms) {
@@ -802,19 +802,23 @@ public static class WorldExporter {
 		Logger.Info("");
 		Logger.Info("Composing world_XX.txt file");
 		List<string> finalWorldFile = [];
-		if (hideRooms.Count != 0 || exclusiveRooms.Count != 0 && mergedSpecifiedChanges.Count != 0) {
+		// REVIEW - separate by timeline?
+		if (WorldWindow.replaceRooms.Count != 0 || hideRooms.Count != 0 || exclusiveRooms.Count != 0 && mergedSpecifiedChanges.Count != 0) {
 			finalWorldFile.Add("CONDITIONAL LINKS");
-			if (hideRooms.Count != 0)
+			foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+				finalWorldFile.Add($"{PreProcessorsToString(replaceRoom.preProcessorConditions)}{replaceRoom.timeline} : REPLACEROOM : {replaceRoom.replacedRoom.name} : {replaceRoom.replacingRoom.name}");
+			}
+			if (WorldWindow.replaceRooms.Count != 0)
 				finalWorldFile.Add("");
 			foreach (ExportRoom hideRoom in hideRooms) {
 				finalWorldFile.Add($"{PreProcessorsToString(hideRoom.preProcessorConditions)}{hideRoom.timeline.Inverted()} : HIDEROOM : {hideRoom.name}");
 			}
-			if (exclusiveRooms.Count != 0)
+			if (hideRooms.Count != 0)
 				finalWorldFile.Add("");
 			foreach (ExportRoom exclusiveRoom in exclusiveRooms) {
 				finalWorldFile.Add($"{PreProcessorsToString(exclusiveRoom.preProcessorConditions)}{exclusiveRoom.timeline} : EXCLUSIVEROOM : {exclusiveRoom.name}");
 			}
-			if (mergedSpecifiedChanges.Count != 0)
+			if (exclusiveRooms.Count != 0)
 				finalWorldFile.Add("");
 			foreach (SpecifiedChange specifiedChange in mergedSpecifiedChanges) {
 				string finalLine = $"{PreProcessorsToString(specifiedChange.newConnection.connectionConditions)}{specifiedChange.timeline} : {specifiedChange.affectedRoom} : ";
