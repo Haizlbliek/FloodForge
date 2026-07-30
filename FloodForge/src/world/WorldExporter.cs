@@ -802,45 +802,47 @@ public static class WorldExporter {
 		Logger.Info("");
 		Logger.Info("Composing world_XX.txt file");
 		List<string> finalWorldFile = [];
-		finalWorldFile.Add("CONDITIONAL LINKS");
-		if (hideRooms.Count != 0)
-			finalWorldFile.Add("");
-		foreach (ExportRoom hideRoom in hideRooms) {
-			finalWorldFile.Add($"{PreProcessorsToString(hideRoom.preProcessorConditions)}{hideRoom.timeline.Inverted()} : HIDEROOM : {hideRoom.name}");
-		}
-		if (exclusiveRooms.Count != 0)
-			finalWorldFile.Add("");
-		foreach (ExportRoom exclusiveRoom in exclusiveRooms) {
-			finalWorldFile.Add($"{PreProcessorsToString(exclusiveRoom.preProcessorConditions)}{exclusiveRoom.timeline} : EXCLUSIVEROOM : {exclusiveRoom.name}");
-		}
-		if (mergedSpecifiedChanges.Count != 0)
-			finalWorldFile.Add("");
-		foreach (SpecifiedChange specifiedChange in mergedSpecifiedChanges) {
-			string finalLine = $"{PreProcessorsToString(specifiedChange.newConnection.connectionConditions)}{specifiedChange.timeline} : {specifiedChange.affectedRoom} : ";
-			if (specifiedChange.oldConnection.roomName.IsNullOrEmpty() || specifiedChange.oldConnection.roomName == "DISCONNECTED") {
-				ExportRoom affectedRoom = allRooms.First(r => r.name == specifiedChange.affectedRoom);
-				int disconnectedBeforeExit = 0;
-				for (int exitID = 0; exitID < specifiedChange.exitID; exitID++) {
-					if (affectedRoom.connections[exitID].roomName.IsNullOrEmpty())
-						disconnectedBeforeExit++;
+		if (hideRooms.Count != 0 || exclusiveRooms.Count != 0 && mergedSpecifiedChanges.Count != 0) {
+			finalWorldFile.Add("CONDITIONAL LINKS");
+			if (hideRooms.Count != 0)
+				finalWorldFile.Add("");
+			foreach (ExportRoom hideRoom in hideRooms) {
+				finalWorldFile.Add($"{PreProcessorsToString(hideRoom.preProcessorConditions)}{hideRoom.timeline.Inverted()} : HIDEROOM : {hideRoom.name}");
+			}
+			if (exclusiveRooms.Count != 0)
+				finalWorldFile.Add("");
+			foreach (ExportRoom exclusiveRoom in exclusiveRooms) {
+				finalWorldFile.Add($"{PreProcessorsToString(exclusiveRoom.preProcessorConditions)}{exclusiveRoom.timeline} : EXCLUSIVEROOM : {exclusiveRoom.name}");
+			}
+			if (mergedSpecifiedChanges.Count != 0)
+				finalWorldFile.Add("");
+			foreach (SpecifiedChange specifiedChange in mergedSpecifiedChanges) {
+				string finalLine = $"{PreProcessorsToString(specifiedChange.newConnection.connectionConditions)}{specifiedChange.timeline} : {specifiedChange.affectedRoom} : ";
+				if (specifiedChange.oldConnection.roomName.IsNullOrEmpty() || specifiedChange.oldConnection.roomName == "DISCONNECTED") {
+					ExportRoom affectedRoom = allRooms.First(r => r.name == specifiedChange.affectedRoom);
+					int disconnectedBeforeExit = 0;
+					for (int exitID = 0; exitID < specifiedChange.exitID; exitID++) {
+						if (affectedRoom.connections[exitID].roomName.IsNullOrEmpty())
+							disconnectedBeforeExit++;
+					}
+					finalLine += $"{disconnectedBeforeExit + 1} : ";
 				}
-				finalLine += $"{disconnectedBeforeExit + 1} : ";
-			}
-			else {
-				finalLine += $"{specifiedChange.oldConnection.roomName + (CEEE && defaultSpecifyLists[specifiedChange.oldConnection.roomName].Contains(specifiedChange.affectedRoom) ? $"<{specifiedChange.oldConnection.exitID}>" : "")} : ";
-			}
-			bool specifyExitID = false;
-			foreach (string timeline in specifiedChange.timeline.timelines) {
-				if (timelineSpecifyLists[timeline][specifiedChange.affectedRoom].Contains(specifiedChange.newConnection.roomName)) {
-					specifyExitID = true;
-					break;
+				else {
+					finalLine += $"{specifiedChange.oldConnection.roomName + (CEEE && defaultSpecifyLists[specifiedChange.oldConnection.roomName].Contains(specifiedChange.affectedRoom) ? $"<{specifiedChange.oldConnection.exitID}>" : "")} : ";
 				}
+				bool specifyExitID = false;
+				foreach (string timeline in specifiedChange.timeline.timelines) {
+					if (timelineSpecifyLists[timeline][specifiedChange.affectedRoom].Contains(specifiedChange.newConnection.roomName)) {
+						specifyExitID = true;
+						break;
+					}
+				}
+				finalLine += specifiedChange.newConnection.roomName + (CEEE && specifyExitID ? $"<{specifiedChange.newConnection.exitID}>" : "");
+				finalWorldFile.Add(finalLine);
 			}
-			finalLine += specifiedChange.newConnection.roomName + (CEEE && specifyExitID ? $"<{specifiedChange.newConnection.exitID}>" : "");
-			finalWorldFile.Add(finalLine);
+			finalWorldFile.Add("END CONDITIONAL LINKS");
+			finalWorldFile.Add("");
 		}
-		finalWorldFile.Add("END CONDITIONAL LINKS");
-		finalWorldFile.Add("");
 		finalWorldFile.Add("ROOMS");
 		foreach (ExportRoom exportRoom in allRooms.OrderBy(r => r.tags.Contains("GATE") ? 0 : 1)
 					.ThenBy(r => r.subregion)
