@@ -1314,11 +1314,18 @@ public static class WorldWindow {
 				string debug = "";
 				foreach (WorldDraggable worldDraggable in selectedDraggables) {
 					if (worldDraggable is Room room) {
-						debug += room.name + "; ";
+						debug += room.name;
+					}
+					else if (worldDraggable is ReferenceImage refImage) {
+						debug += Path.GetFileName(refImage.imagePath);
+					}
+					else if (worldDraggable is ReplaceRoom replaceRoom) {
+						debug += $"replace-{replaceRoom.replacedRoom.name}->{replaceRoom.replacingRoom.name}";
 					}
 					else {
-						debug += worldDraggable.GetType().ToString() + "; ";
+						debug += worldDraggable.GetType().ToString();
 					}
+					debug += "; ";
 					if (debug.Length > 75) {
 						totalDebug.Add(debug);
 						debug = "";
