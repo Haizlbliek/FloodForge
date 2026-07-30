@@ -862,6 +862,8 @@ public static class WorldExporter {
 		}
 		finalWorldFile.Add("END ROOMS");
 		finalWorldFile.Add("");
+		// TODO - verify creature losslessness
+		// TODO - merge similar creatures(incl.tl's and ppc) in a room into single lines for readability?
 		finalWorldFile.Add("CREATURES"); // this section is directly taken from the old exporter.
 		foreach (Room room in WorldWindow.region.rooms) {
 			for (int i = 0; i < room.dens.Count; i++) {
@@ -902,15 +904,7 @@ public static class WorldExporter {
 					}
 
 					if (mainCreature.preProcessorConditions.Length != 0) {
-						string text = "";
-						bool first1 = true;
-						foreach (string preProcessor in mainCreature.preProcessorConditions) {
-							if (!first1)
-								text += ",";
-							first1 = false;
-							text += preProcessor;
-						}
-						finalCreature += $"{{{text}}}";
+						finalCreature += PreProcessorsToString(mainCreature.preProcessorConditions);
 					}
 
 					if (room == WorldWindow.region.offscreenDen) {
@@ -958,15 +952,7 @@ public static class WorldExporter {
 					}
 
 					if (lineage.preProcessorConditions.Length != 0) {
-						string text = "";
-						bool first = true;
-						foreach (string preProcessor in lineage.preProcessorConditions) {
-							if (!first)
-								text += ",";
-							first = false;
-							text += preProcessor;
-						}
-						finalDen += $"{{{text}}}";
+						finalDen += PreProcessorsToString(lineage.preProcessorConditions);
 					}
 
 					finalDen += "LINEAGE : ";
@@ -1012,15 +998,7 @@ public static class WorldExporter {
 				}
 
 				if (worm.preProcessorConditions.Length != 0) {
-					finalWorm += "{";
-					bool first = true;
-					foreach (string preProcessor in worm.preProcessorConditions) {
-						if (!first)
-							finalWorm += ",";
-						first = false;
-						finalWorm += preProcessor;
-					}
-					finalWorm += "}";
+					finalWorm += PreProcessorsToString(worm.preProcessorConditions);
 				}
 
 				finalWorm += $"{RoomNameCasing(room.name)} : {room.GarbageWormDenIndex}-{Mods.ExportCreatureName(worm.type)}";
