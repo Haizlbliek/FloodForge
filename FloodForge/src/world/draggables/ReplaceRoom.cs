@@ -1,5 +1,6 @@
 namespace FloodForge.World;
 
+// IDEA - some kind of separate hide-button for replaceRooms to avoid them constantly getting in the way of the rooms they replace
 public class ReplaceRoom : MapDraggable {
 	public Room replacingRoom;
 	public Room replacedRoom;
