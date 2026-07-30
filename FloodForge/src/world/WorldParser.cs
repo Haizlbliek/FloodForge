@@ -253,15 +253,15 @@ public static class WorldParser {
 		List<(float, int)> orderedXOffsetCounters = [.. xOffsetCounters.OrderByDescending(x => x.Item2)];
 		List<(float, int)> orderedYOffsetCounters = [.. yOffsetCounters.OrderByDescending(x => x.Item2)];
 		Vector2 commonDir = new(orderedXOffsetCounters.First().Item1, orderedYOffsetCounters.First().Item1);
-		if (orderedXOffsetCounters.First().Item2 > Mathf.FloorDivide(gridOffsets.Count, 5) || orderedXOffsetCounters.First().Item2 > Mathf.FloorDivide(gridOffsets.Count, 5)) {
+		if (commonDir != Vector2.Zero) {
 			Vector2 reverseOffset = -commonDir;
 			foreach (Room room in WorldWindow.region.rooms) {
 				room.CanonPosition += reverseOffset;
 				room.DevPosition += reverseOffset;
-			}
-			foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
-				replaceRoom.CanonPosition += reverseOffset;
-				replaceRoom.DevPosition += reverseOffset;
+				foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+					replaceRoom.CanonPosition += reverseOffset;
+					replaceRoom.DevPosition += reverseOffset;
+				}
 			}
 		}
 
