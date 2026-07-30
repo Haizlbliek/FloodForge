@@ -172,8 +172,8 @@ public static class WorldExporter {
 				);
 				canonPosition -= averageCanonPosition;
 				Vector2 devPosition = new Vector2(
-					(room.DevPosition.x + room.width * 0.5f) * 3.0f,
-					(room.DevPosition.y - room.height * 0.5f) * 3.0f
+					(room.DevPosition.x + room.width * 0.5f) * 2.0f,
+					(room.DevPosition.y - room.height * 0.5f) * 2.0f
 				);
 				devPosition -= averageDevPosition;
 
