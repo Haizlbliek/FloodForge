@@ -132,7 +132,7 @@ public abstract class Popup {
 				if (Settings.DEBUGVisiblePopupVisuals)
 					UI.StrokeRect(this.scaleControlExcluder.x0, this.scaleControlExcluder.y0, this.scaleControlExcluder.x1, this.scaleControlExcluder.y1);
 			}
-			if (Mouse.JustRight) {
+			if (Mouse.JustRight && (this.isHovered || this.hoverRetained)) {
 				if (this.initialBounds != null)
 					this.ResizePopup(this.initialBounds.Value);
 			}

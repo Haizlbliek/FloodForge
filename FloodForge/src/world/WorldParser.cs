@@ -68,66 +68,68 @@ public static class WorldParser {
 		return true;
 	}
 
-	public static bool ParseMapRoom(string line) {
+	public static bool ParseMapRoom(string line, out MapDraggable? offsetDraggable, string? timeline) {
+		offsetDraggable = null;
 		string? roomName = line[..line.IndexOf(':')];
 		string roomPath = WorldWindow.region.roomsPath;
 
-		foreach (Room existingRoom in WorldWindow.region.rooms) {
-			if (existingRoom.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase)) // skip parsing the room if another map has already loaded this one
-				return true;
+		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, (StringComparison)3));
+		
+		if (roomName.StartsWith("offscreenden", (StringComparison) 3)) {
+			room = WorldWindow.region.rooms.FirstOrDefault(x => x is OffscreenRoom);
 		}
 
-		if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
-			roomPath = PathUtil.FindDirectory(PathUtil.Combine(roomPath, ".."), "gates") ?? "";
-			if (roomPath.IsNullOrEmpty()) {
-				Logger.Warn("Failed to load gate! Missing gates folder");
-				return true;
+		if (room == null) {
+			Logger.Warn($"MapRoom {roomName} not found!");
+			return true;
+		}
+
+		Room dataTarget = room;
+		MapDraggable positionTarget = room;
+		Room sizeSource = room;
+		if (timeline != null) {
+			ReplaceRoom? relevantReplaceRoom = room.replaceRooms.LastOrDefault(x => x.timeline.OverlapsWith(timeline));
+			if (relevantReplaceRoom != null) {
+				dataTarget = relevantReplaceRoom.replacedRoom;
+				positionTarget = relevantReplaceRoom;
+				sizeSource = relevantReplaceRoom.replacingRoom;
 			}
 		}
-
-		string? filePath = PathUtil.FindFile(roomPath, roomName + ".txt");
-
-		Room room;
-		if (roomName.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
-			if (WorldWindow.region.offscreenDen == null) {
-				WorldWindow.region.offscreenDen = new OffscreenRoom(roomName, roomName);
-				WorldWindow.region.rooms.Add(WorldWindow.region.offscreenDen);
-			}
-
-			room = WorldWindow.region.offscreenDen;
-		}
-		else {
-			if (filePath == null) {
-				Logger.Info("File '", Path.Combine(roomPath, roomName), ".txt' could not be found");
-			}
-
-			room = new Room(filePath ?? "", roomName);
-			WorldWindow.region.rooms.Add(room);
-		}
-
+		
 		string[] data = [.. line[(line.IndexOf(':') + 1)..].Split('>').Select(x => x.Replace("<", "").Trim())];
 		float canonX = float.Parse(data[0]) / 3f;
 		float canonY = float.Parse(data[1]) / 3f;
-		float devX = float.Parse(data[2]) / 3f;
-		float devY = float.Parse(data[3]) / 3f;
+		float devX = float.Parse(data[2]) / 2f;
+		float devY = float.Parse(data[3]) / 2f;
 		int layer = data[4].IsNullOrEmpty() ? 0 : int.Parse(data[4]);
 		string subregion = data[5];
 
-		room.CanonPosition.x = canonX - room.width * 0.5f;
-		room.CanonPosition.y = canonY + room.height * 0.5f;
-		room.DevPosition.x = devX - room.width * 0.5f;
-		room.DevPosition.y = devY + room.height * 0.5f;
-		room.data.layer = layer;
+		if (positionTarget.CanonPosition != Vector2.Zero) {
+			totalAvgOffset = (totalAvgOffset * avgCount + (new Vector2(canonX - sizeSource.width * 0.5f, canonY + sizeSource.height * 0.5f) - positionTarget.CanonPosition)) / (avgCount + 1);
+			avgCount++;
+			return true;
+		}
+		offsetDraggable = positionTarget;
+
+		positionTarget.CanonPosition.x = canonX - sizeSource.width * 0.5f;
+		positionTarget.CanonPosition.y = canonY + sizeSource.height * 0.5f;
+		positionTarget.DevPosition.x = devX - sizeSource.width * 0.5f;
+		positionTarget.DevPosition.y = devY + sizeSource.height * 0.5f;
+
+		if (gridOffsets.FirstOrDefault(x => x.Item1 == room).Item1 == null)
+			gridOffsets.Add((room, new (Mathf.Mod1(positionTarget.CanonPosition.x), Mathf.Mod1(positionTarget.CanonPosition.y))));
+
+		dataTarget.data.layer = layer;
 		if (subregion.IsNullOrEmpty()) {
-			room.data.subregion = -1;
+			dataTarget.data.subregion = -1;
 		}
 		else {
 			int idx = WorldWindow.region.subregions.IndexOf(subregion);
 			if (idx != -1) {
-				room.data.subregion = idx;
+				dataTarget.data.subregion = idx;
 			}
 			else {
-				room.data.subregion = WorldWindow.region.subregions.Count;
+				dataTarget.data.subregion = WorldWindow.region.subregions.Count;
 				WorldWindow.region.subregions.Add(subregion);
 			}
 		}
@@ -135,20 +137,33 @@ public static class WorldParser {
 		return true;
 	}
 
+	// REVIEW - improve offset calculation robustness (and/or find out why it happens in the first place)
+	// (it probably happens because of differing map sizes or differing map bounds, therefore different map origins... hmm)
+	private static Vector2 totalAvgOffset;
+	private static int avgCount;
+	
+	private static List<(Room, Vector2)> gridOffsets = [];
 	public static bool ParseMap(string path) {
+		gridOffsets = [];
+
 		Dictionary<string, (int hidden, bool warpable, bool merge)> extraRoomData = [];
-		List<string> allMaps = [];
+		List<(string? timeline, string mapPath)> allMaps = [(null, path)];
 		
 		Logger.Info("Looking for alternate maps");
 		string cutMapPath = path[..path.IndexOfReverse('.')];
 		foreach (string alternatePath in Directory.GetFiles(WorldWindow.region.exportPath)) {
-			if (alternatePath.StartsWith(cutMapPath) && alternatePath.EndsWith(".txt")) {
-				Logger.Info($"found alternate map: {Path.GetFileNameWithoutExtension(alternatePath)}");
-				allMaps.Add(alternatePath);
+			if (alternatePath.StartsWith(cutMapPath) && alternatePath.EndsWith(".txt") && alternatePath != path) {
+				string fileName = Path.GetFileNameWithoutExtension(alternatePath);
+				Logger.Info($"found alternate map: {fileName}");
+				string timeline = fileName.Split('-').Last();
+				allMaps.Add((timeline, alternatePath));
 			}
 		}
 
-		foreach (string mapPath in allMaps) {
+		foreach ((string? timeline, string mapPath) in allMaps) {
+			totalAvgOffset = Vector2.Zero;
+			avgCount = 0;
+			List<MapDraggable> offsetDraggables = [];
 			foreach (string line in File.ReadAllLines(mapPath)) {
 				if (line.IsNullOrEmpty()) continue;
 
@@ -187,13 +202,24 @@ public static class WorldParser {
 				}
 				else {
 					try {
-						if (!ParseMapRoom(line)) return false;
+						if (!ParseMapRoom(line, out MapDraggable? affectedOffsetDraggable, timeline)) {
+							return false;
+						}
+						if (affectedOffsetDraggable != null)
+							offsetDraggables.Add(affectedOffsetDraggable);
 					}
 					catch (Exception e) {
 						Logger.Warn($"Issue encountered while parsing {Path.GetFileName(mapPath)}");
 						Logger.Warn($"> {line}");
 						Logger.Warn(e);
 					}
+				}
+			}
+			if (offsetDraggables.Count != 0 && avgCount != 0 && totalAvgOffset != Vector2.Zero) {
+				Logger.Info($"map offset detected in map {Path.GetFileNameWithoutExtension(mapPath)}, fixing");
+				Logger.Info($"offsetDraggables.Count: {offsetDraggables.Count}; avg offset: ({totalAvgOffset.x};{totalAvgOffset.y})");
+				foreach (MapDraggable offsetDraggable in offsetDraggables) {
+					offsetDraggable.CanonPosition -= totalAvgOffset;
 				}
 			}
 		}
@@ -204,6 +230,47 @@ public static class WorldParser {
 			room.data.hidden = pair.Value.hidden;
 			room.data.warpable = pair.Value.warpable;
 			room.data.merge = pair.Value.merge;
+		}
+
+		List<(float, int)> xOffsetCounters = [];
+		List<(float, int)> yOffsetCounters = [];
+		foreach ((Room room, Vector2 offset) in gridOffsets) {
+			bool found = false;
+			for (int i = 0; i < xOffsetCounters.Count; i++) {
+				(float existingXOffset, int count) = xOffsetCounters[i];
+				if (Math.Round(existingXOffset, 4) == Math.Round(offset.x, 4)) {
+					xOffsetCounters[i] = (offset.x, count + 1);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				xOffsetCounters.Add((offset.x, 1));
+			found = false;
+			for (int i = 0; i < yOffsetCounters.Count; i++) {
+				(float existingYOffset, int count) = yOffsetCounters[i];
+				if (Math.Round(existingYOffset, 4) == Math.Round(offset.y, 4)) {
+					yOffsetCounters[i] = (offset.y, count + 1);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				yOffsetCounters.Add((offset.y, 1));
+		}
+		List<(float, int)> orderedXOffsetCounters = [.. xOffsetCounters.OrderByDescending(x => x.Item2)];
+		List<(float, int)> orderedYOffsetCounters = [.. yOffsetCounters.OrderByDescending(x => x.Item2)];
+		Vector2 commonDir = new(orderedXOffsetCounters.First().Item1, orderedYOffsetCounters.First().Item1);
+		if (commonDir != Vector2.Zero) {
+			Vector2 reverseOffset = -commonDir;
+			foreach (Room room in WorldWindow.region.rooms) {
+				room.CanonPosition += reverseOffset;
+				room.DevPosition += reverseOffset;
+				foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+					replaceRoom.CanonPosition += reverseOffset;
+					replaceRoom.DevPosition += reverseOffset;
+				}
+			}
 		}
 
 		return true;
@@ -249,35 +316,28 @@ public static class WorldParser {
 		}
 	}
 
-	private static Room ParseReplaceRoom(string roomName, Room replacedRoom) {
-		Room? replacingRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
-		if (replacingRoom == null) {
+	private static Room CreateRoom(string name) {
+		Room returnValue;
+		if (name.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
+			returnValue = new OffscreenRoom(name, name);
+		}
+		else {
 			string path = WorldWindow.region.roomsPath;
-			if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
+			if (name.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
 				path = PathUtil.FindDirectory(PathUtil.Parent(path), "gates") ?? "";
 				if (path.IsNullOrEmpty()) {
 					Logger.Warn($"Couldn't find gates folder in {WorldWindow.region.roomsPath}");
 				}
 			}
 
-			string filePath = PathUtil.FindFile(path, roomName + ".txt") ?? "";
+			string filePath = PathUtil.FindFile(path, name + ".txt") ?? "";
 			if (filePath.IsNullOrEmpty()) {
-				Logger.Warn($"Room file {path}/{roomName}.txt could not be found");
+				Logger.Warn($"Room file {path}/{name}.txt could not be found");
 			}
 
-			replacingRoom = new Room(filePath, roomName);
-
-			WorldWindow.region.rooms.Add(replacingRoom);
+			returnValue = new Room(filePath, name);
 		}
-
-		// copy data from roomToReplace
-		replacingRoom.DevPosition = replacedRoom.DevPosition;
-		replacingRoom.CanonPosition = replacedRoom.CanonPosition;
-		replacingRoom.replacedRoom = replacedRoom;
-		replacedRoom.replacingRooms.Add(replacingRoom);
-		// REVIEW - what other parts should be copied?
-
-		return replacingRoom;
+		return returnValue;
 	}
 
 	private static void ParseWorldRoom(string line, ref List<ConnectionToAdd> connectionsToAdd) {
@@ -290,26 +350,7 @@ public static class WorldParser {
 
 		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 		if (room == null) {
-			if (roomName.StartsWith("offscreenden", StringComparison.InvariantCultureIgnoreCase)) {
-				room = new OffscreenRoom(roomName, roomName);
-			}
-			else {
-				string path = WorldWindow.region.roomsPath;
-				if (roomName.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
-					path = PathUtil.FindDirectory(PathUtil.Parent(path), "gates") ?? "";
-					if (path.IsNullOrEmpty()) {
-						Logger.Warn($"Couldn't find gates folder in {WorldWindow.region.roomsPath}");
-					}
-				}
-
-				string filePath = PathUtil.FindFile(path, roomName + ".txt") ?? "";
-				if (filePath.IsNullOrEmpty()) {
-					Logger.Warn($"Room file {path}/{roomName}.txt could not be found");
-				}
-
-				room = new Room(filePath, roomName);
-			}
-
+			room = CreateRoom(roomName);
 			WorldWindow.region.rooms.Add(room);
 		}
 
@@ -646,6 +687,10 @@ public static class WorldParser {
 				return false;
 			}
 
+			// REVIEW - this fails to correctly parse a case such as:
+			// 		{condition}Watcher : HIDEROOM : XX_A01
+            // 		Rivulet : HIDEROOM : XX_A01
+			// overwriting the preprocessorcondition for both conditionals to be the same, practically merging two distinct cases
 			room2.preProcessorConditions = preProcessorConditions;
 
 			if (mod == "exclusiveroom" || (mod == "hideroom" && xminus)) {
@@ -673,41 +718,33 @@ public static class WorldParser {
 		}
 		else if (parts.Length == 4 && mod == "replaceroom") {
 			Logger.Info($"Parsing REPLACEROOM: {link}");
-			string roomAName = parts[2];
-			Room? roomA = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomAName, StringComparison.InvariantCultureIgnoreCase));
-			if (roomA == null) {
-				Logger.Warn($"Skipping line due to missing room {roomAName}");
-				Logger.Warn($"> {link}");
-				return false;
+			ReplaceRoom? similarReplaceRoom = WorldWindow.replaceRooms.FirstOrDefault(x => x.replacedRoom.name == parts[2] && x.replacingRoom.name == parts[3] && x.preProcessorConditions.Length == 0 && preProcessorConditions.Length == 0 && !((x.timeline.timelineType == TimelineType.Except) ^ xminus));
+			if (similarReplaceRoom != null) {
+				Logger.Info($"Existing replaceRoom found matching parameters.");
+				foreach (string timeline in timelines) {
+					similarReplaceRoom.timeline.timelines.Add(timeline);
+				}
 			}
-
-			//roomA.preProcessorConditions = preProcessorConditions;
-
-			string roomBName = parts[3];
-			Room roomB = ParseReplaceRoom(roomBName, roomA);
-
-			roomB.preProcessorConditions = preProcessorConditions;
-
-			// SET TIMELINES
-
-			if (roomA.timeline.timelineType == TimelineType.Only) {
-				Logger.Warn($"Skipping line due to invalid REPLACEROOM {roomAName}");
-				Logger.Warn($"> {link}");
-				return false;
+			else {
+				Room? foundRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(parts[2], StringComparison.InvariantCultureIgnoreCase));
+				if (foundRoom != null) {
+					Logger.Info($"Found room {foundRoom.name}!");
+					Room? replacingRoom = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(parts[3], (StringComparison)3));
+					replacingRoom ??= WorldWindow.replaceReferenceRooms.FirstOrDefault(x => x.name.Equals(parts[3], (StringComparison)3));
+					if (replacingRoom == null) {
+						replacingRoom = CreateRoom(parts[3]);
+						replacingRoom.isVirtualRoom = true;
+						WorldWindow.replaceReferenceRooms.Add(replacingRoom);
+					}
+					ReplaceRoom newReplaceRoom = new ReplaceRoom(replacingRoom, foundRoom, new(xminus ? TimelineType.Except : TimelineType.Only, [..timelines]), []);
+					replacingRoom.referencingReplaceRooms.Add(newReplaceRoom);
+					foundRoom.replaceRooms.Add(newReplaceRoom);
+					WorldWindow.replaceRooms.Add(newReplaceRoom);
+				}
+				else {
+					Logger.Warn($"No room {parts[2]} found!");
+				}
 			}
-
-			roomA.timeline.timelineType = TimelineType.Except;
-			timelines.ForEach(x => roomA.timeline.timelines.Add(x));
-
-			if (roomB.timeline.timelineType == TimelineType.Except) {
-				Logger.Warn($"Skipping line due to invalid REPLACEROOM {roomBName}");
-				Logger.Warn($"> {link}");
-				return false;
-			}
-
-			roomB.timeline.timelineType = TimelineType.Only;
-			timelines.ForEach(x => roomB.timeline.timelines.Add(x));
-
 			return true;
 		}
 
@@ -967,7 +1004,7 @@ public static class WorldParser {
 			}
 			
 			if (!connectionData.roomA.ValidConnection(connectionData.roomAExitID) || !connectionData.roomB.ValidConnection(connectionData.roomBExitID.Value)) {
-				Logger.Warn($"Failed to load connection from {connectionData.roomA.name} to {connectionData.roomB?.name ?? $"'{connectionData.roomBName}'"} - Not valid connections");
+				Logger.Warn($"Failed to load connection from {connectionData.roomA.name}({connectionData.roomAExitID}) to {connectionData.roomB?.name ?? $"'{connectionData.roomBName}'"}({connectionData.roomBExitID}) - Invalid connection indices");
 				continue;
 			}
 
@@ -1117,7 +1154,11 @@ public static class WorldParser {
 			if (!ParseProperties(propertiesPath)) return false;
 		}
 
-		string? mapPath = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "map_" + WorldWindow.region.acronym + ".txt");
+		Logger.Info("Loading world");
+
+		if (!ParseWorld(worldPath)) return false;
+
+		string? mapPath = PathUtil.FindFile(WorldWindow.region.exportPath, "map_" + WorldWindow.region.acronym + ".txt");
 		if (mapPath != null) {
 			Logger.Info("Loading map");
 			if (!ParseMap(mapPath)) return false;
@@ -1125,10 +1166,6 @@ public static class WorldParser {
 		else {
 			Logger.Info("Map file not found");
 		}
-
-		Logger.Info("Loading world");
-
-		if (!ParseWorld(worldPath)) return false;
 
 		Logger.Info("Loading extra room data");
 

@@ -12,7 +12,9 @@ public class SettingsPopup : Popup {
 		this.RecalculateBounds();
 	}
 
-	private void RecalculateBounds(bool retainTopLeft = false) {
+	protected void RecalculateBounds(bool retainTopLeft = false, bool tryRetainScale = false) {
+		float oldWidth = this.bounds.x1 - this.bounds.x0;
+		float oldHeight = this.bounds.y1 - this.bounds.y0;
 		Vector2 TopLeft = new (this.bounds.x0, this.bounds.y1);
 		float totalHeight = 0;
 		float maxWidth = UI.font.Measure(this.popupTitle, 0.03f).x + 0.1f;
@@ -21,9 +23,13 @@ public class SettingsPopup : Popup {
 			maxWidth = Math.Max(maxWidth, settingContainer.SettingWidth);
 		}
 		totalHeight += 0.05f + SettingSpacing + 0.02f;
+		Vector2 minimumBottomLeft = new (TopLeft.x, TopLeft.y - totalHeight);
+		float finalHeight = tryRetainScale ? Math.Max(totalHeight, oldHeight) : totalHeight;
+		Vector2 finalBottomLeft = new (TopLeft.x, TopLeft.y - finalHeight);
 		maxWidth += 0.02f;
-		Vector2 BottomLeft = new (TopLeft.x, TopLeft.y - totalHeight);
-		this.bounds = retainTopLeft ? Rect.FromSize(BottomLeft, new (maxWidth, totalHeight)) : new Rect(-maxWidth * 0.5f, totalHeight * 0.5f, maxWidth * 0.5f, -totalHeight * 0.5f);
+		float finalWidth = tryRetainScale ? Math.Max(maxWidth, oldWidth) : maxWidth;
+		this.bounds = retainTopLeft ? Rect.FromSize(finalBottomLeft, new (finalWidth, finalHeight)) : new Rect(-finalWidth * 0.5f, finalHeight * 0.5f, finalWidth * 0.5f, -finalHeight * 0.5f);
+		this.initialBounds = this.minimumResizeBounds = retainTopLeft ? Rect.FromSize(minimumBottomLeft, new (maxWidth, totalHeight)) : new Rect(-maxWidth * 0.5f, totalHeight * 0.5f, maxWidth * 0.5f, -totalHeight * 0.5f);
 	}
 
 	public override Popup Title(string title) {
@@ -84,8 +90,23 @@ public class SettingsPopup : Popup {
 		}
 	}
 
-	public class HorizontalElement : SettingContainer {
-		protected SettingContainer[] settings;
+	public class MultiElement : SettingContainer {
+		protected (string ID, SettingContainer container)[] settings;
+
+		public MultiElement((string, SettingContainer)[] settings) : base("") {
+			this.settings = settings;
+		}
+
+		public SettingContainer? GetByID(string ID) {
+			foreach ((string containerID, SettingContainer container) in this.settings)
+				if (containerID == ID)
+					return container;
+			return null;
+		}
+	}
+
+
+	public class HorizontalElement : MultiElement {
 		protected float[] widthOverrides;
 		protected float lastCalculatedWidth = 0f;
 		protected float[] resultingWidths = [];
@@ -94,15 +115,24 @@ public class SettingsPopup : Popup {
 		public override float SettingHeight {
 			get {
 				float maxHeight = 0f;
-				foreach (SettingContainer container in this.settings) {
+				foreach ((_, SettingContainer container) in this.settings) {
 					maxHeight = Math.Max(container.SettingHeight, maxHeight);
 				}
 				return maxHeight == 0f ? SettingsPopup.SettingHeight : maxHeight;
 			}
 		}
 
-		public HorizontalElement(SettingContainer[] settings, float[]? widthOverrides = null, bool hasDivider = true, bool forceEqualWidth = false) : base("") {
-			this.settings = settings;
+		public override float SettingWidth {
+			get {
+				float totalWidth = 0f;
+				foreach ((_, SettingContainer container) in this.settings) {
+					totalWidth += container.SettingWidth + SettingSpacing;
+				}
+				return totalWidth;
+			}
+		}
+
+		public HorizontalElement((string, SettingContainer)[] settings, float[]? widthOverrides = null, bool hasDivider = true, bool forceEqualWidth = false) : base(settings) {
 			this.widthOverrides = widthOverrides ?? [];
 			this.forceEqualWidth = forceEqualWidth;
 			this.hasDivider = hasDivider;
@@ -112,7 +142,7 @@ public class SettingsPopup : Popup {
 			// - list with only overrides filled in
 			this.resultingWidths = new float[this.settings.Length];
 			// get remaining width
-			float totalMarginlessWidth = totalWidth - SettingsPopup.SettingSpacing * (this.settings.Length - 1);
+			float totalMarginlessWidth = totalWidth - SettingsPopup.SettingSpacing * (this.settings.Length - 1) / (this.hasDivider ? 1 : 2);
 			float remainingSpace = totalMarginlessWidth;
 			int unOverriddenCount = 0;
 			for (int i = 0; i < this.settings.Length; i++) {
@@ -138,7 +168,7 @@ public class SettingsPopup : Popup {
 				float totalSettingWidth = 0f;
 				for (int i = 0; i < this.settings.Length; i++) {
 					if (this.resultingWidths[i] == 0) {
-						float width = this.settings[i].SettingWidth;
+						float width = this.settings[i].container.SettingWidth;
 						settingWidths.Add(width);
 						totalSettingWidth += width;
 					}
@@ -163,25 +193,24 @@ public class SettingsPopup : Popup {
 			for (int i = 0; i < this.settings.Length; i++) {
 				float x1 = currentXPosition + this.resultingWidths[i];
 				Rect newBounds = new Rect(currentXPosition, bounds.y0, x1, bounds.y1);
-				this.settings[i].Draw(newBounds);
+				this.settings[i].container.Draw(newBounds);
 				if (i != 0 && this.hasDivider) {
 					float lineX = currentXPosition - (SettingsPopup.SettingSpacing / 2);
 					float lineHeight = SettingsPopup.SettingSpacing + SettingsPopup.SettingHeight;
 					Immediate.Color(Themes.Border);
 					UI.Line(lineX, bounds.CenterY - lineHeight / 2, lineX, bounds.CenterY + lineHeight / 2);
 				}
-				currentXPosition = x1 + SettingsPopup.SettingSpacing;
+				currentXPosition = x1 + SettingsPopup.SettingSpacing / (this.hasDivider ? 1 : 2);
 			}
 		}
 	}
 
 	// IDEA - ScrollableList element
-	public class VerticalElement : SettingContainer {
-		protected SettingContainer[] settings;
+	public class VerticalElement : MultiElement {
 		public override float SettingHeight {
 			get {
 				float totalHeight = 0f;
-				foreach (SettingContainer container in this.settings) {
+				foreach ((_, SettingContainer container) in this.settings) {
 					totalHeight += container.SettingHeight;
 				}
 				return totalHeight + ((this.settings.Length - 1) * SettingsPopup.SettingSpacing);
@@ -190,23 +219,21 @@ public class SettingsPopup : Popup {
 		public override float SettingWidth {
 			get {
 				float maxWidth = 0f;
-				foreach (SettingContainer container in this.settings) {
+				foreach ((_, SettingContainer container) in this.settings) {
 					maxWidth = Math.Max(container.SettingWidth, maxWidth);
 				}
 				return maxWidth;
 			}
 		}
 
-		public VerticalElement(SettingContainer[] settings) : base("") {
-			this.settings = settings;
-		}
+		public VerticalElement((string, SettingContainer)[] settings) : base(settings) {}
 
 		public override void Draw(Rect bounds) {
 			float currentYPosition = bounds.y1;
 			for (int i = 0; i < this.settings.Length; i++) {
-				float y0 = currentYPosition - this.settings[i].SettingHeight;
+				float y0 = currentYPosition - this.settings[i].container.SettingHeight;
 				Rect newBounds = new Rect(bounds.x0, y0, bounds.x1, currentYPosition);
-				this.settings[i].Draw(newBounds);
+				this.settings[i].container.Draw(newBounds);
 				currentYPosition = y0 - SettingsPopup.SettingSpacing;
 			}
 		}
@@ -304,6 +331,12 @@ public class SettingsPopup : Popup {
 		protected float prefixSizeX;
 		protected string hint;
 
+		public override float SettingWidth {
+			get {
+				return UI.font.Measure(this.settingName, 0.03f).x + UI.font.Measure(this.prefix, 0.03f).x + (this.stringInput.value == "" ? UI.font.Measure(this.hint, 0.03f).x : UI.font.Measure(this.stringInput.value, 0.03f).x);
+			}
+		}
+
 		public StringSettingContainer(string name, Action<string> callback, string defaultValue = "", string prefix = "", string hint = "", string postfix = "") : base(name) {
 			this.stringInput = new UI.TextInputEditable(UI.TextInputEditable.Type.Text, defaultValue);
 			this.callback = callback;
@@ -342,6 +375,7 @@ public class SettingsPopup : Popup {
 		readonly Action onClickCallback;
 		Func<ButtonContainer, bool>? contextCheckCallback;
 		bool darkenOnFalse;
+		bool disableOnFalse;
 
 		public override float SettingWidth {
 			get {
@@ -353,32 +387,66 @@ public class SettingsPopup : Popup {
 			this.onClickCallback = onClickCallback;
 		}
 
-		public ButtonContainer SetContextCheck(Func<ButtonContainer, bool> contextCheckCallback, bool darkenOnFalse = false) {
+		public ButtonContainer SetContextCheck(Func<ButtonContainer, bool> contextCheckCallback, bool darkenOnFalse = false, bool disableOnFalse = true) {
 			this.contextCheckCallback = contextCheckCallback;
 			this.darkenOnFalse = darkenOnFalse;
+			this.disableOnFalse = disableOnFalse;
 			return this;
 		}
 
 		public override void Draw(Rect bounds) {
-			bool enabled = (this.contextCheckCallback == null) || this.contextCheckCallback(this);
-			if (UI.TextButton(this.settingName, bounds, new UI.TextButtonMods((enabled || !this.darkenOnFalse) ? Themes.Text : Themes.TextDisabled)) && enabled) {
+			bool callbackCheck = (this.contextCheckCallback == null) || this.contextCheckCallback(this);
+			bool darkened = !callbackCheck && this.darkenOnFalse;
+			bool disabled = !callbackCheck && this.disableOnFalse;
+			if (UI.TextButton(this.settingName, bounds, new UI.TextButtonMods(darkened ? Themes.TextDisabled : Themes.Text)) && !disabled) {
 				this.onClickCallback();
 			}
 		}
 	}
 
 	public class LabelContainer : SettingContainer {
+		protected Font.Align align = Font.Align.TopCenter;
+		protected bool autoCrop;
+		protected bool fromRight;
+
 		public override float SettingWidth {
 			get {
-				return UI.font.Measure(this.settingName, 0.03f).x;
+				if (this.autoCrop)
+					return 0f;
+				string[] splitLines = this.settingName.Split('\n');
+				float maxWidth = 0f;
+				foreach (string line in splitLines)
+					maxWidth = Math.Max(maxWidth, UI.font.Measure(line, 0.03f).x);
+				return maxWidth;
+			}
+		}
+		public override float SettingHeight {
+			get {
+				string[] splitLines = this.settingName.Split('\n');
+				float totalHeight = 0f;
+				foreach (string line in splitLines)
+					totalHeight += UI.font.Measure(line, 0.03f).y;
+				totalHeight += SettingSpacing * (splitLines.Length - 1);
+				return totalHeight;
 			}
 		}
 
-		public LabelContainer(string name) : base(name) {}
+		public LabelContainer(string name, Font.Align? align = null, bool autoCrop = false, bool fromRight = false) : base(name) {
+			if (align != null)
+				this.align = (Font.Align)align;
+			this.autoCrop = autoCrop;
+			this.fromRight = fromRight;
+		}
 
 		public override void Draw(Rect bounds) {
 			Immediate.Color(Themes.Text);
-			UI.font.Write(this.settingName, bounds.CenterX, bounds.CenterY, 0.03f, Font.Align.MiddleCenter);
+			string[] splitLines = this.settingName.Split('\n');
+			float y = bounds.y1;
+			foreach (string line in splitLines) {
+				string croppedLine = this.autoCrop ? UI.font.CropText(line, bounds.x1 - bounds.x0 - 0.02f, 0.03f, out _, this.fromRight) : line;
+				UI.font.Write(croppedLine, bounds.CenterX, y, 0.03f, this.align);
+				y -= UI.font.Measure(line, 0.03f).y + SettingSpacing;
+			}
 		}
 	}
 

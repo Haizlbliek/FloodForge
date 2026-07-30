@@ -10,6 +10,7 @@ public class TimelineChange : MultipleRoomChange {
 	protected string timeline;
 	protected Connection? connection;
 	protected DenLineage? lineage;
+	protected ReplaceRoom? replaceRoom;
 
 	public TimelineChange(bool add, string timeline) {
 		this.add = add;
@@ -24,6 +25,10 @@ public class TimelineChange : MultipleRoomChange {
 		this.lineage = lineage;
 	}
 
+	public void AddReplaceRoom(ReplaceRoom replaceRoom) {
+		this.replaceRoom = replaceRoom;
+	}
+
 	private void Insert() {
 		if (this.connection != null) {
 			this.connection.timeline.timelines.Add(this.timeline);
@@ -32,6 +37,9 @@ public class TimelineChange : MultipleRoomChange {
 		else if (this.lineage != null) {
 			this.lineage.timeline.timelines.Add(this.timeline);
 			this.lineage.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timeline);
+		}
+		else if (this.replaceRoom != null) {
+			this.replaceRoom.timeline.timelines.Add(this.timeline);
 		}
 		else {
 			foreach (Room room in this.rooms) {
@@ -49,6 +57,9 @@ public class TimelineChange : MultipleRoomChange {
 		else if (this.lineage != null) {
 			this.lineage.timeline.timelines.Remove(this.timeline);
 			this.lineage.conditionalPopup?.InvokeOnTimelineChange(this.lineage.timeline);
+		}
+		else if (this.replaceRoom != null) {
+			this.replaceRoom.timeline.timelines.Remove(this.timeline);
 		}
 		else {
 			foreach (Room room in this.rooms) {
