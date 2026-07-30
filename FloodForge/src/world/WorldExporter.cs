@@ -126,7 +126,17 @@ public static class WorldExporter {
 			Vector2 topLeft = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
 			Vector2 bottomRight = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
 
+			// when exporting and re-importing vanilla regions an offset is induced
+			// this may originate in the exporting, parsing or both places
+			int totalCount = 0;
+			Vector2 averageCanonPosition = Vector2.Zero;
+			Vector2 averageDevPosition = Vector2.Zero;
+
 			foreach (Room room in WorldWindow.region.rooms) {
+				averageCanonPosition += room.CanonPosition;
+				averageDevPosition += room.DevPosition;
+				totalCount++;
+
 				if (room is OffscreenRoom)
 					continue;
 
@@ -141,6 +151,9 @@ public static class WorldExporter {
 				bottomRight.y = Math.Max(bottomRight.y, bottom);
 			}
 
+			averageCanonPosition /= totalCount;
+			averageDevPosition /= totalCount;
+
 			foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
 				float replaceLeft = replaceRoom.CanonPosition.x;
 				float replaceRight = replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width; // same here
@@ -152,19 +165,17 @@ public static class WorldExporter {
 				bottomRight.y = Math.Max(bottomRight.y, replaceBottom);
 			}
 
-			Vector2 centerOffset = (topLeft + bottomRight) / 2;
-
 			foreach (Room room in WorldWindow.region.rooms) {
 				Vector2 canonPosition = new Vector2(
 					(room.CanonPosition.x + room.width * 0.5f) * 3.0f,
 					(room.CanonPosition.y - room.height * 0.5f) * 3.0f
 				);
-				canonPosition -= centerOffset;
+				canonPosition -= averageCanonPosition;
 				Vector2 devPosition = new Vector2(
 					(room.DevPosition.x + room.width * 0.5f) * 3.0f,
 					(room.DevPosition.y - room.height * 0.5f) * 3.0f
 				);
-				devPosition -= centerOffset;
+				devPosition -= averageDevPosition;
 
 				string line = $"{FancyRoomCasing(room)}: " +
 							$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
@@ -205,12 +216,12 @@ public static class WorldExporter {
 						(replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width * 0.5f) * 3.0f,
 						(replaceRoom.CanonPosition.y - replaceRoom.replacingRoom.height * 0.5f) * 3.0f
 					);
-					canonPosition -= centerOffset;
+					canonPosition -= averageCanonPosition;
 					Vector2 devPosition = new Vector2(
 						(replaceRoom.DevPosition.x + replaceRoom.replacingRoom.width * 0.5f) * 3.0f,
 						(replaceRoom.DevPosition.y - replaceRoom.replacingRoom.height * 0.5f) * 3.0f
 					);
-					devPosition -= centerOffset;
+					devPosition -= averageDevPosition;
 
 					string line = $"{FancyRoomCasing(replaceRoom.replacedRoom)}: " +
 								$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
@@ -1109,9 +1120,6 @@ public static class WorldExporter {
 
 	// REVIEW - optimise usage of this method by returning a byte[] of the room's image, and then overlaying that separately onto each relevant timeline map?
 	// this would reduce the amount of times the same room is drawn, but might be counteracted by the increased cost of overlaying the new room?
-
-	// REVIEW - there's a chance that the 'fix' applied below was what caused the issue to begin with
-	// All of this might even have been easier to fix simply by giving replacerooms their own position separate from the replaced room.
 	private static byte[] DrawRoomAtMapPosition(Room roomToDraw, Vector2i mapPosition, byte[] imageToDraw, int textureWidth, int textureHeight, int layerXOffset, int layerYOffset, bool fillBlack = false) {
 		Vector2i topLeftRoomPosition = new (mapPosition.x + layerXOffset, mapPosition.y + layerYOffset - roomToDraw.height);
 		for (int ox = 0; ox < roomToDraw.width; ox++) {
