@@ -10,23 +10,6 @@ public class Connection {
 	public uint roomBExitID;
 
 	public string[] preProcessorConditions = [];
-	public List<ConnectionVisual> replacementVirtualConnections = [];
-	public void RefreshReplacementVirtualConnections() {
-		this.replacementVirtualConnections = [];
-		if (this.roomA.replacingRooms.Count == 0 && this.roomB.replacingRooms.Count == 0)
-			return;
-		foreach (Room replacement in this.roomA.replacingRooms) {
-			this.replacementVirtualConnections.Add(new ConnectionVisual(replacement, this.roomB, this.roomAExitID, this.roomBExitID));
-		}
-		foreach (Room replacement in this.roomB.replacingRooms) {
-			this.replacementVirtualConnections.Add(new ConnectionVisual(this.roomA, replacement, this.roomAExitID, this.roomBExitID));
-		}
-	}
-	public void RecalculateReplacementVirtualConnectionBeziers() {
-		foreach (ConnectionVisual connectionVisual in this.replacementVirtualConnections) {
-			connectionVisual.recalculateBezier = true;
-		}
-	}
 	
 	public Timeline timeline;
 	public Timeline EffectiveConnectionTimeline {
@@ -36,7 +19,7 @@ public class Connection {
 	}
 	public bool ConnectionVisible {
 		get {
-			return this.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
+			return this.timeline.OverlapsWith(WorldWindow.VisibleTimeline) || WorldWindow.VisibleTimeline.timelineType == TimelineType.Only && WorldWindow.VisibleTimeline.timelines.Count == 0;
 		}
 	}
 	public ConditionalPopup? conditionalPopup;
@@ -110,7 +93,6 @@ public class Connection {
 	public bool recalculateBezier = true;
 
 	public void RecalculateBezier() {
-		this.RefreshReplacementVirtualConnections();
 		bool isSingleExitConnection = this.roomA == this.roomB && this.roomAExitID == this.roomBExitID;
 		Vector2 pointA = this.roomA.GetConnectionConnectPoint(this.roomAExitID);
 		Vector2 pointB = this.roomB.GetConnectionConnectPoint(this.roomBExitID);
@@ -168,10 +150,6 @@ public class Connection {
 			this.fittedAABB = bounds;
 		}
 		this.recalculateBezier = false;
-
-		foreach (ConnectionVisual visual in this.replacementVirtualConnections) {
-			visual.RecalculateBezier();
-		}
 		this.GenerateMesh();
 	}
 
@@ -314,13 +292,10 @@ public class Connection {
 		if (this.BezierPoints == null || this.BezierPoints.Length == 0 || this.recalculateBezier) {
 			this.RecalculateBezier();
 		}
-		//this.RefreshReplacementVirtualConnections();
-		foreach (ConnectionVisual connectionVisual in this.replacementVirtualConnections) {
-			connectionVisual.Draw();
-		}
 		if (WorldWindow.CullTest(this.fittedAABB)) {
-			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && (this.roomA.timeline.OverlapsWith(WorldWindow.VisibleTimeline) || this.ConnectionVisible);
-			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && (this.roomB.timeline.OverlapsWith(WorldWindow.VisibleTimeline) || this.ConnectionVisible);
+			bool visibleTimelineIsEmptyOnly = WorldWindow.VisibleTimeline.timelineType == TimelineType.Only && WorldWindow.VisibleTimeline.timelines.Count == 0;
+			bool aVisible = WorldWindow.VisibleLayers[this.roomA.data.layer] && (visibleTimelineIsEmptyOnly || WorldWindow.VisibleTimeline.OverlapsWith(this.roomA.timeline) || this.ConnectionVisible);
+			bool bVisible = WorldWindow.VisibleLayers[this.roomB.data.layer] && (visibleTimelineIsEmptyOnly || WorldWindow.VisibleTimeline.OverlapsWith(this.roomB.timeline) || this.ConnectionVisible);
 			float opacity = Settings.ConnectionOpacity;
 			if (!aVisible && !bVisible || opacity < 0.01f)
 				return;

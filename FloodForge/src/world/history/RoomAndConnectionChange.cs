@@ -38,16 +38,11 @@ public class RoomAndConnectionChange : Change {
 			if (room is OffscreenRoom) continue;
 
 			// LATER: Add into correct index
+			if (room.isVirtualRoom) {
+				room.isVirtualRoom = false;
+				WorldWindow.replaceReferenceRooms.Remove(room);
+			}
 			WorldWindow.region.rooms.Add(room);
-			// - if we add a room that replaces another room, add this room to that room's replacingrooms
-			// - if we add a room that is replaced by another room, set that room's replacedroom to this room
-			if (room.replacedRoom != null && WorldWindow.region.rooms.Contains(room.replacedRoom) && !this.rooms.Contains(room.replacedRoom)) {
-				room.replacedRoom.replacingRooms.Add(room);
-				room.replacedRoom.MoveUpdate();
-			}
-			foreach (Room replacingRoom in room.replacingRooms) {
-				replacingRoom.replacedRoom = room;
-			}
 		}
 
 		foreach (Connection internalConnection in this.internalConnections) {
@@ -79,14 +74,9 @@ public class RoomAndConnectionChange : Change {
 			if (room is OffscreenRoom) continue;
 
 			WorldWindow.region.rooms.Remove(room);
-			// if a room replaces another room, remove this room from that room's replacingrooms
-			if (room.replacedRoom != null && WorldWindow.region.rooms.Contains(room.replacedRoom) && !this.rooms.Contains(room.replacedRoom)) {
-				room.replacedRoom.replacingRooms.Remove(room);
-				room.replacedRoom.MoveUpdate();
-			}
-			// if a room is replaced by another room, remove this room from its replacedroomness
-			foreach (Room replacingRoom in room.replacingRooms) {
-				replacingRoom.replacedRoom = null;
+			if (room.referencingReplaceRooms.Count != 0) {
+				room.isVirtualRoom = true;
+				WorldWindow.replaceReferenceRooms.Add(room);
 			}
 		}
 	}

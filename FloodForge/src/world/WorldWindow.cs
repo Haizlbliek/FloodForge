@@ -73,6 +73,8 @@ public static class WorldWindow {
 	public static Vector2 selectionEnd;
 
 	public static List<ReferenceImage> referenceImages = [];
+	public static List<ReplaceRoom> replaceRooms = [];
+	public static List<Room> replaceReferenceRooms = [];
 
 	private static bool roomSnap;
 	public static bool placingRoom = false;
@@ -112,10 +114,17 @@ public static class WorldWindow {
 		Panning,
 	}
 
+	public static Room? denRoom = null;
+	public static int hoveredDen = -1; // LATER: Remove / improve
+	public static Room? shortcutRoom = null;
+	public static int hoveredRoomExit = -1; // LATER: Remove / improve
+	public static int hoveredShortcutEntrance = -1;
+
 	// REVIEW - find a way to make this more flexible - a list of all draggables?
 	public static Room? HoveringRoom => region.rooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
-	public static ReferenceImage? HoveringReferenceImage => referenceImages.LastOrDefault(i => i.Visible && i.Inside(worldMouse));
-	public static WorldDraggable? HoveringDraggable => (placingRoom && roomPlacementVisualiser.Inside(worldMouse)) ? roomPlacementVisualiser : (HoveringRoom != null) ? HoveringRoom : HoveringReferenceImage;
+	public static ReferenceImage? HoveringReferenceImage => referenceImages.LastOrDefault(i => i.Inside(worldMouse));
+	public static ReplaceRoom? HoveringReplaceRoom => replaceRooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
+	public static WorldDraggable? HoveringDraggable => (placingRoom && roomPlacementVisualiser.Inside(worldMouse)) ? roomPlacementVisualiser : HoveringReplaceRoom ?? HoveringRoom ?? (WorldDraggable?)HoveringReferenceImage;
 
 	public static Connection? HoveringConnection => region.connections?.LastOrDefault(c => {
 		return (c.ConnectionVisible || c.roomA.Visible && c.roomB.Visible) && c.Hovered;
@@ -139,14 +148,14 @@ public static class WorldWindow {
 
 	public static void Initialize() {
 		Mods.Initialize();
-		// CreatureTextures.Initialize();
-		// ConditionalTimelineTextures.Initialize();
 		RecentFiles.Initialize();
 		PersistentData.Initialize();
 	}
 
 	public static void Reset() {
 		referenceImages.Clear();
+		replaceRooms.Clear();
+		replaceReferenceRooms.Clear();
 		selectedDraggables.Clear();
 		draggablePossibleSelect = null;
 		connectionExtensionsEnabled = false;
@@ -214,13 +223,16 @@ public static class WorldWindow {
 		highlightRoom = room;
 	}
 
-	private static void UpdateConnectionControls() {
+	// REVIEW - optimise distance checks by only checking rooms within a distance from the cursor
+	private static void UpdateHoveredExits() {
 		Room? hoveringRoom = null;
 		uint hoveringConnection = 0;
 		int hoveringShortcutEntrance = -1;
 		float maxSqrDist = MathF.Pow(SelectorScale / (cameraScale / 100), 2);
+		shortcutRoom = null;
+		hoveredRoomExit = -1;
+		hoveredShortcutEntrance = -1;
 		foreach (Room room in WorldWindow.region.rooms) {
-			room.hoveredRoomExit = -1;
 			if (!WorldWindow.VisibleLayers[room.data.layer])
 				continue;
 
@@ -262,9 +274,119 @@ public static class WorldWindow {
 				}
 			}
 		}
-		hoveringRoom?.hoveredRoomExit = (int) hoveringConnection;
-		hoveringRoom?.hoveredShortcutEntrance = hoveringShortcutEntrance;
-		
+		foreach (ReplaceRoom replaceRoom in replaceRooms) {
+			Room roomReplacing = replaceRoom.replacingRoom;
+			Room roomReplaced = replaceRoom.replacedRoom;
+			for (uint i = 0; i < roomReplacing.roomExits.Count; i++) {
+				Vector2 spot = new Vector2();
+				float sqrDist = 0;
+				if (roomReplacing.roomExitPaths[roomReplacing.roomExits[(int) i]].endType == Room.RoomPathEndType.shortcutEntrance) {
+					spot = roomReplacing.GetShortcutEntranceWorldPoint(i, replaceRoom.Position); // if the roomPath has a shortcutExit, first check that
+					sqrDist = (worldMouse - spot).SqrLength;
+					if (sqrDist < maxSqrDist) {
+						maxSqrDist = sqrDist;
+						hoveringRoom = roomReplaced;
+						hoveringConnection = i;
+						hoveringShortcutEntrance = -1;
+					}
+				}
+				spot = roomReplacing.GetConnectionConnectPoint(i, replaceRoom.Position); // then check the roomExit
+				sqrDist = (worldMouse - spot).SqrLength;
+				if (sqrDist < maxSqrDist) {
+					maxSqrDist = sqrDist;
+					hoveringRoom = roomReplaced;
+					hoveringConnection = i;
+					hoveringShortcutEntrance = -1;
+				}
+			}
+			for (uint i = 0; i < roomReplacing.allShortcutEntrancePoints.Count; i++) {
+				Vector2 spot = new Vector2();
+				float sqrDist = 0;
+				(Room.RoomConnection connection, bool matchesWithRoomExitPath) = roomReplacing.shortcutEntrancePaths[roomReplacing.allShortcutEntrancePoints[(int) i]];
+				if (!matchesWithRoomExitPath && connection.endType == Room.RoomPathEndType.roomExit) {
+					spot = roomReplacing.RoomPositionToWorldPosition(connection.path.StartPosition, replaceRoom.Position);
+					sqrDist = (worldMouse - spot).SqrLength;
+					if (sqrDist < maxSqrDist) {
+						maxSqrDist = sqrDist;
+						hoveringRoom = roomReplaced;
+						hoveringConnection = roomReplacing.GetRoomExitIDFromShortcut(i);
+						hoveringShortcutEntrance = (int) i;
+					}
+				}
+			}
+		}
+
+		shortcutRoom = hoveringRoom;
+		hoveredRoomExit = shortcutRoom != null ? (int) hoveringConnection : -1;
+		hoveredShortcutEntrance = shortcutRoom != null ? hoveringShortcutEntrance : -1;
+
+		bool found = false;
+		denRoom = null;
+		hoveredDen = -1;
+		float closestDistance = SelectorScale;
+		// TODO - fix offscreenDens not being c-able through other rooms despite their den position being closer to the mouse than any other room's
+		for (int i = region.rooms.Count - 1; i >= 0; i--) {
+			Room room = region.rooms[i];
+			if (found || !room.Visible)
+				continue;
+			Vector2 roomMouse = worldMouse - room.Position;
+			Vector2 shortcutPosition;
+
+			if (room is OffscreenRoom offscreenRoom) {
+				shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + i * 4f + 2.5f, -room.height * 0.25f - 0.5f);
+				float dist = (roomMouse - shortcutPosition).Length;
+				if (dist < closestDistance) {
+					hoveredDen = 0;
+					denRoom = offscreenRoom;
+					closestDistance = dist;
+					found = true;
+				}
+				continue;
+			}
+
+			foreach (Vector2i shortcut in room.denShortcutEntrances) {
+				shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
+				float dist = (roomMouse - shortcutPosition).Length;
+				if (dist < closestDistance) {
+					hoveredDen = room.GetDenId01(shortcut);
+					denRoom = room;
+					closestDistance = dist;
+					found = true;
+				}
+			}
+		}
+		for (int i = replaceRooms.Count - 1; i >= 0; i--) {
+			ReplaceRoom replaceRoom = replaceRooms[i];
+			if (found || !replaceRoom.Visible)
+				continue;
+			Vector2 roomMouse = worldMouse - replaceRoom.Position;
+			Vector2 shortcutPosition;
+
+			for (int j = 0; j < replaceRoom.replacedRoom.denShortcutEntrances.Count && j < replaceRoom.replacingRoom.denShortcutEntrances.Count; j++) {
+				Vector2i shortcut = replaceRoom.replacingRoom.denShortcutEntrances[j];
+				shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
+				float dist = (roomMouse - shortcutPosition).Length;
+				if (dist < closestDistance) {
+					hoveredDen = replaceRoom.replacingRoom.GetDenId01(shortcut);
+					denRoom = replaceRoom.replacedRoom;
+					closestDistance = dist;
+					found = true;
+				}
+			}
+		}
+		if (found)
+			return;
+
+		if (!found) {
+			if (HoveringRoom is OffscreenRoom offscreenRoom) {
+				denRoom = offscreenRoom;
+				hoveredDen = 0;
+			}
+		}
+	}
+
+	private static void UpdateConnectionControls() {		
+		Room? hoveringRoom = hoveredRoomExit == -1 ? null : shortcutRoom;
 		lastConnectionState = connectionState;
 		if (Mouse.Right) {
 			if (connectionState == ConnectionState.None) {
@@ -274,10 +396,10 @@ public static class WorldWindow {
 				}
 
 				if (hoveringRoom.Visible) {
-					ConnectionStart = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
+					ConnectionStart = hoveringRoom.GetConnectionConnectPoint((uint)hoveredRoomExit);
 					ConnectionStartClickPosition = worldMouse;
 					ConnectionEnd = ConnectionStart;
-					NewConnection = new Connection(hoveringRoom, hoveringConnection, null!, 0);
+					NewConnection = new Connection(hoveringRoom, (uint)hoveredRoomExit, null!, 0);
 					connectionState = ConnectionState.PendingConnection;
 					CurrentConnectionValid = false;
 					CurrentConnectionWarn = false;
@@ -292,9 +414,9 @@ public static class WorldWindow {
 			}
 			else if (connectionState == ConnectionState.Connection && NewConnection != null) {
 				if (hoveringRoom != null && hoveringRoom.Visible) {
-					ConnectionEnd = hoveringRoom.GetConnectionConnectPoint(hoveringConnection);
+					ConnectionEnd = hoveringRoom.GetConnectionConnectPoint((uint)hoveredRoomExit);
 					NewConnection.roomB = hoveringRoom;
-					NewConnection.roomBExitID = hoveringConnection;
+					NewConnection.roomBExitID = (uint)hoveredRoomExit;
 					CurrentConnectionValid = true;
 					CurrentConnectionWarn = false;
 
@@ -302,30 +424,6 @@ public static class WorldWindow {
 						CurrentConnectionValid = false;
 					}
 					else {
-						// todo - add check for case:
-						// roomA > roomB
-						// roomB replaced by roomB2 in TL1
-						// roomC replaced by roomC2 in TL1
-						// roomA > roomC2 is allowed, despite both roomA and roomC2 having their exits occupied in by replacementvirtualconnections
-						if (NewConnection.roomA.replacedRoom != null || NewConnection.roomB.replacedRoom != null){
-							Room originRoomA = NewConnection.roomA;
-							while (originRoomA.replacedRoom != null && originRoomA.replacedRoom != originRoomA) {
-								originRoomA = originRoomA.replacedRoom;
-							}
-							Room originRoomB = NewConnection.roomB;
-							while (originRoomB.replacedRoom != null && originRoomB.replacedRoom != originRoomB) {
-								originRoomB = originRoomB.replacedRoom;
-							}
-							foreach (Connection connection in originRoomA.connections) {
-								if (connection.roomA == originRoomA && connection.roomB == originRoomB ||
-								connection.roomB == originRoomA && connection.roomA == originRoomB) {
-									CurrentConnectionWarn = false;
-								}
-							}
-							if (originRoomA == originRoomB && !connectionExtensionsEnabled)
-								CurrentConnectionValid = false;
-						}
-
 						// todo: check for timeline intersections
 						if (NewConnection.roomA.AnyConnectionConnectedTo(NewConnection.roomAExitID) || NewConnection.roomB.AnyConnectionConnectedTo(NewConnection.roomBExitID)) {
 							CurrentConnectionWarn = true;
@@ -432,6 +530,7 @@ public static class WorldWindow {
 		bool isOriginal = Settings.OriginalControls;
 		
 		// REVIEW - move settingspopup callbacks into separate class (or just SettingsPopup) so that settings don't take up too much space in other classes
+		// REVIEW UPDATE - the above review is sort of in-progress with modularPopups.
 		if ((Mouse.Right && !Mouse.LastRight && (connectionState == ConnectionState.None || connectionState == ConnectionState.NoConnection)) || (!Mouse.Right && Mouse.LastRight && lastConnectionState == ConnectionState.PendingConnection)) {
 			if (HoveringConnection != null) {
 				SettingsPopup? connectionSettingsPopup = null;
@@ -445,173 +544,12 @@ public static class WorldWindow {
 				]).Translate(Mouse.Pos, true).Title("Settings - Connection");
 				PopupManager.Add(connectionSettingsPopup);
 			}
+			else if (HoveringDraggable is ReplaceRoom replaceRoom) {
+				// TODO - allow for viewing the replacing reference room's settings
+				PopupManager.Add(new ReplaceRoomSettingsPopup(replaceRoom).Translate(Mouse.Pos, true));
+			}
 			else if (HoveringDraggable is Room room and not OffscreenRoom) {
-				PopupManager.Add(new SettingsPopup([
-					new SettingsPopup.BoolSettingContainer("Enclosed Room", room.data.enclosedRoom, b => {
-						worldHistory.Apply(new VariableChange<bool>(room.data.enclosedRoom, b, bRedo => room.data.enclosedRoom = bRedo));
-					}),
-					new SettingsPopup.IntSliderSettingContainer("Water Height", room.data.waterHeight, -2, room.height, h => 
-						worldHistory.Apply(new VariableChange<int>(room.data.waterHeight, h, hRedo => {
-							room.data.waterHeight = hRedo;
-							room.RegenerateWater();
-						}))
-					).UpdateWhileDragging(true),
-					new SettingsPopup.BoolSettingContainer("Water In Front", room.data.waterInFront, b => {
-						worldHistory.Apply(new VariableChange<bool>(room.data.waterInFront, b, bRedo => room.data.waterInFront = bRedo));
-					}),
-					new SettingsPopup.ButtonContainer("Render Room", () => {
-						PopupManager.Add(new ConfirmPopup($"Render Room {room}?\nThis will overwrite existing images.")).SetOkay("Render").Okay(() => {
-							DropletWindow.LoadRoom(room);
-							if (DropletWindow.Render(out string errorMessage, out (string name, string path, byte[] image)[] images)) {
-								foreach ((string name, string path, byte[] image) in images) {
-									FloodForge.Backup.File(path);
-
-									using Stream stream = File.OpenWrite(path);
-									ImageWriter writer = new ImageWriter();
-									writer.WritePng(image, CameraTextureWidth, CameraTextureHeight, ColorComponents.RedGreenBlue, stream);
-								}
-								PopupManager.Add(new InfoPopup($"Render complete.\nBackups made."));
-							}
-							else {
-								PopupManager.Add(new InfoPopup($"Error while rendering {room.name}\n{errorMessage}\nview log.txt for more info"));
-							}
-						});
-					}),
-					new SettingsPopup.ButtonContainer("Rename Room", () => {
-						if (room.data.tags.Contains("GATE") || room.name.StartsWith("GATE")){
-							PopupManager.Add(new InfoPopup("Cannot rename GATE rooms!"));
-						}
-						else {
-							PopupManager.Add(new RenameRoomPopup(room, name => {
-								NameChanger.ChangeRoomName(room, name);
-							}).Translate(Mouse.Pos, true).Title("Rename Room"));
-						}
-					}),
-					// I apologise for the bulk of this constructor. I am now slowly starting to see where lambdas have their drawbacks. Whoops.
-					new SettingsPopup.ButtonContainer("Create Timeline Room", () => {
-						bool copyConnections = true;
-						string newName = "";
-						Timeline newTimeline = new(TimelineType.Only, []);
-						Action<string>? updateName = s => {};
-						SettingsPopup? timelineRoomPopup = null;
-						timelineRoomPopup = (SettingsPopup) new SettingsPopup([
-							new SettingsPopup.BoolSettingContainer("Copy Connections", copyConnections, b => copyConnections = b),
-							new SettingsPopup.ButtonContainer("Timeline", () => {
-								PopupManager.Add(new TimelinePopup(newTimeline, type => newTimeline.timelineType = type == TimelineType.All ? TimelineType.Only : type,
-								(enabled, timeline) => {
-									if (!enabled)
-										newTimeline.timelines.Add(timeline);
-									else
-										newTimeline.timelines.Remove(timeline);
-								}, true).SetButtons<TimelinePopup>("", "EXCLUSIVE", "HIDE").Translate(Mouse.Pos, false).Title("Specify Timeline"));
-							}).SetContextCheck(b => {
-								b.settingName = "Timeline" + (newTimeline.timelines.Count == 0 ? "" : $" - {newTimeline}");
-								return true;
-							}),
-							new SettingsPopup.HorizontalElement([
-								new SettingsPopup.StringSettingContainer("", name => newName = name, ref updateName, prefix: $"{region.acronym}_", hint: room.name[(room.name.IndexOf('_') + 1)..]),
-								new SettingsPopup.ButtonContainer("Generate", () => {
-									string generatedName = room.name[(room.name.IndexOf('_') + 1)..];
-									generatedName += (newTimeline.timelineType == TimelineType.Only ? "" : "X") + newTimeline.timelines.FirstOrDefault();
-									newName = generatedName;
-									updateName?.Invoke(newName);
-								})
-							], [0f, UI.font.Measure("Generate", 0.03f).x + 0.01f]),
-							new SettingsPopup.ButtonContainer("Create Room", () => {
-								string newPath = Path.Combine(region.roomsPath, $"{region.acronym}_{newName}.txt");
-								File.Copy(Path.Combine(region.roomsPath, room.name + ".txt"), newPath, true);
-								selectedDraggables = [];
-								string key = "TIMELINEROOM";
-								worldHistory.StartCollectingChanges([], key);
-								Room[] newRooms = HandleRoomFilesSelected([newPath]);
-								Change[] foundChanges = worldHistory.StopCollectingChanges(key);
-								RoomAndConnectionChange change = new(true);
-								List<Change> unmanagedChanges = [];
-								foreach (Change foundChange in foundChanges){
-									if (foundChange is RoomAndConnectionChange roomChange){
-										foreach (Room room in roomChange.GetRooms()) {
-											change.AddRoom(room);
-										}
-										foreach (Connection connection in roomChange.GetExternalConnections()) {
-											change.AddConnection(connection);
-										}
-									}
-									else {
-										unmanagedChanges.Add(foundChange);
-									}
-								}
-								worldHistory.StartCollectingChanges([], key);
-								worldHistory.Apply(new MassChange([..unmanagedChanges]));
-								if (newRooms.Length != 0) {
-									Room newRoom = newRooms.First();
-									newRoom.DevPosition = room.DevPosition + Vector2.One;
-									newRoom.CanonPosition = room.CanonPosition + Vector2.One;
-									newRoom.timeline = new(newTimeline);
-
-									List<Change> tlModifications = [];
-
-									Timeline newInverted = newTimeline.Inverted();
-									Timeline newInvertedAndRoom = room.timeline.And(newInverted);
-									TimelineTypeChange roomTypeChange = new (newInvertedAndRoom.timelineType);
-									roomTypeChange.AddRoom(room);
-									tlModifications.Add(roomTypeChange);
-									foreach (string timeline in room.timeline.timelines) {
-										if (!newInvertedAndRoom.timelines.Contains(timeline)){
-											TimelineChange roomTLChange = new(false, timeline);
-											roomTLChange.AddRoom(room);
-											tlModifications.Add(roomTLChange);
-										}
-									}
-									foreach (string timeline in newInvertedAndRoom.timelines){
-										if (!room.timeline.timelines.Contains(timeline)){
-											TimelineChange roomTLChange = new(true, timeline);
-											roomTLChange.AddRoom(room);
-											tlModifications.Add(roomTLChange);
-										}
-									}
-									
-									if (copyConnections){
-										foreach (Connection connection in room.connections){
-											Timeline newInvertedAndConnection = connection.timeline.And(newTimeline.Inverted());
-											TimelineTypeChange connectionTypeChange = new (newInvertedAndConnection.timelineType);
-											connectionTypeChange.AddConnection(connection);
-											tlModifications.Add(connectionTypeChange);
-
-											foreach (string timeline in connection.timeline.timelines) {
-												if (!newInvertedAndConnection.timelines.Contains(timeline)){
-													TimelineChange connectionTLChange = new(false, timeline);
-													connectionTLChange.AddConnection(connection);
-													tlModifications.Add(connectionTLChange);
-												}
-											}
-											foreach (string timeline in newInvertedAndConnection.timelines){
-												if (!connection.timeline.timelines.Contains(timeline)){
-													TimelineChange connectionTLChange = new(true, timeline);
-													connectionTLChange.AddConnection(connection);
-													tlModifications.Add(connectionTLChange);
-												}
-											}
-											
-											Room roomA = connection.roomA == room ? newRoom : connection.roomA;
-											Room roomB = connection.roomB == room ? newRoom : connection.roomB;
-											Connection newConnection = new(roomA, roomB, connection.roomAExitID, connection.roomBExitID) { timeline = new(newTimeline) };
-											if(!newConnection.EffectiveConnectionTimeline.IsNone()){
-												change.AddConnection(newConnection);
-											}
-										}
-									}
-									worldHistory.Apply(new MassChange([..tlModifications]));
-								}
-								worldHistory.Apply(change);
-								worldHistory.GetAndApplyCollectedMassChange(key);
-								timelineRoomPopup?.Close();
-							}).SetContextCheck(_ => {
-								return newName != "" && $"{region.acronym}_" + newName != room.name;
-							}, true)
-						]).SetSize(new (0.7f, 0f)).Translate(Mouse.Pos, false).Title("Create Timeline Room");
-						PopupManager.Add(timelineRoomPopup);
-					})
-				]).Translate(Mouse.Pos, true).Title($"Settings - {room.name}"), true);
+				PopupManager.Add(new RoomSettingsPopup(room).Translate(Mouse.Pos, true).Title($"Settings - {room.name}"), true);
 			}
 			else if (HoveringDraggable is ReferenceImage image) {
 				SettingsPopup? refSettingsPopup = null;
@@ -737,8 +675,19 @@ public static class WorldWindow {
 			if (selectingState == SelectingState.PendingDrag && draggablePossibleSelect != null) {
 				HandleSelectionLogic(draggablePossibleSelect); // change the selectedRooms list depending on shift/ctrl
 				if (roomSnap) {
-					foreach (WorldDraggable draggable in selectedDraggables)
-						draggable.Position = draggable.Position.Rounded();
+					MoveChange draggableMoveChange = new MoveChange();
+					foreach (WorldDraggable draggable in selectedDraggables) {
+						if (draggable is MapDraggable mapDraggable) {
+							Vector2 DevPosDiff = (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) ? mapDraggable.DevPosition.Rounded() - mapDraggable.DevPosition : Vector2.Zero;
+							Vector2 CanonPosDiff = (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) ? mapDraggable.CanonPosition.Rounded() - mapDraggable.CanonPosition : Vector2.Zero;
+							draggableMoveChange.AddDraggable(mapDraggable, DevPosDiff, CanonPosDiff);
+						}
+						else {
+							Vector2 diff = draggable.Position.Rounded() - draggable.Position;
+							draggableMoveChange.AddDraggable(draggable, diff, diff);
+						}
+					}
+					worldHistory.Apply(draggableMoveChange);
 				}
 			}
 
@@ -750,6 +699,10 @@ public static class WorldWindow {
 				foreach (ReferenceImage image in referenceImages) {
 					if (image.Intersects(selectionStart, selectionEnd) && image.Draggable)
 						selectedDraggables.Add(image);
+				}
+				foreach (ReplaceRoom replaceRoom in replaceRooms) {
+					if (replaceRoom.Intersects(selectionStart, selectionEnd) && replaceRoom.Draggable)
+						selectedDraggables.Add(replaceRoom);
 				}
 			}
 
@@ -799,7 +752,7 @@ public static class WorldWindow {
 
 			Vector2 diff = newPos - draggable.Position;
 
-			if (draggable is Room room) {
+			if (draggable is MapDraggable mapDraggable) {
 				Vector2 dev = Vector2.Zero, canon = Vector2.Zero; // initialise movement vectors
 
 				bool moveBoth = Keys.Modifier(Keys.Modifiers.Alt) || PositionType == RoomPosition.Both;
@@ -807,15 +760,14 @@ public static class WorldWindow {
 				if (PositionType == RoomPosition.Canon) { // depending on visible position type and moveBoth, move one and match the other
 					canon = diff;
 					if (moveBoth)
-						dev = canon - room.DevPosition + room.CanonPosition;
+						dev = canon - mapDraggable.DevPosition + mapDraggable.CanonPosition;
 				}
 				else {
 					dev = diff;
 					if (moveBoth)
-						canon = dev - room.CanonPosition + room.DevPosition;
+						canon = dev - mapDraggable.CanonPosition + mapDraggable.DevPosition;
 				}
-				room.MoveUpdate(); // REVIEW - is this necessary? since redoing and undoing runs MoveUpdate anyway
-				change.AddDraggable(room, dev, canon); // add the delta position to the moveChange
+				change.AddDraggable(mapDraggable, dev, canon); // add the delta position to the moveChange
 			}
 			else {
 				change.AddDraggable(draggable, diff, diff); // for non-rooms, it only uses the Dev diff anyway
@@ -849,11 +801,17 @@ public static class WorldWindow {
 
 		WorldDraggable? draggable = HoveringDraggable;
 		if (draggable != null) {
-			if (draggable is Room room) {
+			if (draggable is ReplaceRoom replaceRoom) {
+				ReplaceRoomChange replaceRoomChange = new ReplaceRoomChange(false);
+				replaceRoomChange.AddReplaceRoom(replaceRoom);
+				worldHistory.Apply(replaceRoomChange);
+			}
+			else if (draggable is Room room) {
 				if (room is OffscreenRoom)
 					return;
 
 				RoomAndConnectionChange change = new RoomAndConnectionChange(false);
+				ReplaceRoomChange replaceRoomChange = new ReplaceRoomChange(false);
 				if(room != null)
 					selectedDraggables.Add(room);
 
@@ -865,11 +823,14 @@ public static class WorldWindow {
 						change.AddRoom(room2);
 						region.connections.Where(c => c.roomA == room2 && !selectedDraggables.Contains(c.roomB) || (c.roomB == room2 && !selectedDraggables.Contains(c.roomA)))
 							.ForEach(change.AddConnection);
+						foreach (ReplaceRoom replaceRoom1 in room2.replaceRooms) {
+							replaceRoomChange.AddReplaceRoom(replaceRoom1);
+						}
 					}
 					selectedDraggables.Clear();
 				}
 
-				worldHistory.Apply(change);
+				worldHistory.Apply(new MassChange([change, replaceRoomChange]));
 				return;
 			}
 			else if (draggable is ReferenceImage image) {
@@ -942,6 +903,15 @@ public static class WorldWindow {
 				rooms.ForEach(r => change.AddRoom(r, minimumLayer));
 				worldHistory.Apply(change);
 			}
+			else if (HoveringReplaceRoom != null) { // technically replaceRooms can have a different layer from the replaced room. separate mapData container for both room and replaceroom?
+				Room relevantRoom = HoveringReplaceRoom.replacedRoom;
+				int layer = relevantRoom.data.layer;
+
+				layer = (layer + 1) % 3;
+
+				VariableChange<int> change = new VariableChange<int>(relevantRoom.data.layer, layer, i => relevantRoom.data.layer = i);
+				worldHistory.Apply(change);
+			}
 		}
 
 		if (Keys.JustPressed(Key.G)) {
@@ -990,46 +960,12 @@ public static class WorldWindow {
 		}
 
 		if (VisibleCreatures && Keys.JustPressed(Key.C)) {
-			bool found = false;
-
-			for (int i = region.rooms.Count - 1; i >= 0; i--) {
-				Room room = region.rooms[i];
-				if (!room.Visible)
-					continue;
-				Vector2 roomMouse = worldMouse - room.Position;
-				Vector2 shortcutPosition;
-
-				if (room is OffscreenRoom offscreenRoom) {
-					for (int j = 0; j <= room.dens.Count; j++) {
-						shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + i * 4f + 2.5f, -room.height * 0.25f - 0.5f);
-						if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-							PopupManager.Add(new DenPopup(room.GetDen01(j)));
-							found = true;
-							break;
-						}
-					}
+			if (denRoom != null) {
+				if (denRoom is OffscreenRoom offscreenRoom) {
+					PopupManager.Add(new DenPopup(offscreenRoom.GetDen()));
 				}
-				else {
-					for (int j = 0; j < room.denShortcutEntrances.Count; j++) {
-						Vector2i shortcut = room.denShortcutEntrances[j];
-						shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
-						if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-							PopupManager.Add(new DenPopup(room.GetDen01(j)));
-							found = true;
-							break;
-						}
-					}
-				}
-
-				if (found)
-					break;
-			}
-
-			if (!found) {
-				Room? room = HoveringRoom;
-				if (room is OffscreenRoom offscreen) {
-					PopupManager.Add(new DenPopup(offscreen.GetDen()));
-				}
+				else
+					PopupManager.Add(new DenPopup(denRoom.GetDen01(hoveredDen))); // make this work with offscreenRoom
 			}
 		}
 
@@ -1058,55 +994,33 @@ public static class WorldWindow {
 				PopupManager.Add(new InfoPopup("You must export your region\nbefore creating or editing a room."));
 			}
 			else {
-				if (HoveringDraggable == null || HoveringDraggable is not Room room || HoveringDraggable is OffscreenRoom) {
+				if (HoveringDraggable != null && HoveringDraggable is not OffscreenRoom && HoveringDraggable is Room or ReplaceRoom) {
+					Room? roomToLoad = null;
+					Vector2 camRelativePosition = WorldWindow.cameraOffset;
+					if (HoveringDraggable is Room room) {
+						roomToLoad = room;
+					}
+					else if (HoveringDraggable is ReplaceRoom replaceRoom) {
+						roomToLoad = replaceRoom.replacingRoom;
+						camRelativePosition += replaceRoom.replacingRoom.Position - replaceRoom.Position;
+					}
+					if (roomToLoad != null) {
+						if (roomToLoad.valid) {
+							Main.mode = Main.Mode.Droplet;
+							DropletWindow.LoadRoom(roomToLoad, camRelativePosition);
+						}
+						else {
+							PopupManager.Add(new InfoPopup($"Unable to open {roomToLoad.name}\nInvalid room!"));
+						}
+					}
+					else {
+						PopupManager.Add(new InfoPopup($"Unable to open room\nNo reference found!"));
+					}
+				}
+				else {
 					PopupManager.Add(new CreateRoomPopup());
 					placingRoom = true;
 					roomPlacementVisualiser.Position = worldMouse - ((Vector2)roomPlacementVisualiser.size * 0.5f * Vector2.NegY);
-				}
-				else {
-					if (room.valid) {
-						Main.mode = Main.Mode.Droplet;
-						DropletWindow.LoadRoom(room);
-					}
-					else {
-						PopupManager.Add(new InfoPopup($"Unable to open {room.name}\nInvalid room!"));
-					}
-				}
-			}
-		}
-
-		{
-			bool found = false;
-			for (int i = region.rooms.Count - 1; i >= 0; i--) {
-				Room room = region.rooms[i];
-				room.hoveredDen = -1;
-				if (found || !room.Visible)
-					continue;
-				Vector2 roomMouse = worldMouse - room.Position;
-				Vector2 shortcutPosition;
-				float closestDistance = SelectorScale;
-
-				if (room is OffscreenRoom offscreenRoom) {
-					for (int j = 0; j < room.dens.Count; j++) {
-						shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + i * 4f + 2.5f, -room.height * 0.25f - 0.5f);
-						float dist = (roomMouse - shortcutPosition).Length;
-						if (dist < closestDistance) {
-							room.hoveredDen = i;
-							closestDistance = dist;
-							found = true;
-						}
-					}
-					continue;
-				}
-
-				foreach (Vector2i shortcut in room.denShortcutEntrances) {
-					shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
-					float dist = (roomMouse - shortcutPosition).Length;
-					if (dist < closestDistance) {
-						room.hoveredDen = room.GetDenId01(shortcut);
-						closestDistance = dist;
-						found = true;
-					}
 				}
 			}
 		}
@@ -1136,6 +1050,8 @@ public static class WorldWindow {
 			}
 
 			roomSnap = !Keys.Modifier(Keys.Modifiers.Alt);
+			
+			UpdateHoveredExits();
 
 			UpdateConnectionControls();
 
@@ -1165,6 +1081,12 @@ public static class WorldWindow {
 			Immediate.Vertex(-cameraScale * Main.screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
 			Immediate.Vertex(cameraScale * Main.screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
 		}
+		Immediate.Color(Themes.Layer1Color);
+		Immediate.Vertex(cameraOffset.x - Main.screenBounds.x * cameraScale, -(cameraOffset.y * (1 - 1f)) / 2); // this may be another colorpopup situation
+		Immediate.Vertex(cameraOffset.x + Main.screenBounds.x * cameraScale, -(cameraOffset.y * (1 - 1f)) / 2);
+		Immediate.Color(Themes.Layer1Color);
+		Immediate.Vertex(-(cameraOffset.x * 0) / 2, cameraOffset.y - Main.screenBounds.y * cameraScale);
+		Immediate.Vertex(-(cameraOffset.x * 0) / 2, cameraOffset.y + Main.screenBounds.y * cameraScale);
 		Immediate.End();
 	}
 
@@ -1234,27 +1156,33 @@ public static class WorldWindow {
 			if(!image.drawUnderGrid) image.Draw();
 		Profiler.MarkPoint("DrawGrid");
 
+		Dictionary<Room, bool> timelineCullResults = [];
+
 		Program.gl.Enable(EnableCap.Blend);
 		foreach (Room room in WorldWindow.region.rooms) {
+			bool timelineCullResult = room.CheckTimelineCull();
+			timelineCullResults.Add(room, timelineCullResult);
+
 			if (!room.data.merge)
 				continue;
-			if (!VisibleLayers[room.data.layer] || !VisibleTimeline.OverlapsWith(room.timeline))
+			if (!VisibleLayers[room.data.layer] || !timelineCullResult) {	
 				continue;
+			}
 
 			if (PositionType == RoomPosition.Both) {
 				room.DrawBlack(RoomPosition.Canon);
 				room.DrawBlack(RoomPosition.Dev);
 			}
 			else {
-				room.DrawBlack(PositionType);
+				room.DrawBlack(WorldWindow.PositionType);
 			}
 		}
 		Profiler.MarkPoint("rooms", 2, true);
 		foreach (Room room in WorldWindow.region.rooms) {
-			Profiler.MarkPoint("rooms", 1, true);
-
-			if (!VisibleLayers[room.data.layer] || !VisibleTimeline.OverlapsWith(room.timeline))
+			if (!VisibleLayers[room.data.layer] || !timelineCullResults[room])
 				continue;
+
+			Profiler.MarkPoint("rooms", 1, true);
 
 			if (WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
 				if (!room.data.merge) {
@@ -1313,6 +1241,32 @@ public static class WorldWindow {
 
 		DrawCurrentConnection();
 		Profiler.MarkPoint("DrawConnections");
+
+		foreach (ReplaceRoom replaceRoom in replaceRooms) {
+			if (!VisibleLayers[replaceRoom.replacedRoom.data.layer] || !VisibleTimeline.OverlapsWith(replaceRoom.timeline))
+				continue;
+
+			if (PositionType == RoomPosition.Both) {
+				replaceRoom.Draw(RoomPosition.Canon);
+				replaceRoom.Draw(RoomPosition.Dev);
+			}
+			else {
+				replaceRoom.Draw(PositionType);
+				if (Keys.Modifier(Keys.Modifiers.Alt)) {
+					replaceRoom.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
+				}
+			}
+
+			if (selectedDraggables.Contains(replaceRoom)) {
+				Immediate.Color(Themes.SelectionBorder);
+				if (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) {
+					UI.StrokeRect(Rect.FromSize(replaceRoom.DevPosition.x, replaceRoom.DevPosition.y, replaceRoom.replacingRoom.width, -replaceRoom.replacingRoom.height), cameraScale / 4f);
+				}
+				if (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) {
+					UI.StrokeRect(Rect.FromSize(replaceRoom.CanonPosition.x, replaceRoom.CanonPosition.y, replaceRoom.replacingRoom.width, -replaceRoom.replacingRoom.height), cameraScale / 4f);
+				}
+			}
+		}
 
 		if (selectingState == SelectingState.Selecting) {
 			Program.gl.Enable(EnableCap.Blend);
@@ -1378,11 +1332,18 @@ public static class WorldWindow {
 				string debug = "";
 				foreach (WorldDraggable worldDraggable in selectedDraggables) {
 					if (worldDraggable is Room room) {
-						debug += room.name + "; ";
+						debug += room.name;
+					}
+					else if (worldDraggable is ReferenceImage refImage) {
+						debug += Path.GetFileName(refImage.imagePath);
+					}
+					else if (worldDraggable is ReplaceRoom replaceRoom) {
+						debug += $"replace-{replaceRoom.replacedRoom.name}->{replaceRoom.replacingRoom.name}";
 					}
 					else {
-						debug += worldDraggable.GetType().ToString() + "; ";
+						debug += worldDraggable.GetType().ToString();
 					}
+					debug += "; ";
 					if (debug.Length > 75) {
 						totalDebug.Add(debug);
 						debug = "";
@@ -1395,6 +1356,7 @@ public static class WorldWindow {
 					debugText.Add(totalDebug[j]);
 				}
 			}
+			debugText.Add($"ReplaceReferenceRooms: {replaceReferenceRooms.Count}");
 
 			if (hoveringConnection != null) {
 				bool specifyTimelines = hoveringConnection.timeline.timelineType != TimelineType.All || hoveringConnection.roomA.timeline.timelineType != TimelineType.All || hoveringConnection.roomB.timeline.timelineType != TimelineType.All;
@@ -1438,12 +1400,9 @@ public static class WorldWindow {
 					}
 					else {
 						debugText.Add($"Name: {room.name}");
+						debugText.Add($"Path: {UI.font.CropText(room.path, 30, 1, out _, true)}");
 						if (room.pathOutsideRoomsFolder)
 							debugText.Add($" > Room imported from outside {region.acronym}-rooms");
-						if (room.replacedRoom != null)
-							debugText.Add($"Room replaces {room.replacedRoom.name}");
-						foreach (Room replacement in room.replacingRooms)
-							debugText.Add($" > Room replaced by {replacement.name} ({replacement.timeline})");
 						debugText.Add($"Tags: {string.Join(" ", room.data.tags)}");
 						debugText.Add($"Size: {room.width}x{room.height}");
 						if (room.timeline.timelineType != TimelineType.All)
@@ -1541,45 +1500,13 @@ public static class WorldWindow {
 			}
 
 			if (VisibleCreatures) {
-				bool debuggedDen = false;
-
-				for (int r = region.rooms.Count - 1; r >= 0; r--) {
-					Room room = region.rooms[r];
-					if (!room.Visible)
-						continue;
-					Vector2 roomMouse = worldMouse - room.Position;
-					Vector2 shortcutPosition;
-
-					if (room is OffscreenRoom offscreenRoom) {
-						for (int j = 0; j <= room.dens.Count; j++) {
-							shortcutPosition = new Vector2(room.width * 0.5f - room.dens.Count * 2f + r * 4f + 2.5f, -room.height * 0.25f - 0.5f);
-							if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-								DebugDen(offscreenRoom.GetDen(), offscreenRoom, ref debugText);
-								debuggedDen = true;
-								break;
-							}
-						}
+				if (denRoom != null) {
+					if (denRoom is OffscreenRoom offscreenRoom) {
+						DebugDen(offscreenRoom.GetDen(), offscreenRoom, ref debugText);
 					}
 					else {
-						if (room.hoveredDen != -1) {
-							DebugDen(room.GetDen01(room.hoveredDen), room, ref debugText);
-							debuggedDen = true;
-						}
-						else {
-							for (int j = 0; j < room.denShortcutEntrances.Count; j++) {
-								Vector2i shortcut = room.denShortcutEntrances[j];
-								shortcutPosition = new Vector2(shortcut.x + 0.5f, -1f - shortcut.y + 0.5f);
-								if ((roomMouse - shortcutPosition).Length < SelectorScale) {
-									DebugDen(room.GetDen01(j), room, ref debugText);
-									debuggedDen = true;
-									break;
-								}
-							}
-						}
+						DebugDen(denRoom.GetDen01(hoveredDen), denRoom, ref debugText);
 					}
-
-					if (debuggedDen)
-						break;
 				}
 			}
 			EncounteredErrorOnLastDebug = false;
@@ -1722,9 +1649,10 @@ public static class WorldWindow {
 		return room;
 	}
 
+	// REVIEW - prevent importing of rooms that already exist
 	private static Room CreateAndAddRoom(string path, string name, string tag = "", bool importFromOutside = false) {
 		RoomAndConnectionChange change = new RoomAndConnectionChange(true);
-		Room room = new Room(path, name, importFromOutside);
+		Room room = WorldWindow.replaceReferenceRooms.FirstOrDefault(x => x.name == name) ?? new Room(path, name, importFromOutside);
 		if (tag.Length > 0)
 			room.data.tags = [tag];
 		room.CanonPosition = room.DevPosition = WorldWindow.cameraOffset;
@@ -1745,7 +1673,7 @@ public static class WorldWindow {
 		return bounds.x0 < camBound.x1 && bounds.x1 > camBound.x0 && bounds.y0 < camBound.y1 && bounds.y1 > camBound.y0;
 	}
 
-	private static Room[] HandleRoomFilesSelected(string[] paths) {
+	public static Room[] HandleRoomFilesSelected(string[] paths) {
 		if (paths.Length == 0)
 			return [];
 
@@ -1877,7 +1805,7 @@ public static class WorldWindow {
 				if (await TryCancelRender($"Render cancelled at\n{finished}/{totalCount} rendered.\nNo changes made."))
 					return;
 				renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nloading");
-				await Task.Run(() => DropletWindow.LoadRoom(room));
+				await Task.Run(() => DropletWindow.LoadRoom(room, Vector2.Zero));
 				renderStatusPopup.UpdateText("Rendering rooms\n" + (finished + 1) + "/" + totalCount + "\nrendering");
 				errorMessage = "";
 				(string name, string path, byte[] image)[] images = []; // possibly: make this tuple contain the exportpath so it doesn't need to be recalculated every time?

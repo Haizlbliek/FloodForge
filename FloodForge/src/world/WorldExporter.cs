@@ -75,12 +75,17 @@ public static class WorldExporter {
 					timelinesInRegion.Add(timelineEntry);
 				}
 			}
-			foreach (Connection connection in room.connections) {
-				if (connection.timeline.timelineType != TimelineType.All) {
-					foreach (string timelineEntry in room.timeline.timelines) {
-						timelinesInRegion.Add(timelineEntry);
-					}
+		}
+		foreach (Connection connection in WorldWindow.region.connections) {
+			if (connection.timeline.timelineType != TimelineType.All) {
+				foreach (string timelineEntry in connection.timeline.timelines) {
+					timelinesInRegion.Add(timelineEntry);
 				}
+			}
+		}
+		foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+			foreach (string timelineEntry in replaceRoom.timeline.timelines) {
+				timelinesInRegion.Add(timelineEntry);
 			}
 		}
 		string timelinesLogger = "";
@@ -118,16 +123,59 @@ public static class WorldExporter {
 				}
 			}
 			Logger.Info("- Rooms");
+			Vector2 topLeft = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+			Vector2 bottomRight = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+
+			// when exporting and re-importing vanilla regions an offset is induced
+			// this may originate in the exporting, parsing or both places
+			int totalCount = 0;
+			Vector2 averageCanonPosition = Vector2.Zero;
+			Vector2 averageDevPosition = Vector2.Zero;
+
+			foreach (Room room in WorldWindow.region.rooms) {
+				averageCanonPosition += room.CanonPosition;
+				averageDevPosition += room.DevPosition;
+				totalCount++;
+
+				if (room is OffscreenRoom)
+					continue;
+
+				float left = room.CanonPosition.x;
+				float right = room.CanonPosition.x + room.width; // REVIEW - do right & top need to be extended by one for completely accurate map bounds?
+				float top = room.CanonPosition.y - room.height;  // compare w/ existing regions, possibly
+				float bottom = room.CanonPosition.y;
+
+				topLeft.x = Math.Min(topLeft.x, left);
+				bottomRight.x = Math.Max(bottomRight.x, right);
+				topLeft.y = Math.Min(topLeft.y, top);
+				bottomRight.y = Math.Max(bottomRight.y, bottom);
+			}
+
+			averageCanonPosition /= totalCount;
+			averageDevPosition /= totalCount;
+
+			foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+				float replaceLeft = replaceRoom.CanonPosition.x;
+				float replaceRight = replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width; // same here
+				float replaceTop = replaceRoom.CanonPosition.y - replaceRoom.replacingRoom.height;
+				float replaceBottom = replaceRoom.CanonPosition.y;
+				topLeft.x = Math.Min(topLeft.x, replaceLeft);
+				bottomRight.x = Math.Max(bottomRight.x, replaceRight);
+				topLeft.y = Math.Min(topLeft.y, replaceTop);
+				bottomRight.y = Math.Max(bottomRight.y, replaceBottom);
+			}
 
 			foreach (Room room in WorldWindow.region.rooms) {
 				Vector2 canonPosition = new Vector2(
 					(room.CanonPosition.x + room.width * 0.5f) * 3.0f,
 					(room.CanonPosition.y - room.height * 0.5f) * 3.0f
 				);
+				canonPosition -= averageCanonPosition;
 				Vector2 devPosition = new Vector2(
-					(room.DevPosition.x + room.width * 0.5f) * 3.0f,
-					(room.DevPosition.y - room.height * 0.5f) * 3.0f
+					(room.DevPosition.x + room.width * 0.5f) * 2.0f,
+					(room.DevPosition.y - room.height * 0.5f) * 2.0f
 				);
+				devPosition -= averageDevPosition;
 
 				string line = $"{FancyRoomCasing(room)}: " +
 							$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
@@ -140,10 +188,51 @@ public static class WorldExporter {
 				
 				if (room.timeline.timelineType != TimelineType.Only)
 					writer.WriteLine(line);
+				
 				foreach (KeyValuePair<string, StreamWriter> timelineMapWriter in timelineMapWriters) {
-					if (room.timeline.OverlapsWith(timelineMapWriter.Key)) {
-						timelineMapWriter.Value.WriteLine(line);
+					bool skipForReplaceRoom = false;
+					foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+						if (replaceRoom.timeline.OverlapsWith(timelineMapWriter.Key)) {
+							skipForReplaceRoom = true;
+							break;
+						}
 					}
+					if (!skipForReplaceRoom && room.timeline.OverlapsWith(timelineMapWriter.Key))
+						timelineMapWriter.Value.WriteLine(line);
+				}
+			}
+			
+			Dictionary<Room, List<ReplaceRoom>> replaceRooms = [];
+			foreach (ReplaceRoom room in WorldWindow.replaceRooms) {
+				replaceRooms.TryAdd(room.replacedRoom, []);
+				replaceRooms[room.replacedRoom].Add(room);
+			}
+			foreach (KeyValuePair<Room, List<ReplaceRoom>> keyValuePair in replaceRooms) {
+				foreach (KeyValuePair<string, StreamWriter> timelineMapWriter in timelineMapWriters) {
+					ReplaceRoom? replaceRoom = keyValuePair.Value.LastOrDefault(r => r.timeline.OverlapsWith(timelineMapWriter.Key));
+					if (replaceRoom == null)
+						continue;
+					Vector2 canonPosition = new Vector2(
+						(replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width * 0.5f) * 3.0f,
+						(replaceRoom.CanonPosition.y - replaceRoom.replacingRoom.height * 0.5f) * 3.0f
+					);
+					canonPosition -= averageCanonPosition;
+					Vector2 devPosition = new Vector2(
+						(replaceRoom.DevPosition.x + replaceRoom.replacingRoom.width * 0.5f) * 3.0f,
+						(replaceRoom.DevPosition.y - replaceRoom.replacingRoom.height * 0.5f) * 3.0f
+					);
+					devPosition -= averageDevPosition;
+
+					string line = $"{FancyRoomCasing(replaceRoom.replacedRoom)}: " +
+								$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
+								$"{devPosition.x:G12}><{devPosition.y:G12}><" +
+								$"{replaceRoom.replacedRoom.data.layer}><";
+
+					if (replaceRoom.replacedRoom.data.subregion > -1) {
+						line += WorldWindow.region.subregions[replaceRoom.replacedRoom.data.subregion];
+					}
+					
+					timelineMapWriter.Value.WriteLine(line);
 				}
 			}
 
@@ -184,7 +273,36 @@ public static class WorldExporter {
 					writer.WriteLine(line);
 				foreach (KeyValuePair<string, StreamWriter> timelineMapWriter in timelineMapWriters) {
 					if (connection.timeline.OverlapsWith(timelineMapWriter.Key)) {
-						timelineMapWriter.Value.WriteLine(line);
+						if (connection.roomA.replaceRooms.Count != 0 || connection.roomB.replaceRooms.Count != 0) {
+							Room replaceRoomA = connection.roomA;
+							Room replaceRoomB = connection.roomB;
+							foreach (ReplaceRoom replaceRoom in connection.roomA.replaceRooms) {
+								if (replaceRoom.timeline.OverlapsWith(timelineMapWriter.Key)) {
+									replaceRoomA = replaceRoom.replacingRoom;
+								}
+							}
+							foreach (ReplaceRoom replaceRoom in connection.roomB.replaceRooms) {
+								if (replaceRoom.timeline.OverlapsWith(timelineMapWriter.Key)) {
+									replaceRoomB = replaceRoom.replacingRoom;
+								}
+							}
+							Vector2i newConnA = replaceRoomA.GetShortcutEntranceRoomPoint(connection.roomAExitID);
+							Vector2i newConnB = replaceRoomB.GetShortcutEntranceRoomPoint(connection.roomBExitID);
+
+							newConnA = new Vector2i(newConnA.x, replaceRoomA.height - newConnA.y - 1);
+							newConnB = new Vector2i(newConnB.x, replaceRoomB.height - newConnB.y - 1);
+							
+							string newLine = $"Connection: " +
+								$"{FancyRoomCasing(connection.roomA)}," +
+								$"{FancyRoomCasing(connection.roomB)}," +
+								$"{newConnA.x},{newConnA.y}," +
+								$"{newConnB.x},{newConnB.y}," +
+								$"{(int) replaceRoomA.GetShortcutEntranceDirectionInt(connection.roomAExitID)}," +
+								$"{(int) replaceRoomB.GetShortcutEntranceDirectionInt(connection.roomBExitID)}";
+							timelineMapWriter.Value.WriteLine(newLine);
+						}
+						else
+							timelineMapWriter.Value.WriteLine(line);
 					}
 				}
 			}
@@ -353,7 +471,9 @@ public static class WorldExporter {
 		return finalTags + "}";
 	}
 
-	public static bool KhyExporter() { // TODO - make this a hundred times more compact (this is a naive implementation)
+	// TODO - make this a hundred times more compact (this is a naive implementation)
+	// TODO - implement replaceRoom support
+	public static bool KhyExporter() {
 		Logger.Info("");
 		Logger.Info("========================================");
 		Logger.Info("Starting KhyExporter");
@@ -367,10 +487,6 @@ public static class WorldExporter {
 			Logger.Info($"    {room.name}");
 			if (room is OffscreenRoom){
 				Logger.Info($"        offscreenroom, skipping");
-				continue;
-			}
-			if (room.replacedRoom != null) {
-				Logger.Info($"        REPLACEROOM, skipping"); // to be implemented later`
 				continue;
 			}
 			allRooms.Add(new(room.name, room.data.tags, room.data.subregion, room.data.cameras.Count, new IDExit[room.roomExits.Count], room.timeline, room.preProcessorConditions));
@@ -557,8 +673,10 @@ public static class WorldExporter {
 				for (int exitIndex = 0; exitIndex < timelineRoom.connections.Length; exitIndex++) {
 					IDExit defaultConnection = matchingDefaultRoom.connections[exitIndex];
 					defaultConnection.roomName ??= "DISCONNECTED";
+					defaultConnection.connectionConditions ??= [];
 					IDExit newConnection = timelineRoom.connections[exitIndex];
 					newConnection.roomName ??= "DISCONNECTED";
+					newConnection.connectionConditions ??= [];
 					if (defaultConnection.roomName != newConnection.roomName || (CEEE && (defaultConnection.exitID != newConnection.exitID))) {
 						Logger.Info($"            Change at [{exitIndex}]: {defaultConnection} -> {newConnection}; added");
 						changes.Add(new(timelineRoom.name, exitIndex, defaultConnection, newConnection));
@@ -1022,12 +1140,13 @@ public static class WorldExporter {
 
 	public static string PreProcessorsToString(string[] preProcessorConditions) {
 		string preProcessors = "";
-		if (preProcessorConditions != null) {
-			foreach (string preProcessorCondition in preProcessorConditions)
-				preProcessors += (preProcessors == "" ? "" : ",") + preProcessorCondition;
-			if (preProcessors != "")
-				preProcessors = $"{{{preProcessors}}}";
+		if (preProcessorConditions == null) {
+			throw new NullReferenceException("Could not convert null preProcessorConditions to string");
 		}
+		foreach (string preProcessorCondition in preProcessorConditions)
+			preProcessors += (preProcessors == "" ? "" : ",") + preProcessorCondition;
+		if (preProcessors != "")
+			preProcessors = $"{{{preProcessors}}}";
 		return preProcessors;
 	}
 
@@ -1104,8 +1223,8 @@ public static class WorldExporter {
 					Timeline virtualTimeline = roomToParse.timeline;
 
 					// REVIEW - check whether this works with preprocessorconditions?
-					foreach (Room replacingRoom in roomToParse.replacingRooms) {
-						Timeline resultingTimeline = replacingRoom.timeline.Inverted().And(roomToParse.timeline.Inverted()).Inverted(); // this is cursed but should work (XOR)
+					foreach (ReplaceRoom replaceRoom in roomToParse.replaceRooms) {
+						Timeline resultingTimeline = replaceRoom.timeline.Inverted().And(roomToParse.timeline.Inverted()).Inverted(); // this is cursed but should work (XOR)
 						virtualTimeline = resultingTimeline;
 					}
 
@@ -1125,12 +1244,12 @@ public static class WorldExporter {
 						conditionalBufferWriter.Write("}");
 					}
 
-					if (virtualTimeline.timelineType == TimelineType.All || virtualTimeline.timelines.Count == 0) {
+					if (roomToParse.timeline.timelineType == TimelineType.All || roomToParse.timeline.timelines.Count == 0) {
 						continue;
 					}
 
 					bool first = true;
-					foreach (string timeline in virtualTimeline.timelines) {
+					foreach (string timeline in roomToParse.timeline.timelines) {
 						if (!first)
 							conditionalBufferWriter.Write(",");
 						first = false;
@@ -1138,11 +1257,35 @@ public static class WorldExporter {
 					}
 
 					conditionalBufferWriter.Write(" : ");
-					if (roomToParse.replacedRoom != null)
-						conditionalBufferWriter.Write($"REPLACEROOM : {roomToParse.replacedRoom.name}");
-					else
-						conditionalBufferWriter.Write((virtualTimeline.timelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
+					conditionalBufferWriter.Write((virtualTimeline.timelineType == TimelineType.Only) ? "EXCLUSIVEROOM" : "HIDEROOM");
 					conditionalBufferWriter.WriteLine($" : {RoomNameCasing(roomToParse.name)}");
+				}
+
+				foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+					if (replaceRoom.preProcessorConditions.Length != 0) {
+						conditionalBufferWriter.Write("{");
+						bool first1 = true;
+						foreach (string preProcessor in replaceRoom.preProcessorConditions) {
+							if (!first1)
+								conditionalBufferWriter.Write(",");
+							first1 = false;
+							conditionalBufferWriter.Write(preProcessor);
+						}
+						conditionalBufferWriter.Write("}");
+					}
+
+					bool first = true;
+					if (replaceRoom.timeline.timelineType == TimelineType.Except) {
+						conditionalBufferWriter.Write("X-");
+					}
+					foreach (string timeline in replaceRoom.timeline.timelines) {
+						if (!first)
+							conditionalBufferWriter.Write(",");
+						first = false;
+						conditionalBufferWriter.Write(timeline);
+					}
+
+					conditionalBufferWriter.WriteLine($" : REPLACEROOM : {RoomNameCasing(replaceRoom.replacedRoom.name)} : {RoomNameCasing(replaceRoom.replacingRoom.name)}");
 				}
 			}
 
@@ -1169,9 +1312,6 @@ public static class WorldExporter {
 			bool wasGate = false;
 
 			foreach (Room room in sortedRooms) {
-				if (room.replacedRoom != null)
-					continue;
-
 				bool isGate = room.data.tags.Contains("GATE");
 
 				if (!isFirstRoom && ((wasGate && !isGate) || (!isGate && room.data.subregion != lastSubregion))) {
@@ -1419,11 +1559,18 @@ public static class WorldExporter {
 					timelinesInRegion.Add(timelineEntry);
 				}
 			}
-			foreach (Connection connection in room.connections) {
-				if (connection.timeline.timelineType != TimelineType.All) {
-					foreach (string timelineEntry in room.timeline.timelines) {
-						timelinesInRegion.Add(timelineEntry);
-					}
+		}
+		foreach (Connection connection in WorldWindow.region.connections) {
+			if (connection.timeline.timelineType != TimelineType.All) {
+				foreach (string timelineEntry in connection.timeline.timelines) {
+					timelinesInRegion.Add(timelineEntry);
+				}
+			}
+		}
+		foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+			if (replaceRoom.timeline.timelineType != TimelineType.All) {
+				foreach (string timelineEntry in replaceRoom.timeline.timelines) {
+					timelinesInRegion.Add(timelineEntry);
 				}
 			}
 		}
@@ -1483,6 +1630,18 @@ public static class WorldExporter {
 			bottomRight.x = Math.Max(bottomRight.x, right);
 			topLeft.y = Math.Min(topLeft.y, top);
 			bottomRight.y = Math.Max(bottomRight.y, bottom);
+
+		}
+
+		foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+			float replaceLeft = replaceRoom.CanonPosition.x;
+			float replaceRight = replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width;
+			float replaceTop = replaceRoom.CanonPosition.y - replaceRoom.replacingRoom.height;
+			float replaceBottom = replaceRoom.CanonPosition.y;
+			topLeft.x = Math.Min(topLeft.x, replaceLeft);
+			bottomRight.x = Math.Max(bottomRight.x, replaceRight);
+			topLeft.y = Math.Min(topLeft.y, replaceTop);
+			bottomRight.y = Math.Max(bottomRight.y, replaceBottom);
 		}
 
 		int layerHeight = Math.Max((int) (bottomRight.y - topLeft.y) + 20, 20);
@@ -1528,45 +1687,27 @@ public static class WorldExporter {
 
 			Vector2i roomPosition = new Vector2i(
 				(int) (room.CanonPosition.x - topLeft.x),
-				(int) (bottomRight.y - room.CanonPosition.y)
+				(int) (bottomRight.y - room.CanonPosition.y + room.height)
 			);
 
 			int layerXOffset = 10;
 			int layerYOffset = (2 - room.data.layer) * layerHeight + 10;
 
-			if (room.data.hidden == 1) {
-				for (int ox = 0; ox < room.width; ox++) {
-					for (int oy = 0; oy < room.height; oy++) {
-						int targetX = roomPosition.x + ox + layerXOffset;
-						int targetY = roomPosition.y + oy + layerYOffset;
-
-						if (targetX < 0 || targetX >= textureWidth || targetY < 0 || targetY >= textureHeight)
-							continue;
-
-						int i = (targetY * textureWidth + targetX) * 3;
-
-						if (room.timeline.timelineType != TimelineType.Only) { // only rooms set to "only" don't appear in the default map
-							bool pixelIsGreen = imageData[i] == 0 && imageData[i + 2] == 0;
-							if (!room.data.merge || pixelIsGreen) {
-								imageData[i] = 0;
-								imageData[i + 1] = 0;
-								imageData[i + 2] = 0;
-							}
-						}
-
-						foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
-							if (room.timeline.OverlapsWith(timelineWriter.Key)) {
-								bool pixelIsGreen = timelineImageData[timelineWriter.Key][i] == 0 && timelineImageData[timelineWriter.Key][i + 2] == 0;
-								if (!room.data.merge || pixelIsGreen) {
-									timelineImageData[timelineWriter.Key][i] = 0;
-									timelineImageData[timelineWriter.Key][i + 1] = 0;
-									timelineImageData[timelineWriter.Key][i + 2] = 0;
-								}
-							}
+			if (room.data.hidden == 1) { // if Hidden, draw the room as solid black
+				if (room.timeline.timelineType != TimelineType.Only)
+					imageData = DrawRoomAtMapPosition(room, roomPosition, imageData, textureWidth, textureHeight, layerXOffset, layerYOffset, true);
+				foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
+					bool skipForReplaceRoom = false;
+					foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+						if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
+							skipForReplaceRoom = true;
+							break;
 						}
 					}
+					if (!skipForReplaceRoom && room.timeline.OverlapsWith(timelineWriter.Key)) {
+						timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(room, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset, true);
+					}
 				}
-
 				continue;
 			}
 
@@ -1576,72 +1717,66 @@ public static class WorldExporter {
 				mapFile?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{mapfileRoomYPos},{room.width},{room.height}");
 			}
 			foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
-				if (room.timeline.OverlapsWith(timelineWriter.Key)) {
+				bool skipForReplaceRoom = false;
+				foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+					if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
+						skipForReplaceRoom = true;
+						break;
+					}
+				}
+				if (!skipForReplaceRoom && room.timeline.OverlapsWith(timelineWriter.Key)) {
 					timelineWriter.Value?.WriteLine($"{RoomNameCasing(room.name)}: {roomPosition.x + layerXOffset},{mapfileRoomYPos},{room.width},{room.height}");
 				}
 			}
 
-			for (int ox = 0; ox < room.width; ox++) {
-				for (int oy = 0; oy < room.height; oy++) {
-					int targetX = roomPosition.x + ox + layerXOffset;
-					int targetY = roomPosition.y + oy + layerYOffset;
-
-					if (targetX < 0 || targetX >= textureWidth || targetY < 0 || targetY >= textureHeight)
-						continue;
-
-					int i = (targetY * textureWidth + targetX) * 3;
-					uint tile = room.GetTile(ox, oy);
-					uint tileType = tile & 15;
-
-					byte r = 0, g = 0, b = 0;
-
-					if (tileType == 0 || tileType == 4 || tileType == 5) {
-						r = 255;
-						g = 0;
-					}
-					if (tileType == 1) {
-						r = 0;
-						g = 0;
-					}
-					if (tileType == 2 || tileType == 3 || (tile & Room.FLAG_HORIZONTAL_POLE) != 0 || (tile & Room.FLAG_VERTICAL_POLE) != 0) {
-						r = 153;
-						g = 0;
-					}
-
-					if (room.visuals.UnderTerrain(ox, oy, out bool slope)) {
-						g = 0;
-						if (slope) {
-							r = Math.Min(r, (byte) 153);
-						} else {
-							r = 0;
-						}
-					}
-
-					if (r > 0 && room.visuals.Underwater(ox, oy)) {
-						b = 255;
-					}
-
-					bool isBlack = r == 0 && g == 0 && b == 0;
-
-					if (room.timeline.timelineType != TimelineType.Only) { // only rooms set to "only" don't appear in the default map
-						bool pixelIsGreen = imageData[i] == 0 && imageData[i + 2] == 0;
-						if (!room.data.merge || !isBlack || pixelIsGreen) {
-							imageData[i] = r;
-							imageData[i + 1] = g;
-							imageData[i + 2] = b;
-						}
-					}
-					foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
-						if (room.timeline.OverlapsWith(timelineWriter.Key)) {
-							bool pixelIsGreen = timelineImageData[timelineWriter.Key][i] == 0 && timelineImageData[timelineWriter.Key][i + 2] == 0;
-							if (!room.data.merge || !isBlack || pixelIsGreen) {
-								timelineImageData[timelineWriter.Key][i] = r;
-								timelineImageData[timelineWriter.Key][i + 1] = g;
-								timelineImageData[timelineWriter.Key][i + 2] = b;
-							}
-						}
+			if (room.timeline.timelineType != TimelineType.Only)
+				imageData = DrawRoomAtMapPosition(room, roomPosition, imageData, textureWidth, textureHeight, layerXOffset, layerYOffset);
+			foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
+				bool skipForReplaceRoom = false;
+				foreach (ReplaceRoom replaceRoom in room.replaceRooms) {
+					if (replaceRoom.timeline.OverlapsWith(timelineWriter.Key)) {
+						skipForReplaceRoom = true;
+						break;
 					}
 				}
+				if (!skipForReplaceRoom && room.timeline.OverlapsWith(timelineWriter.Key)) {
+					timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(room, roomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset);
+				}
+			}
+		}
+
+		// TODO - fix write to prioritise and only write the last replaceroom for each room
+		Dictionary<Room, List<ReplaceRoom>> replaceRooms = [];
+		foreach (ReplaceRoom room in WorldWindow.replaceRooms) {
+			replaceRooms.TryAdd(room.replacedRoom, []);
+			replaceRooms[room.replacedRoom].Add(room);
+		}
+		foreach (KeyValuePair<Room, List<ReplaceRoom>> keyValuePair in replaceRooms) {
+			foreach (KeyValuePair<string, StreamWriter?> timelineWriter in timelineMapFiles) {
+				ReplaceRoom? replaceRoom = keyValuePair.Value.LastOrDefault(r => r.timeline.OverlapsWith(timelineWriter.Key));
+				if (replaceRoom == null)
+					continue;
+				if (replaceRoom.replacedRoom.data.hidden == 2)
+					continue;
+				
+				Vector2i replaceRoomPosition = new Vector2i(
+					(int) (replaceRoom.CanonPosition.x - topLeft.x),
+					(int) (bottomRight.y - replaceRoom.CanonPosition.y + replaceRoom.replacingRoom.height)
+				);
+
+				int layerXOffset = 10;
+				int layerYOffset = (2 - replaceRoom.replacedRoom.data.layer) * layerHeight + 10;
+
+				if (replaceRoom.replacedRoom.data.hidden == 1) { // if Hidden, draw the room as solid black
+					timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoom.replacingRoom, replaceRoomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset, true);
+					continue;
+				}
+
+				int mapfileRoomYPos = textureHeight - replaceRoomPosition.y - layerYOffset - replaceRoom.replacingRoom.height;
+
+				timelineWriter.Value?.WriteLine($"{RoomNameCasing(replaceRoom.replacedRoom.name)}: {replaceRoomPosition.x + layerXOffset},{mapfileRoomYPos},{replaceRoom.replacingRoom.width},{replaceRoom.replacingRoom.height}");
+
+				timelineImageData[timelineWriter.Key] = DrawRoomAtMapPosition(replaceRoom.replacingRoom, replaceRoomPosition, timelineImageData[timelineWriter.Key], textureWidth, textureHeight, layerXOffset, layerYOffset);
 			}
 		}
 
@@ -1679,6 +1814,70 @@ public static class WorldExporter {
 		catch (Exception e) {
 			Logger.Error($"Exporting image failed: {e.Message}");
 		}
+	}
+
+	// REVIEW - optimise usage of this method by returning a byte[] of the room's image, and then overlaying that separately onto each relevant timeline map?
+	// this would reduce the amount of times the same room is drawn, but might be counteracted by the increased cost of overlaying the new room?
+	private static byte[] DrawRoomAtMapPosition(Room roomToDraw, Vector2i mapPosition, byte[] imageToDraw, int textureWidth, int textureHeight, int layerXOffset, int layerYOffset, bool fillBlack = false) {
+		Vector2i topLeftRoomPosition = new (mapPosition.x + layerXOffset, mapPosition.y + layerYOffset - roomToDraw.height);
+		for (int ox = 0; ox < roomToDraw.width; ox++) {
+			for (int oy = 0; oy < roomToDraw.height; oy++) {
+				int targetX = topLeftRoomPosition.x + ox;
+				int targetY = topLeftRoomPosition.y + oy;
+
+				if (targetX < 0 || targetX >= textureWidth || targetY < 0 || targetY >= textureHeight)
+					continue;
+
+				int i = (targetY * textureWidth + targetX) * 3;
+
+				if (fillBlack) {
+					imageToDraw[i] = 0;
+					imageToDraw[i + 1] = 0;
+					imageToDraw[i + 2] = 0;
+					continue;
+				}
+
+				uint tile = roomToDraw.GetTile(ox, oy);
+				uint tileType = tile & 15;
+
+				byte r = 0, g = 0, b = 0;
+
+				if (tileType == 0 || tileType == 4 || tileType == 5) {
+					r = 255;
+					g = 0;
+				}
+				if (tileType == 1) {
+					r = 0;
+					g = 0;
+				}
+				if (tileType == 2 || tileType == 3 || (tile & Room.FLAG_HORIZONTAL_POLE) != 0 || (tile & Room.FLAG_VERTICAL_POLE) != 0) {
+					r = 153;
+					g = 0;
+				}
+
+				if (roomToDraw.visuals.UnderTerrain(ox, oy, out bool slope)) {
+					g = 0;
+					if (slope) {
+						r = Math.Min(r, (byte) 153);
+					} else {
+						r = 0;
+					}
+				}
+
+				if (r > 0 && roomToDraw.visuals.Underwater(ox, oy)) {
+					b = 255;
+				}
+
+				bool isBlack = r == 0 && g == 0 && b == 0;
+				bool pixelIsGreen = imageToDraw[i] == 0 && imageToDraw[i + 2] == 0;
+				if (!roomToDraw.data.merge || !isBlack || pixelIsGreen) {
+					imageToDraw[i] = r;
+					imageToDraw[i + 1] = g;
+					imageToDraw[i + 2] = b;
+				}
+			}
+		}
+		return imageToDraw;
 	}
 
 	private static void ExportRoomAttr(StreamWriter writer, string name, Dictionary<string, RoomAttractiveness> attrs) {
