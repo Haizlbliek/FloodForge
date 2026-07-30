@@ -176,6 +176,13 @@ public class ReplaceRoom : MapDraggable {
 		return pos.x >= position.x && pos.y >= position.y - this.size.y && pos.x < position.x + this.size.x && pos.y <= position.y;
 	}
 
+	public bool Intersects(Vector2 from, Vector2 to) {
+		Vector2 cornerMin = Vector2.Min(from, to);
+		Vector2 cornerMax = Vector2.Max(from, to);
+
+		return cornerMax.x >= this.Position.x && cornerMax.y >= this.Position.y - this.size.y && cornerMin.x < this.Position.x + this.size.x && cornerMin.y <= this.Position.y;
+	}
+
 	/// what does this class need to do?
 	/// it needs to:
 	/// - know what room it replaces
