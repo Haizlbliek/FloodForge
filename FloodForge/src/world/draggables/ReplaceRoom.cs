@@ -33,7 +33,7 @@ public class ReplaceRoom : MapDraggable {
 		UI.FillRect(renderedPosition.x, renderedPosition.y - this.size.y, renderedPosition.x + this.size.x, renderedPosition.y);
 
 		// REVIEW - change room mesh drawing to display correct layer information
-		this.replacingRoom.DrawRoomMeshes(renderedPosition, positionType);
+		this.replacingRoom.DrawRoomMeshes(renderedPosition, positionType, this.replacedRoom.GetTintColor());
 
 		Immediate.Color(Themes.Layer2Color);
 		UI.Line(renderedPosition, this.replacedRoom.Position);
