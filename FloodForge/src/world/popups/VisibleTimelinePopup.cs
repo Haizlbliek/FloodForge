@@ -13,7 +13,7 @@ public class VisibleTimelinePopup : TimelinePopup {
 
 	public override void Draw() {
 		base.Draw();
-
-		this.setNewConnectionsContainer.Draw(new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y0 + 0.05f));
+		if (!this.collapsed)
+			this.setNewConnectionsContainer.Draw(new Rect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x1 - 0.01f, this.bounds.y0 + 0.05f));
 	}
 }
