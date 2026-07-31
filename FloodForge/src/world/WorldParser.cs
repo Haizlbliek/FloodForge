@@ -1026,7 +1026,8 @@ public static class WorldParser {
 			Connection connection = new Connection(connectionData.roomA, connectionData.roomAExitID, connectionData.roomB, connectionData.roomBExitID.Value);
 			WorldWindow.region.connections.Add(connection);
 			connectionData.roomA.Connect(connection);
-			connectionData.roomB.Connect(connection);
+			if (connection.roomA != connection.roomB)
+				connectionData.roomB.Connect(connection);
 		}
 
 		Logger.Info("Loaded connections");
