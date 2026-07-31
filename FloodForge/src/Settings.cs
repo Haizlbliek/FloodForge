@@ -42,6 +42,7 @@ public static class Settings {
 	public static Setting<bool> DEBUGVisibleShortcutEntranceData = Setting.Of("DebugVisibleShortcutEntranceData", false);
 	public static Setting<bool> DEBUGRoomWireframe = Setting.Of("DebugRoomWireframe", false);
 	public static Setting<bool> DEBUGLogInvalidSlopes = Setting.Of("DebugLogInvalidSlopes", false);
+	public static Setting<bool> DEBUGVerboseExportLog = Setting.Of("DebugVerboseExportLog", false);
 
 
 	public static void Initialize() {
