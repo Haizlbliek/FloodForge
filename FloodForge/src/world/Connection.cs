@@ -120,16 +120,9 @@ public class Connection : ConnectionVisual{
 			squareHeight++;
 		}
 
-		Vector2 pointA = this.PointA;
-		Vector2 pointB = this.PointB;
-		Vector2 pointDirAB = (pointB - pointA).Normalized;
-		Vector2 pointDirBA = pointDirAB * -1;
-		float dotA = Vector2.Dot(pointDirAB, this.roomA.GetConnectionConnectDirection(this.roomAExitID));
-		float dotB = Vector2.Dot(pointDirBA, this.roomB.GetConnectionConnectDirection(this.roomBExitID));
-		bool onLeft = dotB > dotA ? (pointB.x < pointA.x) : (pointA.x < pointB.x);
-		bool onTop = dotB > dotA ? (pointB.y > pointA.y) : (pointA.y > pointB.y);
-		float offsetX0 = (onLeft ? this.fittedAABB.x0 : (this.fittedAABB.x1 - (squareWidth * size))) - 0.5f;
-		float offsetY1 = (onTop ? this.fittedAABB.y1 : (this.fittedAABB.y0 + (squareHeight * size))) + 0.5f;
+		// REVIEW - re-add BezierMiddle point in recalculateBezier (for the true center of the bezier)
+		Vector2 middleBezierPoint = this.BezierPoints[Mathf.FloorToInt(this.BezierPoints.Length / 2)];
+		Vector2 topLeftPoint = middleBezierPoint - new Vector2(squareWidth / 2f, -squareHeight / 2f) * size;
 
 		if (WorldWindow.VisibleTimelineIcons) {
 			HashSet<string>.Enumerator timelineEnumerator = this.timeline.timelines.GetEnumerator();
@@ -139,14 +132,14 @@ public class Connection : ConnectionVisual{
 						break;
 
 					Immediate.Color(1f, 1f, 1f);
-					UI.CenteredTexture(Mods.GetTimelineTexture(timelineEnumerator.Current), offsetX0 + (x * size) + size / 2, offsetY1 - (y * size) - size / 2, size);
+					UI.CenteredTexture(Mods.GetTimelineTexture(timelineEnumerator.Current), topLeftPoint.x + (x * size) - 0.5f + size/2, topLeftPoint.y - (y * size) + 0.5f - size/2, size);
 
 					if (this.timeline.timelineType == TimelineType.Except) {
 						Immediate.Color(1f, 0f, 0f);
-						float x0 = offsetX0 + 0.5f + ((x + 0.1f) * size);
-						float x1 = offsetX0 + 0.5f + ((x + 0.9f) * size);
-						float y0 = offsetY1 - 0.5f - ((y + 0.1f) * size);
-						float y1 = offsetY1 - 0.5f - ((y + 0.9f) * size);
+						float x0 = topLeftPoint.x + ((x + 0.1f) * size);
+						float x1 = topLeftPoint.x + ((x + 0.9f) * size);
+						float y0 = topLeftPoint.y - ((y + 0.1f) * size);
+						float y1 = topLeftPoint.y - ((y + 0.9f) * size);
 						UI.Line(x0, y0, x1, y1, WorldWindow.SelectorScale * 3f);
 						UI.Line(x0, y1, x1, y0, WorldWindow.SelectorScale * 3f);
 					}
@@ -154,9 +147,9 @@ public class Connection : ConnectionVisual{
 
 				if (this.preProcessorConditions.Length != 0) {
 					Immediate.Color(1f, 1f, 0f);
-					float x0 = offsetX0 + 0.5f;
-					float y0 = offsetY1 - 0.5f - (y * size);
-					float y1 = offsetY1 - 0.5f - ((y + 1) * size);
+					float x0 = topLeftPoint.x;
+					float y0 = topLeftPoint.y - (y * size);
+					float y1 = topLeftPoint.y - ((y + 1) * size);
 					UI.Line(x0, y0, x0, y1, WorldWindow.SelectorScale * 3f);
 				}
 			}
