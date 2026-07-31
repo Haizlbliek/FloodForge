@@ -1575,19 +1575,6 @@ public static class DropletWindow {
 		sw.Write(after);
 	}
 
-	private static bool ValidSlopePos(uint geo, Vector2 tp) { // something in this function is broken, which is why the other overload doesn't simply make a new vector2 to call this one with.
-		uint type = (geo & (1024 | 2048)) / 1024;
-		float x = (tp.x - 0.5f) % 1f;
-		float y = (tp.y - 0.5f) % 1f;
-		return type switch {
-			0 => 1f - x > y,
-			1 => 1f - x > 1f - y,
-			2 => x > y,
-			3 => x > 1f - y,
-			_ => false,
-		};
-	}
-
 	private static bool ValidSlopePos(uint geo, int xInTile, int yInTile) {
 		if (xInTile < 0 || xInTile > 19 || yInTile < 0 || yInTile > 19)
 			return false;
