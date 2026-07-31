@@ -166,16 +166,9 @@ public static class WorldExporter {
 			}
 
 			foreach (Room room in WorldWindow.region.rooms) {
-				Vector2 canonPosition = new Vector2(
-					(room.CanonPosition.x + room.width * 0.5f) * 3.0f,
-					(room.CanonPosition.y - room.height * 0.5f) * 3.0f
-				);
-				canonPosition -= averageCanonPosition;
-				Vector2 devPosition = new Vector2(
-					(room.DevPosition.x + room.width * 0.5f) * 2.0f,
-					(room.DevPosition.y - room.height * 0.5f) * 2.0f
-				);
-				devPosition -= averageDevPosition;
+				Vector2 roomCornerVector = new Vector2(room.width, -room.height) * 0.5f;
+				Vector2 canonPosition = (room.CanonPosition - averageCanonPosition + roomCornerVector) * 3.0f;
+				Vector2 devPosition = (room.DevPosition - averageDevPosition + roomCornerVector) * 2.0f;
 
 				string line = $"{FancyRoomCasing(room)}: " +
 							$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
@@ -212,16 +205,9 @@ public static class WorldExporter {
 					ReplaceRoom? replaceRoom = keyValuePair.Value.LastOrDefault(r => r.timeline.OverlapsWith(timelineMapWriter.Key));
 					if (replaceRoom == null)
 						continue;
-					Vector2 canonPosition = new Vector2(
-						(replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width * 0.5f) * 3.0f,
-						(replaceRoom.CanonPosition.y - replaceRoom.replacingRoom.height * 0.5f) * 3.0f
-					);
-					canonPosition -= averageCanonPosition;
-					Vector2 devPosition = new Vector2(
-						(replaceRoom.DevPosition.x + replaceRoom.replacingRoom.width * 0.5f) * 3.0f,
-						(replaceRoom.DevPosition.y - replaceRoom.replacingRoom.height * 0.5f) * 3.0f
-					);
-					devPosition -= averageDevPosition;
+					Vector2 roomCornerVector = new Vector2(replaceRoom.replacingRoom.width, -replaceRoom.replacingRoom.height) * 0.5f;
+					Vector2 canonPosition = (replaceRoom.CanonPosition - averageCanonPosition + roomCornerVector) * 3.0f;
+					Vector2 devPosition = (replaceRoom.DevPosition - averageDevPosition + roomCornerVector) * 2.0f;
 
 					string line = $"{FancyRoomCasing(replaceRoom.replacedRoom)}: " +
 								$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
