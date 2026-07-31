@@ -101,9 +101,8 @@ public class Connection : ConnectionVisual{
 			WorldWindow.connectionsToBeRemoved.Add(this);
 			return;
 		}
+		base.Draw();
 		if (WorldWindow.CullTest(this.fittedAABB)) {
-			base.Draw();
-
 			if (!this.AVisible || !this.BVisible || !this.ConnectionVisible)
 				return;
 			if (this.timeline.timelines.Count == 0 || this.timeline.timelineType == TimelineType.All)
