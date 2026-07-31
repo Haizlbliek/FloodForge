@@ -53,6 +53,7 @@ public class FloodforgeConfigPopup : Popup {
 	private readonly SettingEditableReferrer<bool, BoolToggleEditable> DEBUGVisibleShortcutEntranceData = new (Settings.DEBUGVisibleShortcutEntranceData, new (Settings.DEBUGVisibleShortcutEntranceData.value));
 	private readonly SettingEditableReferrer<bool, BoolToggleEditable> DEBUGRoomWireframe = new (Settings.DEBUGRoomWireframe, new (Settings.DEBUGRoomWireframe.value));
 	private readonly SettingEditableReferrer<bool, BoolToggleEditable> DEBUGLogInvalidSlopes = new (Settings.DEBUGLogInvalidSlopes, new (Settings.DEBUGLogInvalidSlopes.value));
+	private readonly SettingEditableReferrer<bool, BoolToggleEditable> DEBUGVerboseExportLog = new (Settings.DEBUGVerboseExportLog, new (Settings.DEBUGVerboseExportLog.value));
 	
 
 	public override void Draw() {
@@ -197,6 +198,10 @@ public class FloodforgeConfigPopup : Popup {
 		GotoNextSetting();
 		font.Write(this.DEBUGLogInvalidSlopes.settingName, this.bounds.x0 + 0.01f, settingRect.y1, 0.03f, Font.Align.TopLeft);
 		UI.CheckBox(squareRect, ref this.DEBUGLogInvalidSlopes.ValueRef);
+
+		GotoNextSetting();
+		font.Write(this.DEBUGVerboseExportLog.settingName, this.bounds.x0 + 0.01f, settingRect.y1, 0.03f, Font.Align.TopLeft);
+		UI.CheckBox(squareRect, ref this.DEBUGVerboseExportLog.ValueRef);
 
 		GotoNextSetting();
 		this.maxScroll = -(y - this.scroll) - this.bounds.y1;

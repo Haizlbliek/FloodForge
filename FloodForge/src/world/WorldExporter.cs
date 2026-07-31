@@ -471,16 +471,12 @@ public static class WorldExporter {
 		return finalTags + "}";
 	}
 
-	
-	// TODO - add bool setting for verbose export logging
-	private static bool DoExportLog = false;
 	private static void ExportLog(string message) {
-		if (DoExportLog)
+		if (Settings.DEBUGVerboseExportLog)
 			Logger.Info(message);
 	}
 
 	// TODO - make this a hundred times more compact (this is a naive implementation)
-	// TODO - implement replaceRoom support
 	public static bool KhyExporter() {
 		ExportLog("");
 		ExportLog("========================================");
