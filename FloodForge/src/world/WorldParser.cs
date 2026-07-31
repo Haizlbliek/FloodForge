@@ -829,7 +829,22 @@ public static class WorldParser {
 				connection.timeline.timelineType = TimelineType.Except;
 				timelines.ForEach(x => connection.timeline.timelines.Add(x));
 			}
-			ConditionalConnection conditionalConnection = new(connection.roomA == room ? connection.roomA : connection.roomB, connection.roomA == room ? connection.roomAExitID : connection.roomBExitID, toConnection, link) {
+
+			Room roomA = connection.roomA == room ? connection.roomA : connection.roomB;
+			uint roomAID = connection.roomA == room ? connection.roomAExitID : connection.roomBExitID;
+
+			for (int i = 0; i < conditionalConnectionsToAdd.Count; i++) {
+				ConditionalConnection potentialMatch = conditionalConnectionsToAdd[i];
+				if (potentialMatch.roomB == null && potentialMatch.roomBName.Equals(roomA.name, (StringComparison)3) && potentialMatch.roomA.name.Equals(toConnection, (StringComparison)3)) {
+					conditionalConnectionsToAdd[i] = potentialMatch with {
+						roomB = room,
+						roomBExitID = (uint) connectionId
+					};
+					return true;
+				}
+			}
+
+			ConditionalConnection conditionalConnection = new(roomA, roomAID, toConnection, link) {
 				timeline = new(TimelineType.Only, [.. timelines]),
 				preProcessorConditions = preProcessorConditions
 			};
@@ -1018,16 +1033,12 @@ public static class WorldParser {
 		Logger.Info("Loading conditional links");
 
 		List<ConditionalConnection> conditionalConnectionsToAdd = [];
-		//Logger.Info("Checking links");
 		bool success = true;
 		foreach (string link in conditionalLinks) {
-			//Logger.Info("Link: " + link);
-			//Logger.Info($"Parsing link {link}");
 			if (!ParseWorldConditionalLink(link, ref conditionalConnectionsToAdd)) {
 				success = false;
 				Logger.Warn($"Parse failed on link {link}");
 			}
-			//Logger.Info($"--Link Parsed--");
 		}
 
 		foreach (ConditionalConnection connectionData in conditionalConnectionsToAdd) {
