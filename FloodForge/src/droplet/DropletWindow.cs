@@ -668,6 +668,8 @@ public static class DropletWindow {
 				UI.StrokeRect(rect);
 
 				if (selectionState == 4) {
+					DrawSelection();
+
 					Immediate.Color(Themes.BorderHighlight);
 					UI.StrokeRect(rect.x0 + currentDragged.x, rect.y0 - currentDragged.y, rect.x1 + currentDragged.x, rect.y1 - currentDragged.y);
 				}
@@ -675,6 +677,204 @@ public static class DropletWindow {
 		}
 
 		lastMouseDrawing = Mouse.Left || Mouse.Right;
+	}
+
+	// REVIEW - create a more streamlined version of this?
+	// TODO - find a way to have the shortcutdots not draw as solid squares
+	private static void DrawSelection() {
+		Vector2i pasteStart = selectionStart + currentDragged;
+		Vector2i pasteEnd = selectionEnd + currentDragged + Vector2i.One;
+		Program.gl.Enable(EnableCap.Blend);
+		Immediate.Begin(Immediate.PrimitiveType.QUADS);
+		Immediate.Color(Color.Blue);
+		Immediate.Alpha(0.25f);
+		Immediate.Vertex(pasteStart.x, -pasteStart.y);
+		Immediate.Vertex(pasteEnd.x, -pasteStart.y);
+		Immediate.Vertex(pasteEnd.x, -pasteEnd.y);
+		Immediate.Vertex(pasteStart.x, -pasteEnd.y);
+
+		int index = 0;
+		for (int x = pasteStart.x; x < pasteEnd.x; x++) {
+			for (int y = pasteStart.y; y < pasteEnd.y; y++) {
+				float x0 = roomRect.x0 + x;
+				float y0 = roomRect.y1 - y;
+				float x1 = x0 + 1;
+				float y1 = y0 - 1;
+				uint geo = selectionGeometry[index];
+
+				// Solid Blocks
+				if ((geo % 16) == 1) {
+					Immediate.Color(Themes.RoomSolid);
+					Immediate.Alpha(0.5f);
+					Immediate.Vertex(x0, y0);
+					Immediate.Vertex(x1, y0);
+					Immediate.Vertex(x1, y1);
+					Immediate.Vertex(x0, y1);
+				}
+				// Platforms
+				else if ((geo % 16) == 3) {
+					Immediate.Color(Themes.RoomPlatform);
+					Immediate.Alpha(0.5f);
+					Immediate.Vertex(x0, y0);
+					Immediate.Vertex(x1, y0);
+					Immediate.Vertex(x1, y0 - 0.5f);
+					Immediate.Vertex(x0, y0 - 0.5f);
+				}
+				// Slopes
+				else if ((geo % 16) == 2) {
+					uint type = (Room.GetTile(x, y) & (1024 + 2048)) / 1024;
+					Immediate.Color(Themes.RoomSolid);
+					Immediate.Alpha(0.5f);
+
+					if (type == 0) {
+						Immediate.Vertex(x0, y1);
+						Immediate.Vertex(x1, y0);
+						Immediate.Vertex(x0, y0);
+						Immediate.Vertex(x0, y1);
+					}
+					else if (type == 1) {
+						Immediate.Vertex(x0, y0);
+						Immediate.Vertex(x1, y1);
+						Immediate.Vertex(x0, y1);
+						Immediate.Vertex(x0, y0);
+					}
+					else if (type == 2) {
+						Immediate.Vertex(x0, y0);
+						Immediate.Vertex(x1, y0);
+						Immediate.Vertex(x1, y1);
+						Immediate.Vertex(x0, y0);
+					}
+					else if (type == 3) {
+						Immediate.Vertex(x0, y1);
+						Immediate.Vertex(x1, y0);
+						Immediate.Vertex(x1, y1);
+						Immediate.Vertex(x0, y1);
+					}
+				}
+				// Shortcut Entrances
+				else if ((geo % 16) == 4) {
+					Immediate.Color(Themes.RoomShortcutEntrance);
+					Immediate.Alpha(0.5f);
+					Immediate.Vertex(x0, y0);
+					Immediate.Vertex(x1, y0);
+					Immediate.Vertex(x1, y1);
+					Immediate.Vertex(x0, y1);
+				}
+
+				// Vertical Poles
+				if ((geo & 16) > 0) {
+					Immediate.Color(Themes.RoomPole);
+					Immediate.Alpha(0.5f);
+					Immediate.Vertex(x0 + 0.4f, y0);
+					Immediate.Vertex(x1 - 0.4f, y0);
+					Immediate.Vertex(x1 - 0.4f, y1);
+					Immediate.Vertex(x0 + 0.4f, y1);
+				}
+				// Horizontal Poles
+				if ((geo & 32) > 0) {
+					Immediate.Color(Themes.RoomPole);
+					Immediate.Alpha(0.5f);
+					Immediate.Vertex(x0, y0 - 0.4f);
+					Immediate.Vertex(x1, y0 - 0.4f);
+					Immediate.Vertex(x1, y1 + 0.4f);
+					Immediate.Vertex(x0, y1 + 0.4f);
+				}
+				index++;
+			}
+		}
+		Immediate.End();
+
+		Profiler.MarkPoint("Geo");
+
+		Immediate.UseTexture(GeometryTexture);
+		Immediate.Begin(Immediate.PrimitiveType.QUADS);
+
+		index = 0;
+		for (int x = pasteStart.x; x < pasteEnd.x; x++) {
+			for (int y = pasteStart.y; y < pasteEnd.y; y++) {
+				float x0 = roomRect.x0 + x;
+				float y0 = roomRect.y1 - y - 1;
+				float x1 = x0 + 1;
+				float y1 = y0 + 1;
+				uint geo = selectionGeometry[index];
+
+				if ((geo & 15) == 4) {
+					Immediate.Color(Themes.RoomShortcutRoom);
+					Immediate.Alpha(0.5f);
+					if ((Room.GetTile(x, y + 1) & 128) > 0) {
+						UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0f, 0f, 0.125f, 0.125f));
+					}
+					else if ((Room.GetTile(x - 1, y) & 128) > 0) {
+						UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.125f, 0f, 0.25f, 0.125f));
+					}
+					else if ((Room.GetTile(x + 1, y) & 128) > 0) {
+						UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.25f, 0f, 0.375f, 0.125f));
+					}
+					else if ((Room.GetTile(x, y - 1) & 128) > 0) {
+						UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.375f, 0f, 0.5f, 0.125f));
+					}
+					else {
+						UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.125f, 0.125f, 0.25f, 0.25f));
+					}
+				}
+				else if ((geo & 64) > 0) {
+					Immediate.Color(Themes.RoomShortcutRoom);
+					Immediate.Alpha(0.5f);
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0f, 0.375f, 0.125f, 0.5f));
+				}
+				else if ((geo & 128) > 0) {
+					Immediate.Color(Themes.RoomShortcutDot);
+					Immediate.Alpha(0.5f);
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0f, 0.125f, 0.125f, 0.25f));
+				}
+
+				if ((geo & 256) > 0) {
+					Immediate.Color(Themes.RoomShortcutDen);
+					Immediate.Alpha(0.5f);
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.125f, 0.375f, 0.25f, 0.5f));
+				}
+				if ((geo & 4096) > 0) {
+					Immediate.Color(Themes.RoomShortcutDen);
+					Immediate.Alpha(0.5f);
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.25f, 0.375f, 0.375f, 0.5f));
+				}
+				if ((geo & 8192) > 0) {
+					Immediate.Color(Themes.RoomShortcutDen);
+					Immediate.Alpha(0.5f);
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.375f, 0.375f, 0.5f, 0.5f));
+				}
+				if ((geo & 16384) > 0) {
+					Immediate.Color(Themes.RoomShortcutDot);
+					Immediate.Alpha(0.5f);
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.25f, 0.125f, 0.375f, 0.25f));
+				}
+				if ((geo & 32768) > 0) {
+					Immediate.Color(Themes.RoomShortcutDot);
+					Immediate.Alpha(0.5f);
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.25f, 0.25f, 0.375f, 0.375f));
+				}
+				if ((geo & 65536) > 0) {
+					Immediate.Color(Themes.RoomShortcutDot);
+					Immediate.Alpha(0.5f);
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.375f, 0.25f, 0.5f, 0.375f));
+				}
+				if ((geo & 262144) > 0) {
+					Immediate.Color(Themes.RoomShortcutDot);
+					Immediate.Alpha(0.5f);
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0.125f, 0.25f, 0.25f, 0.375f));
+				}
+				if ((geo & 524288) > 0) {
+					Immediate.Color(Themes.RoomShortcutDot);
+					Immediate.Alpha(0.5f);
+					UI.FillRectNoCall(new UVRect(x0, y0, x1, y1).UV(0f, 0.25f, 0.125f, 0.375f));
+				}
+				index++;
+			}
+		}
+		Immediate.Alpha(1f);
+		Program.gl.Disable(EnableCap.Blend);
+		Immediate.End();
+		Immediate.UseTexture(null);
 	}
 
 	private static bool DrawCameraAngle(Vector2 pos, ref Vector2 angle, bool dragging) {
