@@ -1188,30 +1188,12 @@ public static class WorldWindow {
 			}
 			Profiler.MarkPoint("rooms", 0, true);
 		}
-		Profiler.MarkPoint("DrawRooms");
 
 		if (placingRoom) {
 			roomPlacementVisualiser.Draw();
 		}
 		Program.gl.Disable(EnableCap.Blend);
-
-		// REVIEW - reorder so connections are drawn over replacerooms
-		foreach (Connection connection in WorldWindow.region.connections) {
-			Rect connectionAABB = connection.fittedAABB;
-			if (Settings.DEBUGVisibleConnectionBounds) {
-				Immediate.Color(Color.Cyan);
-				UI.StrokeRect(connectionAABB);
-			}
-			connection.Draw();
-		}
-		foreach (Connection connection in WorldWindow.connectionsToBeRemoved) {
-			connection.roomA.Disconnect(connection);
-			connection.roomB.Disconnect(connection);
-			region.connections.Remove(connection);
-		}
-
-		DrawCurrentConnection();
-		Profiler.MarkPoint("DrawConnections");
+		Profiler.MarkPoint("DrawRooms");
 
 		foreach (ReplaceRoom replaceRoom in replaceRooms) {
 			if (!VisibleLayers[replaceRoom.replacedRoom.data.layer] || !VisibleTimeline.OverlapsWith(replaceRoom.timeline))
@@ -1238,6 +1220,24 @@ public static class WorldWindow {
 				}
 			}
 		}
+		Profiler.MarkPoint("DrawReplaceRooms");
+
+		foreach (Connection connection in WorldWindow.region.connections) {
+			Rect connectionAABB = connection.fittedAABB;
+			if (Settings.DEBUGVisibleConnectionBounds) {
+				Immediate.Color(Color.Cyan);
+				UI.StrokeRect(connectionAABB);
+			}
+			connection.Draw();
+		}
+		foreach (Connection connection in WorldWindow.connectionsToBeRemoved) {
+			connection.roomA.Disconnect(connection);
+			connection.roomB.Disconnect(connection);
+			region.connections.Remove(connection);
+		}
+
+		DrawCurrentConnection();
+		Profiler.MarkPoint("DrawConnections");
 
 		if (selectingState == SelectingState.Selecting) {
 			Program.gl.Enable(EnableCap.Blend);
