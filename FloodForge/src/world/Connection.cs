@@ -56,7 +56,7 @@ public class Connection : ConnectionVisual{
 		};
 	}
 
-	public override (Color, Color) GetColorInformation(bool fadeMiddle, bool AVisible, bool BVisible, bool hovered) {
+	protected override (Color, Color) GetColorInformation(bool fadeMiddle, bool AVisible, bool BVisible, bool hovered) {
 		bool roomConnectionHoverColor = (!fadeMiddle) && AVisible && BVisible && hovered;
 		Color connectionColorA;
 		Color connectionColorB;
