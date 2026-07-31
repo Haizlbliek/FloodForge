@@ -87,6 +87,7 @@ public static class WorldWindow {
 	public static Room? highlightRoom;
 
 	public static Connection? NewConnection;
+	public static FreeConnection? CurrentConnectionVisual;
 	public static Vector2? ConnectionStartClickPosition;
 	public static Vector2? ConnectionStart;
 	public static Vector2? ConnectionEnd;
@@ -396,6 +397,7 @@ public static class WorldWindow {
 				}
 
 				if (hoveringRoom.Visible) {
+					CurrentConnectionVisual = new(true);
 					ConnectionStart = hoveringRoom.GetConnectionConnectPoint((uint)hoveredRoomExit);
 					ConnectionStartClickPosition = worldMouse;
 					ConnectionEnd = ConnectionStart;
@@ -519,6 +521,7 @@ public static class WorldWindow {
 
 			ConnectionStart = null;
 			ConnectionEnd = null;
+			CurrentConnectionVisual = null;
 			connectionState = ConnectionState.None;
 		}
 	}
@@ -1091,53 +1094,20 @@ public static class WorldWindow {
 	}
 
 	private static void DrawCurrentConnection() {
-		if (ConnectionStart == null || ConnectionEnd == null || NewConnection == null)
+		if (ConnectionStart == null || ConnectionEnd == null || NewConnection == null || CurrentConnectionVisual == null)
 			return;
 
-		// REVIEW - add separate theme color for warning
-		Immediate.Color(CurrentConnectionValid ? (CurrentConnectionWarn ? Themes.TextWarn : Themes.RoomConnectionHover) : Themes.RoomConnectionInvalid);
+		// REVIEW - add separate theme color for connection warning
+		Color colorToDraw = CurrentConnectionValid ? (CurrentConnectionWarn ? Themes.TextWarn : Themes.RoomConnectionHover) : Themes.RoomConnectionInvalid;
 
 		bool isSingleExitConnection = NewConnection.roomA == NewConnection.roomB && NewConnection.roomAExitID == NewConnection.roomBExitID;
 
-		float directionStrength = (ConnectionStart - ConnectionEnd).Value.Length;
-		if (directionStrength > 300f)
-			directionStrength = (directionStrength - 300f) * 0.5f + 300f;
+		Vector2 pointA = ConnectionStart.Value;
+		Vector2 pointB = ConnectionEnd.Value;
+		Vector2i directionA = NewConnection.roomA.GetConnectionConnectDirection(NewConnection.roomAExitID);
+		Vector2i directionB = NewConnection.roomB?.GetConnectionConnectDirection(NewConnection.roomBExitID) ?? Vector2i.Zero;
 
-		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-			Vector2 endPoint = ConnectionEnd.Value;
-			if (isSingleExitConnection)
-				endPoint += (NewConnection.roomB?.GetConnectionConnectDirection(NewConnection.roomBExitID) ?? Vector2.Zero) * 3;
-			UI.Line(ConnectionStart.Value, endPoint, cameraScale / 4f);
-		}
-		else {
-			Vector2 directionA = NewConnection.roomA.GetConnectionConnectDirection(NewConnection.roomAExitID);
-			Vector2 directionB = NewConnection.roomB?.GetConnectionConnectDirection(NewConnection.roomBExitID) ?? Vector2.Zero;
-
-			if (isSingleExitConnection) {
-				directionStrength = 10f;
-				directionA += new Vector2(-directionA.y, directionA.x);
-				directionB += new Vector2(directionB.y, -directionB.x);
-			}
-
-			if (directionA.x == -directionB.x || directionA.y == -directionB.y) {
-				directionStrength *= 0.3333f;
-			}
-			else {
-				directionStrength *= 0.6666f;
-			}
-
-			directionA *= directionStrength;
-			directionB *= directionStrength;
-
-			int segments = isSingleExitConnection ? 10 : Math.Clamp(Mathf.RoundToInt(Math.Max((ConnectionStart - ConnectionEnd).Value.Length, (ConnectionStart + directionA - (ConnectionEnd + directionB)).Value.Length) / 2f), 4, 100);
-
-			Vector2 lastPoint = MathUtil.BezierCubic(0f, ConnectionStart.Value, ConnectionStart.Value + directionA, ConnectionEnd.Value + directionB, ConnectionEnd.Value);
-			for (float t = 1f / segments; t <= 1.01f; t += 1f / segments) {
-				Vector2 point = MathUtil.BezierCubic(t, ConnectionStart.Value, ConnectionStart.Value + directionA, ConnectionEnd.Value + directionB, ConnectionEnd.Value);
-				UI.Line(lastPoint, point, cameraScale / 4f);
-				lastPoint = point;
-			}
-		}
+		CurrentConnectionVisual.Draw(pointA, pointB, directionA, directionB, colorToDraw, isSingleExitConnection);
 	}
 
 	private static void DrawEditor() {
@@ -1225,6 +1195,7 @@ public static class WorldWindow {
 		}
 		Program.gl.Disable(EnableCap.Blend);
 
+		// REVIEW - reorder so connections are drawn over replacerooms
 		foreach (Connection connection in WorldWindow.region.connections) {
 			Rect connectionAABB = connection.fittedAABB;
 			if (Settings.DEBUGVisibleConnectionBounds) {
