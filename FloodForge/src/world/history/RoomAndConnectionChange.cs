@@ -14,7 +14,7 @@ public class RoomAndConnectionChange : Change {
 
 	public void AddRoom(Room room) {
 		foreach (Connection connection in room.connections) {
-			if(this.rooms.Contains(connection.roomA) || this.rooms.Contains(connection.roomB))
+			if(this.rooms.Contains(connection.roomA) || this.rooms.Contains(connection.roomB) || connection.roomA == room && connection.roomA == room)
 				this.internalConnections.Add(connection);
 		}
 		this.rooms.Add(room);
