@@ -125,7 +125,7 @@ public static class WorldWindow {
 	// REVIEW - find a way to make this more flexible - a list of all draggables?
 	public static Room? HoveringRoom => region.rooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
 	public static ReferenceImage? HoveringReferenceImage => referenceImages.LastOrDefault(i => i.Inside(worldMouse));
-	public static ReplaceRoom? HoveringReplaceRoom => replaceRooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
+	public static ReplaceRoom? HoveringReplaceRoom => !VisibleReplaceRooms ? null : replaceRooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
 	public static WorldDraggable? HoveringDraggable => (placingRoom && roomPlacementVisualiser.Inside(worldMouse)) ? roomPlacementVisualiser : HoveringReplaceRoom ?? HoveringRoom ?? (WorldDraggable?)HoveringReferenceImage;
 
 	public static Connection? HoveringConnection => region.connections?.LastOrDefault(c => {
@@ -1346,7 +1346,8 @@ public static class WorldWindow {
 					debugText.Add(totalDebug[j]);
 				}
 			}
-			debugText.Add($"ReplaceReferenceRooms: {replaceReferenceRooms.Count}");
+			if (replaceReferenceRooms.Count != 0)
+				debugText.Add($"ReplaceReferenceRooms: {replaceReferenceRooms.Count}");
 
 			if (hoveringConnection != null) {
 				bool specifyTimelines = hoveringConnection.timeline.timelineType != TimelineType.All || hoveringConnection.roomA.timeline.timelineType != TimelineType.All || hoveringConnection.roomB.timeline.timelineType != TimelineType.All;
@@ -1430,9 +1431,9 @@ public static class WorldWindow {
 											canHaveArrows = true;
 										}
 										if (finalString != "") {
-											Timeline effectiveTimeline = connection.EffectiveConnectionTimeline;
-											if (effectiveTimeline.timelineType != TimelineType.All) {
-												string timelineText = effectiveTimeline.ToString();
+											Timeline connectionTimeline = connection.timeline;
+											if (connectionTimeline.timelineType != TimelineType.All) {
+												string timelineText = connectionTimeline.ToString();
 												finalString = $"({(timelineText != "" ? timelineText : "NONE")}){finalString}";
 											}
 											if (connection == hoveringConnection && canHaveArrows)
