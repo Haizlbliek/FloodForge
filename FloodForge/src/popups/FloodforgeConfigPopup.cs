@@ -55,7 +55,7 @@ public class FloodforgeConfigPopup : Popup {
 	private readonly SettingEditableReferrer<bool, BoolToggleEditable> DEBUGLogInvalidSlopes = new (Settings.DEBUGLogInvalidSlopes, new (Settings.DEBUGLogInvalidSlopes.value));
 	private readonly SettingEditableReferrer<bool, BoolToggleEditable> DEBUGVerboseExportLog = new (Settings.DEBUGVerboseExportLog, new (Settings.DEBUGVerboseExportLog.value));
 	
-
+	// REVIEW - the cursor overrides behave weirdly for some reason
 	public override void Draw() {
 		base.Draw();
 
