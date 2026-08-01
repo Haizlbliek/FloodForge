@@ -113,6 +113,7 @@ public class Connection : ConnectionVisual{
 	}
 
 	protected void DrawTimelineIcons() {
+		// TODO - make the icons center themselves within the connection bounds when the total square size exceeds the bounds
 		float size = WorldWindow.SelectorScale * (this.Hovered ? 1.5f : 1f);
 		int squareWidth = Mathf.CeilToInt(Mathf.Sqrt(this.timeline.timelines.Count));
 		int squareHeight = 0;

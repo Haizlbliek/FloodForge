@@ -53,24 +53,34 @@ public class ReplaceRoom : MapDraggable {
 		}
 
 		if (WorldWindow.VisibleTimelineIcons) {
+			float scale = WorldWindow.SelectorScale;
 			int i = 0;
 			Immediate.Color(1f, 1f, 1f);
+			float roomCenterX = renderedPosition.x + this.replacingRoom.width / 2;
+			float centerX = renderedPosition.x + this.timeline.timelines.Count * scale / 2;
+			centerX = Math.Min(roomCenterX, centerX);
+			float startX = centerX - (this.timeline.timelines.Count - 1f) * scale / 2;
+
+			float roomCenterY = renderedPosition.y - this.replacingRoom.height / 2;
+			float yVal = renderedPosition.y - 0.5f * scale;
+			yVal = Math.Max(roomCenterY, yVal);
+
 			foreach (string timeline in this.timeline.timelines) {
-				UI.CenteredTexture(Mods.GetTimelineTexture(timeline), renderedPosition.x - 0.5f + ((i + 0.5f) * WorldWindow.SelectorScale), renderedPosition.y + 0.5f - (0.5f * WorldWindow.SelectorScale), WorldWindow.SelectorScale);
+				UI.TrueCenteredTexture(Mods.GetTimelineTexture(timeline), startX + (i * scale), yVal, scale);
 				i++;
 			}
 
 			if (this.timeline.timelines.Count > 0 && this.timeline.timelineType == TimelineType.Except) {
 				Immediate.Color(1f, 0f, 0f);
-				UI.Line(renderedPosition.x, renderedPosition.y - (0.5f * WorldWindow.SelectorScale), renderedPosition.x + this.timeline.timelines.Count * WorldWindow.SelectorScale, renderedPosition.y - (0.5f * WorldWindow.SelectorScale), WorldWindow.SelectorScale * 4f);
+				UI.Line(startX - 0.5f * scale, yVal, startX + (this.timeline.timelines.Count - 0.5f) * scale, yVal, scale * 4f);
 			}
 
 			if (this.preProcessorConditions.Length != 0) {
 				Immediate.Color(1f, 1f, 0f);
-				float x0 = renderedPosition.x + 0.1f * WorldWindow.SelectorScale;
-				float y0 = renderedPosition.y;
-				float y1 = renderedPosition.y - 1f * WorldWindow.SelectorScale;
-				UI.Line(x0, y0, x0, y1, WorldWindow.SelectorScale * 3f);
+				float x0 = startX - 0.4f * scale;
+				float y0 = yVal + 0.5f * scale;
+				float y1 = yVal - 0.5f * scale;
+				UI.Line(x0, y0, x0, y1, scale * 3f);
 			}
 		}
     }
