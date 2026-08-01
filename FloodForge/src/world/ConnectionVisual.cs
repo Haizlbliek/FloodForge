@@ -99,10 +99,26 @@ public abstract class ConnectionVisual {
 		}
 		else {
 			this.directionStrength = (pointA - pointB).Length;
+			Vector2 fromToDirection = pointB - pointA; // from A to B
+			float dotA = Vector2.Dot(directionA.Normalized, fromToDirection.Normalized);
+			float dotB = -Vector2.Dot(directionB.Normalized, fromToDirection.Normalized);
 			if (createLoop) {
 				this.directionStrength = 10f;
 				directionA += new Vector2(-directionA.y, directionA.x);
 				directionB += new Vector2(directionB.y, -directionB.x);
+			}
+			else if (dotA < -0.8f && dotB < -0.8f) {
+				float averageDot = (Mathf.Abs(dotA) + Mathf.Abs(dotB)) / 2f;
+				float dotEffectMagnitude = (averageDot - 0.8f) * 5;
+				Vector2 rotatedDirA = new Vector2(-directionA.y, directionA.x);
+				if (Vector2.Dot(fromToDirection, rotatedDirA) < 0)
+					rotatedDirA *= -1;
+				Vector2 rotatedDirB = new Vector2(-directionB.y, directionB.x);
+				if (Vector2.Dot(-fromToDirection, rotatedDirB) < 0)
+					rotatedDirB *= -1;
+
+				directionA = (directionA + rotatedDirA * dotEffectMagnitude).Normalized * directionA.Length;
+				directionB = (directionB + rotatedDirB * dotEffectMagnitude).Normalized * directionB.Length;
 			}
 			if (this.directionStrength > 300f) {
 				this.directionStrength = this.directionStrength * 0.5f + 150f;
