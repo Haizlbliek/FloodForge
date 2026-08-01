@@ -25,6 +25,7 @@ public static class WorldWindow {
 	public static bool VisibleDevItems { get; private set; } = false;
 	public static bool VisibleCreatures { get; private set; } = true;
 	public static bool VisibleTimelineIcons { get; private set; } = true;
+	public static bool VisibleReplaceRooms { get; private set; } = true;
 	public static RoomPosition PositionType { get; private set; } = RoomPosition.Canon;
 	public static RoomColors ColorType { get; private set; } = RoomColors.None;
 	public static readonly bool[] VisibleLayers = [true, true, true];
@@ -1195,28 +1196,30 @@ public static class WorldWindow {
 		Program.gl.Disable(EnableCap.Blend);
 		Profiler.MarkPoint("DrawRooms");
 
-		foreach (ReplaceRoom replaceRoom in replaceRooms) {
-			if (!VisibleLayers[replaceRoom.replacedRoom.data.layer] || !VisibleTimeline.OverlapsWith(replaceRoom.timeline))
-				continue;
+		if (VisibleReplaceRooms) {
+			foreach (ReplaceRoom replaceRoom in replaceRooms) {
+				if (!VisibleLayers[replaceRoom.replacedRoom.data.layer] || !VisibleTimeline.OverlapsWith(replaceRoom.timeline))
+					continue;
 
-			if (PositionType == RoomPosition.Both) {
-				replaceRoom.Draw(RoomPosition.Canon);
-				replaceRoom.Draw(RoomPosition.Dev);
-			}
-			else {
-				replaceRoom.Draw(PositionType);
-				if (Keys.Modifier(Keys.Modifiers.Alt)) {
-					replaceRoom.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
+				if (PositionType == RoomPosition.Both) {
+					replaceRoom.Draw(RoomPosition.Canon);
+					replaceRoom.Draw(RoomPosition.Dev);
 				}
-			}
+				else {
+					replaceRoom.Draw(PositionType);
+					if (Keys.Modifier(Keys.Modifiers.Alt)) {
+						replaceRoom.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
+					}
+				}
 
-			if (selectedDraggables.Contains(replaceRoom)) {
-				Immediate.Color(Themes.SelectionBorder);
-				if (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) {
-					UI.StrokeRect(Rect.FromSize(replaceRoom.DevPosition.x, replaceRoom.DevPosition.y, replaceRoom.replacingRoom.width, -replaceRoom.replacingRoom.height), cameraScale / 4f);
-				}
-				if (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) {
-					UI.StrokeRect(Rect.FromSize(replaceRoom.CanonPosition.x, replaceRoom.CanonPosition.y, replaceRoom.replacingRoom.width, -replaceRoom.replacingRoom.height), cameraScale / 4f);
+				if (selectedDraggables.Contains(replaceRoom)) {
+					Immediate.Color(Themes.SelectionBorder);
+					if (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) {
+						UI.StrokeRect(Rect.FromSize(replaceRoom.DevPosition.x, replaceRoom.DevPosition.y, replaceRoom.replacingRoom.width, -replaceRoom.replacingRoom.height), cameraScale / 4f);
+					}
+					if (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) {
+						UI.StrokeRect(Rect.FromSize(replaceRoom.CanonPosition.x, replaceRoom.CanonPosition.y, replaceRoom.replacingRoom.width, -replaceRoom.replacingRoom.height), cameraScale / 4f);
+					}
 				}
 			}
 		}
@@ -2129,6 +2132,11 @@ public static class WorldWindow {
 					new Button("Timeline icons: Shown", button => {
 						VisibleTimelineIcons = !VisibleTimelineIcons;
 						button.Text = VisibleTimelineIcons ? "Timeline icons: Shown" : "Timeline icons: Hidden";
+					}, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
+
+					new Button("ReplaceRooms: Shown", button => {
+						VisibleReplaceRooms = !VisibleReplaceRooms;
+						button.Text = VisibleReplaceRooms ? "ReplaceRooms: Shown" : "ReplaceRooms: Hidden";
 					}, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
 
 					new Button("Canon", button => {
