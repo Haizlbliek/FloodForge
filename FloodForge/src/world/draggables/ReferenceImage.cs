@@ -37,7 +37,7 @@ public class ReferenceImage : WorldDraggable {
 	}
 
 	public void UpdateBounds() {
-		this.imageBounds = new Rect(this.Position.x - this.Width + 0.5f, this.Position.y + this.Height - 0.5f, this.position.x + this.Width + 0.5f, this.Position.y - this.Height - 0.5f);
+		this.imageBounds = new Rect(this.Position.x - this.Width, this.Position.y + this.Height, this.position.x + this.Width, this.Position.y - this.Height);
 	}
 
 	public void Draw() {
@@ -47,7 +47,7 @@ public class ReferenceImage : WorldDraggable {
 				Program.gl.Enable(EnableCap.Blend);
 				Immediate.Alpha(this.opacity);
 			}
-			UI.CenteredTexture(this.image, this.Position.x, this.Position.y, this.Width * 2);
+			UI.TrueCenteredTexture(this.image, this.Position.x, this.Position.y, this.Width * 2);
 			if (this.opacity != 1f) {
 				Program.gl.Disable(EnableCap.Blend);
 				Immediate.Alpha(1f);
