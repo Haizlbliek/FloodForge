@@ -120,9 +120,7 @@ public class Connection : ConnectionVisual{
 			squareHeight++;
 		}
 
-		// REVIEW - re-add BezierMiddle point in recalculateBezier (for the true center of the bezier)
-		Vector2 middleBezierPoint = this.BezierPoints[Mathf.FloorToInt(this.BezierPoints.Length / 2)];
-		Vector2 topLeftPoint = middleBezierPoint - new Vector2(squareWidth / 2f, -squareHeight / 2f) * size;
+		Vector2 topLeftPoint = this.BezierMiddlePoint - new Vector2(squareWidth / 2f, -squareHeight / 2f) * size;
 
 		if (WorldWindow.VisibleTimelineIcons) {
 			HashSet<string>.Enumerator timelineEnumerator = this.timeline.timelines.GetEnumerator();
