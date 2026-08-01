@@ -554,8 +554,41 @@ public static class UI {
 		uvx *= 0.5f;
 		uvy *= 0.5f;
 
-		float centerX = x + 0.5f;
+		float centerX = x + 0.5f; // this doesn't take into account scaling, and also, makes this not CenteredTexture but TopLeftTexture. I cannot believe this /lh
 		float centerY = y - 0.5f;
+		Immediate.TexCoord(0.5f - uvx, 0.5f + uvy);
+		Immediate.Vertex(centerX - scale * 0.5f, centerY - scale * 0.5f);
+		Immediate.TexCoord(0.5f + uvx, 0.5f + uvy);
+		Immediate.Vertex(centerX + scale * 0.5f, centerY - scale * 0.5f);
+		Immediate.TexCoord(0.5f + uvx, 0.5f - uvy);
+		Immediate.Vertex(centerX + scale * 0.5f, centerY + scale * 0.5f);
+		Immediate.TexCoord(0.5f - uvx, 0.5f - uvy);
+		Immediate.Vertex(centerX - scale * 0.5f, centerY + scale * 0.5f);
+
+		Immediate.End();
+		Immediate.UseTexture(0);
+		Program.gl.Disable(EnableCap.Blend);
+	}
+
+	public static void TrueCenteredTexture(Texture texture, float centerX, float centerY, float scale) {
+		Program.gl.Enable(EnableCap.Blend);
+		Immediate.UseTexture(texture);
+		Immediate.Begin(Immediate.PrimitiveType.QUADS);
+
+		float ratio = (texture.width / (float) texture.height + 1f) * 0.5f;
+		float uvx = 1f / ratio;
+		float uvy = ratio;
+		if (uvx < 1f) {
+			uvy /= uvx;
+			uvx = 1f;
+		}
+		if (uvy < 1f) {
+			uvx /= uvy;
+			uvy = 1f;
+		}
+		uvx *= 0.5f;
+		uvy *= 0.5f;
+
 		Immediate.TexCoord(0.5f - uvx, 0.5f + uvy);
 		Immediate.Vertex(centerX - scale * 0.5f, centerY - scale * 0.5f);
 		Immediate.TexCoord(0.5f + uvx, 0.5f + uvy);
