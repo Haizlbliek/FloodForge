@@ -1,6 +1,5 @@
 namespace FloodForge.World;
 
-// IDEA - some kind of separate hide-button for replaceRooms to avoid them constantly getting in the way of the rooms they replace
 public class ReplaceRoom : MapDraggable {
 	public Room replacingRoom;
 	public Room replacedRoom;
@@ -21,8 +20,6 @@ public class ReplaceRoom : MapDraggable {
 		this.size = new (replacingRoom.width, replacingRoom.height);
 	}
 
-	//TODO - add split between CanonPosition and DevPosition to actually match with the replaced room
-	//TODO - draw the replaced room's information at the replacingroom's positions (dens)
 	//IDEA - run timeline checks when drawing dens so that dens that would only appear on replaceroom are only rendered there
     public void Draw(WorldWindow.RoomPosition positionType) {
 		if (Settings.DEBUGRoomWireframe) {
@@ -185,26 +182,4 @@ public class ReplaceRoom : MapDraggable {
 
 		return cornerMax.x >= this.Position.x && cornerMax.y >= this.Position.y - this.size.y && cornerMin.x < this.Position.x + this.size.x && cornerMin.y <= this.Position.y;
 	}
-
-	/// what does this class need to do?
-	/// it needs to:
-	/// - know what room it replaces
-	/// - know what timeline and preprocessorconditions it replaces it for
-	/// - know what room it replaces with
-	/// - be able to draw the replacing room's graphics in its place
-	/// it doesn't need to:
-	/// - keep track of dens, since the replaced room's spawns are used
-	/// - keep track of connections, since the replaced room's connections are used
-	/// 
-	/// important aspect:
-	/// - if multiple rooms are replaced by the same replaceroom, that exact same replaceroom needs to be drawn multiple times
-	/// so:
-	/// - region has a list of replacerooms
-	/// - when a replaceroom is parsed, look up whether the replaced room's virtualRoom already exists
-	/// - if it does exist, refer to it, if it doesn't, create a new virtualRoom
-	/// this way, if a room is used both as a replacement and as a normal room, editing the normal room affects all replacements
-	/// 
-	/// in short:
-	/// - ReplaceRoom : WorldDraggable { Room roomReference; }
-	/// - Room { bool isVirtualRoom; //true if a room only exists for replacerooms to use }
 }

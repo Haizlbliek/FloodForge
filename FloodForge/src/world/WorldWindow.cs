@@ -1238,6 +1238,22 @@ public static class WorldWindow {
 			connection.roomB.Disconnect(connection);
 			region.connections.Remove(connection);
 		}
+		// TODO - make this more efficient by not rebuilding every connection every single frame.
+		foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
+			foreach (Connection connection in replaceRoom.replacedRoom.connections) {
+				if (!connection.timeline.OverlapsWith(replaceRoom.timeline))
+					continue;
+				Room roomA = connection.roomA == replaceRoom.replacedRoom ? replaceRoom.replacingRoom : connection.roomA;
+				Vector2 roomAPosition = connection.roomA == replaceRoom.replacedRoom ? replaceRoom.Position : roomA.Position;
+				Room roomB = connection.roomB == replaceRoom.replacedRoom ? replaceRoom.replacingRoom : connection.roomB;
+				Vector2 roomBPosition = connection.roomB == replaceRoom.replacedRoom ? replaceRoom.Position : roomB.Position;
+				if (!roomA.ValidConnection(connection.roomAExitID) || !roomB.ValidConnection(connection.roomBExitID))
+					continue;
+				bool isLoop = roomA == roomB && connection.roomAExitID == connection.roomBExitID;
+				FreeConnection freeConnection = new(isLoop) { drawStriped = true };
+				freeConnection.Draw(roomA.GetConnectionConnectPoint(connection.roomAExitID, roomAPosition), roomB.GetConnectionConnectPoint(connection.roomBExitID, roomBPosition), roomA.GetConnectionConnectDirection(connection.roomAExitID), roomB.GetConnectionConnectDirection(connection.roomBExitID), Themes.RoomConnection, isLoop);
+			}
+		}
 
 		DrawCurrentConnection();
 		Profiler.MarkPoint("DrawConnections");

@@ -57,7 +57,7 @@ public abstract class ConnectionVisual {
 		}
 	}
 
-	protected bool drawStriped = true;
+	public bool drawStriped;
 
 	protected virtual (Color, Color) GetColorInformation(bool fadeMiddle, bool AVisible, bool BVisible, bool hovered) {
 		Color colorA = Themes.RoomConnection;
