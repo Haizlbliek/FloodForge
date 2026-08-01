@@ -13,6 +13,7 @@ public abstract class ConnectionVisual {
 	protected float directionStrength;
 
 	protected Vector2[] BezierPoints = [];
+	protected Vector2 BezierMiddlePoint;
 	public bool recalculateBezier = true;
 
 	protected Mesh connectionMesh = new Mesh();
@@ -93,6 +94,7 @@ public abstract class ConnectionVisual {
 				pointB += directionA * 3;
 			}
 			this.BezierPoints = [pointA, pointB];
+			this.BezierMiddlePoint = createLoop ? pointB : (pointA + pointB) / 2f;
 			this.fittedAABB = new Rect(pointA, pointB);
 		}
 		else {
@@ -134,6 +136,7 @@ public abstract class ConnectionVisual {
 					break;
 			}
 			this.BezierPoints = [.. bezierPoints];
+			this.BezierMiddlePoint = MathUtil.BezierCubic(0.5f, pointA, pointA + directionA, pointB + directionB, pointB);
 			this.fittedAABB = bounds;
 		}
 		this.recalculateBezier = false;
