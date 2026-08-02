@@ -56,11 +56,11 @@ public class ResizeLevelPopup : Popup {
 
 			y -= 0.06f;
 			UI.TextInputResponse widthResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.Width);
-			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).UV(0.0f, 0.5f, 0.25f, 0.75f), new UI.TextureButtonMods { disabled = widthResponse.focused })) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).AtlasUV("Plus"), new UI.TextureButtonMods { disabled = widthResponse.focused })) {
 				this.Width.value = Math.Max(int.Parse(this.Width.value) - 1, 1).ToString();
 				widthResponse = new UI.TextInputResponse(widthResponse.focused, widthResponse.hovered, true);
 			}
-			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.75f), new UI.TextureButtonMods { disabled = widthResponse.focused })) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).AtlasUV("Minus"), new UI.TextureButtonMods { disabled = widthResponse.focused })) {
 				this.Width.value = Math.Max(int.Parse(this.Width.value) + 1, 1).ToString();
 				widthResponse = new UI.TextInputResponse(widthResponse.focused, widthResponse.hovered, true);
 			}
@@ -69,11 +69,11 @@ public class ResizeLevelPopup : Popup {
 
 			y -= 0.06f;
 			UI.TextInputResponse heightResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.Height);
-			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).UV(0.0f, 0.5f, 0.25f, 0.75f), new UI.TextureButtonMods { disabled = heightResponse.focused })) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).AtlasUV("Plus"), new UI.TextureButtonMods { disabled = heightResponse.focused })) {
 				this.Height.value = Math.Max(int.Parse(this.Height.value) - 1, 1).ToString();
 				heightResponse = new UI.TextInputResponse(heightResponse.focused, heightResponse.hovered, true);
 			}
-			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.75f), new UI.TextureButtonMods { disabled = heightResponse.focused })) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).AtlasUV("Minus"), new UI.TextureButtonMods { disabled = heightResponse.focused })) {
 				this.Height.value = Math.Max(int.Parse(this.Height.value) + 1, 1).ToString();
 				heightResponse = new UI.TextInputResponse(heightResponse.focused, heightResponse.hovered, true);
 			}
@@ -82,11 +82,11 @@ public class ResizeLevelPopup : Popup {
 
 			y -= 0.06f;
 			UI.TextInputResponse screenWidthResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.ScreenWidth);
-			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).UV(0.0f, 0.5f, 0.25f, 0.75f), new UI.TextureButtonMods { disabled = screenWidthResponse.focused })) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).AtlasUV("Plus"), new UI.TextureButtonMods { disabled = screenWidthResponse.focused })) {
 				this.ScreenWidth.value = (float.Parse(this.ScreenWidth.value) - 0.5f).ToString($"F{this.ScreenWidth.floatDecimalCount}");
 				screenWidthResponse = new UI.TextInputResponse(screenWidthResponse.focused, screenWidthResponse.hovered, true);
 			}
-			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.75f), new UI.TextureButtonMods { disabled = screenWidthResponse.focused })) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).AtlasUV("Minus"), new UI.TextureButtonMods { disabled = screenWidthResponse.focused })) {
 				this.ScreenWidth.value = (float.Parse(this.ScreenWidth.value) + 0.5f).ToString($"F{this.ScreenWidth.floatDecimalCount}");
 				screenWidthResponse = new UI.TextInputResponse(screenWidthResponse.focused, screenWidthResponse.hovered, true);
 			}
@@ -95,11 +95,11 @@ public class ResizeLevelPopup : Popup {
 
 			y -= 0.06f;
 			UI.TextInputResponse screenHeightResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.ScreenHeight);
-			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).UV(0.0f, 0.5f, 0.25f, 0.75f), new UI.TextureButtonMods { disabled = screenHeightResponse.focused })) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).AtlasUV("Plus"), new UI.TextureButtonMods { disabled = screenHeightResponse.focused })) {
 				this.ScreenHeight.value = (float.Parse(this.ScreenHeight.value) - 0.5f).ToString($"F{this.ScreenHeight.floatDecimalCount}");
 				screenHeightResponse = new UI.TextInputResponse(screenHeightResponse.focused, screenHeightResponse.hovered, true);
 			}
-			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.75f), new UI.TextureButtonMods { disabled = screenHeightResponse.focused })) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).AtlasUV("Minus"), new UI.TextureButtonMods { disabled = screenHeightResponse.focused })) {
 				this.ScreenHeight.value = (float.Parse(this.ScreenHeight.value) + 0.5f).ToString($"F{this.ScreenHeight.floatDecimalCount}");
 				screenHeightResponse = new UI.TextInputResponse(screenHeightResponse.focused, screenHeightResponse.hovered, true);
 			}
@@ -130,7 +130,7 @@ public class ResizeLevelPopup : Popup {
 				this.SetResizeOffset(this.resizeLevelAnchor, this.stretchRoom);
 			}
 
-			if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.11f, 0.04f, 0.04f).UV(0.5f, 0f, 0.75f, 0.25f))) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.11f, 0.04f, 0.04f).AtlasUV("RotateRight"))) {
 				this.Width.SetValue(DropletWindow.Room.width);
 				this.Height.SetValue(DropletWindow.Room.height);
 				this.ScreenWidth.SetValue((DropletWindow.Room.width + 4) / 52f);
@@ -144,22 +144,22 @@ public class ResizeLevelPopup : Popup {
 					UVRect rect = UVRect.FromSize(this.bounds.x1 - 0.17f + x * 0.08f, this.bounds.y1 - 0.27f - yp * 0.08f, 0.07f, 0.07f);
 					int diff = Math.Abs(x - this.resizeLevelAnchor.x) + Math.Abs(yp - this.resizeLevelAnchor.y);
 					if (diff >= 2 || this.stretchRoom) {
-						rect.UV(0.0f, 0.0f, 0.0f, 0.0f);
+						rect.AtlasUV("Empty");
 					}
 					else if (diff == 0) {
-						rect.UV(0.5f, 0.25f, 0.75f, 0.5f);
+						rect.AtlasUV("BoxEmpty");
 					}
 					else if (x < this.resizeLevelAnchor.x) {
-						rect.UV(0.5f, 0.5f, 0.75f, 0.75f);
+						rect.AtlasUV("ChevronLeft");
 					}
 					else if (x > this.resizeLevelAnchor.x) {
-						rect.UV(0.75f, 0.5f, 1.0f, 0.75f);
+						rect.AtlasUV("ChevronRight");
 					}
 					else if (yp < this.resizeLevelAnchor.y) {
-						rect.UV(0.75f, 0.75f, 1.0f, 1.0f);
+						rect.AtlasUV("ChevronUp");
 					}
 					else if (yp > this.resizeLevelAnchor.y) {
-						rect.UV(0.5f, 0.75f, 0.75f, 1.0f);
+						rect.AtlasUV("ChevronDown");
 					}
 					if (UI.TextureButton(rect, new UI.TextureButtonMods() { selected = x == this.resizeLevelAnchor.x && yp == this.resizeLevelAnchor.y, disabled = this.stretchRoom })) {
 						this.resizeLevelAnchor.x = x;

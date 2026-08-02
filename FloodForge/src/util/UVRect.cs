@@ -46,6 +46,36 @@ public struct UVRect {
 		return this;
 	}
 
+	public UVRect UV(UVAtlas.UVCoordinates uv) {
+		this.uv0 = new Vector2(uv.u0, uv.v0);
+		this.uv1 = new Vector2(uv.u1, uv.v0);
+		this.uv2 = new Vector2(uv.u1, uv.v1);
+		this.uv3 = new Vector2(uv.u0, uv.v1);
+
+		return this;
+	}
+
+	public UVRect AtlasUV(string ID) {
+		return this.UV(UI.uiAtlas.UV(ID));
+	}
+
+	public UVRect Rotate(bool clockWise = true) {
+		(this.uv0, this.uv1, this.uv2, this.uv3) = clockWise ? (this.uv1, this.uv2, this.uv3, this.uv0) : (this.uv3, this.uv0, this.uv1, this.uv2);
+
+		return this;
+	}
+	public UVRect FlipV() {
+		(this.uv0, this.uv1, this.uv2, this.uv3) = (this.uv2, this.uv3, this.uv0, this.uv1);
+
+		return this;
+	}
+
+	public UVRect FlipU() {
+		(this.uv0, this.uv1, this.uv2, this.uv3) = (this.uv1, this.uv0, this.uv3, this.uv2);
+		
+		return this;
+	}
+
 	public readonly bool Inside(Vector2 point) {
 		return this.Inside(point.x, point.y);
 	}

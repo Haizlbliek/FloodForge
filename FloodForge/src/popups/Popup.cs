@@ -38,8 +38,8 @@ public abstract class Popup {
 	public Popup() {
 		this.bounds = new Rect(-0.5f, -0.5f, 0.5f, 0.5f);
 		this.minimumResizeBounds = new Rect(-0.1f, -0.1f, 0.1f, 0.1f);
-		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).UV(0f, 0f, 0.25f, 0.25f);
-		this.collapseButton = new UVRect(this.bounds.x1 - 0.1f, this.bounds.y1 - 0.05f, this.bounds.x1 - 0.05f, this.bounds.y1).UV(0f, 0.5f, 0.25f, 0.75f);
+		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).AtlasUV("cross");
+		this.collapseButton = new UVRect(this.bounds.x1 - 0.1f, this.bounds.y1 - 0.05f, this.bounds.x1 - 0.05f, this.bounds.y1).AtlasUV("minus");
 		this.UpdateScaleControls(this.bounds);
 	}
 
@@ -227,17 +227,17 @@ public abstract class Popup {
 			UI.font.WriteFormatted(this.popupTitle, this.collapsed ? this.bounds.x1 - collapsedWidth + 0.01f : this.bounds.x0 + 0.01f, this.bounds.y1 - 0.025f, 0.03f, Font.Align.MiddleLeft, textColor);
 		}
 
-		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).UV(0f, 0f, 0.25f, 0.25f);
+		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).AtlasUV("cross");
 		if (UI.TextureButton(this.closeButton)) {
 			this.Close();
 		}
 
 		this.collapseButton = new UVRect(this.bounds.x1 - 0.1f, this.bounds.y1 - 0.05f, this.bounds.x1 - 0.05f, this.bounds.y1);
 		if (this.collapsed) {
-			this.collapseButton.UV(0.25f, 0.5f, 0.5f, 0.75f);
+			this.collapseButton.AtlasUV("plus");
 		}
 		else {
-			this.collapseButton.UV(0f, 0.5f, 0.25f, 0.75f);
+			this.collapseButton.AtlasUV("minus");
 		}
 
 		if (UI.TextureButton(this.collapseButton)) {

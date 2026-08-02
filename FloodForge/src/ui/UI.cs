@@ -15,6 +15,7 @@ public static class UI {
 	public static Font rodondo = null!;
 
 	public static Texture ui = null!;
+	public static UVAtlas uiAtlas = null!;
 
 	public static bool CanClick => !Mouse.Disabled && (clipRect?.Inside(Mouse.X, Mouse.Y) ?? true);
 
@@ -24,6 +25,24 @@ public static class UI {
 		rodondo = new Font(Main.AprilFools ? "ComicSand" : "Rodondo");
 
 		ui = Texture.Load("assets/ui.png");
+		uiAtlas = new([
+			new ("Cross",			new(0f,		0.25f,	0.25f,	0f		)),
+			new ("ArrowUp",			new(0.25f,	0.25f,	0.5f,	0f		)),
+			new ("RotateRight",		new(0.5f,	0.25f,	0.75f,	0f		)),
+			new ("DotsHorizontal",	new(0.75f,	0.25f,	1f,		0f		)),
+			new ("Page",			new(0f,		0.5f,	0.25f,	0.25f	)),
+			new ("Folder",			new(0.25f,	0.5f,	0.5f,	0.25f	)),
+			new ("BoxEmpty",		new(0.5f,	0.5f,	0.75f,	0.25f	)),
+			new ("BoxFull",			new(0.75f,	0.5f,	1f,		0.25f	)),
+			new ("Minus",			new(0f,		0.75f,	0.25f,	0.5f	)),
+			new ("Plus",			new(0.25f,	0.75f,	0.5f,	0.5f	)),
+			new ("ChevronLeft",		new(0.5f,	0.75f,	0.75f,	0.5f	)),
+			new ("ChevronRight",	new(0.75f,	0.75f,	1f,		0.5f	)),
+			new ("Empty",			new(0f,		1f,		0.25f,	0.75f	)),
+			new ("Magnify",			new(0.25f,	1f,		0.5f,	0.75f	)),
+			new ("ChevronUp",		new(0.5f,	1f,		0.75f,	0.75f	)),
+			new ("ChevronDown",		new(0.75f,	1f,		1f,		0.75f	)),
+		]);
 	}
 
 	public static void KeyPress(Key key) {
@@ -413,7 +432,7 @@ public static class UI {
 	}
 
 	public static ButtonResponse CheckBox(Rect rect, ref bool value) {
-		ButtonResponse response = TextureButton(new UVRect(rect.x0, rect.y0, rect.x1, rect.y1).UV(value ? 0.75f : 0.5f, 0.25f, value ? 1f : 0.75f, 0.5f));
+		ButtonResponse response = TextureButton(new UVRect(rect.x0, rect.y0, rect.x1, rect.y1).AtlasUV(value ? "boxfull" : "boxempty"));
 
 		if (response.clicked) {
 			value = !value;

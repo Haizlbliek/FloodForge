@@ -274,7 +274,7 @@ public static class Profiler {
 						i++;
 					}
 				}
-				UVRect clearButton = new UVRect(Main.screenBounds.x - 0.05f, -Main.screenBounds.y, Main.screenBounds.x, -Main.screenBounds.y + 0.05f).UV(0f, 0f, 0.25f, 0.25f);
+				UVRect clearButton = new UVRect(Main.screenBounds.x - 0.05f, -Main.screenBounds.y, Main.screenBounds.x, -Main.screenBounds.y + 0.05f).AtlasUV("cross");
 				if (UI.TextureButton(clearButton)) {
 					logMessages.Clear();
 				}

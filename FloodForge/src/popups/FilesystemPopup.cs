@@ -438,7 +438,7 @@ public class FilesystemPopup : Popup {
 
 
 		// Up Directory
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.25f, 0.25f, 0.5f, 0f))) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).AtlasUV("ArrowUp"))) {
 			this.currentPath = PathUtil.Parent(this.currentPath);
 			this.scroll = 0f;
 			this.targetScroll = 0f;
@@ -446,18 +446,18 @@ public class FilesystemPopup : Popup {
 		}
 
 		// Refresh
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.07f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.5f, 0.25f, 0.75f, 0f))) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.07f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).AtlasUV("RotateRight"))) {
 			this.Refresh();
 		}
 
 		// Search
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.12f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.25f, 1f, 0.5f, 0.75f), new UI.TextureButtonMods() { disabled = this.newDirectory != null || this.noDirectoryPerms == true})) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.12f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).AtlasUV("Magnify"), new UI.TextureButtonMods() { disabled = this.newDirectory != null || this.noDirectoryPerms == true})) {
 			this.search = this.search == null ? "" : null;
 			this.Refresh();
 		}
 
 		// New Directory
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.25f), new UI.TextureButtonMods() { disabled = this.search != null || this.noDirectoryPerms == true})) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).AtlasUV("Folder"), new UI.TextureButtonMods() { disabled = this.search != null || this.noDirectoryPerms == true})) {
 			if (this.newDirectory == null) {
 				this.newDirectory = "";
 				this.scroll = 0f;
@@ -515,7 +515,7 @@ public class FilesystemPopup : Popup {
 		}
 
 		if (this.search != null) {
-			if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.17f, 0.05f, 0.05f).UV(0f, 0f, 0.25f, 0.25f))) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.17f, 0.05f, 0.05f).AtlasUV("Cross"))) {
 				this.search = null;
 				this.Refresh();
 			}
@@ -537,7 +537,7 @@ public class FilesystemPopup : Popup {
 		}
 
 		if (this.newDirectory != null) {
-			if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.17f, 0.05f, 0.05f).UV(0f, 0f, 0.25f, 0.25f))) {
+			if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.17f, 0.05f, 0.05f).AtlasUV("Cross"))) {
 				this.newDirectory = null;
 			}
 			else {
@@ -590,7 +590,7 @@ public class FilesystemPopup : Popup {
 			string currentFolderPath = Path.Join(this.currentPath, path);
 
 			if (this.createdFolders.Contains(currentFolderPath)) {
-				if (UI.TextureButton(new UVRect(this.bounds.x1 - 0.09f, y - 0.05f, this.bounds.x1 - 0.04f, y).UV(0f, 0f, 0.25f, 0.25f)) && hover) {
+				if (UI.TextureButton(new UVRect(this.bounds.x1 - 0.09f, y - 0.05f, this.bounds.x1 - 0.04f, y).AtlasUV("Cross")) && hover) {
 					if (Directory.GetFileSystemEntries(currentFolderPath).Length != 0) {
 						this.awaitingDeleteConfirmation = true;
 						PopupManager.Add(new ConfirmPopup("Delete folder?").SetButtons("Delete", "Cancel").Swap().Okay(() => { this.DeleteFolder(currentFolderPath); this.awaitingDeleteConfirmation = false; }).Cancel(() => { this.awaitingDeleteConfirmation = false; }));

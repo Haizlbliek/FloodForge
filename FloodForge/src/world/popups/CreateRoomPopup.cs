@@ -64,11 +64,11 @@ public class CreateRoomPopup : Popup {
 
 		y -= 0.06f;
 		UI.TextInputResponse widthResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.Width);
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).UV(0.0f, 0.5f, 0.25f, 0.75f), new UI.TextureButtonMods { disabled = widthResponse.focused })) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).AtlasUV("minus"), new UI.TextureButtonMods { disabled = widthResponse.focused })) {
 			this.Width.value = Math.Max(int.Parse(this.Width.value) - 1, 1).ToString();
 			widthResponse = new UI.TextInputResponse(widthResponse.focused, widthResponse.hovered, true);
 		}
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.75f), new UI.TextureButtonMods { disabled = widthResponse.focused })) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).AtlasUV("plus"), new UI.TextureButtonMods { disabled = widthResponse.focused })) {
 			this.Width.value = Math.Max(int.Parse(this.Width.value) + 1, 1).ToString();
 			widthResponse = new UI.TextInputResponse(widthResponse.focused, widthResponse.hovered, true);
 		}
@@ -77,11 +77,11 @@ public class CreateRoomPopup : Popup {
 
 		y -= 0.06f;
 		UI.TextInputResponse heightResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.Height);
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).UV(0.0f, 0.5f, 0.25f, 0.75f), new UI.TextureButtonMods { disabled = heightResponse.focused })) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).AtlasUV("minus"), new UI.TextureButtonMods { disabled = heightResponse.focused })) {
 			this.Height.value = Math.Max(int.Parse(this.Height.value) - 1, 1).ToString();
 			heightResponse = new UI.TextInputResponse(heightResponse.focused, heightResponse.hovered, true);
 		}
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.75f), new UI.TextureButtonMods { disabled = heightResponse.focused })) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).AtlasUV("plus"), new UI.TextureButtonMods { disabled = heightResponse.focused })) {
 			this.Height.value = Math.Max(int.Parse(this.Height.value) + 1, 1).ToString();
 			heightResponse = new UI.TextInputResponse(heightResponse.focused, heightResponse.hovered, true);
 		}
@@ -90,11 +90,11 @@ public class CreateRoomPopup : Popup {
 
 		y -= 0.06f;
 		UI.TextInputResponse screenWidthResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.ScreenWidth);
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).UV(0.0f, 0.5f, 0.25f, 0.75f), new UI.TextureButtonMods { disabled = screenWidthResponse.focused })) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).AtlasUV("minus"), new UI.TextureButtonMods { disabled = screenWidthResponse.focused })) {
 			this.ScreenWidth.value = (float.Parse(this.ScreenWidth.value) - 0.5f).ToString($"F{this.ScreenWidth.floatDecimalCount}");
 			screenWidthResponse = new UI.TextInputResponse(screenWidthResponse.focused, screenWidthResponse.hovered, true);
 		}
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.75f), new UI.TextureButtonMods { disabled = screenWidthResponse.focused })) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).AtlasUV("plus"), new UI.TextureButtonMods { disabled = screenWidthResponse.focused })) {
 			this.ScreenWidth.value = (float.Parse(this.ScreenWidth.value) + 0.5f).ToString($"F{this.ScreenWidth.floatDecimalCount}");
 			screenWidthResponse = new UI.TextInputResponse(screenWidthResponse.focused, screenWidthResponse.hovered, true);
 		}
@@ -103,11 +103,11 @@ public class CreateRoomPopup : Popup {
 
 		y -= 0.06f;
 		UI.TextInputResponse screenHeightResponse = UI.TextInput(Rect.FromSize(this.bounds.x0 + 0.01f, y, 0.25f, 0.05f), this.ScreenHeight);
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).UV(0.0f, 0.5f, 0.25f, 0.75f), new UI.TextureButtonMods { disabled = screenHeightResponse.focused })) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.27f, y, 0.05f, 0.05f).AtlasUV("minus"), new UI.TextureButtonMods { disabled = screenHeightResponse.focused })) {
 			this.ScreenHeight.value = (float.Parse(this.ScreenHeight.value) - 0.5f).ToString($"F{this.ScreenHeight.floatDecimalCount}");
 			screenHeightResponse = new UI.TextInputResponse(screenHeightResponse.focused, screenHeightResponse.hovered, true);
 		}
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).UV(0.25f, 0.5f, 0.5f, 0.75f), new UI.TextureButtonMods { disabled = screenHeightResponse.focused })) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x0 + 0.32f, y, 0.05f, 0.05f).AtlasUV("plus"), new UI.TextureButtonMods { disabled = screenHeightResponse.focused })) {
 			this.ScreenHeight.value = (float.Parse(this.ScreenHeight.value) + 0.5f).ToString($"F{this.ScreenHeight.floatDecimalCount}");
 			screenHeightResponse = new UI.TextInputResponse(screenHeightResponse.focused, screenHeightResponse.hovered, true);
 		}
@@ -158,7 +158,7 @@ public class CreateRoomPopup : Popup {
 			this.Height.value = WorldWindow.roomPlacementVisualiser.size.y.ToString();
 		}
 
-		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).UV(0.5f, 0.05f, 0.75f, 0.25f))) {
+		if (UI.TextureButton(UVRect.FromSize(this.bounds.x1 - 0.06f, this.bounds.y1 - 0.11f, 0.05f, 0.05f).AtlasUV("rotateright"))) {
 			this.RoomName.value = "";
 			this.Width.value = "48";
 			this.Height.value = "35";

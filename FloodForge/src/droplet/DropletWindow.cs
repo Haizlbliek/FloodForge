@@ -2171,6 +2171,7 @@ public static class DropletWindow {
 						string message = "";
 						try {
 							if (Render(out message, out (string name, string outputPath, byte[] image)[] images)){
+								Directory.CreateDirectory(Settings.UpdateRoomImagesOnRender ? WorldWindow.region.roomsPath : Path.Combine("renderOutput", WorldWindow.region.acronym));
 								for(int i = 0; i < images.Length; i++){
 									FloodForge.Backup.File(images[i].outputPath);
 

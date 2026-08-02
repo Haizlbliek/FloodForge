@@ -302,7 +302,7 @@ public class DenPopup : Popup {
 
 		// Left
 		if (UI.TextureButton(
-			UVRect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.19f, 0.04f, 0.04f).UV(0.5f, 0.5f, 0.75f, 0.75f),
+			UVRect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.19f, 0.04f, 0.04f).AtlasUV("ChevronLeft"),
 			new UI.TextureButtonMods { disabled = this.selectedCreature == 0, textureColor = (this.selectedCreature <= 0) ? Color.Grey : Color.White }
 		)) {
 			this.selectedCreature--;
@@ -316,7 +316,7 @@ public class DenPopup : Popup {
 
 		// Delete
 		if (UI.TextureButton(
-			UVRect.FromSize(this.bounds.x0 + 0.06f, this.bounds.y1 - 0.19f, 0.04f, 0.04f).UV(0.0f, 0.0f, 0.25f, 0.25f),
+			UVRect.FromSize(this.bounds.x0 + 0.06f, this.bounds.y1 - 0.19f, 0.04f, 0.04f).AtlasUV("Cross"),
 			new UI.TextureButtonMods { disabled = this.den.creatures.Count == 0, textureColor = this.den.creatures.Count == 0 ? Color.Grey : Color.White }
 		)) {
 			WorldWindow.worldHistory.Apply(new LineageChange(this.den, this.selectedCreature));
@@ -332,7 +332,7 @@ public class DenPopup : Popup {
 
 		// Add
 		if (UI.TextureButton(
-			UVRect.FromSize(this.bounds.x0 + 0.11f, this.bounds.y1 - 0.19f, 0.04f, 0.04f).UV(0.25f, 0.5f, 0.5f, 0.75f)
+			UVRect.FromSize(this.bounds.x0 + 0.11f, this.bounds.y1 - 0.19f, 0.04f, 0.04f).AtlasUV("Plus")
 		)) {
 			WorldWindow.worldHistory.Apply(new LineageChange(this.den));
 
@@ -344,7 +344,7 @@ public class DenPopup : Popup {
 
 		// Right
 		if (UI.TextureButton(
-			UVRect.FromSize(this.bounds.x0 + 0.16f, this.bounds.y1 - 0.19f, 0.04f, 0.04f).UV(0.75f, 0.5f, 1f, 0.75f),
+			UVRect.FromSize(this.bounds.x0 + 0.16f, this.bounds.y1 - 0.19f, 0.04f, 0.04f).AtlasUV("ChevronRight"),
 			new UI.TextureButtonMods { disabled = this.selectedCreature >= this.den.creatures.Count - 1, textureColor = (this.selectedCreature >= this.den.creatures.Count - 1) ? Color.Grey : Color.White }
 		)) {
 			this.selectedCreature++;
@@ -408,7 +408,7 @@ public class DenPopup : Popup {
 			}
 
 			if (UI.TextureButton(
-				UVRect.FromSize(creatureRect.x0 + buttonSize + buttonPadding, creatureRect.y0 + buttonSize * 0.25f, buttonSize * 0.5f, buttonSize * 0.5f).UV(0f, 0f, 0.25f, 0.25f)
+				UVRect.FromSize(creatureRect.x0 + buttonSize + buttonPadding, creatureRect.y0 + buttonSize * 0.25f, buttonSize * 0.5f, buttonSize * 0.5f).AtlasUV("Cross")
 			)) {
 				if (lastCreature == null) {
 					if (creature.lineageTo == null) {
@@ -438,19 +438,19 @@ public class DenPopup : Popup {
 		}
 
 		if (UI.TextureButton(
-			UVRect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.19f - this.scrollLineages - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize).UV(0.25f, 0.5f, 0.5f, 0.75f)
+			UVRect.FromSize(this.bounds.x0 + 0.01f, this.bounds.y1 - 0.19f - this.scrollLineages - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize).AtlasUV("Plus")
 		)) {
 			WorldWindow.worldHistory.Apply(new CreatureLineageChange(creature));
 			this.selectedLineage = creature.lineageTo;
 		}
 
-		UI.ButtonResponse response1 = UI.TextureButton(
-			UVRect.FromSize(this.bounds.x0 + 0.01f + buttonSize + buttonPadding, this.bounds.y1 - 0.19f - this.scrollLineages - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize).UV(0.75f, 0f, 1f, 0.25f)
+		UI.ButtonResponse editConditionalsResponse = UI.TextureButton(
+			UVRect.FromSize(this.bounds.x0 + 0.01f + buttonSize + buttonPadding, this.bounds.y1 - 0.19f - this.scrollLineages - (j + 1) * (buttonSize + buttonPadding), buttonSize, buttonSize).AtlasUV("DotsHorizontal")
 		);
-		if (response1.hovered) {
+		if (editConditionalsResponse.hovered) {
 			this.hoverText = "Edit conditionals";
 		}
-		if (response1.clicked) {
+		if (editConditionalsResponse.clicked) {
 			this.den.creatures[this.selectedCreature].conditionalPopup = PopupManager.Add(new ConditionalPopup(this.den.creatures[this.selectedCreature]));
 		}
 	}
