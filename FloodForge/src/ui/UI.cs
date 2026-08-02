@@ -37,11 +37,13 @@ public static class UI {
 			new ("Minus",			new(0f,		0.75f,	0.25f,	0.5f	)),
 			new ("Plus",			new(0.25f,	0.75f,	0.5f,	0.5f	)),
 			new ("ChevronLeft",		new(0.5f,	0.75f,	0.75f,	0.5f	)),
-			new ("ChevronRight",	new(0.75f,	0.75f,	1f,		0.5f	)),
+			new ("ChevronUp",		new(0.75f,	0.75f,	1f,		0.5f	)),
+			new ("ChevronRight",	new(0.75f,	0.75f,	0.5f,	0.5f	)),
+			new ("ChevronDown",		new(0.75f,	0.5f,	1f,		0.75f	)),
 			new ("Empty",			new(0f,		1f,		0.25f,	0.75f	)),
 			new ("Magnify",			new(0.25f,	1f,		0.5f,	0.75f	)),
-			new ("ChevronUp",		new(0.5f,	1f,		0.75f,	0.75f	)),
-			new ("ChevronDown",		new(0.75f,	1f,		1f,		0.75f	)),
+			new ("EyeOpen",			new(0.5f,	1f,		0.75f,	0.75f	)),
+			new ("EyeClosed",		new(0.75f,	1f,		1f,		0.75f	))
 		]);
 	}
 
