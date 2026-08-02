@@ -110,7 +110,7 @@ public class SubregionPopup : Popup {
 			}
 			bool exists = WorldWindow.region.overrideSubregionColors.TryGetValue(idx, out Color col);
 			if (exists) subregionColor = col;
-			UVRect buttonUv = new UVRect(0.395f + centerX, y - 0.05f, 0.445f + centerX, y).UV(exists ? 0.75f : 0.5f, 0.25f, exists ? 1f : 0.75f, 0.5f);
+			UVRect buttonUv = new UVRect(0.395f + centerX, y - 0.05f, 0.445f + centerX, y).AtlasUV(exists ? "BoxFull" : "BoxEmpty");
 			if (UI.TextureButton(buttonUv, new UI.TextureButtonMods { textureColor = subregionColor })) {
 				if (!exists) {
 					WorldWindow.worldHistory.Apply(new OverrideSubregionColorChange(idx, subregionColor));
@@ -122,7 +122,7 @@ public class SubregionPopup : Popup {
 				PopupManager.Add(this.colorEditPopups[idx]);
 			}
 			if (exists) {
-				if (UI.TextureButton(UVRect.FromSize(0.455f + centerX, y - 0.04f, 0.03f, 0.03f).UV(0.5f, 0.25f, 0.75f, 0f))) {
+				if (UI.TextureButton(UVRect.FromSize(0.455f + centerX, y - 0.04f, 0.03f, 0.03f).AtlasUV("RotateRight"))) {
 					WorldWindow.worldHistory.Apply(new OverrideSubregionColorChange(idx));
 					if (this.colorEditPopups.TryGetValue(idx, out ColorEditPopup? colorEditPopup))
 						colorEditPopup.Close();
