@@ -7,10 +7,12 @@ public static class PopupManager {
 	private static Popup? mousePopup = null;
 	private static Popup? interactingPopup = null;
 	private static Vector2 holdingOffset;
+	private static bool doResizeBoundsCheck = false;
 
 	public static List<Popup> Windows { get; private set; } = [];
 
 	public static void Initialize() {
+		Program.window.Resize += _ => doResizeBoundsCheck = true;
 	}
 
 	public static void Cleanup() {
@@ -76,10 +78,13 @@ public static class PopupManager {
 		}
 
 		foreach (Popup popup in Windows) {
+			if (doResizeBoundsCheck)
+				popup.Translate(Vector2.Zero, false);
 			Mouse.Disabled = popup != mousePopup;
 			popup.Draw();
 			popup.FinishDraw();
 		}
+		doResizeBoundsCheck = false;
 		Mouse.Disabled = interactingPopup != null;
 	}
 
