@@ -404,6 +404,39 @@ public class SettingsPopup : Popup {
 		}
 	}
 
+	public class TextureButtonContainer : SettingContainer {
+		readonly Action onClickCallback;
+		private UVAtlas.UVCoordinates uvCoordinates;
+		private Func<TextureButtonContainer, bool> contextCheck = _ => true;
+
+		public override float SettingWidth {
+			get {
+				return 0.07f;
+			}
+		}
+
+		public TextureButtonContainer(string name, UVAtlas.UVCoordinates uvCoordinates, Action onClickCallback) : base(name) {
+			this.onClickCallback = onClickCallback;
+			this.uvCoordinates = uvCoordinates;
+		}
+
+		public TextureButtonContainer SetContextCheck(Func<TextureButtonContainer, bool> contextCheck) {
+			this.contextCheck = contextCheck;
+			return this;
+		}
+
+		public void SetUV(UVAtlas.UVCoordinates uvCoordinates) {
+			this.uvCoordinates = uvCoordinates;
+		}
+
+		public override void Draw(Rect bounds) {
+			bool enabled = this.contextCheck(this);
+			if (UI.TextureButton(new UVRect(bounds.x0, bounds.y0, bounds.x1, bounds.y1).UV(this.uvCoordinates)) && enabled) {
+				this.onClickCallback();
+			}
+		}
+	}
+
 	public class LabelContainer : SettingContainer {
 		protected Font.Align align = Font.Align.TopCenter;
 		protected bool autoCrop;
