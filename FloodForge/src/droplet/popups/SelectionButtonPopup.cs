@@ -33,7 +33,6 @@ public class SelectionButtonPopup : Popup {
 		this.clearButton = new UVRect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x0 + 0.06f, this.bounds.y1 - 0.01f).UV(0.0f,0.25f,0.25f,0.0f);
 		UI.ButtonResponse clearResponse = UI.TextureButton(this.clearButton);
 		if (clearResponse.clicked) {
-			DropletWindow.selectionState = -1;
 			this.Close();
 		}
 		if (clearResponse.hovered) {
@@ -90,5 +89,10 @@ public class SelectionButtonPopup : Popup {
 			Immediate.Color(Themes.Border);
 			UI.StrokeRect(hoverRect);
 		}
+	}
+
+	public override void Close() {
+		DropletWindow.selectionState = -1;
+		base.Close();
 	}
 }
