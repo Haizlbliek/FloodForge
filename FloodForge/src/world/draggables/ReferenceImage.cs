@@ -52,11 +52,13 @@ public class ReferenceImage : WorldDraggable {
 				Program.gl.Disable(EnableCap.Blend);
 				Immediate.Alpha(1f);
 			}
+		}
+	}
 
-			if (WorldWindow.selectedDraggables.Contains(this)) {
-				Immediate.Color(Themes.RoomBorderHighlight);
-				UI.StrokeRect(this.imageBounds);
-			}
+	public void DrawSelectedBox() {
+		if (WorldWindow.selectedDraggables.Contains(this)) {
+			Immediate.Color(Themes.RoomBorderHighlight);
+			UI.StrokeRect(this.imageBounds);
 		}
 	}
 

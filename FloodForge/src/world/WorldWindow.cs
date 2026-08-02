@@ -1123,8 +1123,10 @@ public static class WorldWindow {
 		foreach (ReferenceImage image in referenceImages)
 			if(image.drawUnderGrid) image.Draw();
 		DrawGrid();
-		foreach (ReferenceImage image in referenceImages)
+		foreach (ReferenceImage image in referenceImages) {
 			if(!image.drawUnderGrid) image.Draw();
+			image.DrawSelectedBox();
+		}
 		Profiler.MarkPoint("DrawGrid");
 
 		Dictionary<Room, bool> timelineCullResults = [];
