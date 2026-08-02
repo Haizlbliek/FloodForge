@@ -172,7 +172,7 @@ public class RoomSettingsPopup : ModularPopup {
 		public override void Draw() {
 			Immediate.Color(Color.Yellow);
 			UI.Line(new(this.bounds.x0, this.bounds.y1), (this.relevantRoom.Position - WorldWindow.cameraOffset) / WorldWindow.cameraScale);
-			if (this.isHovered)
+			if (this.isHovered) // TODO - allow replaceRooms to reference these popups so that they can be rebuilt at any time
 				this.RebuildSettings();
 			base.Draw();
 		}
@@ -184,9 +184,10 @@ public class RoomSettingsPopup : ModularPopup {
 			this.AddToQueue(new Divider());
 			foreach (ReplaceRoom replacingRoom in this.relevantRoom.replaceRooms) {
 				LabelContainer replaceRoomLabel = new LabelContainer("");
+				TextureButtonContainer hideButton = new TextureButtonContainer("", UI.uiAtlas.UV(replacingRoom.setHidden ? "EyeClosed" : "EyeOpen"), () => this.ToggleReplaceRoomHidden(replacingRoom));
 				ButtonContainer viewButton = new ButtonContainer("View", () => this.ViewReplaceRoom(replacingRoom));
 				HorizontalElement reorderButtons = new ([("up", new ButtonContainer("/\\", () => this.Move(replacingRoom, true))), ("down", new ButtonContainer("\\/", () => this.Move(replacingRoom, false)))], null, false, true);
-				HorizontalElement buttonElement = new ([("view", viewButton), ("movebuttons", reorderButtons)], [0f, 0.12f]);
+				HorizontalElement buttonElement = new ([("hide", hideButton), ("view", viewButton), ("movebuttons", reorderButtons)], [0.05f, 0f, 0.12f]);
 				VerticalElement finalElement = new ([("label", replaceRoomLabel), ("buttons", buttonElement)]);
 				this.associatedVerticalElements.Add((replacingRoom, finalElement));
 				this.AddToQueue(finalElement);
@@ -221,6 +222,11 @@ public class RoomSettingsPopup : ModularPopup {
 			}
 			this.UpdateReplaceRoomLabels();
 			this.AddQueuedSettings(setPos);
+		}
+
+		private void ToggleReplaceRoomHidden(ReplaceRoom replaceRoom) {
+			replaceRoom.ToggleHide();
+			this.RebuildSettings(true);
 		}
 
 		private void ResetReplaceRoomParameters() {

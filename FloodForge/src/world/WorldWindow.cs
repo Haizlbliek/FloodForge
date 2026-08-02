@@ -125,7 +125,7 @@ public static class WorldWindow {
 	// REVIEW - find a way to make this more flexible - a list of all draggables?
 	public static Room? HoveringRoom => region.rooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
 	public static ReferenceImage? HoveringReferenceImage => referenceImages.LastOrDefault(i => i.Inside(worldMouse));
-	public static ReplaceRoom? HoveringReplaceRoom => !VisibleReplaceRooms ? null : replaceRooms.LastOrDefault(r => r.Visible && r.Inside(worldMouse));
+	public static ReplaceRoom? HoveringReplaceRoom => !VisibleReplaceRooms ? null : replaceRooms.LastOrDefault(r => r.Visible && !r.IsHidden && r.Inside(worldMouse));
 	public static WorldDraggable? HoveringDraggable => (placingRoom && roomPlacementVisualiser.Inside(worldMouse)) ? roomPlacementVisualiser : HoveringReplaceRoom ?? HoveringRoom ?? (WorldDraggable?)HoveringReferenceImage;
 
 	public static Connection? HoveringConnection => region.connections?.LastOrDefault(c => {
@@ -939,7 +939,10 @@ public static class WorldWindow {
 		}
 
 		if (Keys.JustPressed(Key.H)) {
-			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
+			if (HoveringReplaceRoom != null) {
+				HoveringReplaceRoom.ToggleHide();
+			}
+			else if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
 				int minimumHidden = 3;
 				foreach (Room room in rooms) {
 					minimumHidden = Math.Min(minimumHidden, room.data.hidden);
@@ -1200,17 +1203,17 @@ public static class WorldWindow {
 
 		if (VisibleReplaceRooms) {
 			foreach (ReplaceRoom replaceRoom in replaceRooms) {
-				if (!VisibleLayers[replaceRoom.replacedRoom.data.layer] || !VisibleTimeline.OverlapsWith(replaceRoom.timeline))
+				if (!VisibleLayers[replaceRoom.replacedRoom.data.layer] || !VisibleTimeline.OverlapsWith(replaceRoom.timeline) || replaceRoom.IsHidden)
 					continue;
 
 				if (PositionType == RoomPosition.Both) {
-					replaceRoom.Draw(RoomPosition.Canon);
-					replaceRoom.Draw(RoomPosition.Dev);
+					replaceRoom.Draw(RoomPosition.Canon, true);
+					replaceRoom.Draw(RoomPosition.Dev, true);
 				}
 				else {
-					replaceRoom.Draw(PositionType);
+					replaceRoom.Draw(PositionType, Keys.Modifier(Keys.Modifiers.Alt) && replaceRoom.setHidden);
 					if (Keys.Modifier(Keys.Modifiers.Alt)) {
-						replaceRoom.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
+						replaceRoom.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon, true);
 					}
 				}
 

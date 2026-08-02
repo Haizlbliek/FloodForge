@@ -8,6 +8,7 @@ public class ReplaceRoomSettingsPopup : ModularPopup {
 	protected LabelContainer replacesRoomLabel;
 	protected ButtonContainer timelineButton;
 	protected ButtonContainer deleteButton;
+	protected TextureButtonContainer hideButton;
 	protected TimelinePopup? timelinePopup = null;
 
 	public ReplaceRoomSettingsPopup(ReplaceRoom replaceRoom) {
@@ -21,10 +22,16 @@ public class ReplaceRoomSettingsPopup : ModularPopup {
 		this.AddToQueue(this.timelineButton);
 
 		this.deleteButton = new ButtonContainer("Delete", this.DeleteReplaceRoom);
-		this.AddToQueue(this.deleteButton);
+		this.hideButton = new TextureButtonContainer("", UI.uiAtlas.UV(this.replaceRoom.setHidden ? "EyeClosed" : "EyeOpen"), () => replaceRoom.ToggleHide()).SetContextCheck(this.UpdateHideButton);
+		this.AddToQueue(new HorizontalElement([("hide", this.hideButton), ("delete", this.deleteButton)], [0.05f, 0f]));
 
 		this.AddQueuedSettings();
 		this.UpdateLabels();
+	}
+
+	private bool UpdateHideButton(TextureButtonContainer button) {
+		button.SetUV(UI.uiAtlas.UV(this.replaceRoom.setHidden ? "EyeClosed" : "EyeOpen"));
+		return true;
 	}
 
 	private void TimelineButton() {
