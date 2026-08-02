@@ -1,3 +1,6 @@
+using Silk.NET.Input;
+using FloodForge.History;
+
 namespace FloodForge.World;
 
 public class ReplaceRoom : MapDraggable {
@@ -5,6 +8,8 @@ public class ReplaceRoom : MapDraggable {
 	public Room replacedRoom;
 	public Timeline timeline;
 	public string[] preProcessorConditions;
+	public bool setHidden = false;
+	public bool IsHidden => this.setHidden && !Keys.Pressed(Key.AltLeft) && !Keys.Pressed(Key.AltRight);
 
     public Vector2i size;
 
@@ -19,15 +24,22 @@ public class ReplaceRoom : MapDraggable {
 		this.preProcessorConditions = preProcessorConditions;
 		this.size = new (replacingRoom.width, replacingRoom.height);
 	}
+	
+	public void ToggleHide() {
+		WorldWindow.worldHistory.Apply(new VariableChange<bool>(this.setHidden, !this.setHidden, b => this.setHidden = b));
+	}
 
 	//IDEA - run timeline checks when drawing dens so that dens that would only appear on replaceroom are only rendered there
-    public void Draw(WorldWindow.RoomPosition positionType) {
+    public void Draw(WorldWindow.RoomPosition positionType, bool atHalfAlpha) {
 		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
 		}
 		Vector2 renderedPosition = positionType == WorldWindow.RoomPosition.Canon ? this.CanonPosition : this.DevPosition;
 
+		Program.gl.Enable(EnableCap.Blend);
 		Immediate.Color(Themes.RoomSolid);
+		if (positionType == WorldWindow.RoomPosition.Both || positionType != WorldWindow.PositionType || atHalfAlpha)
+			Immediate.Alpha(0.5f);
 		UI.FillRect(renderedPosition.x, renderedPosition.y - this.size.y, renderedPosition.x + this.size.x, renderedPosition.y);
 
 		// REVIEW - change room mesh drawing to display correct layer information
@@ -83,6 +95,7 @@ public class ReplaceRoom : MapDraggable {
 				UI.Line(x0, y0, x0, y1, scale * 3f);
 			}
 		}
+		Program.gl.Disable(EnableCap.Blend);
     }
 
 	public void DrawReplaceRoomShortcuts(Vector2 renderedPosition) {

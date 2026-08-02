@@ -71,7 +71,7 @@ public class Room : MapDraggable {
 		if (andedTimeline.timelineType == TimelineType.Only) {
 			HashSet<string> leftTLs = [.. andedTimeline.timelines];
 			foreach (ReplaceRoom replaceRoom in this.replaceRooms) {
-				if (replaceRoom.timeline.OverlapsWith(WorldWindow.VisibleTimeline) && replaceRoom.timeline.timelineType == TimelineType.Only) {
+				if (replaceRoom.timeline.OverlapsWith(WorldWindow.VisibleTimeline) && replaceRoom.timeline.timelineType == TimelineType.Only && !replaceRoom.setHidden) {
 					replaceRoom.timeline.timelines.ForEach(tl => leftTLs.Remove(tl));
 				}
 			}
