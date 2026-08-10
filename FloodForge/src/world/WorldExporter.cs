@@ -304,172 +304,17 @@ public static class WorldExporter {
 		}
 	}
 
-	private static void ParseConditionalLinkConnection(TextWriter conditionalBufferWriter, Room parsingRoom, Connection connectionToParse, List<string> foundTimelines, Dictionary<string, List<(Room? connectedRoom, bool second)>> timelineStates, List<(Room? connectedRoom, bool second)> defaultTimelineState) {
-		Room? connectedToRoom;
-		int parsingRoomExitID;
-
-		if (connectionToParse.roomA == parsingRoom) {
-			connectedToRoom = connectionToParse.roomB;
-			parsingRoomExitID = (int) connectionToParse.roomAExitID;
-		}
-		else {
-			connectedToRoom = connectionToParse.roomA;
-			parsingRoomExitID = (int) connectionToParse.roomBExitID;
-		}
-
-		if (connectedToRoom == null || parsingRoomExitID == -1)
-			return;
-
-		string preProcessorConditionsString = "";
-		bool first = true;
-		foreach (string condition in connectionToParse.preProcessorConditions) {
-			if (!first)
-				preProcessorConditionsString += ',';
-			first = false;
-			preProcessorConditionsString += condition;
-		}
-		if (!string.IsNullOrEmpty(preProcessorConditionsString))
-			preProcessorConditionsString = $"{{{preProcessorConditionsString}}}";
-
-		foreach (string connectionTimeline in connectionToParse.timeline.timelines) {
-			if (!timelineStates.ContainsKey(connectionTimeline)) {
-				timelineStates[connectionTimeline] = [.. defaultTimelineState];
-				foundTimelines.Add(connectionTimeline);
-			}
-
-			if (connectionToParse.timeline.timelineType == TimelineType.Only) {
-				conditionalBufferWriter.Write($"{preProcessorConditionsString}{connectionTimeline} : {RoomNameCasing(parsingRoom.name)} : ");
-
-				if (timelineStates[connectionTimeline][parsingRoomExitID].connectedRoom == null) {
-					int disconnectedBefore = 0;
-					for (int i = 0; i < parsingRoomExitID; i++) {
-						if (defaultTimelineState[i].connectedRoom == null)
-							disconnectedBefore++;
-					}
-					conditionalBufferWriter.Write(disconnectedBefore + 1);
-				}
-				else {
-					conditionalBufferWriter.Write(timelineStates[connectionTimeline][parsingRoomExitID].connectedRoom);
-				}
-				conditionalBufferWriter.WriteLine($" : {RoomNameCasing(connectedToRoom.name)}");
-
-				if (connectedToRoom != timelineStates[connectionTimeline][parsingRoomExitID].connectedRoom) {
-					timelineStates[connectionTimeline][parsingRoomExitID] = (connectedToRoom, true);
-				}
-			}
-			else if (connectionToParse.timeline.timelineType == TimelineType.Except) {
-				foreach (string otherTimeline in foundTimelines) {
-					if (otherTimeline == connectionTimeline) {
-						continue;
-					}
-					if (!timelineStates[otherTimeline][parsingRoomExitID].second) {
-						continue;
-					}
-
-					conditionalBufferWriter.Write($"{preProcessorConditionsString}{otherTimeline} : {RoomNameCasing(parsingRoom.name)} : ");
-					if (timelineStates[otherTimeline][parsingRoomExitID].connectedRoom == null) {
-						int disconnectedBefore = 0;
-						for (int i = 0; i < parsingRoomExitID; i++) {
-							if (timelineStates[otherTimeline][i].connectedRoom == null)
-								disconnectedBefore++;
-						}
-						conditionalBufferWriter.Write(disconnectedBefore + 1);
-					}
-					else {
-						conditionalBufferWriter.Write(timelineStates[otherTimeline][parsingRoomExitID].connectedRoom);
-					}
-					conditionalBufferWriter.WriteLine($" : {RoomNameCasing(connectedToRoom.name)}");
-				}
-
-				conditionalBufferWriter.Write($"{preProcessorConditionsString}{connectionTimeline} : {RoomNameCasing(parsingRoom.name)} : ");
-				if (timelineStates[connectionTimeline][parsingRoomExitID].second) {
-					if (timelineStates[connectionTimeline][parsingRoomExitID].connectedRoom == null) {
-						int disconnectedBefore = 0;
-						for (int i = 0; i < parsingRoomExitID; i++) {
-							if (timelineStates[connectionTimeline][i].connectedRoom == null)
-								disconnectedBefore++;
-						}
-						conditionalBufferWriter.Write(disconnectedBefore + 1);
-					}
-					else {
-						conditionalBufferWriter.Write(timelineStates[connectionTimeline][parsingRoomExitID].connectedRoom);
-					}
-				}
-				else {
-					conditionalBufferWriter.Write(RoomNameCasing(connectedToRoom.name));
-				}
-				conditionalBufferWriter.WriteLine($" : {(defaultTimelineState[parsingRoomExitID].connectedRoom == null ? "DISCONNECTED" : RoomNameCasing(defaultTimelineState[parsingRoomExitID].connectedRoom!.name))}");
-
-				if (connectedToRoom != defaultTimelineState[parsingRoomExitID].connectedRoom) {
-					defaultTimelineState[parsingRoomExitID] = (connectedToRoom, false);
-				}
-			}
-		}
-	}
-
-	private static void ExportCreatureTags(DenCreature creature, StreamWriter writer) {
-		if (creature.tags.Count <= 0) {
-			return;
-		}
-
-		writer.Write("-{");
-		bool first = true;
-		foreach (DenCreature.Tag tag in creature.tags) {
-			if (!first) writer.Write(",");
-			first = false;
-
-			// TODO: Handle dynamically?
-			if (tag.id.displayType == Mods.DisplayType.None) {
-				writer.Write(tag.id.id);
-			}
-			else {
-				string name = Mods.ExportTagName(tag.id.id) + ":";
-				if (tag.id == Mods.tags["polemimic_length"] || tag.id == Mods.tags["centipede_length"]) name = "";
-				writer.Write($"{name}{(tag is DenCreature.IntegerTag intTag ? intTag.data : (tag is DenCreature.FloatTag floatTag ? floatTag.data : (tag is DenCreature.StringTag stringTag ? stringTag.data : "IDK LOL")))}");
-			}
-		}
-		writer.Write("}");
-	}
-
-	private static string ExportCreatureTags(DenCreature creature) {
-		if (creature.tags.Count <= 0) {
-			return "";
-		}
-
-		string finalTags = "";
-		finalTags += "-{";
-		bool first = true;
-		foreach (DenCreature.Tag tag in creature.tags) {
-			if (!first)
-				finalTags += ",";
-			first = false;
-
-			// TODO: Handle dynamically?
-			if (tag.id.displayType == Mods.DisplayType.None) {
-				finalTags += tag.id.id;
-			}
-			else {
-				string name = Mods.ExportTagName(tag.id.id) + ":";
-				if (tag.id == Mods.tags["polemimic_length"] || tag.id == Mods.tags["centipede_length"]) name = "";
-				finalTags += $"{name}{(tag is DenCreature.IntegerTag intTag ? intTag.data : (tag is DenCreature.FloatTag floatTag ? floatTag.data : (tag is DenCreature.StringTag stringTag ? stringTag.data : "IDK LOL")))}";
-			}
-		}
-		return finalTags + "}";
-	}
-
-	private static void ExportLog(string message) {
-		if (Settings.DEBUGVerboseExportLog)
-			Logger.Info(message);
-	}
-
 	// TODO - make this a hundred times more compact (this is a naive implementation)
-	public static bool KhyExporter() {
+	public static void ExportWorldFile() {
+		Logger.Info("Exporting world file");
+		
 		ExportLog("");
 		ExportLog("========================================");
-		ExportLog("Starting KhyExporter");
+
 		bool CEEE = WorldWindow.connectionExtensionsEnabled;
 		if (CEEE)
 			ExportLog("    connectionExtensions enabled!");
+
 		ExportLog("");
 		ExportLog("Rooms:");
 		List<ExportRoom> allRooms = [];
@@ -488,6 +333,7 @@ public static class WorldExporter {
 			ExportLog($"    {newExportConnection}");
 			allConnections.Add(newExportConnection);
 		}
+
 		ExportLog("");
 		List<ExportConnection> defaultConnections = [];
 		List<ExportConnection> conditionalConnections = [];
@@ -502,6 +348,7 @@ public static class WorldExporter {
 				conditionalConnections.Add(connection);
 			}
 		}
+
 		ExportLog("");
 		ExportLog("Populating ExportRoom default connections");
 		foreach (ExportRoom exportRoom in allRooms) {
@@ -519,6 +366,7 @@ public static class WorldExporter {
 				}
 			}
 		}
+
 		ExportLog("");
 		ExportLog("Checking default state for special connections");
 		Dictionary<string, List<string>> defaultSpecifyLists = [];
@@ -546,6 +394,7 @@ public static class WorldExporter {
 			ExportLog("");
 			Logger.Warn("Special connections found with connectionExtension support disabled."); // TODO - give user the option to enable at this point
 		}
+
 		ExportLog("");
 		ExportLog("Finding Room Conditionals");
 		List<ExportRoom> hideRooms = [];
@@ -560,6 +409,7 @@ public static class WorldExporter {
 				hideRooms.Add(exportRoom);
 			}
 		}
+
 		ExportLog("");
 		ExportLog("Finding encountered timelines");
 		List<string> timelines = [];
@@ -581,9 +431,11 @@ public static class WorldExporter {
 				}
 			}
 		}
+
 		ExportLog("");
 		ExportLog("Initialising timelineSpecifyLists");
 		Dictionary<string, Dictionary<string, List<string>>> timelineSpecifyLists = [];
+
 		ExportLog("");
 		ExportLog("Running through found timelines");
 		List<SpecifiedChange> specifiedChanges = [];
@@ -616,6 +468,7 @@ public static class WorldExporter {
 					connectionsInTimeline.Add(exportConnection);
 				}
 			}
+
 			ExportLog("");
 			ExportLog($"    Populating ExportRoom connections for {worldTimeline}");
 			foreach (ExportRoom timelineRoom in roomsInTimeline) {
@@ -633,6 +486,7 @@ public static class WorldExporter {
 					}
 				}
 			}
+
 			ExportLog("");
 			ExportLog($"    Checking {worldTimeline} for special connections");
 			timelineSpecifyLists.Add(worldTimeline, []);
@@ -654,6 +508,7 @@ public static class WorldExporter {
 						namesEncountered.Add(foundName);
 				}
 			}
+
 			ExportLog("");
 			ExportLog($"    Finding changes");
 			List<TLChange> changes = [];
@@ -692,6 +547,7 @@ public static class WorldExporter {
 					}
 				}
 			}
+
 			ExportLog("");
 			ExportLog("    Finding unpaired disconnections"); // Probably not really needed, but i'd rather be safe than have pathfinding get a one-way and break.
 			List<TLChange> pairChanges = [];
@@ -721,6 +577,7 @@ public static class WorldExporter {
 			foreach (TLChange pairChange in pairChanges) {
 				changes.Add(pairChange);
 			}
+
 			ExportLog("");
 			ExportLog("    Ordering changes");
 			List<TLChange> orderedChanges = [];
@@ -757,6 +614,7 @@ public static class WorldExporter {
 			foreach (TLChange change in changes) {
 				orderedChanges.Add(change);
 			}
+
 			ExportLog("");
 			ExportLog($"    Adding changes to specifiedChanges");
 			foreach(TLChange change in orderedChanges) {
@@ -764,6 +622,7 @@ public static class WorldExporter {
 			}
 		}
 		bool mergeSimilarChanges = false;
+
 		ExportLog("");
 		ExportLog("Merging similar changes"); // Review - make this optional?
 		if (!mergeSimilarChanges) {
@@ -789,8 +648,10 @@ public static class WorldExporter {
 			}
 			mergedSpecifiedChanges.Add(changeToMerge);
 		}
+
 		ExportLog("");
 		ExportLog("Composing world_XX.txt file");
+
 		List<string> finalWorldFile = [];
 		// REVIEW - separate by timeline?
 		if (WorldWindow.replaceRooms.Count != 0 || hideRooms.Count != 0 || exclusiveRooms.Count != 0 && mergedSpecifiedChanges.Count != 0) {
@@ -837,6 +698,7 @@ public static class WorldExporter {
 			finalWorldFile.Add("END CONDITIONAL LINKS");
 			finalWorldFile.Add("");
 		}
+
 		finalWorldFile.Add("ROOMS");
 		foreach (ExportRoom exportRoom in allRooms.OrderBy(r => r.tags.Contains("GATE") ? 0 : 1)
 					.ThenBy(r => r.subregion)
@@ -851,10 +713,153 @@ public static class WorldExporter {
 			finalWorldFile.Add(finalLine);
 		}
 		finalWorldFile.Add("END ROOMS");
+
 		finalWorldFile.Add("");
 		// TODO - verify creature losslessness
 		// TODO - merge similar creatures(incl.tl's and ppc) in a room into single lines for readability?
-		finalWorldFile.Add("CREATURES"); // this section is directly taken from the old exporter.
+		finalWorldFile.Add("CREATURES");
+		ExportCreatures(ref finalWorldFile);
+		finalWorldFile.Add("END CREATURES");
+
+		IOrderedEnumerable<Room> sortedMigrationRooms = WorldWindow.region.rooms
+			.Where(room => room is not OffscreenRoom && room.data.blockedBatMigration)
+			.OrderBy(room => room.data.tags.Contains("GATE") ? 0 : 1)
+			.ThenBy(room => room.data.subregion)
+			.ThenBy(room => room.data.tags.Contains("SHELTER") ? 0 : 1)
+			.ThenBy(room => room.data.cameras.Count)
+			.ThenBy(room => room.name, StringComparer.OrdinalIgnoreCase);
+
+		if (sortedMigrationRooms.Any()) {
+			finalWorldFile.Add("");
+			finalWorldFile.Add("BAT MIGRATION BLOCKAGES");
+			foreach (Room room in sortedMigrationRooms) {
+				finalWorldFile.Add($"{FancyRoomCasing(room)}");
+			}
+			finalWorldFile.Add("END BAT MIGRATION BLOCKAGES");
+		}
+		if (!WorldWindow.region.extraWorld.IsNullOrEmpty())
+			WorldWindow.region.extraWorld.Split('\n').ForEach(finalWorldFile.Add);;
+		
+		string worldFileStringified = "";
+		finalWorldFile.ForEach(l => worldFileStringified += "\n" + l);
+		ExportLog($"\n---------------------------{worldFileStringified}\n---------------------------");
+		ExportLog("Writing to file");
+		try {
+			string fileName = $"world_{WorldWindow.region.acronym}.txt";
+			string path = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, fileName);
+			Backup.File(path);
+			File.WriteAllLines(path, finalWorldFile);
+		}
+		catch (Exception exception) {
+			Logger.Error($"Error writing to world_{WorldWindow.region.acronym}.txt");
+			Logger.Error($"> {exception}");
+		}
+		ExportLog("");
+		ExportLog("End Exporter!");
+		ExportLog("========================================");
+		ExportLog("");
+	}
+
+	public static string PreProcessorsToString(string[] preProcessorConditions) {
+		string preProcessors = "";
+		if (preProcessorConditions == null) {
+			throw new NullReferenceException("Could not convert null preProcessorConditions to string");
+		}
+		foreach (string preProcessorCondition in preProcessorConditions)
+			preProcessors += (preProcessors == "" ? "" : ",") + preProcessorCondition;
+		if (preProcessors != "")
+			preProcessors = $"{{{preProcessors}}}";
+		return preProcessors;
+	}
+
+	private static void ExportLog(string message) {
+		if (Settings.DEBUGVerboseExportLog)
+			Logger.Info(message);
+	}
+
+	public struct TLChange(string affectedRoom, int exitID, IDExit oldConnection, IDExit newConnection) {
+		public string affectedRoom = affectedRoom;
+		public int exitID = exitID;
+		public IDExit oldConnection = oldConnection;
+		public IDExit newConnection = newConnection;
+		public readonly override string ToString() {
+			return $"{this.affectedRoom}({this.exitID}) {this.oldConnection} -> {this.newConnection}";
+		}
+	}
+
+	public struct SpecifiedChange(TLChange change, Timeline timeline) {
+		public string affectedRoom = change.affectedRoom;
+		public int exitID = change.exitID;
+		public IDExit oldConnection = change.oldConnection;
+		public IDExit newConnection = change.newConnection;
+		public Timeline timeline = timeline;
+		public readonly bool Matches (SpecifiedChange otherChange, bool CEEE) {
+			return this.affectedRoom == otherChange.affectedRoom && this.exitID == otherChange.exitID && this.oldConnection.roomName == otherChange.oldConnection.roomName && this.newConnection.roomName == otherChange.newConnection.roomName
+				&& (!CEEE || this.oldConnection.exitID == otherChange.oldConnection.exitID && this.newConnection.exitID == otherChange.newConnection.exitID);
+		}
+		public readonly override string ToString() {
+			return $"{this.affectedRoom}({this.exitID}) {this.oldConnection} -> {this.newConnection}";
+		}
+	}
+
+	public struct IDExit {
+		public string roomName;
+		public int exitID;
+		public string[] connectionConditions;
+		public override readonly string ToString() {
+			return PreProcessorsToString(this.connectionConditions) + $"{this.roomName ?? "DISCONNECTED"}{((this.roomName == null || this.roomName == "DISCONNECTED" )? "" : $"<{this.exitID}>")}";
+		}
+
+		public IDExit(string room, int exitID, string[] connectionConditions) {
+			this.roomName = room;
+			this.exitID = exitID;
+			this.connectionConditions = connectionConditions;
+		}
+	}
+
+	public class ExportRoom {
+		public string name;
+		public IDExit[] connections;
+		public Timeline timeline;
+		public string[] preProcessorConditions;
+		public bool HasPreprocessors => this.preProcessorConditions.Length != 0;
+		public HashSet<string> tags;
+		
+		// ordering information
+		public int subregion;
+		public int cameraCount;
+		public override string ToString() {
+			return PreProcessorsToString(this.preProcessorConditions) + (this.timeline.timelineType == TimelineType.All ? "" : $"({this.timeline}) ") + $"{this.name}";
+		}
+
+		public ExportRoom(string name, HashSet<string> tags, int subregion, int cameraCount, IDExit[] connections, Timeline timeline, string[] preProcessorConditions) {
+			this.name = name;
+			this.connections = connections;
+			this.timeline = timeline;
+			this.preProcessorConditions = preProcessorConditions;
+			this.tags = tags;
+			this.subregion = subregion;
+			this.cameraCount = cameraCount;
+		}
+	}
+
+	public class ExportConnection {
+		public IDExit roomA;
+		public IDExit roomB;
+		public Timeline timeline;
+		public bool HasPreprocessors => this.roomA.connectionConditions.Length != 0 || this.roomB.connectionConditions.Length != 0;
+		public override string ToString() {
+			return $"{PreProcessorsToString(this.roomA.connectionConditions)}" + (this.timeline.timelineType == TimelineType.All ? "" : $"({this.timeline}) ") + $"{this.roomA.roomName}({this.roomA.exitID}) - {this.roomB.roomName}({this.roomB.exitID})";
+		}
+
+		public ExportConnection(IDExit roomA, IDExit roomB, Timeline timeline) {
+			this.roomA = roomA;
+			this.roomB = roomB;
+			this.timeline = timeline;
+		}
+	}
+
+	public static void ExportCreatures(ref List<string> finalWorldFile) { // this section is directly taken from the old exporter.
 		foreach (Room room in WorldWindow.region.rooms) {
 			for (int i = 0; i < room.dens.Count; i++) {
 				List<DenLineage?> nonLineageCreatures = [];
@@ -1000,146 +1005,32 @@ public static class WorldExporter {
 
 		if (!WorldWindow.region.extraWorldCreatures.IsNullOrEmpty())
 			WorldWindow.region.extraWorldCreatures.Split('\n').ForEach(finalWorldFile.Add);
-		finalWorldFile.Add("END CREATURES");
-		IOrderedEnumerable<Room> sortedMigrationRooms = WorldWindow.region.rooms
-			.Where(room => room is not OffscreenRoom && room.data.blockedBatMigration)
-			.OrderBy(room => room.data.tags.Contains("GATE") ? 0 : 1)
-			.ThenBy(room => room.data.subregion)
-			.ThenBy(room => room.data.tags.Contains("SHELTER") ? 0 : 1)
-			.ThenBy(room => room.data.cameras.Count)
-			.ThenBy(room => room.name, StringComparer.OrdinalIgnoreCase);
+	}
 
-		if (sortedMigrationRooms.Any()) {
-			finalWorldFile.Add("");
-			finalWorldFile.Add("BAT MIGRATION BLOCKAGES");
-			foreach (Room room in sortedMigrationRooms) {
-				finalWorldFile.Add($"{FancyRoomCasing(room)}");
+	private static string ExportCreatureTags(DenCreature creature) {
+		if (creature.tags.Count <= 0) {
+			return "";
+		}
+
+		string finalTags = "";
+		finalTags += "-{";
+		bool first = true;
+		foreach (DenCreature.Tag tag in creature.tags) {
+			if (!first)
+				finalTags += ",";
+			first = false;
+
+			// TODO: Handle dynamically?
+			if (tag.id.displayType == Mods.DisplayType.None) {
+				finalTags += tag.id.id;
 			}
-			finalWorldFile.Add("END BAT MIGRATION BLOCKAGES");
+			else {
+				string name = Mods.ExportTagName(tag.id.id) + ":";
+				if (tag.id == Mods.tags["polemimic_length"] || tag.id == Mods.tags["centipede_length"]) name = "";
+				finalTags += $"{name}{(tag is DenCreature.IntegerTag intTag ? intTag.data : (tag is DenCreature.FloatTag floatTag ? floatTag.data : (tag is DenCreature.StringTag stringTag ? stringTag.data : "IDK LOL")))}";
+			}
 		}
-		if (!WorldWindow.region.extraWorld.IsNullOrEmpty())
-			WorldWindow.region.extraWorld.Split('\n').ForEach(finalWorldFile.Add);;
-		
-		string worldFileStringified = "";
-		finalWorldFile.ForEach(l => worldFileStringified += "\n" + l);
-		ExportLog($"\n---------------------------{worldFileStringified}\n---------------------------");
-		ExportLog("Writing to file");
-		try {
-			string fileName = $"world_{WorldWindow.region.acronym}.txt";
-			string path = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, fileName);
-			Backup.File(path);
-			File.WriteAllLines(path, finalWorldFile);
-		}
-		catch (Exception exception) {
-			Logger.Error($"Error writing to world_{WorldWindow.region.acronym}.txt");
-			Logger.Error($"> {exception}");
-		}
-		ExportLog("");
-		ExportLog("End KhyExporter!");
-		ExportLog("========================================");
-		ExportLog("");
-		return true;
-	}
-
-	public struct TLChange(string affectedRoom, int exitID, IDExit oldConnection, IDExit newConnection) {
-		public string affectedRoom = affectedRoom;
-		public int exitID = exitID;
-		public IDExit oldConnection = oldConnection;
-		public IDExit newConnection = newConnection;
-		public readonly override string ToString() {
-			return $"{this.affectedRoom}({this.exitID}) {this.oldConnection} -> {this.newConnection}";
-		}
-	}
-
-	public struct SpecifiedChange(TLChange change, Timeline timeline) {
-		public string affectedRoom = change.affectedRoom;
-		public int exitID = change.exitID;
-		public IDExit oldConnection = change.oldConnection;
-		public IDExit newConnection = change.newConnection;
-		public Timeline timeline = timeline;
-		public readonly bool Matches (SpecifiedChange otherChange, bool CEEE) {
-			return this.affectedRoom == otherChange.affectedRoom && this.exitID == otherChange.exitID && this.oldConnection.roomName == otherChange.oldConnection.roomName && this.newConnection.roomName == otherChange.newConnection.roomName
-				&& (!CEEE || this.oldConnection.exitID == otherChange.oldConnection.exitID && this.newConnection.exitID == otherChange.newConnection.exitID);
-		}
-		public readonly override string ToString() {
-			return $"{this.affectedRoom}({this.exitID}) {this.oldConnection} -> {this.newConnection}";
-		}
-	}
-
-	public struct IDExit {
-		public string roomName;
-		public int exitID;
-		public string[] connectionConditions;
-		public override readonly string ToString() {
-			return PreProcessorsToString(this.connectionConditions) + $"{this.roomName ?? "DISCONNECTED"}{((this.roomName == null || this.roomName == "DISCONNECTED" )? "" : $"<{this.exitID}>")}";
-		}
-
-		public IDExit(string room, int exitID, string[] connectionConditions) {
-			this.roomName = room;
-			this.exitID = exitID;
-			this.connectionConditions = connectionConditions;
-		}
-	}
-
-	public class ExportRoom {
-		public string name;
-		public IDExit[] connections;
-		public Timeline timeline;
-		public string[] preProcessorConditions;
-		public bool HasPreprocessors => this.preProcessorConditions.Length != 0;
-		public HashSet<string> tags;
-		
-		// ordering information
-		public int subregion;
-		public int cameraCount;
-		public override string ToString() {
-			return PreProcessorsToString(this.preProcessorConditions) + (this.timeline.timelineType == TimelineType.All ? "" : $"({this.timeline}) ") + $"{this.name}";
-		}
-
-		public ExportRoom(string name, HashSet<string> tags, int subregion, int cameraCount, IDExit[] connections, Timeline timeline, string[] preProcessorConditions) {
-			this.name = name;
-			this.connections = connections;
-			this.timeline = timeline;
-			this.preProcessorConditions = preProcessorConditions;
-			this.tags = tags;
-			this.subregion = subregion;
-			this.cameraCount = cameraCount;
-		}
-	}
-
-	public class ExportConnection {
-		public IDExit roomA;
-		public IDExit roomB;
-		public Timeline timeline;
-		public bool HasPreprocessors => this.roomA.connectionConditions.Length != 0 || this.roomB.connectionConditions.Length != 0;
-		public override string ToString() {
-			return $"{PreProcessorsToString(this.roomA.connectionConditions)}" + (this.timeline.timelineType == TimelineType.All ? "" : $"({this.timeline}) ") + $"{this.roomA.roomName}({this.roomA.exitID}) - {this.roomB.roomName}({this.roomB.exitID})";
-		}
-
-		public ExportConnection(IDExit roomA, IDExit roomB, Timeline timeline) {
-			this.roomA = roomA;
-			this.roomB = roomB;
-			this.timeline = timeline;
-		}
-	}
-
-	public static string PreProcessorsToString(string[] preProcessorConditions) {
-		string preProcessors = "";
-		if (preProcessorConditions == null) {
-			throw new NullReferenceException("Could not convert null preProcessorConditions to string");
-		}
-		foreach (string preProcessorCondition in preProcessorConditions)
-			preProcessors += (preProcessors == "" ? "" : ",") + preProcessorCondition;
-		if (preProcessors != "")
-			preProcessors = $"{{{preProcessors}}}";
-		return preProcessors;
-	}
-
-	public static void ExportWorldFile() {
-		Logger.Info("Exporting world file");
-		KhyExporter();
-		
-		// TODO - reorganise code to put in here instead of in the separate method
+		return finalTags + "}";
 	}
 
 	// REVIEW: this does not take into account preprocessorconditions - for example, Watcher's WAUA does not contain a "map_WAUA-Watcher.png",
