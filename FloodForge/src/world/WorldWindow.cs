@@ -2193,6 +2193,17 @@ public static class WorldWindow {
 					}),
 					new Button("Splash", button => {
 						PopupManager.Add(new SplashArtPopup(false));
+					}),
+					new Button("Reset Camera", button => {
+						cameraOffset = Vector2.Zero;
+						lastNormalCameraOffset = Vector2.Zero;
+						cameraPanning = false;
+						cameraPanningBlocked = false;
+						cameraPanTo = Vector2.Zero;
+						cameraPanStart = Vector2.Zero;
+						cameraPanStartMouse = Vector2.Zero;
+						cameraScale = 32f;
+						cameraScaleTo = 32f;
 					})
 				]),
 
