@@ -96,7 +96,8 @@ public static class DropletWindow {
 
 		Vector2 previousWorldMouse = Mouse.Pos * cameraScale + cameraOffset;
 		targetCameraScale *= zoom;
-		targetCameraScale = Mathf.Clamp(targetCameraScale, 2.5f, 1f * MathF.Max(Room.width, Room.height));
+		if(!Keys.Modifier(Keys.Modifiers.Alt))
+			targetCameraScale = Mathf.Clamp(targetCameraScale, 2.5f, 1f * MathF.Max(Room.width, Room.height));
 		cameraScale += (targetCameraScale - cameraScale) * (1f - MathF.Pow(1f - Settings.CameraZoomSpeed, Program.Delta * 60f));
 		Vector2 worldMouse = Mouse.Pos * cameraScale + cameraOffset;
 
