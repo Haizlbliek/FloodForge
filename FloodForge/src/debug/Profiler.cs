@@ -236,6 +236,7 @@ public static class Profiler {
 		static List<string> profilerMessagesLeft = [];
 		static List<string> profilerMessagesRight = [];
 		static readonly List<(string, int)> logMessages = [];
+		static bool showLogMessages = true;
 		public static void DrawProfilerMessages(bool drawLog = true) {
 			Immediate.Color(Color.White);
 			int i = 0;
@@ -261,22 +262,28 @@ public static class Profiler {
 			profilerMessagesRight = [];
 
 			if (drawLog) {
-				foreach((string message, int severity) in logMessages.AsEnumerable().Reverse()) {
-					Immediate.Color(severity switch {
-						0 => Color.Grey,
-						1 => Color.White,
-						2 => Color.Yellow,
-						3 => Color.Red,
-						_ => Color.White
-					});
-					foreach (string line in message.Split("\n").Reverse()) {
-						UI.font.Write(line, Main.screenBounds.x - UI.font.Measure(line, 0.025f).x, -Main.screenBounds.y + 0.1f + (i * 0.03f), 0.025f);
-						i++;
-					}
-				}
 				UVRect clearButton = new UVRect(Main.screenBounds.x - 0.05f, -Main.screenBounds.y, Main.screenBounds.x, -Main.screenBounds.y + 0.05f).AtlasUV("cross");
 				if (UI.TextureButton(clearButton)) {
 					logMessages.Clear();
+				}
+				UVRect hideButton = new UVRect(Main.screenBounds.x - 0.1f, -Main.screenBounds.y, Main.screenBounds.x - 0.05f, -Main.screenBounds.y + 0.05f).AtlasUV(showLogMessages ? "eyeOpen" : "eyeClosed");
+				if (UI.TextureButton(hideButton)) {
+					showLogMessages = !showLogMessages;
+				}
+				if (showLogMessages) {
+					foreach((string message, int severity) in logMessages.AsEnumerable().Reverse()) {
+						Immediate.Color(severity switch {
+							0 => Color.Grey,
+							1 => Color.White,
+							2 => Color.Yellow,
+							3 => Color.Red,
+							_ => Color.White
+						});
+						foreach (string line in message.Split("\n").Reverse()) {
+							UI.font.Write(line, Main.screenBounds.x - UI.font.Measure(line, 0.025f).x, -Main.screenBounds.y + 0.1f + (i * 0.03f), 0.025f);
+							i++;
+						}
+					}
 				}
 			}
 		}
