@@ -1123,6 +1123,7 @@ public static class DropletWindow {
 		}
 
 		UpdateCamera();
+		Profiler.Debug.AddProfilerMessage($"camScale: {DropletWindow.cameraScale}; camPos: x={DropletWindow.cameraOffset.x},y={DropletWindow.cameraOffset.y};");
 
 		Immediate.LoadIdentity();
 		Immediate.Ortho(cameraOffset.x, cameraOffset.y, cameraScale * Main.screenBounds.x, cameraScale * Main.screenBounds.y);
