@@ -324,9 +324,10 @@ public static class WorldParser {
 		else {
 			string path = WorldWindow.region.roomsPath;
 			if (name.StartsWith("gate", StringComparison.InvariantCultureIgnoreCase)) {
-				path = PathUtil.FindDirectory(PathUtil.Parent(path), "gates") ?? "";
+				string parentPath = PathUtil.Parent(path);
+				path = PathUtil.FindDirectory(parentPath, "gates") ?? "";
 				if (path.IsNullOrEmpty()) {
-					Logger.Warn($"Couldn't find gates folder in {WorldWindow.region.roomsPath}");
+					Logger.Warn($"Couldn't find gates folder in {parentPath}");
 				}
 			}
 
@@ -1270,6 +1271,7 @@ public static class WorldParser {
 		Logger.Info("Opening world ", WorldWindow.region.acronym);
 
 		string? roomsPath = PathUtil.FindDirectory(PathUtil.Parent(WorldWindow.region.exportPath), WorldWindow.region.acronym + "-rooms");
+		Logger.Info($"RoomsPath: {roomsPath ?? "NULL"}");
 		if (roomsPath == null || roomsPath == "") {
 			Logger.Error("Cannot find rooms directory");
 			return false;
