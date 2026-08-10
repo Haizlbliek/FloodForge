@@ -87,7 +87,11 @@ public class FloodforgeConfigPopup : Popup {
 			Immediate.Color(Color.White);
 		}
 
-		Immediate.Color(Color.White);
+		Immediate.Color(Themes.TextWarn);
+		font.Write("NOTE: Settings can't currently be saved.", this.bounds.x0 + 0.01f, settingRect.y1, 0.03f, Font.Align.TopLeft);
+		Immediate.Color(Themes.Text);
+
+		GotoNextSetting();
 		font.Write(this.CameraPanSpeed.settingName, this.bounds.x0 + 0.01f, settingRect.y1, 0.03f, Font.Align.TopLeft);
 		UI.Slider(settingRect, this.CameraPanSpeed.editable, ref this.CameraPanSpeed.ValueRef);
 
