@@ -1083,6 +1083,7 @@ public static class WorldWindow {
 		Vector2 gridScale = Main.screenBounds * (gridStep * 16f);
 
 		Immediate.Color(Themes.Grid);
+		Program.gl.Enable(EnableCap.Blend);
 		Immediate.Begin(Immediate.PrimitiveType.LINES);
 		for (float x = -gridScale.x + offset.x; x < gridScale.x + offset.x; x += gridStep) {
 			Immediate.Vertex(x + extraOffset.x, -cameraScale * Main.screenBounds.y + offset.y + extraOffset.y - gridStep);
@@ -1092,13 +1093,15 @@ public static class WorldWindow {
 			Immediate.Vertex(-cameraScale * Main.screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
 			Immediate.Vertex(cameraScale * Main.screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
 		}
-		Immediate.Color(Themes.Layer1Color);
+		Immediate.Color(Themes.RoomAir);
+		Immediate.Alpha(0.25f);
 		Immediate.Vertex(cameraOffset.x - Main.screenBounds.x * cameraScale, -(cameraOffset.y * (1 - 1f)) / 2); // this may be another colorpopup situation
 		Immediate.Vertex(cameraOffset.x + Main.screenBounds.x * cameraScale, -(cameraOffset.y * (1 - 1f)) / 2);
-		Immediate.Color(Themes.Layer1Color);
 		Immediate.Vertex(-(cameraOffset.x * 0) / 2, cameraOffset.y - Main.screenBounds.y * cameraScale);
 		Immediate.Vertex(-(cameraOffset.x * 0) / 2, cameraOffset.y + Main.screenBounds.y * cameraScale);
 		Immediate.End();
+		Immediate.Alpha(1f);
+		Program.gl.Disable(EnableCap.Blend);
 	}
 
 	private static void DrawCurrentConnection() {
