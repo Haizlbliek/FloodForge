@@ -47,6 +47,7 @@ public static class WorldWindow {
 	public static bool invalidCreaturesEncountered = false;
 	public static bool ExportFinished = true;
 	public static Vector2 cameraOffset;
+	private static Vector2 lastNormalCameraOffset = Vector2.Zero;
 	private static bool cameraPanning = false;
 	private static bool cameraPanningBlocked = false;
 	private static Vector2 cameraPanTo = Vector2.Zero;
@@ -177,11 +178,14 @@ public static class WorldWindow {
 		float zoom = MathF.Pow(1.25f, scrollY);
 		if (MathF.Abs(zoom - 1f) > 0.1f)
 			highlightRoom = null;
-		if (float.IsNaN(cameraOffset.x) || float.IsNaN(cameraOffset.y)) { // find a way to maintain position when tabbing out and into fullscreen
-			cameraOffset = Vector2.Zero;
-			cameraPanTo = Vector2.Zero;
-			cameraPanStart = Vector2.Zero;
-			cameraPanStartMouse = Vector2.Zero;
+		if (float.IsNaN(cameraOffset.x) || float.IsNaN(cameraOffset.y)) {
+			cameraOffset = lastNormalCameraOffset;
+			cameraPanTo = lastNormalCameraOffset;
+			cameraPanStart = lastNormalCameraOffset;
+			cameraPanStartMouse = lastNormalCameraOffset;
+		}
+		else {
+			lastNormalCameraOffset = cameraOffset;
 		}
 		Vector2 previousWorldMouse = Mouse.Pos * cameraScale + cameraOffset;
 		cameraScaleTo *= zoom;

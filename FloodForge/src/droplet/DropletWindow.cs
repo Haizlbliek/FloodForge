@@ -71,6 +71,7 @@ public static class DropletWindow {
 	private static List<DevObject> backupObjects = [];
 
 	private static Vector2 cameraOffset;
+	private static Vector2 lastNormalCameraOffset = Vector2.Zero;
 	private static float cameraScale = 40f;
 	private static float targetCameraScale = 40f;
 	private static bool cameraPanning = false;
@@ -89,11 +90,21 @@ public static class DropletWindow {
 		GeometryTexture = Texture.Load(Themes.GetPath("geometry.png"));
 	}
 
+	// REVIEW - add a separate class containing camera data & controls, so that camera controls are unified?
 	private static void UpdateCamera() {
 		bool isHoveringPopup = Mouse.Disabled;
 		float scrollY = -Mouse.Scroll;
 		float zoom = MathF.Pow(1.25f, scrollY);
 
+		if (float.IsNaN(cameraOffset.x) || float.IsNaN(cameraOffset.y)) {
+			cameraOffset = lastNormalCameraOffset;
+			targetCameraPan = lastNormalCameraOffset;
+			cameraPanStart = lastNormalCameraOffset;
+			cameraPanStartMouse = lastNormalCameraOffset;
+		}
+		else {
+			lastNormalCameraOffset = cameraOffset;
+		}
 		Vector2 previousWorldMouse = Mouse.Pos * cameraScale + cameraOffset;
 		targetCameraScale *= zoom;
 		if(!Keys.Modifier(Keys.Modifiers.Alt))
