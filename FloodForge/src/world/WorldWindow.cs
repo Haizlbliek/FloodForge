@@ -2097,6 +2097,7 @@ public static class WorldWindow {
 						string? path = PathUtil.FindFile(WorldWindow.region.exportPath, $"world_{WorldWindow.region.acronym}.txt");
 						if (path == null) {
 							PopupManager.Add(new InfoPopup("Could not find world_xx.txt file!"));
+							Logger.Info($"Failed to find world file at {WorldWindow.region.exportPath}/world_{WorldWindow.region.acronym}.txt");
 							return;
 						}
 						if (!WorldParser.ImportWorldFile(path, out string? message))
