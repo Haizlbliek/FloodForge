@@ -1264,6 +1264,10 @@ public static class WorldWindow {
 					continue;
 				bool isLoop = roomA == roomB && connection.roomAExitID == connection.roomBExitID;
 				FreeConnection freeConnection = new(isLoop) { drawStriped = true };
+
+				bool draggableAIsVisible = connection.roomA == replaceRoom.replacedRoom ? replaceRoom.Visible : connection.roomA.Visible;
+				bool draggableBIsVisible = connection.roomB == replaceRoom.replacedRoom ? replaceRoom.Visible : connection.roomB.Visible;
+				freeConnection.SetVisibilities(draggableAIsVisible, draggableBIsVisible, connection.ConnectionVisible);
 				freeConnection.Draw(roomA.GetConnectionConnectPoint(connection.roomAExitID, roomAPosition), roomB.GetConnectionConnectPoint(connection.roomBExitID, roomBPosition), roomA.GetConnectionConnectDirection(connection.roomAExitID), roomB.GetConnectionConnectDirection(connection.roomBExitID), Themes.RoomConnection, isLoop);
 			}
 		}
