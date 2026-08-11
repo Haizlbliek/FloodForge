@@ -244,8 +244,8 @@ public class SplashArtPopup : Popup {
 
 				if (Mouse.JustLeft) {
 					this.Close();
-					if (!WorldParser.ImportWorldFile(RecentFiles.recents[i]))
-						PopupManager.Add(new InfoPopup("Importing world failed!\nView log.txt for more info."));
+					if (!WorldParser.ImportWorldFile(RecentFiles.recents[i], out string? message))
+						PopupManager.Add(new InfoPopup($"Importing world failed!\n{(message == null ? "" : $"{message}\n")}View log.txt for more info."));
 					else if (!Settings.HideTutorial && !Settings.HideTutorialOnLoadWorld && this.showTutorialAfterClose) {
 						PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
 					}
