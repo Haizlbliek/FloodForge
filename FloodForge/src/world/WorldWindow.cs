@@ -1988,7 +1988,10 @@ public static class WorldWindow {
 				);
 			}
 
-			WorldWindow.region.exportPath = lastExportDirectory;
+			if (!lastExportDirectory.IsNullOrEmpty()) {
+				Logger.Info($"Set exportPath from\n{WorldWindow.region.exportPath}\nback to\b{lastExportDirectory}");
+				WorldWindow.region.exportPath = lastExportDirectory;
+			}
 		}
 
 		private static void ExportMap() {
