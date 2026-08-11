@@ -1,4 +1,4 @@
-using System.Text;
+using System.Diagnostics;
 using StbImageWriteSharp;
 using Stride.Core.Extensions;
 
@@ -305,9 +305,11 @@ public static class WorldExporter {
 	}
 
 	// TODO - make this a hundred times more compact (this is a naive implementation)
+	// My first attempt at making this more compact resulted in a slight performance loss, for some reason. Seems like this exporter is less fundamentally inefficient than I thought.
 	public static void ExportWorldFile() {
 		Logger.Info("Exporting world file");
 		
+		Stopwatch stopwatch = Stopwatch.StartNew();
 		ExportLog("");
 		ExportLog("========================================");
 
@@ -758,6 +760,8 @@ public static class WorldExporter {
 		ExportLog("End Exporter!");
 		ExportLog("========================================");
 		ExportLog("");
+		Logger.Info($"Elapsed time: {stopwatch.Elapsed.TotalMilliseconds}ms");
+		stopwatch.Stop();
 	}
 
 	public static string PreProcessorsToString(string[] preProcessorConditions) {
