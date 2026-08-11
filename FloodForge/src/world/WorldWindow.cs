@@ -1956,11 +1956,13 @@ public static class WorldWindow {
 					Directory.CreateDirectory("worlds");
 				}
 				WorldWindow.region.exportPath = PathUtil.FindOrAssumeDirectory("worlds", WorldWindow.region.acronym);
+				WorldWindow.region.roomsPath = PathUtil.FindOrAssumeDirectory("worlds", $"{WorldWindow.region.acronym}-rooms");
 				Logger.Info($"Special exporting to directory: {WorldWindow.region.exportPath}");
 
-				if (!Directory.Exists(WorldWindow.region.exportPath)) {
+				if (!Directory.Exists(WorldWindow.region.exportPath))
 					Directory.CreateDirectory(WorldWindow.region.exportPath);
-				}
+				if (!Directory.Exists(WorldWindow.region.roomsPath))
+					Directory.CreateDirectory(WorldWindow.region.roomsPath);
 			}
 
 			if (!string.IsNullOrEmpty(WorldWindow.region.exportPath)) {
