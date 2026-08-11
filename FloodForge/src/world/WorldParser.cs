@@ -1218,10 +1218,12 @@ public static class WorldParser {
 		return displaynamePath == null ? "" : File.ReadAllText(displaynamePath).Trim();
 	}
 
-	public static bool ImportWorldFile(string worldPath) {
+	public static bool ImportWorldFile(string worldPath, out string? message) {
+		message = null;
 		WorldWindow.importIncomplete = true;
 		if (!File.Exists(worldPath)) {
-			Logger.Error("Cannot find world_XX.txt");
+			message = "Cannot find world_XX.txt";
+			Logger.Error(message);
 			return false;
 		}
 		WorldWindow.worldHistory.Clear();
@@ -1263,7 +1265,10 @@ public static class WorldParser {
 				}
 			}
 
-			Logger.Info(string.Join(", ", WorldWindow.region.regionsPaths));
+			if(WorldWindow.region.regionsPaths.Count != 0)
+				Logger.Info(string.Join(", ", WorldWindow.region.regionsPaths));
+			else
+				Logger.Info("'No regions.txt paths found");
 		}
 
 		WorldWindow.region.acronym = WorldWindow.region.FindAcronym(WorldWindow.region.acronym);
@@ -1273,7 +1278,8 @@ public static class WorldParser {
 		string? roomsPath = PathUtil.FindDirectory(PathUtil.Parent(WorldWindow.region.exportPath), WorldWindow.region.acronym + "-rooms");
 		Logger.Info($"RoomsPath: {roomsPath ?? "NULL"}");
 		if (roomsPath == null || roomsPath == "") {
-			Logger.Error("Cannot find rooms directory");
+			message = "Cannot find rooms directory";
+			Logger.Error(message);
 			return false;
 		}
 		WorldWindow.region.roomsPath = roomsPath;
@@ -1281,7 +1287,7 @@ public static class WorldParser {
 		string? propertiesPath = PathUtil.FindFile(WorldWindow.region.exportPath, "properties.txt");
 		if (propertiesPath != null) {
 			Logger.Info("Loading properties");
-			if (!ParseProperties(propertiesPath)) return false;
+			if (!ParseProperties(propertiesPath)) return false; // Does ParseProperties at any point even have the capacity to return false??
 		}
 
 		Logger.Info("Loading world");
