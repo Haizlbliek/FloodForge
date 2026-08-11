@@ -20,7 +20,6 @@ internal static partial class Regexs {
 
 public static class WorldWindow {
 	private static readonly WorldMenuItems menuItems = new WorldMenuItems();
-	private static FloodforgeConfigPopup configPopup = new FloodforgeConfigPopup();
 
 	public static bool VisibleAxisLines { get; private set; } = true;
 	public static bool VisibleDevItems { get; private set; } = false;
@@ -2247,7 +2246,7 @@ public static class WorldWindow {
 				}, b => worldHistory.HasRedos),
 
 				new Button("Settings", button => {
-					PopupManager.Add(configPopup, true);
+					PopupManager.Add(new FloodforgeConfigPopup(), true);
 				})
 			];
 		}
