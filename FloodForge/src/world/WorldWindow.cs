@@ -42,7 +42,8 @@ public static class WorldWindow {
 	public static Region region = null!;
 	// public static List<ConnectionVisual> virtualConnections = [];
 	public static List<Connection> connectionsToBeRemoved = [];
-	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || WorldWindow.region.exportPath.IsNullOrEmpty() || importIncomplete);
+	public static bool HasExportPath => !WorldWindow.region.exportPath.IsNullOrEmpty();
+	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || !HasExportPath || importIncomplete);
 	public static bool importIncomplete = false;
 	public static bool invalidCreaturesEncountered = false;
 	public static bool ExportFinished = true;
@@ -1001,7 +1002,7 @@ public static class WorldWindow {
 			if (region.acronym.IsNullOrEmpty()) {
 				PopupManager.Add(new InfoPopup("You must create or import your region\nbefore creating or editing a room."));
 			}
-			else if (region.exportPath.IsNullOrEmpty()) {
+			else if (!HasExportPath) {
 				PopupManager.Add(new InfoPopup("You must export your region\nbefore creating or editing a room."));
 			}
 			else {
@@ -1913,7 +1914,7 @@ public static class WorldWindow {
 			acronym = filename.Split('_')[0];
 		else
 			acronym = "";
-		if ((acronym.Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase) & !acronym.IsNullOrEmpty()) || region.exportPath.IsNullOrEmpty()) {
+		if ((acronym.Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase) & !acronym.IsNullOrEmpty()) && HasExportPath) {
 			return CreateAndAddRoom(path, filename);
 		}
 		else {
