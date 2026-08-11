@@ -2,7 +2,7 @@ namespace FloodForge.World;
 
 public class WorldDraggable {
 	public bool Visible => this.IsVisible();
-	public virtual bool IsVisible() {
+	protected virtual bool IsVisible() {
 		return true;
 	}
 
