@@ -1228,9 +1228,18 @@ public static class WorldParser {
 		}
 		WorldWindow.worldHistory.Clear();
 		RecentFiles.AddPath(worldPath);
+		
+		Logger.Info($"File path: {worldPath}");
+		string exportPath = PathUtil.Parent(worldPath);
+		if (Path.GetFileNameWithoutExtension(PathUtil.Parent(PathUtil.Parent(exportPath))).Equals("modify", StringComparison.InvariantCultureIgnoreCase)) {
+			message = $"Cannot load world from inside /modify folder";
+			Logger.Error(message);
+			return false;
+		}
+
 		roomAttractiveness.Clear();
 		WorldWindow.Reset();
-		WorldWindow.region.exportPath = PathUtil.Parent(worldPath);
+		WorldWindow.region.exportPath = exportPath;
 		WorldWindow.region.acronym = Path.GetFileNameWithoutExtension(worldPath);
 		WorldWindow.region.acronym = WorldWindow.region.acronym[(WorldWindow.region.acronym.IndexOfReverse('_') + 1)..];
 
