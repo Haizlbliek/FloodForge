@@ -1990,7 +1990,7 @@ public static class WorldWindow {
 			}
 
 			if (!lastExportDirectory.IsNullOrEmpty()) {
-				Logger.Info($"Set exportPath from\n{WorldWindow.region.exportPath}\nback to\b{lastExportDirectory}");
+				Logger.Info($"Set exportPath from\n{WorldWindow.region.exportPath}\nback to\n{lastExportDirectory}");
 				WorldWindow.region.exportPath = lastExportDirectory;
 			}
 		}
