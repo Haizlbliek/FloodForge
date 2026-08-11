@@ -12,9 +12,8 @@ public class Connection : ConnectionVisual{
 	public override Vector2 PointB => this.roomB.GetConnectionConnectPoint(this.roomBExitID);
 	public override Vector2i DirectionB => this.roomB.GetConnectionConnectDirection(this.roomBExitID);
 
-	private bool VisibleTimelineIsEmptyOnly => WorldWindow.VisibleTimeline.timelineType == TimelineType.Only && WorldWindow.VisibleTimeline.timelines.Count == 0;
-	public override bool AVisible => WorldWindow.VisibleLayers[this.roomA.data.layer] && (this.VisibleTimelineIsEmptyOnly || WorldWindow.VisibleTimeline.OverlapsWith(this.roomA.timeline) || this.ConnectionVisible);
-	public override bool BVisible => WorldWindow.VisibleLayers[this.roomB.data.layer] && (this.VisibleTimelineIsEmptyOnly || WorldWindow.VisibleTimeline.OverlapsWith(this.roomB.timeline) || this.ConnectionVisible);
+	public override bool AVisible => this.roomA.Visible;
+	public override bool BVisible => this.roomB.Visible;
 
 	public string[] preProcessorConditions = [];
 	
