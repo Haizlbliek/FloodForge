@@ -58,10 +58,14 @@ public abstract class MenuItems {
 				float y = Main.screenBounds.y - 0.1f;
 
 				float maxWidth = width;
+				int activeButtonsCount = 0;
 				foreach (Button button in dropdown.buttons) {
-					maxWidth = MathF.Max(maxWidth, button.Size.x + 0.02f);
+					if (button.buttonEnabled || Settings.DisabledButtonsMode.value != Settings.STDisabledButtonsMode.Hide) {
+						maxWidth = MathF.Max(maxWidth, button.Size.x + 0.02f);
+						activeButtonsCount++;
+					}
 				}
-				Rect extendedRect = Rect.FromSize(x - 0.01f, y + 0.05f, maxWidth + 0.02f, -0.05f * dropdown.buttons.Count - 0.01f);
+				Rect extendedRect = Rect.FromSize(x - 0.01f, y + 0.05f, maxWidth + 0.02f, -0.05f * activeButtonsCount - 0.01f);
 				this.selectedDropdownRect = extendedRect;
 
 				Immediate.Color(Themes.Popup);
@@ -74,7 +78,9 @@ public abstract class MenuItems {
 
 				foreach (Button button in dropdown.buttons) {
 					if (this.DrawButton(button, x, y)) {
-						y -= 0.05f;
+						if (button.buttonEnabled || Settings.DisabledButtonsMode.value != Settings.STDisabledButtonsMode.Hide ) {
+							y -= 0.05f;
+						}
 					}
 				}
 			}
