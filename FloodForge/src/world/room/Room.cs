@@ -56,7 +56,7 @@ public class Room : MapDraggable {
 	private int specialExitCount = 0;
 	public int GarbageWormDenIndex => this.specialExitCount + this.nonDenExitCount + this.denShortcutEntrances.Count;
 
-	public override bool IsVisible() {
+	protected override bool IsVisible() {
 		return WorldWindow.VisibleLayers[this.data.layer] && this.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
 	}
 
