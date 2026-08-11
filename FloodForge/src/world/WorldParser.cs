@@ -1220,13 +1220,11 @@ public static class WorldParser {
 
 	public static bool ImportWorldFile(string worldPath, out string? message) {
 		message = null;
-		WorldWindow.importIncomplete = true;
 		if (!File.Exists(worldPath)) {
 			message = "Cannot find world_XX.txt";
 			Logger.Error(message);
 			return false;
 		}
-		WorldWindow.worldHistory.Clear();
 		RecentFiles.AddPath(worldPath);
 		
 		Logger.Info($"File path: {worldPath}");
@@ -1236,6 +1234,8 @@ public static class WorldParser {
 			Logger.Error(message);
 			return false;
 		}
+		WorldWindow.importIncomplete = true;
+		WorldWindow.worldHistory.Clear();
 
 		roomAttractiveness.Clear();
 		WorldWindow.Reset();

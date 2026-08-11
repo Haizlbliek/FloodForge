@@ -2019,6 +2019,7 @@ public static class WorldWindow {
 				new Button("New", button => {
 					PopupManager.Add(new AcronymPopup((acronym) => {
 							WorldWindow.Reset();
+							WorldWindow.importIncomplete = false;
 							WorldWindow.region.offscreenDen = new OffscreenRoom("offscreenden" + acronym.ToLowerInvariant(), "OffscreenDen" + acronym.ToUpperInvariant());
 							WorldWindow.region.rooms.Add(WorldWindow.region.offscreenDen);
 							WorldWindow.region.acronym = acronym;
@@ -2042,7 +2043,7 @@ public static class WorldWindow {
 							ExportButton();
 						}
 						else{
-							PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(ExportButton));
+							PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(() => { WorldWindow.ExportFinished = false; ExportButton(); }));
 						}
 					},
 					button => {
