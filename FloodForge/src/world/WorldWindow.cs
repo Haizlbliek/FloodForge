@@ -22,6 +22,7 @@ public static class WorldWindow {
 	private static readonly WorldMenuItems menuItems = new WorldMenuItems();
 	private static FloodforgeConfigPopup configPopup = new FloodforgeConfigPopup();
 
+	public static bool VisibleAxisLines { get; private set; } = true;
 	public static bool VisibleDevItems { get; private set; } = false;
 	public static bool VisibleCreatures { get; private set; } = true;
 	public static bool VisibleTimelineIcons { get; private set; } = true;
@@ -1094,14 +1095,16 @@ public static class WorldWindow {
 			Immediate.Vertex(-cameraScale * Main.screenBounds.x + offset.x + extraOffset.x - gridStep, y + extraOffset.y);
 			Immediate.Vertex(cameraScale * Main.screenBounds.x + offset.x + extraOffset.x + gridStep, y + extraOffset.y);
 		}
-		Immediate.Color(Themes.RoomAir);
-		Immediate.Alpha(0.25f);
-		Immediate.Vertex(cameraOffset.x - Main.screenBounds.x * cameraScale, -(cameraOffset.y * (1 - 1f)) / 2); // this may be another colorpopup situation
-		Immediate.Vertex(cameraOffset.x + Main.screenBounds.x * cameraScale, -(cameraOffset.y * (1 - 1f)) / 2);
-		Immediate.Vertex(-(cameraOffset.x * 0) / 2, cameraOffset.y - Main.screenBounds.y * cameraScale);
-		Immediate.Vertex(-(cameraOffset.x * 0) / 2, cameraOffset.y + Main.screenBounds.y * cameraScale);
+		if (VisibleAxisLines) {
+			Immediate.Color(Themes.RoomAir);
+			Immediate.Alpha(0.25f);
+			Immediate.Vertex(cameraOffset.x - Main.screenBounds.x * cameraScale, -(cameraOffset.y * (1 - 1f)) / 2); // this may be another colorpopup situation
+			Immediate.Vertex(cameraOffset.x + Main.screenBounds.x * cameraScale, -(cameraOffset.y * (1 - 1f)) / 2);
+			Immediate.Vertex(-(cameraOffset.x * 0) / 2, cameraOffset.y - Main.screenBounds.y * cameraScale);
+			Immediate.Vertex(-(cameraOffset.x * 0) / 2, cameraOffset.y + Main.screenBounds.y * cameraScale);
+			Immediate.Alpha(1f);
+		}
 		Immediate.End();
-		Immediate.Alpha(1f);
 		Program.gl.Disable(EnableCap.Blend);
 	}
 
@@ -2163,6 +2166,11 @@ public static class WorldWindow {
 							return WorldWindow.ValidRegionLoaded;
 						}
 					),
+
+					new Button("Axis Lines: Shown", button => {
+						VisibleAxisLines = !VisibleAxisLines;
+						button.Text = VisibleAxisLines ? "Axis Lines: Shown" : "Axis Lines: Hidden";
+					}, button => { return WorldWindow.ValidRegionLoaded; }) { preventClose = true },
 
 					new Button("Dev Items: Hidden", button => {
 						VisibleDevItems = !VisibleDevItems;
