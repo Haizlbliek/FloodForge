@@ -57,7 +57,7 @@ public class Room : MapDraggable {
 	public int GarbageWormDenIndex => this.specialExitCount + this.nonDenExitCount + this.denShortcutEntrances.Count;
 
 	protected override bool IsVisible() {
-		return WorldWindow.VisibleLayers[this.data.layer] && this.timeline.OverlapsWith(WorldWindow.VisibleTimeline);
+		return this.CheckTimelineCull();
 	}
 
 	// REVIEW - check for redundancy in terms of edge-case checks
