@@ -30,7 +30,7 @@ public abstract class MenuItems {
 					PopupManager.Add(new InfoPopup(button.disabledInteractMessage));
 				}
 
-				if (!button.preventClose) this.selectedDropdownButton = null;
+				if (!button.preventClose && button.buttonEnabled) this.selectedDropdownButton = null;
 			}
 			return true;
 		}
