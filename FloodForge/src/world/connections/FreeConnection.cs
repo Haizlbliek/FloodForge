@@ -14,6 +14,33 @@ public class FreeConnection : ConnectionVisual {
 
 	protected Color color;
 
+	protected bool aVisible = true;
+	public override bool AVisible {
+		get {
+			return this.aVisible;
+		}
+	}
+
+	protected bool bVisible = true;
+	public override bool BVisible {
+		get {
+			return this.bVisible;
+		}
+	}
+
+	protected bool connectionVisible = true;
+	public override bool ConnectionVisible {
+		get {
+			return this.connectionVisible;
+		}
+	}
+
+	public void SetVisibilities(bool a, bool b, bool connection) {
+		this.aVisible = a;
+		this.bVisible = b;
+		this.connectionVisible = connection;
+	}
+
 	protected override (Color, Color) GetColorInformation(bool fadeMiddle, bool AVisible, bool BVisible, bool hovered) {
 		Color colorA = this.color;
 		Color colorB = this.color;
