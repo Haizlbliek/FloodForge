@@ -18,11 +18,21 @@ public abstract class MenuItems {
 		}
 
 		if (button.buttonEnabled || Settings.DisabledButtonsMode.value != Settings.STDisabledButtonsMode.Hide ) {
-			UI.TextButtonMods mods = new UI.TextButtonMods();
-			if (button.Dark || (!button.buttonEnabled && Settings.DisabledButtonsMode.value == Settings.STDisabledButtonsMode.Grey)) {
-				mods.textColor = Themes.TextDisabled;
+			bool buttonDark = button.Dark || (!button.buttonEnabled && Settings.DisabledButtonsMode.value == Settings.STDisabledButtonsMode.Grey);
+			UI.ButtonResponse buttonResponse;
+			if (!button.useUITexture) {
+				UI.TextButtonMods mods = new UI.TextButtonMods();
+				if (buttonDark)
+					mods.textColor = Themes.TextDisabled;
+				buttonResponse = UI.TextButton(button.Text, Rect.FromSize(x, y, button.Size.x + 0.02f, 0.04f), mods);
 			}
-			if (UI.TextButton(button.Text, Rect.FromSize(x, y, button.Size.x + 0.02f, 0.04f), mods)) {
+			else {
+				UI.TextureButtonMods mods = new UI.TextureButtonMods();
+				if (buttonDark)
+					mods.textureColor = Themes.TextDisabled;
+				buttonResponse = UI.TextureButton(UVRect.FromSize(x, y, 0.04f, 0.04f).AtlasUV(button.Text), mods);
+			}
+			if (buttonResponse) {
 				if (button.buttonEnabled) {
 					button.onclick(button);
 				}
@@ -87,7 +97,7 @@ public abstract class MenuItems {
 
 			if (item is Button button1) {
 				if (this.DrawButton(button1, x, Main.screenBounds.y - 0.05f)) {
-					x += width + 0.01f;
+					x += button1.useUITexture ? 0.05f : (width + 0.01f);
 				}
 			}
 			else if (item is Dropdown dropdown1) {
@@ -147,6 +157,7 @@ public abstract class MenuItems {
 	}
 
 	protected class Button : UIItem {
+		public bool useUITexture = false;
 		public Action<Button> onclick;
 		public Func<Button, bool>? contextCheckCallback;
 		public bool buttonEnabled = true;
@@ -154,12 +165,13 @@ public abstract class MenuItems {
 		public virtual bool Dark => false;
 		public bool preventClose = false;
 
-		public Button(string text, Action<Button> callback) : base(text) {
+		public Button(string text, Action<Button> callback, bool useUITexture = false) : base(text) {
 			this.onclick = callback;
 			this.contextCheckCallback = null;
+			this.useUITexture = useUITexture;
 		}
 
-		public Button(string text, Action<Button> callback, Func<Button, bool> contextCheckCallback, string? disabledInteractMessage = null) : this(text, callback) {
+		public Button(string text, Action<Button> callback, Func<Button, bool> contextCheckCallback, string? disabledInteractMessage = null, bool useUITexture = false) : this(text, callback, useUITexture) {
 			this.contextCheckCallback = contextCheckCallback;
 			this.disabledInteractMessage = disabledInteractMessage;
 		}
