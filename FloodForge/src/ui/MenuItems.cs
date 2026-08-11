@@ -105,6 +105,11 @@ public abstract class MenuItems {
 
 				x += width + 0.01f;
 			}
+			else if (item is Divider) {
+				Immediate.Color(Themes.Border);
+				UI.Line(new (x, this.menuBarRect.y1 - 0.01f), new (x, this.menuBarRect.y1 - 0.05f));
+				x += 0.01f;
+			}
 		}
 		if ((Settings.DropdownOnHover || Mouse.JustLeft) && this.selectedDropdownButton != null && !(hoveringDropdownButton || this.selectedDropdownRect.Inside(Mouse.Pos))) {
 			this.selectedDropdownButton = null;
@@ -158,5 +163,9 @@ public abstract class MenuItems {
 			this.contextCheckCallback = contextCheckCallback;
 			this.disabledInteractMessage = disabledInteractMessage;
 		}
+	}
+
+	protected class Divider : UIItem {
+		public Divider() : base("") {}
 	}
 }
