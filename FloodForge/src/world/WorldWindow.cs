@@ -2003,6 +2003,8 @@ public static class WorldWindow {
 
 			WorldExporter.ExportDisplayName(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "displayname.txt"));
 
+			RecentFiles.AddPath(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"world_{WorldWindow.region.acronym}.txt"));
+
 			PersistentData.StorePersistentData(WorldWindow.region.acronym);
 			PopupManager.Add(new InfoPopup("Exported successfully!"));
 			WorldWindow.ExportFinished = true;
