@@ -1996,6 +1996,7 @@ public static class WorldWindow {
 		}
 
 		private static void ExportMap() {
+			bool isNewMap = !WorldWindow.HasExportPath;
 			WorldWindow.invalidCreaturesEncountered = false;
 			WorldExporter.ExportMapFile();
 			WorldExporter.ExportWorldFile();
@@ -2007,7 +2008,8 @@ public static class WorldWindow {
 
 			WorldExporter.ExportDisplayName(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "displayname.txt"));
 
-			RecentFiles.AddPath(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"world_{WorldWindow.region.acronym}.txt"));
+			if (isNewMap)
+				RecentFiles.AddPath(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"world_{WorldWindow.region.acronym}.txt"));
 
 			PersistentData.StorePersistentData(WorldWindow.region.acronym);
 			PopupManager.Add(new InfoPopup("Exported successfully!"));
