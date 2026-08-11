@@ -2237,13 +2237,19 @@ public static class WorldWindow {
 					})
 				]),
 
-				new Button("<", button => {
+				new Divider(),
+				// UNDO
+				new Button("RotateLeft", button => {
 					worldHistory.Undo();
-				}, b => worldHistory.HasUndos),
+				}, b => worldHistory.HasUndos) { useUITexture = true },
 
-				new Button(">", button => {
+				new Divider(),
+				// REDO
+				new Button("RotateRight", button => {
 					worldHistory.Redo();
-				}, b => worldHistory.HasRedos),
+				}, b => worldHistory.HasRedos) { useUITexture = true },
+
+				new Divider(),
 
 				new Button("Settings", button => {
 					PopupManager.Add(new FloodforgeConfigPopup(), true);
