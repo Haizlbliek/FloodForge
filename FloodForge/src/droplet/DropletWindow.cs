@@ -2244,7 +2244,7 @@ public static class DropletWindow {
 								if (paths.Length != 1) return;
 
 								ExportProject(paths[0]);
-							}).Filter(FilesystemPopup.SelectionType.Folder).Hint("Data/LevelEditorProjects")
+							}).Filter(FilesystemPopup.SelectionType.Folder).Hint("Data/LevelEditorProjects").ButtonText("Export")
 						);
 					}),
 

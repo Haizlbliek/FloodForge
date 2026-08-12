@@ -12,6 +12,8 @@ public class FilesystemPopup : Popup {
 	protected bool allowMultiple = false;
 	protected SelectionType typeFilter = SelectionType.File;
 	protected string hint = "";
+	protected string buttonText = "Open";
+	protected float buttonWidth = 0.1f;
 
 	protected string? search = null;
 	protected string? newDirectory = null;
@@ -113,6 +115,12 @@ public class FilesystemPopup : Popup {
 
 	public FilesystemPopup Hint(string hint) {
 		this.hint = hint;
+		return this;
+	}
+
+	public FilesystemPopup ButtonText(string text) {
+		this.buttonText = text;
+		this.buttonWidth = UI.font.Measure(text, 0.03f).x;
 		return this;
 	}
 
@@ -486,7 +494,7 @@ public class FilesystemPopup : Popup {
 
 		float left = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 0.21f : 0.14f;
 
-		if (UI.TextButton("Open", new Rect(this.bounds.x1 - 0.11f, this.bounds.y0 + 0.06f, this.bounds.x1 - 0.01f, this.bounds.y0 + 0.01f), new UI.TextButtonMods() { disabled = this.selected.Count == 0 && this.typeFilter == SelectionType.File })) {
+		if (UI.TextButton(this.buttonText, new Rect(this.bounds.x1 - 0.02f - this.buttonWidth, this.bounds.y0 + 0.06f, this.bounds.x1 - 0.01f, this.bounds.y0 + 0.01f), new UI.TextButtonMods() { disabled = this.selected.Count == 0 && this.typeFilter == SelectionType.File })) {
 			this.Accept();
 		}
 

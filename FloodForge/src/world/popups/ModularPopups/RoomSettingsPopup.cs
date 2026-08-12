@@ -307,7 +307,7 @@ public class RoomSettingsPopup : ModularPopup {
 		}
 
 		private void OpenFileSystem() {
-			PopupManager.Add(new FilesystemPopup(this.SelectFile, 1).Hint("xx_a01_future.txt").Filter(new Regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)")).Title("Select room file to use"), true);
+			PopupManager.Add(new FilesystemPopup(this.SelectFile, 1).Hint("xx_a01_future.txt").Filter(new Regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)")).ButtonText("Select").Title("Select room file to use"), true);
 		}
 
 		private void SelectFile(string[] selectedFileArray) {
