@@ -1991,7 +1991,7 @@ public static class WorldWindow {
 						ExportMap();
 					}, 0)
 					.Filter(FilesystemPopup.SelectionType.Folder)
-					.Hint("YOUR_MOD/world/")
+					.Hint("YOUR_MOD/world/").ButtonText("Export")
 				);
 			}
 
@@ -2068,6 +2068,7 @@ public static class WorldWindow {
 									.Filter(new Regex("((?!.*_settings)(?=.+_.+).+\\.txt)|(gate_([^._-]+)_([^._-]+)\\.txt)"))
 									.Multiple()
 									.Hint("xx_a01.txt")
+									.ButtonText("Add Room")
 							);
 						},
 						button => {
@@ -2101,7 +2102,7 @@ public static class WorldWindow {
 								referenceImages.Add(newImage);
 								selectedDraggables.Add(newImage);
 							}
-						}));
+						})).Hint("map_concept.png").ButtonText("Add");
 					}, button => {
 						return WorldWindow.ValidRegionLoaded;
 					}),
