@@ -2093,7 +2093,7 @@ public static class DropletWindow {
 		for (int i = 0; i < Room.data.cameras.Count; i++) {
 			if (i > 0) project.Append(", ");
 			RoomData.Camera c = Room.data.cameras[i];
-			project.Append($"point({(c.position.x + 12.0f) * 20.0f:F1}, {(c.position.y + 3.0f) * 20.0f:F1})");
+			project.Append($"point({c.position.x + 240.0f:F1}, {c.position.y + 60.0f:F1})"); // 240 = 12 * 20, 60 = 3 * 20 (the additional tile borders * 20)
 		}
 		project.Append("], #selectedCamera: 0, #quads: [");
 
