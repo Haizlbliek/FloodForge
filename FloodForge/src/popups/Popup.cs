@@ -18,6 +18,7 @@ public abstract class Popup {
 	protected Rect minimumResizeBounds;
 	protected Rect? initialBounds;
 	public Vector2 TopLeft => new (this.bounds.x0, this.bounds.y1);
+	public float CollapsedWidth => Math.Min(Math.Max(UI.font.Measure(this.popupTitle, 0.03f).x + 0.12f, 0.25f), this.bounds.x1 - this.bounds.x0);
 
 	protected Rect scaleControlIncluder;
 	protected Rect scaleControlExcluder;
@@ -217,14 +218,12 @@ public abstract class Popup {
 			Immediate.Color(Themes.Popup);
 			UI.ButtonFillRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
 		}
-		
-		float collapsedWidth = Math.Min(Math.Max(UI.font.Measure(this.popupTitle, 0.03f).x + 0.12f, 0.25f), this.bounds.x1 - this.bounds.x0);
 
 		Immediate.Color(Themes.PopupHeader);
-		UI.ButtonFillRect(this.collapsed ? this.bounds.x1 - collapsedWidth : this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
+		UI.ButtonFillRect(this.collapsed ? this.bounds.x1 - this.CollapsedWidth : this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
 		if(this.popupTitle != "") {
 			Color textColor = this.collapsed ? Themes.TextDisabled : Themes.Text;
-			UI.font.WriteFormatted(this.popupTitle, this.collapsed ? this.bounds.x1 - collapsedWidth + 0.01f : this.bounds.x0 + 0.01f, this.bounds.y1 - 0.025f, 0.03f, Font.Align.MiddleLeft, textColor);
+			UI.font.WriteFormatted(this.popupTitle, this.collapsed ? this.bounds.x1 - this.CollapsedWidth + 0.01f : this.bounds.x0 + 0.01f, this.bounds.y1 - 0.025f, 0.03f, Font.Align.MiddleLeft, textColor);
 		}
 
 		this.closeButton = new UVRect(this.bounds.x1 - 0.05f, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1).AtlasUV("cross");
@@ -246,7 +245,7 @@ public abstract class Popup {
 
 		Immediate.Color(this.isHovered ? Themes.BorderHighlight : Themes.Border);
 		if (this.collapsed) {
-			UI.ButtonStrokeRect(this.bounds.x1 - collapsedWidth, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
+			UI.ButtonStrokeRect(this.bounds.x1 - this.CollapsedWidth, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1);
 		}
 		else {
 			UI.ButtonStrokeRect(this.bounds.x0, this.bounds.y0, this.bounds.x1, this.bounds.y1);
@@ -280,7 +279,7 @@ public abstract class Popup {
 		this.cursorOverrideActive = false;
 	}
 
-	public virtual Rect InteractBounds() => this.collapsed ? new Rect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1) : this.bounds;
+	public virtual Rect InteractBounds() => this.collapsed ? new Rect(this.bounds.x1 - this.CollapsedWidth, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1) : this.bounds;
 
 	public virtual bool InsideBoundsOrIncluder(Vector2 mousePos) => this.InteractBounds().Inside(mousePos) || this.hoverRetained;
 
@@ -322,7 +321,7 @@ public abstract class Popup {
 	public virtual bool IsDragArea(float mouseX, float mouseY) {
 		if (this.resizingWindow)
 			return false;
-		if (mouseX <= this.bounds.x1 - 0.1f && mouseX >= this.bounds.x0 && mouseY <= this.bounds.y1 && mouseY >= this.bounds.y1 - 0.05f) return true;
+		if (mouseX <= this.bounds.x1 - 0.1f && mouseX >= (this.collapsed ? this.bounds.x1 - this.CollapsedWidth : this.bounds.x0) && mouseY <= this.bounds.y1 && mouseY >= this.bounds.y1 - 0.05f) return true;
 
 		return false;
 	}
