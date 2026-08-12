@@ -444,6 +444,9 @@ public static class DropletWindow {
 			selectedTool = (GeometryTool)tool;
 		}
 
+		if (Mouse.Disabled || PopupManager.Windows.Any(x => x.InsideBoundsOrIncluder(Mouse.Pos)))
+			return;
+
 		if (showMousePosition) {
 			Immediate.Color(Color.White);
 			UI.font.Write($"x:{mouseTile.x} y:{mouseTile.y}", mouseTile.x, -mouseTile.y + 1, 0.6f);

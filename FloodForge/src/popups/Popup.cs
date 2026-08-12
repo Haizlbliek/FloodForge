@@ -282,6 +282,8 @@ public abstract class Popup {
 
 	public virtual Rect InteractBounds() => this.collapsed ? new Rect(this.bounds.x0, this.bounds.y1 - 0.05f, this.bounds.x1, this.bounds.y1) : this.bounds;
 
+	public virtual bool InsideBoundsOrIncluder(Vector2 mousePos) => this.InteractBounds().Inside(mousePos) || this.hoverRetained;
+
 	public virtual void UpdateScaleControls(Rect bounds) {
 		this.scaleControlExcluder = new Rect(
 			bounds.x0 + this.scaleControlInnerMargin,
