@@ -2024,14 +2024,24 @@ public static class DropletWindow {
 	private static void ExportProject(string path) {
 		string fileName = Path.Combine(path, Room.name + ".txt");
 		StringBuilder project = new StringBuilder();
+		StringBuilder tlMatrix = new StringBuilder();
 
 		project.Append("[");
+		tlMatrix.Append("[");
+
 		for (int x = -12; x < Room.width + 12; x++) {
-			if (x != -12) project.Append(", ");
+			if (x != -12) {
+				project.Append(", ");
+				tlMatrix.Append(", ");
+			}
 
 			project.Append("[");
+			tlMatrix.Append("[");
 			for (int y = -3; y < Room.height + 5; y++) {
-				if (y != -3) project.Append(", ");
+				if (y != -3) {
+					project.Append(", ");
+					tlMatrix.Append(", ");
+				}
 
 				uint geo = Room.GetTile(x, y);
 				int solidA = 0;
@@ -2064,12 +2074,16 @@ public static class DropletWindow {
 				project.Append($"[[{solidA}, [{string.Join(", ", flags)}]], ");
 				project.Append($"[{((geo & 512) > 0 ? "1" : "0")}, []], ");
 				project.Append("[0, []]]");
+
+				tlMatrix.Append("[[#tp: \"default\", #Data: 0],[#tp: \"default\", #Data: 0],[#tp: \"default\", #Data: 0]]");
 			}
 			project.Append("]");
+			tlMatrix.Append("]");
 		}
 		project.Append("]\n");
+		tlMatrix.Append("]");
 
-		project.AppendLine("[#lastKeys: [], #Keys: [], #workLayer: 1, #lstMsPs: point(0, 0), #tlMatrix: [], #defaultMaterial: \"Standard\", #toolType: \"material\", #toolData: \"Big Metal\", #tmPos: point(1, 1), #tmSavPosL: [], #specialEdit: 0]");
+		project.AppendLine($"[#lastKeys: [], #Keys: [], #workLayer: 1, #lstMsPs: point(0, 0), #tlMatrix: {tlMatrix}, #defaultMaterial: \"Standard\", #toolType: \"material\", #toolData: \"Big Metal\", #tmPos: point(1, 1), #tmSavPosL: [], #specialEdit: 0]");
 		project.AppendLine("[#lastKeys: [], #Keys: [], #lstMsPs: point(0, 0), #effects: [], #emPos: point(1, 1), #editEffect: 0, #selectEditEffect: 0, #mode: \"createNew\", #brushSize: 5]");
 		project.AppendLine($"[#pos: point(0, 0), #rot: 0, #sz: point({Room.width}, {Room.height}), #col: 1, #Keys: [#m1: 0, #m2: 0, #w: 0, #a: 0, #s: 0, #d: 0, #r: 0, #f: 0, #z: 0, #m: 0], #lastKeys: [#m1: 0, #m2: 0, #w: 0, #a: 0, #s: 0, #d: 0, #r: 0, #f: 0, #z: 0, #m: 0], #lastTm: 0, #lightAngle: 180, #flatness: 1, #lightRect: rect(1000, 1000, -1000, -1000), #paintShape: \"pxl\"]");
 		project.AppendLine($"[#timeLimit: 4800, #defaultTerrain: {(Room.data.enclosedRoom ? "1" : "0")}, #maxFlies: 10, #flySpawnRate: 50, #lizards: [], #ambientSounds: [], #music: \"NONE\", #tags: [], #lightType: \"Static\", #waterDrips: 1, #lightRect: rect(0, 0, 1040, 800), #Matrix: []]");
