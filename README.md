@@ -1,11 +1,11 @@
 # FloodForge
 
 FloodForge is a remake of a few Rain World modding tools.
-It aims for intuitive controls, clean ui, and more features than anyone every thought necessary
+It aims for intuitive controls, clean ui, and more features than anyone ever thought necessary.
 
 ## Installation
 
-FloodForge has two types of releases, Stable, and Nightly. Stable builds take longer to release, but are usually safer. Nightly builds are automatically compiled after every commit, therefore they have the newest changes but are more likely to contain bugs and crashes.
+FloodForge has two types of releases, Stable, and Nightly. Stable builds are released less frequently, but are usually safer. Nightly builds are automatically compiled after every commit, therefore they have the newest changes but are more likely to contain bugs and crashes.
 
 **Stable**
 - Head to https://github.com/Haizlbliek/FloodForge/releases/latest
@@ -31,7 +31,7 @@ If you do actually want to build from source:
 
 - Get [.NET 10.0.x](https://dotnet.microsoft.com/en-us/download) or later
 - Download the source code (either through `git clone` or just downloading as a zip and extracting)
-- Open a terminal in the same directory as `FloodForge.csproj`
+- Open a terminal in the same directory as `FloodForge/FloodForge.csproj`
 - Run `dotnet run`
 
 ## License
@@ -45,13 +45,3 @@ Please refer to the `LICENSE` file for full details.
 - Bitmap Fonts: Generated using [Snow Bamboo](https://snowb.org).
 - Splash Screen Art: Rendered from Rain World's Shoreline map.
 - All other artwork: Hand-created by the FloodForge team.
-
-## Star History
-
-<a href="https://www.star-history.com/?repos=Haizlbliek%2FFloodForge&type=date&legend=top-left">
-	<picture>
-		<source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=Haizlbliek/FloodForge&type=date&theme=dark&legend=top-left" />
-		<source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=Haizlbliek/FloodForge&type=date&legend=top-left" />
-		<img alt="Star History Chart" src="https://api.star-history.com/image?repos=Haizlbliek/FloodForge&type=date&legend=top-left" />
-	</picture>
-</a>
