@@ -1920,17 +1920,19 @@ public static class WorldWindow {
 			acronym = filename.Split('_')[0];
 		else
 			acronym = "";
-		if ((acronym.Equals(region.acronym, StringComparison.InvariantCultureIgnoreCase) & !acronym.IsNullOrEmpty()) && HasExportPath) {
+		bool fileIsInRoomsFolder = path.StartsWith(region.roomsPath);
+		if (fileIsInRoomsFolder) {
 			return CreateAndAddRoom(path, filename);
 		}
 		else {
+			Logger.Info($"Room file {path} not in {region.roomsPath}.");
 			PopupManager.Add(
 				new ConfirmPopup($"Room {filename} isn't located inside {region.acronym}.\nCopy room to {region.acronym}-rooms?")
 					.SetCancel("Just Add")
 					.Cancel(() => {
 						CreateAndAddRoom(path, filename, importFromOutside: true);
 					})
-					.SetOkay("Yes")
+					.SetOkay("Copy")
 					.Okay(() => {
 						string filename = Path.GetFileName(path);
 						if (!filename.Contains('_'))
@@ -1942,10 +1944,10 @@ public static class WorldWindow {
 							.SetOkay("Overwrite")
 							.SetCancel("Cancel")
 							.Okay(() => {
-								CopyRoom(path, toPath, true);
+								CopyRoom(path, toPath, true); // REVIEW - The path displayed in the debugText is the import path, not the path to the actual relevant room file
 							}));
 						}
-						else
+						else // does this need to account for gatefile-ness? since HandleGateFile is already a separate method
 							CopyRoom(path, toPath)?.data.tags = isGateFile ? ["GATE"] : [];
 					})
 			);
