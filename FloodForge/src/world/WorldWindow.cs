@@ -70,6 +70,15 @@ public static class WorldWindow {
 			return rooms;
 		}
 	}
+	public static HashSet<ReplaceRoom> SelectedReplaceRooms {
+		get {
+			HashSet<ReplaceRoom> replaceRooms = [];
+			foreach (WorldDraggable draggable in selectedDraggables)
+				if (draggable is ReplaceRoom replaceRoom)
+					replaceRooms.Add(replaceRoom);
+			return replaceRooms;
+		}
+	}
 	public static WorldDraggable? draggablePossibleSelect = null;
 	private static SelectingState selectingState = SelectingState.None;
 	public static Vector2 selectionStart;
@@ -1789,10 +1798,9 @@ public static class WorldWindow {
 		return false;
 	}
 
-	private static async Task MassRenderRooms() {
+	private static async Task MassRenderRooms(HashSet<Room> rooms) {
 		WorldWindow.cancelRender = false;
 		WorldWindow.awaitingCancelConfirmation = false;
-		HashSet<Room> rooms = SelectedRooms;
 		rooms.ForEach(r => { if (!r.valid) rooms.Remove(r); } );
 		if (rooms.Count <= 0) {
 			PopupManager.Add(new InfoPopup("Select at least one valid room!"));
@@ -2080,18 +2088,26 @@ public static class WorldWindow {
 					),
 
 					new Button("Mass Render", button => {
-						confirmRenderPopup = new ConfirmPopup("Render " + SelectedRooms.Count + " rooms?" + (Settings.UpdateRoomImagesOnRender ? 
+						HashSet<Room> selectedRooms = SelectedRooms;
+						HashSet<Room> allRooms = [.. selectedRooms];
+						HashSet<Room> selectedReplaceRoomRefs = [];
+						foreach (ReplaceRoom replaceRoom in SelectedReplaceRooms){
+							if (!selectedRooms.Contains(replaceRoom.replacingRoom)) {
+								selectedReplaceRoomRefs.Add(replaceRoom.replacingRoom);
+								allRooms.Add(replaceRoom.replacingRoom);
+							}
+						}
+						confirmRenderPopup = new ConfirmPopup($"Render {(selectedRooms.Count != 0 ? selectedRooms.Count + " rooms" + (selectedReplaceRoomRefs.Count != 0 ? " and " : "") : "")}{(selectedReplaceRoomRefs.Count != 0 ? selectedReplaceRoomRefs.Count + " replaceRoom references" : "")}?"
+							 + (Settings.UpdateRoomImagesOnRender ? 
 								(region.roomsPath.Contains(Path.Combine("StreamingAssets", "world")) ? "\nVanilla rooms may be overwritten!" :
 								region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "moreslugcats")) ? "\nDownpour rooms may be overwritten!" :
 								region.roomsPath.Contains(Path.Combine("StreamingAssets", "mods", "watcher")) ? "\nWatcher rooms may be overwritten!" :
 								"\n<s:1>This will overwrite all existing images!") :
 								"\nThis will export images to the renderOutput folder"
-							)).Okay(() => {
-								renderRoomsTask = Task.Run(MassRenderRooms);
-							});
+							)).Okay(() => renderRoomsTask = MassRenderRooms(allRooms));
 						PopupManager.Add(confirmRenderPopup);
 					}, button => {
-						bool result = SelectedRooms.Count != 0 && ValidRegionLoaded;
+						bool result = (SelectedRooms.Count != 0 || SelectedReplaceRooms.Count != 0) && ValidRegionLoaded;
 						button.Text = (result ? "<s:1>" : "") + "Mass Render";
 						return result;
 					},
