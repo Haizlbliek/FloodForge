@@ -86,10 +86,10 @@ public static class PopupManager {
 				popup.FinishDraw();
 			}
 			catch (Exception e1) {
-				Logger.Error($"Problem encountered on popup with title {popup.popupTitle}({nameof(popup)}):\n{e1}");
+				Logger.Error($"Problem encountered on popup with title {popup.popupTitle}({popup}):\n{e1}");
 				popup.Close();
 				if (popup is not InfoPopup) // just in case InfoPopups have issues, we don't want to add more of them when one crashes.
-					Add($"Problem encountered on popup\n{popup.popupTitle}({nameof(popup)}):\n{e1.Message}\nview log.txt for further information");
+					Add($"Problem encountered on popup\n{popup.popupTitle}({popup}):\n{e1.Message}\nview log.txt for further information");
 			}
 		}
 		doResizeBoundsCheck = false;
