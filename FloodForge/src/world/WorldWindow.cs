@@ -1504,7 +1504,7 @@ public static class WorldWindow {
 								debugText.Add($" > This room has duplicate connections: {duplicateString}");
 						}
 						// END CONNECTION DEBUG
-						debugText.Add($"Subregion: {(room.data.subregion == -1 ? "<<NONE>>" : region.subregions[room.data.subregion])}");
+						debugText.Add($"Subregion: {(room.data.subregion == -1 ? "<<NONE>>" : (room.data.subregion < 0 || room.data.subregion >= region.subregions.Count ? $"<<INVALID ID ({room.data.subregion})>>" : region.subregions[room.data.subregion]))}");
 						debugText.Add($"Layer: {room.data.layer}");
 						if (!room.data.merge)
 							debugText.Add("No Merge");
