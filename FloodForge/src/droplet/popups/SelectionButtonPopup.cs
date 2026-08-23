@@ -5,10 +5,10 @@ namespace FloodForge.Popups;
 public class SelectionButtonPopup : Popup {
 	protected override bool Resizable => false;
 	public override bool Draggable => false;
-	protected  UVRect clearButton;
-	protected  UVRect copyButton;
-	protected  UVRect cutButton;
-	protected  UVRect pasteButton;
+	protected UVRect clearButton;
+	protected UVRect copyButton;
+	protected UVRect cutButton;
+	protected UVRect pasteButton;
 	protected string hoverText = "";
 
 	public SelectionButtonPopup() {
@@ -18,6 +18,8 @@ public class SelectionButtonPopup : Popup {
 	public void SetPosition(Vector2 position) {
 		this.bounds = new Rect(position.x, position.y, position.x + 0.3f, position.y + 0.07f);
 	}
+
+	public override bool InsideBoundsOrIncluder(Vector2 mousePos) => false;
 
 	public Vector2 GetBottomLeft() {
 		return new Vector2(this.bounds.x0, this.bounds.y1);
