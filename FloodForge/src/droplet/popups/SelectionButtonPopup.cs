@@ -92,7 +92,8 @@ public class SelectionButtonPopup : Popup {
 	}
 
 	public override void Close() {
-		DropletWindow.selectionState = -1;
+		if (DropletWindow.selectionState != 5)
+			DropletWindow.selectionState = -1;
 		base.Close();
 	}
 }
