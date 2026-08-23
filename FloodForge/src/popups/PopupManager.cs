@@ -68,7 +68,7 @@ public static class PopupManager {
 			}
 		}
 
-		if (holdingPopup != null) {
+		if (holdingPopup != null && holdingPopup.Draggable) {
 			if (Mouse.Left) {
 				holdingPopup.Translate(Mouse.Pos + holdingOffset - holdingPopup.TopLeft);
 			}

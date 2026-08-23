@@ -4,6 +4,7 @@ namespace FloodForge.Popups;
 
 public class SelectionButtonPopup : Popup {
 	protected override bool Resizable => false;
+	public override bool Draggable => false;
 	protected  UVRect clearButton;
 	protected  UVRect copyButton;
 	protected  UVRect cutButton;
