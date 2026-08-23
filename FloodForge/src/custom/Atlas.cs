@@ -1,5 +1,3 @@
-using FloodForge;
-
 namespace Custom;
 
 public class UVAtlas {
@@ -28,10 +26,28 @@ public class UVAtlas {
 		}
 	}
 		
-	public struct UVCoordinates(float u0, float v0, float u1, float v1) {
-		public float u0 = u0;
-		public float v0 = v0;
-		public float u1 = u1;
-		public float v1 = v1;
+	public struct UVCoordinates {
+		/// <summary> TOPLEFT </summary>
+		public Vector2 uv0;
+		/// <summary> TOPRIGHT </summary>
+		public Vector2 uv1;
+		/// <summary> BOTTOMRIGHT </summary>
+		public Vector2 uv2;
+		/// <summary> BOTTOMLEFT </summary>
+		public Vector2 uv3;
+
+		public UVCoordinates(float u0, float v0, float u1, float v1) {
+			this.uv0 = new Vector2(u0, v0);
+			this.uv1 = new Vector2(u1, v0);
+			this.uv2 = new Vector2(u1, v1);
+			this.uv3 = new Vector2(u0, v1);
+		}
+
+		public UVCoordinates(Vector2 uv0, Vector2 uv1, Vector2 uv2, Vector2 uv3) {
+			this.uv0 = uv0;
+			this.uv1 = uv1;
+			this.uv2 = uv2;
+			this.uv3 = uv3;
+		}
 	}
 }

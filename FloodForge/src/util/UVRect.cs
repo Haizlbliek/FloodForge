@@ -47,10 +47,10 @@ public struct UVRect {
 	}
 
 	public UVRect UV(UVAtlas.UVCoordinates uv) {
-		this.uv0 = new Vector2(uv.u0, uv.v0);
-		this.uv1 = new Vector2(uv.u1, uv.v0);
-		this.uv2 = new Vector2(uv.u1, uv.v1);
-		this.uv3 = new Vector2(uv.u0, uv.v1);
+		this.uv0 = uv.uv0;
+		this.uv1 = uv.uv1;
+		this.uv2 = uv.uv2;
+		this.uv3 = uv.uv3;
 
 		return this;
 	}
