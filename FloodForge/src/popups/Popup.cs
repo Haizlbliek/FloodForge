@@ -4,6 +4,7 @@ namespace FloodForge.Popups;
 
 public abstract class Popup {
 	protected virtual bool Resizable => true;
+	public virtual bool Draggable => true;
 	public string popupTitle = "";
 
 	protected bool cursorOverButton = false;
