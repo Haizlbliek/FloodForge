@@ -1,4 +1,5 @@
 using FloodForge.Droplet;
+using Silk.NET.Input;
 
 namespace FloodForge.Popups;
 
@@ -45,7 +46,7 @@ public class SelectionButtonPopup : Popup {
 		if (DropletWindow.selectionState == 2) {
 			this.copyButton = new UVRect(this.bounds.x0 + 0.07f, this.bounds.y0 + 0.01f, this.bounds.x0 + 0.12f, this.bounds.y1 - 0.01f).AtlasUV("Page");
 			UI.ButtonResponse copyResponse = UI.TextureButton(this.copyButton);
-			if (copyResponse.clicked) {
+			if (copyResponse.clicked || (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.C))) {
 				DropletWindow.selectionState = 3;
 				DropletWindow.selectionModificationMode = 0;
 			}
@@ -55,7 +56,7 @@ public class SelectionButtonPopup : Popup {
 
 			this.cutButton = new UVRect(this.bounds.x0 + 0.13f, this.bounds.y0 + 0.01f, this.bounds.x0 + 0.18f, this.bounds.y1 - 0.01f).AtlasUV("ArrowUp");
 			UI.ButtonResponse cutResponse = UI.TextureButton(this.cutButton);
-			if (cutResponse.clicked) {
+			if (cutResponse.clicked || (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.X))) {
 				DropletWindow.selectionState = 3;
 				DropletWindow.selectionModificationMode = 1;
 			}
@@ -66,7 +67,7 @@ public class SelectionButtonPopup : Popup {
 		else if (DropletWindow.selectionState == 4) {
 			this.pasteButton = new UVRect(this.bounds.x0 + 0.07f, this.bounds.y0 + 0.01f, this.bounds.x0 + 0.12f, this.bounds.y1 - 0.01f).AtlasUV("ArrowDown");
 			UI.ButtonResponse pasteResponse = UI.TextureButton(this.pasteButton);
-			if (pasteResponse.clicked) {
+			if (pasteResponse.clicked || (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.V))) {
 				DropletWindow.selectionState = 5;
 				this.Close();
 			}
