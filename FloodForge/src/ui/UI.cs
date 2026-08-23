@@ -28,6 +28,7 @@ public static class UI {
 		uiAtlas = new([
 			new ("Cross",			new(0f,		0.25f,	0.25f,	0f		)),
 			new ("ArrowUp",			new(0.25f,	0.25f,	0.5f,	0f		)),
+			new ("ArrowDown",		new(0.25f,	0f,		0.5f,	0.25f	)),
 			new ("RotateRight",		new(0.5f,	0.25f,	0.75f,	0f		)),
 			new ("RotateLeft",		new(0.75f,	0.25f,	0.5f,	0f		)),
 			new ("DotsHorizontal",	new(0.75f,	0.25f,	1f,		0f		)),

@@ -61,7 +61,7 @@ public class SelectionButtonPopup : Popup {
 			}
 		}
 		else if (DropletWindow.selectionState == 4) {
-			this.pasteButton = new UVRect(this.bounds.x0 + 0.07f, this.bounds.y0 + 0.01f, this.bounds.x0 + 0.12f, this.bounds.y1 - 0.01f).AtlasUV("ArrowUp").FlipV();
+			this.pasteButton = new UVRect(this.bounds.x0 + 0.07f, this.bounds.y0 + 0.01f, this.bounds.x0 + 0.12f, this.bounds.y1 - 0.01f).AtlasUV("ArrowDown");
 			UI.ButtonResponse pasteResponse = UI.TextureButton(this.pasteButton);
 			if (pasteResponse.clicked) {
 				DropletWindow.selectionState = 5;
