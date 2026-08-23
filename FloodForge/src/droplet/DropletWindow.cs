@@ -447,15 +447,14 @@ public static class DropletWindow {
 			selectedTool = (GeometryTool)tool;
 		}
 
-		if (Mouse.Disabled || PopupManager.Windows.Any(x => x.InsideBoundsOrIncluder(Mouse.Pos)))
-			return;
+		bool preventMouseInteraction = Mouse.Disabled || PopupManager.Windows.Any(x => x.InsideBoundsOrIncluder(Mouse.Pos)) || blockMouse;
 
 		if (showMousePosition) {
 			Immediate.Color(Color.White);
 			UI.font.Write($"x:{mouseTile.x} y:{mouseTile.y}", mouseTile.x, -mouseTile.y + 1, 0.6f);
 		}
 
-		if (!blockMouse && selectionState == -1) {
+		if (selectionState == -1 && !preventMouseInteraction) {
 			if (drawingState == 0 || drawingState == 1) { // if we are making a rectangle
 				if ((drawingState == 0 && !Mouse.Left) || (drawingState == 1 && !Mouse.Right)) { // if we are done with dragging the rectangle
 					dropletHistory.StartCollectingChanges([typeof(TileChange)]);
@@ -581,7 +580,7 @@ public static class DropletWindow {
 				float TLY = -Math.Min(selectionStart.y, selectionEnd.y);
 				selectionButtonPopup.SetPosition((new Vector2 (TLX, TLY) - cameraOffset) / cameraScale);
 			}
-			if (selectionState == 0) { // 0 == pressed ctrl+E
+			if (selectionState == 0 && !preventMouseInteraction) { // 0 == pressed ctrl+E
 				if (Mouse.Right) {
 					selectionState = -1;
 				}
@@ -592,7 +591,7 @@ public static class DropletWindow {
 				}
 			}
 			if (selectionState == 1) { // 1 == creating rectangle
-				if (Mouse.Right) {
+				if (Mouse.Right && !preventMouseInteraction) {
 					selectionState = -1;
 				}
 				else if (!Mouse.Left) {
@@ -604,13 +603,13 @@ public static class DropletWindow {
 					PopupManager.Add(selectionButtonPopup);
 				}
 			}
-			if (selectionState == 2) { // 2 == done creating rectangle
+			if (selectionState == 2 && !preventMouseInteraction) { // 2 == done creating rectangle
 				if (Mouse.Right) {
 					selectionState = -1;
 				}
 				// handled by SelectionButtonPopup
 			}
-			if (selectionState == 3) { // 3 == moving selected tiles
+			if (selectionState == 3 && !preventMouseInteraction) { // 3 == moving selected tiles
 				int arraySize = (selectionEnd.x + 1 - selectionStart.x) * (selectionEnd.y + 1 - selectionStart.y);
 				selectionGeometry = new uint[arraySize];
 				List<TileChange> tileChanges = [];
@@ -640,20 +639,22 @@ public static class DropletWindow {
 			}
 			if (selectionState == 4) {
 				Rect selectionRect = new Rect(selectionStart + totalDragged, selectionEnd + totalDragged + Vector2.One);
-				if (Mouse.JustLeft && selectionRect.Inside(mouseTile)) {
-					drawStart = mouseTile;
-					dragging = true;
-				}
-				if (Mouse.Left && dragging) {
-					currentDragged = totalDragged + mouseTile - drawStart;
-				}
-				if (Mouse.LastLeft && !Mouse.Left && dragging) {
-					totalDragged = currentDragged;
-					dragging = false;
+				if (!preventMouseInteraction) {
+					if (Mouse.JustLeft && selectionRect.Inside(mouseTile)) {
+						drawStart = mouseTile;
+						dragging = true;
+					}
+					if (Mouse.Left && dragging) {
+						currentDragged = totalDragged + mouseTile - drawStart;
+					}
+					if (Mouse.LastLeft && !Mouse.Left && dragging) {
+						totalDragged = currentDragged;
+						dragging = false;
+					}
 				}
 				selectionButtonPopup?.SetPosition(((selectionStart + currentDragged) * Vector2.NegY - cameraOffset) / cameraScale);
 			}
-			if (selectionState == 5) {
+			if (selectionState == 5 && !preventMouseInteraction) {
 				Vector2i pasteStart = selectionStart + totalDragged;
 				Vector2i pasteEnd = selectionEnd + totalDragged + Vector2i.One;
 				List<Change> tileChanges = [];
