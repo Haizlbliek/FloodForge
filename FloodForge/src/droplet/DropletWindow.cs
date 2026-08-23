@@ -12,6 +12,8 @@ namespace FloodForge.Droplet;
 
 public static class DropletWindow {
 	private static readonly DropletMenuItems menuItems = new DropletMenuItems();
+	// REVIEW - edit ChangeHistory so that two separate methods exist, Register & Apply, so that it's clear within code that these differ in function
+	// since in droplet the change isn't actually applied, it's only registered that something has happened
 	public static readonly ChangeHistory dropletHistory = new ChangeHistory(RedoChangeOnApply: false);
 
 	private static Texture GeometryTexture = null!;
@@ -414,6 +416,7 @@ public static class DropletWindow {
 	// -1 == no mode set
 	// 0 == copy
 	// 1 == cut
+	private static MassChange? cutChange;
 
 	private static void UpdateGeometryTab() {
 		if (!(Mouse.Left || Mouse.Right)) {
@@ -626,8 +629,11 @@ public static class DropletWindow {
 					}
 				}
 				if (selectionModificationMode == 1) {
-					dropletHistory.Apply(new MassChange([.. tileChanges]));
+					cutChange = new MassChange([.. tileChanges]);
+					dropletHistory.Apply(cutChange);
 				}
+				else
+					cutChange = null;
 				selectionState = 4;
 				totalDragged = Vector2i.Zero;
 				currentDragged = Vector2i.Zero;
@@ -664,7 +670,11 @@ public static class DropletWindow {
 						i++;
 					}
 				}
-				dropletHistory.Apply(new MassChange([.. tileChanges]));
+				MassChange pasteChange = new MassChange([.. tileChanges]);
+				if (cutChange != null && dropletHistory.Last == cutChange)
+					cutChange.Merge(pasteChange);
+				else
+					dropletHistory.Apply(pasteChange);
 				selectionState = -1;
 			}
 			
