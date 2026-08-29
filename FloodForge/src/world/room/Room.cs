@@ -44,17 +44,21 @@ public class Room : MapDraggable {
 	public Dictionary<Vector2i, RoomConnection> roomExitPaths = [];
 	public Dictionary<Vector2i, (RoomConnection, bool matchesWithRoomExitPath)> shortcutEntrancePaths = [];
 	public List<Vector2i> denShortcutEntrances = [];
-	public int nonDenExitCount = 0;
 	public List<Den> dens = [];
 	public List<GarbageWormDen> garbageWormDens = [];
 
 	public List<Connection> connections = [];
 
+	public int roomExitCount = 0;
+	public int scavengerHoleCount = 0;
+	public int roomBorderExitCount = 0; // includes side, sky & sea exits
+	public int batflyHiveCount = 0;
+	public int GarbageWormHoleIndex => this.roomExitCount + this.denShortcutEntrances.Count + this.scavengerHoleCount + this.roomBorderExitCount + this.batflyHiveCount;
+	public bool hasGarbageWormHoles = false;
+
+
 	// IDEA: Room alerts/hints? (an exclamation mark that appears above a room's corner if there's something of note - softlocking shortcuts, lack of cameras)
 	// then, this could also be added to connections so that a room that connects to the same room multiple times isn't allowed to exist without feedback
-
-	private int specialExitCount = 0;
-	public int GarbageWormDenIndex => this.specialExitCount + this.nonDenExitCount + this.denShortcutEntrances.Count;
 
 	protected override bool IsVisible() {
 		return this.CheckTimelineCull();
@@ -121,7 +125,7 @@ public class Room : MapDraggable {
 	}
 
 	public bool HasDen(int id) {
-		return this.HasDen01(id - this.nonDenExitCount) || id == this.GarbageWormDenIndex;
+		return this.HasDen01(id - this.roomExitCount) || id == this.GarbageWormHoleIndex;
 	}
 
 	public bool HasDen01(int id) {
@@ -129,11 +133,11 @@ public class Room : MapDraggable {
 	}
 
 	public Den GetDen(int id) {
-		return this.GetDen01(id - this.nonDenExitCount);
+		return this.GetDen01(id - this.roomExitCount);
 	}
 
 	public int GetDenId(Vector2i pos) {
-		return this.denShortcutEntrances.IndexOf(pos) + this.nonDenExitCount;
+		return this.denShortcutEntrances.IndexOf(pos) + this.roomExitCount;
 	}
 
 	public int GetDenId01(Vector2i pos) {
@@ -606,22 +610,22 @@ public class Room : MapDraggable {
 	}
 
 	protected void EnsureConnections() {
-		this.specialExitCount = 0;
-		this.nonDenExitCount = 0;
 		this.roomExits.Clear();
 		this.roomExitPaths.Clear();
 		this.shortcutEntrancePaths.Clear();
 		this.denShortcutEntrances.Clear();
+		
+		this.roomExitCount = 0;
+		this.scavengerHoleCount = 0;
+		this.roomBorderExitCount = 0;
+		this.batflyHiveCount = 0;
+		this.hasGarbageWormHoles = false;
 
 		List<(RoomExitType type, Vector2i position)> newList = [];
 		for (int y = 0; y < this.height; y++) {
 			for (int x = 0; x < this.width; x++) {
-				// REVIEW - DOES THIS DO WHAT I THINK IT DOES????
-				// Because I'm not sure what specialExitCount actually does,
-				// so I don't know if I've inadvertently messed something up by
-				// incrementing it here.
 				if ((this.GetTile(x, y) & FLAG_GARBAGE_WORM_HOLE) > 0)
-					this.specialExitCount++;
+					this.hasGarbageWormHoles = true;
 				foreach ((RoomExitType _, Vector2i position) item in this.allRoomExitPoints) {
 					if (item.position == new Vector2i(x, y)) {
 						newList.Add(item);
@@ -695,8 +699,11 @@ public class Room : MapDraggable {
 			if (endType == RoomPathEndType.den) {
 				this.denShortcutEntrances.Add(shortcutPath.StartPosition);
 			}
+			else if (endType == RoomPathEndType.scavengerDen) {
+				this.scavengerHoleCount++;
+			}
 			else if (endType == RoomPathEndType.roomExit) {
-				this.nonDenExitCount++;
+				this.roomExitCount++;
 			}
 		}
 
@@ -706,9 +713,9 @@ public class Room : MapDraggable {
 			bool airL = (this.GetTile(0, y) & 15) != 1;
 			bool airR = (this.GetTile(this.width - 1, y) & 15) != 1;
 			if (airL && !wasL)
-				this.specialExitCount++;
+				this.roomBorderExitCount++;
 			if (airR && !wasR)
-				this.specialExitCount++;
+				this.roomBorderExitCount++;
 			wasL = airL;
 			wasR = airR;
 		}
@@ -720,9 +727,9 @@ public class Room : MapDraggable {
 			bool airL = (this.GetTile(x, 0) & 15) != 1;
 			bool airR = (this.GetTile(x, this.height - 1) & 15) != 1;
 			if (airL && !wasL)
-				this.specialExitCount++;
+				this.roomBorderExitCount++;
 			if (airR && !wasR && this.data.waterHeight >= 0)
-				this.specialExitCount++;
+				this.roomBorderExitCount++;
 			wasL = airL;
 			wasR = airR;
 		}
@@ -733,7 +740,7 @@ public class Room : MapDraggable {
 			for (int x = 0; x < this.width; x++) {
 				bool hive = (this.GetTile(x, y) & FLAG_BATFLY_HIVE) > 0;
 				if (!wasL && hive)
-					this.specialExitCount++;
+					this.batflyHiveCount++;
 				wasL = hive;
 			}
 		}
