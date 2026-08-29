@@ -111,6 +111,7 @@ public class Den {
 }
 
 public class GarbageWormDen {
+	public bool isInvalidGarbageWormDen;
 	public string type = "";
 	public int count;
 	public Timeline timeline = new();
