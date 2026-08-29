@@ -74,7 +74,7 @@ public class RoomReplacementChange : Change {
 		foreach (Vector2i denPos in this.replacedRoom.denShortcutEntrances) {
 			int id = this.replacedRoom.GetDenId(denPos);
 			if (this.newRoom.HasDen(id))
-				this.newRoom.dens[id - this.newRoom.nonDenExitCount] = this.replacedRoom.GetDen(id);
+				this.newRoom.dens[id - this.newRoom.roomExitCount] = this.replacedRoom.GetDen(id);
 		}
 		this.newRoom.DevPosition = this.replacedRoom.DevPosition;
 		this.newRoom.CanonPosition = this.replacedRoom.CanonPosition;

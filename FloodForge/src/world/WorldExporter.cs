@@ -924,7 +924,7 @@ public static class WorldExporter {
 							finalCreature += $"0-{Mods.ExportCreatureName(creature.type)}";
 						}
 						else {
-							finalCreature += $"{i + room.nonDenExitCount}-{Mods.ExportCreatureName(creature.type)}";
+							finalCreature += $"{i + room.roomExitCount}-{Mods.ExportCreatureName(creature.type)}";
 						}
 						finalCreature += ExportCreatureTags(creature);
 						if (creature.count > 1)
@@ -967,7 +967,7 @@ public static class WorldExporter {
 						finalDen += "0 : ";
 					}
 					else {
-						finalDen += $"{i + room.nonDenExitCount} : ";
+						finalDen += $"{i + room.roomExitCount} : ";
 					}
 
 					DenCreature current = creature;
@@ -1000,7 +1000,7 @@ public static class WorldExporter {
 					finalWorm += PreProcessorsToString(worm.preProcessorConditions);
 				}
 
-				finalWorm += $"{RoomNameCasing(room.name)} : {room.GarbageWormDenIndex}-{Mods.ExportCreatureName(worm.type)}";
+				finalWorm += $"{RoomNameCasing(room.name)} : {room.GarbageWormHoleIndex}-{Mods.ExportCreatureName(worm.type)}";
 				if (worm.count > 1)
 					finalWorm += $"-{worm.count}";
 				finalWorldFile.Add(finalWorm);
