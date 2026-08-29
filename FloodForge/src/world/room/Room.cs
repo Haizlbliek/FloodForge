@@ -1844,7 +1844,7 @@ public class Room : MapDraggable {
 		bool denEmpty = true;
 		bool drawnDen = false;
 
-		float selectorScale = WorldWindow.SelectorScale;
+		float scale = WorldWindow.SelectorScale * (hovered ? 1.5f : 1f);
 		int drawnCreatures = 0;
 		List<DenLineage> visibleLineages = den.creatures.FindAll(d => d.timeline.OverlapsWith(WorldWindow.VisibleTimeline) && (timelineFilter == null || d.timeline.OverlapsWith(timelineFilter)));
 		for (int i = 0; i < visibleLineages.Count; i++) {
@@ -1856,12 +1856,8 @@ public class Room : MapDraggable {
 			if (creature is DenLineage denLineage && !denLineage.timeline.OverlapsWith(WorldWindow.VisibleTimeline))
 				continue;
 
-			float scale = selectorScale;
 			float rectX = x + drawnCreatures * scale - (visibleLineages.Count - 1f) * 0.5f * scale + 0.5f;
 			float rectY = y - 0.5f;
-
-			if (hovered)
-				scale *= 1.5f;
 
 			if (!creature.type.IsNullOrEmpty()) {
 				denEmpty = false;
@@ -1879,11 +1875,11 @@ public class Room : MapDraggable {
 					while (creature.lineageTo != null) {
 						float chance = creature.lineageChance;
 						creature = creature.lineageTo;
-						rectY -= selectorScale;
+						rectY -= scale;
 						if (!creature.type.IsNullOrEmpty()) {
 							UI.TrueCenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
 						}
-						UI.font.Write((int) (chance * 100f) + "%", rectX + scale * 0.25f, rectY + selectorScale + 0.1f - scale * 0.5f, 0.3f * scale, Font.Align.MiddleCenter);
+						UI.font.Write((int) (chance * 100f) + "%", rectX + scale * 0.25f, rectY + scale + 0.1f - scale * 0.5f, 0.3f * scale, Font.Align.MiddleCenter);
 					}
 				}
 			}
@@ -1891,7 +1887,7 @@ public class Room : MapDraggable {
 		}
 		if (!drawnDen && (!denEmpty || denEmpty && WorldWindow.cameraScale < 400f || roomHovered)) {
 			Immediate.Color(Themes.RoomShortcutDen);
-			UI.FillCircle(x + 0.5f, y - 0.5f, selectorScale * (hovered ? 1.5f : 1f) * 0.25f, 8);
+			UI.FillCircle(x + 0.5f, y - 0.5f, scale * 0.25f, 8);
 		}
 	}
 
