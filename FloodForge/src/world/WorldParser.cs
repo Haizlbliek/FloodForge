@@ -521,8 +521,24 @@ public static class WorldParser {
 				offscreenDen.GetDen();
 			}
 
-			if (denId == room.GarbageWormHoleIndex) {
+			bool addGarbageWormAnyway = false;
+			if (Mods.ParseCreature(creature).Equals("GarbageWorm", StringComparison.InvariantCultureIgnoreCase)) {
+				if (!room.hasGarbageWormHoles || (!room.HasDen(denId))) {
+					if (room.hasGarbageWormHoles) {
+						Logger.Warn($"Invalid garbage worm detected within {room.name}!\nCreature: {Mods.ParseCreature(creature)}; expected {room.GarbageWormHoleIndex}, got {denId}\n > {creatureInDen}");
+						WorldWindow.invalidCreatures.Add($"{room.name}: {creatureInDen} - invalid garbage worm index");
+						addGarbageWormAnyway = true;
+					}
+					else {
+						Logger.Warn($"Invalid garbage worm detected within {room.name}!\nRoom has no garbage worm holes");
+						WorldWindow.invalidCreatures.Add($"{room.name}: {creatureInDen} - room has no garbage worm holes");
+					}
+				}
+			}
+
+			if (denId == room.GarbageWormHoleIndex || addGarbageWormAnyway) {
 				GarbageWormDen worm = new GarbageWormDen() {
+					isInvalidGarbageWormDen = addGarbageWormAnyway,
 					type = Mods.ParseCreature(creature),
 					timeline = timeline,
 					preProcessorConditions = preProcessorConditions,
