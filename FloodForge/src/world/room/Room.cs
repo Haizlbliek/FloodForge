@@ -1857,8 +1857,8 @@ public class Room : MapDraggable {
 				continue;
 
 			float scale = selectorScale;
-			float rectX = x + drawnCreatures * scale - (visibleLineages.Count - 1f) * 0.5f * scale;
-			float rectY = y;
+			float rectX = x + drawnCreatures * scale - (visibleLineages.Count - 1f) * 0.5f * scale + 0.5f;
+			float rectY = y - 0.5f;
 
 			if (hovered)
 				scale *= 1.5f;
@@ -1870,10 +1870,10 @@ public class Room : MapDraggable {
 				drawnDen = true;
 				Immediate.Color(1f, 1f, 1f);
 				if (!denEmpty && !creature.type.IsNullOrEmpty()) {
-					UI.CenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
+					UI.TrueCenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
 				}
 				if (creature.lineageTo == null) {
-					UI.font.Write(creature.count.ToString(), rectX + 0.5f + scale * 0.25f, rectY - 0.5f - scale * 0.5f, 0.5f * scale, Font.Align.MiddleCenter);
+					UI.font.Write(creature.count.ToString(), rectX + scale * 0.25f, rectY - scale * 0.5f, 0.5f * scale, Font.Align.MiddleCenter);
 				}
 				else {
 					while (creature.lineageTo != null) {
@@ -1881,9 +1881,9 @@ public class Room : MapDraggable {
 						creature = creature.lineageTo;
 						rectY -= selectorScale;
 						if (!creature.type.IsNullOrEmpty()) {
-							UI.CenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
+							UI.TrueCenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
 						}
-						UI.font.Write((int) (chance * 100f) + "%", rectX + 0.5f + scale * 0.25f, rectY + selectorScale - 0.4f - scale * 0.5f, 0.3f * scale, Font.Align.MiddleCenter);
+						UI.font.Write((int) (chance * 100f) + "%", rectX + scale * 0.25f, rectY + selectorScale + 0.1f - scale * 0.5f, 0.3f * scale, Font.Align.MiddleCenter);
 					}
 				}
 			}
