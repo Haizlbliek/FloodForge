@@ -534,6 +534,7 @@ public static class WorldParser {
 
 			if (!room.HasDen(denId)) {
 				Logger.Warn($"{room.name} missing den {denId}");
+				WorldWindow.invalidCreatures.Add($"{room.name}: {creatureInDen} - missing den {denId}");
 				return false;
 			}
 
@@ -1006,7 +1007,7 @@ public static class WorldParser {
 		List<ConnectionToAdd> connectionsToAdd = [];
 		List<string> conditionalLinks = [];
 		WorldParseState parseState = WorldParseState.None;
-		WorldWindow.invalidCreaturesEncountered = false;
+		WorldWindow.invalidCreatures = [];
 
 		foreach (string line in File.ReadAllLines(path)) {
 			if (line.IsNullOrEmpty() || line.StartsWith("//")) continue;
@@ -1108,7 +1109,7 @@ public static class WorldParser {
 			else if (parseState == WorldParseState.Creatures) {
 				if (!ParseWorldCreature(line)) {
 					Logger.Warn("Invalid world creature " + line);
-					WorldWindow.invalidCreaturesEncountered = true;
+					WorldWindow.invalidCreatures.Add($"{line}");
 					continue;
 				}
 			}
@@ -1333,6 +1334,15 @@ public static class WorldParser {
 		Logger.Info("World file imported");
 
 		WorldWindow.importIncomplete = false;
+
+		if (WorldWindow.invalidCreatures.Count != 0) {
+			string finalText = "Invalid creatures encountered:";
+			foreach (string invalidCreature in WorldWindow.invalidCreatures) {
+				finalText += $"\n{invalidCreature}";
+			}
+			finalText += "\nCheck log.txt for more information";
+			PopupManager.Add(finalText);
+		}
 		return true;
 	}
 }

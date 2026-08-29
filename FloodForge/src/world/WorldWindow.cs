@@ -45,7 +45,7 @@ public static class WorldWindow {
 	public static bool HasExportPath => !WorldWindow.region.exportPath.IsNullOrEmpty();
 	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || !HasExportPath || importIncomplete);
 	public static bool importIncomplete = false;
-	public static bool invalidCreaturesEncountered = false;
+	public static List<string> invalidCreatures = [];
 	public static bool ExportFinished = true;
 	public static Vector2 cameraOffset;
 	private static Vector2 lastNormalCameraOffset = Vector2.Zero;
@@ -2013,7 +2013,7 @@ public static class WorldWindow {
 
 		private static void ExportMap() {
 			bool isNewMap = !WorldWindow.HasExportPath;
-			WorldWindow.invalidCreaturesEncountered = false;
+			WorldWindow.invalidCreatures = [];
 			WorldExporter.ExportMapFile();
 			WorldExporter.ExportWorldFile();
 
@@ -2056,12 +2056,13 @@ public static class WorldWindow {
 
 				new Button("Export Map",
 					button => {
-						if(!invalidCreaturesEncountered){
+						if(invalidCreatures.Count == 0){
 							WorldWindow.ExportFinished = false;
 							ExportButton();
 						}
 						else{
-							PopupManager.Add(new ConfirmPopup("This region contains invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(() => { WorldWindow.ExportFinished = false; ExportButton(); }));
+							// REVIEW - add a "view invalid creatures" type button, which would show the relevant invalidCreature strings
+							PopupManager.Add(new ConfirmPopup("This region may contain invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(() => { WorldWindow.ExportFinished = false; ExportButton(); }));
 						}
 					},
 					button => {
