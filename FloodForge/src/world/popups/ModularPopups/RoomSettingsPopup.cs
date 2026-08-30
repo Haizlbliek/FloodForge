@@ -11,6 +11,7 @@ public class RoomSettingsPopup : ModularPopup {
 	private BoolSettingContainer enclosedRoomToggle;
 	private IntSliderSettingContainer waterLevelSlider;
 	private BoolSettingContainer waterInFrontToggle;
+	private ButtonContainer editCreatures;
 	private ButtonContainer renderRoomButton;
 	private ButtonContainer renameRoomButton;
 	private ButtonContainer createTimelineRoomButton;
@@ -30,6 +31,8 @@ public class RoomSettingsPopup : ModularPopup {
 			WorldWindow.worldHistory.Apply(new VariableChange<bool>(this.relevantRoom.data.waterInFront, b, bRedo => this.relevantRoom.data.waterInFront = bRedo));
 		});
 		this.AddToQueue(this.waterInFrontToggle);
+		this.editCreatures = new ButtonContainer("Edit Creatures", this.EditCreatures);
+		this.AddToQueue(this.editCreatures);
 		this.renderRoomButton = new ButtonContainer("Render Room", this.RenderRoom);
 		this.AddToQueue(this.renderRoomButton);
 		this.renameRoomButton = new ButtonContainer("Rename Room", this.RenameRoom);
@@ -52,6 +55,10 @@ public class RoomSettingsPopup : ModularPopup {
 			this.relevantRoom.data.waterHeight = hRedo;
 			this.relevantRoom.RegenerateWater();
 		}));
+	}
+
+	private void EditCreatures() {
+		PopupManager.Add(new EditCreaturesPopup(this.relevantRoom));
 	}
 
 	private void RenderRoom() {
