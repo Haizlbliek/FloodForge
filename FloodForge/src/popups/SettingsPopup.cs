@@ -103,6 +103,18 @@ public class SettingsPopup : Popup {
 					return container;
 			return null;
 		}
+
+		public void AddSetting(string ID, SettingContainer container) {
+			List<(string, SettingContainer)> settingsList = [.. this.settings];
+			settingsList.Add((ID, container));
+			this.settings = [.. settingsList];
+		}
+
+		public void SortByID(bool descending) {
+			this.settings = [.. this.settings.OrderBy(x => x.ID)];
+			if (descending)
+				this.settings = [.. this.settings.Reverse()];
+		}
 	}
 
 
