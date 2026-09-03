@@ -30,6 +30,8 @@ public static class DropletWindow {
 		Camera,
 	}
 	private static readonly string[] TabNames = [ "Environment", "Geometry", "Cameras" ];
+	public const float sidebarWidth = 0.41f;
+	public const float topbarHeight = 0.12f;
 
 	private enum GeometryTool {
 		Wall,
@@ -139,8 +141,8 @@ public static class DropletWindow {
 			cameraPanningBlocked = false;
 		}
 
-		targetCameraPan.x = Mathf.Clamp(targetCameraPan.x, -(Main.screenBounds.x - 0.41f) * cameraScale, Main.screenBounds.x * cameraScale + Room.width);
-		targetCameraPan.y = Mathf.Clamp(targetCameraPan.y, -(Main.screenBounds.y - 0.12f) * cameraScale - Room.height, Main.screenBounds.y * cameraScale);
+		targetCameraPan.x = Mathf.Clamp(targetCameraPan.x, -(Main.screenBounds.x - sidebarWidth) * cameraScale, Main.screenBounds.x * cameraScale + Room.width);
+		targetCameraPan.y = Mathf.Clamp(targetCameraPan.y, -(Main.screenBounds.y - topbarHeight) * cameraScale - Room.height, Main.screenBounds.y * cameraScale);
 
 		cameraOffset += (targetCameraPan - cameraOffset) * (1f - MathF.Pow(1f - Settings.CameraPanSpeed, Program.Delta * 60f));
 	}
@@ -1403,7 +1405,7 @@ public static class DropletWindow {
 			-Mathf.CeilToInt(Mouse.Y * cameraScale + cameraOffset.y)
 		);
 
-		blockMouse = Mouse.Y >= Main.screenBounds.y - 0.12f || Mouse.X >= Main.screenBounds.x - 0.41f || Mouse.Disabled;
+		blockMouse = Mouse.Y >= Main.screenBounds.y - topbarHeight || Mouse.X >= Main.screenBounds.x - sidebarWidth || Mouse.Disabled;
 
 		if (currentTab == EditorTab.Details) {
 			UpdateDetailsTab();
@@ -1424,7 +1426,7 @@ public static class DropletWindow {
 		Immediate.LoadIdentity();
 		Immediate.Ortho(-1f * Main.screenBounds.x, 1f * Main.screenBounds.x, -1f * Main.screenBounds.y, 1f * Main.screenBounds.y, 0f, 1f);
 
-		Rect sidebar = new Rect(Main.screenBounds.x - 0.41f, Main.screenBounds.y - 0.12f, Main.screenBounds.x, -Main.screenBounds.y);
+		Rect sidebar = new Rect(Main.screenBounds.x - sidebarWidth, Main.screenBounds.y - topbarHeight, Main.screenBounds.x, -Main.screenBounds.y);
 		Immediate.Color(Themes.Popup);
 		UI.FillRect(sidebar);
 		Immediate.Color(Themes.Border);
@@ -1460,7 +1462,7 @@ public static class DropletWindow {
 			if (UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - 0.06f, 0.05f, 0.05f), ref Room.data.enclosedRoom)) 
 				dropletHistory.Apply(new VariableChange<bool>(!Room.data.enclosedRoom, Room.data.enclosedRoom, b => Room.data.enclosedRoom = b));
 
-			if (UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - 0.12f, 0.05f, 0.05f), ref hasWater))
+			if (UI.CheckBox(Rect.FromSize(sidebar.x0 + 0.01f, sidebar.y1 - topbarHeight, 0.05f, 0.05f), ref hasWater))
 				dropletHistory.Apply(new VariableChange<int>(Room.data.waterHeight, hasWater ? Room.height / 2 : -1, h => {
 					Room.data.waterHeight = h;
 					Room.visuals.waterNeedsRefresh = true;
@@ -1513,13 +1515,13 @@ public static class DropletWindow {
 			}
 		}
 
-		Rect tabPositions = new Rect(-Main.screenBounds.x, Main.screenBounds.y - 0.06f, Main.screenBounds.x, Main.screenBounds.y - 0.12f);
+		Rect tabPositions = new Rect(-Main.screenBounds.x, Main.screenBounds.y - 0.06f, Main.screenBounds.x, Main.screenBounds.y - topbarHeight);
 		Immediate.Color(Themes.Popup);
 		UI.FillRect(tabPositions);
 		Immediate.Color(Themes.Border);
 		UI.Line(tabPositions.x0, tabPositions.y0, tabPositions.x1, tabPositions.y0);
 
-		Vector2 tabPosition = new Vector2(-Main.screenBounds.x + 0.01f, Main.screenBounds.y - 0.12f);
+		Vector2 tabPosition = new Vector2(-Main.screenBounds.x + 0.01f, Main.screenBounds.y - topbarHeight);
 		float tabHeight = 0.05f;
 		for (int i = 0; i < 3; i++) {
 			float tabWidth = MathF.Max(0.15f, UI.font.Measure(TabNames[i], 0.03f).x + 0.04f);
