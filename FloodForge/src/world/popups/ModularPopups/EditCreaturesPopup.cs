@@ -1,3 +1,4 @@
+using FloodForge.History;
 using FloodForge.Popups;
 
 namespace FloodForge.World;
@@ -26,40 +27,46 @@ public class EditCreaturesPopup : ModularPopup {
 				("", new LabelContainer($"Garbage Worms", Font.Align.MiddleLeft)),
 				("", new HorizontalElement([
 					("", new TextureButtonContainer("Minus", UI.uiAtlas.UV("Minus"), () => {
-							if (den != null){
-								den.count = Math.Max(0, den.count - 1);
-								garbageWormCounter.settingName = $"{den.count}";
-							}
-						}).SetContextCheck(_ => den != null)),
+							if (den != null)
+								WorldWindow.worldHistory.Apply(new VariableChange<int>(den.count, Math.Max(0, den.count - 1), c => { den.count = c; garbageWormCounter.settingName = $"{den.count}"; }));
+						}).SetContextCheck(_ => den != null && den.count != 0)),
 					("", garbageWormCounter),
 					("", new TextureButtonContainer("Plus", UI.uiAtlas.UV("Plus"), () => {
-							if (den != null){
-								den.count = Math.Max(0, den.count + 1);
-								garbageWormCounter.settingName = $"{den.count}";
-							}
+							if (den != null)
+								WorldWindow.worldHistory.Apply(new VariableChange<int>(den.count, den.count + 1, c => { den.count = c; garbageWormCounter.settingName = $"{den.count}"; }));
 						}).SetContextCheck(_ => den != null))
 				], [ 0.05f, 0f, 0.05f ], false))
 			], forceEqualWidth: true));
 			if (den == null) {
 				this.AddToQueue(new ButtonContainer("add Worm den", () => {
-					this.relevantRoom.garbageWormDens.Add(new GarbageWormDen() {
+					List<GarbageWormDen> newDenList = [.. this.relevantRoom.garbageWormDens];
+					newDenList.Add(new GarbageWormDen() {
 						count = 0,
 						type = Mods.ParseCreature("garbageworm"),
 						isInvalidGarbageWormDen = false
 					});
-					this.RebuildSettings();
+					WorldWindow.worldHistory.Apply(new VariableChange<List<GarbageWormDen>>([.. this.relevantRoom.garbageWormDens], newDenList, l => {
+						this.relevantRoom.garbageWormDens = l;
+						this.RebuildSettings();
+					}));
 				}));
 			}
 			else {
 				if (den.isInvalidGarbageWormDen) {
 					this.AddToQueue(new ButtonContainer("fix Worm den", () => {
-						den.isInvalidGarbageWormDen = false; // it's that easy (this just tells the exporter it's fine)
-						this.RebuildSettings();
+						WorldWindow.worldHistory.Apply(new VariableChange<bool>(true, false, b => {
+							den.isInvalidGarbageWormDen = b;
+							this.RebuildSettings();
+						})); // (this just tells the exporter it's fine)
 					}));
 				}
 				this.AddToQueue(new ButtonContainer("remove Worm den", () => {
-					this.relevantRoom.garbageWormDens.Remove(den);
-					this.RebuildSettings();
+					List<GarbageWormDen> newDenList = [.. this.relevantRoom.garbageWormDens];
+					newDenList.Remove(den);
+					WorldWindow.worldHistory.Apply(new VariableChange<List<GarbageWormDen>>([.. this.relevantRoom.garbageWormDens], newDenList, l => {
+						this.relevantRoom.garbageWormDens = l;
+						this.RebuildSettings();
+					}));
 				}));
 			}
 		}
