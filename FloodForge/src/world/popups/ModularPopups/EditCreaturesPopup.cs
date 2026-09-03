@@ -63,7 +63,7 @@ public class EditCreaturesPopup : ModularPopup {
 				}));
 			}
 		}
-		this.AddQueuedSettings();
+		this.AddQueuedSettings(true);
 		this.UpdateDenList();
 	}
 
