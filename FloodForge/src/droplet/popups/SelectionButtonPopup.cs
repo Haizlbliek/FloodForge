@@ -32,6 +32,13 @@ public class SelectionButtonPopup : Popup {
 			return;
 		}
 
+		Program.gl.Enable(EnableCap.ScissorTest);
+		Program.gl.Scissor(
+			0,
+			0,
+			(uint) ((1 - (DropletWindow.sidebarWidth / (Main.screenBounds.x * 2))) * Program.window.FramebufferSize.X),
+			(uint) ((1 - (DropletWindow.topbarHeight / (Main.screenBounds.y * 2))) * Program.window.FramebufferSize.Y)
+		);
 		this.hoverText = "";
 
 		this.clearButton = new UVRect(this.bounds.x0 + 0.01f, this.bounds.y0 + 0.01f, this.bounds.x0 + 0.06f, this.bounds.y1 - 0.01f).AtlasUV("Cross");
@@ -75,6 +82,7 @@ public class SelectionButtonPopup : Popup {
 				this.hoverText = "Paste Selection";
 			}
 		}
+		Program.gl.Disable(EnableCap.ScissorTest);
 
 		if (this.hoverText.Length != 0) {
 			float width = UI.font.Measure(this.hoverText, 0.03f).x;
