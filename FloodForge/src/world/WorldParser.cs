@@ -1353,8 +1353,14 @@ public static class WorldParser {
 
 		if (WorldWindow.invalidCreatures.Count != 0) {
 			string finalText = "Invalid creatures encountered:";
+			int creaturesLogged = 0;
 			foreach (string invalidCreature in WorldWindow.invalidCreatures) {
+				if (finalText.Split('\n').Length > 10) {
+					finalText += $"\n...{invalidCreature.Length - creaturesLogged} left";
+					break;
+				}
 				finalText += $"\n{invalidCreature}";
+				creaturesLogged++;
 			}
 			finalText += "\nCheck log.txt for more information";
 			PopupManager.Add(finalText);
