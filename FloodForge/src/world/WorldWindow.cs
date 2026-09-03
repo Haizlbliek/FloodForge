@@ -1226,13 +1226,16 @@ public static class WorldWindow {
 				if (!VisibleLayers[replaceRoom.replacedRoom.data.layer] || !VisibleTimeline.OverlapsWith(replaceRoom.timeline) || replaceRoom.IsHidden)
 					continue;
 
+				bool canonCull = WorldWindow.CullTest(new Rect(replaceRoom.CanonPosition.x, replaceRoom.CanonPosition.y - replaceRoom.replacingRoom.height, replaceRoom.CanonPosition.x + replaceRoom.replacingRoom.width, replaceRoom.CanonPosition.y));
+				bool devCull = WorldWindow.CullTest(new Rect(replaceRoom.DevPosition.x, replaceRoom.DevPosition.y - replaceRoom.replacingRoom.height, replaceRoom.DevPosition.x + replaceRoom.replacingRoom.width, replaceRoom.DevPosition.y));
+				(bool typeCull, bool nonTypeCull) = PositionType == RoomPosition.Dev ? (devCull, canonCull) : (canonCull, devCull);
 				if (PositionType == RoomPosition.Both) {
-					replaceRoom.Draw(RoomPosition.Canon, true);
-					replaceRoom.Draw(RoomPosition.Dev, true);
+					if (canonCull) replaceRoom.Draw(RoomPosition.Canon, true);
+					if (devCull) replaceRoom.Draw(RoomPosition.Dev, true);
 				}
 				else {
-					replaceRoom.Draw(PositionType, Keys.Modifier(Keys.Modifiers.Alt) && replaceRoom.setHidden);
-					if (Keys.Modifier(Keys.Modifiers.Alt)) {
+					if (typeCull) replaceRoom.Draw(PositionType, Keys.Modifier(Keys.Modifiers.Alt) && replaceRoom.setHidden);
+					if (Keys.Modifier(Keys.Modifiers.Alt) && nonTypeCull) {
 						replaceRoom.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon, true);
 					}
 				}
