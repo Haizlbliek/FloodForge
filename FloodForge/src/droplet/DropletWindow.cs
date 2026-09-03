@@ -96,7 +96,7 @@ public static class DropletWindow {
 
 	// REVIEW - add a separate class containing camera data & controls, so that camera controls are unified?
 	private static void UpdateCamera() {
-		bool isHoveringPopup = PopupManager.Windows.Any(x => x.InteractBounds().Inside(Mouse.Pos));
+		bool isHoveringPopup = PopupManager.Windows.Any(x => x.InteractBounds().Inside(Mouse.Pos) && x is not SelectionButtonPopup);
 
 		float scrollY = -Mouse.Scroll;
 		if (isHoveringPopup)
