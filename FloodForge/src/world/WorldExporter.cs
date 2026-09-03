@@ -991,7 +991,7 @@ public static class WorldExporter {
 				continue;
 
 			foreach (GarbageWormDen worm in room.garbageWormDens) {
-				if (worm.isInvalidGarbageWormDen)
+				if (worm.isInvalidGarbageWormDen || worm.count == 0)
 					continue;
 				string finalWorm = "";
 				if (worm.timeline.timelineType != TimelineType.All) {
