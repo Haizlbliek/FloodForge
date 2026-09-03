@@ -505,6 +505,26 @@ public class SettingsPopup : Popup {
 		}
 	}
 
+	// REVIEW
+	// - add UV variable (0,0-1,1 by default)
+	// - add color variable (white by default)
+	public class ImageContainer : SettingContainer {
+		private Texture textureToDraw;
+		private float aspectRatio => this.textureToDraw.width / this.textureToDraw.height;
+
+		public override float SettingWidth => this.SettingHeight * this.aspectRatio;
+
+		public ImageContainer(Texture textureToUse) : base("") {
+			this.textureToDraw = textureToUse;
+		}
+
+		public override void Draw(Rect bounds) {
+			Immediate.Color(Color.White);
+			bounds = new (bounds.x0 - 0.01f, bounds.y0 - 0.01f, bounds.x1 + 0.01f, bounds.y1 + 0.01f); // reverse padding variable?
+			UI.TrueCenteredTexture(this.textureToDraw, bounds.CenterX, bounds.CenterY, Math.Min(bounds.x1 - bounds.x0, bounds.y1 - bounds.y0));
+		}
+	}
+
 	public class Divider : SettingContainer {
 		public override float SettingHeight => 0.01f;
 		public override float SettingWidth => 0.1f;
