@@ -489,7 +489,17 @@ public class SettingsPopup : Popup {
 			float y = bounds.y1;
 			foreach (string line in splitLines) {
 				string croppedLine = this.autoCrop ? UI.font.CropText(line, bounds.x1 - bounds.x0 - 0.02f, 0.03f, out _, this.fromRight) : line;
-				UI.font.Write(croppedLine, bounds.CenterX, y, 0.03f, this.align);
+				float xStart = bounds.x0;
+				float yStart = y;
+				if (this.align.HasFlag(Font.Align.AnyCenter))
+					xStart = bounds.CenterX;
+				if (this.align.HasFlag(Font.Align.AnyRight))
+					xStart = bounds.x1;
+				if (this.align.HasFlag(Font.Align.AnyBottom))
+					yStart = y - UI.font.Measure(line, 0.03f).y;
+				if (this.align.HasFlag(Font.Align.AnyMiddle))
+					yStart = bounds.CenterY;
+				UI.font.Write(croppedLine, xStart, yStart, 0.03f, this.align);
 				y -= UI.font.Measure(line, 0.03f).y + SettingSpacing;
 			}
 		}
