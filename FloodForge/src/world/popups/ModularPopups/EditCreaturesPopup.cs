@@ -19,8 +19,17 @@ public class EditCreaturesPopup : ModularPopup {
 
 	public void UpdateDenList() {
 		int denIndex = 0;
+		// IDEA - add timeline icon to lineages?
 		foreach (Den den in this.relevantRoom.dens) {
-			this.denListContainer.AddSetting($"{denIndex}", new ButtonContainer($"View den {denIndex}" + (den.creatures.Count == 0 ? "(empty)" : ""), () => { PopupManager.Add(new DenPopup(den)); }));
+			HorizontalElement denImages = new HorizontalElement([], null, false, true);
+			foreach (DenLineage lineage in den.creatures) {
+				// IDEA - add lineage creatures behind first creature?
+				denImages.AddSetting("", new ImageContainer(Mods.GetCreatureTexture(lineage.type)));
+			}
+			if (den.creatures.Count == 0) {
+				denImages.AddSetting("", new LabelContainer("EMPTY", align: Font.Align.MiddleCenter));
+			}
+			this.denListContainer.AddSetting($"{denIndex}", new HorizontalElement([ ("", new ButtonContainer($"den {denIndex}", () => { PopupManager.Add(new DenPopup(den)); })), ("", denImages) ], null, true, true));
 			denIndex++;
 		}
 		this.RecalculateBounds(true, true);
