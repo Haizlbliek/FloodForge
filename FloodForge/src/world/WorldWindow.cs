@@ -1179,36 +1179,37 @@ public static class WorldWindow {
 
 			Profiler.MarkPoint("rooms", 1, true);
 
-			if (WorldWindow.CullTest(new Rect(room.Position.x, room.Position.y - room.height, room.Position.x + room.width, room.Position.y))) {
-				if (!room.data.merge) {
-					if (PositionType == RoomPosition.Both) {
-						room.DrawBlack(RoomPosition.Canon);
-						room.DrawBlack(RoomPosition.Dev);
-					}
-					else {
-						room.DrawBlack(PositionType);
-					}
-				}
-
+			bool canonCull = WorldWindow.CullTest(new Rect(room.CanonPosition.x, room.CanonPosition.y - room.height, room.CanonPosition.x + room.width, room.CanonPosition.y));
+			bool devCull = WorldWindow.CullTest(new Rect(room.DevPosition.x, room.DevPosition.y - room.height, room.DevPosition.x + room.width, room.DevPosition.y));
+			(bool typeCull, bool nonTypeCull) = PositionType == RoomPosition.Dev ? (devCull, canonCull) : (canonCull, devCull);
+			if (!room.data.merge) {
 				if (PositionType == RoomPosition.Both) {
-					room.Draw(RoomPosition.Canon);
-					room.Draw(RoomPosition.Dev);
+					room.DrawBlack(RoomPosition.Canon);
+					room.DrawBlack(RoomPosition.Dev);
 				}
 				else {
-					room.Draw(PositionType);
-					if (Keys.Modifier(Keys.Modifiers.Alt)) {
-						room.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
-					}
+					room.DrawBlack(PositionType);
 				}
+			}
 
-				if (selectedDraggables.Contains(room)) {
-					Immediate.Color(Themes.SelectionBorder);
-					if (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) {
-						UI.StrokeRect(Rect.FromSize(room.DevPosition.x, room.DevPosition.y, room.width, -room.height), cameraScale / 4f);
-					}
-					if (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) {
-						UI.StrokeRect(Rect.FromSize(room.CanonPosition.x, room.CanonPosition.y, room.width, -room.height), cameraScale / 4f);
-					}
+			if (PositionType == RoomPosition.Both) {
+				if (canonCull) room.Draw(RoomPosition.Canon);
+				if (devCull) room.Draw(RoomPosition.Dev);
+			}
+			else {
+				if (typeCull) room.Draw(PositionType);
+				if (Keys.Modifier(Keys.Modifiers.Alt) && nonTypeCull) {
+					room.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
+				}
+			}
+
+			if (selectedDraggables.Contains(room)) {
+				Immediate.Color(Themes.SelectionBorder);
+				if (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) {
+					UI.StrokeRect(Rect.FromSize(room.DevPosition.x, room.DevPosition.y, room.width, -room.height), cameraScale / 4f);
+				}
+				if (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) {
+					UI.StrokeRect(Rect.FromSize(room.CanonPosition.x, room.CanonPosition.y, room.width, -room.height), cameraScale / 4f);
 				}
 			}
 			Profiler.MarkPoint("rooms", 0, true);
