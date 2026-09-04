@@ -298,7 +298,7 @@ public class SettingsPopup : Popup {
 			float textWidth = UI.font.Measure(this.settingName, 0.03f).x;
 			UVRect rect = new UVRect(bounds.x0 + textWidth + 0.02f, bounds.y1, bounds.x1, bounds.y0);
 			int previousValue = this.value;
-			UI.SliderResponse slider = UI.Slider(Rect.FromSize(rect.x0, rect.y0 + 0.02f, rect.x1 - rect.x0 - 0.04f, rect.y1 - rect.y0 - 0.04f), this.valueSlider, ref this.value, new UI.SliderMods() { disabled = false });
+			UI.SliderResponse slider = UI.Slider(Rect.FromSize(rect.x0, rect.y0, rect.x1 - rect.x0 - 0.04f, rect.y1 - rect.y0), this.valueSlider, ref this.value, new UI.SliderMods() { disabled = false });
 			Immediate.Color(Themes.Text);
 			bool swap = slider.sliderPos.x > rect.x1 + 0.1f;
 			float x = slider.sliderPos.x + (swap ? -0.01f : 0.01f);
@@ -331,7 +331,7 @@ public class SettingsPopup : Popup {
 			float textWidth = UI.font.Measure(this.settingName, 0.03f).x;
 			UVRect rect = new UVRect(bounds.x0 + textWidth + 0.02f, bounds.y1, bounds.x1, bounds.y0);
 			float previousValue = this.value;
-			UI.SliderResponse slider = UI.Slider(Rect.FromSize(rect.x0, rect.y0 + 0.02f, rect.x1 - rect.x0 - 0.04f, rect.y1 - rect.y0 - 0.04f), this.valueSlider, ref this.value, new UI.SliderMods() { disabled = false });
+			UI.SliderResponse slider = UI.Slider(Rect.FromSize(rect.x0, rect.y0, rect.x1 - rect.x0 - 0.04f, rect.y1 - rect.y0), this.valueSlider, ref this.value, new UI.SliderMods() { disabled = false });
 			Immediate.Color(Themes.Text);
 			bool swap = slider.sliderPos.x > rect.x1 + 0.1f;
 			float x = slider.sliderPos.x + (swap ? -0.01f : 0.01f);
