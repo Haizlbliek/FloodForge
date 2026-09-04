@@ -24,7 +24,7 @@ public static class UI {
 		font = new Font(Main.AprilFools ? "ComicSand" : "rainworld");
 		rodondo = new Font(Main.AprilFools ? "ComicSand" : "Rodondo");
 
-		ui = Texture.Load("assets/ui.png");
+		ui = Texture.Load(Themes.GetPath("ui.png"));
 		uiAtlas = new([
 			new ("Cross",			new(0f,		0.25f,	0.25f,	0f		)),
 			new ("ArrowUp",			new(0.25f,	0.25f,	0.5f,	0f		)),
