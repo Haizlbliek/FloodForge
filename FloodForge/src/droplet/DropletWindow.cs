@@ -1526,7 +1526,7 @@ public static class DropletWindow {
 		for (int i = 0; i < 3; i++) {
 			float tabWidth = MathF.Max(0.15f, UI.font.Measure(TabNames[i], 0.03f).x + 0.04f);
 			Rect tab = Rect.FromSize(tabPosition, new Vector2(tabWidth, tabHeight));
-			bool hovered = tab.Inside(Mouse.Pos);
+			bool hovered = tab.Inside(Mouse.Pos) && !menuItems.Hovered();
 			bool selected = i == (int) currentTab;
 
 			if (selected || hovered) {
