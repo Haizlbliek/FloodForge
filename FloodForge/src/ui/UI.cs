@@ -559,33 +559,27 @@ public static class UI {
 		return new SliderResponse(CurrentEditable == editable, submitted, new Vector2(x, centerY));
 	}
 
-	public static void TrueCenteredTexture(Texture texture, float centerX, float centerY, float scale) {
+	public static void TrueCenteredTexture(Texture texture, float centerX, float centerY, float scale, bool expandToMinimum = false) {
 		Program.gl.Enable(EnableCap.Blend);
 		Immediate.UseTexture(texture);
 		Immediate.Begin(Immediate.PrimitiveType.QUADS);
 
-		float ratio = (texture.width / (float) texture.height + 1f) * 0.5f;
-		float uvx = 1f / ratio;
-		float uvy = ratio;
-		if (uvx < 1f) {
-			uvy /= uvx;
-			uvx = 1f;
-		}
-		if (uvy < 1f) {
-			uvx /= uvy;
-			uvy = 1f;
-		}
-		uvx *= 0.5f;
-		uvy *= 0.5f;
+		float horizontalScale = scale * 0.5f;
+		float verticalScale = scale * 0.5f;
 
-		Immediate.TexCoord(0.5f - uvx, 0.5f + uvy);
-		Immediate.Vertex(centerX - scale * 0.5f, centerY - scale * 0.5f);
-		Immediate.TexCoord(0.5f + uvx, 0.5f + uvy);
-		Immediate.Vertex(centerX + scale * 0.5f, centerY - scale * 0.5f);
-		Immediate.TexCoord(0.5f + uvx, 0.5f - uvy);
-		Immediate.Vertex(centerX + scale * 0.5f, centerY + scale * 0.5f);
-		Immediate.TexCoord(0.5f - uvx, 0.5f - uvy);
-		Immediate.Vertex(centerX - scale * 0.5f, centerY + scale * 0.5f);
+		if (expandToMinimum || texture.width > texture.height)
+			verticalScale *= texture.height / (float) texture.width;
+		else
+			horizontalScale *= texture.width / (float) texture.height;
+
+		Immediate.TexCoord(0.0f, 1.0f);
+		Immediate.Vertex(centerX - horizontalScale, centerY - verticalScale);
+		Immediate.TexCoord(1.0f, 1.0f);
+		Immediate.Vertex(centerX + horizontalScale, centerY - verticalScale);
+		Immediate.TexCoord(1.0f, 0.0f);
+		Immediate.Vertex(centerX + horizontalScale, centerY + verticalScale);
+		Immediate.TexCoord(0.0f, 0.0f);
+		Immediate.Vertex(centerX - horizontalScale, centerY + verticalScale);
 
 		Immediate.End();
 		Immediate.UseTexture(0);

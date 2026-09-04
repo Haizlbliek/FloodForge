@@ -23,7 +23,8 @@ public class GenericItemObject : DevObject {
 			this.texture,
 			offset.x + this.nodes[0].position.x / 20f,
 			offset.y + this.nodes[0].position.y / 20f,
-			Main.mode == Main.Mode.World ? WorldWindow.SelectorScale : 1f
+			Main.mode == Main.Mode.World ? WorldWindow.SelectorScale : 1f,
+			expandToMinimum: true
 		);
 	}
 }
