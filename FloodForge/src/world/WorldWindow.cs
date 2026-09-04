@@ -1509,7 +1509,7 @@ public static class WorldWindow {
 						}
 						// END CONNECTION DEBUG
 						debugText.Add($"Subregion: {(room.data.subregion == -1 ? "<<NONE>>" : (room.data.subregion < 0 || room.data.subregion >= region.subregions.Count ? $"<<INVALID ID ({room.data.subregion})>>" : region.subregions[room.data.subregion]))}");
-						debugText.Add($"Layer: {room.data.layer}");
+						debugText.Add($"Layer: {room.data.layer + 1}"); // Though the actual value is zero-indexed, the user end pretends to count from 1 (see layer buttons)
 						if (!room.data.merge)
 							debugText.Add("No Merge");
 						if (!room.data.warpable)
