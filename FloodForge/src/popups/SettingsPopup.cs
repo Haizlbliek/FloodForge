@@ -137,8 +137,14 @@ public class SettingsPopup : Popup {
 		public override float SettingWidth {
 			get {
 				float totalWidth = 0f;
+				float maxWidth = 0f;
 				foreach ((_, SettingContainer container) in this.settings) {
-					totalWidth += container.SettingWidth + SettingSpacing;
+					float settingWidth = container.SettingWidth;
+					totalWidth += settingWidth + SettingSpacing;
+					maxWidth = Math.Max(maxWidth, settingWidth);
+				}
+				if (this.forceEqualWidth) {
+					totalWidth = this.settings.Length * maxWidth + (this.settings.Length - 1) * SettingSpacing;
 				}
 				return totalWidth;
 			}
