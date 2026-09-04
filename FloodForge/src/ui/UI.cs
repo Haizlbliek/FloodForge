@@ -38,6 +38,7 @@ public static class UI {
 			new ("BoxFull",			new(0.75f,	0.5f,	1f,		0.25f	)),
 			new ("Minus",			new(0f,		0.75f,	0.25f,	0.5f	)),
 			new ("Plus",			new(0.25f,	0.75f,	0.5f,	0.5f	)),
+			new ("Lock",			new(0.5f,	0.75f,	0.75f,	0.5f	)),
 			new ("ChevronUp",		new(0.75f,	0.75f,	1f,		0.5f	)),
 			new ("ChevronDown",		new(0.75f,	0.5f,	1f,		0.75f	)),
 			new ("ChevronLeft",		new(new Vector2(0.75f, 0.5f), new(0.75f, 0.75f), new(1f, 0.75f), new(1f, 0.5f))),
