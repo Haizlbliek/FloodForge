@@ -2319,6 +2319,11 @@ public static class WorldWindow {
 					}
 				}
 			}
+
+			protected override void CalculateSize() {
+				Vector2 size = UI.font.Measure(this.text, 0.03f);
+				this.Size = Vector2.One * Math.Max(size.x, size.y);
+			}
 		}
 	}
 }
