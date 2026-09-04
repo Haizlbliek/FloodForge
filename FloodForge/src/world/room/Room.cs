@@ -1783,7 +1783,7 @@ public class Room : MapDraggable {
 			yVal = Math.Max(roomCenterY, yVal);
 
 			foreach (string timeline in this.timeline.timelines) {
-				UI.TrueCenteredTexture(Mods.GetTimelineTexture(timeline), startX + (i * scale), yVal, scale);
+				UI.CenteredTexture(Mods.GetTimelineTexture(timeline), startX + (i * scale), yVal, scale);
 				i++;
 			}
 
@@ -1866,7 +1866,7 @@ public class Room : MapDraggable {
 				drawnDen = true;
 				Immediate.Color(1f, 1f, 1f);
 				if (!denEmpty && !creature.type.IsNullOrEmpty()) {
-					UI.TrueCenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
+					UI.CenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
 				}
 				if (creature.lineageTo == null) {
 					UI.font.Write(creature.count.ToString(), rectX + scale * 0.25f, rectY - scale * 0.5f, 0.5f * scale, Font.Align.MiddleCenter);
@@ -1877,7 +1877,7 @@ public class Room : MapDraggable {
 						creature = creature.lineageTo;
 						rectY -= scale;
 						if (!creature.type.IsNullOrEmpty()) {
-							UI.TrueCenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
+							UI.CenteredTexture(Mods.GetCreatureTexture(creature.type), rectX, rectY, scale);
 						}
 						UI.font.Write((int) (chance * 100f) + "%", rectX + scale * 0.25f, rectY + scale + 0.1f - scale * 0.5f, 0.3f * scale, Font.Align.MiddleCenter);
 					}

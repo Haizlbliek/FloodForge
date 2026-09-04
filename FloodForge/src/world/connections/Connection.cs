@@ -130,7 +130,7 @@ public class Connection : ConnectionVisual{
 						break;
 
 					Immediate.Color(1f, 1f, 1f);
-					UI.TrueCenteredTexture(Mods.GetTimelineTexture(timelineEnumerator.Current), topLeftPoint.x + (x * size) + size/2, topLeftPoint.y - (y * size) - size/2, size);
+					UI.CenteredTexture(Mods.GetTimelineTexture(timelineEnumerator.Current), topLeftPoint.x + (x * size) + size/2, topLeftPoint.y - (y * size) - size/2, size);
 
 					if (this.timeline.timelineType == TimelineType.Except) {
 						Immediate.Color(1f, 0f, 0f);

@@ -78,7 +78,7 @@ public class ReplaceRoom : MapDraggable {
 			yVal = Math.Max(roomCenterY, yVal);
 
 			foreach (string timeline in this.timeline.timelines) {
-				UI.TrueCenteredTexture(Mods.GetTimelineTexture(timeline), startX + (i * scale), yVal, scale);
+				UI.CenteredTexture(Mods.GetTimelineTexture(timeline), startX + (i * scale), yVal, scale);
 				i++;
 			}
 

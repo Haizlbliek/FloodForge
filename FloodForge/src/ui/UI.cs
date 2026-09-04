@@ -559,7 +559,7 @@ public static class UI {
 		return new SliderResponse(CurrentEditable == editable, submitted, new Vector2(x, centerY));
 	}
 
-	public static void TrueCenteredTexture(Texture texture, float centerX, float centerY, float scale, bool expandToMinimum = false) {
+	public static void CenteredTexture(Texture texture, float centerX, float centerY, float scale, bool expandToMinimum = false) {
 		Program.gl.Enable(EnableCap.Blend);
 		Immediate.UseTexture(texture);
 		Immediate.Begin(Immediate.PrimitiveType.QUADS);
