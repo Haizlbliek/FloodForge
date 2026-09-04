@@ -1147,9 +1147,9 @@ public static class DropletWindow {
 		hoverText = "";
 
 		if (!Mouse.Left && !Mouse.Right) {
-			if (Keys.JustPressed(Key.Number1)) currentTab = EditorTab.Details;
+			if (Keys.JustPressed(Key.Number1)) { currentTab = EditorTab.Details;  selectionState = -1; }
 			if (Keys.JustPressed(Key.Number2)) currentTab = EditorTab.Geometry;
-			if (Keys.JustPressed(Key.Number3)) currentTab = EditorTab.Camera;
+			if (Keys.JustPressed(Key.Number3)) { currentTab = EditorTab.Camera;  selectionState = -1; }
 		}
 
 		UpdateCamera();
@@ -1547,6 +1547,7 @@ public static class DropletWindow {
 
 			if (hovered && Mouse.JustLeft) {
 				currentTab = (EditorTab) i;
+				selectionState = -1;
 			}
 
 			tabPosition.x += tabWidth + 0.01f;
