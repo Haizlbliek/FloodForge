@@ -2272,14 +2272,14 @@ public static class DropletWindow {
 					new Button("Show Objects", b => {
 						showObjects = !showObjects;
 						b.Text = showObjects ? "Hide objects" : "Show objects";
-					}),
+					}) { preventClose = true },
 
 					new Button("Show Position", b => {
 						showMousePosition = !showMousePosition;
 						b.Text = showMousePosition ? "Hide Position" : "Show Position";
 					}, button => {
 						return currentTab == EditorTab.Geometry;
-					}),
+					}) { preventClose = true },
 				]),
 
 				new Button("Exit Droplet", b =>{
