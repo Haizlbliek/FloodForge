@@ -138,7 +138,7 @@ public abstract class MenuItems {
 			}
 		}
 
-		protected void CalculateSize() {
+		protected virtual void CalculateSize() {
 			this.Size = UI.font.Measure(this.text, 0.03f);
 		}
 
