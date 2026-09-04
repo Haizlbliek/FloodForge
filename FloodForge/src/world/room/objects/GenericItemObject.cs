@@ -24,7 +24,7 @@ public class GenericItemObject : DevObject {
 			offset.x + this.nodes[0].position.x / 20f,
 			offset.y + this.nodes[0].position.y / 20f,
 			Main.mode == Main.Mode.World ? WorldWindow.SelectorScale : 1f,
-			expandToMinimum: true
+			expandMode: UI.ExpandMode.average
 		);
 	}
 }

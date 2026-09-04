@@ -559,18 +559,31 @@ public static class UI {
 		return new SliderResponse(CurrentEditable == editable, submitted, new Vector2(x, centerY));
 	}
 
-	public static void CenteredTexture(Texture texture, float centerX, float centerY, float scale, bool expandToMinimum = false) {
-		Program.gl.Enable(EnableCap.Blend);
-		Immediate.UseTexture(texture);
-		Immediate.Begin(Immediate.PrimitiveType.QUADS);
+	public enum ExpandMode {
+		fit,
+		expand,
+		average
+	}
 
+	public static void CenteredTexture(Texture texture, float centerX, float centerY, float scale, ExpandMode expandMode = ExpandMode.fit) {
 		float horizontalScale = scale * 0.5f;
 		float verticalScale = scale * 0.5f;
 
-		if (expandToMinimum || texture.width > texture.height)
-			verticalScale *= texture.height / (float) texture.width;
+		float aspectRatio = texture.width / (float) texture.height;
+		if ((expandMode == ExpandMode.expand && aspectRatio < 1) || (expandMode == ExpandMode.fit && aspectRatio > 1))
+			verticalScale /= aspectRatio;
 		else
-			horizontalScale *= texture.width / (float) texture.height;
+			horizontalScale *= aspectRatio;
+
+		if (expandMode == ExpandMode.average) {
+			float scaler = 0.5f + 0.25f * scale / horizontalScale;
+			horizontalScale *= scaler;
+			verticalScale *= scaler;
+		}
+
+		Program.gl.Enable(EnableCap.Blend);
+		Immediate.UseTexture(texture);
+		Immediate.Begin(Immediate.PrimitiveType.QUADS);
 
 		Immediate.TexCoord(0.0f, 1.0f);
 		Immediate.Vertex(centerX - horizontalScale, centerY - verticalScale);
