@@ -25,7 +25,7 @@ public class RoomSettingsPopup : ModularPopup {
 
 		this.enclosedRoomToggle = new BoolSettingContainer("Enclosed Room", this.relevantRoom.data.enclosedRoom, this.UpdateEnclosedRoom);
 		this.AddToQueue(this.enclosedRoomToggle);
-		this.waterLevelSlider = new IntSliderSettingContainer("Water Height", this.relevantRoom.data.waterHeight, -2, this.relevantRoom.height, this.UpdateWaterHeight).UpdateWhileDragging(true);
+		this.waterLevelSlider = new IntSliderSettingContainer("Water Height", this.relevantRoom.data.waterHeight, -1, this.relevantRoom.height, this.UpdateWaterHeight).UpdateWhileDragging(true);
 		this.AddToQueue(this.waterLevelSlider);
 		this.waterInFrontToggle = new BoolSettingContainer("Water In Front", this.relevantRoom.data.waterInFront, b => {
 			WorldWindow.worldHistory.Apply(new VariableChange<bool>(this.relevantRoom.data.waterInFront, b, bRedo => this.relevantRoom.data.waterInFront = bRedo));
