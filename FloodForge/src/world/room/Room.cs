@@ -61,7 +61,7 @@ public class Room : MapDraggable {
 	// then, this could also be added to connections so that a room that connects to the same room multiple times isn't allowed to exist without feedback
 
 	protected override bool IsVisible() {
-		return this.CheckTimelineCull();
+		return this.CheckTimelineCull() && WorldWindow.VisibleLayers[this.data.layer];
 	}
 
 	// REVIEW - check for redundancy in terms of edge-case checks
