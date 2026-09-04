@@ -47,7 +47,7 @@ public class ReferenceImage : WorldDraggable {
 				Program.gl.Enable(EnableCap.Blend);
 				Immediate.Alpha(this.opacity);
 			}
-			UI.TrueCenteredTexture(this.image, this.Position.x, this.Position.y, this.Width * 2);
+			UI.CenteredTexture(this.image, this.Position.x, this.Position.y, this.Width * 2);
 			if (this.opacity != 1f) {
 				Program.gl.Disable(EnableCap.Blend);
 				Immediate.Alpha(1f);
