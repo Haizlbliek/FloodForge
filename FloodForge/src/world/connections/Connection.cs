@@ -120,7 +120,7 @@ public class Connection : ConnectionVisual{
 			squareHeight++;
 		}
 
-		Vector2 topLeftPoint = this.BezierMiddlePoint - new Vector2(squareWidth / 2f, -squareHeight / 2f) * size;
+		Vector2 topLeftPoint = this.WorldspaceMiddlePoint - new Vector2(squareWidth / 2f, -squareHeight / 2f) * size;
 
 		if (WorldWindow.VisibleTimelineIcons) {
 			HashSet<string>.Enumerator timelineEnumerator = this.timeline.timelines.GetEnumerator();
