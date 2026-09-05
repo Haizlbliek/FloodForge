@@ -6,7 +6,7 @@ out vec4 color;
 uniform vec4 tintColor;
 uniform vec4 tintColorB;
 uniform float widthClip;
-uniform float fadeMiddle;
+uniform int fadeMiddle;
 
 vec3 lerp(vec3 a, vec3 b, float t) {
 	return (b - a) * t + a;

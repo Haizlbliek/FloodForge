@@ -184,13 +184,11 @@ public abstract class ConnectionVisual {
 			drawQuad = !this.drawStriped || !drawQuad;
 		}
 
-		// REVIEW - find a way to not have fadeMiddle be converted to a float. because that feels. painful.
-		// Convert to int?
 		this.connectionRenderable = new MeshRenderable(this.connectionMesh, Preload.ConnectionShader, [
 				new (0, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) 0),
 				new (1, 4, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 2)),
 				new (2, 1, VertexAttribPointerType.Float, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 4)),
-				new (3, 1, VertexAttribPointerType.Byte, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 5))
+				new (3, 1, VertexAttribPointerType.Int, false, (uint) sizeof(Vertex), (void*) (sizeof(float) * 5))
 			], [ "projection", "model", "tintColor", "tintColorB", "widthClip", "fadeMiddle" ]);
 	}
 
