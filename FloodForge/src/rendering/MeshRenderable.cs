@@ -60,6 +60,9 @@ public class MeshRenderable {
 	public void Uniform1(string name, float val)
 		=> Program.gl.Uniform1(this.shaderVariableLocations[name], val);
 
+	public void Uniform1(string name, int val)
+		=> Program.gl.Uniform1(this.shaderVariableLocations[name], val);
+
 	public void PreDraw() {
 		Program.gl.BindVertexArray(this._vao);
 		Program.gl.UseProgram(this.shaderToUse);
