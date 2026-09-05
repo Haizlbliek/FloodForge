@@ -63,6 +63,8 @@ public static class Immediate {
 		public static VertexData[] verts = new VertexData[4];
 		public static uint active_idx0 = 0;
 		public static uint active_idx1 = 0;
+
+		public static bool preventCall = false;
 	}
 
 	public static unsafe void Initialize() {
@@ -408,7 +410,21 @@ void main() {
 		}
 	}
 
+	public static void PreventCall() {
+		if (DrawState.preventCall)
+			Logger.Error("ERROR: Immediate.PreventCall called when Immediate was already preventing calls!");
+		DrawState.preventCall = true;
+	}
+	
+	public static void AllowCall() {
+		if (!DrawState.preventCall)
+			Logger.Error("ERROR: Immediate.AllowCall called when Immediate was already allowing calls!");
+		DrawState.preventCall = false;
+	}
+
 	public static void Begin(PrimitiveType primType) {
+		if (DrawState.preventCall)
+			return;
 		if (DrawState.drawActive) {
 			Logger.Error("ERROR: Immediate.Begin called when Immediate operation was already active.");
 			return;
@@ -475,6 +491,8 @@ void main() {
 	}
 
 	public static void End() {
+		if (DrawState.preventCall)
+			return;
 		if (!DrawState.drawActive) {
 			Logger.Error("ERROR: Immediate.End called without an active Immediate operation.");
 			return;
