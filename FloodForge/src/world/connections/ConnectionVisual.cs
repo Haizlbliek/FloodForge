@@ -12,13 +12,17 @@ public abstract class ConnectionVisual {
 	protected int segments;
 	protected float directionStrength;
 
+	private const float recalculateThreshold = 0.01f; // visible while up close but hardly noticeable
+	protected Vector2 bezierOriginOffset;
 	protected Vector2[] BezierPoints = [];
 	protected Vector2 BezierMiddlePoint;
+	protected Vector2 WorldspaceMiddlePoint => this.BezierMiddlePoint + this.bezierOriginOffset;
 	public bool recalculateBezier = true;
 
 	protected Mesh connectionMesh = new Mesh();
 	protected MeshRenderable? connectionRenderable;
 
+	public Rect originRelativeAABB;
 	public Rect fittedAABB;
 	public Rect PaddedAABB {
 		get {
@@ -89,74 +93,78 @@ public abstract class ConnectionVisual {
 
 	// REVIEW - generate and interpret bezier points relative to pointA (so that collective movement does not recalculate beziers all the time)
 	public void RecalculateBezier(Vector2 pointA, Vector2 pointB, Vector2 directionA, Vector2 directionB, bool createLoop) {
-		if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
-			if (createLoop) {
-				pointB += directionA * 3;
-			}
-			this.BezierPoints = [pointA, pointB];
-			this.BezierMiddlePoint = createLoop ? pointB : (pointA + pointB) / 2f;
-			this.fittedAABB = new Rect(pointA, pointB);
-		}
-		else {
-			this.directionStrength = (pointA - pointB).Length;
-			Vector2 fromToDirection = pointB - pointA; // from A to B
-			float dotA = Vector2.Dot(directionA.Normalized, fromToDirection.Normalized);
-			float dotB = -Vector2.Dot(directionB.Normalized, fromToDirection.Normalized);
-			if (createLoop) {
-				this.directionStrength = 10f;
-				directionA += new Vector2(-directionA.y, directionA.x);
-				directionB += new Vector2(directionB.y, -directionB.x);
-			}
-			else if (dotA < -0.8f && dotB < -0.8f) {
-				float averageDot = (Mathf.Abs(dotA) + Mathf.Abs(dotB)) / 2f;
-				float dotEffectMagnitude = (averageDot - 0.8f) * 5;
-				Vector2 rotatedDirA = new Vector2(-directionA.y, directionA.x);
-				if (Vector2.Dot(fromToDirection, rotatedDirA) < 0)
-					rotatedDirA *= -1;
-				Vector2 rotatedDirB = new Vector2(-directionB.y, directionB.x);
-				if (Vector2.Dot(-fromToDirection, rotatedDirB) < 0)
-					rotatedDirB *= -1;
-
-				directionA = (directionA + rotatedDirA * dotEffectMagnitude).Normalized * directionA.Length;
-				directionB = (directionB + rotatedDirB * dotEffectMagnitude).Normalized * directionB.Length;
-			}
-			if (this.directionStrength > 300f) {
-				this.directionStrength = this.directionStrength * 0.5f + 150f;
-			}
-			if (directionA.x == -directionB.x || directionA.y == -directionB.y) { // increases directionStrength if shortcuts both face the same direction
-				this.directionStrength *= 0.3333f;
+		this.bezierOriginOffset = pointA;
+		Vector2 pointBOffset = pointB - pointA;
+		Vector2 zeroOrigin = Vector2.Zero;
+		if (this.BezierPoints.Length == 0 || (pointBOffset - this.BezierPoints.Last()).Length > recalculateThreshold) { 
+			if (Settings.ConnectionType.value == Settings.STConnectionType.Linear) {
+				if (createLoop) {
+					pointBOffset += directionA * 3;
+				}
+				this.BezierPoints = [zeroOrigin, pointBOffset];
+				this.BezierMiddlePoint = createLoop ? pointBOffset : pointBOffset * 0.5f;
 			}
 			else {
-				this.directionStrength *= 0.6666f;
-			}
-			directionA *= this.directionStrength;
-			directionB *= this.directionStrength;
-			this.segments = createLoop ? 10 : Math.Clamp((int) (Math.Max((pointA - pointB).Length, (pointA + directionA - (pointB + directionB)).Length) / 2f), 4, 100);
+				this.directionStrength = pointBOffset.Length;
+				float dotA = Vector2.Dot(directionA.Normalized, pointBOffset.Normalized);
+				float dotB = -Vector2.Dot(directionB.Normalized, pointBOffset.Normalized);
+				if (createLoop) {
+					this.directionStrength = 10f;
+					directionA += new Vector2(-directionA.y, directionA.x);
+					directionB += new Vector2(directionB.y, -directionB.x);
+				}
+				else if (dotA < -0.8f && dotB < -0.8f) {
+					float averageDot = (Mathf.Abs(dotA) + Mathf.Abs(dotB)) / 2f;
+					float dotEffectMagnitude = (averageDot - 0.8f) * 5;
+					Vector2 rotatedDirA = new Vector2(-directionA.y, directionA.x);
+					if (Vector2.Dot(pointBOffset, rotatedDirA) < 0)
+						rotatedDirA *= -1;
+					Vector2 rotatedDirB = new Vector2(-directionB.y, directionB.x);
+					if (Vector2.Dot(-pointBOffset, rotatedDirB) < 0)
+						rotatedDirB *= -1;
 
-			float overSegments = 1f / this.segments;
-			List<Vector2> bezierPoints = [];
-			Rect bounds = new Rect(pointA, pointB);
+					directionA = (directionA + rotatedDirA * dotEffectMagnitude).Normalized * directionA.Length;
+					directionB = (directionB + rotatedDirB * dotEffectMagnitude).Normalized * directionB.Length;
+				}
+				if (this.directionStrength > 300f) {
+					this.directionStrength = this.directionStrength * 0.5f + 150f;
+				}
+				if (directionA.x == -directionB.x || directionA.y == -directionB.y) { // increases directionStrength if shortcuts both face the same direction
+					this.directionStrength *= 0.3333f;
+				}
+				else {
+					this.directionStrength *= 0.6666f;
+				}
+				directionA *= this.directionStrength;
+				directionB *= this.directionStrength;
+				this.segments = createLoop ? 10 : Math.Clamp((int) (Math.Max(pointBOffset.Length, (directionA - (pointBOffset + directionB)).Length) / 2f), 4, 100);
 
-			bezierPoints.Add(pointA);
-			for (float t = overSegments; t < 1 + overSegments; t += overSegments) {
-				t = Mathf.Clamp01(t);
-				Vector2 point = MathUtil.BezierCubic(t, pointA, pointA + directionA, pointB + directionB, pointB);
-				bezierPoints.Add(point);
-				bounds = new Rect(
-					Math.Min(bounds.x0, point.x),
-					Math.Min(bounds.y0, point.y),
-					Math.Max(bounds.x1, point.x),
-					Math.Max(bounds.y1, point.y)
-				);
-				if (t == 1)
-					break;
+				float overSegments = 1f / this.segments;
+				List<Vector2> bezierPoints = [];
+				Rect bounds = new Rect(zeroOrigin, pointBOffset);
+
+				bezierPoints.Add(zeroOrigin);
+				for (float t = overSegments; t < 1 + overSegments; t += overSegments) {
+					t = Mathf.Clamp01(t);
+					Vector2 point = MathUtil.BezierCubic(t, zeroOrigin, directionA, pointBOffset + directionB, pointBOffset);
+					bezierPoints.Add(point);
+					bounds = new Rect(
+						Math.Min(bounds.x0, point.x),
+						Math.Min(bounds.y0, point.y),
+						Math.Max(bounds.x1, point.x),
+						Math.Max(bounds.y1, point.y)
+					);
+					if (t == 1)
+						break;
+				}
+				this.BezierPoints = [.. bezierPoints];
+				this.BezierMiddlePoint = MathUtil.BezierCubic(0.5f, zeroOrigin, directionA, pointBOffset + directionB, pointBOffset);
+				this.originRelativeAABB = bounds;
 			}
-			this.BezierPoints = [.. bezierPoints];
-			this.BezierMiddlePoint = MathUtil.BezierCubic(0.5f, pointA, pointA + directionA, pointB + directionB, pointB);
-			this.fittedAABB = bounds;
+			this.GenerateMesh();
 		}
+		this.fittedAABB = this.originRelativeAABB + this.bezierOriginOffset;
 		this.recalculateBezier = false;
-		this.GenerateMesh();
 	}
 
 	protected unsafe void GenerateMesh() {
@@ -172,7 +180,7 @@ public abstract class ConnectionVisual {
 			float lastCurveProgress = i / (float) this.BezierPoints.Length;
 
 			if (drawQuad)
-				this.connectionMesh.AddQuad(this.CreateConnectionLineQuad(pointA.x, pointA.y, pointB.x, pointB.y, lastCurveProgress, curveProgress));
+				this.connectionMesh.AddQuad(CreateConnectionLineQuad(pointA.x, pointA.y, pointB.x, pointB.y, lastCurveProgress, curveProgress));
 			drawQuad = !this.drawStriped || !drawQuad;
 		}
 
@@ -203,10 +211,11 @@ public abstract class ConnectionVisual {
 				return false;
 
 			float lineDist = WorldWindow.SelectorScale / 4f;
-
+			
+			Vector2 localMouse = WorldWindow.worldMouse - this.bezierOriginOffset;
 			Vector2 lastPoint = this.BezierPoints[0];
 			foreach (Vector2 point in this.BezierPoints) {
-				if (MathUtil.LineDistance(WorldWindow.worldMouse, lastPoint, point) < lineDist)
+				if (MathUtil.LineDistance(localMouse, lastPoint, point) < lineDist)
 					return true;
 
 				lastPoint = point;
@@ -215,7 +224,7 @@ public abstract class ConnectionVisual {
 		}
 	}
 
-	public Vertex[] CreateConnectionLineQuad(float x0, float y0, float x1, float y1, float progress0, float progress1, float thickness = 5f) {
+	public static Vertex[] CreateConnectionLineQuad(float x0, float y0, float x1, float y1, float progress0, float progress1, float thickness = 5f) {
 		// Review - use vector flipping instead of trigonometric functions? (since we're only ever rotating by quarter turns anyway)
 		float angle = MathF.Atan2(y1 - y0, x1 - x0);
 
@@ -254,7 +263,7 @@ public abstract class ConnectionVisual {
 			Program.gl.Enable(EnableCap.Blend);
 			(Color connectionColorA, Color connectionColorB) = this.GetColorInformation(fadeMiddle, aVisible, bVisible, hovered);
 
-			Vector2 matrixPos = WorldWindow.cameraOffset;
+			Vector2 matrixPos = WorldWindow.cameraOffset - this.bezierOriginOffset;
 			Vector2 matrixScale = WorldWindow.cameraScale * Main.screenBounds;
 
 			if (this.connectionRenderable != null)
