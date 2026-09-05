@@ -115,11 +115,21 @@ public static class Profiler {
 					contextStack.Peek().context.AddItem(AllSumStopwatches[key].Item1);
 					break;
 				case 1:
-					AllSumStopwatches[key].Item2.Restart();
+					if (!AllSumStopwatches.TryGetValue(key, out (ProfilerSum, Stopwatch) case1Value)) {
+						Logger.Error($"Profiler: Attempted to restart single sum stopwatch with non-sum key {key}");
+						return;
+					}
+
+					case1Value.Item2.Restart();
 					break;
 				case 0:
-					AllSumStopwatches[key].Item1.AddSummedTime(AllSumStopwatches[key].Item2.Elapsed);
-					AllSumStopwatches[key].Item2.Stop();
+					if (!AllSumStopwatches.TryGetValue(key, out (ProfilerSum, Stopwatch) case0Value)) {
+						Logger.Error($"Profiler: Attempted to end sum with non-sum key {key}");
+						return;
+					}
+
+					case0Value.Item1.AddSummedTime(AllSumStopwatches[key].Item2.Elapsed);
+					case0Value.Item2.Stop();
 					break;
 			}
 		}
