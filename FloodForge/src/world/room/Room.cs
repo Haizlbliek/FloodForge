@@ -998,11 +998,12 @@ public class Room : MapDraggable {
 				x++;
 				indexer += marginedWaterHeight;
 				for (;x <= this.width; x++, indexer += marginedWaterHeight) {
-					// until a nonmatching tiletype is encountered OR y >= this.height OR stripHeight >= 4095 (12-bit limit)
-					if (indexer >= waterMeshTiles.Count) indexer = waterMeshTiles.Count - 1;
-					if(x == this.width || stripWidth >= TwelveBitLimit || waterMeshTiles[indexer] != tileType) {
+					// until a nonmatching tiletype is encountered OR y >= this.height OR stripHeight >= 4095 (12-bit limit) OR this tile is a slope
+					if (indexer >= waterMeshTiles.Count)
+						indexer = waterMeshTiles.Count - 1;
+					if (x == this.width || stripWidth >= TwelveBitLimit || waterMeshTiles[indexer] != tileType || (tileType & 4) > 0) {
 						// then: if not solid, add to greedyTiles
-						if(tileType != 1) {
+						if (tileType != 1) {
 							uint data = tileType;
 							data |= stripWidth << 16;
 							greedyTiles.Add(key, data);
@@ -1020,13 +1021,13 @@ public class Room : MapDraggable {
 		for (int x = 0; x < this.width; x++) {
 			for (int y = waterStartPoint; y < this.height; y++) {
 				Vector2i key = new Vector2i(x, y);
-				if(greedyTiles.TryGetValue(key, out uint data)) {
+				if (greedyTiles.TryGetValue(key, out uint data)) {
 					byte tileType = (byte)(data & 15);
 					uint height = 1;
 					uint width = (data & WidthMask) >> 16;
 					for (int y1 = y + 1; y1 < this.height; y1++) {
-						if(height < TwelveBitLimit && greedyTiles.TryGetValue(new (x, y1), out uint compareData)
-							&& (byte)(compareData & 15) == tileType && ((compareData & WidthMask) >> 16) == width) {
+						if (height < TwelveBitLimit && greedyTiles.TryGetValue(new (x, y1), out uint compareData)
+							&& (byte)(compareData & 15) == tileType && ((compareData & WidthMask) >> 16) == width && (tileType & 4) == 0) {
 							greedyTiles.Remove(new (x, y1));
 							height++;
 						}
@@ -1058,7 +1059,7 @@ public class Room : MapDraggable {
 			// tiletypes we need: air, solid, slope
 			if (!addWater)
 				continue;
-			if(tileType == 0) { // if it's air, we add full water
+			if (tileType == 0) { // if it's air, we add full water
 				this.waterMesh.AddQuad(
 					new Vertex(x0, isTopOfwater ? cutoffY0 : y0, Themes.RoomWater),
 					new Vertex(x1, isTopOfwater ? cutoffY0 : y0, Themes.RoomWater),
@@ -1190,7 +1191,7 @@ public class Room : MapDraggable {
 						else if (direction == 2)
 							roomMeshTiles.Add((byte)(6 | bgSolidFlag)); // add x?110 ==> type = slope 2
 						else if (direction == 3)
-							roomMeshTiles.Add((byte)(7 | bgSolidFlag));// add x?111 ==> type = slope 3
+							roomMeshTiles.Add((byte)(7 | bgSolidFlag)); // add x?111 ==> type = slope 3
 					}
 					else
 						roomMeshTiles.Add(bgSolidFlag); // add x?000 ==> type =? bgsolid
@@ -1223,11 +1224,12 @@ public class Room : MapDraggable {
 				x++;
 				indexer += this.height;
 				for (;x <= this.width; x++, indexer += this.height) {
-					// until a nonmatching tiletype is encountered OR y >= this.height OR stripHeight >= 4095 (12-bit limit)
-					if (indexer >= roomMeshTiles.Count) indexer = roomMeshTiles.Count - 1;
-					if(x == this.width || stripWidth >= TwelveBitLimit || roomMeshTiles[indexer] != tileType) {
+					// until a nonmatching tiletype is encountered OR y >= this.height OR stripHeight >= 4095 (12-bit limit) OR this tile is a slope
+					if (indexer >= roomMeshTiles.Count)
+						indexer = roomMeshTiles.Count - 1;
+					if (x == this.width || stripWidth >= TwelveBitLimit || roomMeshTiles[indexer] != tileType || (tileType & 4) > 0) {
 						// then: if not solid, add to greedyTiles
-						if(tileType != 1) {
+						if (tileType != 1) {
 							uint data = tileType;
 							data |= stripWidth << 16;
 							greedyTiles.Add(key, data);
@@ -1245,13 +1247,13 @@ public class Room : MapDraggable {
 		for (int x = 0; x < this.width; x++) {
 			for (int y = 0; y < this.height; y++) {
 				Vector2i key = new Vector2i(x, y);
-				if(greedyTiles.TryGetValue(key, out uint data)) {
+				if (greedyTiles.TryGetValue(key, out uint data)) {
 					byte tileType = (byte)(data & 15);
 					uint height = 1;
 					uint width = (data & WidthMask) >> 16;
 					for (int y1 = y + 1; y1 < this.height; y1++) {
-						if(height < TwelveBitLimit && greedyTiles.TryGetValue(new (x, y1), out uint compareData)
-							&& (byte)(compareData & 15) == tileType && ((compareData & WidthMask) >> 16) == width) {
+						if (height < TwelveBitLimit && greedyTiles.TryGetValue(new (x, y1), out uint compareData)
+							&& (byte)(compareData & 15) == tileType && ((compareData & WidthMask) >> 16) == width && (tileType & 4) == 0) {
 							greedyTiles.Remove(new (x, y1));
 							height++;
 						}
@@ -1281,7 +1283,7 @@ public class Room : MapDraggable {
 				8 => Themes.RoomLayer2Solid,
 				_ => null
 			};
-			if(color != null) { // if air, background or shortcutentrance, draw quad in the right color
+			if (color != null) { // if air, background or shortcutentrance, draw quad in the right color
 				this.roomMesh.AddQuad(
 					new Vertex(x0, y0, color.Value),
 					new Vertex(x1, y0, color.Value),
@@ -1328,8 +1330,9 @@ public class Room : MapDraggable {
 		for (int x = 0; x < this.width; x++) {
 			for (int y = 0; y < this.height; y++) {
 				int idx = x * this.height + y;
-				if(idx >= overlappingTiles.Count) break;
-				if(overlappingTiles[idx] != 0) {
+				if (idx >= overlappingTiles.Count)
+					break;
+				if (overlappingTiles[idx] != 0) {
 					byte type = overlappingTiles[idx];
 
 					float x0 = x;
