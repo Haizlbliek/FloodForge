@@ -350,11 +350,22 @@ public static class WorldParser {
 		string[] connections = data[1].Split(',', StringSplitOptions.TrimEntries);
 		string[] tags = data[2..];
 
+		string[] preProcessorConditions = [];
+
+		if (roomName[0] == '{') {
+			int closingBracketPosition = roomName.IndexOf('}');
+			string conditions = roomName[1..closingBracketPosition];
+			roomName = roomName[(closingBracketPosition + 1)..].Trim();
+			preProcessorConditions = [.. conditions.Split(',')];
+		}
+
 		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 		if (room == null) {
 			room = CreateRoom(roomName);
 			WorldWindow.region.rooms.Add(room);
 		}
+
+		room.preProcessorConditions = preProcessorConditions;
 
 		uint connectionId = 0;
 		for (int j = 0; j < connections.Length; j++) {

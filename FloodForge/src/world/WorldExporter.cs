@@ -707,7 +707,7 @@ public static class WorldExporter {
 					.ThenBy(room => room.tags.Contains("SHELTER") ? 0 : 1)
 					.ThenBy(room => room.cameraCount)
 					.ThenBy(room => room.name, StringComparer.OrdinalIgnoreCase)) {
-			string finalLine = exportRoom.name + " : ";
+			string finalLine = $"{(exportRoom.timeline.IsNeutral() ? PreProcessorsToString(exportRoom.preProcessorConditions) : "")}{exportRoom.name} : ";
 			for (int i = 0; i < exportRoom.connections.Length; i++)
 				finalLine += (i > 0 ? ", " : "") + (exportRoom.connections[i].roomName.IsNullOrEmpty() ? "DISCONNECTED" : (exportRoom.connections[i].roomName + ((CEEE && defaultSpecifyLists[exportRoom.name].Contains(exportRoom.connections[i].roomName)) ? $"<{exportRoom.connections[i].exitID}>" : "")));
 			foreach (string tag in exportRoom.tags)
