@@ -19,6 +19,8 @@ public class Timeline {
 		this.timelines = [..timelines];
 	}
 
+	public static Timeline All => new Timeline(TimelineType.All, []);
+
 	public bool Match(Timeline other) {
 		if (this.timelineType != other.timelineType)
 			return false;
