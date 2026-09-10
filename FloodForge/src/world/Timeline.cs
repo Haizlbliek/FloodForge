@@ -193,6 +193,10 @@ public class Timeline {
 		}
 		return false;
 	}
+
+	public bool IsNeutral() {
+		return this.timelineType == TimelineType.All || (this.timelineType == TimelineType.Except && this.timelines.Count == 0);
+	}
 }
 
 public enum TimelineType {
