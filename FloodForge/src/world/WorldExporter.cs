@@ -304,6 +304,8 @@ public static class WorldExporter {
 		}
 	}
 
+#region  Worldfile Exporting
+
 	// TODO - make this a hundred times more compact (this is a naive implementation)
 	// My first attempt at making this more compact resulted in a slight performance loss, for some reason. Seems like this exporter is less fundamentally inefficient than I thought.
 	public static void ExportWorldFile() {
@@ -717,8 +719,7 @@ public static class WorldExporter {
 		finalWorldFile.Add("END ROOMS");
 
 		finalWorldFile.Add("");
-		// TODO - verify creature losslessness
-		// TODO - merge similar creatures(incl.tl's and ppc) in a room into single lines for readability?
+		// TODO - verify creature losslessness - not really rigorously verified yet
 		finalWorldFile.Add("CREATURES");
 		ExportCreatures(ref finalWorldFile);
 		finalWorldFile.Add("END CREATURES");
@@ -863,132 +864,148 @@ public static class WorldExporter {
 		}
 	}
 
-	public static void ExportCreatures(ref List<string> finalWorldFile) { // this section is directly taken from the old exporter.
-		foreach (Room room in WorldWindow.region.rooms) {
-			for (int i = 0; i < room.dens.Count; i++) {
-				List<DenLineage?> nonLineageCreatures = [];
+#endregion
 
-				Den den = room.GetDen01(i);
-				foreach (DenLineage creature in den.creatures) {
-					if (creature.lineageTo != null)
-						continue;
+#region Creature Exporting
 
-					if (string.IsNullOrEmpty(creature.type) || creature.count == 0)
-						continue;
+	public static void ExportCreatures(ref List<string> finalWorldFile) {
+		List<CreatureRoom> rooms = [];
+		
+		List<Room> orderedRooms = [.. WorldWindow.region.rooms.OrderBy(r => r == WorldWindow.region.offscreenDen)
+			.ThenBy(room => room.name, StringComparer.OrdinalIgnoreCase)];
 
-					nonLineageCreatures.Add(creature);
-				}
+		List<Timeline> encounteredTimelines = [ Timeline.All ];
+		
+		ExportCreaturesLog("Finding creatures");
+		foreach (Room room in orderedRooms) {
+			ExportCreaturesLog($"    room: {room.name}");
+			CreatureRoom thisCreatureRoom = new(room.name, room == WorldWindow.region.offscreenDen);
 
-				for (int j = 0; j < nonLineageCreatures.Count; j++) {
-					string finalCreature = "";
-					DenLineage? mainCreature = nonLineageCreatures[j];
-					if (mainCreature == null)
-						continue;
+			for (int denIndex = 0; denIndex < room.dens.Count; denIndex++) {
+				ExportCreaturesLog($"        den: {denIndex} (true index: {room.roomExitCount + denIndex})");
+				Den den = room.GetDen01(denIndex);
+				ExportDen exportDen = new (room.roomExitCount + denIndex);
 
-					List<DenLineage> sameTimelineCreatures = [mainCreature];
-					nonLineageCreatures[j] = null;
-					for (int k = j + 1; k < nonLineageCreatures.Count; k++) {
-						DenLineage? otherCreature = nonLineageCreatures[k];
-						if (otherCreature == null)
-							continue;
-
-						if (mainCreature.timeline.Match(otherCreature.timeline)) {
-							sameTimelineCreatures.Add(otherCreature);
-							nonLineageCreatures[k] = null;
-						}
-					}
-
-					if (mainCreature.timeline.timelineType != TimelineType.All) {
-						finalCreature += $"({mainCreature.timeline})";
-					}
-
-					if (mainCreature.preProcessorConditions.Length != 0) {
-						finalCreature += PreProcessorsToString(mainCreature.preProcessorConditions);
-					}
-
-					if (room == WorldWindow.region.offscreenDen) {
-						finalCreature += "OFFSCREEN : ";
-					}
-					else {
-						finalCreature += $"{RoomNameCasing(room.name)} : ";
-					}
-
-					bool first = true;
-
-					foreach (DenLineage creature in sameTimelineCreatures) {
-						if (!first)
-							finalCreature += ", ";
-						first = false;
-
-						if (room == WorldWindow.region.offscreenDen) {
-							finalCreature += $"0-{Mods.ExportCreatureName(creature.type)}";
-						}
-						else {
-							finalCreature += $"{i + room.roomExitCount}-{Mods.ExportCreatureName(creature.type)}";
-						}
-						finalCreature += ExportCreatureTags(creature);
-						if (creature.count > 1)
-							finalCreature += $"-{creature.count}";
-					}
-
-					finalWorldFile.Add(finalCreature);
-				}
-			}
-
-			for (int i = 0; i < room.dens.Count; i++) {
-				Den den = room.GetDen01(i);
-				string finalDen = "";
 				foreach (DenLineage lineage in den.creatures) {
-					DenCreature creature = lineage;
-
-					if (creature.lineageTo == null)
-						continue;
-
-					if (lineage.timeline.timelineType != TimelineType.All && lineage.timeline.timelines.Count > 0) {
-						finalDen += "(";
-						finalDen += lineage.timeline;
-						finalDen += ")";
-					}
-
-					if (lineage.preProcessorConditions.Length != 0) {
-						finalDen += PreProcessorsToString(lineage.preProcessorConditions);
-					}
-
-					finalDen += "LINEAGE : ";
-
-					if (room == WorldWindow.region.offscreenDen) {
-						finalDen += "OFFSCREEN : ";
-					}
-					else {
-						finalDen += $"{RoomNameCasing(room.name)} : ";
-					}
-
-					if (room == WorldWindow.region.offscreenDen) {
-						finalDen += "0 : ";
-					}
-					else {
-						finalDen += $"{i + room.roomExitCount} : ";
-					}
-
-					DenCreature current = creature;
-					while (current != null) {
-						finalDen += string.IsNullOrEmpty(current.type) || current.count == 0 ? "NONE" : Mods.ExportCreatureName(current.type);
-
-						finalDen += ExportCreatureTags(current);
-
-						if (current.lineageTo == null) {
-							finalWorldFile.Add(finalDen + "-0");
-							break;
+					ExportCreaturesLog($"            checking lineage: starts with {lineage.type}");
+					bool added = false;
+					if (lineage.lineageTo == null) {
+						ExportCreaturesLog($"                lineageTo == null");
+						if (!string.IsNullOrEmpty(lineage.type) && lineage.count != 0) {
+							ExportCreaturesLog($"                  > added new IndividualExportCreature");
+							IndividualExportCreature exportCreature = new(lineage.type, lineage.tags, lineage.count, lineage.timeline, lineage.preProcessorConditions);
+							exportDen.exportCreatures.Add(exportCreature);
+							added = true;
 						}
-						finalDen += $"-{Math.Clamp(current.lineageChance, 0.0f, 1.0f)}, ";
-
-						current = current.lineageTo;
 					}
+					else {
+						ExportCreaturesLog($"                is lineage");
+						ExportLineage exportLineage = new([], lineage.timeline, lineage.preProcessorConditions);
+						
+						DenCreature currentCreature = lineage;
+						while (currentCreature != null) {
+							exportLineage.creatures.Add(new LineageExportCreature(currentCreature.type, currentCreature.tags, currentCreature.lineageChance));
+							ExportCreaturesLog($"                  > added creature {currentCreature.type} to lineage");
+							currentCreature = currentCreature.lineageTo!;
+						}
+						added = true;
+
+						exportDen.lineages.Add(exportLineage);
+					}
+					if (added && !encounteredTimelines.Any(x => x.Match(lineage.timeline))) {
+						ExportCreaturesLog($"              > added timeline {lineage.timeline} to encounteredTimelines");
+						encounteredTimelines.Add(lineage.timeline);
+					}
+				}
+
+				if (exportDen.IsNotEmpty()) {
+					ExportCreaturesLog($"          > added denID {exportDen.denID} to {thisCreatureRoom.name}");
+					thisCreatureRoom.dens.Add(exportDen);
 				}
 			}
 
+			if (thisCreatureRoom.dens.Count != 0) {
+				ExportCreaturesLog($"      > added room {thisCreatureRoom.name} to rooms");
+				rooms.Add(thisCreatureRoom);
+			}
+		}
+
+		ExportCreaturesLog("Sorting timelines");
+		encounteredTimelines = [.. encounteredTimelines.OrderBy(t => t.ToString())];
+
+		List<(Timeline, List<CreatureRoom>)> perTimelineCreatureRooms = [];
+		
+		ExportCreaturesLog("Splitting creatureRooms per timeline");
+		foreach (Timeline timeline in encounteredTimelines) {
+			ExportCreaturesLog($"    looking at timeline {timeline}");
+			List<CreatureRoom> timelineCreatureRooms = [];
+
+			foreach (CreatureRoom creatureRoom in rooms) {
+				ExportCreaturesLog($"        looking at room {creatureRoom.name}");
+				CreatureRoom roomToWrite = new(creatureRoom.name, creatureRoom.isOffscreenDen);
+
+				foreach (ExportDen den in creatureRoom.dens) {
+					ExportCreaturesLog($"            checking denID {den.denID}");
+					ExportDen denToWrite = new(creatureRoom.isOffscreenDen ? 0 : den.denID);
+
+					foreach (IndividualExportCreature individual in den.exportCreatures) {
+						ExportCreaturesLog($"                checking {individual.type}");
+						if (individual.timeline.Match(timeline)) {
+							denToWrite.exportCreatures.Add(individual);
+							ExportCreaturesLog($"                  > added to exportCreatures");
+						}
+					}
+					foreach (ExportLineage lineage in den.lineages) {
+						ExportCreaturesLog($"                checking lineage starting with {lineage.creatures.First().type}");
+						if (lineage.timeline.Match(timeline)) {
+							ExportCreaturesLog($"                  > added to lineages");
+							denToWrite.lineages.Add(lineage);
+						}
+					}
+					if (denToWrite.IsNotEmpty()) {
+						roomToWrite.dens.Add(denToWrite);
+						ExportCreaturesLog($"              > added den to roomToWrite.dens");
+					}
+				}
+				if (roomToWrite.IsNotEmpty()) {
+					timelineCreatureRooms.Add(roomToWrite);
+					ExportCreaturesLog($"          > added {roomToWrite.name} to timelineCreatureRooms");
+				}
+			}
+			if (timelineCreatureRooms.Count != 0) {
+				perTimelineCreatureRooms.Add((timeline, timelineCreatureRooms));
+				ExportCreaturesLog($"      > added {timeline} list to perTimelineCreatureRooms");
+			}
+		}
+		
+		ExportCreaturesLog("Exporting creatures");
+		bool firstTimeline = true;
+		foreach ((Timeline timeline, List<CreatureRoom> creatureRooms) in perTimelineCreatureRooms) {
+			ExportCreaturesLog($"    exporting {timeline}");
+			if (firstTimeline) {
+				firstTimeline = false;
+			}
+			else {
+				finalWorldFile.Add("");
+			}
+			foreach (CreatureRoom creatureRoom in creatureRooms) {
+				ExportCreaturesLog($"        exporting {creatureRoom.name}");
+				creatureRoom.WriteIndividualCreatures(ref finalWorldFile, timeline);
+			}
+			foreach (CreatureRoom creatureRoom in creatureRooms) {
+				creatureRoom.WriteLineages(ref finalWorldFile, timeline);
+			}
+		}
+
+		bool firstGarbageWorm = true;
+
+		foreach (Room room in WorldWindow.region.rooms) {
 			if (room == WorldWindow.region.offscreenDen)
 				continue;
+			
+			if (firstGarbageWorm)
+				finalWorldFile.Add("");
+			firstGarbageWorm = false;
 
 			foreach (GarbageWormDen worm in room.garbageWormDens) {
 				if (worm.isInvalidGarbageWormDen || worm.count == 0)
@@ -998,30 +1015,27 @@ public static class WorldExporter {
 					finalWorm += $"({worm.timeline})";
 				}
 
-				if (worm.preProcessorConditions.Length != 0) {
-					finalWorm += PreProcessorsToString(worm.preProcessorConditions);
-				}
-
-				finalWorm += $"{RoomNameCasing(room.name)} : {room.GarbageWormHoleIndex}-{Mods.ExportCreatureName(worm.type)}";
+				finalWorm += $"{PreProcessorsToString(worm.preProcessorConditions)}{RoomNameCasing(room.name)} : {room.GarbageWormHoleIndex}-{Mods.ExportCreatureName(worm.type)}";
 				if (worm.count > 1)
 					finalWorm += $"-{worm.count}";
 				finalWorldFile.Add(finalWorm);
 			}
 		}
 
+
 		if (!WorldWindow.region.extraWorldCreatures.IsNullOrEmpty())
 			WorldWindow.region.extraWorldCreatures.Split('\n').ForEach(finalWorldFile.Add);
 	}
 
-	private static string ExportCreatureTags(DenCreature creature) {
-		if (creature.tags.Count <= 0) {
+	private static string ExportCreatureTags(List<DenCreature.Tag> tags) {
+		if (tags.Count <= 0) {
 			return "";
 		}
 
 		string finalTags = "";
 		finalTags += "-{";
 		bool first = true;
-		foreach (DenCreature.Tag tag in creature.tags) {
+		foreach (DenCreature.Tag tag in tags) {
 			if (!first)
 				finalTags += ",";
 			first = false;
@@ -1038,6 +1052,257 @@ public static class WorldExporter {
 		}
 		return finalTags + "}";
 	}
+	
+	// REVIEW - separate DEBUG setting for this?
+	private static void ExportCreaturesLog(string message) {
+		if (Settings.DEBUGVerboseExportLog)
+			Logger.Info(message);
+	}
+
+	public class CreatureRoom {
+		public bool isOffscreenDen;
+		public string name;
+		public List<ExportDen> dens = [];
+
+		public CreatureRoom(string name, bool isOffscreenDen) {
+			this.name = isOffscreenDen ? "OFFSCREEN" : RoomNameCasing(name);
+			this.isOffscreenDen = isOffscreenDen;
+		}
+
+		public bool IsNotEmpty() {
+			return this.dens.Count != 0;
+		}
+
+		public void WriteIndividualCreatures(ref List<string> finalWorldFile, Timeline timeline) {
+			ExportCreaturesLog($"            looking for preProcessorConditions");
+
+			List<string[]> uniquePreProcessors = [];
+			foreach (ExportDen den in this.dens) {
+				ExportCreaturesLog($"                checking den {den.denID}");
+				List<string[]> denUniquePreProcessors = den.GetUniquePreProcessors();
+				foreach (string[] denUniquePreProcessor in denUniquePreProcessors) {
+					ExportCreaturesLog($"                    checking {PreProcessorsToString(denUniquePreProcessor)}");
+					bool foundExisting = false;
+					foreach (string[] existingPreProcessorToCheck in uniquePreProcessors) {
+						if (denUniquePreProcessor.SequenceEqual(existingPreProcessorToCheck)) {
+							foundExisting = true;
+						}
+					}
+					if (!foundExisting) {
+						ExportCreaturesLog($"                      > added preprocessor to uniquePreProcessors");
+						uniquePreProcessors.Add(denUniquePreProcessor);
+					}
+				}
+			}
+
+			ExportCreaturesLog($"            getting separated dens");
+
+			List<ExportDen> allSeparatedDens = [];
+
+			foreach (ExportDen den in this.dens) {
+				List<ExportDen> denSeparatedDens = den.SplitDenByPreProcessors();
+				foreach (ExportDen item in denSeparatedDens) {
+					allSeparatedDens.Add(item);
+				}
+			}
+			ExportCreaturesLog($"                final result:");
+			foreach (ExportDen exportDen in allSeparatedDens) {
+				ExportCreaturesLog($"                  > den {exportDen.denID}: {PreProcessorsToString(exportDen.GetSingularPreProcessor())}");
+			}
+
+			ExportCreaturesLog($"            writing creatures");
+
+			foreach (string[] preProcessorToCheck in uniquePreProcessors) {
+				ExportCreaturesLog($"                finding mergeable dens for {PreProcessorsToString(preProcessorToCheck)}");
+				List<ExportDen> densToMerge = [];
+				foreach (ExportDen den in allSeparatedDens) {
+					ExportCreaturesLog($"                    checking den {den.denID} for merging");
+					if (den.GetSingularPreProcessor().SequenceEqual(preProcessorToCheck)) {
+						densToMerge.Add(den);
+						ExportCreaturesLog($"                      > added den to densToMerge");
+					}
+				}
+
+				if (densToMerge.Count == 0)
+					continue;
+
+				ExportCreaturesLog($"                writing mergeable dens");
+
+				string finalCreature = "";
+
+				if (!timeline.IsNeutral()) {
+					finalCreature += $"({timeline})";
+				}
+
+				finalCreature += $"{PreProcessorsToString(preProcessorToCheck)}{this.name} : ";
+
+				bool first = true;
+
+				foreach (ExportDen denToMerge in densToMerge) {
+					foreach (IndividualExportCreature creature in denToMerge.exportCreatures) {
+						if (!first)
+							finalCreature += ", ";
+						first = false;
+
+						finalCreature += $"{denToMerge.denID}-{Mods.ExportCreatureName(creature.type)}";
+						
+						finalCreature += ExportCreatureTags(creature.tags);
+						if (creature.count > 1)
+							finalCreature += $"-{creature.count}";
+					}
+				}
+
+				finalWorldFile.Add(finalCreature);
+				ExportCreaturesLog($"                  > added \"{finalCreature}\" to finalWorldFile");
+			}
+		}
+
+		public void WriteLineages(ref List<string> finalWorldFile, Timeline timeline) {
+			foreach (ExportDen den in this.dens) {
+				ExportCreaturesLog($"            checking lineages for den {den.denID}");
+				foreach (ExportLineage lineage in den.lineages) {
+					ExportCreaturesLog($"                exporting lineage {den.denID} ({timeline}){PreProcessorsToString(lineage.preProcessorConditions)}");
+					string finalLineage = "";
+
+					if (lineage.timeline.timelineType != TimelineType.All && lineage.timeline.timelines.Count > 0) {
+						finalLineage += $"({lineage.timeline})";
+					}
+
+					finalLineage += $"{PreProcessorsToString(lineage.preProcessorConditions)}LINEAGE : {this.name} : {den.denID} : ";
+
+					for (int lineageIndex = 0; lineageIndex < lineage.creatures.Count; lineageIndex++) {
+						LineageExportCreature creature = lineage.creatures[lineageIndex];
+						finalLineage += string.IsNullOrEmpty(creature.type) ? "NONE" : Mods.ExportCreatureName(creature.type);
+
+						finalLineage += ExportCreatureTags(creature.tags);
+
+						if (lineageIndex + 1 == lineage.creatures.Count) {
+							finalLineage += "-0";
+							break;
+						}
+						finalLineage += $"-{Math.Clamp(creature.lineageChance, 0.0f, 1.0f)}, ";
+					}
+
+					finalWorldFile.Add(finalLineage);
+					ExportCreaturesLog($"                  > added \"{finalLineage}\" to finalWorldFile");
+				}
+			}
+		}
+	}
+
+	public class ExportDen {
+		public int denID;
+		public List<ExportLineage> lineages = [];
+		public List<IndividualExportCreature> exportCreatures = [];
+
+		public ExportDen(int denID) {
+			this.denID = denID;
+		}
+
+		public bool IsNotEmpty() {
+			return this.lineages.Count != 0 || this.exportCreatures.Count != 0;
+		}
+
+		public List<ExportDen> SplitDenByPreProcessors() {
+			ExportCreaturesLog($"                 << running SplitByIndividualPreProcessors on den {this.denID}");
+			List<string[]> conditions = [];
+			List<ExportDen> result = [];
+			foreach (IndividualExportCreature creature in this.exportCreatures) {
+				ExportCreaturesLog($"                 <<     checking creature {creature.type} {PreProcessorsToString(creature.preProcessorConditions)}");
+				bool foundMatch = false;
+				ExportCreaturesLog($"                 <<     looking through previous conditions");
+				for (int i = 0; i < result.Count; i++) {
+					ExportCreaturesLog($"                 <<         checking {PreProcessorsToString(conditions[i])}");
+					if (conditions[i].SequenceEqual(creature.preProcessorConditions)) {
+						ExportCreaturesLog($"                 <<           > match, adding creature to result[i].exportCreatures");
+						result[i].exportCreatures.Add(creature);
+						foundMatch = true;
+						break;
+					}
+				}
+				if (!foundMatch) {
+					ExportCreaturesLog($"                 <<       > no match found, adding new split den to result");
+					ExportDen newSplit = new ExportDen(this.denID);
+					newSplit.exportCreatures.Add(creature);
+					result.Add(newSplit);
+					conditions.Add(creature.preProcessorConditions);
+				}
+			}
+			ExportCreaturesLog($"                 << final result:");
+			for (int i = 0; i < result.Count; i++) {
+				ExportCreaturesLog($"                 <<   > den {result[i].denID}: {PreProcessorsToString(conditions[i])}");
+			}
+			return result;
+		}
+
+		public string[] GetSingularPreProcessor() { // ASSUMES USAGE ON PREPROCESSOR-SPLIT DENS (see SplitByIndividualPreProcessors())
+			string[]? preProcessors = null;
+			foreach (IndividualExportCreature creature in this.exportCreatures) {
+				if (preProcessors != null && !preProcessors.SequenceEqual(creature.preProcessorConditions)) {
+					Logger.Error($"Multiple preProcessors detected in den! [{this.denID}]");
+					Logger.Error($"Existing: {PreProcessorsToString(preProcessors)}");
+					Logger.Error($"New: {PreProcessorsToString(creature.preProcessorConditions)}");
+					return [];
+				}
+				else {
+					preProcessors = creature.preProcessorConditions;
+				}
+			}
+			return preProcessors ?? [];
+		}
+
+		public List<string[]> GetUniquePreProcessors() {
+			List<string[]> uniquePreProcessors = [];
+			foreach (IndividualExportCreature creature in this.exportCreatures) {
+				if (uniquePreProcessors.Count == 0 || !uniquePreProcessors.Any(item => item.SequenceEqual(creature.preProcessorConditions))) {
+					uniquePreProcessors.Add(creature.preProcessorConditions);
+				}
+			}
+			return uniquePreProcessors;
+		}
+	}
+
+	public class ExportLineage {
+		public Timeline timeline;
+		public string[] preProcessorConditions;
+		public List<LineageExportCreature> creatures;
+
+		public ExportLineage(List<LineageExportCreature> creatures, Timeline timeline, string[] preProcessorConditions) {
+			this.creatures = creatures;
+			this.timeline = timeline;
+			this.preProcessorConditions = preProcessorConditions;
+		}
+	}
+
+	public class IndividualExportCreature {
+		public string type;
+		public List<DenCreature.Tag> tags;
+		public Timeline timeline;
+		public string[] preProcessorConditions;
+		public int count;
+
+		public IndividualExportCreature(string type, List<DenCreature.Tag> tags, int count, Timeline timeline, string[] preProcessorConditions) {
+			this.type = type;
+			this.tags = tags;
+			this.timeline = timeline;
+			this.preProcessorConditions = preProcessorConditions;
+			this.count = count;
+		}
+	}
+
+	public class LineageExportCreature {
+		public string type;
+		public List<DenCreature.Tag> tags;
+		public float lineageChance;
+
+		public LineageExportCreature(string type, List<DenCreature.Tag> tags, float lineageChance = 0f) {
+			this.type = type;
+			this.tags = tags;
+			this.lineageChance = lineageChance;
+		}
+	}
+
+#endregion
 
 	// REVIEW: this does not take into account preprocessorconditions - for example, Watcher's WAUA does not contain a "map_WAUA-Watcher.png",
 	// whereas this method does end up creating one.
