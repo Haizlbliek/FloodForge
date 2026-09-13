@@ -595,7 +595,7 @@ public class FilesystemPopup : Popup {
 			bool hover = rect.Inside(Mouse.X, Mouse.Y) && !this.awaitingDeleteConfirmation && IsInScrollView(y);
 
 			Immediate.Color(hover ? Themes.TextHighlight : Themes.Text);
-			UI.font.Write(path + "/", this.bounds.x0 + 0.1f, y, this.fontSize);
+			UI.font.Write(this.FormatPath(path) + "/", this.bounds.x0 + 0.1f, y, this.fontSize);
 			string currentFolderPath = Path.Join(this.currentPath, path);
 
 			if (this.createdFolders.Contains(currentFolderPath)) {
@@ -680,6 +680,36 @@ public class FilesystemPopup : Popup {
 		}
 
 		Program.gl.Disable(EnableCap.ScissorTest);
+	}
+
+	public string FormatPath(string pathToFormat) {
+		if (this.currentPath.EndsWith(Path.Join("workshop", "content")) && pathToFormat == "312520") {
+			return pathToFormat + " (Rain World)";
+		}
+		if (this.currentPath.EndsWith(Path.Join("workshop", "content", "312520"))) {
+			return $"{pathToFormat} ({TryFindModName(Path.Join(this.currentPath, pathToFormat)) ?? "ModID not found"})";
+		}
+		return pathToFormat;
+	}
+
+	public static string? TryFindModName(string pathToFind) {
+		string jsonPath = Path.Join(pathToFind, "modinfo.json");
+		if (File.Exists(jsonPath)) {
+			string[] lines = File.ReadAllLines(jsonPath);
+			foreach (string line in lines) {
+				int colonIndex = line.IndexOf(':');
+				if (colonIndex == -1 || colonIndex >= line.Length)
+					continue;	
+				string key = line[.. colonIndex].Trim();
+				if (key.Equals("\"id\"", StringComparison.InvariantCultureIgnoreCase)) {
+					string modID = line[colonIndex ..];
+					int firstQuote = modID.IndexOf('"');
+					int lastQuote = modID.LastIndexOf('"');
+					return modID[(firstQuote + 1) .. lastQuote];
+				}
+			}
+		}
+		return null;
 	}
 
 	public enum SelectionType {
