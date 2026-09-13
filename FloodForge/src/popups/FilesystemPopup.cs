@@ -313,6 +313,7 @@ public class FilesystemPopup : Popup {
 	public override void Close() {
 		Main.Scroll -= this.Scroll;
 		Main.KeyPress -= this.KeyPress;
+		Program.gl.Disable(EnableCap.ScissorTest);
 
 		base.Close();
 
