@@ -168,7 +168,7 @@ public static class WorldExporter {
 			foreach (Room room in WorldWindow.region.rooms) {
 				Vector2 roomCornerVector = new Vector2(room.width, -room.height) * 0.5f;
 				Vector2 canonPosition = (room.CanonPosition - averageCanonPosition + roomCornerVector) * 3.0f;
-				Vector2 devPosition = (room.DevPosition - averageDevPosition + roomCornerVector) * 2.0f;
+				Vector2 devPosition = (room.DevPosition - averageDevPosition + new Vector2(0f, -room.height)) * 2.0f;
 
 				string line = $"{FancyRoomCasing(room)}: " +
 							$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +
@@ -207,7 +207,7 @@ public static class WorldExporter {
 						continue;
 					Vector2 roomCornerVector = new Vector2(replaceRoom.replacingRoom.width, -replaceRoom.replacingRoom.height) * 0.5f;
 					Vector2 canonPosition = (replaceRoom.CanonPosition - averageCanonPosition + roomCornerVector) * 3.0f;
-					Vector2 devPosition = (replaceRoom.DevPosition - averageDevPosition + roomCornerVector) * 2.0f;
+					Vector2 devPosition = (replaceRoom.DevPosition - averageDevPosition + new Vector2(0f, -replaceRoom.replacingRoom.height)) * 2.0f;
 
 					string line = $"{FancyRoomCasing(replaceRoom.replacedRoom)}: " +
 								$"{canonPosition.x:G12}><{canonPosition.y:G12}><" +

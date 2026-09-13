@@ -113,8 +113,8 @@ public static class WorldParser {
 
 		positionTarget.CanonPosition.x = canonX - sizeSource.width * 0.5f;
 		positionTarget.CanonPosition.y = canonY + sizeSource.height * 0.5f;
-		positionTarget.DevPosition.x = devX - sizeSource.width * 0.5f;
-		positionTarget.DevPosition.y = devY + sizeSource.height * 0.5f;
+		positionTarget.DevPosition.x = devX;
+		positionTarget.DevPosition.y = devY + sizeSource.height;
 
 		if (gridOffsets.FirstOrDefault(x => x.Item1 == room).Item1 == null)
 			gridOffsets.Add((room, new (Mathf.Mod1(positionTarget.CanonPosition.x), Mathf.Mod1(positionTarget.CanonPosition.y))));
