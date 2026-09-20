@@ -412,7 +412,7 @@ public static class WorldWindow {
 				}
 
 				if (hoveringRoom.Visible) {
-					CurrentConnectionVisual = new(true);
+					CurrentConnectionVisual = new(true, false);
 					ConnectionStart = hoveringRoom.GetConnectionConnectPoint((uint)hoveredRoomExit);
 					ConnectionStartClickPosition = worldMouse;
 					ConnectionEnd = ConnectionStart;
@@ -1278,7 +1278,7 @@ public static class WorldWindow {
 				if (!roomA.ValidConnection(connection.roomAExitID) || !roomB.ValidConnection(connection.roomBExitID))
 					continue;
 				bool isLoop = roomA == roomB && connection.roomAExitID == connection.roomBExitID;
-				FreeConnection freeConnection = new(isLoop) { drawStriped = true };
+				FreeConnection freeConnection = new(isLoop, true);
 
 				bool draggableAIsVisible = connection.roomA == replaceRoom.replacedRoom ? replaceRoom.Visible : connection.roomA.Visible;
 				bool draggableBIsVisible = connection.roomB == replaceRoom.replacedRoom ? replaceRoom.Visible : connection.roomB.Visible;
