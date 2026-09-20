@@ -1275,8 +1275,7 @@ public static class WorldParser {
 		RecentFiles.AddPath(worldPath);
 		
 		Logger.Info($"File path: {worldPath}");
-		string parentPath = PathUtil.Parent(worldPath);
-		if (Path.GetFileNameWithoutExtension(PathUtil.Parent(PathUtil.Parent(parentPath))).Equals("modify", StringComparison.InvariantCultureIgnoreCase)) {
+		if (Path.GetFileNameWithoutExtension(PathUtil.Parent(worldPath, 3)).Equals("modify", StringComparison.InvariantCultureIgnoreCase)) {
 			return (false, WorldFileType.modify, $"Cannot load world from inside /modify folder");
 		}
 
@@ -1302,7 +1301,7 @@ public static class WorldParser {
 			if (regionsPath != null)
 				WorldWindow.region.regionsPaths.Add(regionsPath);
 
-			string main = PathUtil.Parent(Path.Combine(WorldWindow.region.exportPath, ".."));
+			string main = PathUtil.Parent(WorldWindow.region.exportPath, 2);
 
 			// `world/xx/world_xx.txt` -> `modify/world/regions.txt`
 			regionsPath = PathUtil.FindDirectory(main, "modify");
@@ -1317,7 +1316,7 @@ public static class WorldParser {
 
 			// `mods/MOD/world/xx/world_xx.txt` -> `world/regions.txt`
 			if (Path.GetFileNameWithoutExtension(PathUtil.Parent(main))?.ToLowerInvariant() == "mods") {
-				regionsPath = PathUtil.FindDirectory(PathUtil.Parent(Path.Combine(main, "..")), "world");
+				regionsPath = PathUtil.FindDirectory(PathUtil.Parent(main, 2), "world");
 				if (regionsPath != null) {
 					regionsPath = PathUtil.FindFile(regionsPath, "regions.txt");
 					if (regionsPath != null)
