@@ -7,7 +7,7 @@ public class WorldDraggable {
 	}
 
 	public bool Draggable => this.IsDraggable();
-	public virtual bool IsDraggable() {
+	protected virtual bool IsDraggable() {
 		return this.Visible;
 	}
 
