@@ -1246,28 +1246,51 @@ public static class WorldParser {
 		return displaynamePath == null ? "" : File.ReadAllText(displaynamePath).Trim();
 	}
 
-	public static bool ImportWorldFile(string worldPath, out string? message) {
-		message = null;
+	private enum WorldFileType {
+		none, //the file doesn't exist
+		regular, //the file is a regular WorldFile
+		modify //the file modifies another WorldFile
+	}
+
+	public static async void ImportWorld(string worldPath, bool showTutorial) {
+		(bool success, WorldFileType type, string? message) = CheckImportFile(worldPath);
+
+		if (success) {
+			if (type == WorldFileType.regular)
+				success = ImportWorldFile(worldPath, out message);
+		}
+
+		if (!success) {
+			Logger.Error(message ?? "Unknown error encountered while importing!");
+			PopupManager.Add($"Importing world failed!\n{(message == null ? "" : $"{message}\n")}View log.txt for more info.");
+		}
+		else if (showTutorial)
+			PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+	}
+
+	private static (bool, WorldFileType, string?) CheckImportFile(string worldPath) {
 		if (!File.Exists(worldPath)) {
-			message = "Cannot find world_XX.txt";
-			Logger.Error(message);
-			return false;
+			return (false, WorldFileType.none, "Cannot find world_XX.txt");
 		}
 		RecentFiles.AddPath(worldPath);
 		
 		Logger.Info($"File path: {worldPath}");
-		string exportPath = PathUtil.Parent(worldPath);
-		if (Path.GetFileNameWithoutExtension(PathUtil.Parent(PathUtil.Parent(exportPath))).Equals("modify", StringComparison.InvariantCultureIgnoreCase)) {
-			message = $"Cannot load world from inside /modify folder";
-			Logger.Error(message);
-			return false;
+		string parentPath = PathUtil.Parent(worldPath);
+		if (Path.GetFileNameWithoutExtension(PathUtil.Parent(PathUtil.Parent(parentPath))).Equals("modify", StringComparison.InvariantCultureIgnoreCase)) {
+			return (false, WorldFileType.modify, $"Cannot load world from inside /modify folder");
 		}
+
+		return (true, WorldFileType.regular, null);
+	}
+
+	private static bool ImportWorldFile(string worldPath, out string? message) {
+		message = null;
 		WorldWindow.importIncomplete = true;
 		WorldWindow.worldHistory.Clear();
 
 		roomAttractiveness.Clear();
 		WorldWindow.Reset();
-		WorldWindow.region.exportPath = exportPath;
+		WorldWindow.region.exportPath = PathUtil.Parent(worldPath);
 		WorldWindow.region.acronym = Path.GetFileNameWithoutExtension(worldPath);
 		WorldWindow.region.acronym = WorldWindow.region.acronym[(WorldWindow.region.acronym.IndexOfReverse('_') + 1)..];
 
