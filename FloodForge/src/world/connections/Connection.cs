@@ -7,10 +7,13 @@ public class Connection : ConnectionVisual{
 	public uint roomAExitID;
 	public uint roomBExitID;
 
-	public override Vector2 PointA => this.roomA.GetConnectionConnectPoint(this.roomAExitID);
-	public override Vector2i DirectionA => this.roomA.GetConnectionConnectDirection(this.roomAExitID);
-	public override Vector2 PointB => this.roomB.GetConnectionConnectPoint(this.roomBExitID);
-	public override Vector2i DirectionB => this.roomB.GetConnectionConnectDirection(this.roomBExitID);
+	public bool invalid;
+	public override bool drawStriped { get => this.invalid; }
+
+	public override Vector2 PointA => this.invalid ? this.roomA.Position : this.roomA.GetConnectionConnectPoint(this.roomAExitID);
+	public override Vector2i DirectionA => this.invalid ? new Vector2i(0, 0) : this.roomA.GetConnectionConnectDirection(this.roomAExitID);
+	public override Vector2 PointB => this.invalid ? this.roomB.Position : this.roomB.GetConnectionConnectPoint(this.roomBExitID);
+	public override Vector2i DirectionB => this.invalid ? new Vector2i(0, 0) : this.roomB.GetConnectionConnectDirection(this.roomBExitID);
 
 	public override bool AVisible => this.roomA.Visible;
 	public override bool BVisible => this.roomB.Visible;
@@ -60,7 +63,11 @@ public class Connection : ConnectionVisual{
 		Color connectionColorA;
 		Color connectionColorB;
 
-		if (roomConnectionHoverColor) {
+		if (this.invalid) {
+			connectionColorA = Themes.RoomConnectionInvalid;
+			connectionColorB = Themes.RoomConnectionInvalid;
+		}
+		else if (roomConnectionHoverColor) {
 			Timeline timeline = this.EffectiveConnectionTimeline;
 			bool warnConflictingTimelines = timeline.timelineType == TimelineType.Only && timeline.timelines.Count == 0;
 			connectionColorA = warnConflictingTimelines ? Themes.TextWarn : Themes.RoomConnectionHover;
@@ -95,9 +102,10 @@ public class Connection : ConnectionVisual{
 	}
 
 	public override void Draw() {
-		if (this.roomAExitID >= this.roomA.roomExits.Count || this.roomBExitID >= this.roomB.roomExits.Count) {
-			Logger.Warn($"Connection {this.roomA.name}[{this.roomAExitID}] - {this.roomB.name}[{this.roomBExitID}] connects to invalid index! Deleting connection.");
-			WorldWindow.connectionsToBeRemoved.Add(this);
+		if (!this.invalid && (this.roomAExitID >= this.roomA.roomExits.Count || this.roomBExitID >= this.roomB.roomExits.Count)) {
+			Logger.Warn($"Connection {this.roomA.name}[{this.roomAExitID}] - {this.roomB.name}[{this.roomBExitID}] connects to invalid index! Converting to InvalidConnection.");
+			this.invalid = true;
+			this.recalculateBezier = true;
 			return;
 		}
 		base.Draw();

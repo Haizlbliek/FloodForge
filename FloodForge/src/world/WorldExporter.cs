@@ -77,6 +77,8 @@ public static class WorldExporter {
 			}
 		}
 		foreach (Connection connection in WorldWindow.region.connections) {
+			if (connection.invalid)
+				continue;
 			if (connection.timeline.timelineType != TimelineType.All) {
 				foreach (string timelineEntry in connection.timeline.timelines) {
 					timelinesInRegion.Add(timelineEntry);
@@ -239,6 +241,8 @@ public static class WorldExporter {
 
 			Logger.Info("- Connections");
 			foreach (Connection connection in WorldWindow.region.connections) {
+				if (connection.invalid)
+					continue;
 				if (connection.roomA.data.hidden == 2 || connection.roomB.data.hidden == 2)
 					continue;
 
@@ -333,6 +337,8 @@ public static class WorldExporter {
 		ExportLog("Connections:");
 		List<ExportConnection> allConnections = [];
 		foreach (Connection connection in WorldWindow.region.connections) {
+			if (connection.invalid)
+				continue;
 			ExportConnection newExportConnection = new(new (connection.roomA.name, (int)connection.roomAExitID, connection.preProcessorConditions), new (connection.roomB.name, (int)connection.roomBExitID, connection.preProcessorConditions), connection.timeline);
 			ExportLog($"    {newExportConnection}");
 			allConnections.Add(newExportConnection);
@@ -1321,6 +1327,8 @@ public static class WorldExporter {
 			}
 		}
 		foreach (Connection connection in WorldWindow.region.connections) {
+			if (connection.invalid)
+				continue;
 			if (connection.timeline.timelineType != TimelineType.All) {
 				foreach (string timelineEntry in connection.timeline.timelines) {
 					timelinesInRegion.Add(timelineEntry);

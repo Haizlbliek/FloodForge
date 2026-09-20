@@ -793,6 +793,14 @@ public class Room : MapDraggable {
 
 		this.GenerateMesh();
 		this.GenerateWaterMesh();
+
+		this.RevalidateConnections();
+	}
+
+	public void RevalidateConnections() {
+		foreach (Connection connection in this.connections) {
+			connection.invalid = false;
+		}
 	}
 
 	public void RegenerateWater() {

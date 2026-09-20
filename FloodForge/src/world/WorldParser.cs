@@ -1163,10 +1163,9 @@ public static class WorldParser {
 				Logger.Warn($"Failed to load connection from {connectionData.roomA.name}({connectionData.roomAExitID}) to {connectionData.roomB?.name ?? $"'{connectionData.roomBName}'"}({connectionData.roomBExitID})");
 				continue;
 			}
-			
+	
 			if (!connectionData.roomA.ValidConnection(connectionData.roomAExitID) || !connectionData.roomB.ValidConnection(connectionData.roomBExitID.Value)) {
-				Logger.Warn($"Failed to load connection from {connectionData.roomA.name}({connectionData.roomAExitID}) to {connectionData.roomB?.name ?? $"'{connectionData.roomBName}'"}({connectionData.roomBExitID}) - Invalid connection indices");
-				continue;
+				Logger.Warn($"Failed to load connection from {connectionData.roomA.name}({connectionData.roomAExitID}) to {connectionData.roomB.name ?? $"'{connectionData.roomBName}'"}({connectionData.roomBExitID}) - Invalid connection indices; adding invalid connection");
 			}
 
 			Connection connection = new Connection(connectionData.roomA, connectionData.roomAExitID, connectionData.roomB, connectionData.roomBExitID.Value);

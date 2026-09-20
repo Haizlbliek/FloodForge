@@ -40,8 +40,6 @@ public static class WorldWindow {
 	public static bool connectionExtensionsEnabled = false;
 
 	public static Region region = null!;
-	// public static List<ConnectionVisual> virtualConnections = [];
-	public static List<Connection> connectionsToBeRemoved = [];
 	public static bool HasExportPath => !WorldWindow.region.exportPath.IsNullOrEmpty();
 	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || !HasExportPath || importIncomplete);
 	public static bool importIncomplete = false;
@@ -1261,11 +1259,6 @@ public static class WorldWindow {
 			}
 			connection.Draw();
 		}
-		foreach (Connection connection in WorldWindow.connectionsToBeRemoved) {
-			connection.roomA.Disconnect(connection);
-			connection.roomB.Disconnect(connection);
-			region.connections.Remove(connection);
-		}
 		// TODO - make this more efficient by not rebuilding every connection every single frame.
 		foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
 			foreach (Connection connection in replaceRoom.replacedRoom.connections) {
@@ -2059,13 +2052,16 @@ public static class WorldWindow {
 
 				new Button("Export Map",
 					button => {
-						if(invalidCreatures.Count == 0){
+						bool hasInvalidCreatures = invalidCreatures.Count != 0;
+						bool hasInvalidConnections = region.connections.FirstOrDefault(c => c.invalid) != null;
+						if(!hasInvalidCreatures && !hasInvalidConnections){
 							WorldWindow.ExportFinished = false;
 							ExportButton();
 						}
 						else{
 							// REVIEW - add a "view invalid creatures" type button, which would show the relevant invalidCreature strings
-							PopupManager.Add(new ConfirmPopup("This region may contain invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(() => { WorldWindow.ExportFinished = false; ExportButton(); }));
+							string invalidItem = (hasInvalidCreatures ? "dens" : "") + (hasInvalidConnections && hasInvalidCreatures ? " and " : "") + (hasInvalidConnections ? "connections" : "");
+							PopupManager.Add(new ConfirmPopup($"This region may contain invalid {invalidItem}!\nExporting may delete or change these {invalidItem}.").SetOkay("Export anyway").Okay(() => { WorldWindow.ExportFinished = false; ExportButton(); }));
 						}
 					},
 					button => {
