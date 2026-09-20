@@ -25,6 +25,13 @@ public class Room : MapDraggable {
 	public string path;
 	public string name;
 
+	public enum RoomLockState {
+		none,
+		partial,
+		full
+	}
+	public RoomLockState lockState;
+
 	public bool isVirtualRoom = false;
 	public List<ReplaceRoom> replaceRooms = [];
 	public List<ReplaceRoom> referencingReplaceRooms = [];
@@ -1608,8 +1615,12 @@ public class Room : MapDraggable {
 		Immediate.Color(hovered ? Themes.RoomBorderHighlight : Themes.RoomBorder);
 		UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.width, renderedPosition.y - this.height);
 
-		if (this.timeline.timelineType != TimelineType.All) {
-			this.DrawTimelineIcons(renderedPosition);
+		this.DrawTimelineIcons(renderedPosition);
+
+		if (this.lockState != RoomLockState.none) {
+			UVRect lockRect = new (renderedPosition.x + this.width - 10f, renderedPosition.y - 10f, renderedPosition.x + this.width, renderedPosition.y);
+			lockRect.AtlasUV("Lock");
+			UI.UVTexture(lockRect, textureColor: this.lockState == RoomLockState.full ? Themes.TextHighlight : Color.White);
 		}
 	}
 
@@ -1808,7 +1819,7 @@ public class Room : MapDraggable {
 	public static void DrawRoomPath(Vector2 position, RoomConnection connectionPathToDraw, bool isHovered, bool isHighlighted) {
 		Vector2 positionOffset = position + new Vector2(0.5f, -0.5f);
 		Immediate.Color(isHovered ? Themes.RoomConnectionHover : Themes.RoomConnection);
-		if (WorldWindow.changeConnectBehaviour && isHighlighted && (WorldWindow.cameraScale < 75f || Keys.Pressed(Silk.NET.Input.Key.P))) {
+		if (WorldWindow.changeConnectBehaviour && isHighlighted && WorldWindow.cameraScale < 75f) {
 			bool drawnExit = false;
 			foreach (Vector2i dot in connectionPathToDraw.path.Path) { // DRAWING SHORTCUT PATH, STARTS FROM ROOMEXIT, WHICH IS WHY IT DRAWS THE FIRST ORB BIGGER
 				UI.FillCircle(dot * new Vector2(1, -1) + positionOffset, drawnExit ? 0.4f : 0.5f, 8);

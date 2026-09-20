@@ -8,6 +8,7 @@ namespace FloodForge.World;
 
 public class RoomSettingsPopup : ModularPopup {
 	public Room relevantRoom;
+	private HorizontalElement lockButtons; 
 	private BoolSettingContainer enclosedRoomToggle;
 	private IntSliderSettingContainer waterLevelSlider;
 	private BoolSettingContainer waterInFrontToggle;
@@ -23,6 +24,30 @@ public class RoomSettingsPopup : ModularPopup {
 	public RoomSettingsPopup(Room relevantRoom) {
 		this.relevantRoom = relevantRoom;
 
+		this.lockButtons = new HorizontalElement([
+			("label", new LabelContainer("LockState", Font.Align.MiddleLeft)),
+			("buttons", new VerticalElement([
+				("nolock", new ButtonContainer("Unlocked", () => {
+					WorldWindow.worldHistory.Apply(new VariableChange<Room.RoomLockState>(this.relevantRoom.lockState, Room.RoomLockState.none, l => this.relevantRoom.lockState = l));
+				}).SetContextCheck(b => {
+					b.settingName = this.relevantRoom.lockState == Room.RoomLockState.none ? "Unlocked" : "Unlock";
+					return this.relevantRoom.lockState != Room.RoomLockState.none;
+				}, true, true)),
+				("partial", new ButtonContainer("Partially locked", () => {
+					WorldWindow.worldHistory.Apply(new VariableChange<Room.RoomLockState>(this.relevantRoom.lockState, Room.RoomLockState.partial, l => this.relevantRoom.lockState = l));
+				}).SetContextCheck(b => {
+					b.settingName = this.relevantRoom.lockState == Room.RoomLockState.partial ? "Partially locked" : "Set Partial";
+					return this.relevantRoom.lockState != Room.RoomLockState.partial;
+				}, true, true)),
+				("full", new ButtonContainer("Fully locked", () => {
+					WorldWindow.worldHistory.Apply(new VariableChange<Room.RoomLockState>(this.relevantRoom.lockState, Room.RoomLockState.full, l => this.relevantRoom.lockState = l));
+				}).SetContextCheck(b => {
+					b.settingName = this.relevantRoom.lockState == Room.RoomLockState.full ? "Fully locked" : "Set Full";
+					return this.relevantRoom.lockState != Room.RoomLockState.full;
+				}, true, true))
+			]))
+		]);
+		this.AddToQueue(this.lockButtons);
 		this.enclosedRoomToggle = new BoolSettingContainer("Enclosed Room", this.relevantRoom.data.enclosedRoom, this.UpdateEnclosedRoom);
 		this.AddToQueue(this.enclosedRoomToggle);
 		this.waterLevelSlider = new IntSliderSettingContainer("Water Height", this.relevantRoom.data.waterHeight, -1, this.relevantRoom.height, this.UpdateWaterHeight).UpdateWhileDragging(true);
