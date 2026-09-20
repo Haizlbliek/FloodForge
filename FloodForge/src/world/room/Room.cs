@@ -1629,7 +1629,7 @@ public class Room : MapDraggable {
 		if (this.data.lockState != RoomLockState.none) {
 			UVRect lockRect = new (renderedPosition.x + this.width - 10f, renderedPosition.y - 10f, renderedPosition.x + this.width, renderedPosition.y);
 			lockRect.AtlasUV("Lock");
-			UI.UVTexture(lockRect, textureColor: this.data.lockState == RoomLockState.full ? Themes.TextHighlight : Color.White);
+			UI.UVTexture(lockRect, textureColor: Themes.TextHighlight);
 		}
 	}
 

@@ -8,8 +8,7 @@ public enum RoomExitType {
 
 public enum RoomLockState {
 	none,
-	partial,
-	full
+	locked
 }
 
 public class RoomData {

@@ -33,17 +33,11 @@ public class RoomSettingsPopup : ModularPopup {
 					b.settingName = this.relevantRoom.data.lockState == RoomLockState.none ? "Unlocked" : "Unlock";
 					return this.relevantRoom.data.lockState != RoomLockState.none;
 				}, true, true)),
-				("partial", new ButtonContainer("Partially locked", () => {
-					WorldWindow.worldHistory.Apply(new VariableChange<RoomLockState>(this.relevantRoom.data.lockState, RoomLockState.partial, l => this.relevantRoom.data.lockState = l));
+				("full", new ButtonContainer("Locked", () => {
+					WorldWindow.worldHistory.Apply(new VariableChange<RoomLockState>(this.relevantRoom.data.lockState, RoomLockState.locked, l => this.relevantRoom.data.lockState = l));
 				}).SetContextCheck(b => {
-					b.settingName = this.relevantRoom.data.lockState == RoomLockState.partial ? "Partially locked" : "Set Partial";
-					return this.relevantRoom.data.lockState != RoomLockState.partial;
-				}, true, true)),
-				("full", new ButtonContainer("Fully locked", () => {
-					WorldWindow.worldHistory.Apply(new VariableChange<RoomLockState>(this.relevantRoom.data.lockState, RoomLockState.full, l => this.relevantRoom.data.lockState = l));
-				}).SetContextCheck(b => {
-					b.settingName = this.relevantRoom.data.lockState == RoomLockState.full ? "Fully locked" : "Set Full";
-					return this.relevantRoom.data.lockState != RoomLockState.full;
+					b.settingName = this.relevantRoom.data.lockState == RoomLockState.locked ? "Locked" : "Lock";
+					return this.relevantRoom.data.lockState != RoomLockState.locked;
 				}, true, true))
 			]))
 		]);
