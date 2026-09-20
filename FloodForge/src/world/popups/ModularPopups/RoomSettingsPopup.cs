@@ -28,22 +28,22 @@ public class RoomSettingsPopup : ModularPopup {
 			("label", new LabelContainer("LockState", Font.Align.MiddleLeft)),
 			("buttons", new VerticalElement([
 				("nolock", new ButtonContainer("Unlocked", () => {
-					WorldWindow.worldHistory.Apply(new VariableChange<Room.RoomLockState>(this.relevantRoom.lockState, Room.RoomLockState.none, l => this.relevantRoom.lockState = l));
+					WorldWindow.worldHistory.Apply(new VariableChange<RoomLockState>(this.relevantRoom.data.lockState, RoomLockState.none, l => this.relevantRoom.data.lockState = l));
 				}).SetContextCheck(b => {
-					b.settingName = this.relevantRoom.lockState == Room.RoomLockState.none ? "Unlocked" : "Unlock";
-					return this.relevantRoom.lockState != Room.RoomLockState.none;
+					b.settingName = this.relevantRoom.data.lockState == RoomLockState.none ? "Unlocked" : "Unlock";
+					return this.relevantRoom.data.lockState != RoomLockState.none;
 				}, true, true)),
 				("partial", new ButtonContainer("Partially locked", () => {
-					WorldWindow.worldHistory.Apply(new VariableChange<Room.RoomLockState>(this.relevantRoom.lockState, Room.RoomLockState.partial, l => this.relevantRoom.lockState = l));
+					WorldWindow.worldHistory.Apply(new VariableChange<RoomLockState>(this.relevantRoom.data.lockState, RoomLockState.partial, l => this.relevantRoom.data.lockState = l));
 				}).SetContextCheck(b => {
-					b.settingName = this.relevantRoom.lockState == Room.RoomLockState.partial ? "Partially locked" : "Set Partial";
-					return this.relevantRoom.lockState != Room.RoomLockState.partial;
+					b.settingName = this.relevantRoom.data.lockState == RoomLockState.partial ? "Partially locked" : "Set Partial";
+					return this.relevantRoom.data.lockState != RoomLockState.partial;
 				}, true, true)),
 				("full", new ButtonContainer("Fully locked", () => {
-					WorldWindow.worldHistory.Apply(new VariableChange<Room.RoomLockState>(this.relevantRoom.lockState, Room.RoomLockState.full, l => this.relevantRoom.lockState = l));
+					WorldWindow.worldHistory.Apply(new VariableChange<RoomLockState>(this.relevantRoom.data.lockState, RoomLockState.full, l => this.relevantRoom.data.lockState = l));
 				}).SetContextCheck(b => {
-					b.settingName = this.relevantRoom.lockState == Room.RoomLockState.full ? "Fully locked" : "Set Full";
-					return this.relevantRoom.lockState != Room.RoomLockState.full;
+					b.settingName = this.relevantRoom.data.lockState == RoomLockState.full ? "Fully locked" : "Set Full";
+					return this.relevantRoom.data.lockState != RoomLockState.full;
 				}, true, true))
 			]))
 		]);

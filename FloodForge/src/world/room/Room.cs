@@ -25,13 +25,6 @@ public class Room : MapDraggable {
 	public string path;
 	public string name;
 
-	public enum RoomLockState {
-		none,
-		partial,
-		full
-	}
-	public RoomLockState lockState;
-
 	public bool isVirtualRoom = false;
 	public List<ReplaceRoom> replaceRooms = [];
 	public List<ReplaceRoom> referencingReplaceRooms = [];
@@ -1617,10 +1610,10 @@ public class Room : MapDraggable {
 
 		this.DrawTimelineIcons(renderedPosition);
 
-		if (this.lockState != RoomLockState.none) {
+		if (this.data.lockState != RoomLockState.none) {
 			UVRect lockRect = new (renderedPosition.x + this.width - 10f, renderedPosition.y - 10f, renderedPosition.x + this.width, renderedPosition.y);
 			lockRect.AtlasUV("Lock");
-			UI.UVTexture(lockRect, textureColor: this.lockState == RoomLockState.full ? Themes.TextHighlight : Color.White);
+			UI.UVTexture(lockRect, textureColor: this.data.lockState == RoomLockState.full ? Themes.TextHighlight : Color.White);
 		}
 	}
 
