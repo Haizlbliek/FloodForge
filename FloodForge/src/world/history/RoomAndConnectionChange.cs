@@ -20,6 +20,10 @@ public class RoomAndConnectionChange : Change {
 		this.rooms.Add(room);
 	}
 
+	public bool IsEmpty() {
+		return this.rooms.Count == 0 && this.externalConnections.Count == 0;
+	}
+
 	public Room[] GetRooms() {
 		return [..this.rooms];
 	}

@@ -14,6 +14,10 @@ public class ReplaceRoomChange : Change {
 		this.affectedReplaceRooms = [];
 	}
 
+	public bool IsEmpty() {
+		return this.affectedReplaceRooms.Count == 0;
+	}
+
 	public void AddReplaceRoom(ReplaceRoom replaceRoom) {
 		this.affectedReplaceRooms.Add(replaceRoom);
 	}
