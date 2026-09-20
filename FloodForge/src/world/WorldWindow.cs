@@ -645,7 +645,7 @@ public static class WorldWindow {
 				if (selectingState == SelectingState.None) { // if we weren't selecting anything before
 					WorldDraggable? draggable = HoveringDraggable; // get hovering room -> WorldDraggable
 
-					if (draggable != null && draggable.Draggable) { // if there's a hovering room (WorldDraggable)
+					if (draggable != null && draggable.Selectable) { // if there's a hovering room (WorldDraggable)
 						holdingDraggable = draggable; // start holding said room (WorldDraggable)
 						holdingStart = worldMouse; // set the hold's start point
 						draggablePossibleSelect = draggable; // we might end up wanting to select this room (WorldDraggable)
@@ -693,6 +693,8 @@ public static class WorldWindow {
 				if (roomSnap) {
 					MoveChange draggableMoveChange = new MoveChange();
 					foreach (WorldDraggable draggable in selectedDraggables) {
+						if (!draggable.Draggable)
+							continue;
 						if (draggable is MapDraggable mapDraggable) {
 							Vector2 DevPosDiff = (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) ? mapDraggable.DevPosition.Rounded() - mapDraggable.DevPosition : Vector2.Zero;
 							Vector2 CanonPosDiff = (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) ? mapDraggable.CanonPosition.Rounded() - mapDraggable.CanonPosition : Vector2.Zero;
@@ -703,21 +705,22 @@ public static class WorldWindow {
 							draggableMoveChange.AddDraggable(draggable, diff, diff);
 						}
 					}
-					worldHistory.Apply(draggableMoveChange);
+					if (!draggableMoveChange.IsEmpty())
+						worldHistory.Apply(draggableMoveChange);
 				}
 			}
 
 			if (selectingState == SelectingState.Selecting) { // if we were creating a selectionbox and just released
 				foreach (Room room in region.rooms) { // check what rooms are in the box and add them to the selectedrooms
-					if (room.Intersects(selectionStart, selectionEnd) && room.Draggable)
+					if (room.Intersects(selectionStart, selectionEnd) && room.Selectable)
 						selectedDraggables.Add(room);
 				}
 				foreach (ReferenceImage image in referenceImages) {
-					if (image.Intersects(selectionStart, selectionEnd) && image.Draggable)
+					if (image.Intersects(selectionStart, selectionEnd) && image.Selectable)
 						selectedDraggables.Add(image);
 				}
 				foreach (ReplaceRoom replaceRoom in replaceRooms) {
-					if (replaceRoom.Intersects(selectionStart, selectionEnd) && replaceRoom.Draggable)
+					if (replaceRoom.Intersects(selectionStart, selectionEnd) && replaceRoom.Selectable)
 						selectedDraggables.Add(replaceRoom);
 				}
 			}
@@ -761,6 +764,8 @@ public static class WorldWindow {
 			offset.Round();
 
 		foreach (WorldDraggable draggable in selectedDraggables) {
+			if (!draggable.Draggable)
+				continue;
 			Vector2 newPos = draggable.Position;
 			if (roomSnap)
 				newPos.Round();
@@ -797,8 +802,10 @@ public static class WorldWindow {
 			moveChange.Merge(change);
 		}
 		else { // else, apply the change
-			worldHistory.Apply(change);
-			continueDrag = true;
+			if (!change.IsEmpty()) {
+				worldHistory.Apply(change);
+				continueDrag = true;
+			}
 		}
 	}
 
@@ -810,7 +817,7 @@ public static class WorldWindow {
 
 	private static void KeybindDelete() {
 		Connection? connection = region.connections.FirstOrDefault(c => c.ConnectionVisible && c.roomA.Visible && c.roomB.Visible && c.Hovered);
-		if (connection != null) {
+		if (connection != null && connection.roomA.data.lockState != RoomLockState.locked && connection.roomB.data.lockState != RoomLockState.locked) {
 			DeleteConnection(connection);
 			return;
 		}

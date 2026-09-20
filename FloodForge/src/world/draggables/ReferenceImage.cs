@@ -22,8 +22,13 @@ public class ReferenceImage : WorldDraggable {
 	}
 	public bool lockImage = false;
 	public bool drawUnderGrid = true;
+
+	protected override bool IsSelectable() {
+		return base.IsSelectable();
+	}
+
 	protected override bool IsDraggable() {
-		return this.Visible & !this.lockImage;
+		return base.IsDraggable() & !this.lockImage;
 	}
 	public Rect imageBounds;
 

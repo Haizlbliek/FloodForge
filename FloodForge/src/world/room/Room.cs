@@ -64,6 +64,14 @@ public class Room : MapDraggable {
 		return this.CheckTimelineCull() && WorldWindow.VisibleLayers[this.data.layer];
 	}
 
+	protected override bool IsSelectable() {
+		return base.IsSelectable();
+	}
+
+	protected override bool IsDraggable() {
+		return base.IsDraggable();
+	}
+
 	// REVIEW - check for redundancy in terms of edge-case checks
 	public bool CheckTimelineCull() {
 		if (WorldWindow.VisibleTimeline.timelineType == TimelineType.All)

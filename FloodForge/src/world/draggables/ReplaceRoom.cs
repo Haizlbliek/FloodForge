@@ -17,6 +17,14 @@ public class ReplaceRoom : MapDraggable {
 		return WorldWindow.VisibleTimeline.OverlapsWith(this.timeline) && !this.IsHidden;
 	}
 
+	protected override bool IsSelectable() {
+		return base.IsSelectable();
+	}
+
+	protected override bool IsDraggable() {
+		return base.IsDraggable();
+	}
+
 	public ReplaceRoom(Room replacingRoom, Room replacedRoom, Timeline replacingTimeline, string[] preProcessorConditions) {
 		this.replacingRoom = replacingRoom;
 		this.replacedRoom = replacedRoom;
