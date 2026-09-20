@@ -69,7 +69,15 @@ public class Room : MapDraggable {
 	}
 
 	protected override bool IsDraggable() {
-		return base.IsDraggable();
+		return base.IsDraggable() && this.data.lockState != RoomLockState.locked;
+	}
+
+	public bool LockedByConnections() {
+		foreach (Connection connection in this.connections) {
+			if (connection.roomA.data.lockState == RoomLockState.locked || connection.roomB.data.lockState == RoomLockState.locked)
+				return true;
+		}
+		return false;
 	}
 
 	// REVIEW - check for redundancy in terms of edge-case checks

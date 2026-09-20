@@ -434,8 +434,8 @@ public static class WorldWindow {
 					NewConnection.roomBExitID = (uint)hoveredRoomExit;
 					CurrentConnectionValid = true;
 					CurrentConnectionWarn = false;
-
-					if (NewConnection.roomA == NewConnection.roomB && !connectionExtensionsEnabled) {
+					
+					if (NewConnection.roomA.data.lockState == RoomLockState.locked || NewConnection.roomB.data.lockState == RoomLockState.locked || (NewConnection.roomA == NewConnection.roomB && !connectionExtensionsEnabled)) {
 						CurrentConnectionValid = false;
 					}
 					else {
@@ -556,7 +556,7 @@ public static class WorldWindow {
 							DeleteConnection(popupConnection);
 							connectionSettingsPopup?.Close();
 						}
-					)
+					).SetContextCheck(b => popupConnection.roomA.data.lockState != RoomLockState.locked && popupConnection.roomB.data.lockState != RoomLockState.locked, true, true)
 				]).Translate(Mouse.Pos, true).Title("Settings - Connection");
 				PopupManager.Add(connectionSettingsPopup);
 			}
@@ -842,7 +842,8 @@ public static class WorldWindow {
 					foreach (WorldDraggable room1 in selectedDraggables) {
 						if (room1 is OffscreenRoom || room1 is not Room room2)
 							continue;
-
+						if (room2.LockedByConnections())
+							continue;
 						change.AddRoom(room2);
 						region.connections.Where(c => c.roomA == room2 && !selectedDraggables.Contains(c.roomB) || (c.roomB == room2 && !selectedDraggables.Contains(c.roomA)))
 							.ForEach(change.AddConnection);
@@ -853,7 +854,8 @@ public static class WorldWindow {
 					selectedDraggables.Clear();
 				}
 
-				worldHistory.Apply(new MassChange([change, replaceRoomChange]));
+				if (!change.IsEmpty())
+					worldHistory.Apply(new MassChange([change, replaceRoomChange]));
 				return;
 			}
 			else if (draggable is ReferenceImage image) {
@@ -1031,12 +1033,17 @@ public static class WorldWindow {
 						camRelativePosition += replaceRoom.replacingRoom.Position - replaceRoom.Position;
 					}
 					if (roomToLoad != null) {
-						if (roomToLoad.valid) {
-							Main.mode = Main.Mode.Droplet;
-							DropletWindow.LoadRoom(roomToLoad, camRelativePosition);
+						if (roomToLoad.data.lockState == RoomLockState.none) {
+							if (roomToLoad.valid) {
+								Main.mode = Main.Mode.Droplet;
+								DropletWindow.LoadRoom(roomToLoad, camRelativePosition);
+							}
+							else {
+								PopupManager.Add(new InfoPopup($"Unable to open {roomToLoad.name}\nInvalid room!"));
+							}
 						}
 						else {
-							PopupManager.Add(new InfoPopup($"Unable to open {roomToLoad.name}\nInvalid room!"));
+							PopupManager.Add(new InfoPopup($"Unable to open {roomToLoad.name}\nCannot open a locked room!"));
 						}
 					}
 					else {
