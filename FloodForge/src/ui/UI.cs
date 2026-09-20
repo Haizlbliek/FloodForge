@@ -406,6 +406,28 @@ public static class UI {
 		return new ButtonResponse(highlight && Mouse.JustLeft && !mods.disabled, highlight);
 	}
 
+	public static void UVTexture(UVRect rect, Texture? texture = null, Color? textureColor = null, Vector2? textureScale = null) {
+		texture ??= ui;
+		Color color = textureColor ?? Color.White;
+		Vector2 scale = textureScale ?? Vector2.One;
+
+		Program.gl.Enable(EnableCap.Blend);
+		Immediate.UseTexture(texture);
+		Immediate.Color(color);
+		Immediate.Begin(Immediate.PrimitiveType.QUADS);
+		Immediate.TexCoord(rect.uv0.x, rect.uv0.y);
+		Immediate.Vertex(Mathf.LerpUnclamped(rect.x1, rect.x0, 0.5f + scale.x * 0.5f), Mathf.LerpUnclamped(rect.y1, rect.y0, 0.5f + scale.y * 0.5f));
+		Immediate.TexCoord(rect.uv1.x, rect.uv1.y);
+		Immediate.Vertex(Mathf.LerpUnclamped(rect.x0, rect.x1, 0.5f + scale.x * 0.5f), Mathf.LerpUnclamped(rect.y1, rect.y0, 0.5f + scale.y * 0.5f));
+		Immediate.TexCoord(rect.uv2.x, rect.uv2.y);
+		Immediate.Vertex(Mathf.LerpUnclamped(rect.x0, rect.x1, 0.5f + scale.x * 0.5f), Mathf.LerpUnclamped(rect.y0, rect.y1, 0.5f + scale.y * 0.5f));
+		Immediate.TexCoord(rect.uv3.x, rect.uv3.y);
+		Immediate.Vertex(Mathf.LerpUnclamped(rect.x1, rect.x0, 0.5f + scale.x * 0.5f), Mathf.LerpUnclamped(rect.y0, rect.y1, 0.5f + scale.y * 0.5f));
+		Immediate.End();
+		Immediate.UseTexture(0);
+		Program.gl.Disable(EnableCap.Blend);
+	}
+
 	public static ButtonResponse TextureButton(UVRect rect, TextureButtonMods? mods = null) {
 		mods ??= new TextureButtonMods();
 		bool can = CanClick;
@@ -414,21 +436,7 @@ public static class UI {
 		Immediate.Color(mods.disabled ? Themes.ButtonDisabled : Themes.Button);
 		ButtonFillRect(rect);
 
-		Program.gl.Enable(EnableCap.Blend);
-		Immediate.UseTexture(mods.texture);
-		Immediate.Color(mods.textureColor);
-		Immediate.Begin(Immediate.PrimitiveType.QUADS);
-		Immediate.TexCoord(rect.uv0.x, rect.uv0.y);
-		Immediate.Vertex(Mathf.LerpUnclamped(rect.x1, rect.x0, 0.5f + mods.textureScale.x * 0.5f), Mathf.LerpUnclamped(rect.y1, rect.y0, 0.5f + mods.textureScale.y * 0.5f));
-		Immediate.TexCoord(rect.uv1.x, rect.uv1.y);
-		Immediate.Vertex(Mathf.LerpUnclamped(rect.x0, rect.x1, 0.5f + mods.textureScale.x * 0.5f), Mathf.LerpUnclamped(rect.y1, rect.y0, 0.5f + mods.textureScale.y * 0.5f));
-		Immediate.TexCoord(rect.uv2.x, rect.uv2.y);
-		Immediate.Vertex(Mathf.LerpUnclamped(rect.x0, rect.x1, 0.5f + mods.textureScale.x * 0.5f), Mathf.LerpUnclamped(rect.y0, rect.y1, 0.5f + mods.textureScale.y * 0.5f));
-		Immediate.TexCoord(rect.uv3.x, rect.uv3.y);
-		Immediate.Vertex(Mathf.LerpUnclamped(rect.x1, rect.x0, 0.5f + mods.textureScale.x * 0.5f), Mathf.LerpUnclamped(rect.y0, rect.y1, 0.5f + mods.textureScale.y * 0.5f));
-		Immediate.End();
-		Immediate.UseTexture(0);
-		Program.gl.Disable(EnableCap.Blend);
+		UVTexture(rect, mods.texture, mods.textureColor, mods.textureScale);
 
 		Immediate.Color(mods.disabled ? Themes.Border : ((highlight || mods.selected) ? Themes.BorderHighlight : Themes.Border));
 		ButtonStrokeRect(rect);
