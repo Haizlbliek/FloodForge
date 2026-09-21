@@ -1009,8 +1009,12 @@ public static class WorldWindow {
 				connection.conditionalPopup = PopupManager.Add(new ConditionalPopup(connection));
 			}
 			else if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
-				ConditionalPopup? conditionalPopup = PopupManager.Add(new ConditionalPopup(rooms).SetButtons<ConditionalPopup>("DEFAULT", "EXCLUSIVE", "HIDE"));
-				rooms.ForEach((room) => { room.conditionalPopup = conditionalPopup; });
+				HashSet<Room> unlockedRooms = [];
+				rooms.ForEach(r => { if (r.data.lockState == RoomLockState.none) unlockedRooms.Add(r); } );
+				if (unlockedRooms.Count != 0) {
+					ConditionalPopup? conditionalPopup = PopupManager.Add(new ConditionalPopup(unlockedRooms).SetButtons<ConditionalPopup>("DEFAULT", "EXCLUSIVE", "HIDE"));
+					unlockedRooms.ForEach((room) => { room.conditionalPopup = conditionalPopup; });
+				}
 			}
 		}
 
