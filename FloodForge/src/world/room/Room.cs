@@ -1632,7 +1632,8 @@ public class Room : MapDraggable {
 		Immediate.Color(hovered ? Themes.RoomBorderHighlight : Themes.RoomBorder);
 		UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.width, renderedPosition.y - this.height);
 
-		this.DrawTimelineIcons(renderedPosition);
+		if (this.timeline.timelineType != TimelineType.All)
+			this.DrawTimelineIcons(renderedPosition);
 
 		if (this.data.lockState != RoomLockState.none) {
 			UVRect lockRect = new (renderedPosition.x + this.width - 10f, renderedPosition.y - 10f, renderedPosition.x + this.width, renderedPosition.y);
