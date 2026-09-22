@@ -5,7 +5,38 @@ using Stride.Core.Extensions;
 namespace FloodForge.World;
 
 public static class WorldExporter {
+	public static bool ExportFinished = true;
+	
 	private static HashSet<string> timelinesInRegion = [];
+
+	public static bool ExportMap(out string? message) {
+		message = null;
+
+		ExportFinished = false;
+
+		bool isNewMap = !WorldWindow.HasExportPath;
+		WorldWindow.invalidCreatures = [];
+
+		GatherTimelines();
+
+		ExportMapFile();
+
+		ExportWorldFile();
+
+		string image = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}.png");
+		ExportImageFile(image);
+
+		ExportPropertiesFile(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "properties.txt"));
+
+		ExportDisplayName(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "displayname.txt"));
+
+		if (isNewMap)
+			RecentFiles.AddPath(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"world_{WorldWindow.region.acronym}.txt"));
+
+		PersistentData.StorePersistentData(WorldWindow.region.acronym);
+		ExportFinished = true;
+		return true;
+	}
 
 	private static string AcronymCasing(string acronym) {
 		if (Settings.ForceExportCasing.value == Settings.STForceExportCasing.MatchAcronym) {

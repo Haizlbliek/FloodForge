@@ -44,7 +44,6 @@ public static class WorldWindow {
 	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || !HasExportPath || importIncomplete);
 	public static bool importIncomplete = false;
 	public static List<string> invalidCreatures = [];
-	public static bool ExportFinished = true;
 	public static Vector2 cameraOffset;
 	private static Vector2 lastNormalCameraOffset = Vector2.Zero;
 	private static bool cameraPanning = false;
@@ -1981,6 +1980,7 @@ public static class WorldWindow {
 	public class WorldMenuItems : MenuItems {
 		private static event Action<Timeline>? UpdateVisibleTimeline;
 		private static void ExportButton() {
+			WorldExporter.ExportFinished = false;
 			string lastExportDirectory = WorldWindow.region.exportPath;
 
 			if (!Settings.UpdateWorldFiles) {
@@ -2026,25 +2026,14 @@ public static class WorldWindow {
 			}
 		}
 
-		private static void ExportMap() {
-			bool isNewMap = !WorldWindow.HasExportPath;
-			WorldWindow.invalidCreatures = [];
-			WorldExporter.ExportMapFile();
-			WorldExporter.ExportWorldFile();
-
-			string image = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}.png");
-			WorldExporter.ExportImageFile(image);
-
-			WorldExporter.ExportPropertiesFile(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "properties.txt"));
-
-			WorldExporter.ExportDisplayName(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "displayname.txt"));
-
-			if (isNewMap)
-				RecentFiles.AddPath(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"world_{WorldWindow.region.acronym}.txt"));
-
-			PersistentData.StorePersistentData(WorldWindow.region.acronym);
-			PopupManager.Add(new InfoPopup("Exported successfully!"));
-			WorldWindow.ExportFinished = true;
+		public static void ExportMap() {
+			if (WorldExporter.ExportMap(out string? message)) {
+				PopupManager.Add("Exported successfully!");
+			}
+			else {
+				Logger.Error(message ?? "Unknown error encountered while exporting!");
+				PopupManager.Add($"Exporting world failed!\n{(message == null ? "" : $"{message}\n")}View log.txt for more info.");
+			}
 		}
 
 		public WorldMenuItems() {
@@ -2073,17 +2062,16 @@ public static class WorldWindow {
 						bool hasInvalidCreatures = invalidCreatures.Count != 0;
 						bool hasInvalidConnections = region.connections.FirstOrDefault(c => c.invalid) != null;
 						if(!hasInvalidCreatures && !hasInvalidConnections){
-							WorldWindow.ExportFinished = false;
 							ExportButton();
 						}
 						else{
 							// REVIEW - add a "view invalid creatures" type button, which would show the relevant invalidCreature strings
 							string invalidItem = (hasInvalidCreatures ? "dens" : "") + (hasInvalidConnections && hasInvalidCreatures ? " and " : "") + (hasInvalidConnections ? "connections" : "");
-							PopupManager.Add(new ConfirmPopup($"This region may contain invalid {invalidItem}!\nExporting may delete or change these {invalidItem}.").SetOkay("Export anyway").Okay(() => { WorldWindow.ExportFinished = false; ExportButton(); }));
+							PopupManager.Add(new ConfirmPopup($"This region may contain invalid {invalidItem}!\nExporting may delete or change these {invalidItem}.").SetOkay("Export anyway").Okay(() => { ExportButton(); }));
 						}
 					},
 					button => {
-						return WorldWindow.region != null && !importIncomplete && WorldWindow.ExportFinished;
+						return WorldWindow.region != null && !importIncomplete && WorldExporter.ExportFinished;
 					},
 					"You must create or import a region\nbefore exporting."
 				),
