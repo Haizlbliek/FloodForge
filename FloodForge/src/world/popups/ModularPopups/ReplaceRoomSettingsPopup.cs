@@ -6,6 +6,7 @@ namespace FloodForge.World;
 public class ReplaceRoomSettingsPopup : ModularPopup {
 	protected ReplaceRoom replaceRoom;
 	protected LabelContainer replacesRoomLabel;
+	protected HorizontalElement lockButtons;
 	protected ButtonContainer timelineButton;
 	protected ButtonContainer deleteButton;
 	protected TextureButtonContainer hideButton;
@@ -17,6 +18,25 @@ public class ReplaceRoomSettingsPopup : ModularPopup {
 
 		this.replacesRoomLabel = new("");
 		this.AddToQueue(this.replacesRoomLabel);
+		
+		this.lockButtons = new HorizontalElement([
+			("label", new LabelContainer("LockState", Font.Align.MiddleLeft)),
+			("buttons", new VerticalElement([
+				("nolock", new ButtonContainer("Unlocked", () => {
+					WorldWindow.worldHistory.Apply(new VariableChange<RoomLockState>(this.replaceRoom.lockState, RoomLockState.none, l => this.replaceRoom.lockState = l));
+				}).SetContextCheck(b => {
+					b.settingName = this.replaceRoom.lockState == RoomLockState.none ? "Unlocked" : "Unlock";
+					return this.replaceRoom.lockState != RoomLockState.none;
+				}, true, true)),
+				("full", new ButtonContainer("Locked", () => {
+					WorldWindow.worldHistory.Apply(new VariableChange<RoomLockState>(this.replaceRoom.lockState, RoomLockState.locked, l => this.replaceRoom.lockState = l));
+				}).SetContextCheck(b => {
+					b.settingName = this.replaceRoom.lockState == RoomLockState.locked ? "Locked" : "Lock";
+					return this.replaceRoom.lockState != RoomLockState.locked;
+				}, true, true))
+			]))
+		]);
+		this.AddToQueue(this.lockButtons);
 
 		this.timelineButton = new ButtonContainer("", this.TimelineButton).SetContextCheck(this.UpdateTimelineButton, false);
 		this.AddToQueue(this.timelineButton);

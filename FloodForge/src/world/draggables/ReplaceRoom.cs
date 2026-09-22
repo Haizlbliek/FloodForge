@@ -4,6 +4,7 @@ using FloodForge.History;
 namespace FloodForge.World;
 
 public class ReplaceRoom : MapDraggable {
+	public RoomLockState lockState;
 	public Room replacingRoom;
 	public Room replacedRoom;
 	public Timeline timeline;
@@ -103,6 +104,13 @@ public class ReplaceRoom : MapDraggable {
 				UI.Line(x0, y0, x0, y1, scale * 3f);
 			}
 		}
+
+		if (this.lockState != RoomLockState.none) {
+			UVRect lockRect = new (renderedPosition.x + this.replacingRoom.width - 10f, renderedPosition.y - 10f, renderedPosition.x + this.replacingRoom.width, renderedPosition.y);
+			lockRect.AtlasUV("Lock");
+			UI.UVTexture(lockRect, textureColor: Themes.TextHighlight);
+		}
+
 		Program.gl.Disable(EnableCap.Blend);
     }
 
