@@ -5,6 +5,8 @@ using Stride.Core.Extensions;
 namespace FloodForge.World;
 
 public static class WorldExporter {
+	private static HashSet<string> timelinesInRegion = [];
+
 	private static string AcronymCasing(string acronym) {
 		if (Settings.ForceExportCasing.value == Settings.STForceExportCasing.MatchAcronym) {
 			return acronym;
@@ -64,10 +66,8 @@ public static class WorldExporter {
 		return name;
 	}
 
-	public static void ExportMapFile() {
-		Logger.Info("Exporting map file");
-
-		Logger.Info("Getting timelines"); // REVIEW - consolidate the timeline gathering into one place. Who knows, maybe WorldWindow already does that lmao.
+	public static void GatherTimelines() {
+		Logger.Info("Getting timelines");
 		HashSet<string> timelinesInRegion = [];
 		foreach (Room room in WorldWindow.region.rooms) {
 			if (room.timeline.timelineType != TimelineType.All) {
@@ -86,8 +86,10 @@ public static class WorldExporter {
 			}
 		}
 		foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
-			foreach (string timelineEntry in replaceRoom.timeline.timelines) {
-				timelinesInRegion.Add(timelineEntry);
+			if (replaceRoom.timeline.timelineType != TimelineType.All) {	
+				foreach (string timelineEntry in replaceRoom.timeline.timelines) {
+					timelinesInRegion.Add(timelineEntry);
+				}
 			}
 		}
 		string timelinesLogger = "";
@@ -95,6 +97,10 @@ public static class WorldExporter {
 			timelinesLogger += (timelinesLogger != "" ? ", " : "") + timeline;
 		}
 		Logger.Info("Final timelines: " + timelinesLogger);
+	}
+
+	public static void ExportMapFile() {
+		Logger.Info("Exporting map file");
 
 		string fileName = $"map_{WorldWindow.region.acronym}.txt";
 		string path = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, fileName);
@@ -1316,37 +1322,6 @@ public static class WorldExporter {
 	// but there's multiple other checks that would have to be added/changed to make sure it works in all cases, which is why I'm leaving this for REVIEW.
 	public static void ExportImageFile(string outputPath) {
 		Logger.Info("Exporting image file");
-
-		Logger.Info("Getting timelines");
-		HashSet<string> timelinesInRegion = [];
-		foreach (Room room in WorldWindow.region.rooms) {
-			if (room.timeline.timelineType != TimelineType.All) {
-				foreach (string timelineEntry in room.timeline.timelines) {
-					timelinesInRegion.Add(timelineEntry);
-				}
-			}
-		}
-		foreach (Connection connection in WorldWindow.region.connections) {
-			if (connection.invalid)
-				continue;
-			if (connection.timeline.timelineType != TimelineType.All) {
-				foreach (string timelineEntry in connection.timeline.timelines) {
-					timelinesInRegion.Add(timelineEntry);
-				}
-			}
-		}
-		foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
-			if (replaceRoom.timeline.timelineType != TimelineType.All) {
-				foreach (string timelineEntry in replaceRoom.timeline.timelines) {
-					timelinesInRegion.Add(timelineEntry);
-				}
-			}
-		}
-		string timelinesLogger = "";
-		foreach (string timeline in timelinesInRegion) {
-			timelinesLogger += (timelinesLogger != "" ? ", " : "") + timeline;
-		}
-		Logger.Info("Final timelines: " + timelinesLogger);
 
 		string mapPath = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_image_{WorldWindow.region.acronym}.txt");
 		Backup.File(mapPath);
