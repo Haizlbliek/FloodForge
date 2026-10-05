@@ -132,12 +132,19 @@ public static class Main {
 		Program.gl.Viewport(0, 0, (uint) Program.window.FramebufferSize.X, (uint) Program.window.FramebufferSize.Y);
 		Immediate.Ortho(-1f * screenBounds.x, 1f * screenBounds.x, -1f * screenBounds.y, 1f * screenBounds.y, 0f, 1f);
 
+		Vector2D<int> logicalSize = Program.window.Size;
+		Vector2D<int> framebufferSize = Program.window.FramebufferSize;
+		float scaleX = (float) framebufferSize.X / logicalSize.X;
+		float scaleY = (float) framebufferSize.Y / logicalSize.Y;
+
 		IMouse? mouse = input.Mice.FirstOrDefault();
 		if (mouse != null) {
-			GlobalMouse = (Vector2) mouse.Position;
+			float physicalMouseX = mouse.Position.X * scaleX;
+			float physicalMouseY = mouse.Position.Y * scaleY;
+
 			GlobalMouse = new Vector2(
-				(GlobalMouse.x - offsetX) / size * 2f - 1f,
-				(GlobalMouse.y - offsetY) / size * -2f + 1f
+				(physicalMouseX - offsetX) / size * 2f - 1f,
+				(physicalMouseY - offsetY) / size * -2f + 1f
 			);
 			Mouse.Update(mouse, GlobalMouse.x, GlobalMouse.y);
 		}
