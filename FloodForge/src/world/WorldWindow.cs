@@ -1983,7 +1983,7 @@ public static class WorldWindow {
 			WorldExporter.ExportFinished = false;
 			string lastExportDirectory = WorldWindow.region.exportPath;
 
-			if (!Settings.UpdateWorldFiles) {
+			if (!Settings.UpdateRegionFiles) {
 				if (!Directory.Exists("worlds")) {
 					Directory.CreateDirectory("worlds");
 				}

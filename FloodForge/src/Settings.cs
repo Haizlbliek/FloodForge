@@ -7,7 +7,7 @@ public static class Settings {
 	/// <summary>
 	/// The config number that the current version of FloodForge expects. To avoid FloodForge upgrading the settings.cfg file on a fresh build, update the repository's settings.cfg 'configVersion' value.
 	/// </summary>
-	private const int programConfigVersion = 0;
+	private const int programConfigVersion = 1;
 	private const string settingsPath = "assets/settings.cfg";
 
 	public static Dictionary<string, Setting> settings = [];
@@ -24,7 +24,7 @@ public static class Settings {
 	public static Setting<bool> WarnMissingImages = Setting.Of("WarnMissingImages", false);
 	public static Setting<bool> HideTutorial = Setting.Of("HideTutorial", false);
 	public static Setting<bool> HideTutorialOnLoadWorld = Setting.Of("HideTutorialOnLoadWorld", false);
-	public static Setting<bool> UpdateWorldFiles = Setting.Of("UpdateWorldFiles", true);
+	public static Setting<bool> UpdateRegionFiles = Setting.Of("UpdateRegionFiles", true);
 	public static Setting<bool> UpdateRoomImagesOnRender = Setting.Of("UpdateRoomImagesOnRender", false);
 	public static Setting<Color> NoSubregionColor = Setting.Of("NoSubregionColor", Color.White);
 	public static Setting<float> RoomTintStrength = Setting.Of("RoomTintStrength", 0.5f);
@@ -129,6 +129,19 @@ public static class Settings {
 		//		settingsFile[DoFunnyThingsIndex] = $"DoSillyThings={settingsFile[DoFunnyThingsIndex].Split('=')[^1]}";
 		//	}
 		//Granted, this system may change. For example, it's harder to update the description that accompanies a setting in the case where the patcher wasn't used to update.
+
+		if (upgradeFromVersion < 1) {
+			int updateWorldFilesIndex = settingsFile.FindIndex(s => s.StartsWith("UpdateWorldFiles"));
+			if (updateWorldFilesIndex != -1) {
+				string value = settingsFile[updateWorldFilesIndex].Split('=')[^1];
+
+				if (settingsFile[updateWorldFilesIndex - 1].StartsWith("# ") && settingsFile[updateWorldFilesIndex - 2].StartsWith("# ")) {
+					settingsFile[updateWorldFilesIndex - 2] = "# If true, exporting will modify the existing files that exist the region's folder (`world_xx.txt`, `map_xx.txt/png`, etc.)";
+					settingsFile[updateWorldFilesIndex - 1] = "# If false, exported regions are stored in `FloodForge/worlds` and need to be manually copied into their respective directories";
+				}
+				settingsFile[updateWorldFilesIndex] = $"UpdateRegionFiles={value}";
+			}
+		}
 
 		if (success) {
 			try {
