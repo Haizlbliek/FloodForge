@@ -141,7 +141,7 @@ public static class Settings {
 					settingsFile.Add($"# This config file's version. Do not modify!");
 					settingsFile.Add($"cfgVersion={upgradeToVersion}");
 				}
-				File.WriteAllLines(settingsPath, [.. settingsFile]);
+				File.WriteAllText(settingsPath, string.Join('\n', [.. settingsFile]));
 			}
 			catch (Exception e) {
 				message = e.ToString();
