@@ -62,12 +62,43 @@ public static class Settings {
 
 			string key = line[..line.IndexOf('=')].Trim();
 			string value = line[(line.IndexOf('=') + 1)..].Trim();
+
+			if (key.Equals("cfgVersion", StringComparison.InvariantCultureIgnoreCase)) {
+				if (int.TryParse(value, out int version)) {
+					loadedConfigVersion = version;
+					Logger.Note($"cfgVersion: {loadedConfigVersion}");
+				}
+				else {
+					Logger.Warn($"failed to parse cfgVersion value \"{value}\" to int");
+				}
+				continue;
+			}
+		}
+
+		bool triedToUpdate = false;
+		if (loadedConfigVersion < programConfigVersion) {
+			Logger.Info($"Outdated config version detected! ({loadedConfigVersion} -> {programConfigVersion})");
+			UpgradeConfigFile([.. lines], loadedConfigVersion, programConfigVersion); // TODO - ask user before doing this
+			triedToUpdate = true;
+		}
+		if (loadedConfigVersion > programConfigVersion) {
+			Logger.Warn($"Config version is newer than expected! ({loadedConfigVersion} -> {programConfigVersion})");
+		}
+
+		lines = File.ReadAllLines(settingsPath);
+
+		foreach (string l in lines) {
+			string line = l.Trim();
+			if (line == "" || line.StartsWith('#')) continue;
+
+			string key = line[..line.IndexOf('=')].Trim();
+			string value = line[(line.IndexOf('=') + 1)..].Trim();
 			if (key == "Theme") {
 				Themes.LoadFromSetting(value);
 				continue;
 			}
 
-			if (key.Equals("cfgVersion", StringComparison.InvariantCultureIgnoreCase)) {
+			if (triedToUpdate && key.Equals("cfgVersion", StringComparison.InvariantCultureIgnoreCase)) {
 				if (int.TryParse(value, out int version)) {
 					loadedConfigVersion = version;
 					Logger.Note($"cfgVersion: {loadedConfigVersion}");
@@ -84,14 +115,6 @@ public static class Settings {
 			else {
 				Logger.Warn($"No setting '{key}'");
 			}
-		}
-
-		if (loadedConfigVersion < programConfigVersion) {
-			Logger.Info($"Outdated config version detected! ({loadedConfigVersion} -> {programConfigVersion})");
-			UpgradeConfigFile([.. lines], loadedConfigVersion, programConfigVersion); // TODO - ask user before doing this
-		}
-		if (loadedConfigVersion > programConfigVersion) {
-			Logger.Warn($"Config version is newer than expected! ({loadedConfigVersion} -> {programConfigVersion})");
 		}
 	}
 
