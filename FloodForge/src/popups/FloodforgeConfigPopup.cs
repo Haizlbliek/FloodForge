@@ -1,4 +1,3 @@
-using Silk.NET.GLFW;
 using static FloodForge.UI;
 
 namespace FloodForge.Popups;
@@ -17,6 +16,7 @@ public class FloodforgeConfigPopup : Popup {
 		Main.Scroll += this.Scroll;
 	}
 
+	// ToAdd: Themes
 	private readonly SettingEditableReferrer<float, SliderFloatEditable> CameraPanSpeed = new (Settings.CameraPanSpeed, new (0, 1));
 	private readonly SettingEditableReferrer<float, SliderFloatEditable> CameraZoomSpeed = new (Settings.CameraZoomSpeed, new (0, 1));
 	private readonly SettingEditableReferrer<float, SliderFloatEditable> PopupScrollSpeed = new (Settings.PopupScrollSpeed, new (0, 1));
@@ -29,7 +29,7 @@ public class FloodforgeConfigPopup : Popup {
 	private readonly SettingEditableReferrer<bool, BoolToggleEditable> WarnMissingImages = new (Settings.WarnMissingImages, new (Settings.WarnMissingImages));
 	private readonly SettingEditableReferrer<bool, BoolToggleEditable> HideTutorial = new (Settings.HideTutorial, new (Settings.HideTutorial));
 	private readonly SettingEditableReferrer<bool, BoolToggleEditable> HideTutorialOnLoadWorld = new (Settings.HideTutorialOnLoadWorld, new (Settings.HideTutorialOnLoadWorld));
-	private readonly SettingEditableReferrer<bool, BoolToggleEditable> UpdateWorldFiles = new (Settings.UpdateWorldFiles, new (Settings.UpdateWorldFiles));
+	private readonly SettingEditableReferrer<bool, BoolToggleEditable> UpdateRegionFiles = new (Settings.UpdateRegionFiles, new (Settings.UpdateRegionFiles));
 	private readonly SettingEditableReferrer<bool, BoolToggleEditable> UpdateRoomImagesOnRender = new (Settings.UpdateRoomImagesOnRender, new (Settings.UpdateRoomImagesOnRender));
 	// ToAdd: NoSubregionColor
 	private readonly SettingEditableReferrer<float, SliderFloatEditable> RoomTintStrength = new (Settings.RoomTintStrength, new (0, 1));
@@ -132,8 +132,8 @@ public class FloodforgeConfigPopup : Popup {
 		UI.CheckBox(squareRect, ref this.HideTutorialOnLoadWorld.ValueRef);
 
 		GotoNextSetting();
-		font.Write(this.UpdateWorldFiles.settingName, this.bounds.x0 + 0.01f, settingRect.y1, 0.03f, Font.Align.TopLeft);
-		UI.CheckBox(squareRect, ref this.UpdateWorldFiles.ValueRef);
+		font.Write(this.UpdateRegionFiles.settingName, this.bounds.x0 + 0.01f, settingRect.y1, 0.03f, Font.Align.TopLeft);
+		UI.CheckBox(squareRect, ref this.UpdateRegionFiles.ValueRef);
 		
 		GotoNextSetting();
 		font.Write(this.UpdateRoomImagesOnRender.settingName, this.bounds.x0 + 0.01f, settingRect.y1, 0.03f, Font.Align.TopLeft);

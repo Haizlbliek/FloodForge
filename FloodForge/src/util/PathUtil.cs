@@ -9,6 +9,13 @@ public static class PathUtil {
 		return Path.GetFullPath(Path.Combine(path, ".."));
 	}
 
+	public static string Parent(string path, int count) {
+		string finalPath = path;
+		for (int i = 0; i < count; i++)
+			finalPath = Path.Combine(finalPath, "..");
+		return Path.GetFullPath(finalPath);
+	}
+
 	public static string? FindFile(string parent, string fileName) {
 		if (parent == null || parent == "")
 			return null;

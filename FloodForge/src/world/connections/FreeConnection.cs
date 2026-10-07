@@ -49,7 +49,7 @@ public class FreeConnection : ConnectionVisual {
 		return (colorA, colorB);
 	}
 
-	public FreeConnection(bool createLoopOnInit) : base(false) {
+	public FreeConnection(bool createLoopOnInit, bool drawStriped) : base(drawStriped) {
 		this.createLoop = createLoopOnInit;
 	}
 

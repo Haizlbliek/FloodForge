@@ -40,13 +40,10 @@ public static class WorldWindow {
 	public static bool connectionExtensionsEnabled = false;
 
 	public static Region region = null!;
-	// public static List<ConnectionVisual> virtualConnections = [];
-	public static List<Connection> connectionsToBeRemoved = [];
 	public static bool HasExportPath => !WorldWindow.region.exportPath.IsNullOrEmpty();
 	public static bool ValidRegionLoaded => !(WorldWindow.region == null || WorldWindow.region.acronym.IsNullOrEmpty() || !HasExportPath || importIncomplete);
 	public static bool importIncomplete = false;
 	public static List<string> invalidCreatures = [];
-	public static bool ExportFinished = true;
 	public static Vector2 cameraOffset;
 	private static Vector2 lastNormalCameraOffset = Vector2.Zero;
 	private static bool cameraPanning = false;
@@ -412,7 +409,7 @@ public static class WorldWindow {
 				}
 
 				if (hoveringRoom.Visible) {
-					CurrentConnectionVisual = new(true);
+					CurrentConnectionVisual = new(true, false);
 					ConnectionStart = hoveringRoom.GetConnectionConnectPoint((uint)hoveredRoomExit);
 					ConnectionStartClickPosition = worldMouse;
 					ConnectionEnd = ConnectionStart;
@@ -436,8 +433,8 @@ public static class WorldWindow {
 					NewConnection.roomBExitID = (uint)hoveredRoomExit;
 					CurrentConnectionValid = true;
 					CurrentConnectionWarn = false;
-
-					if (NewConnection.roomA == NewConnection.roomB && !connectionExtensionsEnabled) {
+					
+					if (NewConnection.roomA.data.lockState == RoomLockState.locked || NewConnection.roomB.data.lockState == RoomLockState.locked || (NewConnection.roomA == NewConnection.roomB && !connectionExtensionsEnabled)) {
 						CurrentConnectionValid = false;
 					}
 					else {
@@ -558,7 +555,7 @@ public static class WorldWindow {
 							DeleteConnection(popupConnection);
 							connectionSettingsPopup?.Close();
 						}
-					)
+					).SetContextCheck(b => popupConnection.roomA.data.lockState != RoomLockState.locked && popupConnection.roomB.data.lockState != RoomLockState.locked, true, true)
 				]).Translate(Mouse.Pos, true).Title("Settings - Connection");
 				PopupManager.Add(connectionSettingsPopup);
 			}
@@ -647,7 +644,7 @@ public static class WorldWindow {
 				if (selectingState == SelectingState.None) { // if we weren't selecting anything before
 					WorldDraggable? draggable = HoveringDraggable; // get hovering room -> WorldDraggable
 
-					if (draggable != null && draggable.Draggable) { // if there's a hovering room (WorldDraggable)
+					if (draggable != null && draggable.Selectable) { // if there's a hovering room (WorldDraggable)
 						holdingDraggable = draggable; // start holding said room (WorldDraggable)
 						holdingStart = worldMouse; // set the hold's start point
 						draggablePossibleSelect = draggable; // we might end up wanting to select this room (WorldDraggable)
@@ -695,6 +692,8 @@ public static class WorldWindow {
 				if (roomSnap) {
 					MoveChange draggableMoveChange = new MoveChange();
 					foreach (WorldDraggable draggable in selectedDraggables) {
+						if (!draggable.Draggable)
+							continue;
 						if (draggable is MapDraggable mapDraggable) {
 							Vector2 DevPosDiff = (PositionType == RoomPosition.Dev || PositionType == RoomPosition.Both) ? mapDraggable.DevPosition.Rounded() - mapDraggable.DevPosition : Vector2.Zero;
 							Vector2 CanonPosDiff = (PositionType == RoomPosition.Canon || PositionType == RoomPosition.Both) ? mapDraggable.CanonPosition.Rounded() - mapDraggable.CanonPosition : Vector2.Zero;
@@ -705,21 +704,22 @@ public static class WorldWindow {
 							draggableMoveChange.AddDraggable(draggable, diff, diff);
 						}
 					}
-					worldHistory.Apply(draggableMoveChange);
+					if (!draggableMoveChange.IsEmpty())
+						worldHistory.Apply(draggableMoveChange);
 				}
 			}
 
 			if (selectingState == SelectingState.Selecting) { // if we were creating a selectionbox and just released
 				foreach (Room room in region.rooms) { // check what rooms are in the box and add them to the selectedrooms
-					if (room.Intersects(selectionStart, selectionEnd) && room.Draggable)
+					if (room.Intersects(selectionStart, selectionEnd) && room.Selectable)
 						selectedDraggables.Add(room);
 				}
 				foreach (ReferenceImage image in referenceImages) {
-					if (image.Intersects(selectionStart, selectionEnd) && image.Draggable)
+					if (image.Intersects(selectionStart, selectionEnd) && image.Selectable)
 						selectedDraggables.Add(image);
 				}
 				foreach (ReplaceRoom replaceRoom in replaceRooms) {
-					if (replaceRoom.Intersects(selectionStart, selectionEnd) && replaceRoom.Draggable)
+					if (replaceRoom.Intersects(selectionStart, selectionEnd) && replaceRoom.Selectable)
 						selectedDraggables.Add(replaceRoom);
 				}
 			}
@@ -763,6 +763,8 @@ public static class WorldWindow {
 			offset.Round();
 
 		foreach (WorldDraggable draggable in selectedDraggables) {
+			if (!draggable.Draggable)
+				continue;
 			Vector2 newPos = draggable.Position;
 			if (roomSnap)
 				newPos.Round();
@@ -799,8 +801,10 @@ public static class WorldWindow {
 			moveChange.Merge(change);
 		}
 		else { // else, apply the change
-			worldHistory.Apply(change);
-			continueDrag = true;
+			if (!change.IsEmpty()) {
+				worldHistory.Apply(change);
+				continueDrag = true;
+			}
 		}
 	}
 
@@ -812,7 +816,7 @@ public static class WorldWindow {
 
 	private static void KeybindDelete() {
 		Connection? connection = region.connections.FirstOrDefault(c => c.ConnectionVisible && c.roomA.Visible && c.roomB.Visible && c.Hovered);
-		if (connection != null) {
+		if (connection != null && connection.roomA.data.lockState != RoomLockState.locked && connection.roomB.data.lockState != RoomLockState.locked) {
 			DeleteConnection(connection);
 			return;
 		}
@@ -837,7 +841,8 @@ public static class WorldWindow {
 					foreach (WorldDraggable room1 in selectedDraggables) {
 						if (room1 is OffscreenRoom || room1 is not Room room2)
 							continue;
-
+						if (room2.LockedByConnections())
+							continue;
 						change.AddRoom(room2);
 						region.connections.Where(c => c.roomA == room2 && !selectedDraggables.Contains(c.roomB) || (c.roomB == room2 && !selectedDraggables.Contains(c.roomA)))
 							.ForEach(change.AddConnection);
@@ -848,7 +853,8 @@ public static class WorldWindow {
 					selectedDraggables.Clear();
 				}
 
-				worldHistory.Apply(new MassChange([change, replaceRoomChange]));
+				if (!change.IsEmpty())
+					worldHistory.Apply(new MassChange([change, replaceRoomChange]));
 				return;
 			}
 			else if (draggable is ReferenceImage image) {
@@ -1002,8 +1008,12 @@ public static class WorldWindow {
 				connection.conditionalPopup = PopupManager.Add(new ConditionalPopup(connection));
 			}
 			else if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
-				ConditionalPopup? conditionalPopup = PopupManager.Add(new ConditionalPopup(rooms).SetButtons<ConditionalPopup>("DEFAULT", "EXCLUSIVE", "HIDE"));
-				rooms.ForEach((room) => { room.conditionalPopup = conditionalPopup; });
+				HashSet<Room> unlockedRooms = [];
+				rooms.ForEach(r => { if (r.data.lockState == RoomLockState.none) unlockedRooms.Add(r); } );
+				if (unlockedRooms.Count != 0) {
+					ConditionalPopup? conditionalPopup = PopupManager.Add(new ConditionalPopup(unlockedRooms).SetButtons<ConditionalPopup>("DEFAULT", "EXCLUSIVE", "HIDE"));
+					unlockedRooms.ForEach((room) => { room.conditionalPopup = conditionalPopup; });
+				}
 			}
 		}
 
@@ -1026,12 +1036,17 @@ public static class WorldWindow {
 						camRelativePosition += replaceRoom.replacingRoom.Position - replaceRoom.Position;
 					}
 					if (roomToLoad != null) {
-						if (roomToLoad.valid) {
-							Main.mode = Main.Mode.Droplet;
-							DropletWindow.LoadRoom(roomToLoad, camRelativePosition);
+						if (roomToLoad.data.lockState == RoomLockState.none) {
+							if (roomToLoad.valid) {
+								Main.mode = Main.Mode.Droplet;
+								DropletWindow.LoadRoom(roomToLoad, camRelativePosition);
+							}
+							else {
+								PopupManager.Add(new InfoPopup($"Unable to open {roomToLoad.name}\nInvalid room!"));
+							}
 						}
 						else {
-							PopupManager.Add(new InfoPopup($"Unable to open {roomToLoad.name}\nInvalid room!"));
+							PopupManager.Add(new InfoPopup($"Unable to open {roomToLoad.name}\nCannot open a locked room!"));
 						}
 					}
 					else {
@@ -1261,11 +1276,6 @@ public static class WorldWindow {
 			}
 			connection.Draw();
 		}
-		foreach (Connection connection in WorldWindow.connectionsToBeRemoved) {
-			connection.roomA.Disconnect(connection);
-			connection.roomB.Disconnect(connection);
-			region.connections.Remove(connection);
-		}
 		// TODO - make this more efficient by not rebuilding every connection every single frame.
 		foreach (ReplaceRoom replaceRoom in WorldWindow.replaceRooms) {
 			foreach (Connection connection in replaceRoom.replacedRoom.connections) {
@@ -1278,7 +1288,7 @@ public static class WorldWindow {
 				if (!roomA.ValidConnection(connection.roomAExitID) || !roomB.ValidConnection(connection.roomBExitID))
 					continue;
 				bool isLoop = roomA == roomB && connection.roomAExitID == connection.roomBExitID;
-				FreeConnection freeConnection = new(isLoop) { drawStriped = true };
+				FreeConnection freeConnection = new(isLoop, true);
 
 				bool draggableAIsVisible = connection.roomA == replaceRoom.replacedRoom ? replaceRoom.Visible : connection.roomA.Visible;
 				bool draggableBIsVisible = connection.roomB == replaceRoom.replacedRoom ? replaceRoom.Visible : connection.roomB.Visible;
@@ -1970,9 +1980,10 @@ public static class WorldWindow {
 	public class WorldMenuItems : MenuItems {
 		private static event Action<Timeline>? UpdateVisibleTimeline;
 		private static void ExportButton() {
+			WorldExporter.ExportFinished = false;
 			string lastExportDirectory = WorldWindow.region.exportPath;
 
-			if (!Settings.UpdateWorldFiles) {
+			if (!Settings.UpdateRegionFiles) {
 				if (!Directory.Exists("worlds")) {
 					Directory.CreateDirectory("worlds");
 				}
@@ -2015,25 +2026,14 @@ public static class WorldWindow {
 			}
 		}
 
-		private static void ExportMap() {
-			bool isNewMap = !WorldWindow.HasExportPath;
-			WorldWindow.invalidCreatures = [];
-			WorldExporter.ExportMapFile();
-			WorldExporter.ExportWorldFile();
-
-			string image = PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"map_{WorldWindow.region.acronym}.png");
-			WorldExporter.ExportImageFile(image);
-
-			WorldExporter.ExportPropertiesFile(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "properties.txt"));
-
-			WorldExporter.ExportDisplayName(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, "displayname.txt"));
-
-			if (isNewMap)
-				RecentFiles.AddPath(PathUtil.FindOrAssumeFile(WorldWindow.region.exportPath, $"world_{WorldWindow.region.acronym}.txt"));
-
-			PersistentData.StorePersistentData(WorldWindow.region.acronym);
-			PopupManager.Add(new InfoPopup("Exported successfully!"));
-			WorldWindow.ExportFinished = true;
+		public static void ExportMap() {
+			if (WorldExporter.ExportMap(out string? message)) {
+				PopupManager.Add("Exported successfully!");
+			}
+			else {
+				Logger.Error(message ?? "Unknown error encountered while exporting!");
+				PopupManager.Add($"Exporting world failed!\n{(message == null ? "" : $"{message}\n")}View log.txt for more info.");
+			}
 		}
 
 		public WorldMenuItems() {
@@ -2053,24 +2053,25 @@ public static class WorldWindow {
 					PopupManager.Add(new FilesystemPopup(selection => {
 						if (selection.Length == 0) return;
 
-						if (!WorldParser.ImportWorldFile(selection[0], out string? message))
-							PopupManager.Add(new InfoPopup($"Importing world failed!\n{(message == null ? "" : $"{message}\n")}View log.txt for more info."));
+						WorldParser.ImportWorld(selection[0], false);
 					}, 0).Filter(Regexs.WorldFileRegex()).Hint("world_xx.txt"));
 				}),
 
 				new Button("Export Map",
 					button => {
-						if(invalidCreatures.Count == 0){
-							WorldWindow.ExportFinished = false;
+						bool hasInvalidCreatures = invalidCreatures.Count != 0;
+						bool hasInvalidConnections = region.connections.FirstOrDefault(c => c.invalid) != null;
+						if(!hasInvalidCreatures && !hasInvalidConnections){
 							ExportButton();
 						}
 						else{
 							// REVIEW - add a "view invalid creatures" type button, which would show the relevant invalidCreature strings
-							PopupManager.Add(new ConfirmPopup("This region may contain invalid dens!\nExporting may delete or change these dens.").SetOkay("Export anyway").Okay(() => { WorldWindow.ExportFinished = false; ExportButton(); }));
+							string invalidItem = (hasInvalidCreatures ? "dens" : "") + (hasInvalidConnections && hasInvalidCreatures ? " and " : "") + (hasInvalidConnections ? "connections" : "");
+							PopupManager.Add(new ConfirmPopup($"This region may contain invalid {invalidItem}!\nExporting may delete or change these {invalidItem}.").SetOkay("Export anyway").Okay(() => { ExportButton(); }));
 						}
 					},
 					button => {
-						return WorldWindow.region != null && !importIncomplete && WorldWindow.ExportFinished;
+						return WorldWindow.region != null && !importIncomplete && WorldExporter.ExportFinished;
 					},
 					"You must create or import a region\nbefore exporting."
 				),
@@ -2137,8 +2138,7 @@ public static class WorldWindow {
 							Logger.Info($"Failed to find world file at {WorldWindow.region.exportPath}/world_{WorldWindow.region.acronym}.txt");
 							return;
 						}
-						if (!WorldParser.ImportWorldFile(path, out string? message))
-						PopupManager.Add(new InfoPopup($"Importing world failed!\n{(message == null ? "" : $"{message}\n")}View log.txt for more info."));
+						WorldParser.ImportWorld(path, false);
 					}, button => { return WorldWindow.ValidRegionLoaded; },
 					"You must create or import a region\nbefore refreshing."),
 				]),

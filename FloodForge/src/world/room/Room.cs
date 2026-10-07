@@ -64,6 +64,22 @@ public class Room : MapDraggable {
 		return this.CheckTimelineCull() && WorldWindow.VisibleLayers[this.data.layer];
 	}
 
+	protected override bool IsSelectable() {
+		return base.IsSelectable();
+	}
+
+	protected override bool IsDraggable() {
+		return base.IsDraggable() && this.data.lockState != RoomLockState.locked;
+	}
+
+	public bool LockedByConnections() {
+		foreach (Connection connection in this.connections) {
+			if (connection.roomA.data.lockState == RoomLockState.locked || connection.roomB.data.lockState == RoomLockState.locked)
+				return true;
+		}
+		return false;
+	}
+
 	// REVIEW - check for redundancy in terms of edge-case checks
 	public bool CheckTimelineCull() {
 		if (WorldWindow.VisibleTimeline.timelineType == TimelineType.All)
@@ -793,6 +809,14 @@ public class Room : MapDraggable {
 
 		this.GenerateMesh();
 		this.GenerateWaterMesh();
+
+		this.RevalidateConnections();
+	}
+
+	public void RevalidateConnections() {
+		foreach (Connection connection in this.connections) {
+			connection.invalid = false;
+		}
 	}
 
 	public void RegenerateWater() {
@@ -1608,8 +1632,13 @@ public class Room : MapDraggable {
 		Immediate.Color(hovered ? Themes.RoomBorderHighlight : Themes.RoomBorder);
 		UI.StrokeRect(renderedPosition.x, renderedPosition.y, renderedPosition.x + this.width, renderedPosition.y - this.height);
 
-		if (this.timeline.timelineType != TimelineType.All) {
+		if (this.timeline.timelineType != TimelineType.All)
 			this.DrawTimelineIcons(renderedPosition);
+
+		if (this.data.lockState != RoomLockState.none) {
+			UVRect lockRect = new (renderedPosition.x + this.width - 10f, renderedPosition.y - 10f, renderedPosition.x + this.width, renderedPosition.y);
+			lockRect.AtlasUV("Lock");
+			UI.UVTexture(lockRect, textureColor: Themes.TextHighlight);
 		}
 	}
 
@@ -1808,7 +1837,7 @@ public class Room : MapDraggable {
 	public static void DrawRoomPath(Vector2 position, RoomConnection connectionPathToDraw, bool isHovered, bool isHighlighted) {
 		Vector2 positionOffset = position + new Vector2(0.5f, -0.5f);
 		Immediate.Color(isHovered ? Themes.RoomConnectionHover : Themes.RoomConnection);
-		if (WorldWindow.changeConnectBehaviour && isHighlighted && (WorldWindow.cameraScale < 75f || Keys.Pressed(Silk.NET.Input.Key.P))) {
+		if (WorldWindow.changeConnectBehaviour && isHighlighted && WorldWindow.cameraScale < 75f) {
 			bool drawnExit = false;
 			foreach (Vector2i dot in connectionPathToDraw.path.Path) { // DRAWING SHORTCUT PATH, STARTS FROM ROOMEXIT, WHICH IS WHY IT DRAWS THE FIRST ORB BIGGER
 				UI.FillCircle(dot * new Vector2(1, -1) + positionOffset, drawnExit ? 0.4f : 0.5f, 8);

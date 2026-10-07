@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using FloodForge.Popups;
 using Stride.Core;
@@ -113,8 +114,8 @@ public static class WorldParser {
 
 		positionTarget.CanonPosition.x = canonX - sizeSource.width * 0.5f;
 		positionTarget.CanonPosition.y = canonY + sizeSource.height * 0.5f;
-		positionTarget.DevPosition.x = devX - sizeSource.width * 0.5f;
-		positionTarget.DevPosition.y = devY + sizeSource.height * 0.5f;
+		positionTarget.DevPosition.x = devX;
+		positionTarget.DevPosition.y = devY + sizeSource.height;
 
 		if (gridOffsets.FirstOrDefault(x => x.Item1 == room).Item1 == null)
 			gridOffsets.Add((room, new (Mathf.Mod1(positionTarget.CanonPosition.x), Mathf.Mod1(positionTarget.CanonPosition.y))));
@@ -350,11 +351,22 @@ public static class WorldParser {
 		string[] connections = data[1].Split(',', StringSplitOptions.TrimEntries);
 		string[] tags = data[2..];
 
+		string[] preProcessorConditions = [];
+
+		if (roomName[0] == '{') {
+			int closingBracketPosition = roomName.IndexOf('}');
+			string conditions = roomName[1..closingBracketPosition];
+			roomName = roomName[(closingBracketPosition + 1)..].Trim();
+			preProcessorConditions = [.. conditions.Split(',')];
+		}
+
 		Room? room = WorldWindow.region.rooms.FirstOrDefault(x => x.name.Equals(roomName, StringComparison.InvariantCultureIgnoreCase));
 		if (room == null) {
 			room = CreateRoom(roomName);
 			WorldWindow.region.rooms.Add(room);
 		}
+
+		room.preProcessorConditions = preProcessorConditions;
 
 		uint connectionId = 0;
 		for (int j = 0; j < connections.Length; j++) {
@@ -515,6 +527,7 @@ public static class WorldParser {
 			string[] sections = Regex.Split(creatureInDen, @"-(?![^{]*})");
 			int denId = int.Parse(sections[0], NumberStyles.Any, CultureInfo.InvariantCulture);
 			string creature = sections[1];
+			string parsedCreature = Mods.ParseCreature(creature);
 
 			if (room is OffscreenRoom offscreenDen) {
 				denId = 0;
@@ -522,10 +535,10 @@ public static class WorldParser {
 			}
 
 			bool addGarbageWormAnyway = false;
-			if (Mods.ParseCreature(creature).Equals("GarbageWorm", StringComparison.InvariantCultureIgnoreCase)) {
+			if (parsedCreature.Equals("GarbageWorm", StringComparison.InvariantCultureIgnoreCase)) {
 				if (!room.hasGarbageWormHoles || (!room.HasDen(denId))) {
 					if (room.hasGarbageWormHoles) {
-						Logger.Warn($"Invalid garbage worm detected within {room.name}!\nCreature: {Mods.ParseCreature(creature)}; expected {room.GarbageWormHoleIndex}, got {denId}\n > {creatureInDen}");
+						Logger.Warn($"Invalid garbage worm detected within {room.name}!\nCreature: {parsedCreature}; expected {room.GarbageWormHoleIndex}, got {denId}\n > {creatureInDen}");
 						WorldWindow.invalidCreatures.Add($"{room.name}: {creatureInDen} - invalid garbage worm index");
 						addGarbageWormAnyway = true;
 					}
@@ -539,7 +552,7 @@ public static class WorldParser {
 			if (denId == room.GarbageWormHoleIndex || addGarbageWormAnyway) {
 				GarbageWormDen worm = new GarbageWormDen() {
 					isInvalidGarbageWormDen = addGarbageWormAnyway,
-					type = Mods.ParseCreature(creature),
+					type = parsedCreature,
 					timeline = timeline,
 					preProcessorConditions = preProcessorConditions,
 					count = sections.Length < 3 ? 1 : int.Parse(sections[2])
@@ -555,7 +568,7 @@ public static class WorldParser {
 			}
 
 			Den den = room.GetDen(denId);
-			DenLineage lineage = new DenLineage(Mods.ParseCreature(creature), 1) {
+			DenLineage lineage = new DenLineage(parsedCreature, 1) {
 				timeline = timeline,
 				preProcessorConditions = preProcessorConditions
 			};
@@ -1151,10 +1164,9 @@ public static class WorldParser {
 				Logger.Warn($"Failed to load connection from {connectionData.roomA.name}({connectionData.roomAExitID}) to {connectionData.roomB?.name ?? $"'{connectionData.roomBName}'"}({connectionData.roomBExitID})");
 				continue;
 			}
-			
+	
 			if (!connectionData.roomA.ValidConnection(connectionData.roomAExitID) || !connectionData.roomB.ValidConnection(connectionData.roomBExitID.Value)) {
-				Logger.Warn($"Failed to load connection from {connectionData.roomA.name}({connectionData.roomAExitID}) to {connectionData.roomB?.name ?? $"'{connectionData.roomBName}'"}({connectionData.roomBExitID}) - Invalid connection indices");
-				continue;
+				Logger.Warn($"Failed to load connection from {connectionData.roomA.name}({connectionData.roomAExitID}) to {connectionData.roomB.name ?? $"'{connectionData.roomBName}'"}({connectionData.roomBExitID}) - Invalid connection indices; adding invalid connection");
 			}
 
 			Connection connection = new Connection(connectionData.roomA, connectionData.roomAExitID, connectionData.roomB, connectionData.roomBExitID.Value);
@@ -1235,28 +1247,52 @@ public static class WorldParser {
 		return displaynamePath == null ? "" : File.ReadAllText(displaynamePath).Trim();
 	}
 
-	public static bool ImportWorldFile(string worldPath, out string? message) {
-		message = null;
+	private enum WorldFileType {
+		none, //the file doesn't exist
+		regular, //the file is a regular WorldFile
+		modify //the file modifies another WorldFile
+	}
+
+	public static async void ImportWorld(string worldPath, bool showTutorial) {
+		(bool success, WorldFileType type, string? message) = CheckImportFile(worldPath);
+
+		if (success) {
+			if (type == WorldFileType.regular)
+				success = ImportWorldFile(worldPath, out message);
+			if (type == WorldFileType.modify)
+				success = ImportModifyingRegion(worldPath, out message);
+		}
+
+		if (!success) {
+			Logger.Error(message ?? "Unknown error encountered while importing!");
+			PopupManager.Add($"Importing world failed!\n{(message == null ? "" : $"{message}\n")}View log.txt for more info.");
+		}
+		else if (showTutorial)
+			PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+	}
+
+	private static (bool, WorldFileType, string?) CheckImportFile(string worldPath) {
 		if (!File.Exists(worldPath)) {
-			message = "Cannot find world_XX.txt";
-			Logger.Error(message);
-			return false;
+			return (false, WorldFileType.none, "Cannot find world_XX.txt");
 		}
 		RecentFiles.AddPath(worldPath);
 		
 		Logger.Info($"File path: {worldPath}");
-		string exportPath = PathUtil.Parent(worldPath);
-		if (Path.GetFileNameWithoutExtension(PathUtil.Parent(PathUtil.Parent(exportPath))).Equals("modify", StringComparison.InvariantCultureIgnoreCase)) {
-			message = $"Cannot load world from inside /modify folder";
-			Logger.Error(message);
-			return false;
+		if (Path.GetFileNameWithoutExtension(PathUtil.Parent(worldPath, 3)).Equals("modify", StringComparison.InvariantCultureIgnoreCase)) {
+			return (true, WorldFileType.modify, null);
 		}
+
+		return (true, WorldFileType.regular, null);
+	}
+
+	private static bool ImportWorldFile(string worldPath, out string? message) {
+		message = null;
 		WorldWindow.importIncomplete = true;
 		WorldWindow.worldHistory.Clear();
 
 		roomAttractiveness.Clear();
 		WorldWindow.Reset();
-		WorldWindow.region.exportPath = exportPath;
+		WorldWindow.region.exportPath = PathUtil.Parent(worldPath);
 		WorldWindow.region.acronym = Path.GetFileNameWithoutExtension(worldPath);
 		WorldWindow.region.acronym = WorldWindow.region.acronym[(WorldWindow.region.acronym.IndexOfReverse('_') + 1)..];
 
@@ -1268,7 +1304,7 @@ public static class WorldParser {
 			if (regionsPath != null)
 				WorldWindow.region.regionsPaths.Add(regionsPath);
 
-			string main = PathUtil.Parent(Path.Combine(WorldWindow.region.exportPath, ".."));
+			string main = PathUtil.Parent(WorldWindow.region.exportPath, 2);
 
 			// `world/xx/world_xx.txt` -> `modify/world/regions.txt`
 			regionsPath = PathUtil.FindDirectory(main, "modify");
@@ -1283,7 +1319,7 @@ public static class WorldParser {
 
 			// `mods/MOD/world/xx/world_xx.txt` -> `world/regions.txt`
 			if (Path.GetFileNameWithoutExtension(PathUtil.Parent(main))?.ToLowerInvariant() == "mods") {
-				regionsPath = PathUtil.FindDirectory(PathUtil.Parent(Path.Combine(main, "..")), "world");
+				regionsPath = PathUtil.FindDirectory(PathUtil.Parent(main, 2), "world");
 				if (regionsPath != null) {
 					regionsPath = PathUtil.FindFile(regionsPath, "regions.txt");
 					if (regionsPath != null)
@@ -1366,5 +1402,205 @@ public static class WorldParser {
 			PopupManager.Add(finalText);
 		}
 		return true;
+	}
+
+	private static bool ImportModifyingRegion(string regionModifyFilePath, out string? message) {
+		message = null;
+
+		// mods/MOD/modify/world/XX/world_xx.txt
+		Logger.Info($"Importing modify file {regionModifyFilePath}");
+
+		string acronym = Path.GetFileNameWithoutExtension(regionModifyFilePath).Split('_')[^1];
+
+		// mods/MOD/modify/world/XX/
+		string regionModifyFolderPath = PathUtil.Parent(regionModifyFilePath);
+		Logger.Info($"regionModifyFolderPath: {regionModifyFolderPath}");
+
+		// mods/MOD/
+		string modFolderPath = PathUtil.Parent(regionModifyFolderPath, 3);
+		Logger.Info($"modFolderPath: {modFolderPath}");
+
+		// mods/MOD/
+		string? regionModID = FilesystemPopup.TryFindModName(modFolderPath);
+		Logger.Info($"regionModID: {regionModID ?? "NULL"}");
+		
+		// mods/MOD/world/XX-rooms/
+		string overwriteRoomsPath = Path.Combine(modFolderPath, "world", $"{acronym}-rooms");
+		Logger.Info($"overwriteRoomsPath: {overwriteRoomsPath}");
+
+		// streamingassets/mods/
+		string modsFolderPath = PathUtil.Parent(modFolderPath);
+		Logger.Info($"modsFolderPath: {modsFolderPath}");
+
+		// streamingassets/
+		string streamingAssetsPath = PathUtil.Parent(modsFolderPath);
+		Logger.Info($"streamingAssetsPath: {streamingAssetsPath}");
+
+		string? steamWorkshopPath = null;
+
+		if (steamWorkshopPath == null) {
+			Logger.Info($"finding workshop folder");
+			// modsFolderPath = steamapps/common/Rain World/RainWorld_Data/StreamingAssets/
+
+			// steamapps/
+			string steamappsPath = PathUtil.Parent(streamingAssetsPath, 4);
+			Logger.Info($"steamappsPath: {steamappsPath}");
+
+			// steamapps/workshop/content/312520
+			steamWorkshopPath = Path.Combine(steamappsPath, "workshop", "content", "312520");
+			Logger.Info($"steamWorkshopPath: {steamWorkshopPath}");
+
+			// TODO - add setting for overwriting the steam workshop folder path
+		}
+
+		List<(string, string?)> allMods = [ (streamingAssetsPath, "basegame") ]; // add basegame mod path so the requirement checks always succeed
+
+		Logger.Info($"checking streamingassets folder");
+		foreach (string modPath in Directory.GetDirectories(modsFolderPath)) {
+			string? modID = FilesystemPopup.TryFindModName(modPath);
+			Logger.Info($"path: {modPath}; ID: {modID ?? "NULL"}");
+			allMods.Add((modPath, modID));
+		}
+		
+		if (!Directory.Exists(steamWorkshopPath)) {
+			Logger.Info($"directory {steamWorkshopPath} does not exist!");
+		}
+		else {
+			Logger.Info($"checking workshop folder");
+			foreach (string modPath in Directory.GetDirectories(steamWorkshopPath)) {
+				string? modID = FilesystemPopup.TryFindModName(modPath);
+				Logger.Info($"path: {modPath}; ID: {modID ?? "NULL"}");
+				allMods.Add((modPath, modID));
+			}
+		}
+
+		List<(string, string?)> orderedPaths = [];
+		GetAllModRequirements(0, modFolderPath, regionModID, allMods, ref orderedPaths, out message);
+
+		List<(string, string?)> filteredPaths = GetRelevantModPaths(orderedPaths, allMods, acronym);
+		foreach((string modPath, string? _) in filteredPaths) {
+			WorldMerger.ImportAndMergeRegion(modPath, acronym, out message);
+		}
+
+		message = "no problems encountered while importing modify file.";
+		return false;
+	}
+
+	private static bool GetAllModRequirements(int depth, string modFolderPath, string? modID, List<(string, string?)> allMods, ref List<(string, string?)> orderedRequirements, out string? message) {
+		message = null;
+		string spacer = "";
+		for (int i = 0; i < depth; i++)
+			spacer += "    ";
+		Logger.Info($"{spacer}CHECK {modID}");
+		List<string>? modRequirements = modID == "basegame" ? [] : GetModInfoRequirements(modFolderPath, out message);
+		if (modRequirements == null)
+			return false;
+		foreach (string modRequirement in modRequirements) {
+			Logger.Info($"{spacer}  > {modRequirement}");
+			bool modAlreadyOrdered = false;
+			foreach ((string modPath, string? modID) mod in orderedRequirements) {
+				if (mod.modID == modRequirement) {
+					modAlreadyOrdered = true;
+					Logger.Info($"{spacer}    ON LIST");
+					break;
+				}
+			}
+			if (!modAlreadyOrdered) {
+				string? modRequirementPath = GetPathByModID(modRequirement, allMods);
+				if (modRequirementPath != null)
+					GetAllModRequirements(depth + 1, modRequirementPath, modRequirement, allMods, ref orderedRequirements, out message);
+			}
+		}
+		orderedRequirements.Add((modFolderPath, modID));
+		Logger.Info($"{spacer}<< add {modID} to list");
+		return true;
+	}
+
+	private static List<string>? GetModInfoRequirements(string modFolderPath, out string? message) {
+		message = null;
+		// mods/MOD/modinfo.json
+		if (!PathUtil.TryGetFile(modFolderPath, "modinfo.json", out string? modInfoFilePath)) {
+			message = "Unable to find modinfo.json";
+			Logger.Error($"Unable to find modinfo.json within {modFolderPath}");
+			return null;
+		}
+		
+		JsonNode? modInfoJSON = JsonArray.Parse(File.ReadAllText(modInfoFilePath));
+
+		if (modInfoJSON == null) {
+			message = $"Unable to parse modinfo.json";
+			Logger.Error(message);
+			return null;
+		}
+
+		JsonNode? requirementsJSON = modInfoJSON["requirements"];
+		List<string> requirements = [ "basegame" ]; // add basegame by default; if the region is fully modded, this should not have any effect.
+
+		foreach (JsonNode item in requirementsJSON!.AsArray()!) {
+			string requirementName = item.GetValue<string>();
+			requirements.Add(requirementName);
+		}
+
+		return requirements;
+	}
+
+	private static string? GetPathByModID(string idToFind, List<(string, string?)> allMods) {
+		foreach ((string path, string? id) in allMods) {
+			if (id == idToFind) {
+				return path;
+			}
+		}
+		return null;
+	}
+
+	private static List<(string, string?)> GetRelevantModPaths(List<(string, string?)> allRequirements, List<(string, string?)> allMods, string acronym) {
+		List<(string, string?)> filteredPaths = [];
+		foreach ((string modPath, string? modID) in allRequirements) {
+			Logger.Info($"checking requirement {modID} for relevancy");
+
+			if (ModIsRelevant(modPath, acronym)) {
+				Logger.Info($"mod {modID} deemed relevant");
+				filteredPaths.Add((modPath, modID));
+			}
+		}
+		return filteredPaths;
+	}
+
+	private static bool ModIsRelevant(string path, string acronym) {
+		// check if the mod modifies or overwrites the relevant region
+		// path = MOD/
+
+		bool result = false;
+
+		// MOD/world/XX
+		Logger.Info($"checking for MOD/world/{acronym}");
+		if (Directory.Exists(Path.Combine(path, "world", acronym))) {
+			Logger.Info($"Exists");
+			result = true;
+		}
+		else
+			Logger.Info($"Does not exist");
+
+		// MOD/world/XX-rooms
+		Logger.Info($"checking for MOD/world/{acronym}-rooms");
+		if (Directory.Exists(Path.Combine(path, "world", $"{acronym}-rooms"))) {
+			Logger.Info($"Exists");
+			result = true;
+		}
+		else
+			Logger.Info($"Does not exist");
+
+		// MOD/modify/world/XX
+		Logger.Info($"checking for MOD/modify/world/{acronym}");
+		if (Directory.Exists(Path.Combine(path, "modify", "world", acronym))) {
+			Logger.Info($"Exists");
+			result = true;
+		}
+		else
+			Logger.Info($"Does not exist");
+
+		// REVIEW - should we check MOD/modify/world/XX-rooms as well?
+		
+		return result;
 	}
 }

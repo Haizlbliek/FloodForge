@@ -6,7 +6,13 @@ public enum RoomExitType {
 	Scavenger,
 }
 
+public enum RoomLockState {
+	none,
+	locked
+}
+
 public class RoomData {
+	public RoomLockState lockState;
 	public int waterHeight = -1;
 	public bool waterInFront = false;
 	public bool enclosedRoom = false;

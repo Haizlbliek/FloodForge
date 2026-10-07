@@ -4,6 +4,12 @@ using FloodForge.SettingTypes;
 namespace FloodForge;
 
 public static class Settings {
+	/// <summary>
+	/// The config number that the current version of FloodForge expects. To avoid FloodForge upgrading the settings.cfg file on a fresh build, update the repository's settings.cfg 'configVersion' value.
+	/// </summary>
+	private const int programConfigVersion = 1;
+	private const string settingsPath = "assets/settings.cfg";
+
 	public static Dictionary<string, Setting> settings = [];
 
 	public static Setting<float> CameraPanSpeed = Setting.Of("CameraPanSpeed", 0.4f);
@@ -18,7 +24,7 @@ public static class Settings {
 	public static Setting<bool> WarnMissingImages = Setting.Of("WarnMissingImages", false);
 	public static Setting<bool> HideTutorial = Setting.Of("HideTutorial", false);
 	public static Setting<bool> HideTutorialOnLoadWorld = Setting.Of("HideTutorialOnLoadWorld", false);
-	public static Setting<bool> UpdateWorldFiles = Setting.Of("UpdateWorldFiles", true);
+	public static Setting<bool> UpdateRegionFiles = Setting.Of("UpdateRegionFiles", true);
 	public static Setting<bool> UpdateRoomImagesOnRender = Setting.Of("UpdateRoomImagesOnRender", false);
 	public static Setting<Color> NoSubregionColor = Setting.Of("NoSubregionColor", Color.White);
 	public static Setting<float> RoomTintStrength = Setting.Of("RoomTintStrength", 0.5f);
@@ -45,8 +51,41 @@ public static class Settings {
 	public static Setting<bool> DEBUGVerboseExportLog = Setting.Of("DebugVerboseExportLog", false);
 
 
+	private static int loadedConfigVersion = -1; // -1 by default: is set if a cfgVersion key is present in the loaded settings.cfg file
+
 	public static void Initialize() {
-		string[] lines = File.ReadAllLines("assets/settings.cfg");
+		string[] lines = File.ReadAllLines(settingsPath);
+
+		foreach (string l in lines) {
+			string line = l.Trim();
+			if (line == "" || line.StartsWith('#')) continue;
+
+			string key = line[..line.IndexOf('=')].Trim();
+			string value = line[(line.IndexOf('=') + 1)..].Trim();
+
+			if (key.Equals("cfgVersion", StringComparison.InvariantCultureIgnoreCase)) {
+				if (int.TryParse(value, out int version)) {
+					loadedConfigVersion = version;
+					Logger.Note($"cfgVersion: {loadedConfigVersion}");
+				}
+				else {
+					Logger.Warn($"failed to parse cfgVersion value \"{value}\" to int");
+				}
+				continue;
+			}
+		}
+
+		bool triedToUpdate = false;
+		if (loadedConfigVersion < programConfigVersion) {
+			Logger.Info($"Outdated config version detected! ({loadedConfigVersion} -> {programConfigVersion})");
+			UpgradeConfigFile([.. lines], loadedConfigVersion, programConfigVersion); // TODO - ask user before doing this
+			triedToUpdate = true;
+		}
+		if (loadedConfigVersion > programConfigVersion) {
+			Logger.Warn($"Config version is newer than expected! ({loadedConfigVersion} -> {programConfigVersion})");
+		}
+
+		lines = File.ReadAllLines(settingsPath);
 
 		foreach (string l in lines) {
 			string line = l.Trim();
@@ -59,6 +98,17 @@ public static class Settings {
 				continue;
 			}
 
+			if (triedToUpdate && key.Equals("cfgVersion", StringComparison.InvariantCultureIgnoreCase)) {
+				if (int.TryParse(value, out int version)) {
+					loadedConfigVersion = version;
+					Logger.Note($"cfgVersion: {loadedConfigVersion}");
+				}
+				else {
+					Logger.Warn($"failed to parse cfgVersion value \"{value}\" to int");
+				}
+				continue;
+			}
+
 			if (settings.TryGetValue(key, out Setting? setting)) {
 				setting.Set(value);
 			}
@@ -67,6 +117,59 @@ public static class Settings {
 			}
 		}
 	}
+
+	private static void UpgradeConfigFile(List<string> settingsFile, int upgradeFromVersion, int upgradeToVersion) {
+		bool success = true;
+		string message = ""; // used to report any issues encountered during any upgrade step.
+
+		//THIS IS WHERE CHECKS WOULD GO; make sure they are in order of cfgVersion (so version 2's changes are applied before version 4's changes)
+		//example of a check: if cfgVersion 3 changes the name of the setting "DoFunnyThings" to "DoSillyThings", the check might look like:
+		//	if (upgradeFromVersion < 3) {
+		//		int DoFunnyThingsIndex = settingsFile.FindIndex(s => s.StartsWith("DoFunnyThings="));
+		//		settingsFile[DoFunnyThingsIndex] = $"DoSillyThings={settingsFile[DoFunnyThingsIndex].Split('=')[^1]}";
+		//	}
+		//Granted, this system may change. For example, it's harder to update the description that accompanies a setting in the case where the patcher wasn't used to update.
+
+		if (upgradeFromVersion < 1) {
+			int updateWorldFilesIndex = settingsFile.FindIndex(s => s.StartsWith("UpdateWorldFiles"));
+			if (updateWorldFilesIndex != -1) {
+				string value = settingsFile[updateWorldFilesIndex].Split('=')[^1];
+
+				if (settingsFile[updateWorldFilesIndex - 1].StartsWith("# ") && settingsFile[updateWorldFilesIndex - 2].StartsWith("# ")) {
+					settingsFile[updateWorldFilesIndex - 2] = "# If true, exporting will modify the existing files that exist the region's folder (`world_xx.txt`, `map_xx.txt/png`, etc.)";
+					settingsFile[updateWorldFilesIndex - 1] = "# If false, exported regions are stored in `FloodForge/worlds` and need to be manually copied into their respective directories";
+				}
+				settingsFile[updateWorldFilesIndex] = $"UpdateRegionFiles={value}";
+			}
+		}
+
+		if (success) {
+			try {
+				Logger.Info("Incrementing cfgVersion");
+				int versionIndex = settingsFile.FindIndex(s => s.StartsWith("cfgVersion="));
+				if (versionIndex != -1)
+					settingsFile[versionIndex] = $"cfgVersion={upgradeToVersion}";
+				else {
+					settingsFile.Add($"");
+					settingsFile.Add($"# This config file's version. Do not modify!");
+					settingsFile.Add($"cfgVersion={upgradeToVersion}");
+				}
+				File.WriteAllText(settingsPath, string.Join('\n', [.. settingsFile]));
+			}
+			catch (Exception e) {
+				message = e.ToString();
+				success = false;
+			}
+		}
+
+		if (success) {
+			Logger.Info("Modifications successful.");
+		}
+		else {
+			Logger.Error($"Modifications failed: {message}");
+		}
+	}
+
 	public class STDisabledButtonsMode : SettingType<STDisabledButtonsMode> {
 		public static readonly STDisabledButtonsMode None = STDisabledButtonsMode.Of("None");
 		public static readonly STDisabledButtonsMode Grey = STDisabledButtonsMode.Of("Grey");

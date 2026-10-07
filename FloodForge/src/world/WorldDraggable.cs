@@ -6,8 +6,13 @@ public class WorldDraggable {
 		return true;
 	}
 
+	public bool Selectable => this.IsSelectable();
+	protected virtual bool IsSelectable() {
+		return this.Visible;
+	}
+
 	public bool Draggable => this.IsDraggable();
-	public virtual bool IsDraggable() {
+	protected virtual bool IsDraggable() {
 		return this.Visible;
 	}
 

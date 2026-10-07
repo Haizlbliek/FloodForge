@@ -19,6 +19,8 @@ public class Timeline {
 		this.timelines = [..timelines];
 	}
 
+	public static Timeline All => new Timeline(TimelineType.All, []);
+
 	public bool Match(Timeline other) {
 		if (this.timelineType != other.timelineType)
 			return false;
@@ -192,6 +194,10 @@ public class Timeline {
 			return this.timelines.Count == 0;
 		}
 		return false;
+	}
+
+	public bool IsNeutral() {
+		return this.timelineType == TimelineType.All || (this.timelineType == TimelineType.Except && this.timelines.Count == 0);
 	}
 }
 
