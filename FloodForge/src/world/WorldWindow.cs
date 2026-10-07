@@ -1581,7 +1581,7 @@ public static class WorldWindow {
 				return;
 			}
 			else if (Keys.JustPressed(Key.T)) {
-				PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+				PopupManager.Add(new MarkdownPopup("docs/FloodForge-docs/docs/world_editor.md"));
 				return;
 			}
 		}
@@ -2243,7 +2243,7 @@ public static class WorldWindow {
 						if (tutorialPopup != null && !tutorialPopup.IsDeleted)
 							tutorialPopup.Close();
 						else
-							tutorialPopup = PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+							tutorialPopup = PopupManager.Add(new MarkdownPopup("docs/FloodForge-docs/docs/world_editor.md"));
 					}),
 					new Button("Splash", button => {
 						PopupManager.Add(new SplashArtPopup(false));

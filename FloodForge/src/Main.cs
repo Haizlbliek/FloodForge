@@ -74,7 +74,6 @@ public static class Main {
 		WorldWindow.Initialize();
 		DropletWindow.Initialize();
 		PopupManager.Initialize();
-		Sfx.Initialize();
 
 		if (Program.patcherUpdated) {
 			FloodForge.Popups.PopupManager.Add("FloodForge updated file structure\nPlease double check if mods are correct");
@@ -88,7 +87,6 @@ public static class Main {
 	}
 
 	public static void Cleanup() {
-		Sfx.Cleanup();
 		RichPresenceManager.Cleanup();
 
 		lockFile.Dispose();

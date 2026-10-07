@@ -21,21 +21,6 @@
           "Silk.NET.Input.Glfw": "2.22.0"
         }
       },
-      "Silk.NET.OpenAL": {
-        "type": "Direct",
-        "requested": "[2.22.0, )",
-        "resolved": "2.22.0",
-        "contentHash": "YpzIhYRcUZ8dHML8+DUHqEgu0exmZhouWYHGR4AXPtD63YbFuuO4aFqulWkCpIaOvjCdsIWtNKElLJreLxXvFw==",
-        "dependencies": {
-          "Silk.NET.Core": "2.22.0"
-        }
-      },
-      "Silk.NET.OpenAL.Soft.Native": {
-        "type": "Direct",
-        "requested": "[1.23.1, )",
-        "resolved": "1.23.1",
-        "contentHash": "gZIbksInoiXbJZmepYnTs5O6Edg5O5k86c1+Uus0zSaVnQx5WRbInGz2VTlvudbs0qAqXs/asL1YvJzco/nfAQ=="
-      },
       "Silk.NET.OpenGL": {
         "type": "Direct",
         "requested": "[2.22.0, )",

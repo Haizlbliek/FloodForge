@@ -1,0 +1,3 @@
+[submodule "FloodForge/docs/FloodForge-docs"]
+	path = FloodForge/docs/FloodForge-docs
+	url = https://github.com/Haizlbliek/FloodForge-Docs.git

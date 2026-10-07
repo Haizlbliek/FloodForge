@@ -247,7 +247,7 @@ public class SplashArtPopup : Popup {
 					if (!WorldParser.ImportWorldFile(RecentFiles.recents[i], out string? message))
 						PopupManager.Add(new InfoPopup($"Importing world failed!\n{(message == null ? "" : $"{message}\n")}View log.txt for more info."));
 					else if (!Settings.HideTutorial && !Settings.HideTutorialOnLoadWorld && this.showTutorialAfterClose) {
-						PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+						PopupManager.Add(new MarkdownPopup("docs/FloodForge-docs/docs/world_editor.md"));
 					}
 					return;
 				}
@@ -299,7 +299,7 @@ public class SplashArtPopup : Popup {
 			this.Close();
 
 			if (!Settings.HideTutorial && this.showTutorialAfterClose) {
-				PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+				PopupManager.Add(new MarkdownPopup("docs/FloodForge-docs/docs/world_editor.md"));
 			}
 		}
 	}

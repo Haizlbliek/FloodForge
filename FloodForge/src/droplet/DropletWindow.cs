@@ -1128,7 +1128,7 @@ public static class DropletWindow {
 	public static void Draw() {
 		if (Keys.Modifier(Keys.Modifiers.Alt)) {
 			if (Keys.JustPressed(Key.T)) {
-				PopupManager.Add(new MarkdownPopup("docs/TutorialDroplet.md"));
+				PopupManager.Add(new MarkdownPopup("docs/FloodForge-docs/docs/droplet.md"));
 				return;
 			}
 		}
@@ -2295,7 +2295,7 @@ public static class DropletWindow {
 				}),
 
 				new Button("Help", button => {
-					PopupManager.Add(new MarkdownPopup("docs/TutorialDroplet.md"));
+					PopupManager.Add(new MarkdownPopup("docs/FloodForge-docs/docs/droplet.md"));
 				}),
 			];
 		}

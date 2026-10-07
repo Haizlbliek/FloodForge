@@ -23,8 +23,6 @@
 	<ItemGroup>
 		<PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
 		<PackageReference Include="Silk.NET.Input" Version="2.22.0" />
-		<PackageReference Include="Silk.NET.OpenAL" Version="2.22.0" />
-		<PackageReference Include="Silk.NET.OpenAL.Soft.Native" Version="1.23.1" />
 		<PackageReference Include="Silk.NET.OpenGL" Version="2.22.0" />
 		<PackageReference Include="Silk.NET.Windowing" Version="2.22.0" />
 		<PackageReference Include="Silk.NET.Windowing.Glfw" Version="2.23.0" />
