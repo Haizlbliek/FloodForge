@@ -2,7 +2,7 @@ name: Build Logic
 on:
   workflow_call:
     inputs:
-      is_release:
+      is_nightly:
         type: boolean
         default: false
       tag_name:
@@ -47,7 +47,7 @@ jobs:
       - name: Add Nightly
         shell: bash
         run: |
-          if [ "${{ inputs.is_release }}" = "false" ]; then
+          if [ "${{ inputs.is_nightly }}" = "true" ]; then
             echo "${{ needs.pre-build.outputs.build_date }}" > ./publish-temp/assets/nightly.txt
           fi
 
@@ -86,7 +86,7 @@ jobs:
           fetch-depth: 0
 
       - name: Reset Nightly Tag
-        if: inputs.is_release == false
+        if: inputs.is_nightly == true
         run: |
           git tag -f nightly
           git push origin nightly --force
@@ -100,9 +100,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag_name }}
-          name: ${{ inputs.is_release && format('FloodForge {0}', inputs.tag_name) || 'Nightly Development Build' }}
-          prerelease: ${{ !inputs.is_release }}
-          draft: ${{ inputs.is_release }}
+          name: ${{ inputs.is_nightly && 'Nightly Development Build' || format('FloodForge {0}', inputs.tag_name) }}
+          prerelease: ${{ inputs.is_nightly }}
+          draft: ${{ !inputs.is_nightly }}
           files: ./artifacts/FloodForge-*.zip
           body: |
-            ${{ inputs.is_release && '' || format('BUILD_DATE: {0}', needs.pre-build.outputs.build_date) }}
+            ${{ inputs.is_nightly && format('BUILD_DATE: {0}', needs.pre-build.outputs.build_date) || '' }}

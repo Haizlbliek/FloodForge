@@ -1268,7 +1268,7 @@ public static class WorldParser {
 			PopupManager.Add($"Importing world failed!\n{(message == null ? "" : $"{message}\n")}View log.txt for more info.");
 		}
 		else if (showTutorial)
-			PopupManager.Add(new MarkdownPopup("docs/TutorialWorld.md"));
+			PopupManager.Add(new MarkdownPopup("docs/FloodForge-docs/docs/world_editor.md"));
 	}
 
 	private static (bool, WorldFileType, string?) CheckImportFile(string worldPath) {

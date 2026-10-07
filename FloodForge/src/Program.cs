@@ -18,7 +18,8 @@ public static class Program {
 			Logger.Error(e.ExceptionObject);
 		};
 
-		if (File.Exists("crashlog.txt")) File.Delete("crashlog.txt");
+		if (File.Exists("crashlog.txt"))
+			File.Delete("crashlog.txt");
 
 		foreach (string arg in args) {
 			if (!arg.StartsWith("--patcher=")) continue;

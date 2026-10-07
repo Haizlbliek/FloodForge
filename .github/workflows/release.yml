@@ -8,5 +8,5 @@ jobs:
   call-build:
     uses: ./.github/workflows/_build_logic.yml
     with:
-      is_release: true
+      is_nightly: false
       tag_name: ${{ github.ref_name }}

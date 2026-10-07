@@ -7,5 +7,5 @@ jobs:
   call-build:
     uses: ./.github/workflows/_build_logic.yml
     with:
-      is_release: false
+      is_nightly: true
       tag_name: "nightly"

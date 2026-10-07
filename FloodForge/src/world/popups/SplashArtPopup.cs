@@ -89,6 +89,7 @@ public class SplashArtPopup : Popup {
 
 			this.updateStatus = currentAvailable ? UpdateStatus.Available : UpdateStatus.Unavailable;
 
+#if !DEBUG
 			string switchText = this.nightlyBuildDate == null ? "Switch to Nightly" : "Switch to Release";
 			this.buttons.Add(new IconButton(switchText, 0.25f, 0.25f, 0.5f, 0.5f, () => {
 				PopupManager.Add(new ConfirmPopup($"Switch to the latest {(this.nightlyBuildDate == null ? "Nightly" : "Release")} build?").Okay(async () => {
@@ -97,6 +98,7 @@ public class SplashArtPopup : Popup {
 				}));
 				return true;
 			}));
+#endif
 
 			if (this.updateStatus == UpdateStatus.Available) {
 				(string? downloadUrl, string? checksum) = this.ParseAssetData(currentNode);
