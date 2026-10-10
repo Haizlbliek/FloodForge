@@ -66,7 +66,7 @@ public class TagPopup : Popup {
 		bool selected = tagId == "" && roomTags.Count == 0 || roomTags.Contains(tagId);
 
 		if (UI.TextButton(tag, rect, new UI.TextButtonMods { selected = selected })) {
-			if (Keys.Modifier(Keys.Modifiers.Shift)) {
+			if (Input.ModifiersPressed(Input.Modifier.Shift)) {
 				if (!tagId.IsNullOrEmpty()) this.ToggleTag(tagId);
 			}
 			else {

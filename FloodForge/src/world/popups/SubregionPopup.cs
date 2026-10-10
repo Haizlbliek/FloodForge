@@ -70,7 +70,7 @@ public class SubregionPopup : Popup {
 			}
 
 			if (UI.TextButton("X", new Rect(0.335f + centerX, y, 0.385f + centerX, y - 0.05f))) {
-				if (Keys.Modifier(Keys.Modifiers.Shift)) {
+				if (Input.Pressed(Keys.ForceDeleteSubregion)) {
 					SubregionChange change = new SubregionChange(idx);
 
 					foreach (Room otherRoom in WorldWindow.region.rooms) {
@@ -96,7 +96,7 @@ public class SubregionPopup : Popup {
 						WorldWindow.worldHistory.Apply(change);
 					}
 					else {
-						PopupManager.Add(new InfoPopup("Cannot remove subregion if assigned to rooms\n(Hold shift to force)"));
+						PopupManager.Add(new InfoPopup("Cannot remove subregion if assigned to rooms\n(Hold shift to force)")); // TODO: Make keybinding-specific
 					}
 				}
 			}

@@ -99,13 +99,13 @@ public static class Main {
 	}
 
 	private static void KeyDown(IKeyboard keyboard, Key key, int arg3) {
-		Keys.Press(key);
+		Input.Press(key);
 		KeyPress(key);
 		UI.KeyPress(key);
 	}
 
 	private static void KeyUp(IKeyboard keyboard, Key key, int arg3) {
-		Keys.Release(key);
+		Input.Release(key);
 	}
 	static Stopwatch? postRenderStopwatch = null;
 	public static void Render() {
@@ -177,15 +177,15 @@ public static class Main {
 
 		PopupManager.Cleanup();
 
-		if (Keys.JustPressed(Key.F11)) {
+		if (Input.JustPressed(Keys.ToggleFullscreen)) {
 			fullscreen = !fullscreen;
 			Program.window.WindowState = fullscreen ? Silk.NET.Windowing.WindowState.Fullscreen : Silk.NET.Windowing.WindowState.Normal;
 		}
 		
-		if (Keys.JustPressed(Key.F3)) {
+		if (Input.JustPressed(Keys.ToggleDevTools)) {
 			// TODO - split log and profiler into separate keybinds
 			if (Profiler.profilerMode == Profiler.ProfilerMode.disabled) {
-				if (Keys.Modifier(Keys.Modifiers.Shift))
+				if (Input.ModifiersPressed(Input.Modifier.Shift))
 					Profiler.profilerMode = Profiler.ProfilerMode.fpsOnly;
 				else
 					Profiler.profilerMode = Profiler.ProfilerMode.full;
@@ -194,7 +194,7 @@ public static class Main {
 				Profiler.profilerMode = Profiler.ProfilerMode.disabled;
 		}
 
-		if (Keys.JustPressed(Key.Escape)) {
+		if (Input.JustPressed(Keys.Cancel)) {
 			if (PopupManager.Windows.Count > 0) {
 				PopupManager.Windows.Last().Reject();
 			}
@@ -213,13 +213,13 @@ public static class Main {
 			}
 		}
 
-		if (Keys.JustPressed(Key.Enter)) {
+		if (Input.JustPressed(Keys.Accept)) {
 			if (PopupManager.Windows.Count > 0) {
 				PopupManager.Windows.Last().Accept();
 			}
 		}
 
-		Keys.End();
+		Input.End();
 
 		Profiler.MarkPoint(-2);
 

@@ -10,9 +10,9 @@ public class ReplaceRoom : MapDraggable {
 	public Timeline timeline;
 	public string[] preProcessorConditions;
 	public bool setHidden = false;
-	public bool IsHidden => this.setHidden && !Keys.Pressed(Key.AltLeft) && !Keys.Pressed(Key.AltRight);
+	public bool IsHidden => this.setHidden && !Input.Pressed(Keys.ShowHiddenReplaceRooms);
 
-    public Vector2i size;
+	public Vector2i size;
 
 	protected override bool IsVisible() {
 		return WorldWindow.VisibleTimeline.OverlapsWith(this.timeline) && !this.IsHidden;
@@ -39,7 +39,7 @@ public class ReplaceRoom : MapDraggable {
 	}
 
 	//IDEA - run timeline checks when drawing dens so that dens that would only appear on replaceroom are only rendered there
-    public void Draw(WorldWindow.RoomPosition positionType, bool atHalfAlpha) {
+	public void Draw(WorldWindow.RoomPosition positionType, bool atHalfAlpha) {
 		if (Settings.DEBUGRoomWireframe) {
 			Program.gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
 		}
@@ -112,7 +112,7 @@ public class ReplaceRoom : MapDraggable {
 		}
 
 		Program.gl.Disable(EnableCap.Blend);
-    }
+	}
 
 	public void DrawReplaceRoomShortcuts(Vector2 renderedPosition) {
 		float clippedSelectorScale = Math.Min(WorldWindow.SelectorScale, 10f);
@@ -154,7 +154,7 @@ public class ReplaceRoom : MapDraggable {
 
 			// Draws shortcutpath if either the associated exit or connection is hovered over.
 			bool shouldBeHighlighted = (thisRoomExitHovered || connectionFound && this.replacedRoom.connections[getConnectionIndex].Hovered) && WorldWindow.hoveredShortcutEntrance == -1;
-			if (shouldBeHighlighted || Keys.Modifier(Keys.Modifiers.Shift)) {
+			if (shouldBeHighlighted || Input.Pressed(Keys.ShowShortcuts)) {
 				if (this.replacingRoom.roomExitPaths.TryGetValue(this.replacingRoom.roomExits[i], out Room.RoomConnection result)) {
 					Room.DrawRoomPath(renderedPosition, result, thisRoomExitHovered, shouldBeHighlighted);
 				}
@@ -202,7 +202,7 @@ public class ReplaceRoom : MapDraggable {
 
 					// Draws shortcutpath if the connection is hovered over. (since a roomexit isn't related to this entrance
 					// (otherwise it'd have been drawn with the roomExits), there is no exit to hover over that should highlight this shortcut entrance)
-					if (thisShortcutEntranceHovered || Keys.Modifier(Keys.Modifiers.Shift)) {
+					if (thisShortcutEntranceHovered || Input.Pressed(Keys.ShowShortcuts)) {
 						Room.DrawRoomPath(renderedPosition, value.connection, thisShortcutEntranceHovered, thisShortcutEntranceHovered);
 					}
 				}

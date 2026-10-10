@@ -653,13 +653,13 @@ public static class WorldWindow {
 				}
 
 				if (selectingState == SelectingState.None) { // but if there isn't a hovering room
-					bool isPanning = isOriginal && !Keys.Modifier(Keys.Modifiers.Shift); // if using original control scheme & !shift, pan
+					bool isPanning = isOriginal && !Input.ModifiersPressed(Input.Modifier.Shift); // if using original control scheme & !shift, pan
 
 					selectingState = isPanning ? SelectingState.Panning : SelectingState.Selecting; // set state according to isPanning
 					selectionStart = isPanning ? Mouse.Pos : worldMouse;
 					selectionEnd = selectionStart; // reset selection
 
-					bool isAdditive = (!isOriginal && Keys.Modifier(Keys.Modifiers.Shift)) || Keys.Modifier(Keys.Modifiers.Control);
+					bool isAdditive = (!isOriginal && Input.ModifiersPressed(Input.Modifier.Shift)) || Input.ModifiersPressed(Input.Modifier.Control);
 					if (!isAdditive && !isPanning)
 						selectedDraggables.Clear(); // if selecting and not additive, any new selection clears the old one
 				}
@@ -740,7 +740,7 @@ public static class WorldWindow {
 			referenceImages.Add(image);
 		}
 
-		bool isAdditive = Keys.Modifier(Keys.Modifiers.Shift) || Keys.Modifier(Keys.Modifiers.Control);
+		bool isAdditive = Input.ModifiersPressed(Input.Modifier.Shift) || Input.ModifiersPressed(Input.Modifier.Control);
 		if (isAdditive) { // if it's additive, add room if it doesn't exist and remove if it does
 			if (!selectedDraggables.Remove(draggable))
 				selectedDraggables.Add(draggable);
@@ -775,7 +775,7 @@ public static class WorldWindow {
 			if (draggable is MapDraggable mapDraggable) {
 				Vector2 dev = Vector2.Zero, canon = Vector2.Zero; // initialise movement vectors
 
-				bool moveBoth = Keys.Modifier(Keys.Modifiers.Alt) || PositionType == RoomPosition.Both;
+				bool moveBoth = Input.Pressed(Keys.DevAndCanon) || PositionType == RoomPosition.Both;
 
 				if (PositionType == RoomPosition.Canon) { // depending on visible position type and moveBoth, move one and match the other
 					canon = diff;
@@ -814,7 +814,7 @@ public static class WorldWindow {
 		worldHistory.Apply(change1);
 	}
 
-	private static void KeybindDelete() {
+	private static void ActionDelete() {
 		Connection? connection = region.connections.FirstOrDefault(c => c.ConnectionVisible && c.roomA.Visible && c.roomB.Visible && c.Hovered);
 		if (connection != null && connection.roomA.data.lockState != RoomLockState.locked && connection.roomB.data.lockState != RoomLockState.locked) {
 			DeleteConnection(connection);
@@ -865,8 +865,8 @@ public static class WorldWindow {
 		}
 	}
 
-	private static void UpdateKeybinds() {
-		if (Keys.JustPressed(Key.O) && Keys.Modifier(Keys.Modifiers.Shift) && SelectedRooms.Count == 2) {
+	private static void UpdateKeybindings() {
+		if (Input.JustPressed(Keys.MassConnectRooms) && SelectedRooms.Count == 2) {
 			Room first = SelectedRooms.First();
 			Room second = SelectedRooms.Last();
 			RoomAndConnectionChange massConnectChange = new RoomAndConnectionChange(true);
@@ -888,33 +888,33 @@ public static class WorldWindow {
 			worldHistory.Apply(massConnectChange);
 		}
 
-		if (Keys.JustPressed(Key.F)) {
+		if (Input.JustPressed(Keys.Search)) {
 			PopupManager.Add(new SearchPopup());
 		}
 
-		if (Keys.JustPressed(Key.I)) {
+		if (Input.JustPressed(Keys.MoveToFront)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
 				worldHistory.Apply(new MoveToBackChange(rooms));
 			}
 		}
 
-		if (Keys.JustPressed(Key.X)) {
-			KeybindDelete();
+		if (Input.JustPressed(Keys.Delete)) {
+			ActionDelete();
 		}
 
-		if (Keys.JustPressed(Key.S)) {
+		if (Input.JustPressed(Keys.ChangeSubregion)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
 				PopupManager.Add(new SubregionPopup(rooms));
 			}
 		}
 
-		if (Keys.JustPressed(Key.T)) {
+		if (Input.JustPressed(Keys.ChangeTag)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
 				PopupManager.Add(new TagPopup(rooms));
 			}
 		}
 
-		if (Keys.JustPressed(Key.L)) {
+		if (Input.JustPressed(Keys.ChangeLayer)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
 				int minimumLayer = 3;
 				foreach (Room room in rooms) {
@@ -938,7 +938,7 @@ public static class WorldWindow {
 			}
 		}
 
-		if (Keys.JustPressed(Key.G)) {
+		if (Input.JustPressed(Keys.ToggleMerge)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
 				bool setMerge = !rooms.Any(r => r.data.merge);
 
@@ -948,7 +948,7 @@ public static class WorldWindow {
 			}
 		}
 
-		if (Keys.JustPressed(Key.W)) {
+		if (Input.JustPressed(Keys.ToggleWarpable)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
 				bool setWarpable = !rooms.Any(r => r.data.warpable);
 
@@ -958,7 +958,7 @@ public static class WorldWindow {
 			}
 		}
 
-		if (Keys.JustPressed(Key.H)) {
+		if (Input.JustPressed(Keys.ToggleVisibility)) {
 			if (HoveringReplaceRoom != null) {
 				HoveringReplaceRoom.ToggleHide();
 			}
@@ -976,7 +976,7 @@ public static class WorldWindow {
 			}
 		}
 
-		if (Keys.JustPressed(Key.B)) {
+		if (Input.JustPressed(Keys.ToggleBatMigrationBlockage)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
 				bool setBlocked = !rooms.Any(r => r.data.blockedBatMigration);
 
@@ -986,7 +986,7 @@ public static class WorldWindow {
 			}
 		}
 
-		if (VisibleCreatures && Keys.JustPressed(Key.C)) {
+		if (VisibleCreatures && Input.JustPressed(Keys.ChangeCreatures)) {
 			if (denRoom != null) {
 				if (denRoom is OffscreenRoom offscreenRoom) {
 					PopupManager.Add(new DenPopup(offscreenRoom.GetDen()));
@@ -996,13 +996,13 @@ public static class WorldWindow {
 			}
 		}
 
-		if (Keys.JustPressed(Key.A)) {
+		if (Input.JustPressed(Keys.ChangeAttractiveness)) {
 			if (HoveringOrSelectedRooms(out HashSet<Room> rooms)) {
 				PopupManager.Add(new RoomAttractivenessPopup(rooms));
 			}
 		}
 
-		if (Keys.JustPressed(Key.D)) {
+		if (Input.JustPressed(Keys.ChangeConditionals)) {
 			Connection? connection = HoveringConnection;
 			if (connection != null) {
 				connection.conditionalPopup = PopupManager.Add(new ConditionalPopup(connection));
@@ -1017,7 +1017,7 @@ public static class WorldWindow {
 			}
 		}
 
-		if (Keys.JustPressed(Key.R)) {
+		if (Input.JustPressed(Keys.EditRoom)) {
 			if (region.acronym.IsNullOrEmpty()) {
 				PopupManager.Add(new InfoPopup("You must create or import your region\nbefore creating or editing a room."));
 			}
@@ -1073,19 +1073,14 @@ public static class WorldWindow {
 		SelectorScale = (scale < 0f) ? MathF.Max(cameraScale / 16f, 1f) : scale;
 
 		if (renderRoomsTask == null || renderRoomsTask.IsCompleted) {
-			if (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.Z)) {
-				if (Keys.Modifier(Keys.Modifiers.Shift)) {
-					worldHistory.Redo();
-				}
-				else {
-					worldHistory.Undo();
-				}
+			if (Input.JustPressed(Keys.Undo)) {
+				worldHistory.Undo();
 			}
-			if (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.Y)) {
+			if (Input.JustPressed(Keys.Redo)) {
 				worldHistory.Redo();
 			}
 
-			roomSnap = !Keys.Modifier(Keys.Modifiers.Alt);
+			roomSnap = !Input.Pressed(Keys.DisableSnap);
 			
 			UpdateHoveredExits();
 
@@ -1096,7 +1091,7 @@ public static class WorldWindow {
 			if (PopupManager.Windows.Count != 0)
 				return;
 
-			UpdateKeybinds();
+			UpdateKeybindings();
 		}
 	}
 
@@ -1213,7 +1208,7 @@ public static class WorldWindow {
 			}
 			else {
 				if (typeCull) room.Draw(PositionType);
-				if (Keys.Modifier(Keys.Modifiers.Alt) && nonTypeCull) {
+				if (Input.Pressed(Keys.DevAndCanon) && nonTypeCull) {
 					room.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon);
 				}
 			}
@@ -1249,8 +1244,8 @@ public static class WorldWindow {
 					if (devCull) replaceRoom.Draw(RoomPosition.Dev, true);
 				}
 				else {
-					if (typeCull) replaceRoom.Draw(PositionType, Keys.Modifier(Keys.Modifiers.Alt) && replaceRoom.setHidden);
-					if (Keys.Modifier(Keys.Modifiers.Alt) && nonTypeCull) {
+					if (typeCull) replaceRoom.Draw(PositionType, Input.Pressed(Keys.DevAndCanon) && replaceRoom.setHidden);
+					if (Input.Pressed(Keys.DevAndCanon) && nonTypeCull) {
 						replaceRoom.Draw((PositionType == RoomPosition.Canon) ? RoomPosition.Dev : RoomPosition.Canon, true);
 					}
 				}
@@ -1585,15 +1580,12 @@ public static class WorldWindow {
 	}
 
 	public static void Draw() {
-		if (Keys.Modifier(Keys.Modifiers.Alt)) {
-			if (Keys.JustPressed(Key.S)) {
-				PopupManager.Add(new SplashArtPopup(false));
-				return;
-			}
-			else if (Keys.JustPressed(Key.T)) {
+		if (Input.JustPressed(Keys.OpenSplash)) {
+			PopupManager.Add(new SplashArtPopup(false));
+		}
+
+		if (Input.JustPressed(Keys.OpenTutorial)) {
 				PopupManager.Add(new MarkdownPopup("docs/FloodForge-docs/docs/world_editor.md"));
-				return;
-			}
 		}
 		UpdateMain();
 		Profiler.MarkPoint("UpdateMain");
@@ -2297,7 +2289,7 @@ public static class WorldWindow {
 			}
 
 			private void Click() {
-				if (!Keys.Modifier(Keys.Modifiers.Shift)) {
+				if (!Input.Pressed(Keys.SoloLayer)) {
 					VisibleLayers[this.layer] = !VisibleLayers[this.layer];
 					return;
 				}

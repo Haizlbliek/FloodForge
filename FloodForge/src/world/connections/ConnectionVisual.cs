@@ -256,7 +256,7 @@ public abstract class ConnectionVisual {
 			if (!aVisible && !bVisible || Settings.ConnectionOpacity < 0.01f)
 				return;
 
-			bool hovered = this.Hovered || Keys.Modifier(Keys.Modifiers.Shift);
+			bool hovered = this.Hovered || Input.Pressed(Keys.HighlightConnections);
 
 			bool fadeMiddle = aVisible && bVisible && !this.ConnectionVisible;
 

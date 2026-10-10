@@ -1738,7 +1738,7 @@ public class Room : MapDraggable {
 
 			// Draws shortcutpath if either the associated exit or connection is hovered over.
 			bool shouldBeHighlighted = (thisRoomExitHovered || connectionFound && this.connections[getConnectionIndex].Hovered) && WorldWindow.hoveredShortcutEntrance == -1;
-			if (shouldBeHighlighted || Keys.Modifier(Keys.Modifiers.Shift)) {
+			if (shouldBeHighlighted || Input.Pressed(Keys.ShowShortcuts)) {
 				if (this.roomExitPaths.TryGetValue(this.roomExits[i], out RoomConnection result)) {
 					DrawRoomPath(renderedPosition, result, thisRoomExitHovered, shouldBeHighlighted);
 				}
@@ -1786,7 +1786,7 @@ public class Room : MapDraggable {
 
 					// Draws shortcutpath if the connection is hovered over. (since a roomexit isn't related to this entrance
 					// (otherwise it'd have been drawn with the roomExits), there is no exit to hover over that should highlight this shortcut entrance)
-					if (thisShortcutEntranceHovered || Keys.Modifier(Keys.Modifiers.Shift)) {
+					if (thisShortcutEntranceHovered || Input.Pressed(Keys.ShowShortcuts)) {
 						DrawRoomPath(renderedPosition, value.connection, thisShortcutEntranceHovered, thisShortcutEntranceHovered);
 					}
 				}

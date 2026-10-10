@@ -70,7 +70,7 @@ public static class UI {
 			selectTime = 0;
 		}
 
-		if (key == Key.V && Keys.Modifier(Keys.Modifiers.Control)) {
+		if (key == Key.V && Input.ModifiersPressed(Input.Modifier.Control)) {
 			string text = Clipboard.Content;
 
 			string filteredText = "";
@@ -92,7 +92,7 @@ public static class UI {
 		}
 		else if (editable.type == TextInputEditable.Type.Text) {
 			if ((int) key >= 33 && (int) key <= 126) {
-				write = Keys.ParseCharacter((char) key, Keys.Modifier(Keys.Modifiers.Shift), false);
+				write = Input.ParseCharacter((char) key, Input.ModifiersPressed(Input.Modifier.Shift), false);
 			}
 			else if (key == Key.Space) {
 				write = ' ';

@@ -103,7 +103,7 @@ public class DenPopup : Popup {
 			newCreature.count = 0;
 		}
 		else if (newCreature.type == creatureType || creatureType == "UNKNOWN") {
-			if (Keys.Modifier(Keys.Modifiers.Shift)) {
+			if (Input.Pressed(Keys.DecrementSwap)) {
 				newCreature.count--;
 				if (newCreature.count <= 0) {
 					newCreature.type = "";

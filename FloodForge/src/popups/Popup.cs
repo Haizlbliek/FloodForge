@@ -308,12 +308,15 @@ public abstract class Popup {
 	}
 
 	public virtual void Close() {
+		PopupManager.Remove(this);
+		this.slatedForDeletion = true;
+	}
+
+	public virtual void Cleanup() {
 		if (this.cursorOverrideActive || this.lastCursorOverrideActive) {
 			Main.mouse?.Cursor.StandardCursor = StandardCursor.Default;
 			this.lastCursorOverrideActive = false;
 		}
-		PopupManager.Remove(this);
-		this.slatedForDeletion = true;
 	}
 
 	public virtual void Accept() => this.Close();

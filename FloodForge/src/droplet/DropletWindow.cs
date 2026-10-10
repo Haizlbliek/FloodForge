@@ -114,7 +114,7 @@ public static class DropletWindow {
 		}
 		Vector2 previousWorldMouse = Mouse.Pos * cameraScale + cameraOffset;
 		targetCameraScale *= zoom;
-		if(!Keys.Modifier(Keys.Modifiers.Alt))
+		if(!Input.ModifiersPressed(Input.Modifier.Alt))
 			targetCameraScale = Mathf.Clamp(targetCameraScale, 2.5f, 1f * MathF.Max(Room.width, Room.height));
 		cameraScale += (targetCameraScale - cameraScale) * (1f - MathF.Pow(1f - Settings.CameraZoomSpeed, Program.Delta * 60f));
 		Vector2 worldMouse = Mouse.Pos * cameraScale + cameraOffset;
@@ -226,7 +226,7 @@ public static class DropletWindow {
 		else {
 			trashCanState = 0;
 
-			if (!blockMouse && Keys.Pressed(Key.W) && Room.data.waterHeight != -1) {
+			if (!blockMouse && Input.Pressed(Keys.SetWaterLevel) && Room.data.waterHeight != -1) {
 				int oldHeight = Room.data.waterHeight;
 				Room.data.waterHeight = Room.height - mouseTile.y - 1;
 				if (Room.data.waterHeight < 0) Room.data.waterHeight = 0;
@@ -424,23 +424,23 @@ public static class DropletWindow {
 		if (!(Mouse.Left || Mouse.Right)) {
 			int tool = (int)selectedTool;
 
-			if (Keys.JustPressed(Key.A)) {
+			if (Input.JustPressed(Keys.TypeLeft)) {
 				tool = ((tool + 3) % 4) + (tool & 0b1100);
 			}
 
-			if (Keys.JustPressed(Key.D)) {
+			if (Input.JustPressed(Keys.TypeRight)) {
 				tool = ((tool + 1) % 4) + (tool & 0b1100);
 			}
 
-			if (Keys.JustPressed(Key.W)) {
+			if (Input.JustPressed(Keys.TypeUp)) {
 				tool = (tool + 12) % 16;
 			}
 
-			if (Keys.JustPressed(Key.S)) {
+			if (Input.JustPressed(Keys.TypeDown)) {
 				tool = (tool + 4) % 16;
 			}
 
-			if (Keys.Modifier(Keys.Modifiers.Shift) && Keys.JustPressed(Key.E)) {
+			if (Input.JustPressed(Keys.SelectionMode)) {
 				if (drawingState == -1 && selectionState == -1) {
 					selectionState = 0;
 				}
@@ -483,7 +483,7 @@ public static class DropletWindow {
 				}
 			}
 			else if (drawingState == 2) { // if we are drawing a stroke
-				if (!(Mouse.Left || Mouse.Right) || Keys.Modifier(Keys.Modifiers.Shift) || Keys.Modifier(Keys.Modifiers.Control)) { // and are ending said stroke
+				if (!(Mouse.Left || Mouse.Right) || Input.ModifiersPressed(Input.Modifier.Shift) || Input.ModifiersPressed(Input.Modifier.Control)) { // and are ending said stroke
 					dropletHistory.GetAndApplyCollectedMassChange(dropIfEmpty: true);
 					drawingState = -1;
 				}
@@ -496,15 +496,15 @@ public static class DropletWindow {
 					}
 				}
 			}
-			else if (Keys.Modifier(Keys.Modifiers.Shift) && (Mouse.Left || Mouse.Right)) { // if we aren't already making a rectangle but are holding shift & mouse,
+			else if (Input.ModifiersPressed(Input.Modifier.Shift) && (Mouse.Left || Mouse.Right)) { // if we aren't already making a rectangle but are holding shift & mouse,
 				drawingState = Mouse.Left ? 0 : 1; // start making a rectangle
 				drawStart = mouseTile;
 			}
-			else if (Keys.Modifier(Keys.Modifiers.Control) && (Mouse.Left || Mouse.Right)) {
+			else if (Input.ModifiersPressed(Input.Modifier.Control) && (Mouse.Left || Mouse.Right)) {
 				drawingState = Mouse.Left ? 3 : 4;
 				drawStart = mouseTile;
 			}
-			else if ((selectedTool == GeometryTool.Wall || selectedTool == GeometryTool.BackgroundWall) && Keys.Pressed(Key.Q) && (Mouse.JustLeft || Mouse.JustRight) && Room.Inside(mouseTile)) {
+			else if ((selectedTool == GeometryTool.Wall || selectedTool == GeometryTool.BackgroundWall) && Input.Pressed(Keys.FloodFill) && (Mouse.JustLeft || Mouse.JustRight) && Room.Inside(mouseTile)) {
 				Stack<Vector2i> items = new Stack<Vector2i>();
 				HashSet<Vector2i> visited = [];
 
@@ -918,7 +918,7 @@ public static class DropletWindow {
 
 		if (dragging) {
 			angle = (transformedMouse - pos) / 4f;
-			if (!Keys.Modifier(Keys.Modifiers.Shift)) {
+			if (!Input.Pressed(Keys.UnlockCameraAngles)) {
 				float len = angle.Length;
 				if (len > 1f) angle /= len;
 			}
@@ -1007,14 +1007,14 @@ public static class DropletWindow {
 			selectedCamera = null;
 		}
 
-		if (Keys.JustPressed(Key.C)) {
+		if (Input.JustPressed(Keys.AddCamera)) {
 			Room.data.cameras.Add(new RoomData.Camera() {
 				position = (transformedMouse * Vector2.NegY - cameraSizeTiles * 0.5f) * 20f,
 			});
 			selectedCamera = Room.data.cameras[^1];
 		}
 
-		if (Keys.JustPressed(Key.X) && selectedCamera != null) {
+		if (Input.JustPressed(Keys.Delete) && selectedCamera != null) {
 			if (Room.data.cameras.Count == 1) {
 				PopupManager.Add(new InfoPopup("Cannot delete last camera"));
 			}
@@ -1126,30 +1126,23 @@ public static class DropletWindow {
 	}
 
 	public static void Draw() {
-		if (Keys.Modifier(Keys.Modifiers.Alt)) {
-			if (Keys.JustPressed(Key.T)) {
-				PopupManager.Add(new MarkdownPopup("docs/FloodForge-docs/docs/droplet.md"));
-				return;
-			}
+		if (Input.JustPressed(Keys.OpenTutorial)) {
+			PopupManager.Add(new MarkdownPopup("docs/FloodForge-docs/docs/droplet.md"));
 		}
-		if (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.Z)) {
-			if (Keys.Modifier(Keys.Modifiers.Shift)) {
-				dropletHistory.Redo();
-			}
-			else {
-				dropletHistory.Undo();
-			}
+
+		if (Input.JustPressed(Keys.Undo)) {
+			dropletHistory.Undo();
 		}
-		if (Keys.Modifier(Keys.Modifiers.Control) && Keys.JustPressed(Key.Y)) {
+		if (Input.JustPressed(Keys.Redo)) {
 			dropletHistory.Redo();
 		}
 
 		hoverText = "";
 
 		if (!Mouse.Left && !Mouse.Right) {
-			if (Keys.JustPressed(Key.Number1)) { currentTab = EditorTab.Details;  selectionState = -1; }
-			if (Keys.JustPressed(Key.Number2)) currentTab = EditorTab.Geometry;
-			if (Keys.JustPressed(Key.Number3)) { currentTab = EditorTab.Camera;  selectionState = -1; }
+			if (Input.JustPressed(Keys.Tab1)) { currentTab = EditorTab.Details;  selectionState = -1; }
+			if (Input.JustPressed(Keys.Tab2)) currentTab = EditorTab.Geometry;
+			if (Input.JustPressed(Keys.Tab3)) { currentTab = EditorTab.Camera;  selectionState = -1; }
 		}
 
 		UpdateCamera();

@@ -336,7 +336,7 @@ public class FilesystemPopup : Popup {
 			return;
 		}
 
-		if (key == Key.V && Keys.Modifier(Keys.Modifiers.Control)) {
+		if (key == Key.V && Input.ModifiersPressed(Input.Modifier.Control)) { // TODO: Tie to keybind
 			string clipboard = Clipboard.Content ?? "";
 
 			char[] invalidChars = Path.GetInvalidFileNameChars();
@@ -371,7 +371,7 @@ public class FilesystemPopup : Popup {
 			return;
 		}
 
-		bool isShiftPressed = Keys.Modifier(Keys.Modifiers.Shift);
+		bool isShiftPressed = Input.ModifiersPressed(Input.Modifier.Shift);
 		string? appendedString = null;
 
 		if (key >= Key.A && key <= Key.Z) {
@@ -634,8 +634,8 @@ public class FilesystemPopup : Popup {
 			bool hover = rect.Inside(Mouse.X, Mouse.Y) && IsInScrollView(y);
 
 			if (hover && Mouse.JustLeft) {
-				if (this.allowMultiple && (Keys.Modifier(Keys.Modifiers.Shift) || Keys.Modifier(Keys.Modifiers.Control))) {
-					if (Keys.Modifier(Keys.Modifiers.Shift)) {
+				if (this.allowMultiple && (Input.ModifiersPressed(Input.Modifier.Shift) || Input.ModifiersPressed(Input.Modifier.Control))) {
+					if (Input.ModifiersPressed(Input.Modifier.Shift)) {
 						string latestSelected = this.selected.Last();
 						bool startSelecting = false;
 						foreach (string selectPath in this.files) {
@@ -647,7 +647,7 @@ public class FilesystemPopup : Popup {
 							}
 						}
 					}
-					else if (Keys.Modifier(Keys.Modifiers.Control)) {
+					else if (Input.ModifiersPressed(Input.Modifier.Control)) {
 						if (!this.selected.Remove(path)) {
 							this.selected.Add(path);
 						}

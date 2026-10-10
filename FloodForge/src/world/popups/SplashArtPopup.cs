@@ -191,8 +191,8 @@ public class SplashArtPopup : Popup {
 		return (null, null);
 	}
 
-	public override void Close() {
-		base.Close();
+	public override void Cleanup() {
+		base.Cleanup();
 		this.splashArt.Dispose();
 		this.uiIcons.Dispose();
 	}

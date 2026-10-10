@@ -21,6 +21,7 @@ public static class PopupManager {
 			popup.Open();
 		}
 		foreach (Popup popup in trash) {
+			popup.Cleanup();
 			Windows.Remove(popup);
 		}
 
