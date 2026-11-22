@@ -90,7 +90,7 @@ public class SubregionPopup : Popup {
 					if (canRemove) {
 						SubregionChange change = new SubregionChange(idx);
 
-						WorldWindow.region.rooms.Where(r => r.data.subregion == idx)
+						WorldWindow.region.rooms.Where(r => r.data.subregion >= idx)
 							.ForEach(r => change.AddRoom(r, r.data.subregion - 1));
 
 						WorldWindow.worldHistory.Apply(change);
